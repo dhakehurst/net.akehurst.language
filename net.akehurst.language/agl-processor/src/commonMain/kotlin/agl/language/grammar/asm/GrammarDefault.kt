@@ -222,6 +222,10 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
+    override fun findOwnedGrammarRuleOrNull(ruleName: String): GrammarRule? {
+        return grammarRule.firstOrNull { it.name == ruleName }
+    }
+
     override fun findAllSuperGrammarRule(ruleName: String): List<GrammarRule> {
         val rules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }.toMutableOrderedSet()
         return rules.filter { it.grammar != this && it.name == ruleName }

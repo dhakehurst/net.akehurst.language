@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.formatter
 
-import net.akehurst.language.agl.language.format.AglFormatExpressionDefault
+import net.akehurst.language.agl.language.format.AglFormatExpressionFromAsm
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.formatter.AglFormatterModel
+import net.akehurst.language.formatter.api.*
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -33,58 +33,81 @@ class FormatterSimple<AsmType>(
         val sb = StringBuilder()
 
         for (root in (asm as Asm).root) {
-            val str = root.format()
+            val str = root.format(model)
             sb.append(str)
         }
 
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    private fun AsmValue.format(): String {
+    private fun AsmValue.format(model: AglFormatterModel?): String {
         val o = this
         return when (o) {
             is AsmNothing -> ""
             is AsmPrimitive -> o.value.toString()
             is AsmStructure -> o.format(model)
-            is AsmListSeparated -> o.elements.joinToString(separator = "") { it.format() }
-            is AsmList -> o.elements.joinToString(separator = "") { it.format() }
+            is AsmListSeparated -> o.elements.joinToString(separator = "") { it.format(model) }
+            is AsmList -> o.elements.joinToString(separator = "") { it.format(model) }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")
         }
     }
 
-    fun AsmStructure.format(model: AglFormatterModel?): String {
+    private fun AsmStructure.format(model: AglFormatterModel?): String {
         val formatRule = model?.rules?.get(this.typeName)
         return when (formatRule) {
             null -> {
                 this.propertyOrdered.map {
                     val propValue = it.value
                     when (propValue) {
-                        is AsmPrimitive -> propValue.toString() + (model?.defaultWhiteSpace ?: "")
-                        else -> propValue.format()
+                        is AsmPrimitive -> propValue.format(model)// + (model?.defaultWhiteSpace ?: "")
+                        else -> propValue.format(model)
                     }
                 }.joinToString(separator = "") { it }
             }
 
-            else -> (formatRule.formatExpression as AglFormatExpressionDefault).execute(model, this)
+            else -> (formatRule.formatExpression as AglFormatExpressionFromAsm).execute(model, this)
         }
     }
 
-    private fun AglFormatExpressionDefault.execute(model: AglFormatterModel?, el: AsmStructure): String {
+    private fun formatExpression(formatExpr: FormatExpression, asm: AsmStructure) = when (formatExpr) {
+        is FormatExpressionLiteral -> formatFromLiteral(formatExpr)
+        is FormatExpressionTemplate -> formatFromTemplate(formatExpr, asm)
+        is FormatExpressionWhen -> formatFromWhen(formatExpr, asm)
+        else -> error("Internal error: subtype of AglFormatExpression not handled: '${formatExpr::class.simpleName}'")
+    }
+
+    private fun formatFromLiteral(formatExpr: FormatExpressionLiteral): String {
+        return formatExpr.literalValue
+    }
+
+    private fun formatFromTemplate(formatExpr: FormatExpressionTemplate, asm: AsmStructure): String {
+        return formatExpr.content.joinToString(separator = "") {
+            when (it) {
+                is TemplateElementText -> TODO()
+                is TemplateElementExpressionSimple -> TODO()
+                is TemplateElementExpressionEmbedded -> TODO()
+                else -> error("Internal error: subtype of TemplateElement not handled: '${it::class.simpleName}'")
+            }
+        }
+    }
+
+    private fun formatFromWhen(formatExpr: FormatExpressionWhen, asm: AsmStructure): String {
+        TODO()
+    }
+
+    private fun AglFormatExpressionFromAsm.execute(model: AglFormatterModel?, el: AsmStructure): String {
         return when (this.asm.typeName) {
-            "LiteralString" -> (el.getProperty("literal_string") as AsmPrimitive).toString()
+            "LiteralString" -> (el.getProperty("literal_string") as AsmPrimitive).value.toString()
             "TemplateString" -> {
                 val templateContentList = (this.asm.getProperty("templateContentList") as AsmList).elements
                 templateContentList.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it.typeName) {
-                        "Text" -> (it as AsmStructure).getProperty("raw_text").toString()
+                        "Text" -> ((it as AsmStructure).getProperty("raw_text") as AsmPrimitive).value.toString()
                         "TemplateExpressionSimple" -> {
-                            val id = (it as AsmStructure).getProperty("dollar_identifier").toString().substringAfter("\$")
+                            val id1 = (it as AsmStructure).getProperty("dollar_identifier")
+                            val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
                             val pv = el.getProperty(id)
-                            when (pv) {
-                                is AsmPrimitive -> pv.toString()
-                                is AsmStructure -> pv.format(model)
-                                else -> error("property ${pv} not handled")
-                            }
+                            pv.format(model)
                         }
 
                         "TemplateExpressionEmbedded" -> TODO()

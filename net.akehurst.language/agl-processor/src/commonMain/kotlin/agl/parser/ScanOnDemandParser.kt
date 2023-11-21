@@ -25,14 +25,12 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.ParseOptions
-import net.akehurst.language.api.processor.ParseResult
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -69,7 +67,10 @@ internal class ScanOnDemandParser(
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
         val cacheSkip = options.cacheSkip
         _issues.clear()
-        val scanner = InputFromString(this.runtimeRuleSet.terminalRules.size, sentence)
+        val scanner = when (options.scanKind) {
+            ScanKind.OnDemand -> InputFromString(this.runtimeRuleSet.terminalRules.size, sentence)
+            ScanKind.Classic -> ScannerClassic(sentence, this.runtimeRuleSet.terminalRules)
+        }
         val rp = createRuntimeParser(goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
@@ -576,7 +577,10 @@ internal class ScanOnDemandParser(
         val automatonKind = options.automatonKind
         val cacheSkip = options.cacheSkip
         val usedText = sentence.substring(0, position)
-        val scanner = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
+        val scanner = when (options.scanKind) {
+            ScanKind.OnDemand -> InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
+            ScanKind.Classic -> ScannerClassic(usedText, this.runtimeRuleSet.terminalRules)
+        }
         val rp = createRuntimeParser(goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 

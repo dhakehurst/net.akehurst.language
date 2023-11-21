@@ -40,8 +40,8 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("nothing"),
             b.nonTerminal("self")
         )
-        b.rule("nothing").concatenation(b.terminalLiteral("§nothing"))
-        b.rule("self").concatenation(b.terminalLiteral("§self"))
+        b.rule("nothing").concatenation(b.terminalLiteral("\$nothing"))
+        b.rule("self").concatenation(b.terminalLiteral("\$self"))
         b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
@@ -67,8 +67,8 @@ grammar Expression {
       | navigation
       ;
     rootExpression = nothing | self ;
-    nothing = '§nothing' ;
-    self = '§self' ;
+    nothing = '${"$"}nothing' ;
+    self = '${"$"}self' ;
     navigation = [propertyReference / '.']+ ;
     propertyReference = IDENTIFIER ;
     

@@ -20,7 +20,7 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -71,7 +71,7 @@ class test_Vistraq_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
                 completionProvider { p ->
                     ProcessResultDefault(
                         CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel),

@@ -44,7 +44,7 @@ internal class AglFormatSyntaxAnalyser(
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AglFormatterModel> {
         val res = _sa.transform(sppt, mapToGrammar)
-        val asm = AglFormatterModelDefault(res.asm)
+        val asm = AglFormatterModelFromAsm(res.asm)
         return SyntaxAnalysisResultDefault(asm, res.issues, this.locationMap)
     }
 }

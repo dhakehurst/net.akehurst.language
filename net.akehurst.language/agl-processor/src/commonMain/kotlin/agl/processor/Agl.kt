@@ -21,7 +21,7 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -67,7 +67,7 @@ object Agl {
         }
         semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
         styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-        formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
+        formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
         completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
     }
 
@@ -75,8 +75,8 @@ object Agl {
      * build a set of options for a parser
      * (does not set the options, they must be passed as argument)
      */
-    fun parseOptions(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
-        val b = ParseOptionsBuilder()
+    fun parseOptions(base: ParseOptions = ParseOptionsDefault(), init: ParseOptionsBuilder.() -> Unit): ParseOptions {
+        val b = ParseOptionsBuilder(base)
         b.init()
         return b.build()
     }
@@ -139,7 +139,7 @@ object Agl {
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr) }
             }
             if (null != formatterModelStr) {
-                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr, config, grammarAglOptions)

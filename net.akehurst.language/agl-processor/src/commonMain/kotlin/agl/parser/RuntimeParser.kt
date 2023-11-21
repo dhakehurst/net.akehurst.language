@@ -72,14 +72,8 @@ internal class RuntimeParser(
 
     val graph = ParseGraph(scanner, this.stateSet.number)
 
-    //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
     val canGrow: Boolean get() = this.graph.canGrow
 
-    //var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
-
-    //val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
-    //val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
-    //val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
     val failedReasons = mutableMapOf<Int, MutableList<FailedParseReason>>()
 
     private var interruptedMessage: String? = null
@@ -91,7 +85,7 @@ internal class RuntimeParser(
         if (this.stateSet.preBuilt) this.skipStateSet.build()
         val skipScanner = when (scanner) {
             is InputFromString -> InputFromString(skipStateSet.usedTerminalRules.size, this.scanner.sentence.text)
-            is ScannerClassic -> ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
+            is ScannerClassic -> scanner //ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
             else -> error("subtype of Scanner unsupported - ${scanner::class.simpleName}")
         }
         RuntimeParser(it, null, false, skipStateSet.userGoalRule, skipScanner, _issues)

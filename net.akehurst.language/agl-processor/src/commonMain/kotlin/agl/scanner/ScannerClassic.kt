@@ -41,6 +41,8 @@ internal class ScannerClassic(
         val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1)
     }
 
+//    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
+
     override var sentence: Sentence = SentenceDefault(sentenceText); private set
 
     override fun reset() {
@@ -56,7 +58,7 @@ internal class ScannerClassic(
 
     override fun findOrTryCreateLeaf(position: Int, terminalRule: Rule): CompleteTreeDataNode? {
         val l = _leaves[position]
-        return when {
+        val res = when {
             terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0)
             null == l -> {
                 val lf = scanAt(position)
@@ -67,8 +69,14 @@ internal class ScannerClassic(
             LEAF_NONE == l -> null
             else -> l
         }
+        return if (res?.rule == terminalRule) {
+            res
+        } else {
+//            val len = res?.nextInputPosition?.let { it - position } ?: 1
+//            issues.error(sentence.locationFor(position, len), "Expecting ${terminalRule.tag} bu got ${res?.rule?.tag}", terminalRule)
+            null
+        }
     }
-
 
     private val _leaves = mutableMapOf<Int, CompleteTreeDataNode>()
 

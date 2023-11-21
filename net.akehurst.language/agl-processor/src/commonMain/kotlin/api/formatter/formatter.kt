@@ -14,25 +14,44 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.formatter
+package net.akehurst.language.formatter.api
 
 interface AglFormatterModel {
 
-    val defaultWhiteSpace:String
+    val defaultWhiteSpace: String
 
     /**
      * all format rules indexed by the type name that the rule applies to
      */
-     val rules:Map<String,AglFormatterRule>
+    val rules: Map<String, AglFormatterRule>
 
 }
 
 interface AglFormatterRule {
-    val model:AglFormatterModel
-    val forTypeName : String
-    val formatExpression:AglFormatExpression
+    val model: AglFormatterModel
+    val forTypeName: String
+    val formatExpression: FormatExpression
 }
 
-interface AglFormatExpression {
+interface FormatExpression {
 
 }
+
+interface FormatExpressionLiteral : FormatExpression {
+    val literalValue: String
+}
+
+interface FormatExpressionTemplate : FormatExpression {
+    val content: List<TemplateElement>
+}
+
+interface FormatExpressionWhen : FormatExpression {}
+
+interface TemplateElement
+
+interface TemplateElementText : TemplateElement {
+    val text: String
+}
+
+interface TemplateElementExpressionSimple : TemplateElement
+interface TemplateElementExpressionEmbedded : TemplateElement

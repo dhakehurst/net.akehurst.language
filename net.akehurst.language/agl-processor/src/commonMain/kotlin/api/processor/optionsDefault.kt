@@ -160,8 +160,8 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
     private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
     private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 
-    fun parse(init: ParseOptionsBuilder.() -> Unit) {
-        val b = ParseOptionsBuilder()
+    fun parse(base: ParseOptions = ParseOptionsDefault(), init: ParseOptionsBuilder.() -> Unit) {
+        val b = ParseOptionsBuilder(base)
         b.init()
         _parser = b.build()
     }
@@ -190,13 +190,15 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
 }
 
 @ProcessOptionsDslMarker
-class ParseOptionsBuilder {
-    private var _goalRuleName: String? = null
-    private var _automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
-    private var _reportErrors: Boolean = true
-    private var _reportGrammarAmbiguities = false
-    private var _cacheSkip: Boolean = true
-    private var _scanKind: ScanKind = ScanKind.OnDemand
+class ParseOptionsBuilder(
+    base: ParseOptions
+) {
+    private var _goalRuleName: String? = base.goalRuleName
+    private var _automatonKind: AutomatonKind = base.automatonKind
+    private var _reportErrors: Boolean = base.reportErrors
+    private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
+    private var _cacheSkip: Boolean = base.cacheSkip
+    private var _scanKind: ScanKind = base.scanKind
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value

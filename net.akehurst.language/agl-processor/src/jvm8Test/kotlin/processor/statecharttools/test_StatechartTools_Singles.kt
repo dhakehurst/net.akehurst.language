@@ -19,7 +19,7 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -46,8 +46,9 @@ class test_StatechartTools_Singles {
         private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
         private val formatterStr = """
+           VariableDeclaration -> §variableDeclarationKind §id 
            AssignmentExpression -> "§expression §assignmentOperator §expression2"
-           FeatureCall -> "§elementReferenceExpression§\§list"
+           FeatureCall -> "§elementReferenceExpression\§list"
            ElementReferenceExpression -> "§id"
            PrimitiveValueExpression -> "§literal"
         """.replace("§", "\$")
@@ -68,7 +69,7 @@ class test_StatechartTools_Singles {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
                 completionProvider { p ->
                     ProcessResultDefault(
                         CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel),

@@ -19,9 +19,15 @@ package agl.parser.scannerless.keywords
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ScanKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal class test_keywords : test_ScanOnDemandParserAbstract() {
 
@@ -52,6 +58,7 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
+                scanKind(ScanKind.OnDemand)
             },
             expectedTrees = arrayOf(expected)
         )
@@ -75,6 +82,7 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
+                scanKind(ScanKind.OnDemand)
             },
             expectedTrees = arrayOf(expected)
         )
@@ -98,16 +106,25 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
+                scanKind(ScanKind.Classic)
             },
             expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun scanClassic_class_class() {
+    fun scanClassic_class_class__fails() {
         val sentence = "class class;"
 
-        testFailWithOptions(
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, //TODO: should this be SCAN ?
+                InputLocation(6, 7, 1, 1),
+                "class ^class;", setOf("NAME")
+            )
+        )
+
+        val result = testFailWithOptions(
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -116,6 +133,9 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
                 scanKind(ScanKind.Classic)
             }
         )
+
+        assertTrue(result.issues.errors.isNotEmpty())
+        assertEquals(expectedIssues, result.issues.all.toList(), result.issues.toString())
     }
 
 }

@@ -140,6 +140,8 @@ interface Grammar {
 
     val allResolvedEmbeddedGrammars: Set<Grammar>
 
+    fun findOwnedGrammarRuleOrNull(ruleName: String): GrammarRule?
+
     /**
      * find rule with given name in all rules that this grammar extends - but not in this grammar
      */
