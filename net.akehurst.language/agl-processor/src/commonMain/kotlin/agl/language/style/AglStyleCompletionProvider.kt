@@ -25,6 +25,7 @@ import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.typemodel.api.TypeInstance
 
@@ -53,11 +54,11 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 //        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
     }
 
-    override fun provide(nextExpected: Set<RuleItem>, context: ContextFromGrammar?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammar?, options: Map<String, Any>): List<CompletionItem> {
         return if (null == context) {
             emptyList()
         } else {
-            val items = nextExpected.flatMap { provideForTerminalItem(it, context) }
+            val items = nextExpected.flatMap { it.expectedNextItems.flatMap { provideForTerminalItem(it, context) } }
             items
         }
     }
@@ -81,7 +82,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
         val scopeItems = context.rootScope.findItemsConformingTo { it == "LITERAL" }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, it, "LITERAL").also {
+            CompletionItem(CompletionItemKind.LITERAL, it.referableName, "LITERAL").also {
                 it.description = "Reference to a literal value used in the grammar. Literals are enclosed in single quotes or leaf rules."
             }
         }
@@ -90,7 +91,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
         val scopeItems = context.rootScope.findItemsConformingTo { it == "PATTERN" }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, it, "PATTERN").also {
+            CompletionItem(CompletionItemKind.LITERAL, it.referableName, "PATTERN").also {
                 it.description = "Reference to a pattern value (regular expression) used in the grammar. Patterns are enclosed in double quotes or leaf rules."
             }
         }
@@ -99,7 +100,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
         val scopeItems = context.rootScope.findItemsConformingTo { it == grammarRule.declaration.qualifiedName }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, it, grammarRule.declaration.name)
+            CompletionItem(CompletionItemKind.LITERAL, it.referableName, grammarRule.declaration.name)
         }
     }
 

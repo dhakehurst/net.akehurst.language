@@ -21,9 +21,11 @@ import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.AsmList
 import net.akehurst.language.api.asm.AsmPrimitive
 import net.akehurst.language.api.asm.AsmStructure
-import net.akehurst.language.formatter.api.*
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatterRule
+import net.akehurst.language.formatter.api.FormatExpression
 
 class AglFormatterModelFromAsm(
     val asm: Asm?
@@ -68,7 +70,7 @@ class AglFormatterRuleFromAsm(
     override val forTypeName: String
         get() = ((asm.getProperty("typeReference") as AsmStructure).getProperty("identifier") as AsmPrimitive).value.toString()
 
-    override val formatExpression: AglFormatExpression
+    override val formatExpression: FormatExpression
         get() {
             val fmAsm = asm.getProperty("formatExpression") as AsmStructure
             return AglFormatExpressionFromAsm(fmAsm)
@@ -77,6 +79,6 @@ class AglFormatterRuleFromAsm(
 
 class AglFormatExpressionFromAsm(
     val asm: AsmStructure
-) : AglFormatExpression {
+) : FormatExpression {
 
 }

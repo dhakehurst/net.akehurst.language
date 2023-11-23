@@ -20,7 +20,7 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
 
-interface TypeModelFromGrammarConfiguration {
+interface Grammar2TypeModelMapping {
     fun typeNameFor(rule: GrammarRule): String
     fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String
 }
@@ -30,13 +30,13 @@ fun String.lower() = when {
     else -> this.replaceFirstChar { it.lowercase() }
 }
 
-class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfiguration {
+class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
     override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
     override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String {
-        val prefix = when (context) {
-            ruleItem.owningRule.grammar -> ""
-            else -> "${ruleItem.owningRule.grammar.name.lower()}_"
-        }
+//        val prefix = when (context) {
+//            ruleItem.owningRule.grammar -> ""
+//            else -> "${ruleItem.owningRule.grammar.name.lower()}_"
+//        }
         val baseName = when (ruleItem) {
             is Terminal -> when (ruleItemType) {
                 is PrimitiveType -> GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME

@@ -68,7 +68,7 @@ class test_StatechartTools_References {
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
                 completionProvider { p ->
                     ProcessResultDefault(
-                        CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel),
+                        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }

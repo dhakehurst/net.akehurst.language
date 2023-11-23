@@ -18,7 +18,7 @@ package net.akehurst.language.agl.language.reference.asm.builder
 
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.*
 
 @DslMarker
@@ -115,12 +115,12 @@ class ReferenceDefinitionBuilder(
     fun property(referringPropertyStr: String, refersToTypes: List<String>, fromExpressionStr: String?) {
         val exprResult = Agl.registry.agl.expressions.processor!!.process(referringPropertyStr)
         check(exprResult.issues.errors.isEmpty()) { exprResult.issues.toString() }
-        val refPropNav = exprResult.asm?.let { if (it is Navigation) it else null } ?: error("Navigation not created from given referringPropertyStr")
+        val refPropNav = exprResult.asm?.let { if (it is NavigationExpression) it else null } ?: error("Navigation not created from given referringPropertyStr")
 
         val fromNav = fromExpressionStr?.let {
             val fromResult = Agl.registry.agl.expressions.processor!!.process(it)
             check(fromResult.issues.errors.isEmpty()) { fromResult.issues.toString() }
-            fromResult.asm?.let { if (it is Navigation) it else null } ?: error("Navigation not created from given fromExpressionStr")
+            fromResult.asm?.let { if (it is NavigationExpression) it else null } ?: error("Navigation not created from given fromExpressionStr")
         }
 
         _refExpressionList.add(PropertyReferenceExpressionDefault(refPropNav, refersToTypes, fromNav))

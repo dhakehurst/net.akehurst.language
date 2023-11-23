@@ -17,8 +17,8 @@
 
 package net.akehurst.language.api.format.test
 
-import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.formatter.AglFormatterRule
+import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatterRule
 import kotlin.test.assertEquals
 import kotlin.test.fail
 

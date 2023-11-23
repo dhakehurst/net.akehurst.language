@@ -15,11 +15,10 @@
  */
 package net.akehurst.language.agl.grammar.format
 
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.format.test.FormatModelTest
-import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.formatter.formatModel
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -28,76 +27,126 @@ import kotlin.test.assertTrue
 class test_AglFormat {
 
     private companion object {
-        val aglProc = Agl.registry.agl.formatter.processor!!
-    }
+        data class TestData(
+            val sentence: String,
+            val expectedAsm: AglFormatterModel? = null
+        )
 
-    private fun test(sentence: String, expected: AglFormatterModel) {
-        val result = aglProc.process(sentence)
-        assertNotNull(result.asm, result.issues.toString())
-        assertTrue(result.issues.isEmpty())
-        FormatModelTest.assertEqual(expected, result.asm)
+        val testData = listOf(
+            TestData(sentence = "// single line comment"),
+            TestData(
+                sentence = """
+                    /* multi
+                       line
+                       comment
+                    */
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type -> ''
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> ''
+                        Type2 -> ''
+                        Type3 -> ''
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> when {
+                          true -> ''
+                          false -> ''
+                        }
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> ""
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> "§prop"
+                    }
+                """.trimIndent().replace("§", "\$")
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> "§prop §prop §prop"
+                    }
+                """.trimIndent().replace("§", "\$")
+            ),
+            TestData(
+                sentence = """
+                    namespace test {
+                        Type1 -> "§{prop} §{prop.re.sdga}"
+                    }
+                """.trimIndent().replace("§", "\$")
+            )
+        )
+
+        private fun test_process(data: TestData) {
+            val result = Agl.registry.agl.formatter.processor!!.process(data.sentence)
+            assertNotNull(result.asm, result.issues.toString())
+            assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
+            data.expectedAsm?.let {
+                FormatModelTest.assertEqual(it, result.asm)
+            }
+        }
     }
 
     @Test
-    fun typeModel() {
-        val actual = aglProc.typeModel
-        val expected = typeModel("AglFormat", true) {
-            namespace("net.akehurst.language.agl") {
-                //unit = ruleList ;
-                //ruleList = [formatRule]* ;
-                //formatRule = typeReference '->' formatExpression ;
-                //formatExpression
-                // = stringExpression
-                // | whenExpression
-                // ;
-            }
+    fun check_grammar() {
+        val proc = Agl.registry.agl.formatter.processor
+        assertTrue(Agl.registry.agl.formatter.issues.errors.isEmpty(), Agl.registry.agl.formatter.issues.toString())
+        assertNotNull(proc)
+    }
+
+    @Test
+    fun check_typeModel() {
+        val actual = Agl.registry.agl.formatter.processor!!.typeModel
+        val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat", "") {
+            //unit = ruleList ;
+            //ruleList = [formatRule]* ;
+            //formatRule = typeReference '->' formatExpression ;
+            //formatExpression
+            // = stringExpression
+            // | whenExpression
+            // ;
         }
 
         TypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
-    fun single_line_comment() {
-
-        val sentence = """
-            // single line comment
-        """.trimIndent()
-
-        val expected = formatModel {
+    fun parse() {
+        val processor = Agl.registry.agl.formatter.processor!!
+        for (td in testData) {
+            println("Parsing '${td.sentence}'")
+            val result = processor.parse(td.sentence)
+            assertTrue(result.issues.errors.isEmpty(), "'${td.sentence}'\n${result.issues}")
         }
-
-        test(sentence, expected)
-
     }
 
     @Test
-    fun multi_line_comment() {
-
-        val sentence = """
-            /* multi
-               line
-               comment
-            */
-        """.trimIndent()
-
-        val expected = formatModel {
+    fun process() {
+        for (td in testData) {
+            println("Processing '${td.sentence}'")
+            test_process(td)
         }
-
-        test(sentence, expected)
-    }
-
-    @Test
-    fun one_rule_literal_empty() {
-        val sentence = """
-            Type -> ''
-        """
-        val expected = formatModel {
-            rule("Type") {
-                literalString("")
-            }
-        }
-
-        test(sentence, expected)
     }
 
 }

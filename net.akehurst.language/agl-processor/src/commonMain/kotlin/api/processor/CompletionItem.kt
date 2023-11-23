@@ -21,6 +21,7 @@ import net.akehurst.language.api.language.grammar.RuleItem
 enum class CompletionItemKind {
     LITERAL,
     PATTERN,
+    REFERRED,
     SEGMENT
 }
 
@@ -32,6 +33,12 @@ data class CompletionItem(
     var description: String = ""
 }
 
+interface Spine {
+    val expectedNextItems: Set<RuleItem>
+    val elements: List<RuleItem>
+    val nextChildNumber: Int
+}
+
 interface CompletionProvider<in AsmType, in ContextType> {
-    fun provide(nextExpected: Set<RuleItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
+    fun provide(nextExpected: Set<Spine>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
 }

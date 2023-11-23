@@ -17,10 +17,13 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,19 +32,35 @@ class test_CompletionProviderDefault {
 
     private companion object {
 
-        fun test(grammarStr: String, sentence: String, position: Int, expected: List<CompletionItem>) {
-            val res = Agl.processorFromStringDefault(grammarStr)
+        data class TestData(
+            val grammarStr: String,
+            val crossReferencesStr: String = "",
+            val additionalTypeModel: TypeModel? = null,
+            val context: ContextSimple? = ContextSimple(),
+            val sentence: String,
+            val position: Int,
+            val expected: List<CompletionItem>
+        )
+
+        fun test(data: TestData) {
+            val res = Agl.processorFromStringDefault(data.grammarStr, data.crossReferencesStr)
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
-            val context = ContextSimple()
-            val actual = proc.expectedItemsAt(sentence, position, 0, Agl.options {
+            data.additionalTypeModel?.let {
+                proc.typeModel.addAllNamespace(it.allNamespace)
+            }
+            proc.typeModel
+            proc.crossReferenceModel
+            assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
+
+            val actual = proc.expectedItemsAt(data.sentence, data.position, 0, Agl.options {
                 completionProvider {
-                    context(context)
+                    context(data.context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(expected.size, actual.items.size)
-            assertEquals(expected.toSet(), actual.items.toSet())
+            assertEquals(data.expected.size, actual.items.size)
+            assertEquals(data.expected.toSet(), actual.items.toSet())
         }
 
     }
@@ -58,7 +77,14 @@ class test_CompletionProviderDefault {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "a", "'a'")
         )
-        test(grammarStr, sentence, sentence.length, expected)
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
     }
 
     @Test
@@ -73,7 +99,14 @@ class test_CompletionProviderDefault {
         val expected = listOf(
             CompletionItem(CompletionItemKind.PATTERN, "<\"[a-z]\">", "[a-z]")
         )
-        test(grammarStr, sentence, sentence.length, expected)
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
     }
 
     @Test
@@ -89,9 +122,98 @@ class test_CompletionProviderDefault {
         val expected = listOf(
             CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "[a-z]")
         )
-        test(grammarStr, sentence, sentence.length, expected)
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
     }
 
-    //TODO
+    @Test
+    fun FailedParseReasonLookahead__varDef_no_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                S = varDef ;
+                varDef = 'var' NAME ':' typeRef ;
+                typeRef = NAME ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
+        """
+
+        val sentence = "var x:"
+
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "[a-zA-Z]+")
+        )
+
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
+    }
+
+    @Test
+    fun FailedParseReasonLookahead__external_from_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                S = varDef ;
+                varDef = 'var' NAME ':' typeRef ;
+                typeRef = REF ;
+                leaf REF = NAME ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
+        """
+        val externalNsName = "external"
+        val crossReferencesStr = """
+            namespace test.Test {
+                import $externalNsName
+                identify VarDef by name
+                references {
+                    in TypeRef {
+                        property ref refers-to TypeDef
+                    }
+                }
+            }
+        """.trimIndent()
+
+
+        val sentence = "var x:"
+        val additionalTypeModel = typeModel("External", true) {
+            namespace(externalNsName) {
+                dataType("TypeDef")
+            }
+        }
+
+        val context = ContextSimple()
+        context.rootScope.addToScope("int", "$externalNsName.TypeDef", AsmPathSimple.EXTERNAL)
+
+
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.REFERRED, "int", "TypeDef")
+        )
+
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                crossReferencesStr = crossReferencesStr,
+                additionalTypeModel = additionalTypeModel,
+                context = context,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
+    }
 
 }

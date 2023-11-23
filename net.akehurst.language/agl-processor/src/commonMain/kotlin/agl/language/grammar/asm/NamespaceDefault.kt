@@ -19,7 +19,5 @@ package net.akehurst.language.agl.language.grammar.asm
 import net.akehurst.language.api.language.grammar.Namespace
 
 data class NamespaceDefault(override val qualifiedName: String) : Namespace {
-
-
     override fun toString(): String = "namespace $qualifiedName"
 }

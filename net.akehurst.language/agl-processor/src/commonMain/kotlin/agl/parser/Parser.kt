@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeSpine
 import net.akehurst.language.api.language.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.ParseOptions
@@ -52,7 +53,7 @@ internal interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      **/
-    fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule>
+    fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeSpine>
 
     /*
      * List of terminal rules expected at the position

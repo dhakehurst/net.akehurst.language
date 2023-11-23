@@ -15,38 +15,34 @@
  */
 package net.akehurst.language.agl.language.format
 
+import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 
-internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
-    //companion object {
+internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language"), "AglFormat") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
-        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
-        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
-        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
+        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "AglFormat");
+        b.extendsGrammar(ExpressionsGrammar)
 
-        b.rule("unit").concatenation(b.nonTerminal("ruleList"))
+        b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
+        b.rule("namespace").concatenation(
+            b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"),
+            b.nonTerminal("ruleList"),
+            b.terminalLiteral("}")
+        )
         b.rule("ruleList").multi(0, -1, b.nonTerminal("formatRule"))
         b.rule("formatRule").concatenation(b.nonTerminal("typeReference"), b.terminalLiteral("->"), b.nonTerminal("formatExpression"))
         b.rule("formatExpression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("stringExpression"),
+            b.nonTerminal("expression"),
+            b.nonTerminal("templateString"),
             b.nonTerminal("whenExpression")
         )
         b.rule("whenExpression").concatenation(b.terminalLiteral("when"), b.terminalLiteral("{"), b.nonTerminal("whenOptionList"), b.terminalLiteral("}"))
         b.rule("whenOptionList").multi(0, -1, b.nonTerminal("whenOption"))
         b.rule("whenOption").concatenation(b.nonTerminal("expression"), b.terminalLiteral("->"), b.nonTerminal("formatExpression"))
-        b.rule("stringExpression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("literalString"),
-            b.nonTerminal("templateString")
-        )
-        b.rule("literalString").concatenation(b.nonTerminal("LITERAL_STRING"))
         b.rule("templateString").concatenation(b.terminalLiteral("\""), b.nonTerminal("templateContentList"), b.terminalLiteral("\""))
         b.rule("templateContentList").multi(0, -1, b.nonTerminal("templateContent"))
         b.rule("templateContent").choiceLongestFromConcatenationItem(
@@ -59,57 +55,46 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.nonTerminal("templateExpressionEmbedded")
         )
         b.rule("templateExpressionSimple").concatenation(b.nonTerminal("DOLLAR_IDENTIFIER"))
-        b.rule("templateExpressionEmbedded").concatenation(b.terminalLiteral("\${"), b.nonTerminal("expression"), b.terminalLiteral("}"))
-        //TODO b.rule("expression").concatenation(b.embed("",""))
-        b.rule("expression").concatenation(b.nonTerminal("propertyReference"))
-        b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.rule("templateExpressionEmbedded").concatenation(b.terminalLiteral("\${"), b.nonTerminal("formatExpression"), b.terminalLiteral("}"))
+
         b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.leaf("DOLLAR_IDENTIFIER").concatenation(b.terminalPattern("[$][a-zA-Z_][a-zA-Z_0-9-]*"))
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))
-        b.leaf("LITERAL_STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
         b.leaf("RAW_TEXT").concatenation(b.terminalPattern("([^\$\"\\\\]|\\\\.)+"))
 
         return b.grammar.grammarRule
     }
-    //}
 
     override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, "unit"))
     override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
 
     const val grammarStr = """
         namespace net.akehurst.language.agl
-        grammar AglFormat {
-            skip leaf WHITESPACE = "\s+" ;
-            skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-            skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
-        
-            unit = ruleList ;
+        grammar AglFormat extends Expressions {        
+            unit = namespace* ;
+            namespace = 'namespace' qualifiedName '{' ruleList '}' ;
             ruleList = [formatRule]* ;
             formatRule = typeReference '->' formatExpression ;
             formatExpression
-              = stringExpression
+              = expression
+              | templateString
               | whenExpression
               ;
+              
             whenExpression = 'when' '{' whenOptionList '}' ;
             whenOptionList = whenOption* ;
             whenOption = expression '->' formatExpression ;
-            stringExpression = literalString | templateString ;
-            literalString = LITERAL_STRING ;
+            
             templateString = '"' templateContentList '"' ;
             templateContentList = templateContent* ;
             templateContent = text | templateExpression ;
             text = RAW_TEXT ;
             templateExpression = templateExpressionSimple | templateExpressionEmbedded ;
             templateExpressionSimple = DOLLAR_IDENTIFIER ;
-            templateExpressionEmbedded = '$${'{'}' expression '}'
-            
-            expression = propertyReference ; //TODO
-            
+            templateExpressionEmbedded = '$${'{'}' formatExpression '}'
+                        
             typeReference = IDENTIFIER ;
             propertyReference = IDENTIFIER ;
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
-            leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
-            leaf LITERAL_STRING = "'([^'\\]|\\'|\\\\)*'" ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }
     """
@@ -119,6 +104,11 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     """
 
     init {
+        super.extends.add(
+            GrammarReferenceDefault(namespace, qualifiedName).also {
+                it.resolveAs(ExpressionsGrammar)
+            }
+        )
         super.grammarRule.addAll(AglFormatGrammar.createRules())
     }
 

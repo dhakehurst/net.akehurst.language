@@ -24,10 +24,10 @@ import net.akehurst.language.api.language.grammar.GrammarRule
 /**
 
  */
-internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl.language"), "References") {
+internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language"), "References") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "References");
+        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "References");
         b.extendsGrammar(ExpressionsGrammar)
 
         b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))

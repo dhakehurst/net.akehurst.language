@@ -17,14 +17,46 @@
 
 package net.akehurst.language.agl.completionProvider
 
+import net.akehurst.language.agl.runtime.structure.RuntimeSpine
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.Spine
+
+internal class SpineDefault(
+    private val runtimeSpine: RuntimeSpine,
+    val mapToGrammar: (Int, Int) -> RuleItem?
+) : Spine {
+
+    override val expectedNextItems: Set<RuleItem> by lazy {
+        runtimeSpine.expectedNextTerminals.mapNotNull {
+            mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
+        }.toSet()
+    }
+
+    override val elements: List<RuleItem> by lazy {
+        runtimeSpine.elements.mapNotNull {
+            mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
+        }
+    }
+
+    override val nextChildNumber get() = runtimeSpine.nextChildNumber
+}
 
 abstract class CompletionProviderAbstract<in AsmType, in ContextType> : CompletionProvider<AsmType, ContextType> {
 
-    fun provideForTerminal(terminalItem: Terminal, context: ContextType?): List<CompletionItem> {
+    protected fun provideTerminalsForSpine(spine: Spine): List<CompletionItem> {
+        return spine.expectedNextItems.flatMap { ri ->
+            when (ri) {
+                is Terminal -> provideForTerminal(ri)
+                else -> emptyList()
+            }
+        }
+    }
+
+    protected fun provideForTerminal(terminalItem: Terminal): List<CompletionItem> {
         val name = when {
             terminalItem.owningRule.isLeaf -> terminalItem.owningRule.name
             else -> terminalItem.name

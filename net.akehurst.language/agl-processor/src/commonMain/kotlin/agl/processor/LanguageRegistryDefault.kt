@@ -36,13 +36,13 @@ import net.akehurst.language.agl.language.style.AglStyleGrammar
 import net.akehurst.language.agl.language.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.language.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.Namespace
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.formatter.api.AglFormatterModel
 
 interface AglLanguages {
     val expressionsLanguageIdentity: String

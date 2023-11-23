@@ -23,8 +23,11 @@ interface CrossReferenceModel {
 
     val declarationsForNamespace: Map<String, DeclarationsForNamespace>
 
+    val isEmpty: Boolean
+
     fun isScopeDefinedFor(possiblyQualifiedTypeName: String): Boolean
     fun referencesFor(possiblyQualifiedTypeName: String): List<ReferenceExpression>
+    fun referenceForProperty(typeQualifiedName: String, propertyName: String): List<String>
 }
 
 interface DeclarationsForNamespace {
@@ -37,6 +40,8 @@ interface DeclarationsForNamespace {
      */
     val scopeDefinition: Map<String, ScopeDefinition>
     val references: List<ReferenceDefinition>
+
+    val isEmpty: Boolean
 
     fun isScopeDefinedFor(typeName: String): Boolean
 
@@ -52,6 +57,8 @@ interface DeclarationsForNamespace {
      * The list of reference-expressions defined for the given type
      */
     fun referencesFor(typeName: String): List<ReferenceExpression>
+
+    fun referenceForPropertyOrNull(typeName: String, propertyName: String): ReferenceExpression?
 
     /**
      *
@@ -83,6 +90,12 @@ interface ReferenceExpression {
 
 }
 
+data class ScopedItem<ItemType>(
+    val referableName: String,
+    val qualifiedTypeName: String,
+    val item: ItemType
+)
+
 /**
  * ItemType - type of elements in the scope
  * TypeNames are specifically passed as Strings so that A Scope is easily serialised
@@ -106,24 +119,29 @@ interface Scope<ItemType> {
 
     val rootScope: Scope<ItemType>
 
+    val isEmpty: Boolean
+
     fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean
 
     /**
      * find all items in this scope with the given <name>, return list of pairs (item,its-typeName)
      */
-    fun findItemsNamed(name: String): Set<Pair<ItemType, String>>
+    fun findItemsNamed(name: String): Set<ScopedItem<ItemType>>
 
-    fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
+    /**
+     * return List<Pair<referableName, item>>
+     */
+    fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>>
 
-    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
+    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>>
 
     /**
      * find all items with the given qualified name, return list of pairs (item,its-typeName)
      * if qualifiedName contains only one name, first try to find it
      */
-    fun findQualified(qualifiedName: List<String>): Set<Pair<ItemType, String>>
+    fun findQualified(qualifiedName: List<String>): Set<ScopedItem<ItemType>>
 
-    fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
+    fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>>
 
     fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
 

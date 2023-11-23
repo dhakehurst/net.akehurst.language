@@ -28,7 +28,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.Scope
@@ -156,7 +156,7 @@ class AsmElementSimpleBuilder(
     private val _interpreter = ExpressionsInterpreterOverAsmSimple(_typeModel)
     private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? = when (this) {
         is RootExpression -> this.createReferenceLocalToScope(scope, element)
-        is Navigation -> this.createReferenceLocalToScope(scope, element)
+        is NavigationExpression -> this.createReferenceLocalToScope(scope, element)
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
@@ -169,7 +169,7 @@ class AsmElementSimpleBuilder(
         }
     }
 
-    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
+    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
         val res = _interpreter.evaluateExpression(element, this)
         return when (res) {
             is AsmNothing -> null
@@ -222,7 +222,7 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as Navigation?
+            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as NavigationExpression?
             val res = nav?.let { ExpressionsInterpreterOverAsmSimple(_typeModel).evaluateExpression(_element, it) }
             val referableName = when (res) {
                 null -> null

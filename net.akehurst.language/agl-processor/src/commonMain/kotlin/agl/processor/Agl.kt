@@ -68,7 +68,12 @@ object Agl {
         semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
         styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
         formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
-        completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+        completionProvider { p ->
+            ProcessResultDefault(
+                CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+                IssueHolder(LanguageProcessorPhase.ALL)
+            )
+        }
     }
 
     /**

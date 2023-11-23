@@ -33,19 +33,33 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
         b.rule("expression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("rootExpression"),
+            b.nonTerminal("root"),
+            b.nonTerminal("literal"),
             b.nonTerminal("navigation")
         )
-        b.rule("rootExpression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("nothing"),
-            b.nonTerminal("self")
+        b.rule("root").choiceLongestFromConcatenationItem(
+            b.nonTerminal("NOTHING"),
+            b.nonTerminal("SELF"),
+
+            )
+        b.rule("literal").choiceLongestFromConcatenationItem(
+            b.nonTerminal("BOOLEAN"),
+            b.nonTerminal("INTEGER"),
+            b.nonTerminal("REAL"),
+            b.nonTerminal("STRING"),
         )
-        b.rule("nothing").concatenation(b.terminalLiteral("\$nothing"))
-        b.rule("self").concatenation(b.terminalLiteral("\$self"))
+
         b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
+
+        b.leaf("NOTHING").concatenation(b.terminalLiteral("\$nothing"))
+        b.leaf("SELF").concatenation(b.terminalLiteral("\$self"))
         b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+        b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"));
+        b.leaf("INTEGER").concatenation(b.terminalPattern("[0-9]+"));
+        b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"));
+        b.leaf("STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"));
 
         return b.grammar.grammarRule
     }
@@ -63,17 +77,25 @@ grammar Expression {
     skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
     
     expression
-      = rootExpression
+      = root
+      | literal
       | navigation
       ;
-    rootExpression = nothing | self ;
-    nothing = '${"$"}nothing' ;
-    self = '${"$"}self' ;
+    root = NOTHING | SELF | literal ;
+    literal = BOOLEAN | INTEGER | REAL | STRING ;
+    
     navigation = [propertyReference / '.']+ ;
     propertyReference = IDENTIFIER ;
     
     qualifiedName = [IDENTIFIER / '.']+ ;
+
+    leaf NOTHING = '${"$"}nothing' ;
+    leaf SELF = '${"$"}self' ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
+    leaf BOOLEAN = "true|false" ;
+    leaf INTEGER = "[0-9]+" ;
+    leaf REAL = "[0-9]+[.][0-9]+" ;
+    leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;
 }
 """
 

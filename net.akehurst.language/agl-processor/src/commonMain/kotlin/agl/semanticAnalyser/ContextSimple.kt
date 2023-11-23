@@ -20,6 +20,7 @@ package net.akehurst.language.agl.semanticAnalyser
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.reference.Scope
+import net.akehurst.language.api.language.reference.ScopedItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class ContextSimple() : SentenceContext<AsmPath> {
@@ -28,6 +29,8 @@ class ContextSimple() : SentenceContext<AsmPath> {
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
     var rootScope = ScopeSimple<AsmPath>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+
+    val isEmpty: Boolean get() = rootScope.isEmpty
 
     fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
@@ -60,7 +63,7 @@ class ScopeSimple<ItemType>(
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
 
-    // referableName -> (item, typeName)
+    // referableName -> (typeName, item)
     private val _items: MutableMap<String, MutableMap<String, ItemType>> = mutableMapOf()
 
     override val rootScope: ScopeSimple<ItemType> by lazy {
@@ -73,11 +76,16 @@ class ScopeSimple<ItemType>(
     override val childScopes: Map<String, ScopeSimple<ItemType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
+    /**
+     * referableName -> typeName -> item
+     */
     override val items: Map<String, Map<String, ItemType>> get() = _items
 
     val path: List<String> by lazy {
         if (null == parent) emptyList() else parent.path + scopeIdentityInParent
     }
+
+    override val isEmpty: Boolean get() = items.isEmpty() && childScopes.isEmpty()
 
     override fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean =
         this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key, typeName) } ?: false
@@ -85,7 +93,7 @@ class ScopeSimple<ItemType>(
     override fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
         var child = this._childScopes[scopeIdentityInParent]
         if (null == child) {
-            child = ScopeSimple<ItemType>(this, scopeIdentityInParent, forTypeName)
+            child = ScopeSimple(this, scopeIdentityInParent, forTypeName)
             this._childScopes[scopeIdentityInParent] = child
         }
         this.rootScope.scopeMap[item] = child
@@ -111,23 +119,23 @@ class ScopeSimple<ItemType>(
         }
     }
 
-    override fun findItemsNamed(name: String): Set<Pair<ItemType, String>> =
-        this.items[name]?.map { Pair(it.value, it.key) }?.toSet() ?: emptySet()
+    override fun findItemsNamed(name: String): Set<ScopedItem<ItemType>> =
+        this.items[name]?.map { (typeName, item) -> ScopedItem(name, typeName, item) }?.toSet() ?: emptySet()
 
-    override fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean) =
-        items.values.flatMap {
-            it.filter {
-                conformsToFunc.invoke(it.key)
-            }.map { it.value }
+    override fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>> =
+        items.entries.flatMap { (referableName, map) ->
+            map.entries.filter { (typeName, _) ->
+                conformsToFunc.invoke(typeName)
+            }.map { (typeName, item) -> ScopedItem(referableName, typeName, item) }
         }
 
-    override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType> =
-        items[name]?.filter {
-            conformsToFunc.invoke(it.key)
-        }?.map { it.value } ?: emptyList()
+    override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>> =
+        items[name]?.filter { (typeName, _) ->
+            conformsToFunc.invoke(typeName)
+        }?.map { (typeName, item) -> ScopedItem(name, typeName, item) } ?: emptyList()
 
 
-    override fun findQualified(qualifiedName: List<String>): Set<Pair<ItemType, String>> = when (qualifiedName.size) {
+    override fun findQualified(qualifiedName: List<String>): Set<ScopedItem<ItemType>> = when (qualifiedName.size) {
         0 -> emptySet()
         1 -> this.findItemsNamed(qualifiedName.first())
         else -> {
@@ -136,7 +144,7 @@ class ScopeSimple<ItemType>(
         }
     }
 
-    override fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType> = when (qualifiedName.size) {
+    override fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>> = when (qualifiedName.size) {
         0 -> emptyList()
         1 -> this.findItemsNamedConformingTo(qualifiedName.first(), conformsToFunc)
         else -> {

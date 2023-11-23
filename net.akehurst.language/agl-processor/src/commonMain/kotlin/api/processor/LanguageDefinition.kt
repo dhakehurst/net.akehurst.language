@@ -18,13 +18,13 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.Namespace
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 interface GrammarRegistry {

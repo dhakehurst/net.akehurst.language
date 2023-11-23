@@ -23,7 +23,7 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
@@ -133,7 +133,7 @@ class ScopeCreator(
 
     private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue = when (this) {
         is RootExpression -> this.createReferenceLocalToScope(scope, element)
-        is Navigation -> this.createReferenceLocalToScope(scope, element)
+        is NavigationExpression -> this.createReferenceLocalToScope(scope, element)
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
@@ -141,7 +141,7 @@ class ScopeCreator(
         _interpreter.evaluateExpression(element, this)
 
 
-    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
+    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
         _interpreter.evaluateExpression(element, this)
 
 

@@ -15,18 +15,24 @@
  *
  */
 
-package net.akehurst.language.agl.completionProvider
+package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 
-import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.processor.CompletionItem
-
-class CompletionProviderSimple : CompletionProviderAbstract<Asm, ContextSimple>() {
-
-    override fun provide(nextExpected: Set<RuleItem>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
-        TODO("not implemented")
+internal class RuntimeSpine(
+    val head: GrowingNodeIndex,
+    val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
+    val expectedNextTerminals: Set<RuntimeRule>,
+    val nextChildNumber: Int
+) {
+    val elements: List<RuntimeRule> by lazy {
+        val list = mutableListOf(head.state.firstRule)
+        var next = gssSnapshot[head]
+        while (null != next && next.isNotEmpty()) {
+            val nh = next.first()
+            list.add(nh.state.firstRule)
+            next = gssSnapshot[nh]
+        }
+        list
     }
-
 }

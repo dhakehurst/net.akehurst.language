@@ -38,7 +38,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_StatechartTools_Singles {
+class test_StatechartTools_CodeCompletion {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
@@ -98,102 +98,79 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun parse_Expressions_Expression_true_OR_false_parse() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "true || false"
-        val result = processors[grammar].parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(sentence, resultStr)
+    fun expectedTerminalsAt_Transitions_TransitionSpecification_0() {
+        val grammar = "Transitions"
+        val goal = "TransitionSpecification"
+        val sentence = ""
+        val actual = processors[grammar].expectedTerminalsAt(sentence, 0, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+        }).items.map { it.text }.toSet().sorted()
+
+        val expected = setOf("<ID>", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#").sorted()
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun process_Expressions_Expression_integer() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "integer"
-        test_process_format(grammar, goal, sentence)
+    fun expectedTerminalsAt_Transitions_TransitionSpecification_after() {
+        val grammar = "Transitions"
+        val goal = "TransitionSpecification"
+        val sentence = "after "
+        val actual = processors[grammar].expectedTerminalsAt(sentence, 6, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+        }).items.map { it.text }.toSet().sorted()
+
+        val expected = setOf(
+            "!", "#", "(", ",", ".", ".@", "/", "<BinaryLiteral>", "<BoolLiteral>", "<DoubleLiteral>",
+            "<FloatLiteral>", "<HexLiteral>", "<ID>", "<IntLiteral>", "<PrefixUnaryOperator>", "<StringLiteral>", "[", "active", "null", "valueof"
+        ).sorted()
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun process_Expressions_Expressions_97() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "97"
-        test_process_format(grammar, goal, sentence)
-    }
+    fun expectedItemsAt_Transitions_TransitionSpecification_after() {
+        val grammar = "Transitions"
+        val goal = "TransitionSpecification"
+        val sentence = "after "
+        val actual = processors[grammar].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+            completionProvider {
+                context(ContextSimple())
+            }
+        }).items.map { it.text }.toSet().sorted()
 
-    @Test
-    fun process_Expressions_Expression_integer_ASS_97() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "integer = 97"
-        test_process_format(grammar, goal, sentence)
+        val expected = setOf("").sorted()
+        assertEquals(expected, actual)
     }
-
+    
     @Test
-    fun process_States_ReactionEffect_integer_ASS_97() {
-        val grammar = "States"
-        val goal = "ReactionEffect"
-        val sentence = "integer = 97"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Global_StatechartLevelDeclaration_var_MyVar_integer() {
+    fun expectedItemsAt_Global_TransitionSpecification_after() {
         val grammar = "Global"
-        val goal = "StatechartLevelDeclaration"
-        val sentence = "internal: var MyVar : integer"
-        test_process_format(grammar, goal, sentence)
-    }
+        val goal = "StatechartSpecification"
+        val sentence = """
+            internal:
+              var x:
+        """.trimIndent()
+        val actual = processors[grammar].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+            completionProvider {
+                context(ContextSimple())
+            }
+        }).items.map { it.text }.toSet().sorted()
 
-    @Test
-    fun process_Global_StatechartLevelDeclaration_var_MyVar_integer_ASS_97() {
-        val grammar = "Global"
-        val goal = "StatechartLevelDeclaration"
-        val sentence = "internal: var MyVar : integer = 97"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Expressions_Expression_a_bF() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "a.b()"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Expressions_Expression_a_bA() {
-        val grammar = "Expressions"
-        val goal = "Expression"
-        val sentence = "a.b[1]"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Transitions_ReactionTrigger_exit() {
-        val grammar = "Transitions"
-        val goal = "ReactionTrigger"
-        val sentence = "exit"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Transitions_TransitionReaction_after_10_s__raise_ABD_intEvent() {
-        val grammar = "Transitions"
-        val goal = "TransitionReaction"
-        val sentence = "after 10 s / raise ABC.intEvent"
-        test_process_format(grammar, goal, sentence)
-    }
-
-    @Test
-    fun process_Transitions_StextTrigger_else() {
-        val grammar = "Transitions"
-        val goal = "StextTrigger"
-        val sentence = "else"
-        test_process_format(grammar, goal, sentence)
+        val expected = setOf("").sorted()
+        assertEquals(expected, actual)
     }
 
 }

@@ -19,18 +19,20 @@ package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.Spine
 
 class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, ContextFromGrammarRegistry>() {
 
-    override fun provide(nextExpected: Set<RuleItem>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
         //TODO
-        return nextExpected.flatMap {
-            when (it) {
-                is Terminal -> provideForTerminal(it, context)
-                else -> emptyList()
+        return nextExpected.flatMap { sp ->
+            sp.expectedNextItems.flatMap { ri ->
+                when (ri) {
+                    is Terminal -> provideForTerminal(ri)
+                    else -> emptyList()
+                }
             }
         }
     }

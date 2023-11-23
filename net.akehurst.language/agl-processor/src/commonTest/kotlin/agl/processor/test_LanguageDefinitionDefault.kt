@@ -21,12 +21,12 @@ import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.formatter.api.AglFormatterModel
 import kotlin.test.*
 
 class test_LanguageDefinitionDefault {

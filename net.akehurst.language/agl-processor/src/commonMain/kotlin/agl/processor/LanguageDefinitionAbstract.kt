@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached

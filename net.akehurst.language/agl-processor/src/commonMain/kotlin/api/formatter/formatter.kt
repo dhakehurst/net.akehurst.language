@@ -16,6 +16,8 @@
 
 package net.akehurst.language.formatter.api
 
+import net.akehurst.language.api.language.expressions.Expression
+
 interface AglFormatterModel {
 
     val defaultWhiteSpace: String
@@ -38,14 +40,21 @@ interface FormatExpression {
 }
 
 interface FormatExpressionLiteral : FormatExpression {
-    val literalValue: String
+    val value: String
 }
 
 interface FormatExpressionTemplate : FormatExpression {
     val content: List<TemplateElement>
 }
 
-interface FormatExpressionWhen : FormatExpression {}
+interface FormatExpressionWhen : FormatExpression {
+    val options: List<WhenOption>
+}
+
+interface WhenOption {
+    val condition: Expression
+    val format: FormatExpression
+}
 
 interface TemplateElement
 
@@ -53,5 +62,10 @@ interface TemplateElementText : TemplateElement {
     val text: String
 }
 
-interface TemplateElementExpressionSimple : TemplateElement
-interface TemplateElementExpressionEmbedded : TemplateElement
+interface TemplateElementExpressionSimple : TemplateElement {
+    val identifier: String
+}
+
+interface TemplateElementExpressionEmbedded : TemplateElement {
+    val expression: FormatExpression
+}

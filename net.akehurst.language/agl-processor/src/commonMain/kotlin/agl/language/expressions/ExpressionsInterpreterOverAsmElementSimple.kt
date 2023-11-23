@@ -24,7 +24,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.PropertyDeclaration
@@ -51,7 +51,7 @@ class ExpressionsInterpreterOverAsmSimple(
 
     fun evaluateExpression(self: AsmValue, expression: Expression): AsmValue = when (expression) {
         is RootExpression -> this.evaluateRootExpression(self, expression)
-        is Navigation -> this.evaluateNavigation(self, expression)
+        is NavigationExpression -> this.evaluateNavigation(self, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
@@ -72,7 +72,7 @@ class ExpressionsInterpreterOverAsmSimple(
         }
     }
 
-    private fun evaluateNavigation(self: AsmValue, expression: Navigation): AsmValue =
+    private fun evaluateNavigation(self: AsmValue, expression: NavigationExpression): AsmValue =
         expression.value.fold(self) { acc, it ->
             val type = typeModel.typeOf(acc)
             val pd = type.declaration.findPropertyOrNull(it)

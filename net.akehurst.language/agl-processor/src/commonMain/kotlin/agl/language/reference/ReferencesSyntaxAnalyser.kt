@@ -20,7 +20,7 @@ import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.DeclarationsForNamespace
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
@@ -169,19 +169,19 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpressionDefault {
-        val navigation = children[1] as Navigation
+        val navigation = children[1] as NavigationExpression
         val typeReferences = children[3] as List<String>
-        val from = children[4] as Navigation?
+        val from = children[4] as NavigationExpression?
         return PropertyReferenceExpressionDefault(navigation, typeReferences, from)
     }
 
     // from = 'from' navigation
-    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
-        children[1] as Navigation
+    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
+        children[1] as NavigationExpression
 
     // collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
-        val navigation = children[1] as Navigation
+        val navigation = children[1] as NavigationExpression
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
         val ofType = children[2] as String?
         return CollectionReferenceExpressionDefault(navigation, ofType, referenceExpression)

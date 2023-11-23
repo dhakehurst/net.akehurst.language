@@ -26,7 +26,7 @@ import net.akehurst.language.agl.language.reference.asm.PropertyReferenceExpress
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.ReferenceExpression
 import net.akehurst.language.api.language.reference.Scope
@@ -170,7 +170,7 @@ class ReferenceResolverDefault(
                     }
 
                     else -> {
-                        val referred = targets.first() // already checked for empty and > 1, so must be only one
+                        val referred = targets.first().item // already checked for empty and > 1, so must be only one
                         when {
                             referred.isExternal -> {
                                 // cannot resolve, intentionally external, refer to null
@@ -225,7 +225,7 @@ class ReferenceResolverDefault(
                     }
 
                     else -> {
-                        val referred = targets.first() // already checked for empty and > 1, so must be only one
+                        val referred = targets.first().item // already checked for empty and > 1, so must be only one
                         when {
                             referred.isExternal -> {
                                 // cannot resolve, intentionally external, refer to null
@@ -291,7 +291,7 @@ class ReferenceResolverDefault(
         typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)
             ?: error("Type '${self.qualifiedTypeName}' not found in type model '${this.name}'")
 
-    private fun Navigation.propertyFor(root: AsmValue): AsmStructureProperty {
+    private fun NavigationExpression.propertyFor(root: AsmValue): AsmStructureProperty {
         return when {
             root is AsmNothing -> error("Cannot navigate '$this' from '$root' value")
             else -> {

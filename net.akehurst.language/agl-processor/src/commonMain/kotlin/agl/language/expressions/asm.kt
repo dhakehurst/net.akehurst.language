@@ -16,18 +16,13 @@
 
 package net.akehurst.language.agl.language.expressions
 
-import net.akehurst.language.api.language.expressions.*
+import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.expressions.LiteralExpression
+import net.akehurst.language.api.language.expressions.NavigationExpression
+import net.akehurst.language.api.language.expressions.RootExpression
 
 
 abstract class ExpressionAbstract : Expression {
-}
-
-data class NavigationDefault(
-    override val value: List<String>
-) : ExpressionAbstract(), Navigation {
-    constructor(vararg values: String) : this(values.toList())
-
-    override fun toString(): String = value.joinToString(separator = ".")
 }
 
 data class RootExpressionDefault(
@@ -40,4 +35,26 @@ data class RootExpressionDefault(
 
     override val isNothing: Boolean get() = NOTHING == this.value
     override val isSelf: Boolean get() = SELF == this.value
+}
+
+data class LiteralExpressionDefault(
+    val type: String,
+    val value: String
+) : LiteralExpression {
+
+    companion object {
+        const val BOOLEAN = "Boolean"
+        const val INTEGER = "Integer"
+        const val REAL = "Real"
+        const val STRING = "String"
+    }
+
+}
+
+data class NavigationDefault(
+    override val value: List<String>
+) : ExpressionAbstract(), NavigationExpression {
+    constructor(vararg values: String) : this(values.toList())
+
+    override fun toString(): String = value.joinToString(separator = ".")
 }

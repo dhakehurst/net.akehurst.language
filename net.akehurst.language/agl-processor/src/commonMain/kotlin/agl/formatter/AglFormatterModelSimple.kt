@@ -19,23 +19,24 @@ package net.akehurst.language.agl.formatter
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.formatter.api.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.formatter.api.*
 import net.akehurst.language.typemodel.api.TypeModel
 
 
 internal class AglFormatterModelSimple : AglFormatterModel {
     companion object {
-        private fun fromRuleItem(ruleItem: RuleItem):TemplateElement = when(ruleItem) {
+        private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
                 ruleItem.isPattern -> TODO()
                 else -> TemplateElementTextSimple(ruleItem.value)
             }
+
             is EmptyRule -> TemplateElementTextSimple("")
-            is NonTerminal -> fromRuleItem(ruleItem.referencedRule().rhs)
+            is NonTerminal -> fromRuleItem(grammar, ruleItem.referencedRule(grammar).rhs)
             is Embedded -> TODO()
             is Choice -> TODO()
             is Concatenation -> TODO()
@@ -58,9 +59,7 @@ internal class AglFormatterModelSimple : AglFormatterModel {
                                 for ((rn, ty) in ns.allRuleNameToType) {
                                     val grule = grammar.findOwnedGrammarRuleOrNull(rn)
                                     when {
-                                        null!=grule -> {
-                                            grule.rhs
-                                        }
+                                        null != grule -> fromRuleItem(grammar, grule.rhs)
                                         else -> TODO()
                                     }
 
@@ -83,7 +82,7 @@ internal class AglFormatterModelSimple : AglFormatterModel {
 
     override val rules = mutableMapOf<String, AglFormatterRule>()
 
-    fun addRule(typeName:String) {
+    fun addRule(typeName: String) {
 
     }
 }
@@ -102,5 +101,5 @@ class AglFormatExpressionSimple() : FormatExpression {
 }
 
 class TemplateElementTextSimple(
-    override val text:String
+    override val text: String
 ) : TemplateElementText

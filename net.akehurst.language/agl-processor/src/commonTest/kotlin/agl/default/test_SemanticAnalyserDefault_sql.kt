@@ -344,7 +344,6 @@ grammar SQL {
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
 
-
     @Test
     fun select_with_multiple_column_refs() {
         val sentence = """

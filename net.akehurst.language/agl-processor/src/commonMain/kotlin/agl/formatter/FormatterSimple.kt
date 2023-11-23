@@ -20,10 +20,10 @@ import net.akehurst.language.agl.language.format.AglFormatExpressionFromAsm
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.formatter.api.*
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.formatter.api.*
 
 class FormatterSimple<AsmType>(
     val model: AglFormatterModel?
@@ -77,7 +77,7 @@ class FormatterSimple<AsmType>(
     }
 
     private fun formatFromLiteral(formatExpr: FormatExpressionLiteral): String {
-        return formatExpr.literalValue
+        return formatExpr.value
     }
 
     private fun formatFromTemplate(formatExpr: FormatExpressionTemplate, asm: AsmStructure): String {

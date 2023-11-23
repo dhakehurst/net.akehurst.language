@@ -1187,10 +1187,10 @@ internal class RuntimeParser(
         if (parseArgs.reportErrors) {
             val position = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonWidthTo(position, transition, gssSnapshot))
+            failedReasonsAdd(FailedParseReasonWidthTo(head, transition, gssSnapshot))
         }
     }
 
@@ -1204,10 +1204,10 @@ internal class RuntimeParser(
     ) {
         if (parseArgs.reportErrors) {
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
@@ -1215,10 +1215,10 @@ internal class RuntimeParser(
         if (parseArgs.reportErrors) {
             val position = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonEmbedded(position, transition, gssSnapshot, failedEmbeddedReasons))
+            failedReasonsAdd(FailedParseReasonEmbedded(head, transition, gssSnapshot, failedEmbeddedReasons))
         }
     }
 
@@ -1226,10 +1226,10 @@ internal class RuntimeParser(
         if (parseArgs.reportErrors) {
             val position = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
@@ -1237,10 +1237,10 @@ internal class RuntimeParser(
         if (parseArgs.reportErrors) {
             val position = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonGraftRTG(position, transition, gssSnapshot, prevNumNonSkipChildren))
+            failedReasonsAdd(FailedParseReasonGraftRTG(head, transition, gssSnapshot, prevNumNonSkipChildren))
         }
     }
 
@@ -1248,10 +1248,10 @@ internal class RuntimeParser(
         if (parseArgs.reportErrors) {
             val position = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
-                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
-                else -> null
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
+                else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 }

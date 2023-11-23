@@ -21,14 +21,13 @@ import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ParseResultDefault
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.scanner.InputFromString
 import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.scanner.Scanner
@@ -106,7 +105,7 @@ internal class ScanOnDemandParser(
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
-            addParseIssue(scanner.sentence, rp, nextExpected, seasons, maxNumHeads)
+            addParseIssue(scanner.sentence, rp, nextExpected.first, nextExpected.second.flatMap { it.expectedNextTerminals }.toSet(), seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, this._issues)
         }
@@ -122,13 +121,12 @@ internal class ScanOnDemandParser(
     private fun addParseIssue(
         sentence: Sentence,
         rp: RuntimeParser,
-        nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
+        lastLocation: InputLocation,
+        expectedTerminals: Set<RuntimeRule>,
         seasons: Int,
         maxNumHeads: Int
     ) {
-        val lastLocation = nextExpected.first
-        val exp = nextExpected.second
-        val expected = exp.map { it.tag }.toSet()
+        val expected = expectedTerminals.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
         val errorLength = 1 //TODO: determine a better length
         val location = sentence.locationFor(errorPos, errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
@@ -455,15 +453,38 @@ internal class ScanOnDemandParser(
         failedParseReasons: Map<Int, MutableList<FailedParseReason>>,
         automatonKind: AutomatonKind,
         stateSet: ParserStateSet
-    ): Pair<InputLocation, Set<RuntimeRule>> {
+    ): Pair<InputLocation, Set<RuntimeSpine>> {
         val max = failedParseReasons.keys.max() //Of { it.position }
-        val maxReasons = failedParseReasons[max]!!
-        val x = maxReasons.map { fr ->
+        val maxReasons = failedParseReasons[max]!!.filter { fr ->
             when (fr) {
-                is FailedParseReasonWidthTo -> Pair(sentence.locationFor(fr.position, 0), setOf(fr.transition.to.firstRule))
+                is FailedParseReasonLookahead -> {
+                    when (fr.attemptedAction) {
+                        // don't use this unless the transition.to matches text at current position
+                        ParseAction.WIDTH -> {
+                            val rhs = fr.transition.to.firstRule.rhs
+                            when {
+                                rhs.rule.isEmptyTerminal -> true
+                                else -> (rhs as RuntimeRuleRhsTerminal).matchable!!.isLookingAt(sentence.text, fr.position)
+                            }
+                        }
+
+                        else -> true
+                    }
+                }
+
+                else -> true
+            }
+        }
+        val x: List<Pair<InputLocation, RuntimeSpine>> = maxReasons.map { fr ->
+            when (fr) {
+                is FailedParseReasonWidthTo -> Pair(
+                    sentence.locationFor(fr.position, 0),
+                    RuntimeSpine(fr.head, fr.gssSnapshot, setOf(fr.transition.to.firstRule), fr.head.numNonSkipChildren)
+                )
+
                 is FailedParseReasonGraftRTG -> {
                     val exp = fr.transition.runtimeGuard.expectedWhenFailed(fr.prevNumNonSkipChildren)
-                    Pair(sentence.locationFor(fr.position, 0), exp)
+                    Pair(sentence.locationFor(fr.position, 0), RuntimeSpine(fr.head, fr.gssSnapshot, exp, fr.head.numNonSkipChildren))
                 }
 
                 is FailedParseReasonLookahead -> {
@@ -477,7 +498,7 @@ internal class ScanOnDemandParser(
                     val terms = stateSet.usedTerminalRules
                     val embeddedSkipTerms = stateSet.embeddedRuntimeRuleSet.flatMap { it.skipTerminals }.toSet()
                     val exp = expected.minus(embeddedSkipTerms.minus(terms))
-                    Pair(sentence.locationFor(fr.position, 0), exp)
+                    Pair(sentence.locationFor(fr.position, 0), RuntimeSpine(fr.head, fr.gssSnapshot, exp, fr.head.numNonSkipChildren + 1))
                 }
 
                 is FailedParseReasonEmbedded -> {
@@ -489,14 +510,14 @@ internal class ScanOnDemandParser(
                     val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
                     val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind).usedTerminalRules
                     val skipTerms = runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
-                    val exp = x.second.minus(skipTerms.minus(embeddedTerms))
-                    Pair(x.first, exp)
+                    val exp = x.second.flatMap { it.expectedNextTerminals }.minus(skipTerms.minus(embeddedTerms)).toSet()
+                    Pair(x.first, RuntimeSpine(fr.head, fr.gssSnapshot, exp, fr.head.numNonSkipChildren))
                 }
             }
         }
         val y = x.groupBy { it.first.position }
         val m = y.map {
-            val m = it.value.flatMap { it.second }.toSet()
+            val m = it.value.map { it.second }.toSet()
             Pair(sentence.locationFor(it.key, 0), m)
         }
         return m.first()
@@ -572,7 +593,7 @@ internal class ScanOnDemandParser(
     }
 */
 
-    override fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule> {
+    override fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeSpine> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val automatonKind = options.automatonKind
         val cacheSkip = options.cacheSkip
@@ -615,14 +636,13 @@ internal class ScanOnDemandParser(
     }
 
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule> {
-        return this.expectedAt(sentence, position, options)
-            .flatMap {
-                when {
-                    it.isTerminal -> listOf(it)
-                    //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
-                    else -> emptyList() // TODO()
-                }
+        val expectedSpines = this.expectedAt(sentence, position, options)
+        return expectedSpines.flatMap { it.expectedNextTerminals }.flatMap {
+            when {
+                it.isTerminal -> listOf(it)
+                //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
+                else -> emptyList() // TODO()
             }
-            .toSet()
+        }.toSet()
     }
 }

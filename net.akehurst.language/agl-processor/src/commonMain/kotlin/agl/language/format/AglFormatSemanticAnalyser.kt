@@ -19,13 +19,13 @@ package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.formatter.api.AglFormatterModel
 
 class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<String>> {
     override fun clear() {

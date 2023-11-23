@@ -22,7 +22,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -44,7 +44,7 @@ fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance {
 
 fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when (this) {
     is RootExpression -> this.typeOfExpressionFor(self)
-    is Navigation -> this.typeOfExpressionFor(self)
+    is NavigationExpression -> this.typeOfExpressionFor(self)
     else -> error("Subtype of Expression not handled in 'typeOfExpressionFor'")
 }
 
@@ -54,10 +54,10 @@ fun RootExpression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when 
     else -> error("type of RootExpression not handled")
 }
 
-fun Navigation.typeOfExpressionFor(self: TypeInstance): TypeInstance =
+fun NavigationExpression.typeOfExpressionFor(self: TypeInstance): TypeInstance =
     this.propertyDeclarationFor(self)?.typeInstance ?: SimpleTypeModelStdLib.NothingType
 
-fun Navigation.propertyDeclarationFor(self: TypeInstance?): PropertyDeclaration? {
+fun NavigationExpression.propertyDeclarationFor(self: TypeInstance?): PropertyDeclaration? {
     var typeInstance = self
     var pd: PropertyDeclaration? = null
 

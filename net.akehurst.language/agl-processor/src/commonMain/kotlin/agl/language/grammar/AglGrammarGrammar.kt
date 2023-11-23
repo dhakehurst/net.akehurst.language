@@ -148,6 +148,51 @@ SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
   foreground: LightSlateGrey;
 }"""
 
+    val formatStr = """
+namespace net.akehurst.language.agl.AglGrammar {
+    Namespace -> 'namespace §qualifiedName'
+    Grammar -> 'grammar §name §{extendsOpt()}{
+                 §{options.join(§eol)}
+                 §{rules.join(§eol)}
+               }'
+    fun Grammar.extendsOpt() = when {
+      extends.isEmpty -> ''
+      else -> ': §{extends.join(',')} '
+    }
+    GrammarReference -> nameOrQName
+    GrammarOption -> '@§name §value'
+    GrammarRule -> '§{isOverride?'override ':''}§{isSkip?'skip ':''}§{isLeaf?'leaf ':''}§name = §rhs ;'
+    PreferenceRule -> ''
+    ChoiceLongest -> when {
+         2 >= alternative.size -> alternative.join(' | ')
+         else -> alternative.join('§eol§indent| ')
+    }
+    ChoiceAmbiguous -> when {
+         2 >= alternative.size -> alternative.join(' || ')
+         else -> alternative.join('§eol§indent| ')
+    }
+    Concatenation -> items.join(' ')
+    OptionalItem -> '§{item}?'
+    SimpleList -> '§item§{multiplicity()}'
+    SeparatedList -> '[ §item / §separator ]§{multiplicity()}'
+    fun ListOfItems.multiplicity() = when {
+        0==min && 1==max -> '?'
+        1==min && -1==max -> '+'
+        0==min && -1==max -> '*'
+        -1==max -> '§min+'
+        else -> '{§min..§max}'
+    }
+    Group -> '(§groupedContent)'
+    EmptyRule -> ''
+    Terminal -> when {
+        isPattern -> '"value"'
+        else '\'§value\''
+    }
+    NonTerminal -> name
+    Embedded -> '§{embeddedGrammarReference}::§{embeddedGoalName}'
+}
+""".trimIndent().replace("§", "\$")
+
     init {
         super.grammarRule.addAll(createRules())
     }

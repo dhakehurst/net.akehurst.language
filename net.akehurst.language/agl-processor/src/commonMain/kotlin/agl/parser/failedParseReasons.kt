@@ -21,35 +21,38 @@ import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 
 internal sealed class FailedParseReason(
-    val position: Int,
+    val head: GrowingNodeIndex,
     val transition: Transition,
-    val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?
-)
+    val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
+) {
+    val position get() = head.nextInputPositionAfterSkip
+    val attemptedAction get() = transition.action
+}
 
 internal class FailedParseReasonLookahead(
-    position: Int,
+    head: GrowingNodeIndex,
     transition: Transition,
-    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val runtimeLhs: Set<LookaheadSet>,
     val possibleEndOfText: Set<LookaheadSet>
-) : FailedParseReason(position, transition, gssSnapshot)
+) : FailedParseReason(head, transition, gssSnapshot)
 
 internal class FailedParseReasonWidthTo(
-    position: Int,
+    head: GrowingNodeIndex,
     transition: Transition,
-    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?
-) : FailedParseReason(position, transition, gssSnapshot)
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
+) : FailedParseReason(head, transition, gssSnapshot)
 
 internal class FailedParseReasonGraftRTG(
-    position: Int,
+    head: GrowingNodeIndex,
     transition: Transition,
-    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val prevNumNonSkipChildren: Int
-) : FailedParseReason(position, transition, gssSnapshot)
+) : FailedParseReason(head, transition, gssSnapshot)
 
 internal class FailedParseReasonEmbedded(
-    position: Int,
+    head: GrowingNodeIndex,
     transition: Transition,
-    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val embededFailedParseReasons: Map<Int, MutableList<FailedParseReason>>
-) : FailedParseReason(position, transition, gssSnapshot)
+) : FailedParseReason(head, transition, gssSnapshot)

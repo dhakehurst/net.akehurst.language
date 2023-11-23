@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.automaton.ParserStateSet
+import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
@@ -28,7 +29,6 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.scanner.AglScanner
 import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -38,6 +38,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
@@ -250,11 +251,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return when {
             null != completionProvider -> {
                 val opts = defaultOptions(options)
-                val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(sentence, position, opts.parse)
-                val grammarItems = parserExpected.mapNotNull {
-                    mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
-                }.toSet()
-                val items = completionProvider!!.provide(grammarItems, opts.completionProvider.context, opts.completionProvider.options)
+                val parserExpected: Set<RuntimeSpine> = this.parser.expectedAt(sentence, position, opts.parse)
+                val spines = parserExpected.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                val items = completionProvider!!.provide(spines, opts.completionProvider.context, opts.completionProvider.options)
                 ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
             }
 

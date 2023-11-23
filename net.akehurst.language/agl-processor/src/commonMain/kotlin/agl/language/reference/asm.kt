@@ -19,7 +19,7 @@ package net.akehurst.language.agl.language.reference.asm
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.*
 import net.akehurst.language.api.processor.ProcessResult
 
@@ -41,6 +41,8 @@ class CrossReferenceModelDefault
     }
 
     override val declarationsForNamespace = mutableMapOf<String, DeclarationsForNamespace>()
+
+    override val isEmpty: Boolean get() = declarationsForNamespace.isEmpty() || declarationsForNamespace.values.all { it.isEmpty }
 
     override fun isScopeDefinedFor(possiblyQualifiedTypeName: String): Boolean {
         return when {
@@ -92,6 +94,15 @@ class CrossReferenceModelDefault
             }
         }
     }
+
+    override fun referenceForProperty(typeQualifiedName: String, propertyName: String): List<String> =
+        _referenceForProperty[Pair(typeQualifiedName, propertyName)] ?: emptyList()
+
+    fun addRecordReferenceForProperty(typeQualifiedName: String, propertyName: String, refersToQualifiedTypeNames: List<String>) {
+        _referenceForProperty[Pair(typeQualifiedName, propertyName)] = refersToQualifiedTypeNames
+    }
+
+    private val _referenceForProperty = mutableMapOf<Pair<String, String>, List<String>>()
 }
 
 data class DeclarationsForNamespaceDefault(
@@ -105,6 +116,8 @@ data class DeclarationsForNamespaceDefault(
         scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     }
 
+    override val isEmpty: Boolean get() = scopeDefinition.isEmpty() && references.isEmpty()
+
     override fun isScopeDefinedFor(typeName: String): Boolean {
         return scopeDefinition.containsKey(typeName)
     }
@@ -115,6 +128,11 @@ data class DeclarationsForNamespaceDefault(
         }.flatMap {
             it.referenceExpressionList
         }
+    }
+
+    override fun referenceForPropertyOrNull(typeName: String, propertyName: String): ReferenceExpression? {
+        val refs = referencesFor(typeName)
+        return refs.firstOrNull { it is PropertyReferenceExpressionDefault }
     }
 
     override fun identifyingExpressionFor(scopeForTypeName: String, typeName: String): Expression? {
@@ -151,14 +169,14 @@ data class PropertyReferenceExpressionDefault(
     /**
      * navigation to the property that is a reference
      */
-    val referringPropertyNavigation: Navigation,
+    val referringPropertyNavigation: NavigationExpression,
 
     /**
      * type of the asm element referred to
      */
     val refersToTypeName: List<String>,
 
-    val fromNavigation: Navigation?
+    val fromNavigation: NavigationExpression?
 ) : ReferenceExpressionAbstract() {
 
     /*    override fun isReference(propertyName: String): Boolean {
@@ -172,7 +190,7 @@ data class PropertyReferenceExpressionDefault(
 }
 
 data class CollectionReferenceExpressionDefault(
-    val navigation: Navigation,
+    val navigation: NavigationExpression,
     val ofType: String?,
     val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract() {
