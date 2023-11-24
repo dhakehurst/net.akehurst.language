@@ -29,6 +29,7 @@ internal sealed class FailedParseReason(
     val attemptedAction get() = transition.action
 }
 
+// Lookahead failure, i.e. lookahead tokens not matched
 internal class FailedParseReasonLookahead(
     head: GrowingNodeIndex,
     transition: Transition,
@@ -37,12 +38,14 @@ internal class FailedParseReasonLookahead(
     val possibleEndOfText: Set<LookaheadSet>
 ) : FailedParseReason(head, transition, gssSnapshot)
 
+// transition.to token not found
 internal class FailedParseReasonWidthTo(
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
 ) : FailedParseReason(head, transition, gssSnapshot)
 
+// transition.runtimeGuard fails
 internal class FailedParseReasonGraftRTG(
     head: GrowingNodeIndex,
     transition: Transition,
@@ -50,6 +53,7 @@ internal class FailedParseReasonGraftRTG(
     val prevNumNonSkipChildren: Int
 ) : FailedParseReason(head, transition, gssSnapshot)
 
+// embedded grammar failure
 internal class FailedParseReasonEmbedded(
     head: GrowingNodeIndex,
     transition: Transition,

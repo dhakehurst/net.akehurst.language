@@ -19,13 +19,11 @@ package test;
 
 import kotlin.Unit;
 import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.api.asm.AsmSimple;
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple;
+import net.akehurst.language.api.asm.Asm;
 import net.akehurst.language.api.processor.*;
-import net.akehurst.language.api.sppt.LeafData;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 public class test_LanguageProcessor {
 
@@ -39,7 +37,7 @@ public class test_LanguageProcessor {
             + "  W = 'world' '!' ;" + EOL
             + "}";
 
-    private static final LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(
+    private static final LanguageProcessor<Asm, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(
             grammarStr,
             null,
             null,
@@ -50,11 +48,11 @@ public class test_LanguageProcessor {
     @Test
     public void scan() {
 
-        List<LeafData> result = proc.scan("hello world !");
+        ScanResult result = proc.scan("hello world !");
 
         Assert.assertNotNull(result);
-        Assert.assertEquals(5, result.size());
-        Assert.assertEquals("hello", result.get(0).getMatchedText());
+        Assert.assertEquals(5, result.getTokens().size());
+        Assert.assertEquals("hello", result.getTokens().get(0).getMatchedText());
     }
 
     @Test
@@ -91,7 +89,7 @@ public class test_LanguageProcessor {
     public void syntaxAnalysis() {
         ParseResult parse = proc.parse("hello world !", null);
         Assert.assertNotNull(parse.getSppt());
-        SyntaxAnalysisResult<AsmSimple> result = proc.syntaxAnalysis(parse.getSppt(), null);
+        SyntaxAnalysisResult<Asm> result = proc.syntaxAnalysis(parse.getSppt(), null);
 
         Assert.assertNotNull(result.getAsm());
         System.out.println(result.getAsm());
@@ -101,7 +99,7 @@ public class test_LanguageProcessor {
     public void semanticAnalysis() {
         ParseResult parse = proc.parse("hello world !", null);
         Assert.assertNotNull(parse.getSppt());
-        SyntaxAnalysisResult<AsmSimple> synt = proc.syntaxAnalysis(parse.getSppt(), null);
+        SyntaxAnalysisResult<Asm> synt = proc.syntaxAnalysis(parse.getSppt(), null);
         Assert.assertNotNull(synt.getAsm());
         SemanticAnalysisResult result = proc.semanticAnalysis(synt.getAsm(), null);
 
@@ -110,16 +108,16 @@ public class test_LanguageProcessor {
 
     @Test
     public void process_noOptions() {
-        ProcessResult<AsmSimple> result = proc.process("hello world !", null);
+        ProcessResult<Asm> result = proc.process("hello world !", null);
         Assert.assertNotNull(result.getAsm());
         Assert.assertNotNull(result.getIssues());
     }
 
     @Test
     public void process_defaultOptions() {
-        ProcessOptions<AsmSimple, ContextSimple> options = proc.optionsDefault();
+        ProcessOptions<Asm, ContextSimple> options = proc.optionsDefault();
         options.getParse().setGoalRuleName("W");
-        ProcessResult<AsmSimple> result = proc.process("world !", options);
+        ProcessResult<Asm> result = proc.process("world !", options);
         Assert.assertNotNull(result.getAsm());
         Assert.assertNotNull(result.getIssues());
     }
