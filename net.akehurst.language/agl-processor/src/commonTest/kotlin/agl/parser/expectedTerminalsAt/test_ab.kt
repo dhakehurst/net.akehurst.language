@@ -16,16 +16,11 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_ab {
-
-    private data class Data(val sentence: String, val position: Int, val expected: List<String>)
+internal class test_ab : test_ExpectedTerminasAtAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a' ;
@@ -35,43 +30,44 @@ class test_ab {
             concatenation("S") { literal("a"); literal("b") }
         }
         val goal = "S"
-        val parser = ScanOnDemandParser(rrs)
 
         val testData = listOf(
-            Data("", 0, listOf("'a'")),
-            Data(" ", 0, listOf("'a'")),
-            Data(" ", 1, listOf("'a'")),
-            Data("a", 0, listOf("'a'")),
-            Data("a", 1, listOf()),
-            Data(" a", 0, listOf("'a'")),
-            Data(" a", 1, listOf("'a'")),
-            Data(" a", 2, listOf()),
-            Data("a ", 0, listOf("'a'")),
-            Data("a ", 1, listOf()),
-            Data("a ", 2, listOf()),
-            Data(" a ", 0, listOf("'a'")),
-            Data(" a ", 1, listOf("'a'")),
-            Data(" a ", 2, listOf()),
-            Data(" a ", 3, listOf()),
-            Data("ab", 0, listOf("'a'")),
-            Data("ab", 1, listOf()),
-            Data("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
+            TestData("", 0, listOf("'a'")),
+            TestData(" ", 0, listOf("'a'")),
+            TestData(" ", 1, listOf("'a'")),
+            TestData("a", 0, listOf("'a'")),
+            TestData("a", 1, listOf()),
+            TestData(" a", 0, listOf("'a'")),
+            TestData(" a", 1, listOf("'a'")),
+            TestData(" a", 2, listOf()),
+            TestData("a ", 0, listOf("'a'")),
+            TestData("a ", 1, listOf()),
+            TestData("a ", 2, listOf()),
+            TestData(" a ", 0, listOf("'a'")),
+            TestData(" a ", 1, listOf("'a'")),
+            TestData(" a ", 2, listOf()),
+            TestData(" a ", 3, listOf()),
+            TestData("ab", 0, listOf("'a'")),
+            TestData("ab", 1, listOf()),
+            TestData("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
     }
 
     @Test
-    fun test() {
-        for (data in testData) {
-            val sentence = data.sentence
-            val position = data.position
-
-            val result = parser.expectedTerminalsAt(sentence, position, Agl.parseOptions {
-                goalRuleName(goal)
-            })
-            val actual = result.filter { it.isEmptyTerminal.not() }.map { it.rhs.toString() }
-            val expected = data.expected
-            assertEquals(expected, actual, data.toString())
+    fun all() {
+        for (i in testData.indices) {
+            val td = testData[i]
+            println("Test[$i]: At ${td.position} in '${td.sentence}'")
+            test(rrs, goal, td)
         }
+    }
+
+    @Test
+    fun one() {
+        val i = 2
+        val td = testData[i]
+        println("Test[$i]: At ${td.position} in '${td.sentence}'")
+        test(rrs, goal, td)
     }
 
 }

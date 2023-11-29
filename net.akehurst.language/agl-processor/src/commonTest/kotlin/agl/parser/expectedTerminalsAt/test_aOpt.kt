@@ -16,62 +16,56 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_aOpt {
-
-    private data class Data(val sentence: String, val position: Int, val expected: Set<RuntimeRule>)
+internal class test_aOpt : test_ExpectedTerminasAtAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a'? ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("WS", true) { pattern("\\s+") }
+            pattern("WS", "\\s+", true)
             concatenation("S") { ref("aOpt") }
             multi("aOpt", 0, 1, "'a'")
             literal("'a'", "a")
         }
         val goal = "S"
-        val parser = ScanOnDemandParser(rrs)
-        val a = rrs.findTerminalRule("'a'")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
 
         val testData = listOf(
-            Data("", 0, setOf(a)),
-            Data(" ", 0, setOf(a)),
-            Data(" ", 1, setOf(a)),
-            Data("a", 0, setOf(a)),
-            Data("a", 1, setOf()),
-            Data(" a", 0, setOf(a)),
-            Data(" a", 1, setOf(a)),
-            Data(" a", 2, setOf()),
-            Data("a ", 0, setOf(a)),
-            Data("a ", 1, setOf()),
-            Data("a ", 2, setOf()),
-            Data(" a ", 0, setOf(a)),
-            Data(" a ", 1, setOf(a)),
-            Data(" a ", 2, setOf()),
-            Data(" a ", 3, setOf()),
+            TestData("", 0, listOf("'a'")),
+            TestData(" ", 0, listOf("'a'")),
+            TestData(" ", 1, listOf("'a'")),
+            TestData("a", 0, listOf("'a'")),
+            TestData("a", 1, listOf("<EOT>")),
+            TestData(" a", 0, listOf("'a'")),
+            TestData(" a", 1, listOf("'a'")),
+            TestData(" a", 2, listOf()),
+            TestData("a ", 0, listOf("'a'")),
+            TestData("a ", 1, listOf()),
+            TestData("a ", 2, listOf()),
+            TestData(" a ", 0, listOf("'a'")),
+            TestData(" a ", 1, listOf("'a'")),
+            TestData(" a ", 2, listOf()),
+            TestData(" a ", 3, listOf()),
         )
     }
 
     @Test
-    fun test() {
-        for (data in testData) {
-            val sentence = data.sentence
-            val position = data.position
-
-            val result = parser.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
-            val actual = result.filter { it.isEmptyTerminal.not() }.toSet()
-            val expected = data.expected
-            assertEquals(expected, actual, "${data}")
+    fun all() {
+        for (i in testData.indices) {
+            val td = testData[i]
+            println("Test[$i]: At ${td.position} in '${td.sentence}'")
+            test(rrs, goal, td)
         }
+    }
+
+    @Test
+    fun one() {
+        val i = 2
+        val td = testData[i]
+        println("Test[$i]: At ${td.position} in '${td.sentence}'")
+        test(rrs, goal, td)
     }
 
 }

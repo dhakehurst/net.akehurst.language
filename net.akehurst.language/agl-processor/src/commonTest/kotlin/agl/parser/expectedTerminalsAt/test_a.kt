@@ -16,16 +16,11 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_a {
-
-    private data class TestData(val sentence: String, val position: Int, val expected: List<String>)
+internal class test_a : test_ExpectedTerminasAtAbstract() {
 
     // skip leaf WS = "\s+" ;
     // S = 'a' ;
@@ -35,7 +30,6 @@ class test_a {
             concatenation("S") { literal("a") }
         }
         val goal = "S"
-        val parser = ScanOnDemandParser(rrs)
 
         val testData = listOf(
             TestData("", 0, listOf("'a'")),
@@ -58,14 +52,6 @@ class test_a {
             TestData("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
 
-        fun test(data: TestData) {
-            val result = parser.expectedTerminalsAt(data.sentence, data.position, Agl.parseOptions {
-                goalRuleName(goal)
-            })
-            val actual = result.filter { it.isEmptyTerminal.not() }.map { it.rhs.toString() }
-            val expected = data.expected
-            assertEquals(expected, actual, data.toString())
-        }
     }
 
     @Test
@@ -73,7 +59,7 @@ class test_a {
         for (i in testData.indices) {
             val td = testData[i]
             println("Test[$i]: At ${td.position} in '${td.sentence}'")
-            test(td)
+            test(rrs, goal, td)
         }
     }
 
@@ -82,7 +68,7 @@ class test_a {
         val i = 2
         val td = testData[i]
         println("Test[$i]: At ${td.position} in '${td.sentence}'")
-        test(td)
+        test(rrs, goal, td)
     }
 
 }
