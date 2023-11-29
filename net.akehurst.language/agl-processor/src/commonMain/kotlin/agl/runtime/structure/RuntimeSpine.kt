@@ -35,4 +35,6 @@ internal class RuntimeSpine(
         }
         list
     }
+
+    override fun toString(): String = "RTSpine ${head.state.firstRule.tag}[${head.numNonSkipChildren}]->${elements.joinToString(separator = "->") { it.tag }}"
 }

@@ -38,6 +38,7 @@ import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.scanner.Scanner
+import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
@@ -99,7 +100,7 @@ internal class RuntimeParser(
         skipParser?.stateSet?.build()
     }
 
-    fun start(startPosition: Int, possibleEndOfText: Set<LookaheadSet>, parseArgs: GrowArgs) {
+    fun start(startPosition: Int, possibleEndOfText: Set<LookaheadSet>, parseArgs: GrowArgs): Map<Int, List<FailedParseReason>> {
         val gState = stateSet.startState
         val initialSkipData = if (this.stateSet.isSkip) {
             null
@@ -114,8 +115,8 @@ internal class RuntimeParser(
             this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, parseArgs) //TODO: think this might allow some wrong things, might be a better way
         }
         val runtimeLookahead = possibleEndOfText//setOf(LookaheadSet.EOT)
-        val gn = this.graph.start(gState, startPosition, runtimeLookahead, initialSkipData) //TODO: remove LH
-//        this.addToLastGrown(gn)
+        this.graph.start(gState, startPosition, runtimeLookahead, initialSkipData) //TODO: remove LH
+        return skipParser?.failedReasons?.clone() ?: emptyMap()
     }
 
     fun interrupt(message: String) {
@@ -1175,9 +1176,9 @@ internal class RuntimeParser(
     }
 
     private fun failedReasonsAdd(fr: FailedParseReason) {
-        val l = failedReasons[fr.position]
+        val l = failedReasons[fr.failedAtPosition]
         if (null == l) {
-            failedReasons[fr.position] = mutableListOf(fr)
+            failedReasons[fr.failedAtPosition] = mutableListOf(fr)
         } else {
             l.add(fr)
         }
@@ -1185,19 +1186,19 @@ internal class RuntimeParser(
 
     private fun recordFailedWidthTo(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition) {
         if (parseArgs.reportErrors) {
-            val position = head.nextInputPositionAfterSkip
+            val failedAtPosition = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonWidthTo(head, transition, gssSnapshot))
+            failedReasonsAdd(FailedParseReasonWidthTo(failedAtPosition, head, transition, gssSnapshot))
         }
     }
 
     private fun recordFailedWidthLH(
         parseArgs: GrowArgs,
         head: GrowingNodeIndex,
-        position: Int,
+        failedAtPosition: Int,
         transition: Transition,
         runtimeLhs: Set<LookaheadSet>,
         possibleEndOfText: Set<LookaheadSet>
@@ -1207,51 +1208,51 @@ internal class RuntimeParser(
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(failedAtPosition, head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
     private fun recordFailedEmbedded(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, failedEmbeddedReasons: Map<Int, MutableList<FailedParseReason>>) {
         if (parseArgs.reportErrors) {
-            val position = head.nextInputPositionAfterSkip
+            val failedAtPosition = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonEmbedded(head, transition, gssSnapshot, failedEmbeddedReasons))
+            failedReasonsAdd(FailedParseReasonEmbedded(failedAtPosition, head, transition, gssSnapshot, failedEmbeddedReasons))
         }
     }
 
     private fun recordFailedHeightLh(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            val position = head.nextInputPositionAfterSkip
+            val failedAtPosition = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(failedAtPosition, head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
     private fun recordFailedGraftRTG(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, prevNumNonSkipChildren: Int) {
         if (parseArgs.reportErrors) {
-            val position = head.nextInputPositionAfterSkip
+            val failedAtPosition = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonGraftRTG(head, transition, gssSnapshot, prevNumNonSkipChildren))
+            failedReasonsAdd(FailedParseReasonGraftRTG(failedAtPosition, head, transition, gssSnapshot, prevNumNonSkipChildren))
         }
     }
 
     private fun recordFailedGraftLH(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            val position = head.nextInputPositionAfterSkip
+            val failedAtPosition = head.nextInputPositionAfterSkip
             val gssSnapshot = when {
                 parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head) ?: emptyMap()
                 else -> emptyMap()
             }
-            failedReasonsAdd(FailedParseReasonLookahead(head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(failedAtPosition, head, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 }

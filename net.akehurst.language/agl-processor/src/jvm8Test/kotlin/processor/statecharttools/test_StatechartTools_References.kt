@@ -506,7 +506,7 @@ StatechartSpecification {
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed("BuiltInType")
 
         val expectedContext = contextSimple {
-            item("integer", "external.BuiltInType", "§external")
+            item("integer", "external.BuiltInType", AsmPathSimple.EXTERNAL.value)
         }
 
         val expectedAsm = asmSimple(
@@ -540,8 +540,9 @@ StatechartSpecification {
             }
         }
 
-        val context = ContextSimple()
-        context.rootScope.addToScope("integer", bit.qualifiedName, AsmPathSimple.EXTERNAL)
+        val context = contextSimple {
+            item("integer", bit.qualifiedName, AsmPathSimple.EXTERNAL.value)
+        }
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }
 

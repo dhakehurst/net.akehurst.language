@@ -18,8 +18,7 @@
 package net.akehurst.language.agl.completionProvider
 
 import net.akehurst.language.agl.runtime.structure.RuntimeSpine
-import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.language.grammar.Terminal
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
@@ -43,6 +42,8 @@ internal class SpineDefault(
     }
 
     override val nextChildNumber get() = runtimeSpine.nextChildNumber
+
+    override fun toString(): String = "Spine [$nextChildNumber]->${elements.joinToString(separator = "->") { it.toString() }}"
 }
 
 abstract class CompletionProviderAbstract<in AsmType, in ContextType> : CompletionProvider<AsmType, ContextType> {
@@ -51,7 +52,7 @@ abstract class CompletionProviderAbstract<in AsmType, in ContextType> : Completi
         return spine.expectedNextItems.flatMap { ri ->
             when (ri) {
                 is Terminal -> provideForTerminal(ri)
-                else -> emptyList()
+                else -> provideForRuleItem(ri, 2)
             }
         }
     }
@@ -66,6 +67,73 @@ abstract class CompletionProviderAbstract<in AsmType, in ContextType> : Completi
             else -> CompletionItem(CompletionItemKind.LITERAL, terminalItem.value, name)
         }
         return listOf(ci)
+    }
+
+    private fun provideForRuleItem(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
+        val rule = item.owningRule
+        return when {
+            rule.isLeaf -> listOf(
+                CompletionItem(CompletionItemKind.PATTERN, "<${rule.name}>", rule.compressedLeaf.value)
+            )
+
+            else -> {
+                val cis = getItems(item, desiredDepth, emptySet())
+                cis.mapNotNull { it }.toSet().toList()
+            }
+        }
+    }
+
+    // uses null to indicate that there is an empty item
+    private fun getItems(item: RuleItem, desiredDepth: Int, done: Set<RuleItem>): List<CompletionItem?> {
+        //TODO: use scope to add real items to this list - maybe in a subclass
+        return when {
+            done.contains(item) -> emptyList()
+            else -> when (item) {
+                is EmptyRule -> listOf(null)
+                is Choice -> item.alternative.flatMap { getItems(it, desiredDepth, done + item) }
+                is Concatenation -> {
+                    var items = getItems(item.items[0], desiredDepth, done + item)
+                    var index = 1
+                    while (index < item.items.size && items.any { it == null }) {
+                        items = items.mapNotNull { it } + getItems(item.items[index], desiredDepth, done + item)
+                        index++
+                    }
+                    items
+                }
+
+                is Terminal -> provideForTerminal(item)
+
+                is NonTerminal -> {
+                    //TODO: handle overridden vs embedded rules!
+                    val refRule = item.referencedRuleOrNull(item.owningRule.grammar)
+                    when (refRule) {
+                        null -> emptyList()
+                        else -> getItems(refRule.rhs, desiredDepth - 1, done + item)
+                    }
+                }
+
+                is SeparatedList -> {
+                    val items = getItems(item.item, desiredDepth, done + item)
+                    if (item.min == 0) {
+                        items + listOf(null)
+                    } else {
+                        items + emptyList<CompletionItem>()
+                    }
+                }
+
+                is SimpleList -> {
+                    val items = getItems(item.item, desiredDepth, done + item)
+                    if (item.min == 0) {
+                        items + listOf(null)
+                    } else {
+                        items + emptyList<CompletionItem>()
+                    }
+                }
+
+                is Group -> getItems(item.groupedContent, desiredDepth, done + item)
+                else -> error("not yet supported!")
+            }
+        }
     }
 
 }

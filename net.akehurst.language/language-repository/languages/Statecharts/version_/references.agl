@@ -5,7 +5,7 @@ namespace com.itemis.create.Expressions {
 }
 
 namespace com.itemis.create.Global {
-    import external  //imports types AnnotationType, RegularState, Type
+    import external  //imports types AnnotationType, RegularState, BuiltInType
 
     identify Interface by id
     identify ImportedName by string

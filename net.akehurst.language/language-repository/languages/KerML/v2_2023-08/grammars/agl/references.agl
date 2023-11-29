@@ -9,6 +9,7 @@ namespace com.itemis.sysml.kerml.cst.KerML {
     identify AssociationStructure by classifierDeclaration.identification.name
 
     identify Package by packageDeclaration.qualifiedName
+    identify LibraryPackage by packageDeclaration.qualifiedName
 
 
     scope Package {
@@ -21,7 +22,7 @@ namespace com.itemis.sysml.kerml.cst.KerML {
         identify AssociationStructure by classifierDeclaration.identification.name
 
         identify Package by packageDeclaration.qualifiedName
-
+        identify LibraryPackage by packageDeclaration.qualifiedName
     }
 
     references {

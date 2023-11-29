@@ -15,25 +15,16 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
-import net.akehurst.language.agl.default.CompletionProviderDefault
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,7 +34,7 @@ class test_StatechartTools_CodeCompletion {
     companion object {
         private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
 
-        private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
+        private val crossReferenceModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
         private val formatterStr = """
            namespace com.itemis.create.Expressions {
@@ -62,26 +53,29 @@ class test_StatechartTools_CodeCompletion {
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
             val grm = grammarList.asm?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
-            val cfg = Agl.configuration {
-                targetGrammarName(null) //use default
-                defaultGoalRuleName(null) //use default
-                typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
-                syntaxAnalyserResolver { p ->
-                    ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.crossReferenceModel),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
-                }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
-                completionProvider { p ->
-                    ProcessResultDefault(
-                        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
-                }
+            /*            val cfg = Agl.configuration {
+                            targetGrammarName(null) //use default
+                            defaultGoalRuleName(null) //use default
+                            typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                            crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                            syntaxAnalyserResolver { p ->
+                                ProcessResultDefault(
+                                    SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.crossReferenceModel),
+                                    IssueHolder(LanguageProcessorPhase.ALL)
+                                )
+                            }
+                            semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                            styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
+                            formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+                            completionProvider { p ->
+                                ProcessResultDefault(
+                                    CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+                                    IssueHolder(LanguageProcessorPhase.ALL)
+                                )
+                            }
+                        }*/
+            val cfg = Agl.configuration(Agl.configurationDefault()) {
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }
@@ -150,7 +144,7 @@ class test_StatechartTools_CodeCompletion {
         val expected = setOf("").sorted()
         assertEquals(expected, actual)
     }
-    
+
     @Test
     fun expectedItemsAt_Global_TransitionSpecification_after() {
         val grammar = "Global"
@@ -159,17 +153,20 @@ class test_StatechartTools_CodeCompletion {
             internal:
               var x:
         """.trimIndent()
+        val context = contextSimple {
+            item("int", "external.BultInType", AsmPathSimple.EXTERNAL.value)
+        }
         val actual = processors[grammar].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
             }
             completionProvider {
-                context(ContextSimple())
+                context(context)
             }
         }).items.map { it.text }.toSet().sorted()
 
-        val expected = setOf("").sorted()
+        val expected = setOf("int", "<ID>").sorted()
         assertEquals(expected, actual)
     }
 

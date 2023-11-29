@@ -21,6 +21,7 @@ import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 
 internal sealed class FailedParseReason(
+    val failedAtPosition: Int,
     val head: GrowingNodeIndex,
     val transition: Transition,
     val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
@@ -31,32 +32,36 @@ internal sealed class FailedParseReason(
 
 // Lookahead failure, i.e. lookahead tokens not matched
 internal class FailedParseReasonLookahead(
+    failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val runtimeLhs: Set<LookaheadSet>,
     val possibleEndOfText: Set<LookaheadSet>
-) : FailedParseReason(head, transition, gssSnapshot)
+) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
 
 // transition.to token not found
 internal class FailedParseReasonWidthTo(
+    failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
-) : FailedParseReason(head, transition, gssSnapshot)
+) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
 
 // transition.runtimeGuard fails
 internal class FailedParseReasonGraftRTG(
+    failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val prevNumNonSkipChildren: Int
-) : FailedParseReason(head, transition, gssSnapshot)
+) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
 
 // embedded grammar failure
 internal class FailedParseReasonEmbedded(
+    failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val embededFailedParseReasons: Map<Int, MutableList<FailedParseReason>>
-) : FailedParseReason(head, transition, gssSnapshot)
+) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
