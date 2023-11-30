@@ -33,21 +33,21 @@ internal class test_aOpt : test_ExpectedTerminasAtAbstract() {
         val goal = "S"
 
         val testData = listOf(
-            TestData("", 0, listOf("'a'")),
-            TestData(" ", 0, listOf("'a'")),
-            TestData(" ", 1, listOf("'a'")),
-            TestData("a", 0, listOf("'a'")),
-            TestData("a", 1, listOf("<EOT>")),
-            TestData(" a", 0, listOf("'a'")),
-            TestData(" a", 1, listOf("'a'")),
-            TestData(" a", 2, listOf()),
-            TestData("a ", 0, listOf("'a'")),
-            TestData("a ", 1, listOf()),
-            TestData("a ", 2, listOf()),
-            TestData(" a ", 0, listOf("'a'")),
-            TestData(" a ", 1, listOf("'a'")),
-            TestData(" a ", 2, listOf()),
-            TestData(" a ", 3, listOf()),
+            TestData("", 0, setOf("'a'")),
+            TestData(" ", 0, setOf("'a'")),
+            TestData(" ", 1, setOf("'a'")),
+            TestData("a", 0, setOf("'a'")),
+            TestData("a", 1, setOf("<EOT>")),
+            TestData(" a", 0, setOf("'a'")),
+            TestData(" a", 1, setOf("'a'")),
+            TestData(" a", 2, setOf("<EOT>")),
+            TestData("a ", 0, setOf("'a'")),
+            TestData("a ", 1, setOf("<EOT>")),
+            TestData("a ", 2, setOf("<EOT>")),
+            TestData(" a ", 0, setOf("'a'")),
+            TestData(" a ", 1, setOf("'a'")),
+            TestData(" a ", 2, setOf("<EOT>")),
+            TestData(" a ", 3, setOf("<EOT>")),
         )
     }
 

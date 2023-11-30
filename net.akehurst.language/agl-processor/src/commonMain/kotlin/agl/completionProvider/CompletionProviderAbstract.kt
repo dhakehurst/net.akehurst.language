@@ -50,8 +50,9 @@ abstract class CompletionProviderAbstract<in AsmType, in ContextType> : Completi
 
     protected fun provideTerminalsForSpine(spine: Spine): List<CompletionItem> {
         return spine.expectedNextItems.flatMap { ri ->
-            when (ri) {
-                is Terminal -> provideForTerminal(ri)
+            when {
+                ri.owningRule.isSkip -> emptyList() //make this an option to exclude skip stuff, this also needs to be extended/improved does not cover all cases
+                ri is Terminal -> provideForTerminal(ri)
                 else -> provideForRuleItem(ri, 2)
             }
         }

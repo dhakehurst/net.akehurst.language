@@ -22,34 +22,34 @@ import kotlin.test.Test
 
 internal class test_ab : test_ExpectedTerminasAtAbstract() {
 
-    // skip WS = "\s+" ;
+    // skip leaf WS = "\s+" ;
     // S = 'a' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("WS", true) { pattern("\\s+") }
+            pattern("WS", "\\s+", true)
             concatenation("S") { literal("a"); literal("b") }
         }
         val goal = "S"
 
         val testData = listOf(
-            TestData("", 0, listOf("'a'")),
-            TestData(" ", 0, listOf("'a'")),
-            TestData(" ", 1, listOf("'a'")),
-            TestData("a", 0, listOf("'a'")),
-            TestData("a", 1, listOf()),
-            TestData(" a", 0, listOf("'a'")),
-            TestData(" a", 1, listOf("'a'")),
-            TestData(" a", 2, listOf()),
-            TestData("a ", 0, listOf("'a'")),
-            TestData("a ", 1, listOf()),
-            TestData("a ", 2, listOf()),
-            TestData(" a ", 0, listOf("'a'")),
-            TestData(" a ", 1, listOf("'a'")),
-            TestData(" a ", 2, listOf()),
-            TestData(" a ", 3, listOf()),
-            TestData("ab", 0, listOf("'a'")),
-            TestData("ab", 1, listOf()),
-            TestData("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
+            TestData("", 0, setOf("'a'")),
+            TestData(" ", 0, setOf("'a'")),
+            TestData(" ", 1, setOf("'a'")),
+            TestData("a", 0, setOf("'a'")),
+            TestData("a", 1, setOf("'b'")),
+            TestData(" a", 0, setOf("'a'")),
+            TestData(" a", 1, setOf("'a'")),
+            TestData(" a", 2, setOf("'b'")),
+            TestData("a ", 0, setOf("'a'")),
+            TestData("a ", 1, setOf("'b'")),
+            TestData("a ", 2, setOf("'b'")),
+            TestData(" a ", 0, setOf("'a'")),
+            TestData(" a ", 1, setOf("'a'")),
+            TestData(" a ", 2, setOf("'b'")),
+            TestData(" a ", 3, setOf("'b'")),
+            TestData("ab", 0, setOf("'a'")),
+            TestData("ab", 1, setOf("'b'")),
+            TestData("ab", 2, setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
     }
 

@@ -44,7 +44,7 @@ class CompletionProviderDefault(
 
     override fun provide(nextExpected: Set<Spine>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
         return if (null == context || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideTerminalsForSpine(sp) }
+            nextExpected.flatMap { sp -> provideTerminalsForSpine(sp) }.toSet().toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val spri = sp.elements.firstOrNull()
@@ -59,7 +59,7 @@ class CompletionProviderDefault(
                     }
                 }
             }
-            items
+            items.toSet().toList() //TODO: can we remove duplicates earlier!
         }
     }
 

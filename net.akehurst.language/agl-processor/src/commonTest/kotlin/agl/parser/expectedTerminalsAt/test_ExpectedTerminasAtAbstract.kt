@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 
 internal abstract class test_ExpectedTerminasAtAbstract {
 
-    protected data class TestData(val sentence: String, val position: Int, val expected: List<String>)
+    protected data class TestData(val sentence: String, val position: Int, val expected: Set<String>)
 
     protected fun test(rrs: RuntimeRuleSet, goal: String, data: TestData) {
         val parser = ScanOnDemandParser(rrs)
@@ -31,7 +31,7 @@ internal abstract class test_ExpectedTerminasAtAbstract {
             goalRuleName(goal)
         })
 
-        val actual = result.filter { it.isEmptyTerminal.not() && it.isSkip.not() }.map { it.rhs.toString() }
+        val actual = result.filter { it.isEmptyTerminal.not() && it.isSkip.not() }.map { it.rhs.toString() }.toSet()
         val expected = data.expected
         assertEquals(expected, actual, data.toString())
     }

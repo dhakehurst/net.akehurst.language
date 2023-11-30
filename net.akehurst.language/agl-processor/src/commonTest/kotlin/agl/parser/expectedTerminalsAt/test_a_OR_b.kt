@@ -27,7 +27,7 @@ internal class test_a_OR_b : test_ExpectedTerminasAtAbstract() {
     // S = 'a' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("WS", true) { pattern("\\s+") }
+            pattern("WS", "\\s+", true)
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 literal("b")
@@ -36,38 +36,38 @@ internal class test_a_OR_b : test_ExpectedTerminasAtAbstract() {
         val goal = "S"
 
         val testData = listOf(
-            TestData("", 0, listOf("'a'")),
-            TestData(" ", 0, listOf("'a'")),
-            TestData(" ", 1, listOf("'a'")),
-            TestData("a", 0, listOf("'a'")),
-            TestData("a", 1, listOf()),
-            TestData(" a", 0, listOf("'a'")),
-            TestData(" a", 1, listOf("'a'")),
-            TestData(" a", 2, listOf()),
-            TestData("a ", 0, listOf("'a'")),
-            TestData("a ", 1, listOf()),
-            TestData("a ", 2, listOf()),
-            TestData(" a ", 0, listOf("'a'")),
-            TestData(" a ", 1, listOf("'a'")),
-            TestData(" a ", 2, listOf()),
-            TestData(" a ", 3, listOf()),
+            TestData("", 0, setOf("'a'", "'b'")),
+            TestData(" ", 0, setOf("'a'", "'b'")),
+            TestData(" ", 1, setOf("'a'", "'b'")),
+            TestData("a", 0, setOf("'a'", "'b'")),
+            TestData("a", 1, setOf("<EOT>")),
+            TestData(" a", 0, setOf("'a'", "'b'")),
+            TestData(" a", 1, setOf("'a'", "'b'")),
+            TestData(" a", 2, setOf("<EOT>")),
+            TestData("a ", 0, setOf("'a'", "'b'")),
+            TestData("a ", 1, setOf("<EOT>")),
+            TestData("a ", 2, setOf("<EOT>")),
+            TestData(" a ", 0, setOf("'a'", "'b'")),
+            TestData(" a ", 1, setOf("'a'", "'b'")),
+            TestData(" a ", 2, setOf("<EOT>")),
+            TestData(" a ", 3, setOf("<EOT>")),
 
-            TestData("b", 0, listOf("'a'")),
-            TestData("b", 1, listOf()),
-            TestData(" b", 0, listOf("'a'")),
-            TestData(" b", 1, listOf("'a'")),
-            TestData(" b", 2, listOf()),
-            TestData("b ", 0, listOf("'a'")),
-            TestData("b ", 1, listOf()),
-            TestData("b ", 2, listOf()),
-            TestData(" b ", 0, listOf("'a'")),
-            TestData(" b ", 1, listOf("'a'")),
-            TestData(" b ", 2, listOf()),
-            TestData(" b ", 3, listOf()),
+            TestData("b", 0, setOf("'a'")),
+            TestData("b", 1, setOf()),
+            TestData(" b", 0, setOf("'a'")),
+            TestData(" b", 1, setOf("'a'")),
+            TestData(" b", 2, setOf()),
+            TestData("b ", 0, setOf("'a'")),
+            TestData("b ", 1, setOf()),
+            TestData("b ", 2, setOf()),
+            TestData(" b ", 0, setOf("'a'")),
+            TestData(" b ", 1, setOf("'a'")),
+            TestData(" b ", 2, setOf()),
+            TestData(" b ", 3, setOf()),
 
-            TestData("ab", 0, listOf("'a'")),
-            TestData("ab", 1, listOf()),
-            TestData("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
+            TestData("ab", 0, setOf("'a'")),
+            TestData("ab", 1, setOf()),
+            TestData("ab", 2, setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
     }
 

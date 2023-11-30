@@ -19,8 +19,12 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.runtime.structure.RuntimeSpine
 
 internal sealed class FailedParseReason(
+    val fromSkipParser: Boolean,
     val failedAtPosition: Int,
     val head: GrowingNodeIndex,
     val transition: Transition,
@@ -28,40 +32,91 @@ internal sealed class FailedParseReason(
 ) {
     val position get() = head.nextInputPositionAfterSkip
     val attemptedAction get() = transition.action
+    open val skipFailure get() = fromSkipParser
+    abstract val spine: RuntimeSpine
 }
 
 // Lookahead failure, i.e. lookahead tokens not matched
 internal class FailedParseReasonLookahead(
+    fromSkipParser: Boolean,
     failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val runtimeLhs: Set<LookaheadSet>,
     val possibleEndOfText: Set<LookaheadSet>
-) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
+) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
+
+    override val spine: RuntimeSpine by lazy {
+        val expected: Set<RuntimeRule> = possibleEndOfText.flatMap { eot ->
+            runtimeLhs.flatMap { rt ->
+                transition.lookahead.flatMap { lh ->
+                    lh.guard.resolve(eot, rt).fullContent
+                }
+            }
+        }.toSet()
+        val terms = head.state.stateSet.usedTerminalRules
+        val embeddedSkipTerms = head.state.stateSet.embeddedRuntimeRuleSet.flatMap { it.skipTerminals }.toSet()
+        val exp = expected.minus(embeddedSkipTerms.minus(terms))
+
+        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren + 1)
+    }
+
+    override val skipFailure get() = fromSkipParser
+}
 
 // transition.to token not found
 internal class FailedParseReasonWidthTo(
+    fromSkipParser: Boolean,
     failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
-) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
+) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
+
+    override val spine = RuntimeSpine(head, gssSnapshot, setOf(transition.to.firstRule), head.numNonSkipChildren)
+
+}
 
 // transition.runtimeGuard fails
 internal class FailedParseReasonGraftRTG(
+    fromSkipParser: Boolean,
     failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     val prevNumNonSkipChildren: Int
-) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
+) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
+
+    override val spine by lazy {
+        val exp = transition.runtimeGuard.expectedWhenFailed(prevNumNonSkipChildren)
+        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren)
+    }
+
+}
 
 // embedded grammar failure
 internal class FailedParseReasonEmbedded(
+    fromSkipParser: Boolean,
     failedAtPosition: Int,
     head: GrowingNodeIndex,
     transition: Transition,
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
-    val embededFailedParseReasons: Map<Int, MutableList<FailedParseReason>>
-) : FailedParseReason(failedAtPosition, head, transition, gssSnapshot)
+    val embededFailedParseReasons: List<FailedParseReason>
+) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
+
+    override val spine by lazy {
+        // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
+        // if these skip terms are not part of the embedded 'normal' terms...remove them
+        val embeddedRhs = transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+        val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind)
+        //val x = findNextExpectedAfterError3(sentence, embededFailedParseReasons, head.state.stateSet.automatonKind, embeddedStateSet, failedAtPosition)
+        val x = embededFailedParseReasons.map { it.spine }
+        val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
+        val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind).usedTerminalRules
+        val skipTerms = head.state.stateSet.runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
+        val exp = x.flatMap { it.expectedNextTerminals }.minus(skipTerms.minus(embeddedTerms)).toSet()
+        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren)
+    }
+
+}

@@ -229,7 +229,7 @@ class test_CompletionProviderDefault_datatypes {
 
     @Test
     fun one() {
-        val td = tests[2]
+        val td = tests[12]
         println("Test: ${td.sentence}")
         test(td)
 
