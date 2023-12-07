@@ -16,10 +16,11 @@
 package net.akehurst.language.comparisons.agl
 
 import korlibs.io.file.std.StandardPaths
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.comparisons.common.*
 import kotlin.test.Test
@@ -31,15 +32,16 @@ class test_Java8_aglOptm {
         const val col = "agl_optm"
         var totalFiles = 0
 
-        suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
+        suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextSimple> {
             println(StandardPaths.cwd)
             val javaGrammarStr = myResourcesVfs[aglFile].readString()
-            val res = Agl.processorFromString<AsmSimple, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextSimple>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                        context(ContextFromGrammarRegistry(Agl.registry))
                     }
                 }
             )
@@ -47,7 +49,7 @@ class test_Java8_aglOptm {
             return res.processor!!
         }
 
-        lateinit var aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>
+        lateinit var aglProcessor: LanguageProcessor<Asm, ContextSimple>
 
         suspend fun files(): Collection<FileDataCommon> {
             val skipPatterns = aglProcessor.grammar!!.allResolvedSkipTerminal.map { Regex(it.value) }.toSet()

@@ -41,15 +41,15 @@ kotlin {
 }
 
 val version_klock:String by project
-val version_korio:String by project
+val version_korge:String by project
 val version_coroutines:String by project
 dependencies {
     //"commonMainImplementation"(kotlin("stdlib"))
     "commonTestImplementation"(kotlin("test"))
     "commonTestImplementation"(kotlin("test-annotations-common"))
     commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_coroutines")
-    commonMainImplementation("com.soywiz.korlibs.klock:klock:$version_klock")
-    commonMainApi("com.soywiz.korlibs.korio:korio:$version_korio")
+    //commonMainImplementation("com.soywiz.korlibs.klock:klock:$version_klock")
+    commonMainApi("com.soywiz.korge:korge-core:$version_korge")
 
     //"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
     "jvm8TestImplementation"(kotlin("test-junit"))

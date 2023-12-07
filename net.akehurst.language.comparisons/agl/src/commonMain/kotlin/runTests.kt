@@ -16,10 +16,11 @@
 package net.akehurst.language.comparisons.agl
 
 import korlibs.io.file.std.StandardPaths
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.comparisons.common.*
@@ -53,15 +54,16 @@ suspend fun files(rootDirInfo: String, numFiles: Int, skipPatterns: Set<Regex>, 
     return sub
 }
 
-suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
+suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextSimple> {
     output(StandardPaths.cwd)
     val javaGrammarStr = myResourcesVfs[aglFile].readString()
-    val res = Agl.processorFromString<AsmSimple, ContextSimple>(
+    val res = Agl.processorFromString<Asm, ContextSimple>(
         grammarDefinitionStr = javaGrammarStr,
         aglOptions = Agl.options {
             semanticAnalysis {
                 // switch off ambiguity analysis for performance
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                context(ContextFromGrammarRegistry(Agl.registry))
             }
         }
     )
@@ -70,15 +72,15 @@ suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimpl
 }
 
 // split to enable separate profile view on each parse
-fun parse1(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
+fun parse1(aglProcessor: LanguageProcessor<Asm, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
     aglProcessor.parse(input, opts)
 }
 
-fun parse2(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
+fun parse2(aglProcessor: LanguageProcessor<Asm, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
     aglProcessor.parse(input, opts)
 }
 
-fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, goalRule: String, file: FileDataCommon, input: String): Duration {
+fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<Asm, ContextSimple>, goalRule: String, file: FileDataCommon, input: String): Duration {
     try {
         val opts = Agl.parseOptions {
             reportErrors(false) // don't need error reporting for speed tests
@@ -93,7 +95,7 @@ fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<Asm
         println("Error: ${e.message}")
         ResultsCommon.logError("${parserCode}-T1-$kotlinTarget", file)
     }
-    return Duration.parse("0")
+    return Duration.ZERO
 }
 
 suspend fun parseJavaFiles(parserCode: String, numFiles: Int, grammarFile: String, goalRule: String) {
@@ -136,10 +138,10 @@ suspend fun runTests() {
     //parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt")
     //parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot")
 
-    //parseJavaFiles("ant_optm",4800, "agl/Java8AntlrOptm.agl", "compilationUnit")
+    parseJavaFiles("ant_optm",4800, "agl/Java8AntlrOptm.agl", "compilationUnit")
     parseJavaFiles("agl_optm", 5300, "agl/Java8AglOptm.agl", "CompilationUnit")
-    //parseJavaFiles("agl_spec",5240, "agl/Java8AglSpec.agl", "CompilationUnit")
-    //parseJavaFiles("ant_spec",3500, "agl/Java8AntlrSpec.agl", "compilationUnit")
+    parseJavaFiles("agl_spec",5240, "agl/Java8AglSpec.agl", "CompilationUnit")
+    parseJavaFiles("ant_spec",3500, "agl/Java8AntlrSpec.agl", "compilationUnit")
 }
 
 

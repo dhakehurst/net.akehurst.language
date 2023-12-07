@@ -16,8 +16,8 @@
 package net.akehurst.language.comparisons.agl
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
@@ -44,7 +44,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor<AsmSimple,ContextSimple> {
+        fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor<Asm,ContextSimple> {
             val bytes = Java8_compare_all_parse_error::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val res = Agl.processorFromStringDefault(javaGrammarStr)
@@ -60,7 +60,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
         var input: String? = null
 
         @ExperimentalTime
-        fun parse(file: FileData, proc: LanguageProcessor<AsmSimple,ContextSimple>, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
+        fun parse(file: FileData, proc: LanguageProcessor<Asm,ContextSimple>, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
             return TimeSource.Monotonic.measureTimedValue {
                 try {
                     val res = proc.parse(input!!,Agl.parseOptions { goalRuleName(goalRuleName) })

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 plugins {
-	kotlin("multiplatform") version ("1.9.0-RC") apply false
+	kotlin("multiplatform") version ("1.9.21") apply false
 }
 
 allprojects {
@@ -31,11 +31,13 @@ allprojects {
 
 subprojects {
 
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
-
+	repositories {
+		mavenLocal {
+			content {
+				includeGroupByRegex("net\\.akehurst.+")
+			}
+		}
+		mavenCentral()
+	}
 
 }

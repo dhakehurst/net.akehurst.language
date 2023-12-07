@@ -103,20 +103,24 @@ internal class ScanOnDemandParser(
             val sppt = SPPTFromTreeData(match, scanner.sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         } else {
-            // need to include the 'startSkipFailures',
-            val map = rp.failedReasons //no need to clone it as it will not be modified after this point
-            startSkipFailures.forEach {
-                val l = map[it.key] ?: mutableListOf()
-                l.addAll(it.value)
-                map[it.key] = l
+            if (options.reportErrors) {
+                // need to include the 'startSkipFailures',
+                val map = rp.failedReasons //no need to clone it as it will not be modified after this point
+                startSkipFailures.forEach {
+                    val l = map[it.key] ?: mutableListOf()
+                    l.addAll(it.value)
+                    map[it.key] = l
+                }
+                val failedAtPosition = map.keys.max()
+                val nextExpected = map[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
+                val loc = scanner.sentence.locationFor(failedAtPosition, 0)
+                //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, fr, rp.stateSet.automatonKind, rp.stateSet, max)
+                addParseIssue(scanner.sentence, loc, nextExpected.flatMap { it.expectedNextTerminals }.toSet(), seasons, maxNumHeads)
+                val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
+                ParseResultDefault(sppt, this._issues)
+            } else {
+                ParseResultDefault(null, this._issues)
             }
-            val failedAtPosition = map.keys.max()
-            val nextExpected = map[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
-            val loc = scanner.sentence.locationFor(failedAtPosition, 0)
-            //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, fr, rp.stateSet.automatonKind, rp.stateSet, max)
-            addParseIssue(scanner.sentence, loc, nextExpected.flatMap { it.expectedNextTerminals }.toSet(), seasons, maxNumHeads)
-            val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
-            ParseResultDefault(sppt, this._issues)
         }
     }
 

@@ -210,7 +210,7 @@ internal class RuntimeParser(
 
         var steps = 0
         val progressSteps = lazyMutableMapNonNull<GrowingNodeIndex, Int> { 0 }
-        val doneEmpties = mutableSetOf<Pair<ParserState, Set<GrowingNodeIndex>>>()
+        val doneEmpties = mutableSetOf<Pair<ParserState, List<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>>>>()
 
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
             checkForTerminationRequest()
@@ -223,12 +223,12 @@ internal class RuntimeParser(
             val head = this.graph.peekNextHead
 
             //TODO: move empty checking stuff to doWidth
-            if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head)))) {
+            if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head).map { Pair(it, graph.previousOf(it)) }))) {
                 //don't do it again
                 this.graph.dropStackWithHead(head)
             } else {
                 if (head.isEmptyMatch) {
-                    doneEmpties.add(Pair(head.state, graph.previousOf(head)))
+                    doneEmpties.add(Pair(head.state, graph.previousOf(head).map { Pair(it, graph.previousOf(it)) }))
                 }
                 growHead(head, possibleEndOfText, growArgs)
                 steps++

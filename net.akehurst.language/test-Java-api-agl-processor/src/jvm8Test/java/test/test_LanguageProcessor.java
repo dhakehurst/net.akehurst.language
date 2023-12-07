@@ -57,6 +57,7 @@ public class test_LanguageProcessor {
 
     @Test
     public void parse_noOptions() {
+        
         ParseResult result = proc.parse("hello world !", null);
 
         Assert.assertNotNull(result.getSppt());

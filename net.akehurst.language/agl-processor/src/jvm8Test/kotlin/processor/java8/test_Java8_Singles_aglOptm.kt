@@ -94,6 +94,7 @@ class test_Java8_Singles_aglOptm {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    context(ContextFromGrammarRegistry(Agl.registry))
                 }
             }).processor!!
 
@@ -917,4 +918,26 @@ class A {
             assertTrue(2 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
         }
     }
+
+    @Test(timeout = 5000)
+    fun CompilationUnit__constructor() {
+        val sentence = """
+package com.test;
+
+public class Test${"$"}Test {
+
+    public Test${"$"}Test(double value) {
+    }
+
+}
+        """
+        val goal = "CompilationUnit"
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        val resultStr = result.sppt!!.asSentence
+        assertEquals(sentence, resultStr)
+    }
+
 }

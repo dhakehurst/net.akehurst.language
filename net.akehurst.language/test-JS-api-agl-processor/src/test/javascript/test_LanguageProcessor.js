@@ -19,7 +19,7 @@ let assert = require('assert');
 let Agl = require('./net.akehurst.language-agl-processor').net.akehurst.language.agl.processor.Agl;
 describe('test_LanguageProcessor', function () {
 
-    let grammarStr=`
+    let grammarStr = `
             namespace test
             grammar Test {
               skip WS="\\s+" ;
@@ -28,30 +28,31 @@ describe('test_LanguageProcessor', function () {
               W = 'world' '!' ;
             }
         `;
-    let proc = Agl.processorFromString(grammarStr);
+    let pr = Agl.processorFromStringDefault(grammarStr);
+    let proc = pr.processor;
 
     it('scan', function () {
         let result = proc.scan('hello world !');
 
-        assert.notEqual(null, result);
-        assert.equal(5, result.toArray().length);
-        assert.notEqual('hello', result.toArray()[0]);
+        assert.notEqual(null, result.tokens);
+        assert.equal(5, result.tokens.toArray().length);
+        assert.notEqual('hello', result.tokens.toArray()[0]);
     });
 
     it('parse_noOptions', function () {
         let result = proc.parse('hello world !');
 
         assert.notEqual(null, result.sppt);
-        console.log( result.sppt.toStringAll );
+        console.log(result.sppt.toStringAll);
     });
 
     it('parse_defaultOptions', function () {
         let options = proc.parseOptionsDefault();
-        options.goalRuleName="W";
+        options.goalRuleName = "W";
         let result = proc.parse("world !", options);
 
         assert.notEqual(null, result.sppt);
-        console.log( result.sppt.toStringAll );
+        console.log(result.sppt.toStringAll);
     });
 
     it('parse_buildOptions', function () {
@@ -60,7 +61,7 @@ describe('test_LanguageProcessor', function () {
         }));
 
         assert.notEqual(null, result.sppt);
-        console.log( result.sppt.toStringAll );
+        console.log(result.sppt.toStringAll);
     });
 
     it('syntaxAnalysis', function () {
@@ -69,7 +70,7 @@ describe('test_LanguageProcessor', function () {
         let result = proc.syntaxAnalysis(parse.sppt);
 
         assert.notEqual(null, result.asm);
-        console.log( result.asm );
+        console.log(result.asm);
     });
 
     it('semanticAnalysis', function () {
