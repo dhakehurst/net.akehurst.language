@@ -19,8 +19,9 @@ package net.akehurst.language.agl.automaton.embedded
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -59,7 +60,7 @@ internal class test_embedded : test_AutomatonAbstract() {
 
     @Test
     fun parse_aba() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))

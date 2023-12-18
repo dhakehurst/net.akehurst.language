@@ -16,10 +16,11 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -57,7 +58,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
 
     @Test
     fun parse_a_aa_aaa() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "a")
         parser.parseForGoal("S", "aa")
         parser.parseForGoal("S", "aaa")
@@ -93,7 +94,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = ScanOnDemandParser(rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("a", "aa", "aaa", "aaaa")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

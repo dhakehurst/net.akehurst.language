@@ -20,7 +20,7 @@ import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.sppt.TreeDataComplete
@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 
 internal class test_TreeData {
 
-    val graph = ParseGraph(InputFromString(0, ""), 0)
+    val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(emptyList()), 0)
 
     @Test
     fun construct() {

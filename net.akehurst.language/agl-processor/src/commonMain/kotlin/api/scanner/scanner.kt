@@ -18,15 +18,21 @@
 package net.akehurst.language.api.scanner
 
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
+import net.akehurst.language.api.processor.ScanResult
 import net.akehurst.language.api.sppt.Sentence
 
 
 interface Scanner {
-    val sentence: Sentence
+    //val sentence: Sentence
+
+    val matchables: List<Matchable>
 
     fun reset()
-    fun isEnd(position: Int): Boolean
-    fun isLookingAt(position: Int, terminalRule: Rule): Boolean
-    fun findOrTryCreateLeaf(position: Int, terminalRule: Rule): CompleteTreeDataNode?
+    fun isEnd(sentence: Sentence, position: Int): Boolean
+    fun isLookingAt(sentence: Sentence, position: Int, terminalRule: Rule): Boolean
+    fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode?
+
+    fun scan(sentence: Sentence): ScanResult
 }

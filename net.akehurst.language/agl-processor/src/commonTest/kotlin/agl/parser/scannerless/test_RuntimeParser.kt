@@ -16,9 +16,10 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,7 +30,7 @@ internal class test_RuntimeParser {
     @Test
     fun construct() {
         val rrs = runtimeRuleSet { }
-        val sp = ScanOnDemandParser(rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
 
         assertNotNull(sp)
     }
@@ -39,7 +40,7 @@ internal class test_RuntimeParser {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a") }
         }
-        val sp = ScanOnDemandParser(rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         sp.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         //TODO: how to test if build worked!
@@ -51,7 +52,7 @@ internal class test_RuntimeParser {
             concatenation("S") { literal("a") }
         }
 
-        val sp = ScanOnDemandParser(rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val sentence = ""
         val goal = "S"
         val position = 0
@@ -69,7 +70,7 @@ internal class test_RuntimeParser {
             concatenation("S") { literal("a") }
         }
 
-        val sp = ScanOnDemandParser(rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val sentence = ""
         val goal = "S"
         val position = 0

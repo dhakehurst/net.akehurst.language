@@ -17,13 +17,11 @@
 
 package net.akehurst.language.agl.scanner
 
-import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
-import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.Sentence
 
 /**
@@ -33,9 +31,8 @@ import net.akehurst.language.api.sppt.Sentence
  * Literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
  */
 internal class ScannerClassic(
-    sentenceText: String,
-    private val nonEmptyTerminals: List<RuntimeRule>
-) : Scanner {
+    nonEmptyTerminals: List<RuntimeRule>
+) : ScannerAbstract(nonEmptyTerminals) {
 
     companion object {
         val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1)
@@ -43,25 +40,23 @@ internal class ScannerClassic(
 
 //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
 
-    override var sentence: Sentence = SentenceDefault(sentenceText); private set
-
     override fun reset() {
 
     }
 
-    override fun isEnd(position: Int): Boolean = position >= this.sentence.text.length
+    override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
 
-    override fun isLookingAt(position: Int, terminalRule: Rule): Boolean {
-        val l = findOrTryCreateLeaf(position, terminalRule)
+    override fun isLookingAt(sentence: Sentence, position: Int, terminalRule: Rule): Boolean {
+        val l = findOrTryCreateLeaf(sentence, position, terminalRule)
         return l?.rule?.equals(terminalRule) ?: false
     }
 
-    override fun findOrTryCreateLeaf(position: Int, terminalRule: Rule): CompleteTreeDataNode? {
+    override fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode? {
         val l = _leaves[position]
         val res = when {
             terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0)
             null == l -> {
-                val lf = scanAt(position)
+                val lf = scanAt(sentence, position)
                 _leaves[position] = lf
                 if (LEAF_NONE == lf) null else lf
             }
@@ -80,8 +75,8 @@ internal class ScannerClassic(
 
     private val _leaves = mutableMapOf<Int, CompleteTreeDataNode>()
 
-    private fun scanAt(position: Int): CompleteTreeDataNode {
-        val matches = nonEmptyTerminals.mapNotNull {
+    private fun scanAt(sentence: Sentence, position: Int): CompleteTreeDataNode {
+        val matches = _nonEmptyTerminals.mapNotNull {
             val matchLength = (it.rhs as RuntimeRuleRhsTerminal).matchable!!.matchedLength(sentence.text, position)
             when (matchLength) {
                 -1 -> null
@@ -109,4 +104,5 @@ internal class ScannerClassic(
             else -> longest
         }
     }
+
 }

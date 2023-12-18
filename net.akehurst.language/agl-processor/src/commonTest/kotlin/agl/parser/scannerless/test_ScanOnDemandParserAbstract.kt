@@ -17,9 +17,10 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.api.runtime.RuleSet
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
@@ -75,7 +76,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         vararg expectedTrees: String
     ): SharedPackedParseTree? {
         println("${this::class.simpleName} - '$sentence'")
-        val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
+        val parser = LeftCornerParser(ScannerOnDemand((rrs as RuntimeRuleSet).nonSkipTerminals), rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
         val (result, duration) = measureTimedValue {
             parser.parse(sentence, options)
@@ -101,7 +102,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
     }
 
     fun testFailWithOptions(rrs: RuleSet, sentence: String, expectedNumGSSHeads: Int, options: ParseOptions): ParseResult {
-        val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
+        val parser = LeftCornerParser(ScannerOnDemand((rrs as RuntimeRuleSet).nonSkipTerminals), rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
         val r = parser.parse(sentence, options)
         return r

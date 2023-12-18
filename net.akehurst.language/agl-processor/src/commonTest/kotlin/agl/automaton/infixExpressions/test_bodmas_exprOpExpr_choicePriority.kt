@@ -18,9 +18,10 @@ package net.akehurst.language.agl.automaton.infixExpressions
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -57,7 +58,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
 
     @Test
     fun automaton_parse_v() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -85,7 +86,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     fun automaton_parse_vav() {
         //given
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)

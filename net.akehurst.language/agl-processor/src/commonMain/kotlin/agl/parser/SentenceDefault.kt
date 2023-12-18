@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.agl.parser
 
-import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -49,8 +49,8 @@ class SentenceDefault(
         locationFor(node.startPosition, node.nextInputNoSkip - node.startPosition)
 
     override fun contextInText(position: Int): String {
-        val startIndex = maxOf(0, position - InputFromString.contextSize)
-        val endIndex = minOf(this.text.length, position + InputFromString.contextSize)
+        val startIndex = maxOf(0, position - ScannerOnDemand.contextSize)
+        val endIndex = minOf(this.text.length, position + ScannerOnDemand.contextSize)
         val forText = this.text.substring(startIndex, position)
         val aftText = this.text.substring(position, endIndex)
         val startOfLine = forText.lastIndexOfAny(listOf("\n", "\r"))
@@ -71,6 +71,6 @@ class SentenceDefault(
     }
 
     // --- implementation ---
-    private val _eolPositions: List<Int> by lazy { InputFromString.eolPositions(text) }
+    private val _eolPositions: List<Int> by lazy { ScannerOnDemand.eolPositions(text) }
 
 }

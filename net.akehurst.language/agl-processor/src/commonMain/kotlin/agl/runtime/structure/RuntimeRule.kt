@@ -106,6 +106,13 @@ internal class RuntimeRule(
 
     override val rhsItems get() = this.rhs.rhsItems
 
+    override val unescapedTerminalValue: String
+        get() = when (rhs) {
+            is RuntimeRuleRhsLiteral -> (rhs as RuntimeRuleRhsLiteral).literalUnescaped
+            is RuntimeRuleRhsPattern -> (rhs as RuntimeRuleRhsPattern).patternUnescaped
+            else -> error("'unescapedTerminalValue' is only valid for Literals and Patterns")
+        }
+
     //val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
 
     val asString: String

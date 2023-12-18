@@ -16,9 +16,10 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.*
@@ -31,15 +32,18 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val kotlinRegEx = Regex("a*")
         val aglRegex = regexMatcher("a*")
 
-        val regExParser = ScanOnDemandParser(
-            runtimeRuleSet {
-                pattern("S", "a*")
-            })
-        val charParser = ScanOnDemandParser(
-            runtimeRuleSet {
-                multi("S", 0, -1, "'a'")
-                literal("'a'", "a")
-            })
+        val rrs1 = runtimeRuleSet {
+            pattern("S", "a*")
+        }
+        val scanner1 = ScannerOnDemand(rrs1.nonSkipTerminals)
+        val regExParser = LeftCornerParser(scanner1, rrs1)
+
+        val rrs2 = runtimeRuleSet {
+            multi("S", 0, -1, "'a'")
+            literal("'a'", "a")
+        }
+        val scanner2 = ScannerOnDemand(rrs2.nonSkipTerminals)
+        val charParser = LeftCornerParser(scanner2, rrs2)
     }
 
 

@@ -18,14 +18,15 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
+import net.akehurst.language.api.parser.RuntimeSpine
 
-internal class RuntimeSpine(
+internal class RuntimeSpineDefault(
     val head: GrowingNodeIndex,
     val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
-    val expectedNextTerminals: Set<RuntimeRule>,
+    override val expectedNextTerminals: Set<RuntimeRule>,
     val nextChildNumber: Int
-) {
-    val elements: List<RuntimeRule> by lazy {
+) : RuntimeSpine {
+    override val elements: List<RuntimeRule> by lazy {
         val list = mutableListOf(head.state.firstRule)
         var next = gssSnapshot[head]
         while (null != next && next.isNotEmpty()) {

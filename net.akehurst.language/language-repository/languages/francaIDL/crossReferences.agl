@@ -1,0 +1,65 @@
+identify FInterface by id
+identify FEnumerationType by id
+identify FStructType by id
+identify FUnionType by id
+
+references {
+    in FInterface {
+        extends.fqn refers-to FInterface
+        foreach managedInterface {
+            fqn refers-to FInterface
+        }
+    }
+    in FMethod {
+        error.fqn refers-to FEnumerationType
+    }
+    in FTypeRef {
+        property fqn refers-to FType
+    }
+    in FStructType {
+        extends.fqn refers-to FStructType
+    }
+    in FUnionType {
+        extends.fqn refers-to FUnionType
+    }
+    in FEnumerationType {
+        extends.fqn refers-to FUnionType
+    }
+    in FEnumerationTypeBody {
+        extends.fqn refers-to FEnumerationType
+    }
+    in FFieldInitializer {
+      property id referes to FField
+    }
+    in FStateGraph {
+        property id refers-to FState
+    }
+    in FTransition {
+        property id refers-to FState
+    }
+    in FTriggerCall {
+        property id_with_selector refers-to FMethod
+    }
+    in FTriggerRespond {
+        property id_with_selector refers-to FMethod
+    }
+    in FTriggerError {
+        property id_with_selector refers-to FMethod
+    }
+    in FTriggerSignal {
+        property id_with_selector refers-to FBroadcast
+    }
+    in FTriggerSet {
+        property id refers-to FAttribute
+    }
+    in FTriggerUpdate {
+        property id refers-to FAttribute
+    }
+    in FMethodErrorEnumRef {
+        property id refers-to FEnumerator
+    }
+    in FQualifiedElementRef {
+        property fqn refers-to FEvaluableElement
+        property id refers-to FField
+    }
+}

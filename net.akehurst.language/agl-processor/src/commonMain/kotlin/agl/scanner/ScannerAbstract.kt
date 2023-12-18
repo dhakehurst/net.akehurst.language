@@ -18,13 +18,16 @@
 package net.akehurst.language.agl.scanner
 
 //import net.akehurst.language.agl.sppt.SPPTLeafFromInput
-import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ScanResultDefault
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ScanResult
+import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.LeafData
+import net.akehurst.language.api.sppt.Sentence
 
 enum class MatchableKind { EOT, LITERAL, REGEX }
 
@@ -67,11 +70,19 @@ data class Matchable(
     }
 }
 
-class AglScanner {
+internal abstract class ScannerAbstract(
+    protected val _nonEmptyTerminals: List<RuntimeRule>
+) : Scanner {
 
-    fun scan(inputText: String, nonEmptyMatchables: List<Matchable>): ScanResult {
+    override val matchables: List<Matchable> by lazy {
+        _nonEmptyTerminals.mapNotNull {
+            (it.rhs as RuntimeRuleRhsTerminal).matchable
+        }
+    }
+
+    override fun scan(sentence: Sentence): ScanResult {
         //TODO: improve this algorithm...it is not efficient
-        val sentence = SentenceDefault(inputText)
+        val inputText = sentence.text
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
         val undefined = RuntimeRuleSet.UNDEFINED_RULE
         val result = mutableListOf<LeafData>()
@@ -80,7 +91,7 @@ class AglScanner {
         var currentUndefinedText = ""
         var currentUndefinedStart = -1
         while (nextInputPosition < inputText.length) {
-            val matches: List<LeafData> = nonEmptyMatchables.mapNotNull {
+            val matches: List<LeafData> = this.matchables.mapNotNull {
                 val matchLength = it.matchedLength(inputText, startPosition)
                 when (matchLength) {
                     -1 -> null

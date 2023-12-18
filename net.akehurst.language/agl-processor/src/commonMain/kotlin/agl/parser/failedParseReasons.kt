@@ -21,7 +21,7 @@ import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
-import net.akehurst.language.agl.runtime.structure.RuntimeSpine
+import net.akehurst.language.agl.runtime.structure.RuntimeSpineDefault
 
 internal sealed class FailedParseReason(
     val fromSkipParser: Boolean,
@@ -33,7 +33,7 @@ internal sealed class FailedParseReason(
     val position get() = head.nextInputPositionAfterSkip
     val attemptedAction get() = transition.action
     open val skipFailure get() = fromSkipParser
-    abstract val spine: RuntimeSpine
+    abstract val spine: RuntimeSpineDefault
 }
 
 // Lookahead failure, i.e. lookahead tokens not matched
@@ -47,7 +47,7 @@ internal class FailedParseReasonLookahead(
     val possibleEndOfText: Set<LookaheadSet>
 ) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
 
-    override val spine: RuntimeSpine by lazy {
+    override val spine: RuntimeSpineDefault by lazy {
         val expected: Set<RuntimeRule> = possibleEndOfText.flatMap { eot ->
             runtimeLhs.flatMap { rt ->
                 transition.lookahead.flatMap { lh ->
@@ -59,7 +59,7 @@ internal class FailedParseReasonLookahead(
         val embeddedSkipTerms = head.state.stateSet.embeddedRuntimeRuleSet.flatMap { it.skipTerminals }.toSet()
         val exp = expected.minus(embeddedSkipTerms.minus(terms))
 
-        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren + 1)
+        RuntimeSpineDefault(head, gssSnapshot, exp, head.numNonSkipChildren + 1)
     }
 
     override val skipFailure get() = fromSkipParser
@@ -74,7 +74,7 @@ internal class FailedParseReasonWidthTo(
     gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>
 ) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
 
-    override val spine = RuntimeSpine(head, gssSnapshot, setOf(transition.to.firstRule), head.numNonSkipChildren)
+    override val spine = RuntimeSpineDefault(head, gssSnapshot, setOf(transition.to.firstRule), head.numNonSkipChildren)
 
 }
 
@@ -90,7 +90,7 @@ internal class FailedParseReasonGraftRTG(
 
     override val spine by lazy {
         val exp = transition.runtimeGuard.expectedWhenFailed(prevNumNonSkipChildren)
-        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren)
+        RuntimeSpineDefault(head, gssSnapshot, exp, head.numNonSkipChildren)
     }
 
 }
@@ -116,7 +116,7 @@ internal class FailedParseReasonEmbedded(
         val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, head.state.stateSet.automatonKind).usedTerminalRules
         val skipTerms = head.state.stateSet.runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
         val exp = x.flatMap { it.expectedNextTerminals }.minus(skipTerms.minus(embeddedTerms)).toSet()
-        RuntimeSpine(head, gssSnapshot, exp, head.numNonSkipChildren)
+        RuntimeSpineDefault(head, gssSnapshot, exp, head.numNonSkipChildren)
     }
 
 }

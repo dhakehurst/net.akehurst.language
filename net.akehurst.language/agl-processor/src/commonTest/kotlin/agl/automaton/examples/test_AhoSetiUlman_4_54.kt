@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -52,7 +53,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
 
     @Test
     fun parse_dd() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "dd")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))

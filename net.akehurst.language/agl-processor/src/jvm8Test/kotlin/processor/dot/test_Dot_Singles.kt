@@ -16,8 +16,9 @@
 package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -275,7 +276,8 @@ class test_Dot_Singles {
         val sentence = "a -> b ;"
 
         val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar!!)
-        val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+        val scanner = ScannerOnDemand(converterToRuntimeRules.runtimeRuleSet.nonSkipTerminals)
+        val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
         val result = parser.parseForGoal(goal, sentence)

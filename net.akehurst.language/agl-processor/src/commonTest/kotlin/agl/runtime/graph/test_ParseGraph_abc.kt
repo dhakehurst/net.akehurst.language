@@ -16,11 +16,12 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RulePositionWithLookahead
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,8 +46,8 @@ class test_ParseGraph_abc {
         }
 
         val text = "a"
-        val input = InputFromString(rrs.terminalRules.size, text)
-        val sut = ParseGraph(input, 0)
+        val scanner = ScannerOnDemand(rrs.terminalRules)
+        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("S")]
         val r_S = rrs.findRuntimeRule("S")
@@ -68,8 +69,8 @@ class test_ParseGraph_abc {
             literal("a", "a")
         }
         val text = "a"
-        val input = InputFromString(rrs.terminalRules.size, text)
-        val sut = ParseGraph(input, 0)
+        val scanner = ScannerOnDemand(rrs.terminalRules)
+        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
         val startState = RulePositionWithLookahead(RulePosition(gr, 0, 0), emptySet())

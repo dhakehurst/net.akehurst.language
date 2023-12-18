@@ -23,10 +23,12 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.scanner.Scanner
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.collections.binaryHeap
 
 internal class ParseGraph(
-    val input: Scanner,
+    val sentence: Sentence,
+    val scanner: Scanner,
     val stateSetNumber: Int
 ) {
 
@@ -230,7 +232,7 @@ internal class ParseGraph(
     }
 
     fun reset() {
-        this.input.reset()
+        this.scanner.reset()
         //       this.completeNodes.clear()
         this._gss.clear()
         this._goals.clear()
@@ -572,9 +574,9 @@ internal class ParseGraph(
                 val lhs = lookaheadGuard.resolve(eotLookahead, rtResolved)
                 when {
                     lhs.matchANY -> true
-                    lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                    lhs.includesEOT && this.scanner.isEnd(sentence, nextInputPosition) -> true
                     lhs.content.isEmpty() -> false
-                    else -> lhs.content.any { this.input.isLookingAt(nextInputPosition, it) }
+                    else -> lhs.content.any { this.scanner.isLookingAt(sentence, nextInputPosition, it) }
                 }
             }
         }
@@ -593,9 +595,9 @@ internal class ParseGraph(
                 val lhs = lookaheadGuard.resolve(eotLookahead, rtResolved)
                 when {
                     lhs.matchANY -> true
-                    lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                    lhs.includesEOT && this.scanner.isEnd(sentence, nextInputPosition) -> true
                     lhs.content.isEmpty() -> false
-                    else -> lhs.content.any { this.input.isLookingAt(nextInputPosition, it) }
+                    else -> lhs.content.any { this.scanner.isLookingAt(sentence, nextInputPosition, it) }
                 }
             }
         }
@@ -611,7 +613,7 @@ internal class ParseGraph(
     private fun doRecordGoal(goal: CompleteNodeIndex) {
         this.treeData.complete.setRoot(goal)
         this._goals.add(goal)
-        this.goalMatchedAll = this.input.isEnd(goal.nextInputPositionAfterSkip)
+        this.goalMatchedAll = this.scanner.isEnd(sentence, goal.nextInputPositionAfterSkip)
     }
 
     private fun prevOfToString(n: GrowingNodeIndex): String {

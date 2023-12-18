@@ -18,7 +18,8 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -26,24 +27,16 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     private val grammar = AglGrammarGrammar
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-    private val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+    private val scanner = ScannerOnDemand(converterToRuntimeRules.runtimeRuleSet.terminalRules.toList())
+    private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
     private val rrs = parser.runtimeRuleSet
 
     private val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
     private val R_namespace = rrs.findRuntimeRule("namespace")
     private val R_rule = rrs.findRuntimeRule("rule")
 
-//    private val R_isOverride = rrs.findRuntimeRule("isOverride")
-//    private   val R_override = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
-//    private   val R_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
-
     private val R_isSkip = rrs.findRuntimeRule("isSkip")
-//    private    val R_skip = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
-//    private    val R_skipEmpty = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
-
     private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
-//    private    val R_leaf = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
-//    private   val R_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
     private val T_namespace = rrs.findRuntimeRule("'namespace'")
@@ -59,7 +52,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     @Test
     fun parse_xxx() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(scanner, rrs)
         parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(goal))
@@ -75,8 +68,8 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser_preBuild = ScanOnDemandParser(rrs_preBuild)
-        val parser_noBuild = ScanOnDemandParser(rrs_noBuild)
+        val parser_preBuild = LeftCornerParser(scanner, rrs_preBuild)
+        val parser_noBuild = LeftCornerParser(scanner, rrs_noBuild)
         val sentences = listOf(
             "namespace test grammar Test { r = 'a' ; }",
             "namespace test.ns1 grammar Test { r = 'a' ; }",

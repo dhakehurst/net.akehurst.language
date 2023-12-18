@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -58,7 +59,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val sentences = listOf(
             "a"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -109,7 +110,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val sentences = listOf(
             "abcd"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -171,7 +172,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "c",
             "d"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -229,7 +230,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val sentences = listOf(
             "abc"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -266,7 +267,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val sentences = listOf(
             ""
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -349,7 +350,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "c",
             ""
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -405,7 +406,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "abc",
             "abc"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -442,7 +443,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "abc",
             "abd"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -479,7 +480,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "abc",
             "xabd"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -515,7 +516,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val sentences = listOf(
             "aaaa"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -557,7 +558,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "aaaaaa",
             "aaaaaaa"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -600,7 +601,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "aaaaaa",
             "aaaaaaa"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -650,7 +651,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "(id)",
             "..."
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -695,7 +696,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "dc",
             "bda"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -733,7 +734,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "aaa",
             "aaaa"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }
@@ -788,7 +789,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             "aaa",
             "aaaa"
         )
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         for (sentence in sentences) {
             parser.parseForGoal("S", sentence)
         }

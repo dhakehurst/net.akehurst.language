@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -51,7 +51,7 @@ internal class test_ObjectSerialisation {
         fun testParse(sentence: String) {
             val res = processor.parse(sentence)
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-            assertTrue(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeDataIsEmpty)
+            assertTrue(((processor as LanguageProcessorDefault).parser as LeftCornerParser).runtimeDataIsEmpty)
         }
     }
 

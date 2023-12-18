@@ -18,13 +18,15 @@
 package net.akehurst.language.agl.aMinimalVersion
 
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.automaton.ParseAction
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.binaryHeap
@@ -371,23 +373,25 @@ internal class MinimalParser private constructor(
     })
 
     val skipTerms by lazy { automaton.runtimeRuleSet.skipTerminals }
-    val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) }?.also { it.input = this.input } }
+    val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) }?.also { it.scanner = this.scanner } }
     val embedded = mutableMapOf<Pair<RuntimeRuleSet, RuntimeRule>, MinimalParser>()
 
-    var input: InputFromString? = null
+    var sentence: Sentence? = null
+    var scanner: ScannerOnDemand? = null
 
-    fun parse(sentence: String): TreeDataComplete<CompleteNode> {
+    fun parse(sentenceText: String): TreeDataComplete<CompleteNode> {
         //this.reset()
-        this.input = InputFromString(-1, sentence)
-        this.skipParser?.input = this.input
+        this.sentence = SentenceDefault(sentenceText)
+        this.scanner = ScannerOnDemand(automaton.runtimeRuleSet.terminalRules)
+        this.skipParser?.scanner = this.scanner
         val td = this.parseAt(0, LookaheadSetPart.EOT)
         val sppt = td ?: error("Parse Failed")
         return sppt
     }
 
     fun reset() {
-        this.input = null
-        this.skipParser?.input = null
+        this.scanner = null
+        this.skipParser?.scanner = null
         this.gss.clear()
         this.sppf = TreeData(automaton.number)
     }
@@ -544,7 +548,7 @@ internal class MinimalParser private constructor(
 
     private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
-        return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
+        return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
             val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nibs, hd.nip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete)
             true
@@ -554,12 +558,12 @@ internal class MinimalParser private constructor(
     }
 
     private fun doWidth(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
-        val lf = input!!.findOrTryCreateLeaf(hd.nip, tr.target.rp.rule)
+        val lf = scanner!!.findOrTryCreateLeaf(sentence!!, hd.nip, tr.target.rp.rule)
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(lf.nextInputPosition, slh)
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
-            if (input!!.isLookingAtAnyOf(slh, nip)) {
+            if (scanner!!.isLookingAtAnyOf(sentence!!, slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
                 val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, lf.nextInputPosition, nip)
                 if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
@@ -575,7 +579,7 @@ internal class MinimalParser private constructor(
     private fun doHeight(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         val nip = hd.nip
-        return if (input!!.isLookingAtAnyOf(lh, nip)) {
+        return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, nip)) {
             val rlh = tr.up.resolve(peot, pv.rlh)
             val nn = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip, hd.nip)//, 1)
             if (nn.isComplete) {
@@ -606,7 +610,7 @@ internal class MinimalParser private constructor(
 
     private fun doGraft(hd: GSSNode, pv: GSSNode, pp: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
-        return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
+        return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
             val rlh = pv.rlh
             val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nibs, hd.nip)//, nc)
             if (nn.isComplete) {
@@ -647,7 +651,7 @@ internal class MinimalParser private constructor(
             embedded[key] = p
             p
         }
-        embeddedParser.input = this.input
+        embeddedParser.scanner = this.scanner
         val embeddedEOT = tr.lh.unionContent(this.skipTerms).resolve(peot, hd.rlh)
         val embed = embeddedParser.parseAt(hd.nip, embeddedEOT)
         return if (null != embed) {
@@ -669,7 +673,7 @@ internal class MinimalParser private constructor(
             null
         } else {
             skipParser!!.reset()
-            skipParser!!.input = this.input
+            skipParser!!.scanner = this.scanner
             skipParser!!.parseAt(position, slh)
         }
     }

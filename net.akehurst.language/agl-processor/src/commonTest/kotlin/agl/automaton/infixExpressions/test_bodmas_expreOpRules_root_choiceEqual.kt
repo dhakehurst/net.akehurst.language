@@ -19,9 +19,10 @@ package net.akehurst.language.agl.automaton.infixExpressions
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -61,7 +62,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
 
     @Test
     fun automaton_parse_v() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -92,7 +93,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
 
     @Test
     fun automaton_parse_vmv() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vmv")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
@@ -136,7 +137,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
 
     @Test
     fun automaton_parse_sentences() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val sentences = listOf("v", "vav", "vavav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         //val sentences = listOf( "vav")
         sentences.forEach {
@@ -208,7 +209,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
 
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
-            val parser = ScanOnDemandParser(rrs)
+            val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
@@ -270,7 +271,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = ScanOnDemandParser(rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

@@ -17,8 +17,9 @@
 package net.akehurst.language.parser
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -44,7 +45,7 @@ internal class test_InputLocation_singleLine {
     fun abc() {
         val sentence = "abc"
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -77,7 +78,7 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sentence = "abc"
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -96,7 +97,7 @@ class test_InputLocation_multiLine {
     fun a_b_c() {
         val sentence = "a b c"
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -139,7 +140,7 @@ class test_InputLocation_multiLine {
             c
         """.trimIndent()
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -176,7 +177,7 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sentence = "aaabbbccc"
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -195,7 +196,7 @@ class test_InputLocation_multiLine2 {
     fun a_b_c() {
         val sentence = "aaa bbb ccc"
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -220,7 +221,7 @@ class test_InputLocation_multiLine2 {
             ccc
         """.trimIndent()
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 
@@ -251,7 +252,7 @@ class test_InputLocation_multiLine2 {
             ccc
         """.trimIndent()
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
         val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -282,7 +283,7 @@ class test_InputLocation_multiLine2 {
             ccc
         """.trimIndent()
         val ss = SentenceDefault(sentence)
-        val sp = ScanOnDemandParser(S)
+        val sp = LeftCornerParser(ScannerOnDemand(S.nonSkipTerminals), S)
 
         val result = sp.parseForGoal("S", sentence)
 

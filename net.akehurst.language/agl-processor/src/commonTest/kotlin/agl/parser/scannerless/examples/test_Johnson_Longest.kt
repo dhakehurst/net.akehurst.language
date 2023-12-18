@@ -16,9 +16,10 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
@@ -189,7 +190,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
     @ExperimentalTime
     //@Test
     fun time() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val times = mutableListOf<Duration>()
 
         for (i in 1..25) {

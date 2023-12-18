@@ -17,8 +17,10 @@
 
 package net.akehurst.language.agl.completionProvider
 
-import net.akehurst.language.agl.runtime.structure.RuntimeSpine
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeSpineDefault
 import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.api.parser.RuntimeSpine
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
@@ -31,17 +33,19 @@ internal class SpineDefault(
 
     override val expectedNextItems: Set<RuleItem> by lazy {
         runtimeSpine.expectedNextTerminals.mapNotNull {
-            mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
+            val rr = it as RuntimeRule
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber)
         }.toSet()
     }
 
     override val elements: List<RuleItem> by lazy {
         runtimeSpine.elements.mapNotNull {
-            mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
+            val rr = it as RuntimeRule
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber)
         }
     }
 
-    override val nextChildNumber get() = runtimeSpine.nextChildNumber
+    override val nextChildNumber get() = (runtimeSpine as RuntimeSpineDefault).nextChildNumber
 
     override fun toString(): String = "Spine [$nextChildNumber]->${elements.joinToString(separator = "->") { it.toString() }}"
 }

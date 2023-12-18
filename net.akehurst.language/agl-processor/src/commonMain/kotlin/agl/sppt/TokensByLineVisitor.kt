@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.syntaxAnalyser.isEmptyMatch
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
@@ -26,7 +26,7 @@ internal class TokensByLineVisitor(
     val sentence: Sentence
 ) {
     val lines = mutableListOf<MutableList<LeafData>>()
-    private lateinit var inputFromString: InputFromString
+    private lateinit var inputFromString: ScannerOnDemand
 
     fun MutableList<MutableList<LeafData>>.getOrCreate(index: Int): MutableList<LeafData> {
         if (index >= this.size) {
@@ -70,7 +70,7 @@ internal class TokensByLineVisitor(
         val tags = tagList + name
         val location = sentence.locationForNode(nodeInfo.node)
         val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
-        val eolPositions = InputFromString.eolPositions(matchedText)
+        val eolPositions = ScannerOnDemand.eolPositions(matchedText)
         when {
             nodeInfo.node.isEmptyMatch -> Unit
             eolPositions.isEmpty() -> {

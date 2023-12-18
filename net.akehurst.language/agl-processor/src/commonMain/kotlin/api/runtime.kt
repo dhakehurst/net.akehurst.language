@@ -46,6 +46,11 @@ interface Rule {
     val isListOptional: Boolean
 
     val rhsItems: List<List<Rule>>
+
+    /**
+     * will throw an error if this rule is not a Terminal
+     */
+    val unescapedTerminalValue: String
 }
 
 @DslMarker

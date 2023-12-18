@@ -18,7 +18,8 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +29,8 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     private val grammar = AglGrammarGrammar
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-    private val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+    private val scanner = ScannerOnDemand(converterToRuntimeRules.runtimeRuleSet.terminalRules.toList())
+    private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
     private val rrs = parser.runtimeRuleSet
 
     private val userGoalRuleName = "rule"
@@ -58,7 +60,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse__r_a() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(scanner, rrs)
         val result = parser.parseForGoal(userGoalRuleName, "r=a;")
         println(rrs.usedAutomatonToString(userGoalRuleName))
         assertNotNull(result.sppt)
@@ -76,7 +78,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse__r_bac() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(scanner, rrs)
         val result = parser.parseForGoal(userGoalRuleName, "r=(a);")
         println(rrs.usedAutomatonToString(userGoalRuleName))
         assertNotNull(result.sppt)
@@ -94,7 +96,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse__s_l_r_bac() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(scanner, rrs)
         val result = parser.parseForGoal(userGoalRuleName, "skip leaf r=(a);")
         println(rrs.usedAutomatonToString(userGoalRuleName))
         assertNotNull(result.sppt)

@@ -16,9 +16,11 @@
 
 package net.akehurst.language.parser.scanondemand.leftRecursive
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
@@ -179,7 +181,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             "acc"
         )
         for (s in sentences) {
-            val parser = ScanOnDemandParser(rrs)
+            val parser = LeftCornerParser(ScannerOnDemand((rrs as RuntimeRuleSet).nonSkipTerminals), rrs)
             val r = parser.parseForGoal(goal, s)
             println(rrs.usedAutomatonToString(goal))
             assertTrue(r.issues.errors.isEmpty(), r.issues.toString())

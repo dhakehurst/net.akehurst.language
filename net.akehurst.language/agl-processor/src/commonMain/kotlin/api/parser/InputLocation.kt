@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.api.parser;
 
+package net.akehurst.language.api.parser
 
 data class InputLocation(
     val position: Int,

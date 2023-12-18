@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -91,7 +92,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
     */
     @Test
     fun parse_aba() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.skipParserStateSet!!
         println(actual.usedAutomatonToString())

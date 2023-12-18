@@ -23,7 +23,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.ScanKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,7 +57,6 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
-                scanKind(ScanKind.OnDemand)
             },
             expectedTrees = arrayOf(expected)
         )
@@ -82,7 +80,6 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
-                scanKind(ScanKind.OnDemand)
             },
             expectedTrees = arrayOf(expected)
         )
@@ -106,7 +103,6 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             options = Agl.parseOptions {
                 goalRuleName(goal)
-                scanKind(ScanKind.Classic)
             },
             expectedTrees = arrayOf(expected)
         )
@@ -130,7 +126,6 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             expectedNumGSSHeads = 1,
             Agl.parseOptions {
                 goalRuleName(goal)
-                scanKind(ScanKind.Classic)
             }
         )
 

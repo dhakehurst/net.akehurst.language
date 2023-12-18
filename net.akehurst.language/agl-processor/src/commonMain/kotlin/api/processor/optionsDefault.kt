@@ -21,6 +21,8 @@ import net.akehurst.language.api.parser.InputLocation
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
     override var targetGrammarName: String?,
     override var defaultGoalRuleName: String?,
+    override val scannerResolver: ScannerResolver<AsmType, ContextType>?,
+    override val parserResolver: ParserResolver<AsmType, ContextType>?,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>?,
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
@@ -31,19 +33,24 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
+    override val scan: ScanOptions = ScanOptionsDefault(),
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
     override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault(),
     override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
 
+internal class ScanOptionsDefault(
+    override val scanKind: ScanKind = ScanKind.OnDemand,
+    override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
+) : ScanOptions
+
 internal class ParseOptionsDefault(
     override var goalRuleName: String? = null,
     override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
     override var reportErrors: Boolean = true,
     override val reportGrammarAmbiguities: Boolean = false,
-    override var cacheSkip: Boolean = true,
-    override val scanKind: ScanKind = ScanKind.OnDemand
+    override var cacheSkip: Boolean = true
 ) : ParseOptions
 
 internal class SyntaxAnalysisOptionsDefault<AsmType : Any>(
@@ -74,6 +81,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
+    private var _scannerResolver: ScannerResolver<AsmType, ContextType>? = null
+    private var _parserResolver: ParserResolver<AsmType, ContextType>? = null
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null
     private var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
@@ -123,6 +132,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             null -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
                 _targetGrammarName,
                 _defaultGoalRuleName,
+                _scannerResolver,
+                _parserResolver,
                 _typeModelResolver,
                 _crossReferenceModelResolver,
                 _syntaxAnalyserResolver,
@@ -135,6 +146,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
                 targetGrammarName = _targetGrammarName ?: base.targetGrammarName,
                 defaultGoalRuleName = _defaultGoalRuleName ?: base.defaultGoalRuleName,
+                scannerResolver = _scannerResolver ?: base.scannerResolver,
+                parserResolver = _parserResolver ?: base.parserResolver,
                 typeModelResolver = _typeModelResolver ?: base.typeModelResolver,
                 crossReferenceModelResolver = _crossReferenceModelResolver ?: base.crossReferenceModelResolver,
                 syntaxAnalyserResolver = _syntaxAnalyserResolver ?: base.syntaxAnalyserResolver,
@@ -153,39 +166,25 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 annotation class ProcessOptionsDslMarker
 
 @ProcessOptionsDslMarker
-class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
+class ScanOptionsBuilder(
+    base: ScanOptions
+) {
+    private var _scanKind = base.scanKind
+    private var _regexEngineKind = base.regexEngineKind
 
-    private var _parser: ParseOptions = ParseOptionsDefault()
-    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault()
-    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
-    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
-
-    fun parse(base: ParseOptions = ParseOptionsDefault(), init: ParseOptionsBuilder.() -> Unit) {
-        val b = ParseOptionsBuilder(base)
-        b.init()
-        _parser = b.build()
+    fun scanKind(value: ScanKind) {
+        _scanKind = value
     }
 
-    fun syntaxAnalysis(init: SyntaxAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = SyntaxAnalysisOptionsBuilder<AsmType, ContextType>()
-        b.init()
-        _syntaxAnalyser = b.build()
+    fun regexEngineKind(value: RegexEngineKind) {
+        _regexEngineKind = value
     }
 
-    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>()
-        b.init()
-        _semanticAnalyser = b.build()
-    }
+    fun build(): ScanOptions {
+        return ScanOptionsDefault(
+            _scanKind, _regexEngineKind,
 
-    fun completionProvider(init: CompletionProviderOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = CompletionProviderOptionsBuilder<AsmType, ContextType>()
-        b.init()
-        _completionProvider = b.build()
-    }
-
-    fun build(): ProcessOptions<AsmType, ContextType> {
-        return ProcessOptionsDefault<AsmType, ContextType>(_parser, _syntaxAnalyser, _semanticAnalyser, _completionProvider)
+            )
     }
 }
 
@@ -198,7 +197,6 @@ class ParseOptionsBuilder(
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
-    private var _scanKind: ScanKind = base.scanKind
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
@@ -220,12 +218,57 @@ class ParseOptionsBuilder(
         _cacheSkip = value
     }
 
-    fun scanKind(value: ScanKind) {
-        _scanKind = value
+    fun build(): ParseOptions {
+        return ParseOptionsDefault(
+            _goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+        )
+    }
+}
+
+@ProcessOptionsDslMarker
+class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
+
+    private var _scan: ScanOptions = ScanOptionsDefault()
+    private var _parse: ParseOptions = ParseOptionsDefault()
+    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault()
+    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
+    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
+
+    fun scan(base: ScanOptions = ScanOptionsDefault(), init: ScanOptionsBuilder.() -> Unit) {
+        val b = ScanOptionsBuilder(base)
+        b.init()
+        _scan = b.build()
     }
 
-    fun build(): ParseOptions {
-        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip, _scanKind)
+    fun parse(base: ParseOptions = ParseOptionsDefault(), init: ParseOptionsBuilder.() -> Unit) {
+        val b = ParseOptionsBuilder(base)
+        b.init()
+        _parse = b.build()
+    }
+
+    fun syntaxAnalysis(init: SyntaxAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
+        val b = SyntaxAnalysisOptionsBuilder<AsmType, ContextType>()
+        b.init()
+        _syntaxAnalyser = b.build()
+    }
+
+    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
+        val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>()
+        b.init()
+        _semanticAnalyser = b.build()
+    }
+
+    fun completionProvider(init: CompletionProviderOptionsBuilder<AsmType, ContextType>.() -> Unit) {
+        val b = CompletionProviderOptionsBuilder<AsmType, ContextType>()
+        b.init()
+        _completionProvider = b.build()
+    }
+
+    fun build(): ProcessOptions<AsmType, ContextType> {
+        return ProcessOptionsDefault<AsmType, ContextType>(
+            _scan, _parse,
+            _syntaxAnalyser, _semanticAnalyser, _completionProvider
+        )
     }
 }
 

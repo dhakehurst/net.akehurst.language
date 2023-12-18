@@ -1,0 +1,105 @@
+namespace net.akehurst.language.m2m
+
+grammar Common {
+
+    skip leaf WS = "\s+" ;
+    skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
+    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+
+    parameters = '(' parameterList ')' ;
+    parameterList = [typedDeclaration / ',']* ;
+    typedDeclaration = NAME ':' type ;
+
+    type = REF ;
+
+    leaf NAME = ID | STRING ;
+    leaf REF = ID | STRING ;
+
+    leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+    leaf STRING = "'([^'\\]|\.)*'" ;
+}
+
+
+grammar MetaModel extends Common {
+
+    unit = declaration* ;
+    declaration = class | primitive ;
+    primitive = 'primitive' ID ;
+    typeParameters = '<' typeParameterList '>' ;
+    typeParameterList = [ID / ',']+ ;
+    class = 'class' ID '{' property* '}' ;
+    property = ID ':' typeReference ;
+    typeReference = type typeArguments? ;
+    typeArguments = '<' typeArgumentList '>' ;
+    typeArgumentList = [typeReference / ',']+ ;
+
+}
+
+grammar Expressions extends Common {
+
+    expression
+      = primary
+      | navigation
+      | infix
+      ;
+
+    primary
+      = root
+      | literal
+      ;
+
+    infix = [expression / OP]2+ ;
+    leaf OP = '==' ;
+
+    root = NAME ;
+    literal = STRING ;
+
+    navigation = primary '.' [ navigationPart /'.']+ ;
+    navigationPart = propertyCall | methodCall ;
+    propertyCall = REF ;
+    methodCall = methodCall1 | methodCall2 | methodCall3 ;
+    methodCall1 = REF arguments ;
+    methodCall2 = REF lambdaCall ;
+    methodCall3 = REF arguments lambdaCall ;
+
+    lambdaCall = '{' expression  '}' ;
+
+    arguments = '(' argumentList ')' ;
+    argumentList = [expression / ',']* ;
+}
+
+grammar Statements extends Expressions {
+
+    statement
+      = relationCall
+      ;
+
+    relationCall = REF arguments ;
+
+}
+
+grammar Transformation  extends Common {
+
+    transformation = 'transformation' NAME parameters relation+ ;
+
+    relation = 'top'? 'relation' NAME '{' var* domain+ when? where?  '}' ;
+
+    var = 'var' typedDeclaration ;
+    domain = 'domain' REF typedDeclaration+ body? ;
+    body = '{' mapping '}' ;
+    mapping = lhs '=' REF ;
+    lhs = Expressions::primary | Expressions::navigation ;
+
+    when = 'when' '{'
+        constraint*
+    '}'
+     ;
+
+    constraint = Expressions::expression ;
+
+    where = 'where' '{'
+        Statements::statement*
+    '}'
+    ;
+
+}

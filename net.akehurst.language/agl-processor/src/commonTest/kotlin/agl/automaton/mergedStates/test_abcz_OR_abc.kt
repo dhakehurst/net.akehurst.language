@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,7 +52,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_abc() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abc")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
@@ -79,7 +80,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_abcz() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abcz")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -129,7 +130,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val sentences = listOf("abcz", "abc")
         for (sent in sentences) {
             println("Parsing sentence '$sent'")
@@ -177,7 +178,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = ScanOnDemandParser(rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("abc", "abcz")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

@@ -19,8 +19,9 @@ package net.akehurst.language.agl.automaton.concatenation
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,7 +45,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun parse_abc() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abc")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -78,7 +79,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abc")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -116,7 +117,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             concatenation("S") { literal("a");literal("b");literal("c") }
         }
 
-        val parser = ScanOnDemandParser(rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("abc")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

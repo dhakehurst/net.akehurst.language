@@ -45,6 +45,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         get() = LanguageProcessorConfigurationDefault(
             targetGrammarName = this.targetGrammarName,
             defaultGoalRuleName = this.defaultGoalRule,
+            scannerResolver = this._scannerResolver,
+            parserResolver = this._parserResolver,
             typeModelResolver = this._typeModelResolver,
             crossReferenceModelResolver = this._crossReferenceModelResolver,
             syntaxAnalyserResolver = this._syntaxAnalyserResolver,

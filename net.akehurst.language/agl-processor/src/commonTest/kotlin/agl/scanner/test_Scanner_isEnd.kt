@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.scanner
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
@@ -26,15 +27,16 @@ internal class test_Scanner_isEnd {
 
     companion object {
 
-        fun test(sentence: String, rrs: RuntimeRuleSet, position: Int, expected: Boolean) {
+        fun test(text: String, rrs: RuntimeRuleSet, position: Int, expected: Boolean) {
+            val sentence = SentenceDefault(text)
             val terms = rrs.terminalRules.filterNot { it.isEmptyTerminal }
             val scanners = listOf(
-                InputFromString(terms.size, sentence),
-                ScannerClassic(sentence, terms)
+                ScannerOnDemand(terms),
+                ScannerClassic(terms)
             )
 
             for (sc in scanners) {
-                val actual = sc.isEnd(position)
+                val actual = sc.isEnd(sentence, position)
                 assertEquals(expected, actual)
             }
         }
@@ -54,60 +56,60 @@ internal class test_Scanner_isEnd {
 
     @Test
     fun isEnd_empty_after_start() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(1)
+        val actual = sut.isEnd(sentence, 1)
 
         assertEquals(true, actual)
     }
 
     @Test
     fun isEnd_full_at_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("abcdefg")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(0)
+        val actual = sut.isEnd(sentence, 0)
 
         assertEquals(false, actual)
     }
 
     @Test
     fun isEnd_full_after_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("abcdefg")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(1)
+        val actual = sut.isEnd(sentence, 1)
 
         assertEquals(false, actual)
     }
 
     @Test
     fun isEnd_full_before_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("abcdefg")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(5)
+        val actual = sut.isEnd(sentence, 5)
 
         assertEquals(false, actual)
     }
 
     @Test
     fun isEnd_full_at_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("abcdefg")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(6)
+        val actual = sut.isEnd(sentence, 6)
 
         assertEquals(false, actual)
     }
 
     @Test
     fun isEnd_full_after_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
+        val sentence = SentenceDefault("abcdefg")
+        val sut = ScannerOnDemand(emptyList())
 
-        val actual = sut.isEnd(7)
+        val actual = sut.isEnd(sentence, 7)
 
         assertEquals(true, actual)
     }

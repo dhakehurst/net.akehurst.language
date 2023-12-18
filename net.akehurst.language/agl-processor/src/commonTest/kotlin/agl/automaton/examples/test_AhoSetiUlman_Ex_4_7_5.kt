@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -79,7 +80,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     @Test
     fun parse_da() {
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "da")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
@@ -96,7 +97,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val sentences = setOf("da", "bdc", "dc", "bda")
-        val parser = ScanOnDemandParser(rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
         sentences.forEach {
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt)
@@ -145,7 +146,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = ScanOnDemandParser(rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("da", "bdc", "dc", "bda")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.scanner
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -29,16 +30,17 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
     companion object {
 
-        fun test(sentence: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
+        fun test(text: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
+            val sentence = SentenceDefault(text)
             val terms = rrs.terminalRules.filterNot { it.isEmptyTerminal }
             val scanners = listOf(
-                InputFromString(terms.size, sentence),
-                ScannerClassic(sentence, terms)
+                ScannerOnDemand(terms),
+                ScannerClassic(terms)
             )
 
             for (sc in scanners) {
                 println(sc::class.simpleName)
-                val actual = sc.findOrTryCreateLeaf(position, rule)
+                val actual = sc.findOrTryCreateLeaf(sentence, position, rule)
                 assertEquals(expected, actual)
             }
         }
@@ -48,7 +50,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
     @Test
     fun construct() {
         val inputText = ""
-        val sut = InputFromString(0, inputText)
+        val sut = ScannerOnDemand(emptyList())
 
         assertNotNull(sut)
     }
@@ -159,7 +161,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun OnDemand_class_A() {
-        val sentence = "class A;"
+        val sentence = SentenceDefault("class A;")
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -170,11 +172,11 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = InputFromString(rrs.terminalRules.size, sentence)
-        val l1 = scanner.findOrTryCreateLeaf(0, litClass)!!
-        val l2 = scanner.findOrTryCreateLeaf(l1.nextInputPosition, patWS)!!
-        val l3 = scanner.findOrTryCreateLeaf(l2.nextInputPosition, patName)!!
-        val l4 = scanner.findOrTryCreateLeaf(l3.nextInputPosition, litSemi)!!
+        val scanner = ScannerOnDemand(rrs.nonSkipTerminals)
+        val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
+        val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
+        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
+        val l4 = scanner.findOrTryCreateLeaf(sentence, l3.nextInputPosition, litSemi)!!
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
@@ -188,7 +190,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun Classic_class_A() {
-        val sentence = "class A;"
+        val sentence = SentenceDefault("class A;")
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -199,12 +201,12 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerClassic(sentence, rrs.terminalRules)
+        val scanner = ScannerClassic(rrs.terminalRules)
         val leaves = mutableListOf<CompleteTreeDataNode>()
-        val l1 = scanner.findOrTryCreateLeaf(0, litClass)!!
-        val l2 = scanner.findOrTryCreateLeaf(l1.nextInputPosition, patWS)!!
-        val l3 = scanner.findOrTryCreateLeaf(l2.nextInputPosition, patName)!!
-        val l4 = scanner.findOrTryCreateLeaf(l3.nextInputPosition, litSemi)!!
+        val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
+        val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
+        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
+        val l4 = scanner.findOrTryCreateLeaf(sentence, l3.nextInputPosition, litSemi)!!
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
@@ -218,7 +220,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun OnDemand_class_class() {
-        val sentence = "class class;"
+        val sentence = SentenceDefault("class class;")
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -229,11 +231,11 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = InputFromString(rrs.terminalRules.size, sentence)
-        val l1 = scanner.findOrTryCreateLeaf(0, litClass)!!
-        val l2 = scanner.findOrTryCreateLeaf(l1.nextInputPosition, patWS)!!
-        val l3 = scanner.findOrTryCreateLeaf(l2.nextInputPosition, patName)!!
-        val l4 = scanner.findOrTryCreateLeaf(l3.nextInputPosition, litSemi)!!
+        val scanner = ScannerOnDemand(rrs.nonSkipTerminals)
+        val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
+        val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
+        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
+        val l4 = scanner.findOrTryCreateLeaf(sentence, l3.nextInputPosition, litSemi)!!
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
@@ -247,7 +249,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun Classic_class_class() {
-        val sentence = "class class;"
+        val sentence = SentenceDefault("class class;")
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -258,12 +260,12 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerClassic(sentence, rrs.terminalRules)
+        val scanner = ScannerClassic(rrs.terminalRules)
         val leaves = mutableListOf<CompleteTreeDataNode>()
-        val l1 = scanner.findOrTryCreateLeaf(0, litClass)!!
-        val l2 = scanner.findOrTryCreateLeaf(l1.nextInputPosition, patWS)!!
-        val l3 = scanner.findOrTryCreateLeaf(l2.nextInputPosition, patName)!!
-        val l4 = scanner.findOrTryCreateLeaf(l3.nextInputPosition, litSemi)!!
+        val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
+        val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
+        val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
+        val l4 = scanner.findOrTryCreateLeaf(sentence, l3.nextInputPosition, litSemi)!!
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(

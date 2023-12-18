@@ -45,6 +45,8 @@ object Agl {
         LanguageProcessorConfigurationDefault(
             targetGrammarName = null,
             defaultGoalRuleName = null,
+            scannerResolver = null,
+            parserResolver = null,
             typeModelResolver = null,
             crossReferenceModelResolver = null,
             syntaxAnalyserResolver = null,
@@ -108,6 +110,7 @@ object Agl {
         b.init()
         return b.build()
     }
+
 
     fun <AsmType : Any, ContextType : Any> processorFromGrammar(
         grammar: Grammar,

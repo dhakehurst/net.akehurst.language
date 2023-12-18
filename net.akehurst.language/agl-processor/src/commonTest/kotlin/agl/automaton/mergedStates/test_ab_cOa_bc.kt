@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -59,7 +60,7 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
 
         val sentences = setOf("abc")
         sentences.forEach {
-            val parser = ScanOnDemandParser(rrs)
+            val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })

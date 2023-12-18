@@ -110,7 +110,7 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
 }
 
-internal class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
+internal class CompletedNodesStore<T>(val num: Int) {
 
     private val _map = HashMap<Pair<RuntimeRule, Int>, T>() //TODO: make this more efficient
     private var _goal: T? = null

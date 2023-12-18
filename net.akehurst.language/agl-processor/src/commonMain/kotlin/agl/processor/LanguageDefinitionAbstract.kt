@@ -172,31 +172,49 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
             this._processor_cache.reset()
         }
     }
+
+    protected var _scannerResolver: ScannerResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.scannerResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+
+    protected var _parserResolver: ParserResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.parserResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+
     protected var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.typeModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.syntaxAnalyserResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.semanticAnalyserResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _formatterResolver: FormatterResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.formatterResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _styleResolver: StyleResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.styleResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.completionProvider) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()

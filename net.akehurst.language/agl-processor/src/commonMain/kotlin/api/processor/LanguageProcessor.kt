@@ -16,10 +16,11 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.parser.Parser
+import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -41,7 +42,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     val grammar: Grammar?
 
-    val scannerMatchables: List<Matchable>
+    val scanner: Scanner?
 
     /**
      * An SPPT parser for this language,
@@ -49,6 +50,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      * useful for testing parser output
      */
     val spptParser: SPPTParser
+
+    val parser: Parser?
 
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
