@@ -36,7 +36,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
 
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
-    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
+    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<Any>> = mutableStackOf(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {

@@ -88,6 +88,7 @@ internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false
             ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
         }
+        scanner.matchables
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.parse.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
         val (result, duration) = measureTimedValue {

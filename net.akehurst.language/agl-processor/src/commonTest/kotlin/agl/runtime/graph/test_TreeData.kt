@@ -26,7 +26,6 @@ import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -39,11 +38,11 @@ internal class test_TreeData {
     @Test
     fun construct() {
         assertNull(graph.treeData.complete.root)
-        assertTrue(graph.treeData.complete.completeChildren.isEmpty())
+        assertTrue(graph.treeData.complete.isEmpty)
         assertTrue(graph.treeData.growingChildren.isEmpty())
         assertNull(graph.treeData.complete.initialSkip)
         assertNull(graph.treeData.complete.root!!.startPosition)
-        assertNull(graph.treeData.complete.root!!.nextInputPositionBeforeSkip)
+        assertNull(graph.treeData.complete.root!!.nextInputNoSkip)
     }
 
     @Test
@@ -80,7 +79,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -136,7 +135,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

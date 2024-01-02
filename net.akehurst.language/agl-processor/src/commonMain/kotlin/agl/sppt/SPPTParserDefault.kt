@@ -24,7 +24,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.mutableStackOf
 
 internal object Tokens {
@@ -118,7 +117,7 @@ internal class SPPTParserDefault(
     val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
-    private var _oldTreeData: TreeDataComplete<CompleteTreeDataNode>? = null
+    private var _oldTreeData: TreeData? = null
 
     // --- SPPTParser ---
     override lateinit var tree: SharedPackedParseTree
@@ -135,7 +134,7 @@ internal class SPPTParserDefault(
         }
         val td = tp.parse(rootRuntimeRuleSet, oldTree)
         this._oldTreeData = td
-        this.tree = SPPTFromTreeData(td as TreeDataComplete<SpptDataNode>, SentenceDefault(tp.sentence), -1, -1)
+        this.tree = SPPTFromTreeData(td as TreeDataComplete, SentenceDefault(tp.sentence), -1, -1)
         return this.tree
     }
 
@@ -169,7 +168,7 @@ internal class TreeParser(
 
     val sentence: String get() = this._sentenceBuilder.toString()
 
-    fun parse(rootRuntimeRuleSet: RuntimeRuleSet, oldTree: TreeDataComplete<CompleteTreeDataNode>?): TreeDataComplete<CompleteTreeDataNode> {
+    fun parse(rootRuntimeRuleSet: RuntimeRuleSet, oldTree: TreeData?): TreeData {
         this.beginTree(rootRuntimeRuleSet, oldTree)
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
         while (scanner.hasMore()) {
@@ -194,7 +193,7 @@ internal class TreeParser(
     private val scanner = SimpleScanner(treeAsString, Tokens.WS)
     private var sentenceStartPosition = 0
     private var sentenceNextInputPosition = 0
-    private val treeDataStack = mutableStackOf<TreeDataComplete<CompleteTreeDataNode>>()
+    private val treeDataStack = mutableStackOf<TreeData>()
     private val nodeNamesStack = mutableStackOf<NodeStart>()
     private val childrenStack = mutableStackOf<MutableList<CompleteTreeDataNode>>()
     private var runtimeRuleSetInUse = mutableStackOf<RuntimeRuleSet>()
@@ -289,13 +288,13 @@ internal class TreeParser(
     }
 
     //
-    private fun beginTree(rrs: RuntimeRuleSet, oldTree: TreeDataComplete<CompleteTreeDataNode>?) {
-        val treeData = oldTree ?: TreeDataComplete<CompleteTreeDataNode>(rrs.number)
+    private fun beginTree(rrs: RuntimeRuleSet, oldTree: TreeData?) {
+        val treeData = oldTree ?: treeData(rrs.number)
         this.treeDataStack.push(treeData)
         this.runtimeRuleSetInUse.push(rrs)
     }
 
-    private fun endTree(userGoalNode: CompleteTreeDataNode): TreeDataComplete<CompleteTreeDataNode> {
+    private fun endTree(userGoalNode: CompleteTreeDataNode): TreeData {
         val rrs = this.runtimeRuleSetInUse.pop()
         val treeData = this.treeDataStack.pop()
         val gr = rrs.goalRuleFor[userGoalNode.rule]!!
@@ -351,11 +350,11 @@ internal class TreeParser(
         // embedded tree
         val embrrs = this.embeddedRuntimeRuleSets[embGramName] ?: error("No embedded RuntimeRuleSet with name '${embGramName}' passed to SPPTParser")
         this.runtimeRuleSetInUse.push(embrrs)
-        val embTreeData = TreeDataComplete<CompleteTreeDataNode>(embrrs.number)
+        val embTreeData = treeData(embrrs.number)
         this.treeDataStack.push(embTreeData)
     }
 
-    private fun endEmbedded(embUserRoot: CompleteTreeDataNode): TreeDataComplete<CompleteTreeDataNode> {
+    private fun endEmbedded(embUserRoot: CompleteTreeDataNode): TreeData {
         val lastNodeStart = nodeNamesStack.pop()
         val embLeafName = lastNodeStart.ref.name
         val embTreeData = endTree(embUserRoot)

@@ -28,7 +28,7 @@ object SPPTTest {
         matches(expected.treeData, actual.treeData)
     }
 
-    fun matches(expected: TreeDataComplete<*>, actual: TreeDataComplete<*>) {
+    fun matches(expected: TreeDataComplete, actual: TreeDataComplete) {
         assertEquals(expected.completeChildren.size, actual.completeChildren.size)
         TODO()
     }

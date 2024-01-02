@@ -20,7 +20,6 @@ import net.akehurst.language.agl.api.messages.Message
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -29,7 +28,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.automaton.ParseAction
@@ -82,7 +81,7 @@ internal class RuntimeParser(
 
     private var interruptedMessage: String? = null
 
-    private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeDataComplete<CompleteNodeIndex>?>()
+    private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
@@ -701,7 +700,7 @@ internal class RuntimeParser(
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
 
                     val skipData = parseSkipIfAny(l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, parseArgs)
-                    val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionBeforeSkip ?: l.nextInputPosition
+                    val nextInputPositionAfterSkip = skipData?.root?.nextInputNoSkip ?: l.nextInputPosition
 
                     val hasLh = possibleEndOfText.any { eot ->
                         runtimeLhs.any { rt ->
@@ -831,7 +830,7 @@ internal class RuntimeParser(
         lh: LookaheadSet,
         possibleEndOfText: Set<LookaheadSet>,
         growArgs: GrowArgs
-    ): TreeDataComplete<CompleteNodeIndex>? {
+    ): TreeData? {
 
         return if (null == skipParser) {
             //this is a skipParser, so no skipData
@@ -851,7 +850,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeDataComplete<CompleteNodeIndex>? {
+    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeData? {
         return if (this.cacheSkip) {
             val key = Pair(startPosition, possibleEndOfSkip)
             if (_skip_cache.containsKey(key)) {
@@ -874,7 +873,7 @@ internal class RuntimeParser(
         possibleEndOfSkip: Set<LookaheadSet>,
         startPosition: Int,
         growArgs: GrowArgs
-    ): TreeDataComplete<CompleteNodeIndex>? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    ): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         if (Debug.OUTPUT_RUNTIME) println("*** Start skip Parser")
         skipParser!!.reset()
         skipParser.start(startPosition, possibleEndOfSkip, growArgs)
@@ -937,7 +936,7 @@ internal class RuntimeParser(
                 val match = embeddedParser.graph.treeData.complete
                 if (match.root != null) {
                     val embeddedS0 = embeddedParser.stateSet.startState
-                    val ni = match.root?.nextInputPositionAfterSkip!! // will always have value if root not null
+                    val ni = match.root?.nextInputPosition!! // will always have value if root not null
                     //TODO: parse skipNodes
                     val skipLh = head.runtimeState.runtimeLookaheadSet.flatMap { rt ->
                         possibleEndOfText.map { eot ->

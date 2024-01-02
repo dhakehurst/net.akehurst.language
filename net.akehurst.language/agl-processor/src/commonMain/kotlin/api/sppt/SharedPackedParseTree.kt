@@ -131,7 +131,7 @@ interface SharedPackedParseTree {
      */
     val toStringAll: String
 
-    val treeData: TreeDataComplete<SpptDataNode>
+    val treeData: TreeDataComplete
 
     /**
      * Diagnostic info.

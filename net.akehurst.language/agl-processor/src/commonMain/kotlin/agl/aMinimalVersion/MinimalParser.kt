@@ -25,7 +25,7 @@ import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.TreeDataGrowing
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -387,7 +387,7 @@ internal class MinimalParser private constructor(
     var sentence: Sentence? = null
     val scanner: ScannerOnDemand = ScannerOnDemand(RegexEnginePlatform, automaton.usedTerminals.toList())
 
-    fun parse(sentenceText: String): TreeDataComplete<CompleteNode> {
+    fun parse(sentenceText: String): TreeData {
         //this.reset()
         this.sentence = SentenceDefault(sentenceText)
         //this.skipParser?.scanner = this.scanner
@@ -405,8 +405,8 @@ internal class MinimalParser private constructor(
         this.sppf = TreeDataGrowing(automaton.number)
     }
 
-    private fun parseAt(position: Int, eot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
-        val initialSkipData = if (null == skipParser) {
+    private fun parseAt(position: Int, eot: LookaheadSetPart): TreeData? {
+        val initialSkipData: TreeData? = if (null == skipParser) {
             null
         } else {
             val slh = firstTerminals(ss.rp, ss.rp, eot)
@@ -681,7 +681,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun tryParseSkip(position: Int, slh: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
+    private fun tryParseSkip(position: Int, slh: LookaheadSetPart): TreeData? {
         return if (null == skipParser) {
             null
         } else {

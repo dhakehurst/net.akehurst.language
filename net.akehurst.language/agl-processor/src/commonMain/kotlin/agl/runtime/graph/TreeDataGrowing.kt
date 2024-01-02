@@ -16,7 +16,8 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.agl.sppt.treeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
 
@@ -28,13 +29,13 @@ internal class TreeDataGrowing<GN, CN : SpptDataNode>(
 
     val isEmpty: Boolean get() = complete.isEmpty && this.isClean
 
-    val complete = TreeDataComplete<CN>(forStateSetNumber)
+    val complete = treeData(forStateSetNumber)
 
     val growingChildren: Map<GN, List<CN>> get() = this._growingChildren
 
     fun preferred(node: CN): CN? = (this.complete.preferred(node) as CN?)
 
-    fun initialise(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
+    fun initialise(gni: GN, initialSkipData: TreeData?) {
         val growing = mutableListOf<CN>()
         this.setGrowingChildren(gni, growing)
         this.complete.start(initialSkipData)
@@ -56,7 +57,7 @@ internal class TreeDataGrowing<GN, CN : SpptDataNode>(
     //   }
 
     fun removeTreeComplete(node: CN) {
-        val childrenOfRemoved = this.complete.completeChildren[node]
+        //val childrenOfRemoved = this.complete.completeChildren[node]
         this.complete.remove(node)
         // if (node.isEmbedded) {
         //     // children stored in other TreeData ? TODO
@@ -72,7 +73,7 @@ internal class TreeDataGrowing<GN, CN : SpptDataNode>(
         //childrenOfRemoved?.forEach { child -> decrementGrowingParents(child) }
     }
 
-    fun setEmbeddedChild(parent: CN, child: CN, embeddedTreeData: TreeDataComplete<CN>) {
+    fun setEmbeddedChild(parent: SpptDataNode, child: SpptDataNode, embeddedTreeData: TreeData) {
         val completeChildren = listOf(child)
         this.complete.setChildren(parent, completeChildren, true)  //might it ever not be preferred!
         this.complete.setEmbeddedTreeFor(parent, embeddedTreeData)
@@ -155,7 +156,7 @@ internal class TreeDataGrowing<GN, CN : SpptDataNode>(
         this.complete.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete<CN>) {
+    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeData) {
         this.complete.setSkipDataAfter(leafNodeIndex, skipData)
     }
 

@@ -20,7 +20,7 @@ import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.Sentence
@@ -382,8 +382,8 @@ internal class ParseGraph(
     /**
      * START
      */
-    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeDataComplete<CompleteNodeIndex>?): GrowingNodeIndex {
-        val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPositionAfterSkip ?: startPosition
+    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?): GrowingNodeIndex {
+        val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPosition ?: startPosition
         val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, null)
         this._gss.root(st)
         this.treeData.initialise(st, initialSkipData)
@@ -401,9 +401,9 @@ internal class ParseGraph(
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        skipData: TreeDataComplete<CompleteNodeIndex>?
+        skipData: TreeData?
     ): Boolean {
-        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
@@ -424,10 +424,10 @@ internal class ParseGraph(
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        embeddedTreeData: TreeDataComplete<CompleteNodeIndex>,
-        skipData: TreeDataComplete<CompleteNodeIndex>?
+        embeddedTreeData: TreeData,
+        skipData: TreeData?
     ): Boolean {
-        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)

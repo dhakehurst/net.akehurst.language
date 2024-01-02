@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-fun SpptDataNode.children(treeData: TreeDataComplete<SpptDataNode>, alternative: Int = 0) = treeData.childrenFor(this)[alternative].second
+fun SpptDataNode.children(treeData: TreeDataComplete, alternative: Int = 0) = treeData.childrenFor(this)[alternative].second
 
 internal class test_InputLocation_singleLine {
 

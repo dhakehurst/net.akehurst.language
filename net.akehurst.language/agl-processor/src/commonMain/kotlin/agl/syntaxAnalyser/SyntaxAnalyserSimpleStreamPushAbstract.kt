@@ -84,7 +84,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 //        return emptyList()
 //    }
 
-    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
+    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack = mutableStackOf(this)
         val downStack = mutableStackOf<DownData?>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()

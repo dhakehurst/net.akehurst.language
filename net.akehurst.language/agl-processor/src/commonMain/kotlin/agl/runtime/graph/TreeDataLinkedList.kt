@@ -24,13 +24,13 @@ internal class TreeDataLinkedList<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 
-    val complete = TreeDataComplete<CN>(forStateSetNumber)
+    val complete = TreeDataComplete(forStateSetNumber)
 
     val growingChildren: Map<GN, List<CN>> get() = this._growingChildren
 
     fun preferred(node: CN): CN? = (this.complete.preferred(node) as CN?)
 
-    fun initialise(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
+    fun initialise(gni: GN, initialSkipData: TreeDataComplete?) {
         val growing = mutableListOf<CN>()
         this.setGrowingChildren(gni, growing)
         this.complete.start(initialSkipData)
@@ -70,7 +70,7 @@ internal class TreeDataLinkedList<GN, CN : SpptDataNode>(
 
     //    fun hasGrowingParent(node: GN): Boolean = (_numberOfParents[node.complete] ?: 0) > 0
 
-    fun setEmbeddedChild(parent: CN, child: CN, embeddedTreeData: TreeDataComplete<CN>) {
+    fun setEmbeddedChild(parent: CN, child: CN, embeddedTreeData: TreeDataComplete) {
         val completeChildren = listOf(child)
         this.complete.setChildren(parent, completeChildren, true)  //might it ever not be preferred!
         this.complete.setEmbeddedTreeFor(parent, embeddedTreeData)
@@ -144,7 +144,7 @@ internal class TreeDataLinkedList<GN, CN : SpptDataNode>(
         this.complete.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete<CN>) {
+    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete) {
         this.complete.setSkipDataAfter(leafNodeIndex, skipData)
     }
 

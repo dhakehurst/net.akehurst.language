@@ -36,7 +36,6 @@ import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.math.max
 
 internal class LeftCornerParser(
@@ -107,7 +106,7 @@ internal class LeftCornerParser(
             totalWork += rp.graph.numberOfHeads
         }
 
-        val match = rp.graph.treeData.complete as TreeDataComplete<SpptDataNode>
+        val match = rp.graph.treeData.complete as TreeDataComplete
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)

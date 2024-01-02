@@ -18,10 +18,13 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToInputSentence
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.LeafData
+import net.akehurst.language.api.sppt.Sentence
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SpptWalker
 
 internal class SPPTFromTreeData(
-    override val treeData: TreeDataComplete<SpptDataNode>,
+    override val treeData: TreeDataComplete,
     internal val sentence: Sentence,
     override val seasons: Int,
     override val maxNumHeads: Int

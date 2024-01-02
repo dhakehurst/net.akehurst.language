@@ -60,5 +60,5 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     /**
      * implement this to walk the tree and set the 'asm' property
      */
-    abstract fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean)
+    abstract fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean)
 }
