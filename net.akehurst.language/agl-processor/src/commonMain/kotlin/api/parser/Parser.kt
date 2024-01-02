@@ -18,7 +18,6 @@
 package net.akehurst.language.api.parser
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.api.language.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult
@@ -29,6 +28,8 @@ interface RuntimeSpine {
 }
 
 interface Parser {
+
+    fun reset()
 
     fun interrupt(message: String)
 
@@ -43,9 +44,6 @@ interface Parser {
      * @param goalRuleName
      * @param inputText
      * @return the result of parsing
-     * @throws ParseFailedException
-     * @throws ParseTreeException
-     * @throws GrammarRuleNotFoundException
      */
     fun parseForGoal(goalRuleName: String, sentenceText: String): ParseResult
 
@@ -54,9 +52,6 @@ interface Parser {
     /**
      * list of non-terminal or terminal runtime rules expected at the position
      *
-     * @throws ParseFailedException
-     * @throws ParseTreeException
-     * @throws GrammarRuleNotFoundException
      **/
     fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpine>
 

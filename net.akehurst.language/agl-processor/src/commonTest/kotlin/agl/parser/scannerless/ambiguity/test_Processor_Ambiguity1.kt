@@ -19,12 +19,12 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
+internal class test_Processor_Ambiguity1 : test_LeftCornerParserAbstract() {
     //TODO: make this use || ambiguous choice
     /**
      * S : 'a' | 'a' S B B ;

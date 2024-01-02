@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal : test_ScanOnDemandParserAbstract() {
+internal class test_literal : test_LeftCornerParserAbstract() {
 
     //  S = 'a'
     private companion object {

@@ -23,10 +23,18 @@ import kotlin.test.assertEquals
 class test_RegexMatcher_multi01 {
 
     @Test
+    fun multi01_0() {
+        val m = regexMatcher(",?")
+        val actual = m.match("", 0)
+        val expected = RegexMatcher.MatchResultAgl("")
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun multi01_1() {
         val m = regexMatcher("a?b")
         val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("b")
         assertEquals(expected, actual)
     }
 
@@ -34,7 +42,7 @@ class test_RegexMatcher_multi01 {
     fun multi01_2() {
         val m = regexMatcher("a?b")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 

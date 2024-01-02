@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RulePositionWithLookahead
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -46,7 +47,7 @@ class test_ParseGraph_abc {
         }
 
         val text = "a"
-        val scanner = ScannerOnDemand(rrs.terminalRules)
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("S")]
@@ -69,7 +70,7 @@ class test_ParseGraph_abc {
             literal("a", "a")
         }
         val text = "a"
-        val scanner = ScannerOnDemand(rrs.terminalRules)
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]

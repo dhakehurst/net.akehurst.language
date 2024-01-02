@@ -22,11 +22,11 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
+internal class test_aObcLiteral : test_LeftCornerParserAbstract() {
 
     // S = a < b c;
     // a = 'a' ;

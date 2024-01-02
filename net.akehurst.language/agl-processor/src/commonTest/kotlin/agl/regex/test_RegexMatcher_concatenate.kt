@@ -34,7 +34,7 @@ class test_RegexMatcher_concatenate {
     fun character() {
         val m = regexMatcher("a")
         val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("a")
         assertEquals(expected, actual)
     }
 
@@ -50,7 +50,7 @@ class test_RegexMatcher_concatenate {
     fun concatenation() {
         val m = regexMatcher("ab")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 

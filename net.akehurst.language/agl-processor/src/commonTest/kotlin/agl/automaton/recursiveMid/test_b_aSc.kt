@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -48,7 +49,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_b() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "b")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.toString())
@@ -77,7 +78,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abc() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abc")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.toString())
@@ -116,7 +117,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_b_abc() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "b")
         val result = parser.parseForGoal("S", "abc")
         println(rrs.usedAutomatonToString("S"))
@@ -157,7 +158,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_aabcc() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "aabcc")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.toString())
@@ -197,7 +198,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_b_abc_aabcc() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "b")
         parser.parseForGoal("S", "abc")
         val result = parser.parseForGoal("S", "aabcc")
@@ -245,7 +246,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         val sentences = setOf("b", "abc", "aabcc")
         sentences.forEach {
             println(it)
-            val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+            val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.toString())
             assertEquals(0, result.issues.size)
@@ -285,7 +286,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("b", "abc", "aabcc", "aaabccc")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

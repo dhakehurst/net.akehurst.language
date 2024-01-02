@@ -26,7 +26,7 @@ class test_RegexMatcher_choice {
     fun choice_1() {
         val m = regexMatcher("a|b")
         val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("a")
         assertEquals(expected, actual)
     }
 
@@ -34,7 +34,7 @@ class test_RegexMatcher_choice {
     fun choice_2() {
         val m = regexMatcher("a|b")
         val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("b")
         assertEquals(expected, actual)
     }
 

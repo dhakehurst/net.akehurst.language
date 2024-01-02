@@ -27,7 +27,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
     private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(grammar) }
-    override val runtimeRuleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
+    override val ruleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
     override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._converterToRuntimeRules.originalRuleItemFor(ruleSetNumber, ruleNumber) }
 
 }

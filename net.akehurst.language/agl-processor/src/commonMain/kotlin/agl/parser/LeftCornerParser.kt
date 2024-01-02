@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
+import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.processor.Agl
@@ -40,8 +41,10 @@ import kotlin.math.max
 
 internal class LeftCornerParser(
     val scanner: Scanner,
-    val runtimeRuleSet: RuntimeRuleSet
+    ruleSet: RuleSet
 ) : Parser {
+
+    val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
     // cached only so it can be interrupted
     private var runtimeParser: RuntimeParser? = null
@@ -49,6 +52,11 @@ internal class LeftCornerParser(
     private val _issues = IssueHolder(LanguageProcessorPhase.PARSE)
 
     val runtimeDataIsEmpty: Boolean get() = runtimeParser?.graph?.isEmpty ?: true
+
+    override fun reset() {
+        runtimeParser = null
+
+    }
 
     override fun interrupt(message: String) {
         this.runtimeParser?.interrupt(message)
@@ -71,6 +79,7 @@ internal class LeftCornerParser(
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
         val cacheSkip = options.cacheSkip
         _issues.clear()
+        scanner.reset()
         val rp = createRuntimeParser(sentence, goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
@@ -228,6 +237,7 @@ internal class LeftCornerParser(
         val automatonKind = options.automatonKind
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, position)
+        scanner.reset()
         val rp = createRuntimeParser(SentenceDefault(usedText), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 

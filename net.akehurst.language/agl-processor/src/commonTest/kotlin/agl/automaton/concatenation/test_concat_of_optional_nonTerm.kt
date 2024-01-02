@@ -20,6 +20,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
@@ -74,7 +75,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     @Test
     fun parse_bcd() {
         //TODO: is there a way to reset the rrs if it needs it?
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "bcd")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -114,7 +115,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     @Test
     fun parse_abcd() {
         //TODO: is there a way to reset the rrs if it needs it?
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abcd")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -154,7 +155,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     @Test
     fun parse_abced() {
         //TODO: is there a way to reset the rrs if it needs it?
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "abced")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -196,7 +197,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val sentences = listOf("bcd", "abcd", "bced", "abced", "bcefed", "abcefed")
         for (sent in sentences) {
             println("Parsing sentence '$sent'")

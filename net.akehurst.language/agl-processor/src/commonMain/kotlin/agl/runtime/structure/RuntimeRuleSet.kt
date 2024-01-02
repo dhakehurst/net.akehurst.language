@@ -20,7 +20,6 @@ import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
@@ -89,7 +88,7 @@ internal class RuntimeRuleSet(
     val nonSkipRules: Array<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip.not() }.toTypedArray() }
 
     // used if scanning (excluding skip)
-    val nonSkipTerminals: List<RuntimeRule> by lazy {
+    override val nonSkipTerminals: List<RuntimeRule> by lazy {
         this.runtimeRules.flatMap {
             when {
                 it.isEmbedded -> (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet.nonSkipTerminals.toList()
@@ -100,10 +99,10 @@ internal class RuntimeRuleSet(
     }
 
     // used if scanning (including skip)
-    val terminalRules: List<RuntimeRule> by lazy {
+    override val terminals: List<RuntimeRule> by lazy {
         this.runtimeRules.flatMap {
             when {
-                it.isEmbedded -> (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet.terminalRules.toList()
+                it.isEmbedded -> (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet.terminals.toList()
                 it.isTerminal -> listOf(it)
                 else -> emptyList()
             }
@@ -323,7 +322,7 @@ internal class RuntimeRuleSet(
 
     fun findTerminalRule(tag: String): RuntimeRule {
         val number = this.terminalRuleNumber[tag]
-            ?: throw ParserException("Terminal RuntimeRule ${tag} not found")
+            ?: error("Terminal RuntimeRule ${tag} not found")
         return this.runtimeRules[number]
     }
 
@@ -398,6 +397,40 @@ internal class RuntimeRuleSet(
     internal fun fullAutomatonToString(goalRuleName: String, automatonKind: AutomatonKind): String {
         this.buildFor(goalRuleName, automatonKind)
         return this.usedAutomatonToString("S")
+    }
+
+    fun calcUsedRules(
+        rule: RuntimeRule,
+        used: MutableSet<RuntimeRule> = mutableSetOf(),
+        done: BooleanArray = BooleanArray(this.runtimeRules.size)
+    ): Set<RuntimeRule> {
+        return when {
+            rule.isGoal -> {
+                used.add(rule)
+                for (sr in rule.rhsItems.flatten()) {
+                    calcUsedRules(sr as RuntimeRule, used, done)
+                }
+                used
+            }
+
+            rule.ruleNumber >= 0 && done[rule.ruleNumber] -> used
+            else -> when {
+                rule.isNonTerminal -> {
+                    used.add(rule)
+                    if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
+                    for (sr in rule.rhsItems.flatten()) {
+                        calcUsedRules(sr as RuntimeRule, used, done)
+                    }
+                    used
+                }
+
+                else -> {
+                    used.add(rule)
+                    if (rule.ruleNumber > 0) done[rule.ruleNumber] = true
+                    used
+                }
+            }
+        }
     }
 
     // only used in test

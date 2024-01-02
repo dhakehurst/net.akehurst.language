@@ -18,10 +18,10 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_recursive_sepList : test_ScanOnDemandParserAbstract() {
+internal class test_recursive_sepList : test_LeftCornerParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S2 ;

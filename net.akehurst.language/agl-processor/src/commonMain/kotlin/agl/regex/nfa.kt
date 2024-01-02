@@ -17,10 +17,12 @@
 package net.akehurst.language.agl.regex
 
 internal class State(
-        val number: Int,
-        val isSplit: Boolean
+    val number: Int,
+    val isSplit: Boolean
 ) {
     val outgoing = mutableListOf<Transition>()
+
+    val isGoal get() = this == RegexMatcherImpl.MATCH_STATE
 
     override fun hashCode(): Int = this.number
     override fun equals(other: Any?): Boolean {
@@ -34,20 +36,20 @@ internal class State(
 }
 
 internal class Fragment(
-        val start: State,
-        val outgoing: List<Transition>
+    val start: State,
+    val outgoing: List<Transition>
 ) {
 }
 
 internal enum class MatcherKind {
-  EMPTY, ANY, END_OF_LINE_OR_INPUT, NEGATED, LITERAL, ONE_OF, RANGE
+    EMPTY, ANY, END_OF_LINE_OR_INPUT, NEGATED, LITERAL, ONE_OF, RANGE
 }
 
 internal class CharacterMatcher(
-        val kind:MatcherKind,
-        val literal:Char = '\u0000', // min
-        val max:Char = '\u0000',
-        val options: Array<CharacterMatcher> = arrayOf(CharacterMatcher.EMPTY)
+    val kind: MatcherKind,
+    val literal: Char = '\u0000', // min
+    val max: Char = '\u0000',
+    val options: Array<CharacterMatcher> = arrayOf(CharacterMatcher.EMPTY)
 ) {
     internal companion object {
         val EMPTY = CharacterMatcher(MatcherKind.EMPTY)
@@ -63,7 +65,7 @@ internal class CharacterMatcher(
 
     //abstract fun matches(text: CharSequence, pos: Int): Boolean =
 
-    override fun toString(): String = when(kind) {
+    override fun toString(): String = when (kind) {
         MatcherKind.EMPTY -> error("should not happen")
         MatcherKind.ANY -> "ANY"
         MatcherKind.END_OF_LINE_OR_INPUT -> "$"
@@ -131,6 +133,7 @@ internal class Transition(val kind: TransitionKind, val matcher: CharacterMatche
 
     var to: State? = null
     lateinit var nextStates: Array<State>
+
     // will get reassigned when nextStates is called
     var isToGoal = false
 

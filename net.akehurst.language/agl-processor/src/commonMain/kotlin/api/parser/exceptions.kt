@@ -17,7 +17,7 @@ package net.akehurst.language.api.parser;
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class ParserException(message: String) : RuntimeException(message)
+//class ParserException(message: String) : RuntimeException(message)
 
 class ParserTerminatedException(message: String) : RuntimeException(message)
 
@@ -26,5 +26,5 @@ class ParseFailedException(
     val longestMatch: SharedPackedParseTree?,
     val location: InputLocation,
     val expected: Set<String>,
-    val contextInText:String
+    val contextInText: String
 ) : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}\n...${contextInText}...")

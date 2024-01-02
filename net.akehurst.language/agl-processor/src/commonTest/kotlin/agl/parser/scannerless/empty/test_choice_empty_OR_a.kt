@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
+internal class test_choice_empty_OR_a : test_LeftCornerParserAbstract() {
 
     //  S = 'a' | e
     //  e = <empty>

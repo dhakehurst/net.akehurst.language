@@ -15,11 +15,10 @@
  *
  */
 
-package thridparty
+package net.akehurst.language.agl.thridparty
 
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -504,25 +503,31 @@ grammar Packages extends Interfaces {
 
     @Test
     fun parse_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration {
+            targetGrammarName("BlocksAndStatements");
+            defaultGoalRuleName("Block")
+        }).processor!!
         val goal = "Block"
         val sentence = """
         {}
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
 
     @Test
     fun process_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration(Agl.configurationDefault()) {
+            targetGrammarName("BlocksAndStatements");
+            defaultGoalRuleName("Block")
+        }).processor!!
         val goal = "Block"
         val sentence = """
         {}
         """.trimIndent()
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 }

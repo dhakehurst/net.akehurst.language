@@ -18,14 +18,14 @@ package net.akehurst.language.agl.regex
 
 import net.akehurst.language.api.regex.RegexMatcher
 
-fun regexMatcher(pattern:String):RegexMatcher = RegexParser(pattern).parse()
+fun regexMatcher(pattern: String): RegexMatcher = RegexParser(pattern).parse()
 
 // nfa is Array of States, each state is element in array
 // Array<Int,
 internal class RegexMatcherImpl(
-        val pattern: String,
-        val start:State,
-        val nfa: List<State>
+    val pattern: String,
+    val start: State,
+    val nfa: List<State>
 ) : RegexMatcher {
 
     internal companion object {
@@ -33,7 +33,11 @@ internal class RegexMatcherImpl(
         val ERROR_STATE = State(-2, false)
     }
 
-    private val startStates:Array<State>
+    override fun matchAt(text: String, atPosition: Int): MatchResult? = this.match(text, atPosition)
+
+    override fun matchesAt(text: String, atPosition: Int): Boolean = null != this.match(text, atPosition)
+
+    private val startStates: Array<State>
 
     init {
         val ns = mutableListOf<State>()
@@ -46,26 +50,28 @@ internal class RegexMatcherImpl(
         }
     }
 
-    private fun matches( matcher:CharacterMatcher, text:CharSequence, pos:Int): Boolean {
-        return when(matcher.kind) {
+    private fun matches(matcher: CharacterMatcher, text: CharSequence, pos: Int): Boolean {
+        return when (matcher.kind) {
             MatcherKind.EMPTY -> error("should not happen")
             MatcherKind.ANY -> true
             MatcherKind.END_OF_LINE_OR_INPUT -> {
-                val nextPos = pos+1
+                val nextPos = pos + 1
                 nextPos == text.length || text[pos] == '\n'
             }
+
             MatcherKind.NEGATED -> this.matches(matcher.matcher, text, pos).not()
             MatcherKind.LITERAL -> text[pos] == matcher.literal
             MatcherKind.ONE_OF -> {
                 val opts = matcher.options
-                for(i in 0 until opts.size) {
+                for (i in 0 until opts.size) {
                     if (this.matches(opts[i], text, pos)) {
                         return true
                     }
                 }
                 return false
             }
-            MatcherKind.RANGE -> text[pos] in matcher.min .. matcher.max
+
+            MatcherKind.RANGE -> text[pos] in matcher.min..matcher.max
         }
     }
 
@@ -73,17 +79,19 @@ internal class RegexMatcherImpl(
     private var currentStates = ArrayList<Array<State>>(10)
     private var nextStates = ArrayList<Array<State>>(10)
     private var eolPositions = ArrayList<Int>(10)
-    override fun match(text: CharSequence, startPosition: Int): RegexMatcher.MatchResult? {
+    override fun match(text: CharSequence, startPosition: Int): RegexMatcher.MatchResultAgl? {
         var pos = startPosition
         this.currentStates.clear()
         this.nextStates.clear()
+        this.eolPositions.clear()
         currentStates.add(this.startStates)
+        val matchesEmpty = currentStates[0].any { s -> s.isGoal }
         var maxMatchedPos = -1
         while (currentStates.isNotEmpty() && pos < text.length) {
-            if (text[pos]=='\n') this.eolPositions.add(pos)
+            if (text[pos] == '\n') this.eolPositions.add(pos)
             for (ss in 0 until currentStates.size) {
                 val states = currentStates[ss]
-                for(s in 0 until states.size) {
+                for (s in 0 until states.size) {
                     val state = states[s]
                     val outgoing = state.outgoing
                     for (t in 0 until outgoing.size) { //TODO: use array and counter here
@@ -104,14 +112,16 @@ internal class RegexMatcherImpl(
             nextStates.clear()
             pos++
         }
-        return if (maxMatchedPos!=-1) {
-            val matchedText = text.substring(startPosition, maxMatchedPos+1)
-            RegexMatcher.MatchResult(matchedText, eolPositions)
-        } else {
-            null
+        return when {
+            (maxMatchedPos != -1) -> {
+                val matchedText = text.substring(startPosition, maxMatchedPos + 1)
+                RegexMatcher.MatchResultAgl(matchedText)//, eolPositions)
+            }
+
+            matchesEmpty -> RegexMatcher.MatchResultAgl("")//, emptyList())
+            else -> null
         }
     }
 
-
-    override fun toString(): String  = "Regex{$pattern}"
+    override fun toString(): String = "Regex{$pattern}"
 }

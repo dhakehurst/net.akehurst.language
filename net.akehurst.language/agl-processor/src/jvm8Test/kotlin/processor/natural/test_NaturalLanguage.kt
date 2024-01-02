@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor.natural
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,11 +80,11 @@ class test_NaturalLanguage(val data: Data) {
 
     @Test
     fun test() {
-
-        val scan = processor.scan(this.data.sentence).tokens
+        val sentence = SentenceDefault(this.data.sentence)
+        val scan = processor.scan(sentence.text).tokens
         scan.forEach { l ->
             if (l.name == "undefined") {
-                throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
+                throw RuntimeException("Found unknown words '${l.matchedText(sentence)}', at ${l.location}")
             }
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })

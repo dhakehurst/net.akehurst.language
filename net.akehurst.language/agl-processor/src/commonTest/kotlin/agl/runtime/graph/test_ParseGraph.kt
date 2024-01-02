@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import kotlin.test.Test
@@ -29,7 +30,7 @@ class test_ParseGraph {
     fun construct() {
         val goalRule = RuntimeRule(0, 0, "a", false)
         val text = ""
-        val scanner = ScannerOnDemand(emptyList())
+        val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
@@ -40,7 +41,7 @@ class test_ParseGraph {
     fun canGrow_empty() {
         val goalRule = RuntimeRule(0, 0, "a", false)
         val text = ""
-        val scanner = ScannerOnDemand(emptyList())
+        val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val actual = sut.canGrow
@@ -52,7 +53,7 @@ class test_ParseGraph {
     fun start() {
         val userGoalRule = RuntimeRule(0, 0, "a", false)
         val text = "a"
-        val scanner = ScannerOnDemand(emptyList())
+        val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]

@@ -31,7 +31,7 @@ class test_std_RegEx {
             it.setRhs(RuntimeRuleRhsPattern(it, "|"))
         }
         val text = "?"
-        val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.isLookingAt(text, 0)
+        val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.using(RegexEnginePlatform).isLookingAt(text, 0)
 
         assertEquals(false, result)
     }

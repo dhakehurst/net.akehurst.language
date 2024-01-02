@@ -34,7 +34,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
         get() = TODO("not implemented")
 
-    override val runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
+    override val ruleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault()
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
@@ -44,7 +44,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
 
     init {
         generated.automata.forEach { (userGoalRuleName, automaton) ->
-            this.runtimeRuleSet.addGeneratedBuildFor(userGoalRuleName, automaton)
+            this.ruleSet.addGeneratedBuildFor(userGoalRuleName, automaton)
         }
     }
 }

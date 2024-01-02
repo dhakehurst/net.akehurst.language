@@ -18,8 +18,11 @@
 package net.akehurst.language.agl.scanner
 
 //import net.akehurst.language.agl.sppt.SPPTLeafFromInput
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ScanResultDefault
+import net.akehurst.language.agl.regex.Regex
+import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -45,7 +48,12 @@ data class Matchable(
     val kind: MatchableKind
 ) {
     // create this so Regex is cached
-    private val _regEx = if (MatchableKind.REGEX == kind) Regex(expression) else null
+    private var _regEx: Regex? = null
+
+    fun using(regexEngine: RegexEngine): Matchable {
+        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression) else null
+        return this
+    }
 
     /**
      * true if the expression matches the text at the given position
@@ -59,29 +67,38 @@ data class Matchable(
     /**
      * length of text matched at the given position, -1 if no match
      */
-    fun matchedLength(text: String, atPosition: Int): Int = when (kind) {
-        MatchableKind.EOT -> if (atPosition >= text.length) 0 else -1
+    fun matchedLength(sentence: Sentence, atPosition: Int): Int = when (kind) {
+        MatchableKind.EOT -> if (atPosition >= sentence.text.length) 0 else -1
         MatchableKind.LITERAL -> when {
-            text.regionMatches(atPosition, expression, 0, expression.length) -> expression.length
+            sentence.text.regionMatches(atPosition, expression, 0, expression.length) -> expression.length
             else -> -1
         }
 
-        MatchableKind.REGEX -> _regEx!!.matchAt(text, atPosition)?.value?.length ?: -1
+        MatchableKind.REGEX -> {
+            val m = _regEx!!.matchAt(sentence.text, atPosition)
+            m?.let {
+                //sentence.setEolPositions(m.eolPositions)
+                it.matchedText.length
+            } ?: -1
+        }
     }
 }
 
-internal abstract class ScannerAbstract(
-    protected val _nonEmptyTerminals: List<RuntimeRule>
+abstract class ScannerAbstract(
+    override val regexEngine: RegexEngine
 ) : Scanner {
 
+    abstract val validTerminals: List<Rule>
+
     override val matchables: List<Matchable> by lazy {
-        _nonEmptyTerminals.mapNotNull {
-            (it.rhs as RuntimeRuleRhsTerminal).matchable
+        validTerminals.mapNotNull {
+            ((it as RuntimeRule).rhs as RuntimeRuleRhsTerminal).matchable?.using(regexEngine)
         }
     }
 
     override fun scan(sentence: Sentence): ScanResult {
         //TODO: improve this algorithm...it is not efficient
+        this.reset()
         val inputText = sentence.text
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
         val undefined = RuntimeRuleSet.UNDEFINED_RULE
@@ -92,14 +109,14 @@ internal abstract class ScannerAbstract(
         var currentUndefinedStart = -1
         while (nextInputPosition < inputText.length) {
             val matches: List<LeafData> = this.matchables.mapNotNull {
-                val matchLength = it.matchedLength(inputText, startPosition)
+                val matchLength = it.matchedLength(sentence, startPosition)
                 when (matchLength) {
                     -1 -> null
                     0 -> null
                     else -> {
                         val loc = sentence.locationFor(startPosition, matchLength)
                         val matchedText = inputText.substring(startPosition, startPosition + matchLength)
-                        LeafData(it.tag, it.kind == MatchableKind.REGEX, loc, matchedText, emptyList())
+                        LeafData(it.tag, it.kind == MatchableKind.REGEX, loc, emptyList())
                     }
                 }
             }
@@ -128,7 +145,7 @@ internal abstract class ScannerAbstract(
                 else -> {
                     if (-1 != currentUndefinedStart) {
                         val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-                        val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+                        val ud = LeafData(undefined.tag, false, loc, emptyList())
                         result.add(ud)
                         currentUndefinedStart = -1
                         currentUndefinedText = ""
@@ -142,7 +159,7 @@ internal abstract class ScannerAbstract(
         //catch undefined stuff at end
         if (-1 != currentUndefinedStart) {
             val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-            val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+            val ud = LeafData(undefined.tag, false, loc, emptyList())
             result.add(ud)
         }
         return ScanResultDefault(result, issues)

@@ -18,6 +18,7 @@ package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import kotlin.test.assertEquals
@@ -27,7 +28,7 @@ internal abstract class test_ExpectedTerminasAtAbstract {
     protected data class TestData(val sentence: String, val position: Int, val expected: Set<String>)
 
     protected fun test(rrs: RuntimeRuleSet, goal: String, data: TestData) {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         val result = parser.expectedTerminalsAt(data.sentence, data.position, Agl.parseOptions {
             goalRuleName(goal)
         })

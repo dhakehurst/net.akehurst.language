@@ -16,6 +16,12 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.regex.RegexEngineAgl
+import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.agl.scanner.ScannerClassic
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
@@ -41,8 +47,6 @@ internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 ) : ProcessOptions<AsmType, ContextType>
 
 internal class ScanOptionsDefault(
-    override val scanKind: ScanKind = ScanKind.OnDemand,
-    override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
 ) : ScanOptions
 
 internal class ParseOptionsDefault(
@@ -97,6 +101,28 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
     fun defaultGoalRuleName(value: String?) {
         _defaultGoalRuleName = value
+    }
+
+    fun scanner(scannerKind: ScannerKind, regexEngineKind: RegexEngineKind) {
+        this._scannerResolver = {
+            val regexEngine = when (regexEngineKind) {
+                RegexEngineKind.PLATFORM -> RegexEnginePlatform
+                RegexEngineKind.AGL -> RegexEngineAgl
+            }
+            val scanner = when (scannerKind) {
+                ScannerKind.Classic -> ScannerClassic(regexEngine, it.ruleSet.terminals)
+                ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.ruleSet.terminals)
+            }
+            ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
+        }
+    }
+
+    fun scannerResolver(func: ScannerResolver<AsmType, ContextType>?) {
+        this._scannerResolver = func
+    }
+
+    fun parserResolver(func: ParserResolver<AsmType, ContextType>?) {
+        this._parserResolver = func
     }
 
     fun typeModelResolver(func: TypeModelResolver<AsmType, ContextType>?) {
@@ -169,22 +195,9 @@ annotation class ProcessOptionsDslMarker
 class ScanOptionsBuilder(
     base: ScanOptions
 ) {
-    private var _scanKind = base.scanKind
-    private var _regexEngineKind = base.regexEngineKind
-
-    fun scanKind(value: ScanKind) {
-        _scanKind = value
-    }
-
-    fun regexEngineKind(value: RegexEngineKind) {
-        _regexEngineKind = value
-    }
 
     fun build(): ScanOptions {
-        return ScanOptionsDefault(
-            _scanKind, _regexEngineKind,
-
-            )
+        return ScanOptionsDefault()
     }
 }
 

@@ -265,7 +265,7 @@ class AsmStructureSimple(
     fun getPropertyAsListOrNull(name: String): List<Any>? = getPropertyOrNull(name) as List<Any>?
 
     override fun getProperty(name: String): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
-    fun getPropertyAsString(name: String): String = getProperty(name) as String
+    fun getPropertyAsString(name: String): String = (getProperty(name) as AsmPrimitive).value as String
     fun getPropertyAsAsmElement(name: String): AsmStructureSimple = getProperty(name) as AsmStructureSimple
     fun getPropertyAsReference(name: String): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
@@ -417,14 +417,14 @@ class AsmListSeparatedSimple(
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
 
     override fun asString(currentIndent: String, indentIncrement: String): String =
-        this.elements.elements.joinToString { (it as AsmValue).asString(currentIndent, indentIncrement) }
+        this.elements.elements.joinToString { (it).asString(currentIndent, indentIncrement) }
 
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
         else -> {
             (0..this.elements.size).all {
-                (this.elements[it] as AsmValue).equalTo(other.elements[it] as AsmValue)
+                (this.elements[it]).equalTo(other.elements[it])
             }
         }
     }

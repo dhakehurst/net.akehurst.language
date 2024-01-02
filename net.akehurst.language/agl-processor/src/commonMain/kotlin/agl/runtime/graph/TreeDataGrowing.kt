@@ -20,7 +20,7 @@ import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
 
-internal class TreeData<GN, CN : SpptDataNode>(
+internal class TreeDataGrowing<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 
@@ -161,7 +161,7 @@ internal class TreeData<GN, CN : SpptDataNode>(
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
-        other !is TreeData<*, *> -> false
+        other !is TreeDataGrowing<*, *> -> false
         else -> other.forStateSetNumber == this.forStateSetNumber
     }
 

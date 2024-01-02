@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,8 +28,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_a() {
-        val pr = Agl.processorFromString<Any, Any>(
-            """
+        val grammarStr = """
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -39,15 +39,16 @@ class test_SharedPackedParseTree {
                 VAR = "[a-z]+" ;
             }
         """.trimIndent()
-        )
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val result = pr.processor!!.parse("a".trimIndent())
+        val text = "a"
+        val result = pr.processor!!.parse(text)
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("a", actual[0].matchedText)
+        assertEquals("a", actual[0].matchedText(SentenceDefault(text)))
     }
 
     @Test
@@ -66,12 +67,11 @@ class test_SharedPackedParseTree {
         """.trimIndent()
         )
 
-        val result = pr.processor!!.parse(
-            """
+        val text = """
             a + b
             + c
         """.trimIndent()
-        )
+        val result = pr.processor!!.parse(text)
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
@@ -80,7 +80,7 @@ class test_SharedPackedParseTree {
             result.sppt!!.tokensByLine(1)
         )
 
-        assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals("a + b\n", actual[0].map { it.matchedText(SentenceDefault(text)) }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)
         assertEquals(2, actual[1][0].location.line)
     }
@@ -101,12 +101,13 @@ class test_SharedPackedParseTree {
         """.trimIndent()
         )
 
-        val result = pr.processor!!.parse(
+        val sentence = SentenceDefault(
             """
             a + b
               + c
         """.trimIndent()
         )
+        val result = pr.processor!!.parse(sentence.text)
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
@@ -115,10 +116,10 @@ class test_SharedPackedParseTree {
             result.sppt!!.tokensByLine(1)
         )
 
-        assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals("a + b\n", actual[0].map { it.matchedText(sentence) }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)
         assertEquals(2, actual[1][0].location.line)
-        assertEquals("  ", actual[1][0].matchedText)
+        assertEquals("  ", actual[1][0].matchedText(sentence))
     }
 
     @Test
@@ -151,6 +152,7 @@ class XXX {
         """
         val text2 = text.trimStart()
         val result = pr.processor!!.parse(text2)
+        val sentence = SentenceDefault(text2)
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
@@ -160,13 +162,13 @@ class XXX {
             result.sppt!!.tokensByLine(2)
         )
 
-        assertEquals("class XXX {\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals("class XXX {\n", actual[0].map { it.matchedText(sentence) }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)
         assertEquals(2, actual[1][0].location.line)
-        assertEquals("    \n", actual[1][0].matchedText)
+        assertEquals("    \n", actual[1][0].matchedText(sentence))
         assertEquals(3, actual[2][0].location.line)
-        assertEquals("    ", actual[2][0].matchedText)
-        assertEquals("prop1", actual[2][1].matchedText)
+        assertEquals("    ", actual[2][0].matchedText(sentence))
+        assertEquals("prop1", actual[2][1].matchedText(sentence))
     }
 
 

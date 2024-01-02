@@ -18,6 +18,7 @@
 package net.akehurst.language.api.scanner
 
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.processor.ScanResult
@@ -27,6 +28,7 @@ import net.akehurst.language.api.sppt.Sentence
 interface Scanner {
     //val sentence: Sentence
 
+    val regexEngine: RegexEngine
     val matchables: List<Matchable>
 
     fun reset()

@@ -19,7 +19,9 @@ package net.akehurst.language.parser.scanondemand
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
@@ -31,7 +33,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.measureTimedValue
 
-internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = false) {
+internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs as RuntimeRuleSet,
@@ -64,7 +66,12 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         printAutomaton: Boolean = false,
         vararg expectedTrees: String
     ): SharedPackedParseTree? =
-        testWithOptions(rrs, embeddedRuntimeRuleSets, sentence, expectedNumGSSHeads, printAutomaton, Agl.parseOptions { goalRuleName(goal) }, *expectedTrees)
+        testWithOptions(
+            rrs, embeddedRuntimeRuleSets, sentence, expectedNumGSSHeads, printAutomaton,
+            Agl.options { parse { goalRuleName(goal) } },
+            ScannerKind.OnDemand,
+            *expectedTrees
+        )
 
     fun testWithOptions(
         rrs: RuleSet,
@@ -72,17 +79,22 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         sentence: String,
         expectedNumGSSHeads: Int,
         printAutomaton: Boolean = false,
-        options: ParseOptions = Agl.parseOptions { },
+        options: ProcessOptions<Any, Any> = Agl.options { },
+        scannerKind: ScannerKind,
         vararg expectedTrees: String
     ): SharedPackedParseTree? {
         println("${this::class.simpleName} - '$sentence'")
-        val parser = LeftCornerParser(ScannerOnDemand((rrs as RuntimeRuleSet).nonSkipTerminals), rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
+        val scanner = when (scannerKind) {
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
+        }
+        val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
+        if (build) parser.buildFor(options.parse.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
         val (result, duration) = measureTimedValue {
-            parser.parse(sentence, options)
+            parser.parse(sentence, options.parse)
         }
         println("Duration: $duration")
-        if (printAutomaton) println(rrs.usedAutomatonToString(options.goalRuleName!!))
+        if (printAutomaton) println(rrs.usedAutomatonToString(options.parse.goalRuleName!!))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
@@ -97,14 +109,18 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
     }
 
     fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection<LanguageIssue>> {
-        val r = testFailWithOptions(rrs, sentence, expectedNumGSSHeads, Agl.parseOptions { goalRuleName(goal) })
+        val r = testFailWithOptions(rrs, sentence, expectedNumGSSHeads, Agl.options { parse { goalRuleName(goal) } }, ScannerKind.OnDemand)
         return Pair(r.sppt, r.issues)
     }
 
-    fun testFailWithOptions(rrs: RuleSet, sentence: String, expectedNumGSSHeads: Int, options: ParseOptions): ParseResult {
-        val parser = LeftCornerParser(ScannerOnDemand((rrs as RuntimeRuleSet).nonSkipTerminals), rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
-        val r = parser.parse(sentence, options)
+    fun testFailWithOptions(rrs: RuleSet, sentence: String, expectedNumGSSHeads: Int, options: ProcessOptions<Any, Any>, scannerKind: ScannerKind): ParseResult {
+        val scanner = when (scannerKind) {
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
+        }
+        val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
+        if (build) parser.buildFor(options.parse.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
+        val r = parser.parse(sentence, options.parse)
         return r
     }
 

@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
+internal class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
 
     // Abstraction of the issue from the Java8 grammar
     // compilationUnit = packageDeclaration? importDeclaration* typeDeclaration*

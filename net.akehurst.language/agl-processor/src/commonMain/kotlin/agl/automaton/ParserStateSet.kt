@@ -47,7 +47,7 @@ internal class ParserStateSet(
         }
     }
 
-    val usedRules: Set<RuntimeRule> by lazy { calcUsedRules(this.startState.runtimeRules.first()) }
+    val usedRules: Set<RuntimeRule> by lazy { this.runtimeRuleSet.calcUsedRules(this.startState.runtimeRules.first()) }
     val usedTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isTerminal }.toSet() }
     val usedNonTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isNonTerminal }.toSet() }
     val firstTerminals: Set<RuntimeRule> by lazy { this.startState.transitionsGoal(this.startState).map { it.to.firstRule }.toSet() }
@@ -244,41 +244,6 @@ internal class ParserStateSet(
             }
         }
     }
-
-    private fun calcUsedRules(
-        rule: RuntimeRule,
-        used: MutableSet<RuntimeRule> = mutableSetOf(),
-        done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)
-    ): Set<RuntimeRule> {
-        return when {
-            rule.isGoal -> {
-                used.add(rule)
-                for (sr in rule.rhsItems.flatten()) {
-                    calcUsedRules(sr as RuntimeRule, used, done)
-                }
-                used
-            }
-
-            rule.ruleNumber >= 0 && done[rule.ruleNumber] -> used
-            else -> when {
-                rule.isNonTerminal -> {
-                    used.add(rule)
-                    if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
-                    for (sr in rule.rhsItems.flatten()) {
-                        calcUsedRules(sr as RuntimeRule, used, done)
-                    }
-                    used
-                }
-
-                else -> {
-                    used.add(rule)
-                    if (rule.ruleNumber > 0) done[rule.ruleNumber] = true
-                    used
-                }
-            }
-        }
-    }
-
 
     /*
         fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {

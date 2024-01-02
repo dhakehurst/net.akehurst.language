@@ -19,10 +19,10 @@ package agl.parser.scannerless.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_emptys : test_ScanOnDemandParserAbstract() {
+internal class test_emptys : test_LeftCornerParserAbstract() {
     //TransitionReaction = StextTrigger? ('/' ReactionEffect)? ('#' TransitionProperty*)?;
     // S = 'a'?
     private companion object {

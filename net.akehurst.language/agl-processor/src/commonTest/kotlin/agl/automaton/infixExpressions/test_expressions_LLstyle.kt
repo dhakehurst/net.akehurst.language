@@ -19,6 +19,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -62,7 +63,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_aoa() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "aoaoaoa")
         println(parser.runtimeRuleSet.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -104,7 +105,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "aoaoaoa")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -122,7 +123,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("a", "aoa", "aoaoa", "aoaoaoa")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

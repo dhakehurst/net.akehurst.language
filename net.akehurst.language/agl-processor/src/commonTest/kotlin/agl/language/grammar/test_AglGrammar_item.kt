@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.Parser
@@ -30,7 +31,8 @@ class test_AglGrammar_item {
 
     private companion object {
         private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar)
-        private val parser: Parser = LeftCornerParser(ScannerOnDemand(converterToRuntimeRules.runtimeRuleSet.nonSkipTerminals), converterToRuntimeRules.runtimeRuleSet)
+        private val parser: Parser =
+            LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals), converterToRuntimeRules.runtimeRuleSet)
     }
 
     private val spptParser = SPPTParserDefault(converterToRuntimeRules.runtimeRuleSet)

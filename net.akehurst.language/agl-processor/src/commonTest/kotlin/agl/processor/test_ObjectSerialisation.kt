@@ -63,7 +63,7 @@ internal class test_ObjectSerialisation {
                prop: ''
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -75,7 +75,7 @@ internal class test_ObjectSerialisation {
                list: ['' '' '' '']
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -91,7 +91,7 @@ internal class test_ObjectSerialisation {
                }]
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -164,7 +164,7 @@ internal class test_ObjectSerialisation {
                 l:''
             }
         }
-"""
+""".trimIndent()
         testParse(sentence)
     }
 }

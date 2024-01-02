@@ -60,8 +60,18 @@ internal data class AlternativesInfo(
     val alternatives = mutableListOf<Pair<StackInfo, List<SpptDataNode>>>()
 }
 
+interface TreeData {
+    val root: SpptDataNode?
+    val userRoot: SpptDataNode
+    val initialSkip: TreeData?
+    fun skipDataAfter(node: SpptDataNode): TreeData?
+    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>>
+    fun embeddedFor(node: SpptDataNode): TreeData?
+    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
+}
+
 internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
-    private val treeData: TreeDataComplete<CN>
+    private val treeData: TreeData
 ) {
 
     companion object {
@@ -127,7 +137,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             }
         }.associate { it }
 
-    private fun numSkipChildren(skipData: TreeDataComplete<CN>?): Int {
+    private fun numSkipChildren(skipData: TreeData?): Int {
         return if (null == skipData) {
             0
         } else {
@@ -138,7 +148,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         }
     }
 
-    fun traverseSkip(callback: SpptWalker, skipDataAsTree: Boolean) {
+    private fun traverseSkip(callback: SpptWalker, skipDataAsTree: Boolean) {
         // handle <GOAL>, <SKIP-MULTI> & <SKIP-CHOICE>
         val goal = treeData.root!!
         val skipMulti = treeData.childrenFor(goal)[0].second[0]
@@ -158,7 +168,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
 
     }
 
-    private fun traverseSkipData(callback: SpptWalker, skipDataAsTree: Boolean, skipData: TreeDataComplete<CN>?) {
+    private fun traverseSkipData(callback: SpptWalker, skipDataAsTree: Boolean, skipData: TreeData?) {
         if (null != skipData) {
             if (skipDataAsTree) {
                 val walker = TreeDataWalkerDepthFirst<CN>(skipData)

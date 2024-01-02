@@ -26,7 +26,7 @@ class test_RegexMatcher_repetition {
     fun rep_0() {
         val m = regexMatcher("a{0}b")
         val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("b")
         assertEquals(expected, actual)
     }
 
@@ -42,7 +42,7 @@ class test_RegexMatcher_repetition {
     fun rep_1() {
         val m = regexMatcher("a{1}b")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -58,7 +58,7 @@ class test_RegexMatcher_repetition {
     fun rep_2() {
         val m = regexMatcher("a{2}b")
         val actual = m.match("aab", 0)
-        val expected = RegexMatcher.MatchResult("aab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("aab")
         assertEquals(expected, actual)
     }
 
@@ -82,7 +82,7 @@ class test_RegexMatcher_repetition {
     fun rep_5() {
         val m = regexMatcher("a{5}")
         val actual = m.match("aaaaa", 0)
-        val expected = RegexMatcher.MatchResult("aaaaa", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("aaaaa")
         assertEquals(expected, actual)
     }
 
@@ -92,7 +92,7 @@ class test_RegexMatcher_repetition {
         for (i in 3..7) {
             val t = "a".repeat(i) + "b"
             val actual = m.match(t, 0)
-            val expected = RegexMatcher.MatchResult(t, emptyList())
+            val expected = RegexMatcher.MatchResultAgl(t)
             assertEquals(expected, actual)
         }
     }
@@ -111,7 +111,7 @@ class test_RegexMatcher_repetition {
         for (i in 1..5) {
             val t = "a".repeat(i) + "b"
             val actual = m.match(t, 0)
-            val expected = RegexMatcher.MatchResult(t, emptyList())
+            val expected = RegexMatcher.MatchResultAgl(t)
             assertEquals(expected, actual)
         }
     }

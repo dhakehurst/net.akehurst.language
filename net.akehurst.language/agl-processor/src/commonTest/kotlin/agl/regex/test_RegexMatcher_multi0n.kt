@@ -26,7 +26,7 @@ class test_RegexMatcher_multi0n {
     fun multi0n_1() {
         val m = regexMatcher("a*b")
         val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("b")
         assertEquals(expected, actual)
     }
 
@@ -34,7 +34,7 @@ class test_RegexMatcher_multi0n {
     fun multi0n_2() {
         val m = regexMatcher("a*b")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -42,7 +42,7 @@ class test_RegexMatcher_multi0n {
     fun multi0n_3() {
         val m = regexMatcher("a*b")
         val actual = m.match("aaaaaab", 0)
-        val expected = RegexMatcher.MatchResult("aaaaaab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("aaaaaab")
         assertEquals(expected, actual)
     }
 

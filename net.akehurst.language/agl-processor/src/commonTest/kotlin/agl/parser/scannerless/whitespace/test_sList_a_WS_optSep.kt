@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
+internal class test_sList_a_WS_optSep : test_LeftCornerParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = ['a' / sep]*

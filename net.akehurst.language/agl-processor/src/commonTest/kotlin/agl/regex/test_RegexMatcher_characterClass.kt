@@ -27,7 +27,7 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[abcd]")
         for (c in 'a'..'d') {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("$c")
             assertEquals(expected, actual)
         }
     }
@@ -37,7 +37,7 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[abcd]")
         for (c in 'a'..'d') {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("$c")
             assertEquals(expected, actual)
         }
         for (c in 'e'..'h') {
@@ -52,7 +52,7 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[a-z]")
         for (c in 'a'..'z') {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("$c")
             assertEquals(expected, actual)
         }
     }
@@ -62,37 +62,41 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[-]")
         for (c in listOf('-')) {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual,"testing '$c',")
+            val expected = RegexMatcher.MatchResultAgl("$c")
+            assertEquals(expected, actual, "testing '$c',")
         }
     }
+
     @Test
     fun characterClass_X_minus() {
         val m = regexMatcher("[+-]")
-        for (c in listOf('-','+')) {
+        for (c in listOf('-', '+')) {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual,"testing '$c',")
+            val expected = RegexMatcher.MatchResultAgl("$c")
+            assertEquals(expected, actual, "testing '$c',")
         }
     }
+
     @Test
     fun characterClass_minus_X() {
         val m = regexMatcher("[-+]")
-        for (c in listOf('-','+')) {
+        for (c in listOf('-', '+')) {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual,"testing '$c',")
+            val expected = RegexMatcher.MatchResultAgl("$c")
+            assertEquals(expected, actual, "testing '$c',")
         }
     }
+
     @Test
     fun characterClass_range_minus() {
         val m = regexMatcher("[a-b-]")
-        for (c in listOf('a','b','-')) {
+        for (c in listOf('a', 'b', '-')) {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual,"testing '$c',")
+            val expected = RegexMatcher.MatchResultAgl("$c")
+            assertEquals(expected, actual, "testing '$c',")
         }
     }
+
     @Test
     fun characterClass_Range_fails() {
         val m = regexMatcher("[a-z]")
@@ -107,7 +111,7 @@ class test_RegexMatcher_characterClass {
     fun characterClass_many() {
         val m = regexMatcher("([a-zA-Z_][a-zA-Z_0-9-]*)")
         val actual = m.match("Ba2-dF9", 0)
-        val expected = RegexMatcher.MatchResult("Ba2-dF9", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("Ba2-dF9")
         assertEquals(expected, actual)
     }
 
@@ -116,7 +120,7 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[^abcd]")
         for (c in 'e'..'h') {
             val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("$c")
             assertEquals(expected, actual)
         }
     }
@@ -130,6 +134,7 @@ class test_RegexMatcher_characterClass {
             assertEquals(expected, actual)
         }
     }
+
     @Test
     fun a2d_negated_failed() {
         val m = regexMatcher("[^a-d]")
@@ -139,15 +144,17 @@ class test_RegexMatcher_characterClass {
             assertEquals(expected, actual)
         }
     }
+
     @Test
     fun a2d_negated_concat() {
         val m = regexMatcher("[^a-d]x")
         for (c in 'e'..'h') {
             val actual = m.match("${c}x", 0)
-            val expected = RegexMatcher.MatchResult("${c}x", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("${c}x")
             assertEquals(expected, actual)
         }
     }
+
     @Test
     fun a2d_negated_concat_failed() {
         val m = regexMatcher("[^a-d]x")
@@ -163,7 +170,7 @@ class test_RegexMatcher_characterClass {
         val m = regexMatcher("[\\x61b\\x63]")
         for (c in 'a'..'c') {
             val actual = m.match("${c}", 0)
-            val expected = RegexMatcher.MatchResult("${c}", emptyList())
+            val expected = RegexMatcher.MatchResultAgl("${c}")
             assertEquals(expected, actual)
         }
     }

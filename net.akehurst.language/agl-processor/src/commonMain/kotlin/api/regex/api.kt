@@ -16,14 +16,20 @@
 
 package net.akehurst.language.api.regex
 
+import net.akehurst.language.agl.regex.MatchResult
+
 
 interface RegexMatcher {
 
-    data class MatchResult(
-        val matchedText: String,
-        val eolPositions: List<Int>
-    )
+    data class MatchResultAgl(
+        override val matchedText: String,
+        //override val eolPositions: List<Int>
+    ) : MatchResult
 
-    fun match(text: CharSequence, startPosition: Int = 0): MatchResult?
+    fun match(text: CharSequence, startPosition: Int = 0): MatchResultAgl?
+
+    fun matchAt(text: String, atPosition: Int): MatchResult?
+
+    fun matchesAt(text: String, atPosition: Int): Boolean
 
 }

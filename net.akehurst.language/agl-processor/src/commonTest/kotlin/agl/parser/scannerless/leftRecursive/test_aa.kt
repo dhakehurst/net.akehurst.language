@@ -19,11 +19,11 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParserTerminatedException
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-internal class test_aa : test_ScanOnDemandParserAbstract() {
+internal class test_aa : test_LeftCornerParserAbstract() {
 
     // S  = P | 'a' ;
     // P  = P1 | S ;  // S*

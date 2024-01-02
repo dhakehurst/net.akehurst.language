@@ -147,7 +147,7 @@ internal class ParseGraph(
         }
     })
 
-    var treeData = TreeData<GrowingNodeIndex, CompleteNodeIndex>(stateSetNumber)
+    var treeData = TreeDataGrowing<GrowingNodeIndex, CompleteNodeIndex>(stateSetNumber)
 
     val goals: Set<CompleteNodeIndex> get() = this._goals
 
@@ -238,7 +238,7 @@ internal class ParseGraph(
         this._goals.clear()
         //TODO: don't want to create new one of these each time we parse skip
         // but currently can't reuse it as it carries the skip data
-        this.treeData = TreeData(stateSetNumber)
+        this.treeData = TreeDataGrowing(stateSetNumber)
     }
 
     /**

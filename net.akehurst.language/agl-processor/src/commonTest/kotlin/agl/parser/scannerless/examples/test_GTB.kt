@@ -18,10 +18,10 @@ package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_GTB : test_ScanOnDemandParserAbstract() {
+internal class test_GTB : test_LeftCornerParserAbstract() {
 
     /*
      * from [https://www.researchgate.net/publication/222194445_The_Grammar_Tool_Box_A_Case_Study_Comparing_GLR_Parsing_Algorithms]

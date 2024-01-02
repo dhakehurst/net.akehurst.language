@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 
-internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
+internal class test_ErrorLocation : test_LeftCornerParserAbstract() {
 
     @Test
     fun parse_success() {

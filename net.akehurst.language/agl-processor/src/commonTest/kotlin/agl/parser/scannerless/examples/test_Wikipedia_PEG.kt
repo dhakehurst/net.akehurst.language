@@ -17,11 +17,12 @@
 package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -30,7 +31,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
-internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
+internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
 
     /**
      * S = x S x | x ;
@@ -137,7 +138,7 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
     @ExperimentalTime
     //@Test
     fun time() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         val times = mutableListOf<Duration>()
 
         for (i in 1..25) {

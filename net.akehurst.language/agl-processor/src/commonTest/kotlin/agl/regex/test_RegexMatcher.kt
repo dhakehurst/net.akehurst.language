@@ -27,7 +27,7 @@ class test_RegexMatcher {
     fun double_quote_string() {
         val m = regexMatcher("\"[^\"]*\"")
         val actual = m.match("\"Ba2-dF9\"", 0)
-        val expected = RegexMatcher.MatchResult("\"Ba2-dF9\"", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("\"Ba2-dF9\"")
         assertEquals(expected, actual)
     }
 
@@ -35,7 +35,7 @@ class test_RegexMatcher {
     fun double_quote_string_2() {
         val m = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
         val actual = m.match("\"Ba2\\\"F9\"", 0)
-        val expected = RegexMatcher.MatchResult("\"Ba2\\\"F9\"", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("\"Ba2\\\"F9\"")
         assertEquals(expected, actual)
     }
 
@@ -43,7 +43,7 @@ class test_RegexMatcher {
     fun double_quote_string_3() {
         val m = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
         val actual = m.match("\"\\\"([^\\\"\\\\]|\\\\.)*\\\"\"", 0)
-        val expected = RegexMatcher.MatchResult("\"\\\"([^\\\"\\\\]|\\\\.)*\\\"\"", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("\"\\\"([^\\\"\\\\]|\\\\.)*\\\"\"")
         assertEquals(expected, actual)
     }
 
@@ -51,7 +51,7 @@ class test_RegexMatcher {
     fun t() {
         val m = regexMatcher("abc*d+(ef*g+)*h")
         val actual = m.match("abcccdddefffgggh", 0)
-        val expected = RegexMatcher.MatchResult("abcccdddefffgggh", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("abcccdddefffgggh")
         assertEquals(expected, actual)
     }
 
@@ -59,18 +59,19 @@ class test_RegexMatcher {
     fun multiline_comment() {
         val m = regexMatcher("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/")
         val actual = m.match("/* fgh /*sdf dfgj */", 0)
-        val expected = RegexMatcher.MatchResult("/* fgh /*sdf dfgj */", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("/* fgh /*sdf dfgj */")
         assertEquals(expected, actual)
     }
 
 
     @Test
     fun integer() {
-        val m = regexMatcher("((0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?))(((l)|(L)){0,1})|((0_*[0-7]([0-7_]*[0-7])?))(((l)|(L)){0,1})|((0[bB][01]([01_]*[01])?))(((l)|(L)){0,1})|(((0|[1-9]([0-9_]*[0-9])?)))(((l)|(L)){0,1})")
+        val m =
+            regexMatcher("((0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?))(((l)|(L)){0,1})|((0_*[0-7]([0-7_]*[0-7])?))(((l)|(L)){0,1})|((0[bB][01]([01_]*[01])?))(((l)|(L)){0,1})|(((0|[1-9]([0-9_]*[0-9])?)))(((l)|(L)){0,1})")
         //val m = regexMatcher("c|d(e|f){0,1}")
         val text = "1"
         val actual = m.match(text, 0)
-        val expected = RegexMatcher.MatchResult(text, emptyList())
+        val expected = RegexMatcher.MatchResultAgl(text)
         assertEquals(expected, actual)
     }
 
@@ -82,7 +83,7 @@ class test_RegexMatcher {
         val m = regexMatcher(ex)
         val text = "\\"
         val actual = m.match(text, 0)
-        val expected = RegexMatcher.MatchResult(text, emptyList())
+        val expected = RegexMatcher.MatchResultAgl(text)
         assertEquals(expected, actual)
     }
 

@@ -49,7 +49,7 @@ class test_Hannes : test_ProcessorAbstract() {
             
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test
@@ -60,7 +60,7 @@ class test_Hannes : test_ProcessorAbstract() {
              S|1 { INT : '123' }
         """.trimIndent()
 
-        super.test(processor,"S", text, expected)
+        super.test(processor, "S", text, expected)
     }
 
 }

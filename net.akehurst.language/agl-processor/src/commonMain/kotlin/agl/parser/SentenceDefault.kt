@@ -35,12 +35,17 @@ class SentenceDefault(
             0 == position -> InputLocation(position, 1, 1, length)
             _eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
             else -> {
-                val line = _eolPositions.filter { it < position }.size
-                val col = when {
-                    0 == line -> position + 1
-                    else -> position - _eolPositions[line - 1]
+//                val line = _eolPositions.filter { it < position }.size
+                val line = _eolPositions.indexOfFirst { it < position }
+                when (line) {
+                    -1 -> InputLocation(position, position + 1, 1, length)
+
+                    //0 == line -> position + 1
+                    else -> {
+                        val col = position - _eolPositions[line]
+                        InputLocation(position, col, line + 1, length)
+                    }
                 }
-                InputLocation(position, col, line + 1, length)
             }
         }
     }
@@ -60,7 +65,7 @@ class SentenceDefault(
             startOfLine + 1
         }
         val forTextAfterLastEol = forText.substring(s)
-        val startOrStartOfLine = startIndex + startOfLine
+        //val startOrStartOfLine = startIndex + startOfLine
         val prefix = when {
             startOfLine > 0 -> ""
             startIndex > 0 -> "..."

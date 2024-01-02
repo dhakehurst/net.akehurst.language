@@ -20,10 +20,10 @@ import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.collections.MutableStack
 
 internal class RegexParser(
-        val pattern: String
+    val pattern: String
 ) {
 
-    internal  enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
+    internal enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
 
     companion object {
         val PREC_GROUP_OPEN = 1
@@ -38,47 +38,71 @@ internal class RegexParser(
 
         val PREDEFINED_DIGIT = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.RANGE, '0', '9')))
         val PREDEFINED_DIGIT_NEGATED = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(CharacterMatcher(MatcherKind.RANGE, '0', '9')))))
-        val PREDEFINED_UNICODE_LINEBREAK = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
-                CharacterMatcher(MatcherKind.LITERAL, '\u000A'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u000D'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u0085'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u2029')
+        val PREDEFINED_UNICODE_LINEBREAK = Pair(
+            EscapeKind.SINGLE, (CharacterMatcher(
+                MatcherKind.ONE_OF, options = arrayOf(
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000A'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000D'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u0085'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u2029')
 //TODO:                CharacterSequence(listOf('\u000D','\u000A'))
-        ))))
-        val PREDEFINED_WHITESPACE = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
-                CharacterMatcher(MatcherKind.LITERAL, ' '),
-                CharacterMatcher(MatcherKind.LITERAL, '\t'),
-                CharacterMatcher(MatcherKind.LITERAL, '\n'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
-                CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
-                CharacterMatcher(MatcherKind.LITERAL, '\r')
-        ))))
-        val PREDEFINED_WHITESPACE_NEGATED = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(
-                CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
-                        CharacterMatcher(MatcherKind.LITERAL, ' '),
-                        CharacterMatcher(MatcherKind.LITERAL, '\t'),
-                        CharacterMatcher(MatcherKind.LITERAL, '\n'),
-                        CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
-                        CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
-                        CharacterMatcher(MatcherKind.LITERAL, '\r')
-                ))
-        )))
-        val PREDEFINED_WORD = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
-                CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
-                CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
-                CharacterMatcher(MatcherKind.LITERAL, '_'),
-                CharacterMatcher(MatcherKind.RANGE, '0', '9')
-        )))
-        val PREDEFINED_WORD_NEGATED = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(
-                CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
-                        CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
-                        CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
-                        CharacterMatcher(MatcherKind.LITERAL, '_'),
-                        CharacterMatcher(MatcherKind.RANGE, '0', '9')
-                ))
-        )))
+                )
+            ))
+        )
+        val PREDEFINED_WHITESPACE = Pair(
+            EscapeKind.SINGLE, (CharacterMatcher(
+                MatcherKind.ONE_OF, options = arrayOf(
+                    CharacterMatcher(MatcherKind.LITERAL, ' '),
+                    CharacterMatcher(MatcherKind.LITERAL, '\t'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\n'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                    CharacterMatcher(MatcherKind.LITERAL, '\r')
+                )
+            ))
+        )
+        val PREDEFINED_WHITESPACE_NEGATED = Pair(
+            EscapeKind.SINGLE, CharacterMatcher(
+                MatcherKind.NEGATED, options = arrayOf(
+                    CharacterMatcher(
+                        MatcherKind.ONE_OF, options = arrayOf(
+                            CharacterMatcher(MatcherKind.LITERAL, ' '),
+                            CharacterMatcher(MatcherKind.LITERAL, '\t'),
+                            CharacterMatcher(MatcherKind.LITERAL, '\n'),
+                            CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                            CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                            CharacterMatcher(MatcherKind.LITERAL, '\r')
+                        )
+                    )
+                )
+            )
+        )
+        val PREDEFINED_WORD = Pair(
+            EscapeKind.SINGLE, CharacterMatcher(
+                MatcherKind.ONE_OF, options = arrayOf(
+                    CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
+                    CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
+                    CharacterMatcher(MatcherKind.LITERAL, '_'),
+                    CharacterMatcher(MatcherKind.RANGE, '0', '9')
+                )
+            )
+        )
+        val PREDEFINED_WORD_NEGATED = Pair(
+            EscapeKind.SINGLE, CharacterMatcher(
+                MatcherKind.NEGATED, options = arrayOf(
+                    CharacterMatcher(
+                        MatcherKind.ONE_OF, options = arrayOf(
+                            CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
+                            CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
+                            CharacterMatcher(MatcherKind.LITERAL, '_'),
+                            CharacterMatcher(MatcherKind.RANGE, '0', '9')
+                        )
+                    )
+                )
+            )
+        )
     }
 
     val patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
@@ -121,6 +145,7 @@ internal class RegexParser(
                                     }
                                     needConcat.push(true)
                                 }
+
                                 EscapeKind.LITERAL -> {
                                     val literal = escaped_matchers.second as CharSequence
                                     if (literal.length > 0) {
@@ -142,10 +167,12 @@ internal class RegexParser(
                                         needConcat.push(true)
                                     }
                                 }
+
                                 EscapeKind.OPTIONS -> TODO()
                             }
                             c = this.next()
                         }
+
                         '.' -> {
                             postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
                             if (needConcat.pop()) {
@@ -157,6 +184,7 @@ internal class RegexParser(
                             needConcat.push(true)
                             c = this.next()
                         }
+
                         '$' -> {
                             postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchEndOfLineOrInput() }))
                             if (needConcat.pop()) {
@@ -168,6 +196,7 @@ internal class RegexParser(
                             needConcat.push(true)
                             c = this.next()
                         }
+
                         '[' -> {
                             val options = this.parseCharacterClass()
                             postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
@@ -180,6 +209,7 @@ internal class RegexParser(
                             needConcat.push(true)
                             c = this.next()
                         }
+
                         '(' -> {
                             needConcat.push(false)
                             opStack.push(Pair(PREC_GROUP_OPEN, { }))
@@ -193,15 +223,19 @@ internal class RegexParser(
                                         ':' -> {
                                             c = this.next()
                                         }
+
                                         '=' -> {
                                             c = this.next()
                                         }
+
                                         '!' -> {
                                             c = this.next()
                                         }
+
                                         '>' -> {
                                             c = this.next()
                                         }
+
                                         '<' -> {
                                             TODO(pattern)
                                         }
@@ -211,10 +245,12 @@ internal class RegexParser(
                                         }
                                     }
                                 }
+
                                 else -> { /* continue */
                                 }
                             }
                         }
+
                         '|' -> {
                             while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CHOICE) {
                                 postfix.push(opStack.pop())
@@ -224,6 +260,7 @@ internal class RegexParser(
                             needConcat.push(false)
                             c = this.next()
                         }
+
                         '?' -> {
                             postfix.push(Pair(PREC_MULTI_01, { this.matcherBuilder.multi01() }))
                             c = this.next()
@@ -231,13 +268,16 @@ internal class RegexParser(
                                 '?' -> {
                                     TODO()
                                 }
+
                                 '+' -> {
                                     TODO()
                                 }
+
                                 else -> { /* continue */
                                 }
                             }
                         }
+
                         '+' -> {
                             postfix.push(Pair(PREC_MULTI_1n, { this.matcherBuilder.multi1n() }))
                             c = this.next()
@@ -245,13 +285,16 @@ internal class RegexParser(
                                 '?' -> {
                                     TODO(pattern)
                                 }
+
                                 '+' -> {
                                     TODO(pattern)
                                 }
+
                                 else -> { /* continue */
                                 }
                             }
                         }
+
                         '*' -> {
                             postfix.push(Pair(PREC_MULTI_0n, { this.matcherBuilder.multi0n() }))
                             c = this.next()
@@ -259,13 +302,16 @@ internal class RegexParser(
                                 '?' -> {
                                     TODO(pattern)
                                 }
+
                                 '+' -> {
                                     TODO(pattern)
                                 }
+
                                 else -> { /* continue */
                                 }
                             }
                         }
+
                         '{' -> {
                             val nb = StringBuilder()
                             c = this.next()
@@ -274,12 +320,13 @@ internal class RegexParser(
                                 c = this.next()
                             }
                             val n = nb.toString().toIntOrNull(10)
-                                    ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                             when (c) {
                                 '}' -> {
                                     postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, n) }))
                                     c = this.next()
                                 }
+
                                 ',' -> {
                                     c = this.next()
                                     when (c) {
@@ -287,6 +334,7 @@ internal class RegexParser(
                                             postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, -1) }))
                                             c = this.next()
                                         }
+
                                         else -> {
                                             val mb = StringBuilder()
                                             mb.append(c)
@@ -296,20 +344,23 @@ internal class RegexParser(
                                                 c = this.next()
                                             }
                                             val m = mb.toString().toIntOrNull(10)
-                                                    ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                                ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                                             when (c) {
                                                 '}' -> {
                                                     postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
                                                     c = this.next()
                                                 }
+
                                                 else -> error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                                             }
                                         }
                                     }
                                 }
+
                                 else -> error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                             }
                         }
+
                         ')' -> {
                             while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN) {
                                 postfix.push(opStack.pop())
@@ -326,6 +377,7 @@ internal class RegexParser(
                             //postfix.push(Pair(PREC_GROUP_CLOSE, { this.matcherBuilder.finishGroup() }))
                             c = this.next()
                         }
+
                         else -> {
                             val cc = c
                             postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
@@ -340,11 +392,11 @@ internal class RegexParser(
                         }
                     }
                 }
-            } catch(t:Throwable) {
-                val before = this.pattern.substring(maxOf(0,this.pp-5),minOf(this.pattern.length,this.pp))
-                val after = this.pattern.substring(maxOf(this.pattern.length,this.pp-5), minOf(this.pattern.length,this.pp+5))
+            } catch (t: Throwable) {
+                val before = this.pattern.substring(maxOf(0, this.pp - 5), minOf(this.pattern.length, this.pp))
+                val after = this.pattern.substring(maxOf(this.pattern.length, this.pp - 5), minOf(this.pattern.length, this.pp + 5))
                 val posStr = "$before^$after"
-                error("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", "+t.message)
+                error("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", " + t.message)
             }
             while (opStack.isEmpty.not()) {
                 postfix.push(opStack.pop())
@@ -385,12 +437,15 @@ internal class RegexParser(
             '0' -> {
                 TODO("Octal value")
             }
+
             'x' -> {
                 TODO("hex value")
             }
+
             'u' -> {
                 TODO("unicode hex value")
             }
+
             'Q' -> { // quote, literal value until \E
                 val sb = StringBuilder()
                 var end = false
@@ -407,6 +462,7 @@ internal class RegexParser(
                                 //c = this.next()
                             }
                         }
+
                         else -> {
                             sb.append(c)
                             c = this.next()
@@ -415,6 +471,7 @@ internal class RegexParser(
                 }
                 Pair(EscapeKind.LITERAL, sb.toString())
             }
+
             else -> TODO("$c at $pp in $pattern")
         }
     }
@@ -435,6 +492,7 @@ internal class RegexParser(
                 ']' -> {
                     options.add(CharacterMatcher(MatcherKind.LITERAL, f))
                 }
+
                 '-' -> {
                     c = this.parseNextCharOrEscape()
                     if (c == ']') {
@@ -446,6 +504,7 @@ internal class RegexParser(
                         f = c
                     }
                 }
+
                 else -> {
                     options.add(CharacterMatcher(MatcherKind.LITERAL, f))
                     f = c
@@ -483,9 +542,11 @@ internal class RegexParser(
                 var unicodeChar = parseUnicode()
                 unicodeChar
             }
+
             'x' -> {
                 this.parseHex()
             }
+
             else -> error("Unknown escape code '$c' in character class, at position ${this.pp} in ${pattern}, ")
         }
     }

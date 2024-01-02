@@ -19,12 +19,12 @@ package net.akehurst.language.parser.scanondemand.examples
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_AhoSetiUlman_Ex_4_7_4 : test_ScanOnDemandParserAbstract() {
+internal class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
 
     // This grammar is LALR(1) but not SLR(1)
 

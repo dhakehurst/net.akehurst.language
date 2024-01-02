@@ -55,7 +55,7 @@ class TreeDataComplete<CN : SpptDataNode>(
     // the following are optional arguments to allow for serialisation
     root: CN? = null,
     initialSkip: TreeDataComplete<CN>? = null
-) {
+) : TreeData {
 
     companion object {
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
@@ -63,16 +63,16 @@ class TreeDataComplete<CN : SpptDataNode>(
 
     val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
     val completeChildren: Map<CN, Map<Int, List<CN>>> get() = this._complete
-    var root: CN? = root; private set
-    var initialSkip: TreeDataComplete<CN>? = initialSkip; private set
+    override var root: CN? = root; private set
+    override var initialSkip: TreeDataComplete<CN>? = initialSkip; private set
 
-    val userRoot get() = childrenFor(root!!).first().second.first()
+    override val userRoot get() = childrenFor(root!!).first().second.first()
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
         this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<CN>>> {
+    override fun childrenFor(node: SpptDataNode): List<Pair<Int, List<CN>>> {
         val keys = this._complete.keys.filter {
             it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
         }
@@ -93,8 +93,8 @@ class TreeDataComplete<CN : SpptDataNode>(
         }
     }
 
-    fun skipDataAfter(node: SpptDataNode) = this._skipDataAfter[node]
-    fun embeddedFor(node: SpptDataNode) = this._embeddedFor[node]
+    override fun skipDataAfter(node: SpptDataNode): TreeData? = this._skipDataAfter[node]
+    override fun embeddedFor(node: SpptDataNode): TreeData? = this._embeddedFor[node]
 
     fun skipNodesAfter(node: SpptDataNode): List<CN> {
         /* remember
@@ -107,7 +107,7 @@ class TreeDataComplete<CN : SpptDataNode>(
             else -> {
                 val sur = skipTreeData.userRoot
                 val skpCh = skipTreeData.childrenFor(sur)
-                return skpCh[0].second
+                return skpCh[0].second as List<CN>
             }
         }
     }
@@ -119,8 +119,8 @@ class TreeDataComplete<CN : SpptDataNode>(
 
     // map startPosition -> CN
     private val _preferred = hashMapOf<PreferredNode, CN>()
-    private val _skipDataAfter = hashMapOf<CN, TreeDataComplete<CN>>()
-    private val _embeddedFor = hashMapOf<CN, TreeDataComplete<CN>>()
+    private val _skipDataAfter = hashMapOf<CN, TreeData>()
+    private val _embeddedFor = hashMapOf<CN, TreeData>()
 
     // --- used only by TreeData ---
     fun reset() {
@@ -157,11 +157,11 @@ class TreeDataComplete<CN : SpptDataNode>(
         this.setCompletedBy(parent, completeChildren, isAlternative)
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete<CN>) {
+    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeData) {
         _skipDataAfter[leafNodeIndex] = skipData
     }
 
-    fun setEmbeddedTreeFor(n: CN, treeData: TreeDataComplete<CN>) {
+    fun setEmbeddedTreeFor(n: CN, treeData: TreeData) {
         _embeddedFor[n] = treeData
     }
 
@@ -188,7 +188,7 @@ class TreeDataComplete<CN : SpptDataNode>(
         }
     }
 
-    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
+    override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         val walker = TreeDataWalkerDepthFirst<CN>(this)
         walker.traverse(callback, skipDataAsTree)
     }

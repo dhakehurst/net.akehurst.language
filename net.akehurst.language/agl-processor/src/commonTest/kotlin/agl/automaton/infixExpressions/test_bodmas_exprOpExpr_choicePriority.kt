@@ -19,6 +19,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -58,7 +59,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
 
     @Test
     fun automaton_parse_v() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -86,7 +87,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     fun automaton_parse_vav() {
         //given
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)

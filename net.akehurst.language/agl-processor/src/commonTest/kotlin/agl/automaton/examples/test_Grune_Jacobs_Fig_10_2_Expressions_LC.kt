@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -76,7 +77,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
 
         val sentences = setOf("v", "vav", "vmv", "vavmv", "vmvav")
         sentences.forEach {
-            val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+            val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
@@ -158,7 +159,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("v", "vav", "vmv", "vavmv", "vmvav", "(v)")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

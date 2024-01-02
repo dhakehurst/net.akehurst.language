@@ -18,12 +18,12 @@ package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multi_3_5_WS : test_ScanOnDemandParserAbstract() {
+internal class test_multi_3_5_WS : test_LeftCornerParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = a* ;

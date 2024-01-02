@@ -19,12 +19,12 @@ package net.akehurst.language.parser.scanondemand.embedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
+internal class test_embedded2 : test_LeftCornerParserAbstract() {
 
     private companion object {
 

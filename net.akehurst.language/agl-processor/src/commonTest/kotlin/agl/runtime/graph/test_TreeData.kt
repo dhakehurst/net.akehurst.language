@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -33,7 +34,7 @@ import kotlin.test.assertTrue
 
 internal class test_TreeData {
 
-    val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(emptyList()), 0)
+    val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(RegexEnginePlatform, emptyList()), 0)
 
     @Test
     fun construct() {
@@ -105,7 +106,7 @@ internal class test_TreeData {
         val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
         val state_b = SM.createState(listOf(RulePosition(rule_b, 0, RulePosition.END_OF_RULE)))
         val state_c = SM.createState(listOf(RulePosition(rule_c, 0, RulePosition.END_OF_RULE)))
-        val sut = TreeData<GrowingNodeIndex, CompleteNodeIndex>(0)
+        val sut = TreeDataGrowing<GrowingNodeIndex, CompleteNodeIndex>(0)
 
         val sentence = "abc"
 

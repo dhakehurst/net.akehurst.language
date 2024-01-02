@@ -74,7 +74,7 @@ internal class TokensByLineVisitor(
         when {
             nodeInfo.node.isEmptyMatch -> Unit
             eolPositions.isEmpty() -> {
-                lines.getOrCreate(location.line - 1).add(LeafData(name, isPattern, location, matchedText, tags))
+                lines.getOrCreate(location.line - 1).add(LeafData(name, isPattern, location, tags))
             }
 
             else -> {
@@ -86,7 +86,7 @@ internal class TokensByLineVisitor(
                 eolPositions.forEach { eolPos ->
                     val lineText = matchedText.substring(indexPos, eolPos + 1)
                     val loc = InputLocation(startLinePos, column, line, lineText.length)
-                    val segmentLeaf = LeafData(name, isPattern, loc, lineText, tags)
+                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                     line++
                     indexPos += lineText.length
@@ -98,7 +98,7 @@ internal class TokensByLineVisitor(
                 val lineText = matchedText.substring(indexPos)
                 if (lineText.isNotEmpty()) {
                     val loc = InputLocation(startLinePos, column, line, lineText.length)
-                    val segmentLeaf = LeafData(name, isPattern, loc, lineText, tags)
+                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                 }
             }

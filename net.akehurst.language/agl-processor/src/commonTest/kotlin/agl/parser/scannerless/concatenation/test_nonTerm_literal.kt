@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_nonTerm_literal : test_ScanOnDemandParserAbstract() {
+internal class test_nonTerm_literal : test_LeftCornerParserAbstract() {
 
     // S = ab 'c';
     // ab = 'a' 'b' ;

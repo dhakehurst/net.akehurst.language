@@ -18,10 +18,10 @@ package net.akehurst.language.parser.scanondemand.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_n_P_I : test_ScanOnDemandParserAbstract() {
+internal class test_n_P_I : test_LeftCornerParserAbstract() {
 
     // S = a | P | I         // name | propertyCall | infix
     // P = S 'p' a ;         // S '.' name

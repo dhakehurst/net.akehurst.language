@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -41,6 +42,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     val issues: IssueCollection<LanguageIssue>
 
     val grammar: Grammar?
+
+    val ruleSet: RuleSet
 
     val scanner: Scanner?
 

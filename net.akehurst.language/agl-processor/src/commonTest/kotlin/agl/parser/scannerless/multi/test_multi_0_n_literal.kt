@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
+internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
 
     // S = 'a'*
     private companion object {

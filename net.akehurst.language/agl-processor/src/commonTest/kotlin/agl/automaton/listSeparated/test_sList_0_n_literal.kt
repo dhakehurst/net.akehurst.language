@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
@@ -44,7 +45,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun parse_empty() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
@@ -65,7 +66,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun parse_a() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "a")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
@@ -78,7 +79,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun parse_aba() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
@@ -91,7 +92,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun parse_empty_and_abababa() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "")
         parser.parseForGoal("S", "abababa")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -120,7 +121,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("", "a", "aba", "ababa", "abababa")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

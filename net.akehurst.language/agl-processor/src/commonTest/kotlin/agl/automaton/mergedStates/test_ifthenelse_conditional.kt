@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -67,7 +68,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_ifXthenY() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "ifXthenY")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
@@ -97,7 +98,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_ifthenelse() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "ifXthenYelseZ")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
@@ -114,7 +115,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_ifXthenifYthenZelseW() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "ifXthenifYthenZelseW")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
@@ -136,7 +137,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
         val sentences = setOf("ifXthenY", "ifXthenYelseZ", "ifXthenifYthenZelseW", "ifXthenYelseifZthenW", "X")
         sentences.forEach {
-            val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+            val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
             val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })
@@ -173,7 +174,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("abc", "abd")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

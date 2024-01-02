@@ -23,12 +23,13 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.api.processor.ScannerKind
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class test_keywords : test_ScanOnDemandParserAbstract() {
+internal class test_keywords : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -55,9 +56,10 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = Agl.parseOptions {
-                goalRuleName(goal)
+            options = Agl.options {
+                parse { goalRuleName(goal) }
             },
+            scannerKind = ScannerKind.OnDemand,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -78,9 +80,10 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = Agl.parseOptions {
-                goalRuleName(goal)
+            options = Agl.options {
+                parse { goalRuleName(goal) }
             },
+            scannerKind = ScannerKind.OnDemand,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -101,9 +104,10 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = Agl.parseOptions {
-                goalRuleName(goal)
+            options = Agl.options {
+                parse { goalRuleName(goal) }
             },
+            scannerKind = ScannerKind.Classic,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -124,12 +128,13 @@ internal class test_keywords : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            Agl.parseOptions {
-                goalRuleName(goal)
-            }
+            options = Agl.options {
+                parse { goalRuleName(goal) }
+            },
+            scannerKind = ScannerKind.Classic,
         )
 
-        assertTrue(result.issues.errors.isNotEmpty())
+        assertTrue(result.issues.errors.isNotEmpty(), result.issues.toString())
         assertEquals(expectedIssues, result.issues.all.toList(), result.issues.toString())
     }
 

@@ -158,7 +158,7 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
             }
         }
 
-        else -> error("No '$sentenceKind' sentence file or directory")
+        else -> error("No '$sentenceKind' sentence file or directory in ${langDir.path}")
     }
 
     return sentences

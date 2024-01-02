@@ -20,6 +20,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonUtilsAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -107,7 +108,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         parser.parseForGoal("S", "ba")
         parser.parseForGoal("S", "a")
 
@@ -158,7 +159,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         parser.parseForGoal("S", "abcx")
         parser.parseForGoal("S", "x")
 

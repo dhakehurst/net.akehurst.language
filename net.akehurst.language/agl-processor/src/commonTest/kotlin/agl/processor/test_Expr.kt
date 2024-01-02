@@ -41,7 +41,7 @@ grammar Test {
 }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test
@@ -52,7 +52,7 @@ grammar Test {
              expr|1 { var { NAME : 'a' } }
         """.trimIndent()
 
-        super.test(processor,"expr", text, expected)
+        super.test(processor, "expr", text, expected)
     }
 
 }

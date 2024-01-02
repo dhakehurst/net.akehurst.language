@@ -18,10 +18,10 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_typeDefs : test_ScanOnDemandParserAbstract() {
+internal class test_typeDefs : test_LeftCornerParserAbstract() {
 
     // S = type name ;
     // type = userDefined < builtIn;

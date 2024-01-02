@@ -23,6 +23,9 @@ interface RuleSet {
     companion object {
         fun build(name: String, init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(name, init)
     }
+
+    val nonSkipTerminals: List<Rule>
+    val terminals: List<Rule>
 }
 
 interface Rule {

@@ -34,6 +34,8 @@ interface Sentence {
     fun locationFor(position: Int, length: Int): InputLocation
     fun locationForNode(node: SpptDataNode): InputLocation
     fun contextInText(position: Int): String
+
+    //fun setEolPositions(eols: List<Int>)
 }
 
 data class ChildInfo(
@@ -88,7 +90,6 @@ data class LeafData(
     val name: String,
     val isPattern: Boolean,
     val location: InputLocation,
-    val matchedText: String,
     val tagList: List<String>
 ) {
     val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
@@ -102,6 +103,8 @@ data class LeafData(
             }
         }
     }
+
+    fun matchedText(sentence: Sentence): String = sentence.text.substring(location.position, location.position + location.length)
 }
 
 /**

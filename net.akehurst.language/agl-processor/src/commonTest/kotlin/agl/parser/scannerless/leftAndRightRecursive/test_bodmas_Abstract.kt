@@ -16,9 +16,9 @@
 
 package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 
-internal abstract class test_bodmas_Abstract : test_ScanOnDemandParserAbstract() {
+internal abstract class test_bodmas_Abstract : test_LeftCornerParserAbstract() {
 
     abstract fun empty_fails()
     abstract fun a()

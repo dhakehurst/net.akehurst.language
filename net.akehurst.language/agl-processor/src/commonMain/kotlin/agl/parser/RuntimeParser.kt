@@ -88,7 +88,7 @@ internal class RuntimeParser(
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
         val skipScanner = when (scanner) {
-            is ScannerOnDemand -> ScannerOnDemand(skipStateSet.usedTerminalRules.toList())
+            is ScannerOnDemand -> ScannerOnDemand(this.scanner.regexEngine, skipStateSet.usedTerminalRules.toList())
             is ScannerClassic -> scanner //ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
             else -> error("subtype of Scanner unsupported - ${scanner::class.simpleName}")
         }

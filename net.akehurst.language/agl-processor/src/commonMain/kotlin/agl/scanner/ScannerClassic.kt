@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.scanner
 
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -31,14 +32,16 @@ import net.akehurst.language.api.sppt.Sentence
  * Literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
  */
 internal class ScannerClassic(
-    nonEmptyTerminals: List<RuntimeRule>
-) : ScannerAbstract(nonEmptyTerminals) {
+    regexEngine: RegexEngine,
+    terminals: List<Rule>
+) : ScannerAbstract(regexEngine) {
 
     companion object {
         val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1)
     }
 
-//    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
+    //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
+    override val validTerminals = terminals.filterNot { it.isEmptyTerminal }
 
     override fun reset() {
 
@@ -76,8 +79,8 @@ internal class ScannerClassic(
     private val _leaves = mutableMapOf<Int, CompleteTreeDataNode>()
 
     private fun scanAt(sentence: Sentence, position: Int): CompleteTreeDataNode {
-        val matches = _nonEmptyTerminals.mapNotNull {
-            val matchLength = (it.rhs as RuntimeRuleRhsTerminal).matchable!!.matchedLength(sentence.text, position)
+        val matches = validTerminals.mapNotNull {
+            val matchLength = ((it as RuntimeRule).rhs as RuntimeRuleRhsTerminal).matchable!!.matchedLength(sentence, position)
             when (matchLength) {
                 -1 -> null
                 0 -> null
@@ -88,7 +91,7 @@ internal class ScannerClassic(
             }
         }
         // prefer literals over patterns
-        val longest = matches.maxWithOrNull(Comparator<CompleteTreeDataNode> { l1, l2 ->
+        val longest = matches.maxWithOrNull { l1, l2 ->
             when {
                 l1.rule.isPattern.not() && l2.rule.isPattern -> 1
                 l1.rule.isPattern && l2.rule.isPattern.not() -> -1
@@ -98,9 +101,9 @@ internal class ScannerClassic(
                     else -> 0
                 }
             }
-        })
-        return when {
-            null == longest -> LEAF_NONE
+        }
+        return when (longest) {
+            null -> LEAF_NONE
             else -> longest
         }
     }

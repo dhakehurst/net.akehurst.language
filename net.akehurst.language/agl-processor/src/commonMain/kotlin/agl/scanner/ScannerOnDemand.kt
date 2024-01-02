@@ -19,6 +19,7 @@ package net.akehurst.language.agl.scanner
 
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.automaton.LookaheadSetPart
+import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmpty
@@ -27,9 +28,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.sppt.Sentence
 
-internal class ScannerOnDemand(
-    nonEmptyTerminals: List<RuntimeRule>
-) : ScannerAbstract(nonEmptyTerminals) {
+class ScannerOnDemand(
+    regexEngine: RegexEngine,
+    terminals: List<Rule>
+) : ScannerAbstract(regexEngine) {
 
     companion object {
         const val contextSize = 10
@@ -47,10 +49,17 @@ internal class ScannerOnDemand(
 
     //override var sentence: Sentence = SentenceDefault(sentenceText); private set
 
-    internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(nonEmptyTerminals.size)
+    internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(terminals.size)
+
+    override val validTerminals: List<Rule> = terminals.filterNot { it.isEmptyTerminal }
+
+    init {
+        this.matchables // iterate this to set the regexengine
+    }
 
     override fun reset() {
         this.leaves.clear()
+        this.isLookingAt_cache.clear()
     }
 
     override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
@@ -67,7 +76,7 @@ internal class ScannerOnDemand(
         }
     }
 
-    fun isLookingAtAnyOf(sentence: Sentence, lh: LookaheadSetPart, position: Int): Boolean {
+    internal fun isLookingAtAnyOf(sentence: Sentence, lh: LookaheadSetPart, position: Int): Boolean {
         return when {
             lh.includesRT -> error("lookahead must be real lookahead values, <RT> must be resolved")
             lh.includesEOT && this.isEnd(sentence, position) -> true
@@ -133,7 +142,7 @@ internal class ScannerOnDemand(
     internal fun tryMatchText(sentence: Sentence, position: Int, terminalRule: RuntimeRule): Int {
         val rhs = terminalRule.rhs as RuntimeRuleRhsTerminal
         val matchable = rhs.matchable
-        return matchable?.matchedLength(sentence.text, position) ?: -1
+        return matchable?.matchedLength(sentence, position) ?: -1
     }
 
     private fun tryCreateLeaf(sentence: Sentence, position: Int, terminalRuntimeRule: RuntimeRule): CompleteTreeDataNode {

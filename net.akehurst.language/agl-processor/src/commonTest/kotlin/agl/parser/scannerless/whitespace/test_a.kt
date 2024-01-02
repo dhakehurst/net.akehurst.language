@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_a : test_ScanOnDemandParserAbstract() {
+internal class test_a : test_LeftCornerParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a' ;

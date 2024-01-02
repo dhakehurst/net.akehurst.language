@@ -19,6 +19,7 @@ package net.akehurst.language.agl.scanner
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
@@ -32,10 +33,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
         fun test(text: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
             val sentence = SentenceDefault(text)
-            val terms = rrs.terminalRules.filterNot { it.isEmptyTerminal }
+            val terms = rrs.terminals.filterNot { it.isEmptyTerminal }
             val scanners = listOf(
-                ScannerOnDemand(terms),
-                ScannerClassic(terms)
+                ScannerOnDemand(RegexEnginePlatform, terms),
+                ScannerClassic(RegexEnginePlatform, terms)
             )
 
             for (sc in scanners) {
@@ -50,7 +51,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
     @Test
     fun construct() {
         val inputText = ""
-        val sut = ScannerOnDemand(emptyList())
+        val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         assertNotNull(sut)
     }
@@ -172,7 +173,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerOnDemand(rrs.nonSkipTerminals)
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
         val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
         val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
@@ -201,7 +202,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerClassic(rrs.terminalRules)
+        val scanner = ScannerClassic(RegexEnginePlatform, rrs.terminals)
         val leaves = mutableListOf<CompleteTreeDataNode>()
         val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
         val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
@@ -231,7 +232,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerOnDemand(rrs.nonSkipTerminals)
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
         val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!
         val l3 = scanner.findOrTryCreateLeaf(sentence, l2.nextInputPosition, patName)!!
@@ -260,7 +261,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val patName = rrs.findRuntimeRule("NAME")
         val litSemi = rrs.findRuntimeRule("';'")
 
-        val scanner = ScannerClassic(rrs.terminalRules)
+        val scanner = ScannerClassic(RegexEnginePlatform, rrs.terminals)
         val leaves = mutableListOf<CompleteTreeDataNode>()
         val l1 = scanner.findOrTryCreateLeaf(sentence, 0, litClass)!!
         val l2 = scanner.findOrTryCreateLeaf(sentence, l1.nextInputPosition, patWS)!!

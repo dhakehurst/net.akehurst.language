@@ -19,6 +19,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
@@ -65,7 +66,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_v() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -97,7 +98,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_vavav() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vavav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -136,7 +137,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_vmvav() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vmvav")
         println(result.sppt!!.toStringAllWithIndent("  "))
         println(rrs.usedAutomatonToString("S"))
@@ -176,7 +177,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
     @Test
     fun automaton_parse_vavmvav() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "vavmvav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -218,7 +219,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         val result = parser.parseForGoal("S", "v/v")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -282,7 +283,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         val rrs_noBuild = rrs.clone()
         val rrs_preBuild = rrs.clone()
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vavmv", "vmvav")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)
@@ -292,11 +293,11 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
 
         println("--No Build Run--")
-        val result_noBuild = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild).parseForGoal("S", "vmvav")
+        val result_noBuild = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild).parseForGoal("S", "vmvav")
         println(result_noBuild.sppt!!.toStringAllWithIndent("  "))
 
         println("--Build Run--")
-        val result_build = LeftCornerParser(ScannerOnDemand(rrs_preBuild.nonSkipTerminals), rrs_preBuild).parseForGoal("S", "vmvav")
+        val result_build = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_preBuild.nonSkipTerminals), rrs_preBuild).parseForGoal("S", "vmvav")
         println(result_build.sppt!!.toStringAllWithIndent("  "))
 
         println("--Build SM--")

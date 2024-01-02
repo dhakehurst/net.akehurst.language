@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
@@ -30,7 +31,7 @@ internal class test_ScanOnDemandParser {
     fun construct() {
         val rrs = runtimeRuleSet {
         }
-        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
 
         assertNotNull(sp)
     }
@@ -40,7 +41,7 @@ internal class test_ScanOnDemandParser {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a") }
         }
-        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         sp.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         //TODO: how to test if build worked!
@@ -51,7 +52,7 @@ internal class test_ScanOnDemandParser {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a") }
         }
-        val sp = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val sp = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
 
         val result = sp.parseForGoal("S", "a")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })

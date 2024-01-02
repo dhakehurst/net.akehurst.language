@@ -17,10 +17,10 @@
 package net.akehurst.language.parser.scanondemand.nesting
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import net.akehurst.language.parser.scanondemand.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_sList_sList : test_ScanOnDemandParserAbstract() {
+internal class test_sList_sList : test_LeftCornerParserAbstract() {
 
     // S = [numList / ';']* ;
     // numList = [NUM / ',']+

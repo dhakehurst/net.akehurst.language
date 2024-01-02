@@ -20,6 +20,7 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.processor.AutomatonKind
@@ -67,7 +68,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
 
     @Test
     fun parse_abcdefghi() {
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "abcdefghi")
         println(rrs.usedAutomatonToString("S"))
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -134,7 +135,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs.nonSkipTerminals), rrs)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.nonSkipTerminals), rrs)
         parser.parseForGoal("S", "abcdefghi")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -181,7 +182,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             concatenation("EF") { literal("e");literal("f") }
         }
 
-        val parser = LeftCornerParser(ScannerOnDemand(rrs_noBuild.nonSkipTerminals), rrs_noBuild)
+        val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs_noBuild.nonSkipTerminals), rrs_noBuild)
         val sentences = listOf("abcdefghi")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen)

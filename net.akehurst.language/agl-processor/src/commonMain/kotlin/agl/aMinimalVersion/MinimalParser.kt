@@ -20,8 +20,9 @@ package net.akehurst.language.agl.aMinimalVersion
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.*
+import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
-import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.graph.TreeDataGrowing
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.TreeDataComplete
@@ -60,6 +61,13 @@ internal class Automaton(
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
     val startState = createState(RulePosition(goalRule, 0, 0))
+
+    val usedRules: Set<RuntimeRule> by lazy {
+        this.runtimeRuleSet.calcUsedRules(this.startState.rp.rule)
+    }
+    val usedTerminals: Set<RuntimeRule> by lazy {
+        this.usedRules.filter { it.isTerminal }.toSet()
+    }
 
     fun createState(rp: RulePosition): State {
         var s = _states[rp]
@@ -291,7 +299,7 @@ internal class MinimalParser private constructor(
 
         val CompleteNode.length get() = this.nextInputPosition - this.startPosition
 
-        fun TreeData<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode) {
+        fun TreeDataGrowing<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode) {
             if (parent.isComplete) {
                 this.setFirstChildForComplete(parent.complete, child, parent.state.rp.rule.isChoiceAmbiguous)
             } else {
@@ -299,7 +307,7 @@ internal class MinimalParser private constructor(
             }
         }
 
-        private fun TreeData<GSSNode, CompleteNode>.setNextChildInParent(oldParent: GSSNode, newParent: GSSNode, nextChild: CompleteNode) {
+        private fun TreeDataGrowing<GSSNode, CompleteNode>.setNextChildInParent(oldParent: GSSNode, newParent: GSSNode, nextChild: CompleteNode) {
             if (newParent.isComplete) {
                 this.setNextChildForCompleteParent(oldParent, newParent.complete, nextChild, newParent.state.rp.rule.isChoiceAmbiguous)
             } else {
@@ -347,7 +355,7 @@ internal class MinimalParser private constructor(
     }
 
     val ss = automaton.startState
-    var sppf = TreeData<GSSNode, CompleteNode>(automaton.number)
+    var sppf = TreeDataGrowing<GSSNode, CompleteNode>(automaton.number)
     val gss = GraphStructuredStack<GSSNode>(binaryHeap { parent, child ->
         // Ordering rules:
         // 1) nextInputPosition lower number first
@@ -373,27 +381,28 @@ internal class MinimalParser private constructor(
     })
 
     val skipTerms by lazy { automaton.runtimeRuleSet.skipTerminals }
-    val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) }?.also { it.scanner = this.scanner } }
+    val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) } }
     val embedded = mutableMapOf<Pair<RuntimeRuleSet, RuntimeRule>, MinimalParser>()
 
     var sentence: Sentence? = null
-    var scanner: ScannerOnDemand? = null
+    val scanner: ScannerOnDemand = ScannerOnDemand(RegexEnginePlatform, automaton.usedTerminals.toList())
 
     fun parse(sentenceText: String): TreeDataComplete<CompleteNode> {
         //this.reset()
         this.sentence = SentenceDefault(sentenceText)
-        this.scanner = ScannerOnDemand(automaton.runtimeRuleSet.terminalRules)
-        this.skipParser?.scanner = this.scanner
+        //this.skipParser?.scanner = this.scanner
+        this.skipParser?.sentence = this.sentence
+
         val td = this.parseAt(0, LookaheadSetPart.EOT)
         val sppt = td ?: error("Parse Failed")
         return sppt
     }
 
     fun reset() {
-        this.scanner = null
-        this.skipParser?.scanner = null
+        this.scanner.reset()
+        this.skipParser?.scanner?.reset()
         this.gss.clear()
-        this.sppf = TreeData(automaton.number)
+        this.sppf = TreeDataGrowing(automaton.number)
     }
 
     private fun parseAt(position: Int, eot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
@@ -443,7 +452,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun recordGoal(sppf: TreeData<GSSNode, CompleteNode>, hd: GSSNode) {
+    private fun recordGoal(sppf: TreeDataGrowing<GSSNode, CompleteNode>, hd: GSSNode) {
         sppf.complete.setRoot(hd.complete)
         gss.dropStack(hd) {}
     }
@@ -548,7 +557,7 @@ internal class MinimalParser private constructor(
 
     private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
-        return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
+        return if (scanner.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
             val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nibs, hd.nip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete)
             true
@@ -558,12 +567,12 @@ internal class MinimalParser private constructor(
     }
 
     private fun doWidth(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
-        val lf = scanner!!.findOrTryCreateLeaf(sentence!!, hd.nip, tr.target.rp.rule)
+        val lf = scanner.findOrTryCreateLeaf(sentence!!, hd.nip, tr.target.rp.rule)
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(lf.nextInputPosition, slh)
-            val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
-            if (scanner!!.isLookingAtAnyOf(sentence!!, slh, nip)) {
+            val nip = if (null != skipData) skipData.root!!.nextInputPosition else lf.nextInputPosition
+            if (scanner.isLookingAtAnyOf(sentence!!, slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
                 val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, lf.nextInputPosition, nip)
                 if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
@@ -651,13 +660,17 @@ internal class MinimalParser private constructor(
             embedded[key] = p
             p
         }
-        embeddedParser.scanner = this.scanner
+        //embeddedParser.scanner = this.scanner
+        //embeddedParser.skipParser?.scanner = this.scanner
+        embeddedParser.sentence = this.sentence
+        embeddedParser.skipParser?.sentence = this.sentence
+
         val embeddedEOT = tr.lh.unionContent(this.skipTerms).resolve(peot, hd.rlh)
         val embed = embeddedParser.parseAt(hd.nip, embeddedEOT)
         return if (null != embed) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(embed.root!!.nextInputPosition, slh)
-            val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else embed.root!!.nextInputPosition
+            val nip = if (null != skipData) skipData.root!!.nextInputPosition else embed.root!!.nextInputPosition
             val rlh = LookaheadSetPart.EMPTY
             val nn = gss.pushNode(hd, tr.target, rlh, embed.root!!.startPosition, embed.root!!.nextInputPosition, nip)
             sppf.complete.setEmbeddedTreeFor(nn.complete, embed)
@@ -673,7 +686,7 @@ internal class MinimalParser private constructor(
             null
         } else {
             skipParser!!.reset()
-            skipParser!!.scanner = this.scanner
+            //skipParser!!.scanner = this.scanner
             skipParser!!.parseAt(position, slh)
         }
     }

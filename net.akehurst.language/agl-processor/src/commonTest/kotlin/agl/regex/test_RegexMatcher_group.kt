@@ -26,7 +26,7 @@ class test_RegexMatcher_group {
     fun group_1() {
         val m = regexMatcher("(a)")
         val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("a")
         assertEquals(expected, actual)
     }
 
@@ -34,7 +34,7 @@ class test_RegexMatcher_group {
     fun group_2() {
         val m = regexMatcher("(a)(b)")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -43,11 +43,11 @@ class test_RegexMatcher_group {
         val m = regexMatcher("(a)|(b)")
 
         val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("a")
         assertEquals(expected, actual)
 
         val actual2 = m.match("b", 0)
-        val expected2 = RegexMatcher.MatchResult("b", emptyList())
+        val expected2 = RegexMatcher.MatchResultAgl("b")
         assertEquals(expected2, actual2)
 
     }
@@ -56,7 +56,7 @@ class test_RegexMatcher_group {
     fun group1_1() {
         val m = regexMatcher("ab|c")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -64,7 +64,7 @@ class test_RegexMatcher_group {
     fun group1_2() {
         val m = regexMatcher("ab|c")
         val actual = m.match("c", 0)
-        val expected = RegexMatcher.MatchResult("c", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("c")
         assertEquals(expected, actual)
     }
 
@@ -88,7 +88,7 @@ class test_RegexMatcher_group {
     fun group2_1() {
         val m = regexMatcher("(ab)|c")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -96,7 +96,7 @@ class test_RegexMatcher_group {
     fun group2_2() {
         val m = regexMatcher("(ab)|c")
         val actual = m.match("c", 0)
-        val expected = RegexMatcher.MatchResult("c", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("c")
         assertEquals(expected, actual)
     }
 
@@ -120,7 +120,7 @@ class test_RegexMatcher_group {
     fun group3_1() {
         val m = regexMatcher("a(b|c)")
         val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ab")
         assertEquals(expected, actual)
     }
 
@@ -128,7 +128,7 @@ class test_RegexMatcher_group {
     fun group3_2() {
         val m = regexMatcher("a(b|c)")
         val actual = m.match("ac", 0)
-        val expected = RegexMatcher.MatchResult("ac", emptyList())
+        val expected = RegexMatcher.MatchResultAgl("ac")
         assertEquals(expected, actual)
     }
 
@@ -169,7 +169,7 @@ class test_RegexMatcher_group {
         val m = regexMatcher("c|d(e|f){0,1}")
         val text = "d"
         val actual = m.match(text, 0)
-        val expected = RegexMatcher.MatchResult(text, emptyList())
+        val expected = RegexMatcher.MatchResultAgl(text)
         assertEquals(expected, actual)
     }
 
