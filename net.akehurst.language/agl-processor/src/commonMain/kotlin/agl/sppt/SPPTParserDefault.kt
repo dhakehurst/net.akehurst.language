@@ -134,7 +134,7 @@ internal class SPPTParserDefault(
         }
         val td = tp.parse(rootRuntimeRuleSet, oldTree)
         this._oldTreeData = td
-        this.tree = SPPTFromTreeData(td as TreeDataComplete, SentenceDefault(tp.sentence), -1, -1)
+        this.tree = SPPTFromTreeData(td, SentenceDefault(tp.sentence), -1, -1)
         return this.tree
     }
 

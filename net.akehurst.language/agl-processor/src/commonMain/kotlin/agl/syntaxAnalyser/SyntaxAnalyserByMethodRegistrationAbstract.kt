@@ -19,7 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
@@ -36,7 +36,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
 
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
-    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean) {
+    override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<Any>> = mutableStackOf(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {

@@ -24,7 +24,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptWalker
 
 internal class SPPTFromTreeData(
-    override val treeData: TreeDataComplete,
+    override val treeData: TreeData,
     internal val sentence: Sentence,
     override val seasons: Int,
     override val maxNumHeads: Int

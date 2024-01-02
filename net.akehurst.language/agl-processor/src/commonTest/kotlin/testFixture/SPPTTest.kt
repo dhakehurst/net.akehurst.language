@@ -16,7 +16,7 @@
  */
 package net.akehurst.language.api.sppt.test
 
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.assertEquals
 
@@ -28,8 +28,8 @@ object SPPTTest {
         matches(expected.treeData, actual.treeData)
     }
 
-    fun matches(expected: TreeDataComplete, actual: TreeDataComplete) {
-        assertEquals(expected.completeChildren.size, actual.completeChildren.size)
+    fun matches(expected: TreeData, actual: TreeData) {
+        //assertEquals(expected.completeChildren.size, actual.completeChildren.size)
         TODO()
     }
 }

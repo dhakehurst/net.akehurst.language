@@ -70,6 +70,8 @@ interface TreeData {
     fun embeddedFor(node: SpptDataNode): TreeData?
     fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
     fun preferred(node: SpptDataNode): SpptDataNode?
+    fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> //only used in one place - maybe not needed
+    fun matches(other: TreeData): Boolean
 
     // Mutation
     fun start(initialSkipData: TreeData?)

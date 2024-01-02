@@ -108,7 +108,7 @@ internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
     }
 
     @Test
-    fun xxxx() {
+    fun xxxx_fails() {
         val sentence = "xxxx"
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)

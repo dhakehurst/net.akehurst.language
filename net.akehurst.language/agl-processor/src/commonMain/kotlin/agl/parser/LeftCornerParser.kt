@@ -25,7 +25,6 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ParseResultDefault
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.parser.InputLocation
@@ -106,7 +105,7 @@ internal class LeftCornerParser(
             totalWork += rp.graph.numberOfHeads
         }
 
-        val match = rp.graph.treeData.complete as TreeDataComplete
+        val match = rp.graph.treeData.complete
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)

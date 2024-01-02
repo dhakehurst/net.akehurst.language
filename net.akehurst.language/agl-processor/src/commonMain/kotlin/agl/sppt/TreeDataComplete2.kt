@@ -16,9 +16,15 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptWalker
+
+data class CompleteKey(
+    val rule: Rule,
+    val startPosition: Int,
+    val nextInputPosition: Int,
+)
 
 // public so it can be serialised
 class TreeDataComplete2(
@@ -28,11 +34,14 @@ class TreeDataComplete2(
     initialSkip: TreeDataComplete2? = null
 ) : TreeData {
     companion object {
+        //private val CompleteKey.preferred get() = PreferredNode(this.rule, this.startPosition)
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
+        //private val SpptDataNode.completeKey get() = CompleteKey(this.rule, this.startPosition, this.nextInputPosition)
     }
 
     override val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
-    val completeChildren: Map<SpptDataNode, Map<Int, List<SpptDataNode>>> get() = this._complete
+
+    //val completeChildren: Map<CompleteKey, Map<Int, List<SpptDataNode>>> get() = this._complete
     override var root: SpptDataNode? = root; private set
     override var initialSkip: TreeData? = initialSkip; private set
 
@@ -42,23 +51,23 @@ class TreeDataComplete2(
         this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
     }
 
+    //TODO: is _preferred actually useful ??
     override fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>> {
-        val keys = this._complete.keys.filter {
-            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
-        }
-        return when (keys.size) {
-            0 -> emptyList()
-            1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
+//        val keys = this._complete.keys.filter {
+//            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
+//        }
+        val alternatives = this._complete[node]
+        return when (alternatives) {
+            null -> emptyList()
+            //1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
             else -> {
-                val preferred = keys[0].preferred
-                if (Debug.CHECK) check(keys.all { it.preferred == preferred })
-                if (_preferred.containsKey(preferred)) {
-                    this._complete[_preferred[preferred]]!!.entries.map { Pair(it.key, it.value) }
-                } else {
-                    keys.flatMap {
-                        this._complete[it]!!.entries.map { Pair(it.key, it.value) }
-                    }
-                }
+//                val preferred = node.preferred
+                //if (Debug.CHECK) check(keys.all { it.preferred == preferred })
+                //               if (_preferred.containsKey(preferred)) {
+                //                   this._complete[_preferred[preferred]!!]!!.entries.map { Pair(it.key, it.value) }
+                //               } else {
+                alternatives.map { Pair(it.key, it.value) }
+                //               }
             }
         }
     }
@@ -66,7 +75,7 @@ class TreeDataComplete2(
     override fun skipDataAfter(node: SpptDataNode) = this._skipDataAfter[node]
     override fun embeddedFor(node: SpptDataNode) = this._embeddedFor[node]
 
-    fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> {
+    override fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> {
         /* remember
          * <SKIP-MULTI> = <SKIP-CHOICE>+
          * <SKIP-CHOICE> = SR-0 | ... | SR-n
@@ -113,7 +122,8 @@ class TreeDataComplete2(
     }
 
     override fun remove(node: SpptDataNode) {
-        this._complete.remove(node)
+        this._complete[node]?.remove(node.option)
+        if (this._complete[node]?.isEmpty() == true) this._complete.remove(node)
         this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)
     }
@@ -136,22 +146,23 @@ class TreeDataComplete2(
     }
 
     private fun setCompletedBy(parent: SpptDataNode, children: List<SpptDataNode>, isAlternative: Boolean) {
-        var alternatives = this._complete[parent]
+        val ck = parent
+        var alternatives = this._complete[ck]
         if (null == alternatives) {
             alternatives = mutableMapOf(parent.option to children)
-            this._complete[parent] = alternatives
+            this._complete[ck] = alternatives
             if (isAlternative) {
                 //ensure other is not preferred
-                this._preferred.remove(parent.preferred)
+                this._preferred.remove(ck.preferred)
             } else {
-                this._preferred[parent.preferred] = parent
+                this._preferred[ck.preferred] = parent
             }
         } else {
             if (isAlternative) {
                 //ensure other is not preferred
-                this._preferred.remove(parent.preferred)
+                this._preferred.remove(ck.preferred)
             } else {
-                this._preferred[parent.preferred] = parent
+                this._preferred[ck.preferred] = parent
                 alternatives.clear()
             }
             alternatives[parent.option] = children
@@ -163,7 +174,8 @@ class TreeDataComplete2(
         walker.traverse(callback, skipDataAsTree)
     }
 
-    fun matches(other: TreeDataComplete2) = when {
+    override fun matches(other: TreeData) = when {
+        other !is TreeDataComplete2 -> false
         this.initialSkip != other.initialSkip -> false
         this._embeddedFor != other._embeddedFor -> false
         this._skipDataAfter != other._skipDataAfter -> false

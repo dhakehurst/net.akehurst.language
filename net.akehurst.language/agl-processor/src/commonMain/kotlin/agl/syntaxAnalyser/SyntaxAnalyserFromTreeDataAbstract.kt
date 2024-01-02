@@ -20,7 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -60,5 +60,5 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     /**
      * implement this to walk the tree and set the 'asm' property
      */
-    abstract fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean)
+    abstract fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean)
 }

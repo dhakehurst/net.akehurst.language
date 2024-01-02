@@ -17,7 +17,7 @@
 package net.akehurst.language.api.sppt
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.parser.InputLocation
 
 interface SpptDataNode {
@@ -131,7 +131,7 @@ interface SharedPackedParseTree {
      */
     val toStringAll: String
 
-    val treeData: TreeDataComplete
+    val treeData: TreeData
 
     /**
      * Diagnostic info.

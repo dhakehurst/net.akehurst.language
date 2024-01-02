@@ -28,10 +28,11 @@ internal data class PreferredNode(
     override fun toString(): String = "PN(${rule.tag},$startPosition)"
 }
 
-data class CompleteTreeDataNode(
+class CompleteTreeDataNode(
     override val rule: Rule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
+
     override val nextInputNoSkip: Int,
     override val option: Int
 ) : SpptDataNode {
@@ -49,7 +50,7 @@ data class CompleteTreeDataNode(
     override fun toString(): String = "CN(${rule.tag}|${option},$startPosition-$nextInputPosition)"
 }
 
-fun treeData(forStateSetNumber: Int): TreeData = TreeDataComplete(forStateSetNumber)
+fun treeData(forStateSetNumber: Int): TreeData = TreeDataComplete2(forStateSetNumber)
 
 // public so it can be serialised
 class TreeDataComplete(
@@ -76,7 +77,9 @@ class TreeDataComplete(
 
     override fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>> {
         val keys = this._complete.keys.filter {
-            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
+            it.startPosition == node.startPosition
+                    && it.nextInputPosition == node.nextInputPosition
+                    && it.rule == node.rule
         }
         return when (keys.size) {
             0 -> emptyList()
@@ -98,7 +101,7 @@ class TreeDataComplete(
     override fun skipDataAfter(node: SpptDataNode): TreeData? = this._skipDataAfter[node]
     override fun embeddedFor(node: SpptDataNode): TreeData? = this._embeddedFor[node]
 
-    fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> {
+    override fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> {
         /* remember
          * <SKIP-MULTI> = <SKIP-CHOICE>+
          * <SKIP-CHOICE> = SR-0 | ... | SR-n
@@ -195,7 +198,8 @@ class TreeDataComplete(
         walker.traverse(callback, skipDataAsTree)
     }
 
-    fun matches(other: TreeDataComplete) = when {
+    override fun matches(other: TreeData) = when {
+        other !is TreeDataComplete -> false
         this.initialSkip != other.initialSkip -> false
         this._embeddedFor != other._embeddedFor -> false
         this._skipDataAfter != other._skipDataAfter -> false

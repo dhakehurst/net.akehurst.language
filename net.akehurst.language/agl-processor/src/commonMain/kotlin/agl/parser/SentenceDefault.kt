@@ -36,14 +36,14 @@ class SentenceDefault(
             _eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
             else -> {
 //                val line = _eolPositions.filter { it < position }.size
-                val line = _eolPositions.indexOfFirst { it < position }
+                val line = _eolPositions.indexOfLast { it < position }
                 when (line) {
                     -1 -> InputLocation(position, position + 1, 1, length)
 
                     //0 == line -> position + 1
                     else -> {
                         val col = position - _eolPositions[line]
-                        InputLocation(position, col, line + 1, length)
+                        InputLocation(position, col, line + 2, length)
                     }
                 }
             }

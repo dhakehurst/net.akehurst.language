@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
@@ -83,7 +83,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         this._asm = null
     }
 
-    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete, skipDataAsTree: Boolean) {
+    override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack: MutableStack<SyntaxAnalyserSimpleAbstract<A>> = mutableStackOf(this)
         val downStack = mutableStackOf<DownData>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()

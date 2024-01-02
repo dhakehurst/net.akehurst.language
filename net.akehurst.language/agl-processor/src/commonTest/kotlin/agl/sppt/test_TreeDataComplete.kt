@@ -19,64 +19,91 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
+import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_TreeDataComplete {
+internal class test_TreeDataComplete {
 
-    fun TreeData.asString(sentence: Sentence): String {
-        val walker = SpptWalkerToString(sentence, "  ")
-        this.traverseTreeDepthFirst(walker, false)
-        return walker.output
+    companion object {
+        fun TreeData.asString(sentence: Sentence): String {
+            val walker = SpptWalkerToString(sentence, "  ")
+            this.traverseTreeDepthFirst(walker, false)
+            return walker.output
+        }
+
+        fun test(sentence: String, rrs: RuntimeRuleSet, goal: String, parent: SpptDataNode, expected: List<Pair<Int, List<SpptDataNode>>>) {
+            //when ()
+            val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
+            val tree = parser.parse(sentence, Agl.parseOptions { goalRuleName(goal) }).sppt!!.treeData
+            val actual = tree.childrenFor(parent)
+
+            //then
+            println(tree.asString(SentenceDefault(sentence)))
+            assertEquals(expected, actual)
+        }
     }
 
     @Test
     fun childrenFor__no_children() {
-        //given (set up tree)
+        val sentence = "a"
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a") }
         }
-        val ss = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
-        val G = ss.goalRule
-        val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
-        val sentence = "a"
-        val root = CompleteTreeDataNode(G, 0, sentence.length, sentence.length, 0)
-        val tree = treeData(ss.number)
-        tree.setRoot(root)
-        val G_children = listOf(
-            CompleteTreeDataNode(S, 0, 1, 1, 0)
-        )
-        tree.setChildren(root, G_children, false)
-        val S_children = listOf(
-            CompleteTreeDataNode(a, 0, 1, 1, 0)
-        )
-        tree.setChildren(G_children[0], S_children, false)
 
-        //when ()
-        val actual = tree.childrenFor(root)
+        val expected = listOf<Pair<Int, List<SpptDataNode>>>()
+        val parent = CompleteTreeDataNode(a, 0, 1, 1, 0)
 
-        //then
-        println(tree.asString(SentenceDefault(sentence)))
-        val expected = listOf<Pair<Int, List<SpptDataNode>>>(
-            Pair(0, listOf(CompleteTreeDataNode(S, 0, 1, 1, 0)))
-        )
-        assertEquals(expected, actual)
-
+        test(sentence, rrs, "S", parent, expected)
     }
 
     @Test
     fun childrenFor__no_alternatives() {
+        val sentence = "a"
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val a = rrs.findRuntimeRule("'a'")
 
+        val expected = listOf<Pair<Int, List<SpptDataNode>>>(
+            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0)))
+        )
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0)
+
+        test(sentence, rrs, "S", parent, expected)
     }
 
     @Test
     fun childrenFor__with_alternatives() {
+        val sentence = "a"
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("A")
+            }
+            concatenation("A") {
+                literal("a")
+            }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val a = rrs.findRuntimeRule("'a'")
 
+        val expected = listOf<Pair<Int, List<SpptDataNode>>>(
+            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0)))
+        )
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0)
+
+        test(sentence, rrs, "S", parent, expected)
     }
 
 }

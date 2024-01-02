@@ -21,14 +21,18 @@ import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-fun SpptDataNode.children(treeData: TreeDataComplete, alternative: Int = 0) = treeData.childrenFor(this)[alternative].second
+fun SpptDataNode.children(treeData: TreeData, alternative: Int = 0) = treeData.childrenFor(this)[alternative].second
+fun SpptDataNode.matchedText(s: Sentence) = s.matchedTextNoSkip(this)
+fun SpptDataNode.skipText(treeData: TreeData) = treeData.skipDataAfter(this)
+
 
 internal class test_InputLocation_singleLine {
 
@@ -187,9 +191,10 @@ class test_InputLocation_multiLine2 {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         assertEquals(InputLocation(0, 1, 1, 9), ss.locationForNode(result.sppt!!.treeData.root!!))
-        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(3, 4, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(6, 7, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(0, 1, 1, 9), ss.locationForNode(result.sppt!!.treeData.userRoot))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(6, 7, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[2]))
 
     }
 
@@ -205,12 +210,12 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 11), ss.locationForNode(result.sppt!!.treeData.root!!))
-        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(3, 4, 1, 1), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(4, 5, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
-        assertEquals(InputLocation(7, 8, 1, 1), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
-        assertEquals(InputLocation(8, 9, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(0, 1, 1, 11), ss.locationForNode(result.sppt!!.treeData.userRoot))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(4, 5, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(7, 8, 1, 1), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(8, 9, 1, 3), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[4]))
 
     }
 
@@ -287,22 +292,28 @@ class test_InputLocation_multiLine2 {
         val sp = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, S.terminals), S)
 
         val result = sp.parseForGoal("S", sentence)
+        val td = result.sppt!!.treeData
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 13), ss.locationForNode(result.sppt!!.treeData.root!!))
-        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
-        assertEquals("\n  ", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(3, 4, 1, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
-        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
-        assertEquals(InputLocation(6, 3, 2, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
-        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
-        assertEquals(InputLocation(9, 6, 2, 1), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
-        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
-        assertEquals(InputLocation(10, 1, 3, 3), ss.locationForNode(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(0, 1, 1, 13), ss.locationForNode(result.sppt!!.treeData.userRoot))
+
+        assertEquals(3, td.userRoot.children(td).size)
+        val ch1 = td.userRoot.children(td)[0]
+        assertEquals("aaa", ch1.matchedText(ss))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationForNode(ch1))
+        assertEquals("\n  ", ch1.skipText(td)?.root?.matchedText(ss))
+
+        val ch2 = td.userRoot.children(td)[1]
+        assertEquals("bbb", ch2.matchedText(ss))
+        assertEquals(InputLocation(6, 3, 2, 3), ss.locationForNode(ch2))
+        assertEquals("\n", ch2.skipText(td)?.root?.matchedText(ss))
+
+        val ch3 = td.userRoot.children(td)[2]
+        assertEquals("ccc", ch3.matchedText(ss))
+        assertEquals(InputLocation(10, 1, 3, 3), ss.locationForNode(ch3))
 
     }
 }
