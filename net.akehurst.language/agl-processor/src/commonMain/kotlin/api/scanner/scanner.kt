@@ -36,5 +36,5 @@ interface Scanner {
     fun isLookingAt(sentence: Sentence, position: Int, terminalRule: Rule): Boolean
     fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode?
 
-    fun scan(sentence: Sentence): ScanResult
+    fun scan(sentence: Sentence, startAtPosition: Int = 0, offsetPosition: Int = 0): ScanResult
 }

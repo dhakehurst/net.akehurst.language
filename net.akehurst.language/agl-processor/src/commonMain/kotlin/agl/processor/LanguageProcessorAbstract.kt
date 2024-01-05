@@ -143,12 +143,12 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
         val opts = options ?: parseOptionsDefault()
         if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
-        this.parser?.buildFor(opts.goalRuleName!!, opts.automatonKind)
+        this.parser?.buildFor(opts.goalRuleName!!)
         return this
     }
 
     override fun scan(sentence: String): ScanResult {
-        return this.scanner?.scan(SentenceDefault(sentence))?.also { scanner?.reset() }
+        return this.scanner?.scan(SentenceDefault(sentence), 0)?.also { scanner?.reset() }
             ?: error("The processor for grammar '${this.grammar.qualifiedName}' was not configured with a Scanner")
     }
 
@@ -250,7 +250,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.grammar.qualifiedName}' was not configured with a Parser")
                 val spines = parserExpected.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
-                val items = completionProvider!!.provide(spines, opts.completionProvider.context, opts.completionProvider.options)
+                val items = completionProvider!!.provide(spines, opts.completionProvider.context, opts.completionProvider.other)
                 ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
             }
 

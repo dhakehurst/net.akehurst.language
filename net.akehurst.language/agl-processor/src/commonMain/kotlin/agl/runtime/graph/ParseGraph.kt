@@ -236,8 +236,6 @@ internal class ParseGraph(
         //       this.completeNodes.clear()
         this._gss.clear()
         this._goals.clear()
-        //TODO: don't want to create new one of these each time we parse skip
-        // but currently can't reuse it as it carries the skip data
         this.treeData = TreeDataGrowing(stateSetNumber)
     }
 

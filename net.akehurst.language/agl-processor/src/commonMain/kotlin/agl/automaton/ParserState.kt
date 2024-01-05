@@ -33,7 +33,7 @@ internal class ParserState(
     }
 
     val outTransitions: TransitionCache = when (this.stateSet.automatonKind) {
-        AutomatonKind.LOOKAHEAD_NONE -> TransitionCacheLC1()//TransitionCacheLC0()
+        AutomatonKind.LOOKAHEAD_NONE -> TODO() //TransitionCacheLC0()
         AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
         AutomatonKind.LOOKAHEAD_1 -> TransitionCacheLC1()
     }

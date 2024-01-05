@@ -96,27 +96,27 @@ abstract class ScannerAbstract(
         }
     }
 
-    override fun scan(sentence: Sentence): ScanResult {
+    override fun scan(sentence: Sentence, startAtPosition: Int, offsetPosition: Int): ScanResult {
         //TODO: improve this algorithm...it is not efficient
         this.reset()
         val inputText = sentence.text
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
         val undefined = RuntimeRuleSet.UNDEFINED_RULE
         val result = mutableListOf<LeafData>()
-        var startPosition = 0
-        var nextInputPosition = 0
+        var position = startAtPosition
+        var nextInputPosition = position
         var currentUndefinedText = ""
         var currentUndefinedStart = -1
         while (nextInputPosition < inputText.length) {
             val matches: List<LeafData> = this.matchables.mapNotNull {
-                val matchLength = it.matchedLength(sentence, startPosition)
+                val matchLength = it.matchedLength(sentence, position)
                 when (matchLength) {
                     -1 -> null
                     0 -> null
                     else -> {
-                        val loc = sentence.locationFor(startPosition, matchLength)
-                        val matchedText = inputText.substring(startPosition, startPosition + matchLength)
-                        LeafData(it.tag, it.kind == MatchableKind.REGEX, loc, emptyList())
+                        //val loc = sentence.locationFor(startPosition, matchLength)
+                        //val matchedText = inputText.substring(startPosition, startPosition + matchLength)
+                        LeafData(it.tag, it.kind == MatchableKind.REGEX, position + offsetPosition, matchLength, emptyList())
                     }
                 }
             }
@@ -126,14 +126,17 @@ abstract class ScannerAbstract(
                     l1.isPattern.not() && l2.isPattern -> 1
                     l1.isPattern && l2.isPattern.not() -> -1
                     else -> when {
-                        l1.location.length > l2.location.length -> 1
-                        l2.location.length > l1.location.length -> -1
+//                        l1.location.length > l2.location.length -> 1
+//                        l2.location.length > l1.location.length -> -1
+                        l1.length > l2.length -> 1
+                        l2.length > l1.length -> -1
                         else -> 0
                     }
                 }
             })
             when {
-                (null == longest || longest.location.length == 0) -> {
+                //(null == longest || longest.location.length == 0) -> {
+                (null == longest || longest.length == 0) -> {
                     val text = inputText[nextInputPosition].toString()
                     if (-1 == currentUndefinedStart) {
                         currentUndefinedStart = nextInputPosition
@@ -144,22 +147,25 @@ abstract class ScannerAbstract(
 
                 else -> {
                     if (-1 != currentUndefinedStart) {
-                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-                        val ud = LeafData(undefined.tag, false, loc, emptyList())
+//                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
+//                        val ud = LeafData(undefined.tag, false, loc, emptyList())
+                        val ud = LeafData(undefined.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
                         result.add(ud)
                         currentUndefinedStart = -1
                         currentUndefinedText = ""
                     }
                     result.add(longest)
-                    nextInputPosition += longest.location.length
+//                    nextInputPosition += longest.location.length
+                    nextInputPosition += longest.length
                 }
             }
-            startPosition = nextInputPosition
+            position = nextInputPosition
         }
         //catch undefined stuff at end
         if (-1 != currentUndefinedStart) {
             val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
-            val ud = LeafData(undefined.tag, false, loc, emptyList())
+//            val ud = LeafData(undefined.tag, false, loc, emptyList())
+            val ud = LeafData(undefined.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
             result.add(ud)
         }
         return ScanResultDefault(result, issues)

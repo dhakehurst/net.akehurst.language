@@ -18,7 +18,6 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -73,7 +72,7 @@ internal class test_LanguageProcessor_scan {
         assertEquals(1, tokens.size)
         assertEquals("ab", tokens[0].matchedText(sentence))
         //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
-        assertEquals(0, tokens[0].location.position)
+        assertEquals(0, tokens[0].position)
         assertEquals(2, tokens[0].matchedText(sentence).length)
 
     }
@@ -90,7 +89,7 @@ internal class test_LanguageProcessor_scan {
         assertEquals(1, tokens.size)
         assertEquals("a", tokens[0].matchedText(sentence))
         //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
-        assertEquals(0, tokens[0].location.position)
+        assertEquals(0, tokens[0].position)
         assertEquals(1, tokens[0].matchedText(sentence).length)
 
     }
@@ -170,10 +169,10 @@ internal class test_LanguageProcessor_scan {
         """.trimIndent()
 
         val expected = listOf(
-            LeafData("'class'", false, InputLocation(0, 1, 1, 5), emptyList()), //"class",
-            LeafData("WS", true, InputLocation(5, 6, 1, 1), emptyList()), //" ",
-            LeafData("NAME", true, InputLocation(6, 7, 1, 1), emptyList()), //"A",
-            LeafData("';'", false, InputLocation(7, 8, 1, 1), emptyList()), //";",
+            LeafData("'class'", false, 0, 5, emptyList()), //"class",
+            LeafData("WS", true, 5, 1, emptyList()), //" ",
+            LeafData("NAME", true, 6, 1, emptyList()), //"A",
+            LeafData("';'", false, 7, 1, emptyList()), //";",
         )
 
         test(grammarStr, "class A;", expected)
@@ -191,10 +190,10 @@ internal class test_LanguageProcessor_scan {
         """.trimIndent()
 
         val expected = listOf(
-            LeafData("'class'", false, InputLocation(0, 1, 1, 5), emptyList()), // "class",
-            LeafData("WS", true, InputLocation(5, 6, 1, 1), emptyList()), // " ",
-            LeafData("'class'", false, InputLocation(6, 7, 1, 5), emptyList()), // "class",
-            LeafData("';'", false, InputLocation(11, 12, 1, 1), emptyList()), // ";",
+            LeafData("'class'", false, 0, 5, emptyList()), // "class",
+            LeafData("WS", true, 5, 1, emptyList()), // " ",
+            LeafData("'class'", false, 6, 5, emptyList()), // "class",
+            LeafData("';'", false, 11, 1, emptyList()), // ";",
         )
 
         test(grammarStr, "class class;", expected)
@@ -212,10 +211,10 @@ internal class test_LanguageProcessor_scan {
         """.trimIndent()
 
         val expected = listOf(
-            LeafData("<UNDEFINED>", false, InputLocation(0, 1, 1, 1), emptyList()), // "/",
-            LeafData("'prefix'", false, InputLocation(1, 2, 1, 6), emptyList()), //"prefix",
-            LeafData("WHITESPACE", true, InputLocation(7, 8, 1, 1), emptyList()), //" ",
-            LeafData("NAME", true, InputLocation(8, 9, 1, 3), emptyList()), //"abc",
+            LeafData("<UNDEFINED>", false, 0, 1, emptyList()), // "/",
+            LeafData("'prefix'", false, 1, 6, emptyList()), //"prefix",
+            LeafData("WHITESPACE", true, 7, 1, emptyList()), //" ",
+            LeafData("NAME", true, 8, 3, emptyList()), //"abc",
         )
 
         test(grammarStr, "/prefix abc", expected)

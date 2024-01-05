@@ -95,16 +95,16 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         grammarStr = grammarStrArg
     }
 
-    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
+    override fun update(grammarStr: String?, crossReferenceModelStr: String?, styleStr: String?) {
         this._doObservableUpdates = false
         val oldGrammarStr = this.grammarStr
         val oldScopeModelStr = this.crossReferenceModelStr
         val oldStyleStr = this.styleStr
         this.grammarStr = grammarStr
-        this.crossReferenceModelStr = scopeModelStr
+        this.crossReferenceModelStr = crossReferenceModelStr
         this.styleStr = styleStr
         updateGrammarStr(oldGrammarStr, grammarStr)
-        updateScopeModelStr(oldScopeModelStr, scopeModelStr)
+        updateScopeModelStr(oldScopeModelStr, crossReferenceModelStr)
         updateStyleStr(oldStyleStr, styleStr)
         this._doObservableUpdates = true
     }

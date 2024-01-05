@@ -29,9 +29,6 @@ data class CompleteKey(
 // public so it can be serialised
 class TreeDataComplete2(
     val forStateSetNumber: Int,
-    // the following are optional arguments to allow for serialisation
-    root: SpptDataNode? = null,
-    initialSkip: TreeDataComplete2? = null
 ) : TreeData {
     companion object {
         //private val CompleteKey.preferred get() = PreferredNode(this.rule, this.startPosition)
@@ -41,9 +38,11 @@ class TreeDataComplete2(
 
     override val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
 
-    //val completeChildren: Map<CompleteKey, Map<Int, List<SpptDataNode>>> get() = this._complete
-    override var root: SpptDataNode? = root; private set
-    override var initialSkip: TreeData? = initialSkip; private set
+    // made public for serialisation support
+    val completeChildren: Map<SpptDataNode, Map<Int, List<SpptDataNode>>> get() = this._complete
+
+    override var root: SpptDataNode? = null; private set
+    override var initialSkip: TreeData? = null; private set
 
     override val userRoot get() = childrenFor(root!!).first().second.first()
 

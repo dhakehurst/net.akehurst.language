@@ -37,6 +37,8 @@ internal class ConverterToRuntimeRules(
         RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName, rules, _precRules)
     }
 
+    val originalRuleItemMap get() = _originalRuleItem
+
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem? =
         this._originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
 

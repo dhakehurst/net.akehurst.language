@@ -27,10 +27,9 @@ interface ScanOptions {
  */
 interface ParseOptions {
     var goalRuleName: String?
-    val automatonKind: AutomatonKind
-    val reportErrors: Boolean
-    val reportGrammarAmbiguities: Boolean
-    val cacheSkip: Boolean
+    var reportErrors: Boolean
+    var reportGrammarAmbiguities: Boolean
+    var cacheSkip: Boolean
 }
 
 /**
@@ -54,7 +53,7 @@ interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
 
 interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {
     var context: ContextType?
-    val options: Map<String, Any>
+    val other: Map<String, Any>
 }
 
 /**

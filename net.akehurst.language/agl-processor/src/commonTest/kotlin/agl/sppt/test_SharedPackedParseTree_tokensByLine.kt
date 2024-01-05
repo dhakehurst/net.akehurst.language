@@ -18,7 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -30,7 +30,7 @@ class test_SharedPackedParseTree_tokensByLine {
         private val grammarStr = """
             namespace test
             grammar Test {
-                skip WS = "\s+" ;
+                skip leaf WS = "(\s|[.])+" ;
                 S = 'aaa' 'bbb' 'ccc' ;
             }
         """.trimIndent()
@@ -46,16 +46,15 @@ class test_SharedPackedParseTree_tokensByLine {
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("aaa", actual[0].matchedText(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), actual[0].location)
-        assertEquals(" ", actual[1].matchedText(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), actual[1].location)
-        assertEquals("bbb", actual[2].matchedText(sentence))
-        assertEquals(InputLocation(4, 5, 1, 3), actual[2].location)
-        assertEquals(" ", actual[3].matchedText(sentence))
-        assertEquals(InputLocation(7, 8, 1, 1), actual[3].location)
-        assertEquals("ccc", actual[4].matchedText(sentence))
-        assertEquals(InputLocation(8, 9, 1, 3), actual[4].location)
+        val expected = listOf(
+            LeafData("'aaa'", false, 0, 3, listOf("S", "'aaa'")),
+            LeafData("WS", true, 3, 1, listOf("S", "WS")),
+            LeafData("'bbb'", false, 4, 3, listOf("S", "'bbb'")),
+            LeafData("WS", true, 7, 1, listOf("S", "WS")),
+            LeafData("'ccc'", false, 8, 3, listOf("S", "'ccc'")),
+        )
+
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -70,62 +69,61 @@ class test_SharedPackedParseTree_tokensByLine {
         val result = processor.parse(sentence.text)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
+
         val actual_1 = result.sppt!!.tokensByLine(0)
         val actual_2 = result.sppt!!.tokensByLine(1)
         val actual_3 = result.sppt!!.tokensByLine(2)
 
-        assertEquals(2, actual_1.size)
-        assertEquals("aaa", actual_1[0].matchedText(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), actual_1[0].location)
-        assertEquals("\n", actual_1[1].matchedText(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), actual_1[1].location)
-
-        assertEquals(2, actual_2.size)
-        assertEquals("bbb", actual_2[0].matchedText(sentence))
-        assertEquals(InputLocation(4, 1, 2, 3), actual_2[0].location)
-        assertEquals("\n", actual_2[1].matchedText(sentence))
-        assertEquals(InputLocation(7, 4, 2, 1), actual_2[1].location)
-
-        assertEquals(1, actual_3.size)
-        assertEquals("ccc", actual_3[0].matchedText(sentence))
-        assertEquals(InputLocation(8, 1, 3, 3), actual_3[0].location)
+        val expected_1 = listOf(
+            LeafData("'aaa'", false, 0, 3, listOf("S", "'aaa'")),
+            LeafData("WS", true, 3, 1, listOf("S", "WS")),
+        )
+        val expected_2 = listOf(
+            LeafData("'bbb'", false, 4, 3, listOf("S", "'bbb'")),
+            LeafData("WS", true, 7, 1, listOf("S", "WS")),
+        )
+        val expected_3 = listOf(
+            LeafData("'ccc'", false, 8, 3, listOf("S", "'ccc'")),
+        )
+        assertEquals(expected_1, actual_1)
+        assertEquals(expected_2, actual_2)
+        assertEquals(expected_3, actual_3)
     }
 
     @Test
     fun separate_lines_with_indent() {
         val sentence = SentenceDefault(
             """
-            aaa
-              bbb
+            aaa..
+            ..bbb
             ccc
         """.trimIndent()
         )
         val result = processor.parse(sentence.text)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
-        val actual = result.sppt!!.tokensByLine(0)
+        println(result.sppt!!.toStringAll)
 
         val actual_1 = result.sppt!!.tokensByLine(0)
         val actual_2 = result.sppt!!.tokensByLine(1)
         val actual_3 = result.sppt!!.tokensByLine(2)
 
-        assertEquals(2, actual_1.size)
-        assertEquals("aaa", actual_1[0].matchedText(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), actual_1[0].location)
-        assertEquals("\n", actual_1[1].matchedText(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), actual_1[1].location)
-
-        assertEquals(3, actual_2.size)
-        assertEquals("  ", actual_2[0].matchedText(sentence))
-        assertEquals(InputLocation(4, 1, 2, 2), actual_2[0].location)
-        assertEquals("bbb", actual_2[1].matchedText(sentence))
-        assertEquals(InputLocation(6, 3, 2, 3), actual_2[1].location)
-        assertEquals("\n", actual_2[2].matchedText(sentence))
-        assertEquals(InputLocation(9, 6, 2, 1), actual_2[2].location)
-
-        assertEquals(1, actual_3.size)
-        assertEquals("ccc", actual_3[0].matchedText(sentence))
-        assertEquals(InputLocation(10, 1, 3, 3), actual_3[0].location)
+        val expected_1 = listOf(
+            LeafData("'aaa'", false, 0, 3, listOf("S", "'aaa'")),
+            LeafData("WS", true, 3, 2, listOf("S", "WS")),
+            LeafData("WS", true, 5, 1, listOf("S", "WS")),
+        )
+        val expected_2 = listOf(
+            LeafData("WS", true, 6, 2, listOf("S", "WS")),
+            LeafData("'bbb'", false, 8, 3, listOf("S", "'bbb'")),
+            LeafData("WS", true, 11, 1, listOf("S", "WS")),
+        )
+        val expected_3 = listOf(
+            LeafData("'ccc'", false, 12, 3, listOf("S", "'ccc'")),
+        )
+        assertEquals(expected_1, actual_1)
+        assertEquals(expected_2, actual_2)
+        assertEquals(expected_3, actual_3)
     }
 }
 

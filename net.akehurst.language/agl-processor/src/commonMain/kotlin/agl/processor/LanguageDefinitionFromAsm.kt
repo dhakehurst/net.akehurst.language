@@ -64,7 +64,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
 
      */
 
-    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
+    override fun update(grammarStr: String?, crossReferenceModelStr: String?, styleStr: String?) {
         error("Cannot update a LanguageDefinitionFromAsm using Strings")
     }
 }

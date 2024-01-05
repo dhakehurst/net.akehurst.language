@@ -24,8 +24,8 @@ enum class AutomatonKind {
 }
 
 //FIXME: added because currently Kotlin will not 'export' enums to JS
-object AutomatonKind_api {
-    val LOOKAHEAD_NONE= AutomatonKind.LOOKAHEAD_NONE
-    val LOOKAHEAD_SIMPLE= AutomatonKind.LOOKAHEAD_SIMPLE
-    val LOOKAHEAD_1= AutomatonKind.LOOKAHEAD_1
-}
+//object AutomatonKind_api {
+//    val LOOKAHEAD_NONE= AutomatonKind.LOOKAHEAD_NONE
+//    val LOOKAHEAD_SIMPLE= AutomatonKind.LOOKAHEAD_SIMPLE
+//    val LOOKAHEAD_1= AutomatonKind.LOOKAHEAD_1
+//}

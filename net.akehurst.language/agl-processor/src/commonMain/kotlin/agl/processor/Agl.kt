@@ -113,8 +113,11 @@ object Agl {
      * build a set of options for a language processor
      * (does not set the options, they must be passed as argument)
      */
-    fun <AsmType : Any, ContextType : Any> options(init: ProcessOptionsBuilder<AsmType, ContextType>.() -> Unit): ProcessOptions<AsmType, ContextType> {
-        val b = ProcessOptionsBuilder<AsmType, ContextType>()
+    fun <AsmType : Any, ContextType : Any> options(
+        base: ProcessOptions<AsmType, ContextType> = ProcessOptionsDefault(),
+        init: ProcessOptionsBuilder<AsmType, ContextType>.() -> Unit
+    ): ProcessOptions<AsmType, ContextType> {
+        val b = ProcessOptionsBuilder<AsmType, ContextType>(base)
         b.init()
         return b.build()
     }

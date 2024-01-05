@@ -46,22 +46,21 @@ internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
 
-internal class ScanOptionsDefault(
+class ScanOptionsDefault(
 ) : ScanOptions
 
-internal class ParseOptionsDefault(
+class ParseOptionsDefault(
     override var goalRuleName: String? = null,
-    override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
     override var reportErrors: Boolean = true,
-    override val reportGrammarAmbiguities: Boolean = false,
+    override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true
 ) : ParseOptions
 
-internal class SyntaxAnalysisOptionsDefault<AsmType : Any>(
+class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType>
 
-internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
+class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
@@ -70,9 +69,9 @@ internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override val other: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
-internal class CompletionProviderOptionsDefault<AsmType : Any, ContextType : Any>(
+class CompletionProviderOptionsDefault<AsmType : Any, ContextType : Any>(
     override var context: ContextType? = null,
-    override val options: Map<String, Any> = mutableMapOf()
+    override val other: Map<String, Any> = mutableMapOf()
 ) : CompletionProviderOptions<AsmType, ContextType>
 
 @DslMarker
@@ -206,17 +205,12 @@ class ParseOptionsBuilder(
     base: ParseOptions
 ) {
     private var _goalRuleName: String? = base.goalRuleName
-    private var _automatonKind: AutomatonKind = base.automatonKind
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
-    }
-
-    fun automatonKind(value: AutomatonKind) {
-        _automatonKind = value
     }
 
     fun reportErrors(value: Boolean) {
@@ -233,19 +227,21 @@ class ParseOptionsBuilder(
 
     fun build(): ParseOptions {
         return ParseOptionsDefault(
-            _goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+            _goalRuleName, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
         )
     }
 }
 
 @ProcessOptionsDslMarker
-class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
+class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
+    base: ProcessOptions<AsmType, ContextType>
+) {
 
-    private var _scan: ScanOptions = ScanOptionsDefault()
-    private var _parse: ParseOptions = ParseOptionsDefault()
-    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault()
-    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
-    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
+    private var _scan: ScanOptions = base.scan
+    private var _parse: ParseOptions = base.parse
+    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = base.syntaxAnalysis
+    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = base.semanticAnalysis
+    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = base.completionProvider
 
     fun scan(base: ScanOptions = ScanOptionsDefault(), init: ScanOptionsBuilder.() -> Unit) {
         val b = ScanOptionsBuilder(base)

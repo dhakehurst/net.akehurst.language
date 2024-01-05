@@ -84,7 +84,7 @@ class test_NaturalLanguage(val data: Data) {
         val scan = processor.scan(sentence.text).tokens
         scan.forEach { l ->
             if (l.name == "undefined") {
-                throw RuntimeException("Found unknown words '${l.matchedText(sentence)}', at ${l.location}")
+                throw RuntimeException("Found unknown words '${l.matchedText(sentence)}', at ${l.location(sentence)}")
             }
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })

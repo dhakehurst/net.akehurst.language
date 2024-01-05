@@ -18,7 +18,6 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.syntaxAnalyser.isEmptyMatch
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 
@@ -74,7 +73,8 @@ internal class TokensByLineVisitor(
         when {
             nodeInfo.node.isEmptyMatch -> Unit
             eolPositions.isEmpty() -> {
-                lines.getOrCreate(location.line - 1).add(LeafData(name, isPattern, location, tags))
+//                lines.getOrCreate(location.line - 1).add(LeafData(name, isPattern, location, tags))
+                lines.getOrCreate(location.line - 1).add(LeafData(name, isPattern, nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip - nodeInfo.node.startPosition, tags))
             }
 
             else -> {
@@ -82,25 +82,40 @@ internal class TokensByLineVisitor(
                 var indexPos = 0
                 val startPos = nodeInfo.node.startPosition
                 var startLinePos = startPos
-                var column = location.column
-                eolPositions.forEach { eolPos ->
-                    val lineText = matchedText.substring(indexPos, eolPos + 1)
-                    val loc = InputLocation(startLinePos, column, line, lineText.length)
-                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
-                    lines.getOrCreate(line - 1).add(segmentLeaf)
-                    line++
-                    indexPos += lineText.length
-                    startLinePos += lineText.length
-                    column = 1
+//                var column = location.column
 
+                for (eolPos in eolPositions) {
+                    val lineText = matchedText.substring(indexPos, eolPos + 1)
+//                    val loc = InputLocation(startLinePos, column, line, lineText.length)
+//                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
+                    val textLength = eolPos - indexPos
+                    if (0 < textLength) {
+                        val segmentLeaf = LeafData(name, isPattern, startLinePos, textLength, tags)
+                        lines.getOrCreate(line - 1).add(segmentLeaf)
+
+                        indexPos += textLength
+                        startLinePos += textLength
+                    }
+
+                    //add the EOL so that the EOL char is in its own token as the last one on the line
+                    val eolTextLength = 1
+                    val eolLeaf = LeafData(name, isPattern, startLinePos, eolTextLength, tags)
+                    lines.getOrCreate(line - 1).add(eolLeaf)
+
+                    line++
+                    indexPos += 1
+                    startLinePos += 1
+//                    column = 1
                 }
                 // add remaining text if there is any
                 val lineText = matchedText.substring(indexPos)
                 if (lineText.isNotEmpty()) {
-                    val loc = InputLocation(startLinePos, column, line, lineText.length)
-                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
+//                    val loc = InputLocation(startLinePos, column, line, lineText.length)
+//                    val segmentLeaf = LeafData(name, isPattern, loc, tags)
+                    val segmentLeaf = LeafData(name, isPattern, startLinePos, lineText.length, tags)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                 }
+
             }
         }
     }

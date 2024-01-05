@@ -30,9 +30,32 @@ interface SpptDataNode {
 
 interface Sentence {
     val text: String
+
+    fun textAt(position: Int, length: Int): String
+
     fun matchedTextNoSkip(node: SpptDataNode): String
+
+    /**
+     * position in text of the beginning of the requested line, first line is 0
+     *
+     * in result InputLocation, first line is 1
+     */
+    fun positionOfLine(line: Int): Int
+
+    /**
+     * location (position, line, column, length) in given line of the given position and length, first line is 0
+     *
+     * in result InputLocation, first line is 1
+     */
+    fun locationInLine(line: Int, position: Int, length: Int): InputLocation
+
+    /**
+     * location (position, line, column, length) of the given position and length
+     */
     fun locationFor(position: Int, length: Int): InputLocation
+
     fun locationForNode(node: SpptDataNode): InputLocation
+
     fun contextInText(position: Int): String
 
     //fun setEolPositions(eols: List<Int>)
@@ -89,7 +112,8 @@ interface SpptWalker {
 data class LeafData(
     val name: String,
     val isPattern: Boolean,
-    val location: InputLocation,
+    val position: Int,
+    val length: Int,
     val tagList: List<String>
 ) {
     val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
@@ -104,7 +128,10 @@ data class LeafData(
         }
     }
 
-    fun matchedText(sentence: Sentence): String = sentence.text.substring(location.position, location.position + location.length)
+    //    fun matchedText(sentence: Sentence): String = sentence.text.substring(location.position, location.position + location.length)
+    fun matchedText(sentence: Sentence): String = sentence.text.substring(position, position + length)
+
+    fun location(sentence: Sentence): InputLocation = sentence.locationFor(position, length)
 }
 
 /**

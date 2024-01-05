@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
@@ -26,8 +27,15 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
-    private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(grammar) }
-    override val ruleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
-    override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._converterToRuntimeRules.originalRuleItemFor(ruleSetNumber, ruleNumber) }
+    override val ruleSet get() = _runtimeRuleSet
+    override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }
 
+    private var _originalRuleMap: Map<Pair<Int, Int>, RuleItem>
+    private var _runtimeRuleSet: RuntimeRuleSet
+
+    init {
+        val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
+        _runtimeRuleSet = converterToRuntimeRules.runtimeRuleSet
+        _originalRuleMap = converterToRuntimeRules.originalRuleItemMap
+    }
 }

@@ -56,8 +56,8 @@ fun treeData(forStateSetNumber: Int): TreeData = TreeDataComplete2(forStateSetNu
 class TreeDataComplete(
     val forStateSetNumber: Int,
     // the following are optional arguments to allow for serialisation
-    root: SpptDataNode? = null,
-    initialSkip: TreeData? = null
+//    root: SpptDataNode? = null,
+//    initialSkip: TreeData? = null
 ) : TreeData {
 
     companion object {
@@ -65,9 +65,12 @@ class TreeDataComplete(
     }
 
     override val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
+
+    // made public for serialisation support
     val completeChildren: Map<SpptDataNode, Map<Int, List<SpptDataNode>>> get() = this._complete
-    override var root: SpptDataNode? = root; private set
-    override var initialSkip: TreeData? = initialSkip; private set
+
+    override var root: SpptDataNode? = null; private set
+    override var initialSkip: TreeData? = null; private set
 
     override val userRoot get() = childrenFor(root!!).first().second.first()
 

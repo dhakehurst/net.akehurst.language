@@ -43,6 +43,10 @@ internal class ScannerClassic(
     //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
     override val validTerminals = terminals.filterNot { it.isEmptyTerminal }
 
+    init {
+        this.matchables // iterate this to set the regexengine
+    }
+
     override fun reset() {
 
     }

@@ -95,6 +95,7 @@ internal class RuntimeParser(
     }
 
     fun reset() {
+        this._skip_cache.clear()
         this.graph.reset()
         this.failedReasons.clear()
     }
@@ -451,6 +452,28 @@ internal class RuntimeParser(
                 }
 
                 else -> {
+                    val trgs = mutableListOf<Transition>()
+                    val trhs = mutableListOf<Transition>()
+                    for (tr in grp.value) {
+                        when (tr.action) {
+                            ParseAction.GRAFT -> trgs.add(tr)
+                            ParseAction.HEIGHT -> trhs.add(tr)
+                            else -> error("should not happen")
+                        }
+                    }
+                    trgs.sortWith { t1, t2 ->
+                        val p1 = t1.to.rulePositions.first().position
+                        val p2 = t2.to.rulePositions.first().position
+                        when {
+                            p1 == p2 -> 0
+                            RulePosition.END_OF_RULE == p1 -> 1
+                            RulePosition.END_OF_RULE == p2 -> -1
+                            p1 > p2 -> 1
+                            p1 < p2 -> -1
+                            else -> 0// should never happen !
+                        }
+                    }
+                    /*
                     val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
                         // if multiple GRAFT trans to same rule, prefer left most target
                         .sortedWith(Comparator { t1, t2 ->
@@ -466,6 +489,7 @@ internal class RuntimeParser(
                             }
                         })
                     val trhs = grp.value.filter { it.action == ParseAction.HEIGHT }
+                    */
                     if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
                         var doneIt = false
                         var i = 0

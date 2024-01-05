@@ -21,7 +21,7 @@ import net.akehurst.language.agl.api.runtime.Rule
 /**
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
  */
-internal class RuntimeRule(
+class RuntimeRule(
     val runtimeRuleSetNumber: Int,
     val ruleNumber: Int,
     val name: String?,
@@ -29,11 +29,11 @@ internal class RuntimeRule(
 ) : Rule {
 
     private lateinit var _rhs: RuntimeRuleRhs
-    fun setRhs(value: RuntimeRuleRhs) {
+    internal fun setRhs(value: RuntimeRuleRhs) {
         this._rhs = value
     }
 
-    val rhs get() = this._rhs
+    internal val rhs get() = this._rhs
 
     //TODO: needs properties- maybe:
     // isUnnamedLiteral - so we can eliminate from AsmSimple
@@ -84,25 +84,25 @@ internal class RuntimeRule(
     override val isListSeparated: Boolean get() = this.rhs is RuntimeRuleRhsListSeparated
 
     @Deprecated("use 'rhs is'")
-    val kind
-        get() = when {
-            isEmbedded -> RuntimeRuleKind.EMBEDDED
-            isGoal -> RuntimeRuleKind.GOAL
-            isTerminal -> RuntimeRuleKind.TERMINAL
-            isNonTerminal -> RuntimeRuleKind.NON_TERMINAL
-            else -> error("Internal Error")
-        }
+//    val kind
+//        get() = when {
+//            isEmbedded -> RuntimeRuleKind.EMBEDDED
+//            isGoal -> RuntimeRuleKind.GOAL
+//            isTerminal -> RuntimeRuleKind.TERMINAL
+//            isNonTerminal -> RuntimeRuleKind.NON_TERMINAL
+//            else -> error("Internal Error")
+//        }
 
     //val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
 
-    val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
+    internal val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
 
     //used in automaton build
-    val rulePositions: Set<RulePosition> get() = rulePositionsAtStart + rulePositionsNotAtStart
+    internal val rulePositions: Set<RulePosition> get() = rulePositionsAtStart + rulePositionsNotAtStart
 
-    val rulePositionsNotAtStart: Set<RulePosition> get() = rhs.rulePositionsNotAtStart
+    internal val rulePositionsNotAtStart: Set<RulePosition> get() = rhs.rulePositionsNotAtStart
 
-    val rulePositionsAtStart get() = rhs.rulePositionsAtStart
+    internal val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 
     override val rhsItems get() = this.rhs.rhsItems
 

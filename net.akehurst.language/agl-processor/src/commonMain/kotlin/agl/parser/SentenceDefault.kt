@@ -22,29 +22,54 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 
+
 class SentenceDefault(
     override val text: String
-) : Sentence {
+) : SentenceAbstract() {
+
+    // --- implementation ---
+    override val eolPositions: List<Int> by lazy { ScannerOnDemand.eolPositions(text) }
+}
+
+abstract class SentenceAbstract() : Sentence {
+
+    abstract override val text: String
+    abstract val eolPositions: List<Int>
 
     // --- Sentence ---
+    override fun textAt(position: Int, length: Int) =
+        this.text.substring(position, position + length)
+
     override fun matchedTextNoSkip(node: SpptDataNode): String =
         text.substring(node.startPosition, node.nextInputNoSkip)
+
+    override fun positionOfLine(line: Int): Int = when {
+        0 > line -> error("Line number must be >= 1")
+        eolPositions.size < line -> error("Number of lines in this text is ${eolPositions.size}, requested line number was $line")
+        0 == line -> 0
+        else -> eolPositions[line - 1] + 1
+    }
+
+    override fun locationInLine(line: Int, position: Int, length: Int): InputLocation {
+        return when {
+            0 > line -> error("Line number must be >= 1")
+            eolPositions.size < line -> error("Number of lines in this text is ${eolPositions.size}, requested line number was $line")
+            else -> {
+                val col = position - positionOfLine(line)
+                InputLocation(position, col, line + 1, length)
+            }
+        }
+    }
 
     override fun locationFor(position: Int, length: Int): InputLocation {
         return when {
             0 == position -> InputLocation(position, 1, 1, length)
-            _eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
+            eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
             else -> {
-//                val line = _eolPositions.filter { it < position }.size
-                val line = _eolPositions.indexOfLast { it < position }
+                val line = eolPositions.indexOfLast { it < position }
                 when (line) {
                     -1 -> InputLocation(position, position + 1, 1, length)
-
-                    //0 == line -> position + 1
-                    else -> {
-                        val col = position - _eolPositions[line]
-                        InputLocation(position, col, line + 2, length)
-                    }
+                    else -> locationInLine(line + 1, position, length)
                 }
             }
         }
@@ -74,8 +99,5 @@ class SentenceDefault(
         val postFix = if (endIndex < this.text.length) "..." else ""
         return "$prefix$forTextAfterLastEol^$aftText$postFix"
     }
-
-    // --- implementation ---
-    private val _eolPositions: List<Int> by lazy { ScannerOnDemand.eolPositions(text) }
 
 }

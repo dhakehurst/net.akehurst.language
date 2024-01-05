@@ -20,7 +20,6 @@ import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -42,7 +41,7 @@ internal class test_ScanOnDemandParser {
             concatenation("S") { literal("a") }
         }
         val sp = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
-        sp.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        sp.buildFor("S")
 
         //TODO: how to test if build worked!
     }

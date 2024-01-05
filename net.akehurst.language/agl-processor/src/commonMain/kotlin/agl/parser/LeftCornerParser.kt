@@ -42,6 +42,7 @@ internal class LeftCornerParser(
     ruleSet: RuleSet
 ) : Parser {
 
+    val automatonKind = AutomatonKind.LOOKAHEAD_1 //TODO: make configuration arg
     val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
     // cached only so it can be interrupted
@@ -52,15 +53,15 @@ internal class LeftCornerParser(
     val runtimeDataIsEmpty: Boolean get() = runtimeParser?.graph?.isEmpty ?: true
 
     override fun reset() {
+        runtimeParser?.reset() //is this necessary?
         runtimeParser = null
-
     }
 
     override fun interrupt(message: String) {
         this.runtimeParser?.interrupt(message)
     }
 
-    override fun buildFor(goalRuleName: String, automatonKind: AutomatonKind) {
+    override fun buildFor(goalRuleName: String) {
         this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
@@ -72,7 +73,6 @@ internal class LeftCornerParser(
         check(sentenceText.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentenceText.length}" }
         val sentence = SentenceDefault(sentenceText)
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
-        val automatonKind = options.automatonKind
         val reportErrors = options.reportErrors
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
         val cacheSkip = options.cacheSkip
@@ -232,7 +232,6 @@ internal class LeftCornerParser(
 
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpineDefault> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
-        val automatonKind = options.automatonKind
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, position)
         scanner.reset()

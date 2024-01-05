@@ -90,7 +90,7 @@ internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false
         }
         scanner.matchables
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(options.parse.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
+        if (build) parser.buildFor(options.parse.goalRuleName!!)
         val (result, duration) = measureTimedValue {
             parser.parse(sentence, options.parse)
         }
@@ -120,7 +120,7 @@ internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false
             ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
         }
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(options.parse.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
+        if (build) parser.buildFor(options.parse.goalRuleName!!)
         val r = parser.parse(sentence, options.parse)
         return r
     }
