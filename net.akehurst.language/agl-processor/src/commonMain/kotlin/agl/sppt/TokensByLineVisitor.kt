@@ -24,7 +24,7 @@ import net.akehurst.language.collections.mutableStackOf
 internal class TokensByLineVisitor(
     val sentence: Sentence
 ) {
-    val lines = mutableListOf<MutableList<LeafData>>()
+    val lines = mutableListOf<MutableList<LeafData>>(mutableListOf()) // initialise with first line empty
     private lateinit var inputFromString: ScannerOnDemand
 
     fun MutableList<MutableList<LeafData>>.getOrCreate(index: Int): MutableList<LeafData> {

@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.language.style
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
@@ -72,7 +73,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                         }
 
                         AglStyleSelectorKind.RULE_NAME -> {
-                            if (AglStyleSyntaxAnalyser.KEYWORD_STYLE_ID == sel.value) {
+                            if (AglStyleModelDefault.KEYWORD_STYLE_ID == sel.value) { //TODO: redundant check I think!
                                 // its OK
                             } else {
                                 if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {

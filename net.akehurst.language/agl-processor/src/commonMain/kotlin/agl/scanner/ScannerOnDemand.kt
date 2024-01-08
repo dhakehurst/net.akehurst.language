@@ -26,6 +26,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmpty
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
+import net.akehurst.language.api.processor.ScannerKind
 import net.akehurst.language.api.sppt.Sentence
 
 class ScannerOnDemand(
@@ -57,12 +58,12 @@ class ScannerOnDemand(
         this.matchables // iterate this to set the regexengine
     }
 
+    override val kind: ScannerKind = ScannerKind.OnDemand
+
     override fun reset() {
         this.leaves.clear()
         this.isLookingAt_cache.clear()
     }
-
-    override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
 
     override fun isLookingAt(sentence: Sentence, position: Int, terminalRule: Rule): Boolean {
         val r = isLookingAt_cache[Pair(position, terminalRule)] //TODO: make this configurable

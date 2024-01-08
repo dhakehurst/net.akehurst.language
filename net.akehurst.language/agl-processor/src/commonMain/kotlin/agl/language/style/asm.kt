@@ -18,19 +18,40 @@ package net.akehurst.language.agl.language.style.asm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.style.AglStyleModel
-import net.akehurst.language.api.style.AglStyleRule
+import net.akehurst.language.api.style.*
 
-internal class AglStyleModelDefault(
-    override val rules: List<AglStyleRule>
+class AglStyleModelDefault(
+    _rules: List<AglStyleRule>
 ) : AglStyleModel {
+
     companion object {
+        //not sure if this should be here or in grammar object
+        const val KEYWORD_STYLE_ID = "\$keyword"
+        const val NO_STYLE_ID = "\$nostyle"
+
+        val DEFAULT_NO_STYLE = AglStyleRule(listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))).also {
+            it.styles["foreground"] = AglStyle("foreground", "black")
+            it.styles["background"] = AglStyle("background", "white")
+            it.styles["font-style"] = AglStyle("font-style", "normal")
+        }
+
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence,
                 options = Agl.options { semanticAnalysis { context(context) } }
             )
+        }
+    }
+
+    override val rules: List<AglStyleRule>
+
+    init {
+        rules = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
+            // NO_STYLE defined
+            _rules
+        } else {
+            listOf(DEFAULT_NO_STYLE) + _rules
         }
     }
 

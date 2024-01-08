@@ -167,6 +167,9 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
     protected val _style: AglStyleModel? = null
 
+    protected var _regexEngineKind = initialConfiguration.regexEngineKind //TODO: make observable
+    protected var _scannerKind = initialConfiguration.scannerKind
+
     protected var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.crossReferenceModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()

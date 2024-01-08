@@ -19,7 +19,6 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.api.processor.LanguageProcessorConfigurationDefault
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessOptions
 import kotlin.properties.Delegates
@@ -42,9 +41,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val isModifiable: Boolean = true
 
     override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
-        get() = LanguageProcessorConfigurationDefault(
+        get() = LanguageProcessorConfigurationEmpty(
             targetGrammarName = this.targetGrammarName,
             defaultGoalRuleName = this.defaultGoalRule,
+            regexEngineKind = this._regexEngineKind,
+            scannerKind = this._scannerKind,
             scannerResolver = this._scannerResolver,
             parserResolver = this._parserResolver,
             typeModelResolver = this._typeModelResolver,

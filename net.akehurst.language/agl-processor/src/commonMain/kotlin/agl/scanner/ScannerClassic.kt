@@ -23,6 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
+import net.akehurst.language.api.processor.ScannerKind
 import net.akehurst.language.api.sppt.Sentence
 
 /**
@@ -31,7 +32,7 @@ import net.akehurst.language.api.sppt.Sentence
  * Longest match takes priority.
  * Literal values take priority over patterns (i.e. Keywords will take priority over identifiers).
  */
-internal class ScannerClassic(
+class ScannerClassic(
     regexEngine: RegexEngine,
     terminals: List<Rule>
 ) : ScannerAbstract(regexEngine) {
@@ -46,6 +47,8 @@ internal class ScannerClassic(
     init {
         this.matchables // iterate this to set the regexengine
     }
+
+    override val kind: ScannerKind = ScannerKind.Classic
 
     override fun reset() {
 

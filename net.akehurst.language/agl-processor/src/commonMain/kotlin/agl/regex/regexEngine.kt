@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.regex
 
+import net.akehurst.language.api.processor.RegexEngineKind
 import net.akehurst.language.api.regex.RegexMatcher
 
 interface Regex {
@@ -25,6 +26,7 @@ interface Regex {
 }
 
 interface RegexEngine {
+    val kind: RegexEngineKind
     fun createFor(pattern: String): Regex
 }
 
@@ -61,12 +63,13 @@ data class RegexAgl(val value: RegexMatcher) : Regex {
 }
 
 object RegexEnginePlatform : RegexEngine {
+    override val kind: RegexEngineKind = RegexEngineKind.PLATFORM
     override fun createFor(pattern: String): Regex = RegexPlatform(Regex(pattern))
 }
 
 
 object RegexEngineAgl : RegexEngine {
-
+    override val kind: RegexEngineKind = RegexEngineKind.AGL
     override fun createFor(pattern: String): Regex = RegexAgl(regexMatcher(pattern))
 
 }

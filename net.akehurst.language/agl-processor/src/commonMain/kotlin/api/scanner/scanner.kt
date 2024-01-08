@@ -22,12 +22,14 @@ import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.processor.ScanResult
+import net.akehurst.language.api.processor.ScannerKind
 import net.akehurst.language.api.sppt.Sentence
 
 
 interface Scanner {
     //val sentence: Sentence
 
+    val kind: ScannerKind
     val regexEngine: RegexEngine
     val matchables: List<Matchable>
 

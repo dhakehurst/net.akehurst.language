@@ -49,6 +49,10 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     //val grammarResolver: GrammarResolver?
     val targetGrammarName: String?
     val defaultGoalRuleName: String?
+
+    val regexEngineKind: RegexEngineKind
+    val scannerKind: ScannerKind
+
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType, ContextType>?
     val typeModelResolver: TypeModelResolver<AsmType, ContextType>?

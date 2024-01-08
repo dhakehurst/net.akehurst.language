@@ -17,25 +17,17 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.default.CompletionProviderDefault
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.agl.parser.LeftCornerParser
-import net.akehurst.language.agl.regex.RegexEnginePlatform
-import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.typemodel.api.TypeModel
 
 object Agl {
 
@@ -44,60 +36,24 @@ object Agl {
 
     val registry: LanguageRegistry = LanguageRegistryDefault()
 
-    fun <AsmType : Any, ContextType : Any> configurationEmpty(): LanguageProcessorConfiguration<AsmType, ContextType> =
-        LanguageProcessorConfigurationDefault(
-            targetGrammarName = null,
-            defaultGoalRuleName = null,
-            scannerResolver = null,
-            parserResolver = null,
-            typeModelResolver = null,
-            crossReferenceModelResolver = null,
-            syntaxAnalyserResolver = null,
-            semanticAnalyserResolver = null,
-            formatterResolver = null,
-            styleResolver = null,
-            completionProvider = null
-        )
+    fun <AsmType : Any, ContextType : Any> configurationEmpty(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationEmpty()
 
-    fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> =
-        LanguageProcessorConfigurationDefault(
-            targetGrammarName = null,
-            defaultGoalRuleName = null,
-            scannerResolver = { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) },
-            parserResolver = { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) },
-            typeModelResolver = { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) },
-            crossReferenceModelResolver = { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") },
-            syntaxAnalyserResolver = null,
-            semanticAnalyserResolver = null,
-            formatterResolver = { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") },
-            styleResolver = { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") },
-            completionProvider = null
-        )
+    fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
-    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextSimple> =
-        LanguageProcessorConfigurationDefault(
-            targetGrammarName = null,
-            defaultGoalRuleName = null,
-            scannerResolver = { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) },
-            parserResolver = { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) },
-            typeModelResolver = { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) },
-            crossReferenceModelResolver = { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") },
-            syntaxAnalyserResolver = { p ->
-                ProcessResultDefault(
-                    SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.crossReferenceModel),
-                    IssueHolder(LanguageProcessorPhase.ALL)
-                )
-            },
-            semanticAnalyserResolver = { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) },
-            formatterResolver = { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") },
-            styleResolver = { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") },
-            completionProvider = { p ->
-                ProcessResultDefault(
-                    CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
-                    IssueHolder(LanguageProcessorPhase.ALL)
-                )
-            }
-        )
+    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextSimple> = LanguageProcessorConfigurationDefault()
+
+    /**
+     * build a configuration for a language processor
+     * (does not set the configuration, they must be passed as argument)
+     */
+    fun <AsmType : Any, ContextType : Any> configuration(
+        base: LanguageProcessorConfiguration<AsmType, ContextType> = Agl.configurationBase(),
+        init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit
+    ): LanguageProcessorConfiguration<AsmType, ContextType> {
+        val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>(base)
+        b.init()
+        return b.build()
+    }
 
     /**
      * build a set of options for a parser
@@ -121,20 +77,6 @@ object Agl {
         b.init()
         return b.build()
     }
-
-    /**
-     * build a configuration for a language processor
-     * (does not set the configuration, they must be passed as argument)
-     */
-    fun <AsmType : Any, ContextType : Any> configuration(
-        base: LanguageProcessorConfiguration<AsmType, ContextType>? = Agl.configurationBase(),
-        init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit
-    ): LanguageProcessorConfiguration<AsmType, ContextType> {
-        val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>(base)
-        b.init()
-        return b.build()
-    }
-
 
     fun <AsmType : Any, ContextType : Any> processorFromGrammar(
         grammar: Grammar,
@@ -161,7 +103,7 @@ object Agl {
         crossReferenceModelStr: String? = null,
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
-        base: LanguageProcessorConfiguration<Asm, ContextSimple>? = Agl.configurationDefault(),
+        base: LanguageProcessorConfiguration<Asm, ContextSimple> = Agl.configurationDefault(),
         grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<Asm, ContextSimple> {
         val config = Agl.configuration(base) {

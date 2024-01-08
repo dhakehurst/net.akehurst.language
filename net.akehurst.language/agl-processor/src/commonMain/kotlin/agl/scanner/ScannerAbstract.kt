@@ -96,6 +96,8 @@ abstract class ScannerAbstract(
         }
     }
 
+    override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
+
     override fun scan(sentence: Sentence, startAtPosition: Int, offsetPosition: Int): ScanResult {
         //TODO: improve this algorithm...it is not efficient
         this.reset()

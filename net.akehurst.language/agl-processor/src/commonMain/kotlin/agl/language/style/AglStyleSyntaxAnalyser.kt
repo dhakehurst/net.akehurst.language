@@ -26,11 +26,6 @@ import net.akehurst.language.collections.toSeparatedList
 
 internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
 
-    companion object {
-        //not sure if this should be here or in grammar object
-        const val KEYWORD_STYLE_ID = "\$keyword"
-    }
-
     override fun registerHandlers() {
         super.register(this::rules)
         super.register(this::rule)
