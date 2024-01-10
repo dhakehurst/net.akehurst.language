@@ -34,6 +34,7 @@ grammar KerML {
     skip leaf MULTILINE_NOTE = "//\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
     leaf REGULAR_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
 
+    // 8.2.2.3 Names
     NAME = BASIC_NAME | UNRESTRICTED_NAME ;
     leaf BASIC_NAME = "[a-zA-Z_][0-9a-zA-Z_]*" ;
     leaf UNRESTRICTED_NAME = "'([^'\\]|\\.)*'" ;
