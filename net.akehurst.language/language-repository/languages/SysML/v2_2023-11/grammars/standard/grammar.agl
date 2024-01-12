@@ -248,7 +248,7 @@ grammar SysMLv2_0 extends KerML {
         | Import
         ;
     MemberPrefix = VisibilityIndicator? ;
-    PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;
+    PackageMember = MemberPrefix ( UsageElement | DefinitionElement ) ;
     ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
     AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' QualifiedName RelationshipBody ;
     Import = VisibilityIndicator? 'import' 'all'? ( ImportedNamespace | ImportedFilterPackage ) RelationshipBody ;
@@ -308,8 +308,8 @@ grammar SysMLv2_0 extends KerML {
     DefinitionBodyItem
         = DefinitionMember
         | VariantUsageMember
-        | NonOccurrenceUsageMember
         | SourceSuccessionMember? OccurrenceUsageMember
+        | NonOccurrenceUsageMember
         | AliasMember
         | Import
         ;
@@ -850,7 +850,7 @@ grammar SysMLv2_0 extends KerML {
     // 8.2.2.20.2 Requirement Usages
     RequirementUsage = OccurrenceUsagePrefix 'requirement' CalculationUsageDeclaration RequirementBody ;
     SatisfyRequirementUsage =
-        OccurrenceUsagePrefix 'assert' 'not'? 'satisfy'
+        OccurrenceUsagePrefix 'assert'? 'not'? 'satisfy'
         ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'requirement' UsageDeclaration )
         ValuePart? ( 'by' SatisfactionSubjectMember )?
         RequirementBody

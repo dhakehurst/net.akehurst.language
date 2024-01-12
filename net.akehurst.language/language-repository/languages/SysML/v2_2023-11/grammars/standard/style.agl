@@ -1,0 +1,23 @@
+$keyword, DEFINED_BY, SPECIALIZES, SUBSETS, REFERENCES, REDEFINES {
+    foreground: blue;
+    font-style: bold;
+}
+
+SINGLE_LINE_NOTE, MULTILINE_NOTE {
+  foreground: gray;
+  font-style: italic;
+}
+
+REGULAR_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+
+NAME {
+    foreground: DarkRed;
+}
+
+PrefixMetadataMember {
+  foreground: green;
+  font-style: italic;
+}
