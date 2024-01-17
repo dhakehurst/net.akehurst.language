@@ -141,3 +141,129 @@ use case def 'Provide Transportation' {
 }
 
 
+
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #scenario occurrence def <'SC-1.1'> 'Scenario 1' {
+    message of 'switch on' from user to stb;
+    then message of 'send signal' from stb to other2;
+    then message of 'sense flow' from env to stb;
+    then message of 'send signal' from stb to other2;
+    then message of 'start flow' from stb to other1;
+  }
+}
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #scenario occurrence def <'SC-1.1'> 'Scenario 1' {
+    message of 'switch on' from user to stb;
+    then message of 'send signal' from stb to other2;
+    then flow t of :Temperature from env to stb;
+    then message of 'send signal' from stb to other2;
+    then flow m of :Pulse from stb to other1;
+  }
+}
+
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #scenario action def <'SC-1.1'> 'Scenario 1' {
+    message of 'switch on' from user to stb;
+    then message of 'send signal' from stb to other2;
+    then flow t of :Temperature from env to stb;
+    then decide;
+      if 'flow detected' then yes;
+
+    action yes;
+      message of 'send signal' from stb to other2;
+      then flow m of :Pulse from stb to other1;
+  }
+
+}
+
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #scenario action def <'SC-1.2'> 'Scenario 2' {
+    message of 'switch on' from user to stb;
+    then message of 'send signal' from stb to other2;
+    then flow t of :Temperature from env to stb;
+    then decide;
+      if 'flow NOT detected' then no;
+
+    action no;
+        message of 'send error' from stb to other2;
+  }
+
+}
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #expected action def 'Use Case Behaviour' {
+    message of 'switch on' from user to stb;
+    then message of 'send signal' from stb to other2;
+    then flow t of :Temperature from env to stb;
+    then decide;
+      if 'flow detected' then yes;
+      if 'flow NOT detected' then no;
+
+    action yes;
+      message of 'send signal' from stb to other2;
+      then flow m of :Pulse from stb to other1;
+
+    action no;
+        message of 'send error' from stb to other2;
+  }
+
+}
+
+use case def <'UC-1.1'> 'Use Case 1' {
+  subject stb: SystemToBuild;
+  actor user: User;
+  actor other1: OtherSystem2;
+  actor other2: OtherSystem2;
+  actor env: Environment;
+
+  #expected action def 'Use Case Behaviour' {
+    accept 'switch on' via user;
+    then send 'signal' to other2;
+    then flow t of :Temperature from env to stb;
+    then decide;
+      if 'flow detected' then yes;
+      if 'flow NOT detected' then no;
+
+    action yes;
+      then send 'signal' to other2;
+      then flow m of :Pulse from stb to other1;
+
+    action no;
+      send 'error' to other2;
+  }
+
+}

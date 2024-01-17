@@ -28,22 +28,22 @@ import kotlin.test.assertTrue
 class test_SysML_Singles {
 
     private companion object {
-
-        private val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        const val grammarPath = "/SysML/v2_2023-11/grammars/standard/grammar.agl"
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }

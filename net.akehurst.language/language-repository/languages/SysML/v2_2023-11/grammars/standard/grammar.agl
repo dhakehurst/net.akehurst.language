@@ -308,8 +308,8 @@ grammar SysMLv2_0 extends KerML {
     DefinitionBodyItem
         = DefinitionMember
         | VariantUsageMember
-        | SourceSuccessionMember? OccurrenceUsageMember
         | NonOccurrenceUsageMember
+        | SourceSuccessionMember? OccurrenceUsageMember
         | AliasMember
         | Import
         ;
