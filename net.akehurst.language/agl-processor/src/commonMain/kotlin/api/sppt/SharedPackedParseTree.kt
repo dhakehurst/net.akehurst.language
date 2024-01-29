@@ -17,6 +17,7 @@
 package net.akehurst.language.api.sppt
 
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.api.parser.InputLocation
 
@@ -118,7 +119,7 @@ data class LeafData(
 ) {
     val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
-            "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
+            AglStyleModelDefault.KEYWORD_STYLE_ID to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
         )
         map.mapNotNull {
             when {

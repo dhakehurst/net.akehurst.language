@@ -267,3 +267,31 @@ use case def <'UC-1.1'> 'Use Case 1' {
   }
 
 }
+
+
+use case <'UC-1'> 'Startup' {
+    doc purpose /* To highlight the startup behaviour of the system */
+
+    subject stb:'Weather Sensor Unit';
+    actor pwr: 'Power/Ignition';
+}
+
+use case <'UC-2'> 'Sense Weather' {
+    doc purpose /* To detect the temperature, rain and light levels
+                   and provide this data to ‘OtherVehECU’ */
+
+    subject stb:'Weather Sensor Unit';
+    actor oth: 'Other Vehicle ECU';
+    actor env: 'Environment';
+}
+
+
+use case <'UC-3'> '???' {
+    doc purpose /*  */
+
+    subject stb:'Weather Sensor Unit';
+    actor pwr: 'Power/Ignition';
+    actor wsc: 'Windscreen';
+
+
+}

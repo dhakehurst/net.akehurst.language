@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.CompletionItem
@@ -62,7 +63,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -96,7 +97,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -215,7 +216,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
