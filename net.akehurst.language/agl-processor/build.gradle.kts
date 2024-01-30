@@ -25,12 +25,10 @@ kotlin {
         }
     }
 
-    // too many issues in wasm for this to work yet
-//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-//    wasm("wasm") {
-//        binaries.library()
-//        browser()
-//    }
+    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+    wasmJs() {
+        binaries.library()
+    }
 
     sourceSets {
         commonTest.configure {
@@ -68,30 +66,6 @@ tasks.forEach {
     }
 }
 
-/*
-tasks.named<Copy>("jsProductionLibraryCompileSync") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
-tasks.named<Copy>("jsDevelopmentLibraryCompileSync") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
-kt2ts {
-    jvmTargetName.set("jvm8")
-    jsTargetName.set("js")
-    classPatterns.set(listOf(
-            "net.akehurst.language.api.syntaxAnalyser.*",
-            "net.akehurst.language.api.semanticAnalyser.*",
-            "net.akehurst.language.api.grammar.*",
-            "net.akehurst.language.api.parser.*",
-            "net.akehurst.language.api.processor.*",
-            "net.akehurst.language.api.sppt.*",
-            "net.akehurst.language.api.style.*",
-            "net.akehurst.language.agl.processor.Agl"
-    ))
-}
-*/
 /*
 jacoco {
     toolVersion = "0.8.5"

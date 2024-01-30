@@ -12,7 +12,7 @@ dependencies {
 kotlin {
 
     @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-    wasm("wasm") {
+    wasmJs {
         binaries.library()
         browser()
     }

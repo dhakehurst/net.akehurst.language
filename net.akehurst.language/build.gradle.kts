@@ -117,10 +117,10 @@ subprojects {
                 }
             }
         }
-
-        //macosX64("macosX64") {
-        //}
-
+        @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+        wasmJs() {
+            browser()
+        }
         sourceSets {
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")
@@ -195,11 +195,16 @@ subprojects {
         sign(publishing.publications)
     }
 
-    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    val signTasks = arrayOf("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication", "signWasmJsPublication")
+
+    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter(*signTasks)
+    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+    tasks.named("publishWasmJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+
+    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 
 }
