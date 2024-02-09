@@ -25,6 +25,8 @@ kotlin {
         }
     }
 
+    macosArm64()
+
     @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
     wasmJs() {
         binaries.library()
@@ -34,6 +36,18 @@ kotlin {
         commonTest.configure {
             // add language repository so we can test the grammars with specific sentences here
             resources.srcDir(projectDir.resolve("../language-repository/languages"))
+        }
+    }
+}
+
+val signTasks = arrayOf("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication", "signWasmJsPublication", "signMacosArm64Publication")
+
+tasks.forEach {
+
+    when {
+        it.name.matches(Regex("publish(.)+PublicationToMavenLocal")) -> {
+            println("${it.name}.mustRunAfter(${signTasks.toList()})")
+            it.mustRunAfter(*signTasks)
         }
     }
 }

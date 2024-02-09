@@ -30,6 +30,15 @@ val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 allprojects {
+    repositories {
+        mavenLocal {
+            content {
+                includeGroupByRegex("net\\.akehurst.+")
+            }
+        }
+        mavenCentral()
+    }
+
     val version_project: String by project
     val group_project = rootProject.name
 
@@ -47,15 +56,6 @@ subprojects {
     apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "com.github.gmazzo.buildconfig")
     apply(plugin = "net.akehurst.kotlin.gradle.plugin.exportPublic")
-
-    repositories {
-        mavenLocal {
-            content {
-                includeGroupByRegex("net\\.akehurst.+")
-            }
-        }
-        mavenCentral()
-    }
 
     configure<BuildConfigExtension> {
         useKotlinOutput {
@@ -117,10 +117,20 @@ subprojects {
                 }
             }
         }
-        @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-        wasmJs() {
-            browser()
-        }
+
+//        androidTarget {
+//            publishLibraryVariants("release", "debug")
+//        }
+
+
+        // wasm not suppored by kotet
+//        @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+//        wasmJs() {
+//            browser()
+//        }
+
+
+        applyDefaultHierarchyTemplate()
         sourceSets {
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")
@@ -195,16 +205,15 @@ subprojects {
         sign(publishing.publications)
     }
 
-    val signTasks = arrayOf("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication", "signWasmJsPublication")
 
-    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter(*signTasks)
-    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter(*signTasks)
-    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
-    tasks.named("publishWasmJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishWasmJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
 
-    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
-    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
-    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
-    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 
 }

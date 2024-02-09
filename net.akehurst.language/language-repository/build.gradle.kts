@@ -17,8 +17,8 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
-val version_korio: String by project
-val version_kotest: String = "5.7.2"
+val version_korge: String by project
+val version_kotest: String = "5.8.0"
 
 plugins {
     // id("io.kotest.multiplatform") version ("5.7.2")
@@ -32,7 +32,8 @@ dependencies {
 
     commonTestImplementation(project(":agl-processor"))
 
-    commonTestImplementation("com.soywiz.korlibs.korio:korio:$version_korio")
+//    commonTestImplementation("com.soywiz.korlibs.korge:korio:$version_korio")
+    commonMainApi("com.soywiz.korge:korge-core:$version_korge")
 
     commonTestImplementation("io.kotest:kotest-assertions-core:$version_kotest")
     commonTestImplementation("io.kotest:kotest-framework-engine:$version_kotest")

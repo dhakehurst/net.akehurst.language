@@ -13,7 +13,7 @@ part def 'System context' {
     connect sut to 'Environment';
 }
 
-
+//1
 
 #system part def 'Weather Sensor Unit';
 
@@ -34,7 +34,7 @@ requirement <'3'> {
     require constraint { sut.mass <= 300[g]  }
 }
 
-
+//2
 part def 'System context' {
     #system   part sut:'Weather Sensor Unit';
     #external part 'Windscreen';
@@ -54,6 +54,7 @@ part def 'System context' {
     doc purpose /* to detect the external temperature, rain & light of a vehicle */
 }
 
+//3
 part def 'System context' {
     #system   part sut:'Weather Sensor Unit';
     #external part 'Windscreen'         { doc purpose /* to provide a mounting point for the system */ }
@@ -67,8 +68,7 @@ part def 'System context' {
     connect sut to 'Environment';
 }
 
-
-
+//4
 part def 'System context' {
     #system   part sut:'Weather Sensor Unit';
     #external part 'Windscreen'         { doc purpose /* to provide a mounting point for the system */ }
@@ -95,7 +95,7 @@ part def 'System context' {
     port environment;
 }
 
-
+//5
 port def AnInterface {
     in attribute aReception;
     in perform action aFunction {
@@ -118,7 +118,7 @@ port def LugNutPort{
     attribute threadPitch;
 }
 
-
+//6
 use case def 'Provide Transportation' {
     subject vehicle : Vehicle;
     actor driver : Person;
@@ -140,9 +140,7 @@ use case def 'Provide Transportation' {
     then message of Exit from driver to vehicle;
 }
 
-
-
-
+//7
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -159,6 +157,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
   }
 }
 
+//8
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -175,7 +174,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
   }
 }
 
-
+//9
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -197,7 +196,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
 
 }
 
-
+//10
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -218,6 +217,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
 
 }
 
+//11
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -243,6 +243,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
 
 }
 
+//12
 use case def <'UC-1.1'> 'Use Case 1' {
   subject stb: SystemToBuild;
   actor user: User;
@@ -268,7 +269,7 @@ use case def <'UC-1.1'> 'Use Case 1' {
 
 }
 
-
+//13
 use case <'UC-1'> 'Startup' {
     doc purpose /* To highlight the startup behaviour of the system */
 
@@ -285,7 +286,7 @@ use case <'UC-2'> 'Sense Weather' {
     actor env: 'Environment';
 }
 
-
+//14
 use case <'UC-3'> '???' {
     doc purpose /*  */
 
