@@ -1,30 +1,32 @@
 namespace net.akehurst.language.sysML.SysMLv2_0 {
 
     identify AliasMember by name
-    identify SimpleClassifier by classifierDeclaration.identification.name
-    identify DataType by classifierDeclaration.identification.name
-    identify Class by classifierDeclaration.identification.name
-    identify Structure by classifierDeclaration.identification.name
-    identify Association by classifierDeclaration.identification.name
-    identify AssociationStructure by classifierDeclaration.identification.name
+//    identify SimpleClassifier by classifierDeclaration.identification.name
+//    identify DataType by classifierDeclaration.identification.name
+//    identify Class by classifierDeclaration.identification.name
+//    identify Structure by classifierDeclaration.identification.name
+//    identify Association by classifierDeclaration.identification.name
+//    identify AssociationStructure by classifierDeclaration.identification.name
+    identify PartDefinition by definition.definitionDeclaration.identification.declaredName.name
 
-    identify Package by packageDeclaration.qualifiedName
-    identify LibraryPackage by packageDeclaration.qualifiedName
+    identify Package by packageDeclaration.identification.declaredName
+    identify LibraryPackage by packageDeclaration.identification.declaredName
 
 
     scope Package {
         identify AliasMember by name
-        identify SimpleClassifier by classifierDeclaration.identification.name
-        identify DataType by classifierDeclaration.identification.name
-        identify Class by classifierDeclaration.identification.name
-        identify Structure by classifierDeclaration.identification.name
-        identify Association by classifierDeclaration.identification.name
-        identify AssociationStructure by classifierDeclaration.identification.name
+//        identify SimpleClassifier by classifierDeclaration.identification.name
+//        identify DataType by classifierDeclaration.identification.name
+//        identify Class by classifierDeclaration.identification.name
+//        identify Structure by classifierDeclaration.identification.name
+//        identify Association by classifierDeclaration.identification.name
+//        identify AssociationStructure by classifierDeclaration.identification.name
+        identify PartDefinition by definition.definitionDeclaration.identification.declaredName.name
 
-        identify Package by packageDeclaration.qualifiedName
-        identify LibraryPackage by packageDeclaration.qualifiedName
+        identify Package by packageDeclaration.identification.declaredName.name
+        identify LibraryPackage by packageDeclaration.identification.declaredName.name
     }
-
+/*
     references {
         in DependencyDeclaration {
             foreach qn in qualifiedName1 {
@@ -81,4 +83,5 @@ namespace net.akehurst.language.sysML.SysMLv2_0 {
             property qualifiedName refers-to Classifier
         }
     }
+*/
 }
