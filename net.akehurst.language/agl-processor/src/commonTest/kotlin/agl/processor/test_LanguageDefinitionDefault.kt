@@ -37,16 +37,20 @@ class test_LanguageDefinitionDefault {
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
     val grammarObserverCalled = mutableListOf<Pair<List<Grammar>, List<Grammar>>>()
     val grammarObserver: (List<Grammar>, List<Grammar>) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
-    val scopeStrObserverCalled = mutableListOf<Pair<String?, String?>>()
-    val scopeStrObserver: (String?, String?) -> Unit = { old, new -> scopeStrObserverCalled.add(Pair(old, new)) }
-    val scopeModelObserverCalled = mutableListOf<Pair<CrossReferenceModel?, CrossReferenceModel?>>()
-    val scopeModelObserver: (CrossReferenceModel?, CrossReferenceModel?) -> Unit = { old, new -> scopeModelObserverCalled.add(Pair(old, new)) }
+
+    val crossReferenceModelStrObserverCalled = mutableListOf<Pair<String?, String?>>()
+    val crossReferenceModelStrObserver: (String?, String?) -> Unit = { old, new -> crossReferenceModelStrObserverCalled.add(Pair(old, new)) }
+    val crossReferenceModelCalled = mutableListOf<Pair<CrossReferenceModel?, CrossReferenceModel?>>()
+    val crossReferenceModelObserver: (CrossReferenceModel?, CrossReferenceModel?) -> Unit = { old, new -> crossReferenceModelCalled.add(Pair(old, new)) }
+
     val processorObserverCalled = mutableListOf<Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>>()
     val processorObserver: (LanguageProcessor<*, *>?, LanguageProcessor<*, *>?) -> Unit = { old, new -> processorObserverCalled.add(Pair(old, new)) }
+
     val styleStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val styleStrObserver: (String?, String?) -> Unit = { old, new -> styleStrObserverCalled.add(Pair(old, new)) }
     val styleObserverCalled = mutableListOf<Pair<AglStyleModel?, AglStyleModel?>>()
     val styleObserver: (AglStyleModel?, AglStyleModel?) -> Unit = { old, new -> styleObserverCalled.add(Pair(old, new)) }
+
     val formatterStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val formatterStrObserver: (String?, String?) -> Unit = { old, new -> formatterStrObserverCalled.add(Pair(old, new)) }
     val formatterObserverCalled = mutableListOf<Pair<AglFormatterModel?, AglFormatterModel?>>()
@@ -64,11 +68,15 @@ class test_LanguageDefinitionDefault {
         )
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
-        sut.scopeStrObservers.add(scopeStrObserver)
-        sut.crossReferenceModelObservers.add(scopeModelObserver)
+
+        sut.crossReferenceModelStrObservers.add(crossReferenceModelStrObserver)
+        sut.crossReferenceModelObservers.add(crossReferenceModelObserver)
+
         sut.processorObservers.add(processorObserver)
+
         sut.styleStrObservers.add(styleStrObserver)
         sut.styleObservers.add(styleObserver)
+
         sut.formatterStrObservers.add(formatterStrObserver)
         sut.formatterObservers.add(formatterObserver)
 
@@ -78,11 +86,15 @@ class test_LanguageDefinitionDefault {
     private fun reset() {
         this.grammarStrObserverCalled.clear()
         this.grammarObserverCalled.clear()
-        this.scopeStrObserverCalled.clear()
-        this.scopeModelObserverCalled.clear()
+
+        this.crossReferenceModelStrObserverCalled.clear()
+        this.crossReferenceModelCalled.clear()
+
         this.processorObserverCalled.clear()
+
         this.styleStrObserverCalled.clear()
         this.styleObserverCalled.clear()
+
         this.formatterStrObserverCalled.clear()
         this.formatterObserverCalled.clear()
     }
@@ -131,8 +143,8 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
         assertTrue(grammarStrObserverCalled.isEmpty())
         assertTrue(grammarObserverCalled.isEmpty())
-        assertTrue(scopeStrObserverCalled.isEmpty())
-        assertTrue(scopeModelObserverCalled.isEmpty())
+        assertTrue(crossReferenceModelStrObserverCalled.isEmpty())
+        assertTrue(crossReferenceModelCalled.isEmpty())
         assertTrue(processorObserverCalled.isEmpty())
         assertTrue(styleStrObserverCalled.isEmpty())
         assertTrue(styleObserverCalled.isEmpty())
@@ -154,8 +166,8 @@ class test_LanguageDefinitionDefault {
         )
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -184,8 +196,8 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -207,8 +219,8 @@ class test_LanguageDefinitionDefault {
         )
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -228,8 +240,8 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(emptyList(), sut.grammarList)), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -253,8 +265,8 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<String?, String?>(g, null)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, emptyList())), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -279,8 +291,8 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(emptyList(), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
         assertEquals(emptyList(), styleStrObserverCalled)
         assertEquals(emptyList(), styleObserverCalled)
@@ -305,8 +317,63 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<String?, String?>(g1, g2)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, sut.grammarList)), grammarObserverCalled)
-        assertEquals(emptyList(), scopeStrObserverCalled)
-        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
+        assertEquals(
+            listOf(
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null),
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)
+            ), processorObserverCalled
+        )
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
+    }
+
+    @Test
+    fun crossReferenceModelStr_change_value_to_diff_value() {
+        val g1 = """
+            namespace ns grammar Test {
+                S = I* ;
+                I = D | R ;
+                D = 'def' N ;
+                R = 'ref' N ;
+                N = "[a-z]+" ;
+            }
+        """
+        sut.grammarStr = g1
+        val cm1 = """
+            namespace ns.Test {
+                identify D by n
+            }
+        """
+        sut.crossReferenceModelStr = cm1
+        val oldCrossReferenceModel = sut.crossReferenceModel
+        val oldProc = sut.processor
+        this.reset()
+
+        val cm2 = """
+            namespace ns.Test {
+                identify D by n
+                references {
+                  in R {
+                    property n refers-to D
+                  }
+                }
+            }
+        """
+        sut.crossReferenceModelStr = cm2
+
+        assertEquals(cm2, sut.crossReferenceModelStr)
+        assertNotNull(sut.crossReferenceModel)
+        assertNotNull(sut.processor)
+        assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair(cm1, cm2)), crossReferenceModelStrObserverCalled.toList())
+        assertEquals(listOf(Pair(oldCrossReferenceModel, sut.crossReferenceModel)), crossReferenceModelCalled.toList())
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(
             listOf(
                 Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null),

@@ -22,7 +22,6 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
@@ -67,15 +66,15 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     override val typeModel: TypeModel?
         get() = this.processor?.typeModel
 
-    override var crossReferenceModel: CrossReferenceModel?
+    override val crossReferenceModel: CrossReferenceModel?
         get() = this.processor?.crossReferenceModel
-        set(value) {
-            val oldValue = this.processor?.crossReferenceModel
-            if (oldValue != value) {
-                _crossReferenceModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceModelObservers.forEach { it(oldValue, value) }
-            }
-        }
+//        set(value) {
+//            val oldValue = this.processor?.crossReferenceModel
+//            if (oldValue != value) {
+//                _crossReferenceModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
+//                crossReferenceModelObservers.forEach { it(oldValue, value) }
+//            }
+//        }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>?
         get() = this.processor?.syntaxAnalyser
@@ -107,7 +106,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     abstract override var styleStr: String?
 
-    override var style: AglStyleModel?
+    override val style: AglStyleModel?
         get() {
             return if (null == _style) {
                 _styleResolver?.let {
@@ -124,23 +123,25 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
                 _style
             }
         }
-        set(value) {
-            val oldValue = _style
-            if (oldValue != value) {
-                _styleResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleObservers.forEach { it(oldValue, value) }
-            }
-        }
+//        set(value) {
+//            val oldValue = _style
+//            if (oldValue != value) {
+//                _styleResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
+//                styleObservers.forEach { it(oldValue, value) }
+//            }
+//        }
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: List<Grammar>, newValue: List<Grammar>) -> Unit>()
-    override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
+    override val crossReferenceModelStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+
+    //override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
     override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
+
+    //override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
     override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
+    //override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity
 

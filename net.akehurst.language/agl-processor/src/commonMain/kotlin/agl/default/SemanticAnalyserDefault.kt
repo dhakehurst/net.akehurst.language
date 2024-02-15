@@ -56,6 +56,7 @@ class SemanticAnalyserDefault(
         when {
             null == context -> _issues.info(null, "No context provided, references not checked or resolved, switch of reference checking or provide a context.")
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
+            crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
             else -> {
                 this.buildScope(asm, context.rootScope)
                 val resolve = if (options.resolveReferences) {

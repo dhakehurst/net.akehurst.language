@@ -43,18 +43,18 @@ fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance {
 }
 
 fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when (this) {
-    is RootExpression -> this.typeOfExpressionFor(self)
-    is NavigationExpression -> this.typeOfExpressionFor(self)
+    is RootExpression -> this.typeOfRootExpressionFor(self)
+    is NavigationExpression -> this.typeOfNavigationExpressionFor(self)
     else -> error("Subtype of Expression not handled in 'typeOfExpressionFor'")
 }
 
-fun RootExpression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when {
+fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = when {
     this.isNothing -> SimpleTypeModelStdLib.NothingType
     this.isSelf -> self
     else -> error("type of RootExpression not handled")
 }
 
-fun NavigationExpression.typeOfExpressionFor(self: TypeInstance): TypeInstance =
+fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance =
     this.propertyDeclarationFor(self)?.typeInstance ?: SimpleTypeModelStdLib.NothingType
 
 fun NavigationExpression.propertyDeclarationFor(self: TypeInstance?): PropertyDeclaration? {

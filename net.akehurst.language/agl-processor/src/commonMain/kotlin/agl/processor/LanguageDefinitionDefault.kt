@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -69,7 +71,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     override var crossReferenceModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
-            updateScopeModelStr(oldValue, newValue)
+            updateCrossReferenceModelStr(oldValue, newValue)
         }
     }
 
@@ -105,7 +107,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.crossReferenceModelStr = crossReferenceModelStr
         this.styleStr = styleStr
         updateGrammarStr(oldGrammarStr, grammarStr)
-        updateScopeModelStr(oldScopeModelStr, crossReferenceModelStr)
+        updateCrossReferenceModelStr(oldScopeModelStr, crossReferenceModelStr)
         updateStyleStr(oldStyleStr, styleStr)
         this._doObservableUpdates = true
     }
@@ -136,22 +138,34 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    private fun updateScopeModelStr(oldValue: String?, newValue: String?) {
+    private fun updateCrossReferenceModelStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
             super._crossReferenceModelResolver = {
-                if (null == newValue) {
-                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    val res = Agl.registry.agl.crossReference.processor!!.process(newValue)
-                    when {
-                        res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
-                        res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
-                        null == res.asm -> error("Internal error: no CrossReferenceModel, but no errors reported")
-                        else -> error("Internal error: situation not handled")
+                when {
+                    (null == newValue) -> {
+                        ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                     }
-                    res
+
+                    (null == this.typeModel) -> {
+                        val ih = IssueHolder(LanguageProcessorPhase.ALL)
+                        ih.error(null, "TypeModel for LanguageDefinition should not be null")
+                        ProcessResultDefault(null, ih)
+                    }
+
+                    else -> {
+                        val res = CrossReferenceModelDefault.fromString(ContextFromTypeModel(this.typeModel!!), newValue)
+                        //val res = Agl.registry.agl.crossReference.processor!!.process(newValue)
+                        when {
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            null == res.asm -> error("Internal error: no CrossReferenceModel, but no errors reported")
+                            else -> error("Internal error: situation not handled")
+                        }
+                        res
+                    }
                 }
             }
+            crossReferenceModelStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
@@ -171,6 +185,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                     res
                 }
             }
+            styleStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 }
