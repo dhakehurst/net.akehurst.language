@@ -104,6 +104,9 @@ interface AsmStructureProperty {
 
 interface AsmList : AsmValue {
     val elements: List<AsmValue>
+
+    val isEmpty: Boolean
+    val isNotEmpty: Boolean
 }
 
 interface AsmListSeparated : AsmList {

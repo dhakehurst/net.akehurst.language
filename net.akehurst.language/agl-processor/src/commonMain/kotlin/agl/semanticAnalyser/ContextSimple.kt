@@ -90,11 +90,15 @@ class ScopeSimple<ItemType>(
     override fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean =
         this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key, typeName) } ?: false
 
-    override fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
-        var child = this._childScopes[scopeIdentityInParent]
+    override fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemType>? {
+        return this._childScopes[childScopeIdentityInThis]
+    }
+
+    override fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
+        var child = this._childScopes[childScopeIdentityInThis]
         if (null == child) {
-            child = ScopeSimple(this, scopeIdentityInParent, forTypeName)
-            this._childScopes[scopeIdentityInParent] = child
+            child = ScopeSimple(this, childScopeIdentityInThis, forTypeName)
+            this._childScopes[childScopeIdentityInThis] = child
         }
         this.rootScope.scopeMap[item] = child
         return child
@@ -135,23 +139,24 @@ class ScopeSimple<ItemType>(
         }?.map { (typeName, item) -> ScopedItem(name, typeName, item) } ?: emptyList()
 
 
-    override fun findQualified(qualifiedName: List<String>): Set<ScopedItem<ItemType>> = when (qualifiedName.size) {
+    override fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ScopedItem<ItemType>> = when (qualifiedName.size) {
         0 -> emptySet()
         1 -> this.findItemsNamed(qualifiedName.first())
         else -> {
             val child = childScopes[qualifiedName.first()]
-            child?.findQualified(qualifiedName.drop(1)) ?: emptySet()
+            child?.findItemsByQualifiedName(qualifiedName.drop(1)) ?: emptySet()
         }
     }
 
-    override fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>> = when (qualifiedName.size) {
-        0 -> emptyList()
-        1 -> this.findItemsNamedConformingTo(qualifiedName.first(), conformsToFunc)
-        else -> {
-            val child = childScopes[qualifiedName.first()]
-            child?.findQualifiedConformingTo(qualifiedName.drop(1), conformsToFunc) ?: emptyList()
+    override fun findItemsByQualifiedNameConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>> =
+        when (qualifiedName.size) {
+            0 -> emptyList()
+            1 -> this.findItemsNamedConformingTo(qualifiedName.first(), conformsToFunc)
+            else -> {
+                val child = childScopes[qualifiedName.first()]
+                child?.findItemsByQualifiedNameConformingTo(qualifiedName.drop(1), conformsToFunc) ?: emptyList()
+            }
         }
-    }
 
     override fun asString(currentIndent: String, indentIncrement: String): String {
         val scopeIndent = currentIndent + indentIncrement

@@ -19,9 +19,14 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.agl.semanticAnalyser.contextSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.language.reference.Scope
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.ProcessOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,22 +36,466 @@ class test_SemanticAnalyserDefault {
 
     private companion object {
 
-        fun test(grammarStr: String, scopeModelStr: String, sentence: String, expected: Scope<AsmPath>) {
+        fun test(grammarStr: String, scopeModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: ContextSimple) {
+            val processor = Agl.processorFromStringDefault(
+                grammarStr,
+                scopeModelStr
+            ).let {
+                it.processor!!.crossReferenceModel
+                check(it.issues.isEmpty()) { it.issues.toString() }
+                it.processor!!
+            }
+            assertEquals(processor.grammar!!.qualifiedName, processor.crossReferenceModel.declarationsForNamespace.keys.first())
+            val result = processor.process(sentence, options)
+            assertTrue(result.issues.isEmpty(), result.issues.toString())
+            assertNotNull(result.asm)
+            assertEquals(expected.asString(), options.semanticAnalysis.context!!.asString())
+        }
+
+        fun test_issues(grammarStr: String, scopeModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: List<LanguageIssue>) {
             val processor = Agl.processorFromStringDefault(
                 grammarStr,
                 scopeModelStr
             ).processor!!
-            val context = ContextSimple()
-            val result = processor.process(sentence, Agl.options {
-                semanticAnalysis {
-                    context(context)
-                }
-            })
-            assertTrue(result.issues.isEmpty(), result.issues.toString())
-            assertNotNull(result.asm)
-            assertEquals(expected.asString(), context.rootScope.asString())
+            val result = processor.process(sentence, options)
+
+            assertEquals(expected, result.issues.all.toList())
         }
     }
+
+    @Test
+    fun no_context_provided() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+            }
+        """
+        val sentence = "a"
+        val context: ContextSimple? = null
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.INFORMATION,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                null,
+                "No context provided, references not checked or resolved, switch off reference checking or provide a context."
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun context_provided() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun checkReferences_off() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(false)
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.INFORMATION,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                null,
+                "Semantic Analysis option 'checkReferences' is off, references not checked."
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun checkReferences_on() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun crossReferenceModel_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.WARNING,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                null,
+                "Empty CrossReferenceModel"
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun crossReferenceModel_notEmpty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_no_identifyingExpression_defined() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B? C?;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+                C = A ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify C by a
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple { }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_by_value_Nothing() {
+        // will identify by typename if id by evaluates to Nothing
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B? ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by b
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+            item("test.Test.S", "test.Test.S", "/0")
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_string() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B? ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by a
+            }
+        """
+        val sentence = "a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+            item("a", "test.Test.S", "/0")
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_integer() {
+        TODO()
+    }
+
+    @Test
+    fun identifyingExpression_listOfString_no_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = As B? ;
+                As = [A/'.']+ ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by as
+            }
+        """
+        val sentence = "a.a.a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(0, 1, 1, 5),
+                "Cannot create a local reference in '//' for ':S[/0]' because there is no scope defined for test.Test.S although its identifying expression evaluates to a List<String>"
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_listOfString_with_scope_but_not_identified_in_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = As B? ;
+                As = [A/'.']+ ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by as
+                scope S {
+                
+                }
+            }
+        """
+        val sentence = "a.a.a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(0, 1, 1, 5),
+                "Cannot create a local reference in '//' for ':S[/0]' because it has no identifying expression in the scope (which should evaluate to a List<String>)"
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_listOfString_with_scope_but_identified_different_in_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = As B? ;
+                As = [A/'.']+ ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by as
+                scope S {
+                    identify S by b
+                }
+            }
+        """
+        val sentence = "a.a.a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(0, 1, 1, 5),
+                "Cannot create a local reference in '//' for ':S[/0]' because the identifying expression is different in the scope and the parent scope"
+            )
+        )
+        test_issues(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_listOfString_with_scope_and_identified_in_scope() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = As B? ;
+                As = [A/'.']+ ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val referenceModelStr = """
+            namespace test.Test {
+                identify S by as
+                scope S {
+                    identify S by as
+                }
+            }
+        """
+        val sentence = "a.a.a"
+        val context = ContextSimple()
+        val options = Agl.options<Asm, ContextSimple> {
+            semanticAnalysis {
+                checkReferences(true)
+                context(context)
+            }
+        }
+
+        val expected = contextSimple {
+            scopedItem("a", "test.Test.S", "/0") {
+                scopedItem("a", "test.Test.S", "/0") {
+                    scopedItem("a", "test.Test.S", "/0") {
+                    }
+                }
+            }
+        }
+        test(grammarStr, referenceModelStr, sentence, options, expected)
+    }
+
+    @Test
+    fun identifyingExpression_structure() {
+        TODO()
+    }
+
+    @Test
+    fun resolveReferences_off() {
+        TODO()
+    }
+
+    @Test
+    fun resolveReferences_on() {
+        TODO()
+    }
+
 
     @Test
     fun listOfItems() {

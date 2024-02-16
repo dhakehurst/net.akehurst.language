@@ -1645,6 +1645,156 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test //S = A B? ; A = ['a'/'.']+ ; B = 'b' ;
+    fun _6_sepList_followed_by_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B? ;
+                A = ['a'/'.']+ ;
+                B = 'b' ;
+            }
+        """
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            dataType("A", "A") {
+                // no properties because rule list contains only literals
+            }
+            dataType("B", "B") {
+                // no properties because rule contains only literals
+            }
+            dataType("S", "S") {
+                // no property 'a' because it is empty
+                propertyDataTypeOf("b", "B", true, 1)
+            }
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("a.a") {
+            asmSimple {
+                element("S") {
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("a.a.a") {
+            asmSimple {
+                element("S") {
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("ab") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("b", "B") {}
+                }
+            }
+        }
+        tests.define("a.ab") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("b", "B") {}
+                }
+            }
+        }
+        tests.define("a.a.ab") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("b", "B") {}
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //S = As B? ; As = [A/'.']+ ; leaf A = 'a' ; leaf B = 'b' ;
+    fun _6_sepList_followed_by_empty_leafs() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = As B? ;
+                As = [A/'.']+ ;
+                leaf A = 'a' ;
+                leaf B = 'b' ;
+            }
+        """
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("A")
+            stringTypeFor("B")
+            dataType("As", "As") {
+                propertyListType("a", false, 0) { primitiveRef("String") }
+            }
+            dataType("S", "S") {
+                propertyListType("as", false, 0) { primitiveRef("String") }
+                propertyPrimitiveType("b", "String", true, 1)
+            }
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a"))
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("a.a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a"))
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("a.a.a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a", "a"))
+                    propertyNothing("b")
+                }
+            }
+        }
+        tests.define("ab") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a"))
+                    propertyString("b", "b")
+                }
+            }
+        }
+        tests.define("a.ab") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a"))
+                    propertyString("b", "b")
+                }
+            }
+        }
+        tests.define("a.a.ab") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a", "a"))
+                    propertyString("b", "b")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     // --- Group ---
     @Test // S = a ('b' 'c' 'd') e ;
     fun _7_concat_group_concat_literal_nonLeaf() {

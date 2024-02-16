@@ -205,7 +205,7 @@ class ReferenceResolverDefault(
                 val list = referringValue.elements.map { (it as AsmPrimitive).value as String }
                 val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByNameOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
-                    scope.rootScope.findQualifiedConformingTo(list) {
+                    scope.rootScope.findItemsByQualifiedNameConformingTo(list) {
                         val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
                         itemType.conformsTo(td)
                     }

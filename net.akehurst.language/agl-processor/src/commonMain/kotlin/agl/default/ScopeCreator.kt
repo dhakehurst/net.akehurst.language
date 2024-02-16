@@ -43,10 +43,10 @@ class ScopeCreator(
     val currentScope = mutableStackOf(rootScope)
 
     override fun beforeRoot(root: AsmValue) {
-        when (root) {
-            is AsmStructure -> addToScope(currentScope.peek(), root)
-            else -> Unit
-        }
+//        when (root) {
+//            is AsmStructure -> addToScope(currentScope.peek(), root)
+//            else -> Unit
+//        }
     }
 
     override fun afterRoot(root: AsmValue) {
@@ -80,10 +80,36 @@ class ScopeCreator(
         return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)) {
             val refInParent = exp.createReferenceLocalToScope(parentScope, el)
             when {
+                // Nothing
                 refInParent is AsmNothing -> parentScope.createOrGetChildScope(el.typeName, el.typeName, el.path)
+                // String
                 refInParent is AsmPrimitive && refInParent.isStdString -> parentScope.createOrGetChildScope((refInParent.value as String), el.typeName, el.path)
+                // List<String>
+                refInParent is AsmList && refInParent.isNotEmpty && refInParent.elements.all { it is AsmPrimitive && it.isStdString } -> {
+                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
+                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.qualifiedTypeName, el.qualifiedTypeName)
+                    when {
+                        // and scope defined with the same expression
+                        scopeDefined && exp == idExprDefinedInScope -> {
+                            // child scopes should have been created in addToScope
+                            // return the deepest child created
+                            val refList = refInParent.elements.map { (it as AsmPrimitive).value as String }
+                            var childScope = parentScope
+                            for (ref in refList) {
+                                childScope = childScope.getChildScopeOrNull(ref) ?: error("Internal error: should never be null as already created these scopes in addToScope")
+                            }
+                            childScope
+                        }
+
+                        else -> {
+                            // issue already reported in addToScope
+                            parentScope
+                        }
+                    }
+                }
+
                 else -> {
-                    issues.error(this.locationMap[el], "Cannot create a local reference in '$parentScope' for '$el' because its identifying expression evaluates to $refInParent")
+                    issues.error(this.locationMap[el], "Cannot create a child scope in '$parentScope' for '$el' because its identifying expression evaluates to $refInParent")
                     parentScope
                 }
             }
@@ -104,7 +130,7 @@ class ScopeCreator(
 //                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
 //                )
                     val contextRef = el.path
-                    val added = scope.addToScope(el.qualifiedTypeName, el.qualifiedTypeName, contextRef).not()
+                    val added = scope.addToScope(el.qualifiedTypeName, el.qualifiedTypeName, contextRef)
                     when (added) {
                         true -> Unit
                         else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
@@ -121,8 +147,54 @@ class ScopeCreator(
                     }
                 }
 
+                // List<String>
+                scopeLocalReference is AsmList && scopeLocalReference.isNotEmpty && scopeLocalReference.elements.all { it is AsmPrimitive && it.isStdString } -> {
+                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
+                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.typeName, el.qualifiedTypeName)
+                    when {
+                        scopeDefined.not() -> {
+                            issues.error(
+                                this.locationMap[el],
+                                "Cannot create a local reference in '$scope' for '$el' because there is no scope defined for ${el.qualifiedTypeName} although its identifying expression evaluates to a List<String>"
+                            )
+                        }
+
+                        scopeDefined && null == idExprDefinedInScope -> {
+                            issues.error(
+                                this.locationMap[el],
+                                "Cannot create a local reference in '$scope' for '$el' because it has no identifying expression in the scope (which should evaluate to a List<String>)"
+                            )
+                        }
+
+                        scopeDefined && exp != idExprDefinedInScope -> {
+                            issues.error(
+                                this.locationMap[el],
+                                "Cannot create a local reference in '$scope' for '$el' because the identifying expression is different in the scope and the parent scope"
+                            )
+                        }
+                        //and scope defined
+                        else -> {
+                            val refList = scopeLocalReference.elements.map { (it as AsmPrimitive).value as String }
+                            val contextRef = el.path
+                            var nextScope = scope
+                            for (ref in refList) {
+                                val added = nextScope.addToScope(ref, el.qualifiedTypeName, contextRef)
+                                when (added) {
+                                    true -> Unit
+                                    else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")
+                                }
+
+                                nextScope = nextScope.createOrGetChildScope(ref, el.typeName, contextRef)
+                            }
+                        }
+                    }
+                }
+
                 else -> {
-                    issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to $scopeLocalReference")
+                    issues.error(
+                        this.locationMap[el],
+                        "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to a ${scopeLocalReference.typeName}"
+                    )
                 }
             }
 

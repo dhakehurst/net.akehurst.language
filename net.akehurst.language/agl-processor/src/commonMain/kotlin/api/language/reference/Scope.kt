@@ -115,6 +115,9 @@ interface Scope<ItemType> {
      */
     val items: Map<String, Map<String, ItemType>>
 
+    /**
+     * childScopeIdentityInThis -> child Scope
+     */
     val childScopes: Map<String, Scope<ItemType>>
 
     val rootScope: Scope<ItemType>
@@ -139,11 +142,13 @@ interface Scope<ItemType> {
      * find all items with the given qualified name, return list of pairs (item,its-typeName)
      * if qualifiedName contains only one name, first try to find it
      */
-    fun findQualified(qualifiedName: List<String>): Set<ScopedItem<ItemType>>
+    fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ScopedItem<ItemType>>
 
-    fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>>
+    fun findItemsByQualifiedNameConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ScopedItem<ItemType>>
 
-    fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
+    fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemType>?
+
+    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: String, item: ItemType): Scope<ItemType>
 
     /**
      * adds Pair(item, typeName) to this scope

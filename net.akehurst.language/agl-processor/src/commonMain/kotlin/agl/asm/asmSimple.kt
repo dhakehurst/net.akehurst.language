@@ -389,6 +389,9 @@ class AsmListSimple(
 ) : AsmValueAbstract(), AsmList {
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.qualifiedName
 
+    override val isEmpty: Boolean get() = elements.isEmpty()
+    override val isNotEmpty: Boolean get() = elements.isNotEmpty()
+
     override fun asString(currentIndent: String, indentIncrement: String): String =
         this.elements.joinToString { it.asString(currentIndent, indentIncrement) }
 
@@ -415,6 +418,9 @@ class AsmListSeparatedSimple(
     override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 ) : AsmValueAbstract(), AsmListSeparated {
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
+
+    override val isEmpty: Boolean get() = elements.isEmpty()
+    override val isNotEmpty: Boolean get() = elements.isNotEmpty()
 
     override fun asString(currentIndent: String, indentIncrement: String): String =
         this.elements.elements.joinToString { (it).asString(currentIndent, indentIncrement) }

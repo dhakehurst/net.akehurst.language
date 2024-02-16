@@ -70,15 +70,15 @@ class test_LanguageDefinitionDefault {
         sut.grammarObservers.add(grammarObserver)
 
         sut.crossReferenceModelStrObservers.add(crossReferenceModelStrObserver)
-        sut.crossReferenceModelObservers.add(crossReferenceModelObserver)
+        //sut.crossReferenceModelObservers.add(crossReferenceModelObserver)
 
         sut.processorObservers.add(processorObserver)
 
         sut.styleStrObservers.add(styleStrObserver)
-        sut.styleObservers.add(styleObserver)
+        //sut.styleObservers.add(styleObserver)
 
         sut.formatterStrObservers.add(formatterStrObserver)
-        sut.formatterObservers.add(formatterObserver)
+        //sut.formatterObservers.add(formatterObserver)
 
         assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
     }

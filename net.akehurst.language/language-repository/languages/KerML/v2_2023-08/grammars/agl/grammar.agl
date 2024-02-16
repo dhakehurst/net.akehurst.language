@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace com.itemis.sysml.kerml.cst
+namespace com.itemis.kerml.cst
 
 grammar Base {
 
