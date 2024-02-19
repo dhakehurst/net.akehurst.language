@@ -16,11 +16,9 @@
 
 package net.akehurst.language.agl.language.style
 
+import net.akehurst.language.agl.language.base.BaseGrammar
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle") {
@@ -28,9 +26,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
     const val goalRuleName = "rules"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-        b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"))
-        b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
-        b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"))
+        b.extendsGrammar(BaseGrammar)
 
         b.rule("rules").multi(0, -1, b.nonTerminal("rule"))
         b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
@@ -42,8 +38,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
         b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"\\\\]|\\\\.)*\""))
 
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-        b.leaf("META_IDENTIFIER").concatenation(b.terminalPattern("[\\$][a-zA-Z_][a-zA-Z_0-9-]*"));
+        b.leaf("META_IDENTIFIER").concatenation(b.terminalPattern("[\\$][a-zA-Z_][a-zA-Z_0-9-]*"))
 
         b.rule("styleList").multi(0, -1, b.nonTerminal("style"))
         b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
@@ -87,16 +82,18 @@ references {
     """
 
     init {
+        super.extends.add(
+            GrammarReferenceDefault(BaseGrammar.namespace, BaseGrammar.name).also {
+                it.resolveAs(BaseGrammar)
+            }
+        )
         super.grammarRule.addAll(createRules())
     }
 
     //TODO: gen this from the ASM
     override fun toString(): String = """
 namespace net.akehurst.language.agl
-grammar AglStyle {
-    skip WHITESPACE = "\s+" ;
-	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
+grammar AglStyle  extends Base {
 
     rules = rule* ;
     rule = selectorExpression '{' styleList '}' ;
@@ -111,7 +108,6 @@ grammar AglStyle {
     
     leaf LITERAL = "'([^'\\]|\\.)+'" ;
     leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
     leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;

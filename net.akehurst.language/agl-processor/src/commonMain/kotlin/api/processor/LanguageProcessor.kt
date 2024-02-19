@@ -18,6 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.Parser
@@ -55,6 +56,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     val spptParser: SPPTParser
 
     val parser: Parser?
+
+    val asmTransformModel: AsmTransformModel
 
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor

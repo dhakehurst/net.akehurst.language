@@ -16,8 +16,9 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.agl.parser.SentenceDefault
-import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -252,8 +253,8 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processorFromStringDefault(grammarStr1).processor!!
-        var processor = Agl.processorFromStringDefault(grammarStr2).processor!!
+        val exprProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr1)).processor!!
+        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr2)).processor!!
     }
 
     @Test

@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextSimple

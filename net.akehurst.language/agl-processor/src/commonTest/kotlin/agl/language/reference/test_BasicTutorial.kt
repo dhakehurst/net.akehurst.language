@@ -17,7 +17,9 @@
 
 package net.akehurst.language.agl.language.reference
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -71,8 +73,8 @@ namespace net.akehurst.language.example.BasicTutorial {
         """.trimIndent()
 
         val processor = Agl.processorFromStringDefault(
-            grammarDefinitionStr = grammarStr,
-            crossReferenceModelStr = referencesStr
+            grammarDefinitionStr = GrammarString(grammarStr),
+            crossReferenceModelStr = CrossReferenceString(referencesStr)
         ).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.processor!!

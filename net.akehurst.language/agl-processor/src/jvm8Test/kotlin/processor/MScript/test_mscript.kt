@@ -16,10 +16,11 @@
  */
 package net.akehurst.language.agl.processor.MScript
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -31,7 +32,7 @@ import kotlin.test.*
 class test_mscript {
     private companion object {
         private val grammarStr = this::class.java.getResource("/MScript/version_/grammar.agl").readText()
-        val sut = Agl.processorFromStringDefault(grammarStr).processor!!
+        val sut = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
     }
 
     @Test

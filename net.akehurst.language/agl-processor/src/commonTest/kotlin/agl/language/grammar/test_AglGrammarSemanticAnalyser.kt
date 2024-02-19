@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.language.grammar.Choice
 import net.akehurst.language.api.language.grammar.ChoiceLongest
 import net.akehurst.language.api.language.grammar.NonTerminal
@@ -180,7 +181,7 @@ class test_AglGrammarSemanticAnalyser {
         assertEquals(1, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())
     }
 
@@ -213,7 +214,7 @@ class test_AglGrammarSemanticAnalyser {
         assertEquals(1, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("ab").issues.errors.isEmpty())
     }
 
@@ -273,7 +274,7 @@ class test_AglGrammarSemanticAnalyser {
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("aa").issues.errors.isEmpty())
     }
 
@@ -308,7 +309,7 @@ class test_AglGrammarSemanticAnalyser {
         assertEquals(3, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("aabb").issues.errors.isEmpty())
     }
 
@@ -383,7 +384,7 @@ class test_AglGrammarSemanticAnalyser {
         assertEquals(2, mid2G.allResolvedGrammarRule.size)
         assertEquals(4, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("abc").issues.errors.isEmpty())
     }
 
@@ -416,7 +417,7 @@ class test_AglGrammarSemanticAnalyser {
         assertTrue(testG.findAllGrammarRuleList("C")[0].rhs is ChoiceLongest)
         assertEquals(3, (testG.findAllResolvedGrammarRule("C")!!.rhs as ChoiceLongest).alternative.size)
 
-        val proc = Agl.processorFromStringDefault(sentence).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())
         assertTrue(proc.parse("b").issues.errors.isEmpty())
         assertTrue(proc.parse("c").issues.errors.isEmpty())

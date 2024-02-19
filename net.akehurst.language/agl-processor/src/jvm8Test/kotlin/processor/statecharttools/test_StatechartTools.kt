@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -37,8 +38,8 @@ class test_StatechartTools(val data: Data) {
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromStringDefault(grammarStr1).processor!!
-        var processor = Agl.processorFromStringDefault(grammarStr2).processor!!
+        val exprProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr1)).processor!!
+        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr2)).processor!!
         var sourceFiles = arrayOf("/statechart-tools/samplesValid.txt")
 
         @JvmStatic

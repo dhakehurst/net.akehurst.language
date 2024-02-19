@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.language.format
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.AsmList
 import net.akehurst.language.api.asm.AsmPrimitive

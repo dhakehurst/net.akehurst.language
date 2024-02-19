@@ -24,10 +24,10 @@ import net.akehurst.language.api.language.grammar.GrammarRule
 /**
 
  */
-internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language"), "References") {
+internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "References");
+        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "References");
         b.extendsGrammar(ExpressionsGrammar)
 
         b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
@@ -38,7 +38,6 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
             b.terminalLiteral("}")
         )
         b.rule("imports").multi(0, -1, b.nonTerminal("import"))
-        b.rule("import").concatenation(b.terminalLiteral("import"), b.nonTerminal("qualifiedName"))
         b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"), b.nonTerminal("referencesOpt"))
         b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
         b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
@@ -105,7 +104,6 @@ grammar References extends Expressions {
     unit = namespace* ;
     namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
     imports = import*;
-    import = 'import' qualifiedName ;
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
     scopes = scope* ;
@@ -149,7 +147,7 @@ ReferenceDefinition -> "in §typeReference property §propertyReference refers-t
 
     init {
         super.extends.add(
-            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.qualifiedName).also {
+            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.name).also {
                 it.resolveAs(ExpressionsGrammar)
             }
         )

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

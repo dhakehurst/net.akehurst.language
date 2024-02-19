@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor.atom_basic
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessorException
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +47,7 @@ class test_AtomBasic(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/atom-basic/Grammar.agl")?.readText() ?: error("File not found")
 
-        var processor = Agl.processorFromStringDefault(grammarStr).let {
+        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).let {
             it.processor ?: error("Unable to parse '/atom-basic/Grammar.agl'\n${it.issues}")
         }
         const val validSourceFilesFolderName = "/atom-basic/valid"

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -31,7 +31,7 @@ class test_Multi1N {
                 b = 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
     }
 
     @Test
@@ -41,9 +41,9 @@ class test_Multi1N {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -53,9 +53,9 @@ class test_Multi1N {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -65,10 +65,10 @@ class test_Multi1N {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a",
-                "b"
+            "a",
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -78,9 +78,9 @@ class test_Multi1N {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a",
-                "b"
+            "a",
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 }

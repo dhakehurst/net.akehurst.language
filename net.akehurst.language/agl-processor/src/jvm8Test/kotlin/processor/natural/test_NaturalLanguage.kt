@@ -15,8 +15,9 @@
  */
 package net.akehurst.language.agl.processor.natural
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.agl.parser.SentenceDefault
-import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -38,7 +39,7 @@ class test_NaturalLanguage(val data: Data) {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() = Agl.processorFromStringDefault(grammarStr).processor!!
+        fun processor() = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")

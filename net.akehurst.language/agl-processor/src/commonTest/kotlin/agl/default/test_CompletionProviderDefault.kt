@@ -17,8 +17,10 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
@@ -43,7 +45,7 @@ class test_CompletionProviderDefault {
         )
 
         fun test(data: TestData) {
-            val res = Agl.processorFromStringDefault(data.grammarStr, data.crossReferencesStr)
+            val res = Agl.processorFromStringDefault(grammarDefinitionStr = GrammarString(data.grammarStr), crossReferenceModelStr = CrossReferenceString(data.crossReferencesStr))
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {

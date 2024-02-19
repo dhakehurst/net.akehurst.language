@@ -15,9 +15,10 @@
  */
 package net.akehurst.language.agl.processor.dot
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.LeftCornerParser
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
@@ -33,7 +34,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
     }
 

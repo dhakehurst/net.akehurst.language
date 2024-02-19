@@ -16,7 +16,8 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -26,7 +27,7 @@ import kotlin.test.*
 class test_AglGrammar {
 
     private fun test(grammarStr: String, sentence: String, expectedStr: String) {
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse(sentence)
@@ -53,7 +54,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("a")
@@ -77,7 +78,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("");
@@ -101,7 +102,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("a");
@@ -125,7 +126,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNull(pr.processor, pr.issues.toString())
     }
 
@@ -139,7 +140,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("\\b");
@@ -166,7 +167,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("b");
@@ -192,7 +193,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("'");
@@ -218,7 +219,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("\"");
@@ -244,7 +245,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("'");
@@ -270,7 +271,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("\"");
@@ -296,7 +297,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("a");
@@ -321,7 +322,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("ba");
@@ -345,7 +346,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("abc");
@@ -369,7 +370,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("b");
@@ -393,7 +394,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("b");
@@ -424,7 +425,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse("f");
@@ -448,7 +449,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("");
@@ -482,7 +483,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("");
@@ -526,7 +527,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("")
@@ -565,7 +566,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -615,7 +616,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -661,7 +662,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -707,7 +708,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -753,7 +754,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -802,8 +803,8 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
-        val p2 = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
+        val p2 = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("abc");
@@ -828,7 +829,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("");
@@ -865,7 +866,7 @@ class test_AglGrammar {
 
         //NOTE: there should be no pseudo rule because there is only one item on rhs of rule 'S'
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("");
@@ -910,7 +911,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("")
@@ -953,7 +954,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1004,7 +1005,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1064,7 +1065,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1115,7 +1116,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1175,7 +1176,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("");
@@ -1218,7 +1219,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1263,7 +1264,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1306,7 +1307,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1357,7 +1358,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
 
@@ -1416,7 +1417,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
 
         val expected = listOf(
             LanguageIssue(
@@ -1441,7 +1442,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result0 = pr.processor!!.parse("")
@@ -1492,7 +1493,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
 
@@ -1552,7 +1553,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("")
@@ -1629,7 +1630,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("")
@@ -1673,7 +1674,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("a");
@@ -1723,7 +1724,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
         //TODO: more checks
     }
@@ -1787,7 +1788,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("abc", Agl.parseOptions { goalRuleName("S") })
@@ -1822,7 +1823,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("acd", Agl.parseOptions { goalRuleName("S") })

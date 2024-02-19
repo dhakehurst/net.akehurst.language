@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib

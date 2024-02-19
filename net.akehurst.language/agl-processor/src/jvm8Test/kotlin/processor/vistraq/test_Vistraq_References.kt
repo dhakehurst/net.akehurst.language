@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor.vistraq
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
@@ -25,7 +26,6 @@ import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel

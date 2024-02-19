@@ -15,13 +15,13 @@
  *
  */
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.formatter.FormatterSimple
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.automaton.Automaton

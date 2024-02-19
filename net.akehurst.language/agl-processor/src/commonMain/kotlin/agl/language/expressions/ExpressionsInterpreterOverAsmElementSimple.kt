@@ -17,10 +17,10 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.AsmListSimple
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression

@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.thridparty
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

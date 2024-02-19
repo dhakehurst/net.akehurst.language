@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.language.grammar.NonTerminal
 import net.akehurst.language.api.language.grammar.NormalRule
 import net.akehurst.language.test.FixMethodOrder

@@ -34,7 +34,7 @@ class SyntaxAnalyserGeneratorKotlin {
                 else -> "super.registerFor(\"${it.name}\", this::${functionNameFor(it)})"
             }
         }
-        val functions = grammar.grammarRule.joinToString(separator = lineSep) {
+        val functions = grammar.grammarRule.joinToString(separator = "$lineSep$lineSep") {
             val fName = functionNameFor(it)
             val type = "Any"
             """
@@ -48,9 +48,9 @@ package ${grammar.namespace.qualifiedName}
 
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 
-class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
+class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AsmType>() {
 
     override fun registerHandlers() {
 $register

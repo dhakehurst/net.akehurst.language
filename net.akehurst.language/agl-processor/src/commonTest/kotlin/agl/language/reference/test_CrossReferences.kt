@@ -16,12 +16,12 @@
 
 package net.akehurst.language.agl.language.reference
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.reference.asm.builder.crossReferenceModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation

@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.language.reference.asm.builder
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.reference.asm.*
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.*
 

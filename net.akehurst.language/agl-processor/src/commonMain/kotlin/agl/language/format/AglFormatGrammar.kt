@@ -21,19 +21,23 @@ import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 
-internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language"), "AglFormat") {
+internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "AglFormat");
+        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
         b.extendsGrammar(ExpressionsGrammar)
 
-        b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
-        b.rule("namespace").concatenation(
-            b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"),
+        b.rule("unit").concatenation(
+            b.nonTerminal("namespace"),
+            b.nonTerminal("formatList")
+        )
+        b.rule("formatList").multi(1, -1, b.nonTerminal("format"))
+        b.rule("format").concatenation(
+            b.terminalLiteral("format"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"),
             b.nonTerminal("ruleList"),
             b.terminalLiteral("}")
         )
-        b.rule("ruleList").multi(0, -1, b.nonTerminal("formatRule"))
+        b.rule("ruleList").multi(1, -1, b.nonTerminal("formatRule"))
         b.rule("formatRule").concatenation(b.nonTerminal("typeReference"), b.terminalLiteral("->"), b.nonTerminal("formatExpression"))
         b.rule("formatExpression").choiceLongestFromConcatenationItem(
             b.nonTerminal("expression"),
@@ -70,9 +74,10 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     const val grammarStr = """
         namespace net.akehurst.language.agl
         grammar AglFormat extends Expressions {        
-            unit = namespace* ;
-            namespace = 'namespace' qualifiedName '{' ruleList '}' ;
-            ruleList = [formatRule]* ;
+            unit = namespace formatList ;
+            formatList = format+ ;
+            format = 'format' qualifiedName '{' ruleList '}' ;
+            ruleList = formatRule+ ;
             formatRule = typeReference '->' formatExpression ;
             formatExpression
               = expression
@@ -105,7 +110,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
 
     init {
         super.extends.add(
-            GrammarReferenceDefault(namespace, qualifiedName).also {
+            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.name).also {
                 it.resolveAs(ExpressionsGrammar)
             }
         )

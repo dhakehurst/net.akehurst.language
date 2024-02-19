@@ -17,11 +17,14 @@
 
 package net.akehurst.language.typemodel
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.TransformString
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -30,8 +33,8 @@ class test_typemodel {
     companion object {
         fun test(grammarStr: String, typeModelStr: String, expected: TypeModel) {
             val res = Agl.processorFromStringDefault(
-                grammarDefinitionStr = grammarStr,
-                typeModelStr = typeModelStr,
+                grammarDefinitionStr = GrammarString(grammarStr),
+                transformStr = TransformString(typeModelStr),
                 crossReferenceModelStr = null
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
@@ -39,12 +42,12 @@ class test_typemodel {
         }
     }
 
+    @Test
     fun rule_creates_type_with_different_name_same_namespace() {
         val grammarStr = """
             namespace test
             grammar Test {
                 S = a '1' ;
-                S2 = a '2' ;
                 leaf a = 'a' ;
             }
         """.trimIndent()
@@ -62,6 +65,7 @@ class test_typemodel {
         test(grammarStr, typeModelStr, expected)
     }
 
+    @Test
     fun rule_creates_type_from_imported_external_namespace() {
         val grammarStr = """
             namespace test
@@ -93,6 +97,7 @@ class test_typemodel {
         test(grammarStr, typeModelStr, expected)
     }
 
+    @Test
     fun rule_creates_type_from_imported_declared_namespace() {
         val grammarStr = """
             namespace test

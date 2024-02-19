@@ -22,7 +22,7 @@ import io.kotest.datatest.withData
 import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

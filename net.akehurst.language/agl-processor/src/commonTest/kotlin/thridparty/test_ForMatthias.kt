@@ -17,7 +17,8 @@
 
 package net.akehurst.language.agl.thridparty
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import kotlin.test.Test
 
 internal class test_ForMatthias {
@@ -40,7 +41,7 @@ internal class test_ForMatthias {
         """.trimIndent()
     }
 
-    private val p = Agl.processorFromStringDefault(grammarStr).processor!!
+    private val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
     @Test
     fun conceptDefinition0() {

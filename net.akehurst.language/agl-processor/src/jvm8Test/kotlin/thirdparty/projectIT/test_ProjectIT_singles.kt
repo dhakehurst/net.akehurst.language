@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor.thirdparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -33,7 +34,7 @@ class test_ProjectIT_singles {
 
         private val grammarStr = this::class.java.getResource("/projectIT/PiEditGrammar.agl")?.readText() ?: error("File not found")
 
-        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
     }
 

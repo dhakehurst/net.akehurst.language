@@ -41,8 +41,8 @@ object TypeModelFromGrammar {
         configuration: Grammar2TypeModelMapping = defaultConfiguration
     ): TypeModel {
         val grmrTypeModel = TypeModelSimple(grammarList.last().name)
+        grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
         for (grammar in grammarList) {
-            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
             //val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
             //val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
             val ns = GrammarTypeNamespaceFromGrammar(grammar, configuration).build(grmrTypeModel, grammar)
@@ -150,7 +150,16 @@ class GrammarTypeNamespaceFromGrammar(
         return embBldr
     }
 
-    private fun typeForGrammarRule(rule: GrammarRule): TypeInstance {
+    /*
+     *
+     * when {
+     *   explicit create-type rule defined -> create that type for this rule
+     *   explicit modify-object rule defined -> no type / NothingType
+     *   else -> create default type for rule (based on rule name and rhs)
+     * }
+     */
+    fun typeForGrammarRule(rule: GrammarRule): TypeInstance {
+
         val type = _ruleToType[rule.name]
         return if (null != type) {
             type // return the type if it exists, also stops recursion

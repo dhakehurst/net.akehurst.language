@@ -17,8 +17,10 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.asmSimple
@@ -71,8 +73,8 @@ class test_SemanticAnalyserDefault_datatypes {
             }
         """.trimIndent()
         val processor = Agl.processorFromStringDefault(
-            grammarStr,
-            crossReferenceModelStr
+            grammarDefinitionStr = GrammarString(grammarStr),
+            crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel

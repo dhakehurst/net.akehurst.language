@@ -37,6 +37,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _defaultGoalRuleName: String? = base.defaultGoalRuleName
     private var _scannerResolver: ScannerResolver<AsmType, ContextType>? = base.scannerResolver
     private var _parserResolver: ParserResolver<AsmType, ContextType>? = base.parserResolver
+    private var _asmTransformResolver: AsmTransformModelResolver<AsmType, ContextType>? = base.asmTransformModelResolver
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = base.typeModelResolver
     private var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = base.crossReferenceModelResolver
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = base.syntaxAnalyserResolver
@@ -75,6 +76,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         this._parserResolver = func
     }
 
+    fun asmTransformResolver(func: AsmTransformModelResolver<AsmType, ContextType>?) {
+        this._asmTransformResolver = func
+    }
+
     fun typeModelResolver(func: TypeModelResolver<AsmType, ContextType>?) {
         this._typeModelResolver = func
     }
@@ -111,6 +116,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             _scannerKind,
             _scannerResolver,
             _parserResolver,
+            _asmTransformResolver,
             _typeModelResolver,
             _crossReferenceModelResolver,
             _syntaxAnalyserResolver,

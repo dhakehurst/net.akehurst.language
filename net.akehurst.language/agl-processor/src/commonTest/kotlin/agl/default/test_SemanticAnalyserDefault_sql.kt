@@ -17,8 +17,10 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -123,8 +125,8 @@ grammar SQL {
             }
         """.trimIndent()
         val processor = Agl.processorFromStringDefault(
-            grammarStr,
-            crossReferenceModelStr
+            grammarDefinitionStr = GrammarString(grammarStr),
+            crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel

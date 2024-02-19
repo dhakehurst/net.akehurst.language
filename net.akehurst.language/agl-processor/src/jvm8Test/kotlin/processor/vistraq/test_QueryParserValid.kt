@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor.vistraq
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,7 +40,7 @@ class test_QueryParserValid(val data: Data) {
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
-        fun tgqlprocessor() = Agl.processorFromStringDefault(grammarStr).processor!!
+        fun tgqlprocessor() = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")

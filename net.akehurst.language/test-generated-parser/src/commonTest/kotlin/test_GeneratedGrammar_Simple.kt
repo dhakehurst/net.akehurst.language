@@ -15,9 +15,8 @@
  *
  */
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class test_GeneratedGrammar_Simple {

@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.parser.LeftCornerParser
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -46,7 +48,7 @@ internal class test_ObjectSerialisation {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
         fun testParse(sentence: String) {
             val res = processor.parse(sentence)

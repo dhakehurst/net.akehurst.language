@@ -17,20 +17,16 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.language.base.BaseGrammar
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
-internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl.language"), "Expressions") {
+internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "Expressions") {
     const val goalRuleName = "expression"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "Expressions");
-        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
-        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
-        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
+        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "Expressions")
+        b.extendsGrammar(BaseGrammar)
 
         b.rule("expression").choiceLongestFromConcatenationItem(
             b.nonTerminal("root"),
@@ -51,15 +47,13 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
 
         b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
-        b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
 
         b.leaf("NOTHING").concatenation(b.terminalLiteral("\$nothing"))
         b.leaf("SELF").concatenation(b.terminalLiteral("\$self"))
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-        b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"));
-        b.leaf("INTEGER").concatenation(b.terminalPattern("[0-9]+"));
-        b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"));
-        b.leaf("STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"));
+        b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"))
+        b.leaf("INTEGER").concatenation(b.terminalPattern("[0-9]+"))
+        b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"))
+        b.leaf("STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
 
         return b.grammar.grammarRule
     }
@@ -68,14 +62,10 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
     override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     const val grammarStr = """
-namespace net.akehurst.language.agl.language
+namespace net.akehurst.language.agl
 
-grammar Expression {
+grammar Expression extends Base {
 
-    skip WHITESPACE = "\s+" ;
-    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
-    skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
-    
     expression
       = root
       | literal
@@ -87,11 +77,8 @@ grammar Expression {
     navigation = [propertyReference / '.']+ ;
     propertyReference = IDENTIFIER ;
     
-    qualifiedName = [IDENTIFIER / '.']+ ;
-
     leaf NOTHING = '${"$"}nothing' ;
     leaf SELF = '${"$"}self' ;
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf BOOLEAN = "true|false" ;
     leaf INTEGER = "[0-9]+" ;
     leaf REAL = "[0-9]+[.][0-9]+" ;
@@ -108,6 +95,11 @@ grammar Expression {
     """
 
     init {
+        super.extends.add(
+            GrammarReferenceDefault(namespace, qualifiedName).also {
+                it.resolveAs(BaseGrammar)
+            }
+        )
         super.grammarRule.addAll(createRules())
     }
 

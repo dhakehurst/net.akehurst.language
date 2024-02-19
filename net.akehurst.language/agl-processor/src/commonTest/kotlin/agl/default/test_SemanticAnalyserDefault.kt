@@ -17,7 +17,9 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
@@ -36,10 +38,10 @@ class test_SemanticAnalyserDefault {
 
     private companion object {
 
-        fun test(grammarStr: String, scopeModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: ContextSimple) {
+        fun test(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: ContextSimple) {
             val processor = Agl.processorFromStringDefault(
-                grammarStr,
-                scopeModelStr
+                grammarDefinitionStr = GrammarString(grammarStr),
+                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).let {
                 it.processor!!.crossReferenceModel
                 check(it.issues.isEmpty()) { it.issues.toString() }
@@ -52,10 +54,10 @@ class test_SemanticAnalyserDefault {
             assertEquals(expected.asString(), options.semanticAnalysis.context!!.asString())
         }
 
-        fun test_issues(grammarStr: String, scopeModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: List<LanguageIssue>) {
+        fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextSimple>, expected: List<LanguageIssue>) {
             val processor = Agl.processorFromStringDefault(
-                grammarStr,
-                scopeModelStr
+                grammarDefinitionStr = GrammarString(grammarStr),
+                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
             val result = processor.process(sentence, options)
 

@@ -16,8 +16,9 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.agl.parser.SentenceDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -79,7 +80,7 @@ internal class test_LanguageProcessor_scan {
 
     @Test
     fun a_a() {
-        val pr = Agl.processorFromStringDefault("namespace test grammar Test { a = 'a';}")
+        val pr = Agl.processorFromStringDefault(GrammarString("namespace test grammar Test { a = 'a';}"))
         val sentence = SentenceDefault("a")
         val tokens = pr.processor!!.scan(sentence.text).tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")

@@ -17,7 +17,8 @@
 
 package thridparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -111,7 +112,7 @@ class test_MetaTyperLanguage {
                         
             }
         """.trimIndent()
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         const val goal = "PiTyperDef"
     }
 

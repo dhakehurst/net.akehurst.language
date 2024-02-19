@@ -16,10 +16,8 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.base.BaseGrammar
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
@@ -28,13 +26,11 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
     const val goalRuleName = "grammarDefinition"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
-        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"))
-        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
-        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"))
+        b.extendsGrammar(BaseGrammar)
 
         b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"))
         b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
-        b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"))
+
         b.rule("grammar").concatenation(
             b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extendsOpt"),
             b.terminalLiteral("{"), b.nonTerminal("options"), b.nonTerminal("rules"), b.terminalLiteral("}")
@@ -100,11 +96,9 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("groupedContent").choiceLongestFromConcatenationItem(b.nonTerminal("concatenation"), b.nonTerminal("choice"))
         b.rule("nonTerminal").concatenation(b.nonTerminal("qualifiedName"))
         b.rule("embedded").concatenation(b.nonTerminal("qualifiedName"), b.terminalLiteral("::"), b.nonTerminal("nonTerminal"))
-        b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
         b.rule("terminal").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"))
         b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)+'"))
         b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"\\\\]|\\\\.)+\""))
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))
         b.leaf("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"))
         b.leaf("POSITIVE_INTEGER_GT_ZERO").concatenation(b.terminalPattern("[1-9][0-9]*"))
 
@@ -194,6 +188,11 @@ namespace net.akehurst.language.agl.AglGrammar {
 """.trimIndent().replace("§", "\$")
 
     init {
+        super.extends.add(
+            GrammarReferenceDefault(BaseGrammar.namespace, BaseGrammar.name).also {
+                it.resolveAs(BaseGrammar)
+            }
+        )
         super.grammarRule.addAll(createRules())
     }
 
@@ -201,10 +200,7 @@ namespace net.akehurst.language.agl.AglGrammar {
     override fun toString(): String = """
 namespace net.akehurst.language.agl
 
-grammar AglGrammar {
-    skip WHITESPACE = "\s+" ;
-    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
-    skip SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
+grammar AglGrammar extends Base {
 
     grammarDefinition = namespace definitions ;
     namespace = 'namespace' qualifiedName ;
@@ -243,8 +239,6 @@ grammar AglGrammar {
     nonTerminal = qualifiedName ;
     embedded = qualifiedName '::' nonTerminal ;
     terminal = LITERAL | PATTERN ;
-    qualifiedName = [IDENTIFIER / '.']+ ;
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
     leaf LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
     leaf PATTERN = "\"(\\\"|[^\"])*\"" ;
     leaf POSITIVE_INTEGER = "[0-9]+" ;

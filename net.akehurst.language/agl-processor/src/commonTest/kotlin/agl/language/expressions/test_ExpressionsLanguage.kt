@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -53,7 +53,7 @@ class test_ExpressionsLanguage {
         val actual = proc.typeModel
         assertTrue(Agl.registry.agl.expressions.issues.errors.isEmpty(), Agl.registry.agl.expressions.issues.toString())
 
-        val expected = grammarTypeModel("net.akehurst.language.agl.language.Expressions", "Expressions", "") {
+        val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions", "") {
             stringTypeFor("BOOLEAN")
             stringTypeFor("IDENTIFIER")
             stringTypeFor("INTEGER")

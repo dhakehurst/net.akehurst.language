@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import kotlin.test.Test

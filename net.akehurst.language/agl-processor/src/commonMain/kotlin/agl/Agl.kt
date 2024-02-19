@@ -1,33 +1,53 @@
-/**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package net.akehurst.language.agl.processor
+package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.agl.default.TypeModelFromAsmTransform
+import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
+import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.*
+import kotlin.jvm.JvmInline
+
+@JvmInline
+value class GrammarString(val value: String)
+
+@JvmInline
+value class TransformString(val value: String)
+
+@JvmInline
+value class CrossReferenceString(val value: String)
+
+@JvmInline
+value class StyleString(val value: String)
+
+@JvmInline
+value class FormatString(val value: String)
 
 object Agl {
 
@@ -99,25 +119,30 @@ object Agl {
      * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
      */
     fun processorFromStringDefault(
-        grammarDefinitionStr: String,
-        crossReferenceModelStr: String? = null,
-        styleModelStr: String? = null,
-        formatterModelStr: String? = null,
+        grammarDefinitionStr: GrammarString,
+        transformStr: TransformString? = null,
+        crossReferenceModelStr: CrossReferenceString? = null,
+        styleModelStr: StyleString? = null,
+        formatterModelStr: FormatString? = null,
         base: LanguageProcessorConfiguration<Asm, ContextSimple> = Agl.configurationDefault(),
         grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<Asm, ContextSimple> {
         val config = Agl.configuration(base) {
+            if (null != transformStr) {
+                asmTransformResolver { p -> AsmTransformModelSimple.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), transformStr.value) }
+                typeModelResolver { p -> TypeModelFromAsmTransform.build(listOf(p.grammar!!), listOf(p.asmTransformModel)) }
+            }
             if (null != crossReferenceModelStr) {
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr.value) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr.value) }
             }
             if (null != formatterModelStr) {
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr.value) }
             }
         }
-        val proc = processorFromString(grammarDefinitionStr, config, grammarAglOptions)
+        val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
         return proc
     }
 

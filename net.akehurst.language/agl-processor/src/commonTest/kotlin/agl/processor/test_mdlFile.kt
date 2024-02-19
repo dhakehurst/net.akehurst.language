@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import kotlin.test.Test
@@ -67,7 +69,7 @@ grammar Mdl {
 }
     """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
     }
 

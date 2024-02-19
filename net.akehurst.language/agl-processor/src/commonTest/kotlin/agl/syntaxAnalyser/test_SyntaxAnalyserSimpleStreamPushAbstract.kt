@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault

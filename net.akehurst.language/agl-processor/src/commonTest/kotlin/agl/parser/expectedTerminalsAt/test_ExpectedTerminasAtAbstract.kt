@@ -16,8 +16,8 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.parser.LeftCornerParser
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand

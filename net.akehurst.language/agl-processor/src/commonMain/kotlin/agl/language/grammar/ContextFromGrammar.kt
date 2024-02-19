@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.grammar.Grammar

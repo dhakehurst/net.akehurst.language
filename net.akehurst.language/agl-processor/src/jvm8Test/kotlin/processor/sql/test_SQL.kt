@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor.sql
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -34,7 +35,7 @@ class test_SQLValid(val data: Data) {
 
         private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
         val processor by lazy {
-            Agl.processorFromStringDefault(grammarStr).processor!!
+            Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         }
 
         var sourceFiles = arrayOf("/sql/valid.txt")

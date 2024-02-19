@@ -17,7 +17,7 @@
 
 package agl.parser.scannerless.keywords
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue

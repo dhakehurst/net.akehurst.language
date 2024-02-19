@@ -16,9 +16,9 @@
 
 package net.akehurst.language.processor.java8
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor

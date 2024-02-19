@@ -25,6 +25,7 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.ReferenceExpression
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -35,7 +36,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.typemodel.api.*
 
 class ReferencesSemanticAnalyser(
-) : SemanticAnalyser<CrossReferenceModelDefault, ContextFromTypeModel> {
+) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<Any, InputLocation> = emptyMap()
@@ -49,10 +50,10 @@ class ReferencesSemanticAnalyser(
     }
 
     override fun analyse(
-        asm: CrossReferenceModelDefault,
+        asm: CrossReferenceModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromTypeModel?,
-        options: SemanticAnalysisOptions<CrossReferenceModelDefault, ContextFromTypeModel>
+        options: SemanticAnalysisOptions<CrossReferenceModel, ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
@@ -145,7 +146,7 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    private fun checkReferenceDefinition(crossReferenceModel: CrossReferenceModelDefault, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypeNamespace>) {
+    private fun checkReferenceDefinition(crossReferenceModel: CrossReferenceModel, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypeNamespace>) {
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
@@ -173,7 +174,7 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkReferenceExpression(
-        crossReferenceModel: CrossReferenceModelDefault,
+        crossReferenceModel: CrossReferenceModel,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpression,
@@ -186,7 +187,7 @@ class ReferencesSemanticAnalyser(
         }
 
     private fun checkCollectionReferenceExpression(
-        crossReferenceModel: CrossReferenceModelDefault,
+        crossReferenceModel: CrossReferenceModel,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
         refExpr: CollectionReferenceExpressionDefault,
@@ -228,7 +229,7 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkPropertyReferenceExpression(
-        crossReferenceModel: CrossReferenceModelDefault,
+        crossReferenceModel: CrossReferenceModel,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
         refExpr: PropertyReferenceExpressionDefault,
@@ -257,7 +258,7 @@ class ReferencesSemanticAnalyser(
 
         if (null != prop) {
             val qualifiedTypeNames = refExpr.refersToTypeName.mapNotNull { findReferredToType(it, importedNamespaces)?.qualifiedName }
-            crossReferenceModel.addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name, qualifiedTypeNames)
+            (crossReferenceModel as CrossReferenceModelDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name, qualifiedTypeNames)
         }
     }
 

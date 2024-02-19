@@ -17,12 +17,12 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet

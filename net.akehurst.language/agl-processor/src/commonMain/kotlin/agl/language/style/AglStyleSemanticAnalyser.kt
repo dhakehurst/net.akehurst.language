@@ -17,9 +17,9 @@
 
 package net.akehurst.language.agl.language.style
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace

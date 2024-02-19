@@ -21,6 +21,7 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -43,6 +44,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
     override val scannerResolver: ScannerResolver<AsmType, ContextType>? = null,
     override val parserResolver: ParserResolver<AsmType, ContextType>? = null,
+    override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = null,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null,
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
@@ -74,6 +76,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
+    override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = null,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault<TypeModel>(
             TypeModelFromGrammar.create(p.grammar!!),
@@ -113,6 +116,12 @@ internal class LanguageProcessorConfigurationDefault(
         ProcessResultDefault(
             LeftCornerParser(it.scanner!!, it.ruleSet),
             IssueHolder(LanguageProcessorPhase.ALL)
+        )
+    },
+    override val asmTransformModelResolver: AsmTransformModelResolver<Asm, ContextSimple>? = { p ->
+        AsmTransformModelSimple.fromString(
+            ContextFromGrammar.createContextFrom(listOf(p.grammar!!)),
+            ""
         )
     },
     override var typeModelResolver: TypeModelResolver<Asm, ContextSimple>? = { p ->

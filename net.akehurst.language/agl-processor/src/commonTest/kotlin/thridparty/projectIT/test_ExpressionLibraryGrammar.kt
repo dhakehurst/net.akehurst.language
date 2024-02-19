@@ -17,7 +17,7 @@
 
 package thridparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 
 class test_ExpressionLibraryGrammar {
@@ -63,7 +63,7 @@ class test_ExpressionLibraryGrammar {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
         const val goal = "LibUnit"
     }
 

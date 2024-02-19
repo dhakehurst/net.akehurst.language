@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet

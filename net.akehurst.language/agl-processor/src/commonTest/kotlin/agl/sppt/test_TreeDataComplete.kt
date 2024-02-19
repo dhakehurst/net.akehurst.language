@@ -17,10 +17,10 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.parser.LeftCornerParser
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet

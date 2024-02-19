@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserStateSet
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ParseResultDefault
 import net.akehurst.language.agl.runtime.structure.*

@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.agl.grammar.format
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.format.test.FormatModelTest
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.test.TypeModelTest
@@ -33,25 +33,39 @@ class test_AglFormat {
         )
 
         val testData = listOf(
-            TestData(sentence = "// single line comment"),
             TestData(
                 sentence = """
-                    /* multi
-                       line
-                       comment
-                    */
-                """.trimIndent()
-            ),
-            TestData(
-                sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type -> ''
                     }
                 """.trimIndent()
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    // single line comment
+                    namespace test
+                    format Test {
+                        Type -> ''
+                    }
+                """
+            ),
+            TestData(
+                sentence = """
+                    /* multi
+                       line
+                       comment
+                    */
+                    namespace test
+                    format Test {
+                        Type -> ''
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test
+                    format Test {
                         Type1 -> ''
                         Type2 -> ''
                         Type3 -> ''
@@ -60,7 +74,8 @@ class test_AglFormat {
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type1 -> when {
                           true -> ''
                           false -> ''
@@ -70,28 +85,32 @@ class test_AglFormat {
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type1 -> ""
                     }
                 """.trimIndent()
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type1 -> "§prop"
                     }
                 """.trimIndent().replace("§", "\$")
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type1 -> "§prop §prop §prop"
                     }
                 """.trimIndent().replace("§", "\$")
             ),
             TestData(
                 sentence = """
-                    namespace test {
+                    namespace test
+                    format Test {
                         Type1 -> "§{prop} §{prop.re.sdga}"
                     }
                 """.trimIndent().replace("§", "\$")

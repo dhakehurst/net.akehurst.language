@@ -20,7 +20,8 @@ package net.akehurst.language.agl.processor.xml
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import org.junit.Test
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -32,7 +33,7 @@ class test_Xml_Singles {
         val grammarStr = this::class.java.getResource("/xml/version_/grammar.agl").readText()
         const val goal = "document"
 
-        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
     }
 
     @Test

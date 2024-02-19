@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,7 +32,7 @@ internal class test_Agl {
               a = 'a';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
@@ -43,7 +45,7 @@ internal class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
@@ -56,7 +58,7 @@ internal class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         p.parse("b", Agl.parseOptions { goalRuleName("b") })
     }
 
@@ -70,7 +72,7 @@ internal class test_Agl {
             }
         """.trimIndent()
         val sentence = "a"
-        val myProcessor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val myProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         val result = myProcessor.process(sentence)
         //TODO
     }

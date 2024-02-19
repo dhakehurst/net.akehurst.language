@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.agl.default.AsmTransformModelDefault
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
@@ -28,6 +29,7 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -79,6 +81,12 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         configuration.defaultGoalRuleName
             ?: grammar.options.firstOrNull { it.name == AglGrammarGrammar.OPTION_defaultGoalRule }?.value
             ?: grammar.grammarRule.first { it.isSkip.not() }.name
+    }
+
+    override val asmTransformModel: AsmTransformModel by lazy {
+        val res = configuration.asmTransformModelResolver?.invoke(this)
+        res?.let { this.issues.addAll(res.issues) }
+        res?.asm?.firstOrNull { it.qualifiedName == grammar.qualifiedName } ?: AsmTransformModelDefault(grammar)
     }
 
     override val typeModel: TypeModel by lazy {

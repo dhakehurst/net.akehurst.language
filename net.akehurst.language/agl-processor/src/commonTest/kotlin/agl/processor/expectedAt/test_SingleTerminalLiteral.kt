@@ -16,7 +16,8 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,15 +31,15 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val pr = Agl.processorFromString<Any,Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
         val sentence = ""
         val position = 0
         val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -49,15 +50,15 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val pr = Agl.processorFromStringDefault(grammarStr)
+        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
 
         val sentence = "a"
         val position = 0
         val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -68,7 +69,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val pr = Agl.processorFromString<Any,Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
         val sentence = "a"
         val position = 1
@@ -76,6 +77,6 @@ class test_SingleTerminalLiteral {
         val expected = setOf<String>(
 
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 }

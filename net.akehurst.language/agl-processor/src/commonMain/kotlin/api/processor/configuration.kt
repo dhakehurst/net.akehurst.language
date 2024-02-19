@@ -17,6 +17,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.scanner.Scanner
@@ -29,8 +30,9 @@ import net.akehurst.language.typemodel.api.TypeModel
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScannerResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<Scanner>
 typealias ParserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<Parser>
-typealias CrossReferenceModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CrossReferenceModel>
+typealias AsmTransformModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<List<AsmTransformModel>>
 typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
+typealias CrossReferenceModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CrossReferenceModel>
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
 typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>
@@ -55,6 +57,7 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
 
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType, ContextType>?
+    val asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>?
     val typeModelResolver: TypeModelResolver<AsmType, ContextType>?
     val crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
