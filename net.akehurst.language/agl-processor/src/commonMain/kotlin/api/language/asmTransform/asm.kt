@@ -18,6 +18,7 @@
 package net.akehurst.language.api.language.asmTransform
 
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.typemodel.api.TypeInstance
 
 interface AsmTransformModel {
     val name: String
@@ -32,6 +33,8 @@ interface AsmTransformModel {
 interface TransformationRule {
     val grammarRuleName: String
     val typeName: String
+
+    val resolvedType:TypeInstance
 }
 
 interface CreateObjectRule : TransformationRule

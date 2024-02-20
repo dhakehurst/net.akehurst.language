@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.agl.default.AsmTransformModelDefault
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -86,7 +86,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val asmTransformModel: AsmTransformModel by lazy {
         val res = configuration.asmTransformModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm?.firstOrNull { it.qualifiedName == grammar.qualifiedName } ?: AsmTransformModelDefault(grammar)
+        res?.asm?.firstOrNull { it.qualifiedName == grammar.qualifiedName }
+            ?: AsmTransformModelSimple.fromGrammar(this.grammar).asm?.first()
+            ?: error("should not happen")
     }
 
     override val typeModel: TypeModel by lazy {
