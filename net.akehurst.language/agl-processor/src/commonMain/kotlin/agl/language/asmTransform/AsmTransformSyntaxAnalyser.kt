@@ -74,7 +74,7 @@ class AsmTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Li
 
         return { namespaceQName ->
             val asm = AsmTransformModelSimple("$namespaceQName.$name")
-            asm.rules.addAll(rules)
+            rules.forEach { asm.addRule(it) }
             asm
         }
     }
@@ -95,17 +95,26 @@ class AsmTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Li
     private fun transformRuleRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRuleAbstract =
         children[0] as TransformationRuleAbstract
 
-    // createRule = typeName ;
+    // createRule = typeName optStatementBlock ;
     private fun createRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectRuleSimple {
         val typeName = children[0] as String
-        return CreateObjectRuleSimple(typeName)
+        val statements = children[1]?.let { it as List<AssignmentTransformationStatement> } ?: emptyList()
+        val tr = CreateObjectRuleSimple(typeName)
+        tr.modifyStatements.addAll(statements)
+        return tr
     }
+
+    // statementBlock = '{' statementList '}' ;
+    private fun statementBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentTransformationStatement> =
+        children[1] as List<AssignmentTransformationStatement>
 
     // modifyRule = '{' typeName '->' statementList '}' ;
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ModifyObjectRuleSimple {
         val typeName = children[1] as String
         val statements = children[3] as List<AssignmentTransformationStatement>
-        return ModifyObjectRuleSimple(typeName, statements)
+        val tr = ModifyObjectRuleSimple(typeName)
+        tr.modifyStatements.addAll(statements)
+        return tr
     }
 
     // statementList = assignmentStatement+ ;

@@ -53,7 +53,7 @@ class test_SimpleTypeModelStdLib_eval {
         }
         val self = asm.root[0]
 
-        test(tm, self, "list.size", AsmPrimitiveSimple("std.Integer", 0))
+        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger(0))
     }
 
     @Test

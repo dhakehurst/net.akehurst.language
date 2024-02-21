@@ -36,18 +36,50 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.rule("root").choiceLongestFromConcatenationItem(
             b.nonTerminal("NOTHING"),
             b.nonTerminal("SELF"),
-
-            )
+        )
         b.rule("literal").choiceLongestFromConcatenationItem(
             b.nonTerminal("BOOLEAN"),
             b.nonTerminal("INTEGER"),
             b.nonTerminal("REAL"),
             b.nonTerminal("STRING"),
         )
+        b.rule("navigation").concatenation(
+            b.nonTerminal("navigationRoot"),
+            b.nonTerminal("navigationPartList")
+        )
+        b.rule("navigationRoot").choiceLongestFromConcatenationItem(
+            b.nonTerminal("root"),
+            b.nonTerminal("literal"),
+            b.nonTerminal("propertyReference")
+        )
+        b.rule("navigationPartList").multi(1, -1, b.nonTerminal("navigationPart"))
+        b.rule("navigationPart").choiceLongestFromConcatenationItem(
+            b.nonTerminal("propertyCall"),
+            b.nonTerminal("methodCall"),
+            b.nonTerminal("indexOperation")
+        )
+        b.rule("propertyCall").concatenation(
+            b.terminalLiteral("."),
+            b.nonTerminal("IDENTIFIER")
+        )
+        b.rule("methodCall").concatenation(
+            b.terminalLiteral("."),
+            b.nonTerminal("IDENTIFIER"),
+            b.terminalLiteral("("),
+            b.nonTerminal("argumentList"),
+            b.terminalLiteral(")"),
+        )
+        b.rule("indexOperation").concatenation(
+            b.terminalLiteral("["),
+            b.nonTerminal("indexList"),
+            b.terminalLiteral("]"),
+        )
+        b.rule("argumentList").separatedList(0, -1, b.terminalLiteral(","), b.nonTerminal("expression"))
+        b.rule("indexList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("expression"))
 
-        b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
-        b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
-
+        b.rule("propertyReference").concatenation(
+            b.nonTerminal("IDENTIFIER")
+        )
         b.leaf("NOTHING").concatenation(b.terminalLiteral("\$nothing"))
         b.leaf("SELF").concatenation(b.terminalLiteral("\$self"))
         b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"))
@@ -74,8 +106,25 @@ grammar Expression extends Base {
     root = NOTHING | SELF | literal ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
     
-    navigation = [propertyReference / '.']+ ;
+    navigation = navigationRoot navigationPart+ ;
+    navigationRoot 
+     = root
+     | literal
+     | propertyReference
+    ;
+    navigationPart
+     = propertyCall
+     | methodCall
+     | indexOperation
+    ;
+     
+    propertyCall = "." propertyReference ;
+    methodCall = "." methodReference '(' argumentList ')' ;
+    argumentList = [expression / ',']* ;
+    propertyCall = "." propertyReference ;
     propertyReference = IDENTIFIER ;
+    methodReference = IDENTIFIER ;
+    indexOperation = '[' argumentList ']' ;
     
     leaf NOTHING = '${"$"}nothing' ;
     leaf SELF = '${"$"}self' ;

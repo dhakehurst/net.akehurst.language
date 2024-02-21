@@ -29,6 +29,8 @@ import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 
 class AsmTransformModelSimple(
@@ -47,18 +49,19 @@ class AsmTransformModelSimple(
         }
 
         fun fromGrammar(grammar: Grammar, configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration): ProcessResult<List<AsmTransformModel>> {
-            val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(grammar, configuration)
-            val trm = atfg.build()
-            return ProcessResultDefault<List<AsmTransformModel>>(listOf(trm), atfg.issues)
+            val grmrTypeModel = TypeModelSimple(grammar.name)
+            val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(grmrTypeModel, grammar, configuration)
+            atfg.build()
+            return ProcessResultDefault<List<AsmTransformModel>>(listOf(atfg.transformModel), atfg.issues)
         }
     }
 
     override val name: String get() = this.qualifiedName.split(".").last()
 
-    override val rules get() = _rules.values.toList()
+    override val rules get() = _rules
 
-    override val createObjectRules: List<CreateObjectRule> get() = rules.filterIsInstance<CreateObjectRule>()
-    override val modifyObjectRules: List<ModifyObjectRule> = rules.filterIsInstance<ModifyObjectRule>()
+    override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
+    override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
 
     // GrammarRuleName -> TransformationRule
     private val _rules = mutableMapOf<String, TransformationRule>()
@@ -84,26 +87,42 @@ class CreateObjectRuleSimple(
     override val typeName: String
 ) : TransformationRuleAbstract(), CreateObjectRule {
 
-    val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
+    override val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
 
-    fun appendAssignment(lhsPropertyName: String, rhs: Expression, rhsType: TypeInstance?) {
-        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs, rhsType)
+    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
+        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
         modifyStatements.add(ass)
     }
 
 }
 
 class ModifyObjectRuleSimple(
-    override val typeName: String,
-    override val modifyStatements: List<AssignmentTransformationStatement>
+    override val typeName: String
 ) : TransformationRuleAbstract(), ModifyObjectRule {
+
+    override val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
+
+    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
+        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
+        modifyStatements.add(ass)
+    }
 
 }
 
 class SubtypeTransformationRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract() {
+) : TransformationRuleAbstract(), SubtypeTransformationRule {
 
+}
+
+class NoActionTransformationRuleSimple(
+    override val typeName: String
+) : TransformationRuleAbstract(), NoActionTransformationRule {
+
+}
+
+class StringActionTransformationRuleSimple() : TransformationRuleAbstract() {
+    override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
 }
 
 abstract class TransformationStatementAbstract

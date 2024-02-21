@@ -21,6 +21,9 @@ import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
 import kotlin.test.Test
@@ -34,6 +37,54 @@ class test_ExpressionsInterpreter {
             val actual = interpreter.evaluateStr(self, expression)
             assertEquals(expected, actual)
         }
+
+        fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
+            val interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
+            val actual = interpreter.evaluateStr(self, expression)
+            assertEquals(AsmNothingSimple, actual)
+            assertEquals(expected, interpreter.issues.all.toList())
+        }
+    }
+
+    @Test
+    fun structure_nothing() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyString("prop1", "strValue")
+            }
+        }
+        val self = asm.root[0]
+
+        val expectedIssues = listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "")
+        )
+        test_fail(tm, self, "\$nothing", expectedIssues)
+    }
+
+    @Test
+    fun structure_self() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyString("prop1", "strValue")
+            }
+        }
+        val self = asm.root[0]
+
+        test(tm, self, "\$self", self)
     }
 
     @Test
@@ -71,6 +122,130 @@ class test_ExpressionsInterpreter {
         }
         val self = asm.root[0]
 
-        test(tm, self, "prop1", AsmPrimitiveSimple("std.String", "strValue"))
+        test(tm, self, "prop1", AsmPrimitiveSimple.stdString("strValue"))
+    }
+
+    @Test
+    fun structure_property_index__notIndexable() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyString("prop1", "strValue")
+            }
+        }
+        val self = asm.root[0]
+
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
+                null,
+                "Index operation on non List value is not possible: strValue"
+            )
+        )
+        test_fail(tm, self, "prop1[0]", expectedIssues)
+    }
+
+    @Test
+    fun structure_property_index__onlyOneIndexValue() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("prop1", listOf("strValue"))
+            }
+        }
+        val self = asm.root[0]
+
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
+                null,
+                "Only one index value should be used for Lists"
+            )
+        )
+        test_fail(tm, self, "prop1[0,1,2]", expectedIssues)
+    }
+
+    @Test
+    fun structure_property_index__mustBeInteger() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("prop1", listOf("strValue"))
+            }
+        }
+        val self = asm.root[0]
+
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
+                null,
+                "Index value must evaluate to an Integer for Lists"
+            )
+        )
+        test_fail(tm, self, "prop1['a']", expectedIssues)
+    }
+
+    @Test
+    fun structure_property_index__outOfRange() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("prop1", listOf("strValue"))
+            }
+        }
+        val self = asm.root[0]
+
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
+                null,
+                "Index '4' out of range"
+            )
+        )
+        test_fail(tm, self, "prop1[4]", expectedIssues)
+    }
+
+    @Test
+    fun structure_propertyListOfString_index_0() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("prop1", listOf("strValue"))
+            }
+        }
+        val self = asm.root[0]
+
+        val expected = AsmPrimitiveSimple.stdString("strValue")
+        test(tm, self, "prop1[0]", expected)
     }
 }

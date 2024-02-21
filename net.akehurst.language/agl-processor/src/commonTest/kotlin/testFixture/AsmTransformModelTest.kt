@@ -15,28 +15,74 @@
  *
  */
 
-package net.akehurst.language.api.asmTransform.test
+package net.akehurst.language.agl.language.asmTransform.test
 
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.agl.language.expressions.test.ExpressionsTest
+import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
+import net.akehurst.language.api.language.asmTransform.*
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 object AsmTransformModelTest {
 
-    fun assertEqual(expected: AsmTransformModel?, actual: AsmTransformModel?) {
+    fun trAssertEquals(expected: AsmTransformModel?, actual: AsmTransformModel?) {
         when {
             (expected == null && actual == null) -> Unit // pass
             expected == null -> fail()
             actual == null -> fail()
             else -> {
-//                assertEquals(expected.transforms, actual.transforms)
-//                assertEquals(expected.rules.size, actual.rules.size, "number of rules in AsmTransformModel is different")
-//                for (k in expected.rules.keys) {
-//                    val expEl = expected.rules[k]
-//                    val actEl = actual.rules[k]
-//                    FormatModelTest.fmAssertEquals(expEl, actEl, "AglFormatterModel")
-//                }
+                assertEquals(expected.name, actual.name)
+                assertEquals(expected.qualifiedName, actual.qualifiedName)
+                assertEquals(expected.rules.size, actual.rules.size, "number of rules in AsmTransformModel is different")
+                for (k in expected.rules.keys) {
+                    val expEl = expected.rules[k]!!
+                    val actEl = actual.rules[k]!!
+                    trAssertEquals(expEl, actEl, "AsmTransformModel")
+                }
             }
         }
     }
 
+    private fun trAssertEquals(expected: TransformationRule, actual: TransformationRule, message: String) {
+        assertEquals(expected.grammarRuleName, actual.grammarRuleName)
+        assertEquals(expected.typeName, actual.typeName)
+        TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
+        when {
+            expected is NoActionTransformationRule && actual is NoActionTransformationRule -> trAssertEquals(expected, actual, message)
+            expected is SubtypeTransformationRule && actual is SubtypeTransformationRule -> trAssertEquals(expected, actual, message)
+            expected is CreateObjectRule && actual is CreateObjectRule -> trAssertEquals(expected, actual, message)
+            expected is ModifyObjectRule && actual is ModifyObjectRule -> trAssertEquals(expected, actual, message)
+            else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
+        }
+    }
+
+    private fun trAssertEquals(expected: NoActionTransformationRule, actual: NoActionTransformationRule, message: String) {
+        //nothing else to check
+    }
+
+    private fun trAssertEquals(expected: SubtypeTransformationRule, actual: SubtypeTransformationRule, message: String) {
+        //nothing else to check
+    }
+
+    private fun trAssertEquals(expected: CreateObjectRule, actual: CreateObjectRule, message: String) {
+        trAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
+    }
+
+    private fun trAssertEquals(expected: ModifyObjectRule, actual: ModifyObjectRule, message: String) {
+        trAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
+    }
+
+    private fun trAssertEquals(expected: List<AssignmentTransformationStatement>, actual: List<AssignmentTransformationStatement>, message: String) {
+        assertEquals(expected.size, actual.size, "number of AssignmentTransformationStatement is different")
+        for (i in expected.indices) {
+            val expEl = expected[i]
+            val actEl = actual[i]
+            trAssertEquals(expEl, actEl, "AssignmentTransformationStatement")
+        }
+    }
+
+    private fun trAssertEquals(expected: AssignmentTransformationStatement, actual: AssignmentTransformationStatement, message: String) {
+        assertEquals(expected.lhsPropertyName, actual.lhsPropertyName)
+        ExpressionsTest.exAssertEquals(expected.rhs, actual.rhs)
+    }
 }

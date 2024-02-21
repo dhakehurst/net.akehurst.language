@@ -16,45 +16,62 @@
 
 package net.akehurst.language.agl.language.expressions
 
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.LiteralExpression
-import net.akehurst.language.api.language.expressions.NavigationExpression
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.expressions.*
 
 
 abstract class ExpressionAbstract : Expression {
 }
 
 data class RootExpressionDefault(
-    val value: String
+    override val name: String
 ) : ExpressionAbstract(), RootExpression {
     companion object {
         const val NOTHING = "§nothing"
         const val SELF = "§self"
     }
 
-    override val isNothing: Boolean get() = NOTHING == this.value
-    override val isSelf: Boolean get() = SELF == this.value
+    override val isNothing: Boolean get() = NOTHING == this.name
+    override val isSelf: Boolean get() = SELF == this.name
 }
 
 data class LiteralExpressionDefault(
-    val type: String,
-    val value: String
+    override val typeName: String,
+    override val value: Any
 ) : LiteralExpression {
 
     companion object {
-        const val BOOLEAN = "Boolean"
-        const val INTEGER = "Integer"
-        const val REAL = "Real"
-        const val STRING = "String"
+        const val BOOLEAN = "std.Boolean"
+        const val INTEGER = "std.Integer"
+        const val REAL = "std.Real"
+        const val STRING = "std.String"
     }
 
 }
 
 data class NavigationDefault(
-    override val value: List<String>
+    override val start: Expression,
+    override val parts: List<NavigationPart>
 ) : ExpressionAbstract(), NavigationExpression {
-    constructor(vararg values: String) : this(values.toList())
 
-    override fun toString(): String = value.joinToString(separator = ".")
+    override fun toString(): String = "$start${parts.joinToString(separator = "")}"
+}
+
+data class PropertyCallDefault(
+    override val propertyName: String
+) : PropertyCall {
+    override fun toString(): String = ".$propertyName"
+}
+
+data class MethodCallDefault(
+    override val methodName: String,
+    override val arguments: List<Expression>
+) : MethodCall {
+
+    override fun toString(): String = ".$methodName(${arguments.joinToString()})"
+}
+
+data class IndexOperationDefault(
+    override val indices: List<Expression>
+) : IndexOperation {
+
 }

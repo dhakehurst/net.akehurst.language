@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.agl.language.asmTransform.AsmTransformCompletionProvider
 import net.akehurst.language.agl.agl.language.asmTransform.AsmTransformSemanticAnalyser
 import net.akehurst.language.agl.agl.language.asmTransform.AsmTransformSyntaxAnalyser
 import net.akehurst.language.agl.agl.language.expressions.ExpressionsCompletionProvider
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.asmTransform.AsmTransformCompletionProvider
 import net.akehurst.language.agl.language.asmTransform.AsmTransformGrammar
 import net.akehurst.language.agl.language.base.BaseGrammar
 import net.akehurst.language.agl.language.expressions.ExpressionsGrammar

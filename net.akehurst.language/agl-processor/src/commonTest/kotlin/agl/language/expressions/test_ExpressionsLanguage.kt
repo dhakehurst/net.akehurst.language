@@ -19,7 +19,7 @@ package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -36,7 +36,16 @@ class test_ExpressionsLanguage {
             "456",
             "3.141",
             "'hello world!'",
-            "aaa.bbb.ccc.ddd.ee"
+            "aaa.bbb.ccc.ddd.ee",
+            "a.method()",
+            "a.b.method()",
+            "a.method().b",
+            "a.method().a.b",
+            "a[1]",
+            "a.b[1]",
+            "a.b.c[1]",
+            "a.b[1].c",
+            "a[1].b.c",
         )
     }
 

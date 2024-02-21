@@ -17,7 +17,8 @@
 
 package net.akehurst.language.agl.language.reference
 
-import net.akehurst.language.agl.language.expressions.propertyDeclarationFor
+import net.akehurst.language.agl.language.expressions.lastPropertyDeclarationFor
+import net.akehurst.language.agl.language.expressions.typeOfNavigationExpressionFor
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
@@ -131,7 +132,7 @@ class ReferencesSemanticAnalyser(
                 identifiedBy is NavigationExpression -> {
                     // only check this if the typeName is valid - else it is always invalid
                     //TODO: check this in context of typeName GrammarRule
-                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType.type())
+                    val identifyingProperty = identifiedBy.typeOfNavigationExpressionFor(identifiedType.type())
                     if (null == identifyingProperty) {
                         //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
                         raiseError(
@@ -200,8 +201,8 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.type())?.typeInstance
-        when (collTypeInstance?.declaration) {
+        val collTypeInstance = refExpr.navigation.typeOfNavigationExpressionFor(contextType.type())
+        when (collTypeInstance) {
             null -> TODO()
             is CollectionType -> {
                 val loopVarType = collTypeInstance.typeArguments[0].declaration
@@ -237,7 +238,7 @@ class ReferencesSemanticAnalyser(
     ) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
-        val prop = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType.type())
+        val prop = refExpr.referringPropertyNavigation.lastPropertyDeclarationFor(contextType.type())
         if (null == prop) {
             raiseError(
                 ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),

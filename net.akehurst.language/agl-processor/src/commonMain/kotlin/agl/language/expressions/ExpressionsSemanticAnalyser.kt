@@ -21,9 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.NavigationExpression
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -35,14 +33,14 @@ import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
-fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance {
+fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance? {
     val result = Agl.registry.agl.expressions.processor!!.process(expression)
     check(result.issues.errors.isEmpty()) { result.issues.toString() }
     val asm = result.asm!!
     return asm.typeOfExpressionFor(this.type())
 }
 
-fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when (this) {
+fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance? = when (this) {
     is RootExpression -> this.typeOfRootExpressionFor(self)
     is NavigationExpression -> this.typeOfNavigationExpressionFor(self)
     else -> error("Subtype of Expression not handled in 'typeOfExpressionFor'")
@@ -54,19 +52,62 @@ fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = w
     else -> error("type of RootExpression not handled")
 }
 
-fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance =
-    this.propertyDeclarationFor(self)?.typeInstance ?: SimpleTypeModelStdLib.NothingType
+fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance? {
+    val st = this.start
+    val start = when (st) {
+        is LiteralExpression -> TODO()
+        is RootExpression -> when {
+            st.isNothing -> SimpleTypeModelStdLib.NothingType
+            st.isSelf -> self
+            else -> {
+                self.resolvedProperty[st.name]?.typeInstance
+            }
+        }
 
-fun NavigationExpression.propertyDeclarationFor(self: TypeInstance?): PropertyDeclaration? {
-    var typeInstance = self
-    var pd: PropertyDeclaration? = null
+        else -> error("type of Navigation.start not handled")
+    }
+    val r = this.parts.fold(start) { acc, it ->
+        when (acc) {
+            null -> SimpleTypeModelStdLib.NothingType
+            else -> it.typeOfNavigationPartFor(acc)
+        }
+    }
+    return r
+}
 
-    for (pn in this.value) {
-        pd = typeInstance?.resolvedProperty?.get(pn)
-        typeInstance = pd?.typeInstance
+fun NavigationPart.typeOfNavigationPartFor(self: TypeInstance): TypeInstance? = when (this) {
+    is PropertyCall -> this.typeOfPropertyCallFor(self)
+    else -> error("subtype of NavigationPart not handled")
+}
+
+fun NavigationExpression.lastPropertyDeclarationFor(self: TypeInstance): PropertyDeclaration? {
+    val st = this.start
+    var pd: PropertyDeclaration? = when (st) {
+        is LiteralExpression -> null
+        is RootExpression -> when {
+            st.isNothing -> null
+            st.isSelf -> null
+            else -> {
+                self.resolvedProperty[st.name]
+            }
+        }
+
+        else -> error("type of Navigation.start not handled")
+    }
+    var acc = pd?.typeInstance
+    val r = parts.forEach {
+        pd = when (it) {
+            is PropertyCall -> acc?.resolvedProperty?.get(it.propertyName)
+            else -> null //everything must be property calls
+        }
+        acc = pd?.typeInstance
     }
     return pd
 }
+
+fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance? =
+    self?.resolvedProperty?.get(this.propertyName)?.typeInstance
+
 
 class ExpressionsSemanticAnalyser(
 ) : SemanticAnalyser<Expression, SentenceContext<String>> {

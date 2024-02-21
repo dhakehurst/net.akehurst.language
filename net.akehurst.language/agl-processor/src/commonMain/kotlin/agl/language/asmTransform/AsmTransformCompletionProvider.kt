@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.agl.language.asmTransform
+package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel

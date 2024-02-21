@@ -20,14 +20,33 @@ package net.akehurst.language.api.language.expressions
 interface Expression
 
 interface RootExpression : Expression {
+    val name: String
     val isNothing: Boolean
     val isSelf: Boolean
 }
 
 interface LiteralExpression : Expression {
+    val typeName: String
+    val value: Any
 }
 
 interface NavigationExpression : Expression {
-    val value: List<String>
+    val start: Expression
+    val parts: List<NavigationPart>
+}
+
+interface NavigationPart
+
+interface PropertyCall : NavigationPart {
+    val propertyName: String
+}
+
+interface MethodCall : NavigationPart {
+    val methodName: String
+    val arguments: List<Expression>
+}
+
+interface IndexOperation : NavigationPart {
+    val indices: List<Expression>
 }
 

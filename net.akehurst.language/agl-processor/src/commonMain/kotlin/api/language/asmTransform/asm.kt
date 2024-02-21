@@ -24,7 +24,10 @@ interface AsmTransformModel {
     val name: String
     val qualifiedName: String
 
-    val rules: List<TransformationRule>
+    /**
+     * map from grammar-rule name to TransformationRule
+     */
+    val rules: Map<String, TransformationRule>
 
     val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
@@ -34,10 +37,15 @@ interface TransformationRule {
     val grammarRuleName: String
     val typeName: String
 
-    val resolvedType:TypeInstance
+    val resolvedType: TypeInstance
 }
 
-interface CreateObjectRule : TransformationRule
+interface NoActionTransformationRule : TransformationRule
+interface SubtypeTransformationRule : TransformationRule
+interface CreateObjectRule : TransformationRule {
+    val modifyStatements: List<AssignmentTransformationStatement>
+}
+
 interface ModifyObjectRule : TransformationRule {
     val modifyStatements: List<AssignmentTransformationStatement>
 }

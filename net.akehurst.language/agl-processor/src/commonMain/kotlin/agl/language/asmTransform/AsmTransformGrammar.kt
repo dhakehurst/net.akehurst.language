@@ -53,7 +53,16 @@ object AsmTransformGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.lang
             b.nonTerminal("createRule"),
             b.nonTerminal("modifyRule")
         )
-        b.rule("createRule").concatenation(b.nonTerminal("typeName"))
+        b.rule("createRule").concatenation(
+            b.nonTerminal("typeName"),
+            b.nonTerminal("optStatementBlock")
+        )
+        b.rule("optStatementBlock").optional(b.nonTerminal("statementBlock"))
+        b.rule("statementBlock").concatenation(
+            b.terminalLiteral("{"),
+            b.nonTerminal("statementList"),
+            b.terminalLiteral("}"),
+        )
         b.rule("modifyRule").concatenation(
             b.terminalLiteral("{"),
             b.nonTerminal("typeName"),
@@ -87,8 +96,9 @@ grammar AsmTransform {
     transform = 'transform' NAME '{' transformRule+ '} ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
-    createRule = typeName ;
-    modifyRule = '{' typeName '->' statement+ '}'
+    createRule = typeName statementBlock? ;
+    statementBlock = '{' statement+ '}' ;
+    modifyRule = '{' typeName '->' statement+ '}' ;
     statement
       = assignmentStatement
       ;

@@ -295,16 +295,16 @@ class ReferenceResolverDefault(
         return when {
             root is AsmNothing -> error("Cannot navigate '$this' from '$root' value")
             else -> {
-                val front = this.value.dropLast(1)
+                val front = this.parts.dropLast(1)
                 var v = root
                 for (pn in front) {
-                    val pd = typeModel.typeOf(v).findPropertyOrNull(pn)
+                    val pd = typeModel.typeOf(v).findPropertyOrNull(pn as String)
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> _interpreter.evaluatePropertyDeclaration(v, pd)
                     }
                 }
-                val lastProp = this.value.last()
+                val lastProp = this.parts.last() as String
                 when (v) {
                     is AsmStructure -> {
                         v.property[lastProp] ?: error("Cannot navigate '$this' from null value")

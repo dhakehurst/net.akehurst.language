@@ -65,7 +65,7 @@ object TypeModelFromAsmTransform {
                 val defaultType = nsFromGrmr.typeForGrammarRule(grmRule)
                 dt.appendPropertyPrimitive(
                     name = ass.lhsPropertyName,
-                    typeInstance = ass.rhs.typeOfExpressionFor(defaultType),
+                    typeInstance = ass.rhs.typeOfExpressionFor(defaultType) ?: error("should not happen"),
                     description = ""
                 )
             }

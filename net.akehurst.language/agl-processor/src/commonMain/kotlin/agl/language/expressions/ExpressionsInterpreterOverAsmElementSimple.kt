@@ -21,11 +21,10 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.AsmListSimple
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
+import net.akehurst.language.agl.asm.isStdInteger
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.NavigationExpression
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeDeclaration
@@ -40,7 +39,7 @@ class ExpressionsInterpreterOverAsmSimple(
     val typeModel: TypeModel
 ) {
 
-    private val _issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
 
     fun evaluateStr(self: AsmValue, expression: String): AsmValue {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
@@ -51,40 +50,71 @@ class ExpressionsInterpreterOverAsmSimple(
 
     fun evaluateExpression(self: AsmValue, expression: Expression): AsmValue = when (expression) {
         is RootExpression -> this.evaluateRootExpression(self, expression)
+        is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is NavigationExpression -> this.evaluateNavigation(self, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
     private fun evaluateRootExpression(self: AsmValue, expression: RootExpression): AsmValue = when {
         expression.isNothing -> AsmNothingSimple
-        expression.isSelf -> when (self) {
-            is AsmNothing -> self
-            is AsmPrimitive -> self
-            else -> {
-                _issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
-                AsmNothingSimple
-            }
+        expression.isSelf -> {
+            //_issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
+            self
         }
 
         else -> {
-            _issues.error(null, "evaluateFor RootExpression not handled")
+            issues.error(null, "evaluateFor RootExpression not handled")
             AsmNothingSimple
         }
     }
 
-    private fun evaluateNavigation(self: AsmValue, expression: NavigationExpression): AsmValue =
-        expression.value.fold(self) { acc, it ->
-            val type = typeModel.typeOf(acc)
-            val pd = type.declaration.findPropertyOrNull(it)
-            when (pd) {
-                null -> {
-                    _issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
-                    AsmNothingSimple
-                }
+    private fun evaluateLiteralExpression(expression: LiteralExpression) = when (expression.typeName) {
+        LiteralExpressionDefault.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value)
+        LiteralExpressionDefault.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value)
+        LiteralExpressionDefault.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value)
+        LiteralExpressionDefault.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value)
+        else -> error("should not happen")
+    }
 
-                else -> evaluatePropertyDeclaration(acc, pd)
+    private fun evaluateNavigation(self: AsmValue, expression: NavigationExpression): AsmValue {
+        // start should be a RootExpression or LiteralExpression
+        val st = expression.start
+        val start = when (st) {
+            is LiteralExpression -> evaluateLiteralExpression(st)
+            is RootExpression -> when {
+                st.isNothing -> AsmNothingSimple
+                st.isSelf -> self
+                else -> {
+                    evaluatePropertyName(self, st.name)
+                }
             }
+
+            else -> error("should not happen")
         }
+        val result =
+            expression.parts.fold(start) { acc, it ->
+                when (it) {
+                    is PropertyCall -> evaluatePropertyName(acc, it.propertyName)
+                    is MethodCall -> TODO()
+                    is IndexOperation -> evaluateIndexOperation(acc, it.indices)
+                    else -> error("should not happen")
+                }
+            }
+        return result
+    }
+
+    fun evaluatePropertyName(self: AsmValue, propertyName: String): AsmValue {
+        val type = typeModel.typeOf(self)
+        val pd = type.declaration.findPropertyOrNull(propertyName)
+        return when (pd) {
+            null -> {
+                issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
+                AsmNothingSimple
+            }
+
+            else -> evaluatePropertyDeclaration(self, pd)
+        }
+    }
 
     fun evaluatePropertyDeclaration(self: AsmValue, propertyDeclaration: PropertyDeclaration): AsmValue = when (propertyDeclaration) {
         is PropertyDeclarationDerived -> TODO()
@@ -102,6 +132,40 @@ class ExpressionsInterpreterOverAsmSimple(
         }
 
         else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
+    }
+
+    fun evaluateIndexOperation(self: AsmValue, indices: List<Expression>): AsmValue = when (self) {
+        is AsmList -> {
+            when (indices.size) {
+                1 -> {
+                    val idx = evaluateExpression(self, indices[0])
+                    when {
+                        idx.isStdInteger -> {
+                            val i = (idx as AsmPrimitive).value as Int
+                            self.elements.getOrNull(i) ?: run {
+                                issues.error(null, "Index '$i' out of range")
+                                AsmNothingSimple
+                            }
+                        }
+
+                        else -> {
+                            issues.error(null, "Index value must evaluate to an Integer for Lists")
+                            AsmNothingSimple
+                        }
+                    }
+                }
+
+                else -> {
+                    issues.error(null, "Only one index value should be used for Lists")
+                    AsmNothingSimple
+                }
+            }
+        }
+
+        else -> {
+            issues.error(null, "Index operation on non List value is not possible: ${self.asString()}")
+            AsmNothingSimple
+        }
     }
 
     private fun TypeModel.typeOf(self: AsmValue): TypeInstance =

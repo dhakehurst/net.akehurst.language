@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.api.format.test
+package net.akehurst.language.agl.language.format.test
 
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.formatter.api.AglFormatterRule

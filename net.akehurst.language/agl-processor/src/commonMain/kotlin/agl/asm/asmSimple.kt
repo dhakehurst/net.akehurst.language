@@ -162,7 +162,9 @@ class AsmPrimitiveSimple(
 
     companion object {
         fun stdString(value: String) = AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, value)
+        fun stdBoolean(value: Boolean) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, value)
         fun stdInteger(value: Int) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, value)
+        fun stdReal(value: Double) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, value)
     }
 
     override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
@@ -183,7 +185,8 @@ class AsmPrimitiveSimple(
     override fun toString(): String = "$qualifiedTypeName($value)"
 }
 
-val AsmPrimitive.isStdString get() = this.qualifiedTypeName == SimpleTypeModelStdLib.String.qualifiedTypeName
+val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.String.qualifiedTypeName
+val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.Integer.qualifiedTypeName
 
 class AsmReferenceSimple(
     override val reference: String,

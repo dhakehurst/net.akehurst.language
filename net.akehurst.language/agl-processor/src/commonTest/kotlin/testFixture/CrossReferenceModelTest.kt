@@ -15,11 +15,11 @@
  *
  */
 
-package net.akehurst.language.api.scopes.test
+package net.akehurst.language.agl.language.reference.test
 
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 
-object ScopeModelTest {
+object CrossReferenceModelTest {
 
     fun assertEqual(expected: CrossReferenceModelDefault, actual: CrossReferenceModelDefault) {
 

@@ -19,9 +19,9 @@ package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.api.asmTransform.test.AsmTransformModelTest
+import net.akehurst.language.agl.language.asmTransform.test.AsmTransformModelTest
+import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
-import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -37,7 +37,7 @@ class test_AsmTransform {
 
         val testData = listOf(
             TestData(
-                testName = "minimal",
+                testName = "single create rule no assignments",
                 sentence = """
                     namespace test
                     transform Test {
@@ -112,6 +112,15 @@ class test_AsmTransform {
                     }
                 """.trimIndent()
             ),
+            TestData(
+                testName = "single create rule with one assignment",
+                sentence = """
+                    namespace test
+                    transform Test {
+                        rule1 : Type { prop1 := nonTerminal }
+                    }
+                """.trimIndent()
+            ),
         )
 
         private fun test_process(data: TestData) {
@@ -119,7 +128,7 @@ class test_AsmTransform {
             assertNotNull(result.asm, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
             data.expectedAsm.forEachIndexed { idx, it ->
-                AsmTransformModelTest.assertEqual(it, result.asm!![idx])
+                AsmTransformModelTest.trAssertEquals(it, result.asm!![idx])
             }
         }
 

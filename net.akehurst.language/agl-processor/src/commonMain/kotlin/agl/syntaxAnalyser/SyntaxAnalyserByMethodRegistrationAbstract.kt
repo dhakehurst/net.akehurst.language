@@ -138,7 +138,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
             }
 
             override fun error(msg: String, path: () -> List<SpptDataNode>) {
-                TODO("not implemented")
+                kotlin.error(msg)
             }
 
             override fun skip(startPosition: Int, nextInputPosition: Int) {

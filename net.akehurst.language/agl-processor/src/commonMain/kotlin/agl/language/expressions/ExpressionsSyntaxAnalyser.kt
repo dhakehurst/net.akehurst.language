@@ -16,23 +16,31 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.agl.language.base.BaseSyntaxAnalyser
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.LiteralExpression
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
+    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
+        "Base" to BaseSyntaxAnalyser()
+    )
+
     override fun registerHandlers() {
         super.register(this::expression)
-        super.register(this::navigation)
         super.register(this::root)
         super.register(this::literal)
+        super.register(this::navigation)
+        super.register(this::navigationRoot)
+        super.register(this::navigationPartList)
+        super.register(this::navigationPart)
+        super.register(this::propertyCall)
+        super.register(this::methodCall)
+        super.register(this::indexOperation)
         super.register(this::propertyReference)
-        super.register(this::qualifiedName)
     }
 
     data class PropertyValue(
@@ -44,10 +52,6 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // navigation = [propertyReference / '.']+ ;
-    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault =
-        NavigationDefault((children as List<String>).toSeparatedList<String, String, String>().items)
-
     // root = NOTHING | SELF ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression = when (nodeInfo.alt.option) {
         0 -> RootExpressionDefault(RootExpressionDefault.NOTHING)
@@ -57,16 +61,53 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option) {
-        0 -> LiteralExpressionDefault(LiteralExpressionDefault.BOOLEAN, children[0] as String)
-        1 -> LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, children[0] as String)
-        2 -> LiteralExpressionDefault(LiteralExpressionDefault.REAL, children[0] as String)
-        3 -> LiteralExpressionDefault(LiteralExpressionDefault.STRING, children[0] as String)
+        0 -> LiteralExpressionDefault(LiteralExpressionDefault.BOOLEAN, (children[0] as String).toBoolean())
+        1 -> LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, (children[0] as String).toInt())
+        2 -> LiteralExpressionDefault(LiteralExpressionDefault.REAL, (children[0] as String).toDouble())
+        3 -> LiteralExpressionDefault(LiteralExpressionDefault.STRING, (children[0] as String))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
-    // qualifiedName = [IDENTIFIER / '.']+ ;
-    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
-        return (children as List<String>).toSeparatedList<String, String, String>().items
+    // navigation = navigationRoot navigationPartList ;
+    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault {
+        val navigationRoot = children[0] as Expression
+        val parts = children[1] as List<NavigationPart>
+        return NavigationDefault(navigationRoot, parts)
+    }
+
+    // navigationRoot = root | literal | propertyReference ;
+    private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression = when (nodeInfo.alt.option) {
+        0 -> children[0] as Expression
+        1 -> children[0] as Expression
+        2 -> RootExpressionDefault(sentence.matchedTextNoSkip(nodeInfo.node))
+        else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'navigationRoot'")
+    }
+
+    // navigationPartList = navigationPart+ ;
+    private fun navigationPartList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<NavigationPart> =
+        children as List<NavigationPart>
+
+    // navigationPart = propertyCall | methodCall | indexOperation ;
+    private fun navigationPart(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        children[0]
+
+    // propertyCall = '.' IDENTIFIER ;
+    private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
+        val id = children[1] as String
+        return PropertyCallDefault(id)
+    }
+
+    // methodCall = '.' IDENTIFIER '(' ')' ;
+    private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
+        val id = children[1] as String
+        //TODO: arguments
+        return MethodCallDefault(id, emptyList())
+    }
+
+    // indexOperation = '[' expression+ ']' ;
+    private fun indexOperation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IndexOperation {
+        val expr = children[1] as List<Expression>
+        return IndexOperationDefault(expr)
     }
 
     // propertyReference = IDENTIFIER
@@ -74,7 +115,4 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return children[0] as String
     }
 
-    // leaf BOOLEAN = "true|false" ;
-    private fun BOOLEAN(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        RootExpressionDefault(RootExpressionDefault.SELF)
 }
