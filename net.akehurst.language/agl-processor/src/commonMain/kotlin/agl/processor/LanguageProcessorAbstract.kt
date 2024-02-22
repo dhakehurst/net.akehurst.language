@@ -83,19 +83,21 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: grammar.grammarRule.first { it.isSkip.not() }.name
     }
 
+    override val baseTypeModel: TypeModel by lazy {
+        val res = configuration.typeModelResolver?.invoke(this)
+        res?.let { this.issues.addAll(res.issues) }
+        res?.asm
+            ?: grammarTypeModel(this.grammar.qualifiedName, this.grammar.name, "None") {}
+    }
+
+    override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
+
     override val asmTransformModel: AsmTransformModel by lazy {
         val res = configuration.asmTransformModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm?.firstOrNull { it.qualifiedName == grammar.qualifiedName }
-            ?: AsmTransformModelSimple.fromGrammar(this.grammar).asm?.first()
+            ?: AsmTransformModelSimple.fromGrammar(this.grammar, this.baseTypeModel).asm?.first()
             ?: error("should not happen")
-    }
-
-    override val typeModel: TypeModel by lazy {
-        val res = configuration.typeModelResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: grammarTypeModel("empty", "<Empty>", "None") {
-        }
     }
 
     override val crossReferenceModel: CrossReferenceModel by lazy {

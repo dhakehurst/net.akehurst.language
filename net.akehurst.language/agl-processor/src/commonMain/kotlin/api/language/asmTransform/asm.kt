@@ -19,10 +19,16 @@ package net.akehurst.language.api.language.asmTransform
 
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeModel
 
 interface AsmTransformModel {
     val name: String
     val qualifiedName: String
+
+    /**
+     * Access to the TypeModel ensuring that the AsmTransform has first been evaluated
+     */
+    val typeModel: TypeModel?
 
     /**
      * map from grammar-rule name to TransformationRule
@@ -31,6 +37,9 @@ interface AsmTransformModel {
 
     val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
+
+
+    fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule?
 }
 
 interface TransformationRule {
@@ -38,16 +47,19 @@ interface TransformationRule {
     val typeName: String
 
     val resolvedType: TypeInstance
+
+    val modifyStatements: List<AssignmentTransformationStatement>
 }
 
 interface NoActionTransformationRule : TransformationRule
 interface SubtypeTransformationRule : TransformationRule
+interface SelfAssignChild0TransformationRule : TransformationRule
+interface ListTransformationRule : TransformationRule
 interface CreateObjectRule : TransformationRule {
-    val modifyStatements: List<AssignmentTransformationStatement>
+
 }
 
 interface ModifyObjectRule : TransformationRule {
-    val modifyStatements: List<AssignmentTransformationStatement>
 }
 
 interface AssignmentTransformationStatement {

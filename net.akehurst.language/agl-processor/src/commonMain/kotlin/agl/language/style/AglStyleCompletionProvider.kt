@@ -45,7 +45,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 
 
         //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
-        private val grammarRule = aglGrammarNamespace.findTypeUsageForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRule = aglGrammarNamespace.findTypeForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
 
 //        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
 //        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
@@ -65,7 +65,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     }
 
     private fun provideForTerminalItem(nextExpected: RuleItem, context: ContextFromGrammar): List<CompletionItem> {
-        val itemType = aglStyleNamespace.findTypeUsageForRule(nextExpected.owningRule.name) ?: error("Should not be null")
+        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name) ?: error("Should not be null")
         return when (nextExpected.owningRule.name) {
             "LITERAL" -> LITERAL(nextExpected, itemType, context)
             "PATTERN" -> PATTERN(nextExpected, itemType, context)

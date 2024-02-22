@@ -52,10 +52,11 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = NOTHING | SELF ;
+    // root = NOTHING | SELF | propertyReference ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression = when (nodeInfo.alt.option) {
         0 -> RootExpressionDefault(RootExpressionDefault.NOTHING)
         1 -> RootExpressionDefault(RootExpressionDefault.SELF)
+        2 -> RootExpressionDefault(children[0] as String)
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'root'")
     }
 
@@ -75,11 +76,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return NavigationDefault(navigationRoot, parts)
     }
 
-    // navigationRoot = root | literal | propertyReference ;
+    // navigationRoot = root | literal ;
     private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression = when (nodeInfo.alt.option) {
         0 -> children[0] as Expression
         1 -> children[0] as Expression
-        2 -> RootExpressionDefault(sentence.matchedTextNoSkip(nodeInfo.node))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'navigationRoot'")
     }
 

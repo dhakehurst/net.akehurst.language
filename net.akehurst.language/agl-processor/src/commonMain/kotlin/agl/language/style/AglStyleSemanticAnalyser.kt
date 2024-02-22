@@ -39,7 +39,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
         private val aglGrammarNamespace: GrammarTypeNamespace
             get() = aglGrammarTypeModel.namespace[aglGrammarQualifiedName] as GrammarTypeNamespace? ?: error("Internal error")
 
-        private val grammarRule = aglGrammarNamespace.findTypeUsageForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRule = aglGrammarNamespace.findTypeForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
     }
 
     override fun clear() {

@@ -65,7 +65,7 @@ class CompletionProviderDefault(
 
     fun typeFor(ruleItem: RuleItem): TypeInstance? {
         val rule = ruleItem.owningRule
-        return targetNamespace.findTypeUsageForRule(rule.name)
+        return targetNamespace.findTypeForRule(rule.name)
     }
 
     private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextSimple): List<CompletionItem> {

@@ -40,21 +40,25 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 
     companion object {
         fun TypeInstance.toNoActionTrRule() = this.let { t -> NoActionTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
-        fun TypeInstance.toStringActionTrRule() = this.let { t -> StringActionTransformationRuleSimple().also { it.resolveTypeAs(t) } }
+        fun TypeInstance.toSelfAssignChild0TrRule() = this.let { t -> SelfAssignChild0TransformationRuleSimple().also { it.resolveTypeAs(t) } }
+        fun TypeInstance.toListTrRule() = this.let { t -> ListTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toSubtypeTrRule() = this.let { t -> SubtypeTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
     }
 
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
     val transformModel = AsmTransformModelSimple(grammar.qualifiedName)
-    val namespace = GrammarTypeNamespaceSimple(
-        qualifiedName = "${grammar.namespace.qualifiedName}.${grammar.name}",
-        imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
-    )
+    val namespace = typeModel.namespace[grammar.qualifiedName] as GrammarTypeNamespaceSimple? ?: let {
+        val ns = GrammarTypeNamespaceSimple(
+            qualifiedName = grammar.qualifiedName,
+            imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
+        )
+        typeModel.addAllNamespace(listOf(ns))
+        ns
+    }
 
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredType, String>, Int>()
     private val _grRuleNameToTrRule = mutableMapOf<String, TransformationRule>()
     private val _grRuleItemToTrRule = mutableMapOf<RuleItem, TransformationRule>()
-
 
     fun build() {
         val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() }
@@ -66,7 +70,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             val value = it.value
             namespace.allRuleNameToType[key] = value.resolvedType
         }
-        typeModel.addAllNamespace(listOf(this.namespace))
+        transformModel.typeModel = typeModel
     }
 
     private fun findOrCreateTrRule(rule: GrammarRule, ifCreate: (DataType) -> TransformationRuleAbstract): TransformationRule {
@@ -106,7 +110,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             null != cor -> cor
             gr.isLeaf -> {
                 val t = SimpleTypeModelStdLib.String
-                val trRule = t.toStringActionTrRule()
+                val trRule = t.toSelfAssignChild0TrRule()
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
             }
@@ -121,7 +125,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     is Concatenation -> trRuleForRuleItemList(gr, rhs.items)
                     is Choice -> trRuleForChoiceRule(rhs, gr)
                     is OptionalItem -> trRuleForRuleItemList(gr, listOf(rhs))
-                    is SimpleList -> trRuleForRuleItemList(gr, listOf(rhs))
+                    is SimpleList -> trRuleForRuleItemList(gr, listOf(rhs)) //findOrCreateTrRule(gr) { t-> t.type().toListTrRule()}  //
                     is SeparatedList -> trRuleForRuleItemList(gr, listOf(rhs))
                     is Group -> trRuleForGroup(rhs, false)
                     else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
@@ -150,7 +154,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             }
 
             subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> {
-                SimpleTypeModelStdLib.String.toStringActionTrRule()
+                SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
             }
 
             subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(choiceRule) { newType ->
@@ -192,12 +196,12 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         } else {
             val trRule: TransformationRule = when (ruleItem) {
                 is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                is Terminal -> (if (forProperty) SimpleTypeModelStdLib.NothingType else SimpleTypeModelStdLib.String).toNoActionTrRule()
+                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.toNoActionTrRule() else SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
                 is NonTerminal -> {
                     val refRule = ruleItem.referencedRuleOrNull(this.grammar)
                     when {
                         null == refRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        refRule.isLeaf -> SimpleTypeModelStdLib.String.toNoActionTrRule()
+                        refRule.isLeaf -> SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
                         refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
                         else -> createOrFindTrRuleForGrammarRule(refRule)
                     }
@@ -206,7 +210,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 is Embedded -> {
                     val embBldr = builderForEmbedded(ruleItem)
                     val embNs = embBldr.namespace
-                    embNs.findTypeUsageForRule(ruleItem.name)?.toNoActionTrRule() //TODO: needs own action
+                    embNs.findTypeForRule(ruleItem.name)?.toNoActionTrRule() //TODO: needs own action
                         ?: error("Should never happen")
                 }
 
@@ -230,7 +234,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 is SimpleList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
                     val typeArgs = mutableListOf<TypeInstance>()
-                    val t = SimpleTypeModelStdLib.List.type(typeArgs).toNoActionTrRule() //TODO: needs action for lists!
+                    val t = SimpleTypeModelStdLib.List.type(typeArgs).toListTrRule()
                     _grRuleItemToTrRule[ruleItem] = t
                     val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
                     when (trRuleForItem.resolvedType.declaration) {
@@ -249,7 +253,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 is SeparatedList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
                     val typeArgs = mutableListOf<TypeInstance>()
-                    val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs).toNoActionTrRule() //TODO: needs action for lists!
+                    val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs).toListTrRule() //TODO: needs action for sep-lists!
                     _grRuleItemToTrRule[ruleItem] = t
                     val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
                     val trRuleForSep = trRuleForRuleItem(ruleItem.separator, forProperty)
@@ -260,7 +264,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                         }
 
                         trRuleForSep.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
-                            val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType)).toNoActionTrRule() //TODO: needs action for lists!
+                            val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType)).toListTrRule()
                             _grRuleItemToTrRule[ruleItem] = lt
                             lt
                         }

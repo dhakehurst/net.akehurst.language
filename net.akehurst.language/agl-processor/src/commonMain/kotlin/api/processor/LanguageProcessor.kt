@@ -57,15 +57,26 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     val parser: Parser?
 
-    val asmTransformModel: AsmTransformModel
+    /**
+     * Access to the TypeModel possibly before the AsmTransform has been resolved.
+     * After resolving the AsmTransform this value will be the same as typeModel
+     */
+    val baseTypeModel: TypeModel
 
     /**
-     * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     * Model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     * After resolving the AsmTransform, which may modify the original baseTypeModel
      */
     val typeModel: TypeModel
 
-    /*
-     * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
+    /**
+     * The transformation from parse-tree to ASM
+     * Evaluating this may or may not modify the typeModel depending on the AsmTransformModel options specified
+     */
+    val asmTransformModel: AsmTransformModel
+
+    /**
+     * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor
      */
     val crossReferenceModel: CrossReferenceModel
 

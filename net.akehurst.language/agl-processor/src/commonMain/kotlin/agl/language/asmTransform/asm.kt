@@ -21,6 +21,10 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.expressions.IndexOperationDefault
+import net.akehurst.language.agl.language.expressions.LiteralExpressionDefault
+import net.akehurst.language.agl.language.expressions.NavigationDefault
+import net.akehurst.language.agl.language.expressions.RootExpressionDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.language.asmTransform.*
@@ -29,8 +33,8 @@ import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 
 class AsmTransformModelSimple(
@@ -48,9 +52,12 @@ class AsmTransformModelSimple(
             )
         }
 
-        fun fromGrammar(grammar: Grammar, configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration): ProcessResult<List<AsmTransformModel>> {
-            val grmrTypeModel = TypeModelSimple(grammar.name)
-            val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(grmrTypeModel, grammar, configuration)
+        fun fromGrammar(
+            grammar: Grammar,
+            typeModel: TypeModel,
+            configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration
+        ): ProcessResult<List<AsmTransformModel>> {
+            val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(typeModel, grammar, configuration)
             atfg.build()
             return ProcessResultDefault<List<AsmTransformModel>>(listOf(atfg.transformModel), atfg.issues)
         }
@@ -58,10 +65,15 @@ class AsmTransformModelSimple(
 
     override val name: String get() = this.qualifiedName.split(".").last()
 
+    override var typeModel: TypeModel? = null
+
     override val rules get() = _rules
 
     override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
     override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
+
+    override fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? =
+        rules[grmRuleName]
 
     // GrammarRuleName -> TransformationRule
     private val _rules = mutableMapOf<String, TransformationRule>()
@@ -81,48 +93,80 @@ abstract class TransformationRuleAbstract : TransformationRule {
     fun resolveTypeAs(type: TypeInstance) {
         _resolvedType = type
     }
+
+    override val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
+
+    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
+        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
+        modifyStatements.add(ass)
+    }
 }
 
 class CreateObjectRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), CreateObjectRule {
-
-    override val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
-
-    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
-        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
-        modifyStatements.add(ass)
-    }
-
-}
+) : TransformationRuleAbstract(), CreateObjectRule
 
 class ModifyObjectRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), ModifyObjectRule {
-
-    override val modifyStatements = mutableListOf<AssignmentTransformationStatement>()
-
-    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
-        val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
-        modifyStatements.add(ass)
-    }
-
-}
+) : TransformationRuleAbstract(), ModifyObjectRule
 
 class SubtypeTransformationRuleSimple(
     override val typeName: String
 ) : TransformationRuleAbstract(), SubtypeTransformationRule {
-
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
+        AssignmentTransformationStatementSimple(
+            lhsPropertyName = RootExpressionDefault.SELF,
+            rhs = NavigationDefault(
+                start = RootExpressionDefault("child"),
+                parts = listOf(
+                    IndexOperationDefault(
+                        listOf(
+                            LiteralExpressionDefault(
+                                LiteralExpressionDefault.INTEGER,
+                                0
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
 }
 
 class NoActionTransformationRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), NoActionTransformationRule {
+) : TransformationRuleAbstract(), NoActionTransformationRule
 
+class SelfAssignChild0TransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
+    override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
+        AssignmentTransformationStatementSimple(
+            lhsPropertyName = RootExpressionDefault.SELF,
+            rhs = NavigationDefault(
+                start = RootExpressionDefault("child"),
+                parts = listOf(
+                    IndexOperationDefault(
+                        listOf(
+                            LiteralExpressionDefault(
+                                LiteralExpressionDefault.INTEGER,
+                                0
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
 }
 
-class StringActionTransformationRuleSimple() : TransformationRuleAbstract() {
-    override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
+class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
+    override val typeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
+        AssignmentTransformationStatementSimple(
+            lhsPropertyName = RootExpressionDefault.SELF,
+            rhs = RootExpressionDefault("children")
+        )
+    )
 }
 
 abstract class TransformationStatementAbstract

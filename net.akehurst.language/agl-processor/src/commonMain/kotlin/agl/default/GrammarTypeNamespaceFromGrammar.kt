@@ -19,6 +19,7 @@ package net.akehurst.language.agl.default
 
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
@@ -34,7 +35,15 @@ object TypeModelFromGrammar {
         grammar: Grammar,
         defaultGoalRuleName: String? = null,
         configuration: Grammar2TypeModelMapping = defaultConfiguration
-    ): TypeModel = createFromGrammarList(listOf(grammar), configuration)
+    ): TypeModel { // = createFromGrammarList(listOf(grammar), configuration)
+        return grammarTypeModel(
+            grammar.qualifiedName,
+            grammar.name,
+            "",
+            imports = listOf(SimpleTypeModelStdLib)
+        ) {
+        }
+    }
 
     fun createFromGrammarList(
         grammarList: List<Grammar>,
@@ -210,7 +219,7 @@ class GrammarTypeNamespaceFromGrammar(
                 is Embedded -> {
                     val embBldr = grammarTypeNamespaceBuilderForEmbedded(ruleItem)
                     val embNs = embBldr._namespace
-                    embNs.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
+                    embNs.findTypeForRule(ruleItem.name) ?: error("Should never happen")
                 }
 
                 is Choice -> typeForChoiceRuleItem(ruleItem, forProperty)

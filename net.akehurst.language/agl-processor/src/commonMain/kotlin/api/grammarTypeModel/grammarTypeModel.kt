@@ -28,7 +28,7 @@ interface GrammarTypeNamespace : TypeNamespace {
 
     val allTypesByRuleName: Collection<Pair<String, TypeInstance>>
 
-    fun findTypeUsageForRule(ruleName: String): TypeInstance?
+    fun findTypeForRule(ruleName: String): TypeInstance?
 
     //fun asString(): String
 }

@@ -53,12 +53,14 @@ object TypeModelFromAsmTransform {
             qualifiedName = trm.qualifiedName,
             imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
         )
+        // create types
         for (tr in trm.createObjectRules) {
             //TODO: allow non-owned types to be used
             val dt = ns.findOwnedOrCreateDataTypeNamed(tr.typeName)
             ns.allRuleNameToType[tr.grammarRuleName] = dt.type()
         }
-        for (tr in trm.modifyObjectRules) {
+        // create properties
+        for (tr in trm.rules.values) {
             val dt = ns.findOwnedTypeNamed(tr.typeName) ?: error("No type named ${tr.typeName}")
             for (ass in tr.modifyStatements) {
                 val grmRule = grammar.findAllResolvedGrammarRule(tr.grammarRuleName) ?: error("No rule found with name ${tr.grammarRuleName}")

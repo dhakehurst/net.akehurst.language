@@ -32,6 +32,8 @@ data class RootExpressionDefault(
 
     override val isNothing: Boolean get() = NOTHING == this.name
     override val isSelf: Boolean get() = SELF == this.name
+
+    override fun toString(): String = name
 }
 
 data class LiteralExpressionDefault(
@@ -46,6 +48,7 @@ data class LiteralExpressionDefault(
         const val STRING = "std.String"
     }
 
+    override fun toString(): String = value.toString()
 }
 
 data class NavigationDefault(
@@ -74,4 +77,5 @@ data class IndexOperationDefault(
     override val indices: List<Expression>
 ) : IndexOperation {
 
+    override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
 }

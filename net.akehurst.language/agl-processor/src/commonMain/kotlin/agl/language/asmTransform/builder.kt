@@ -67,7 +67,7 @@ class AsmTransformModelBuilder(
     }
 
     fun stringRule(grammarRuleName: String) {
-        val tr = StringActionTransformationRuleSimple()
+        val tr = SelfAssignChild0TransformationRuleSimple()
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
     }
@@ -87,6 +87,7 @@ class AsmTransformModelBuilder(
 
     fun build(): AsmTransformModel {
         val res = AsmTransformModelSimple(qualifiedName)
+        res.typeModel = typeModel
         _rules.forEach { res.addRule(it) }
         return res
     }

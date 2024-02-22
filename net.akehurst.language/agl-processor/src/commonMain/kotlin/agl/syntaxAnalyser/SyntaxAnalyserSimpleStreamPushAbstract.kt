@@ -77,7 +77,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 
     private fun findTypeUsageForRule(ruleName: String): TypeInstance? {
         val ns = this.typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace?
-        return ns?.findTypeUsageForRule(ruleName)
+        return ns?.findTypeForRule(ruleName)
     }
 
 //    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {

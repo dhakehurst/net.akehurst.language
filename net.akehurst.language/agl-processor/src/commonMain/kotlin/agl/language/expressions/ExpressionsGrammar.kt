@@ -36,6 +36,7 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.rule("root").choiceLongestFromConcatenationItem(
             b.nonTerminal("NOTHING"),
             b.nonTerminal("SELF"),
+            b.nonTerminal("propertyReference")
         )
         b.rule("literal").choiceLongestFromConcatenationItem(
             b.nonTerminal("BOOLEAN"),
@@ -50,7 +51,6 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.rule("navigationRoot").choiceLongestFromConcatenationItem(
             b.nonTerminal("root"),
             b.nonTerminal("literal"),
-            b.nonTerminal("propertyReference")
         )
         b.rule("navigationPartList").multi(1, -1, b.nonTerminal("navigationPart"))
         b.rule("navigationPart").choiceLongestFromConcatenationItem(
@@ -103,14 +103,13 @@ grammar Expression extends Base {
       | literal
       | navigation
       ;
-    root = NOTHING | SELF | literal ;
+    root = NOTHING | SELF | propertyReference ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
     
     navigation = navigationRoot navigationPart+ ;
     navigationRoot 
      = root
      | literal
-     | propertyReference
     ;
     navigationPart
      = propertyCall

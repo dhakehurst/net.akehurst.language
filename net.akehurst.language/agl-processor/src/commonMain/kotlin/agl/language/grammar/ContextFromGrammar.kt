@@ -34,7 +34,7 @@ class ContextFromGrammar(
             val scope = ScopeSimple<String>(null, grammars.last().name, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
             grammars.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
-                    val rType = namespace.findTypeUsageForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
+                    val rType = namespace.findTypeForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
                     scope.addToScope(it.name, rType.declaration.qualifiedName, it.name)
                 }
                 g.allResolvedTerminal.forEach {

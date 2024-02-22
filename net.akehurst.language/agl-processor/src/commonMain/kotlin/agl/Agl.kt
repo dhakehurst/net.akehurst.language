@@ -18,7 +18,6 @@
 package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.default.TypeModelFromAsmTransform
 import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
@@ -32,10 +31,14 @@ import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.jvm.JvmInline
 
 @JvmInline
 value class GrammarString(val value: String)
+
+@JvmInline
+value class TypeModelString(val value: String)
 
 @JvmInline
 value class TransformString(val value: String)
@@ -120,17 +123,20 @@ object Agl {
      */
     fun processorFromStringDefault(
         grammarDefinitionStr: GrammarString,
+        typeModelStr: TypeModelString? = null,
         transformStr: TransformString? = null,
         crossReferenceModelStr: CrossReferenceString? = null,
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        base: LanguageProcessorConfiguration<Asm, ContextSimple> = Agl.configurationDefault(),
-        grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        base: LanguageProcessorConfiguration<Asm, ContextSimple> = configurationDefault(),
+        grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm, ContextSimple> {
         val config = Agl.configuration(base) {
+            if (null != typeModelStr) {
+                typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
+            }
             if (null != transformStr) {
                 asmTransformResolver { p -> AsmTransformModelSimple.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), transformStr.value) }
-                typeModelResolver { p -> TypeModelFromAsmTransform.build(listOf(p.grammar!!), listOf(p.asmTransformModel)) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr.value) }

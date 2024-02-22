@@ -43,7 +43,7 @@ abstract class GrammarTypeNamespaceAbstract(
     override val allTypesByRuleName: Collection<Pair<String, TypeInstance>>
         get() = allRuleNameToType.entries.map { Pair(it.key, it.value) }
 
-    override fun findTypeUsageForRule(ruleName: String): TypeInstance? = allRuleNameToType[ruleName]
+    override fun findTypeForRule(ruleName: String): TypeInstance? = allRuleNameToType[ruleName]
 
     override fun asString(): String {
         val rules = this.allRuleNameToType.entries.sortedBy { it.key }

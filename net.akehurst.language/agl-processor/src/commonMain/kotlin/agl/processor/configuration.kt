@@ -23,7 +23,6 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.parser.LeftCornerParser
@@ -76,24 +75,36 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = null,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault<TypeModel>(
             TypeModelFromGrammar.create(p.grammar!!),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
+    override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = { p ->
+        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.typeModel)
+    },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = { p ->
-        CrossReferenceModelDefault.fromString(
-            ContextFromTypeModel(p.typeModel),
-            ""
+        ProcessResultDefault(
+            CrossReferenceModelDefault(),
+            IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") },
-    override var styleResolver: StyleResolver<AsmType, ContextType>? = { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") },
-    override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null
+    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = { p ->
+        ProcessResultDefault(
+            null,
+            IssueHolder(LanguageProcessorPhase.ALL)
+        )
+    },
+    override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
+        ProcessResultDefault(
+            AglStyleModelDefault(emptyList()),
+            IssueHolder(LanguageProcessorPhase.ALL)
+        )
+    },
+    override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null,
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class LanguageProcessorConfigurationDefault(
@@ -118,17 +129,14 @@ internal class LanguageProcessorConfigurationDefault(
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override val asmTransformModelResolver: AsmTransformModelResolver<Asm, ContextSimple>? = { p ->
-        AsmTransformModelSimple.fromString(
-            ContextFromGrammar.createContextFrom(listOf(p.grammar!!)),
-            ""
-        )
-    },
     override var typeModelResolver: TypeModelResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault<TypeModel>(
             TypeModelFromGrammar.create(p.grammar!!),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
+    },
+    override val asmTransformModelResolver: AsmTransformModelResolver<Asm, ContextSimple>? = { p ->
+        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<Asm, ContextSimple>? = { p ->
         CrossReferenceModelDefault.fromString(
@@ -138,7 +146,7 @@ internal class LanguageProcessorConfigurationDefault(
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
-            SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.crossReferenceModel),
+            SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.asmTransformModel),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -148,8 +156,15 @@ internal class LanguageProcessorConfigurationDefault(
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override var formatterResolver: FormatterResolver<Asm, ContextSimple>? = { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") },
-    override var styleResolver: StyleResolver<Asm, ContextSimple>? = { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") },
+    override var formatterResolver: FormatterResolver<Asm, ContextSimple>? = { p ->
+        AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "")
+    },
+    override var styleResolver: StyleResolver<Asm, ContextSimple>? = { p ->
+        ProcessResultDefault(
+            AglStyleModelDefault(emptyList()),
+            IssueHolder(LanguageProcessorPhase.ALL)
+        )
+    },
     override var completionProvider: CompletionProviderResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
             CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),

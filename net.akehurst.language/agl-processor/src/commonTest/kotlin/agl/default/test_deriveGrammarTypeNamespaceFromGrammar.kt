@@ -473,21 +473,14 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 C = c ;
                 D = d ;
                 leaf a = 'a';
-                leaf b = 'b';
                 leaf c = 'c';
                 leaf d = 'd';
                 leaf x = 'x';
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
-            stringTypeFor("b")
             stringTypeFor("c")
             stringTypeFor("d")
             stringTypeFor("x")
@@ -504,9 +497,26 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 propertyPrimitiveType("d", "String", false, 0)
             }
         }
-        println(actual.asString())
-        assertEquals(expected.asString(), actual.asString())
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
+            stringRule("c")
+            stringRule("d")
+            stringRule("e")
+            stringRule("x")
+//            subtypeRule("S", "S")
+            createObject("A", "A") {
+                assignment("a", "child[0]")
+                assignment("x", "child[1]")
+            }
+//            subtypeRule("B", "B")
+            createObject("C", "C") {
+                assignment("c", "child[0]")
+            }
+            createObject("D", "D") {
+                assignment("d", "child[0]")
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     // --- Optional ---
@@ -519,17 +529,15 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
             }
         }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S") {
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test // S = a 'b'? c ;
@@ -543,12 +551,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("c")
             dataType("S", "S") {
@@ -556,8 +559,16 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 propertyPrimitiveType("c", "String", false, 2)
             }
         }
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
+            stringRule("c")
 
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("c", "child[2]")
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test // S = a? ;
@@ -570,19 +581,19 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", true, 0)
             }
         }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     // --- ListSimple ---
@@ -595,19 +606,16 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
 
             }
-//            listTypeFor("S", StringType)
         }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S") {
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test // S = a 'b'* c ;
@@ -621,12 +629,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("c")
             dataType("S", "S") {
@@ -634,8 +637,16 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 propertyPrimitiveType("c", "String", false, 2)
             }
         }
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
+            stringRule("c")
 
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("c", "child[2]")
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test //  S = a* ;
@@ -648,20 +659,18 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             dataType("S", "S") {
                 propertyListType("a", false, 0) { primitiveRef("String") }
             }
-            //listTypeFor("S", StringType)
         }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S") {
+                assignment("a", "children")
+            }
+        }
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test // S = a b* c ;

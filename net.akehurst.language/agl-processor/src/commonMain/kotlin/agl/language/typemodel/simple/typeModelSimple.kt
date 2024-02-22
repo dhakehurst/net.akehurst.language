@@ -17,12 +17,24 @@
 
 package net.akehurst.language.typemodel.simple
 
+import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.collections.indexOfOrNull
 import net.akehurst.language.typemodel.api.*
 
 class TypeModelSimple(
     name: String,
 ) : TypeModelSimpleAbstract(name) {
+    companion object {
+        fun fromString(typeModelStr: String): ProcessResult<TypeModel> {
+            TODO()
+//            val proc = Agl.registry.agl.typeModel.processor ?: error("TypeModel language not found!")
+//            return proc.process(
+//                sentence = typeModelStr,
+//                options = Agl.options { semanticAnalysis { context(context) } }
+//            )
+        }
+    }
+
 }
 
 abstract class TypeModelSimpleAbstract(

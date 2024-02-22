@@ -29,7 +29,8 @@ import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
-class AsmTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<List<AsmTransformModel>>() {
+class AsmTransformSyntaxAnalyser(
+) : SyntaxAnalyserByMethodRegistrationAbstract<List<AsmTransformModel>>() {
 
     override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
         "Base" to BaseSyntaxAnalyser()

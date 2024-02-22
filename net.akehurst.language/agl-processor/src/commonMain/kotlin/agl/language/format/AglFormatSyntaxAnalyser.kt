@@ -17,8 +17,8 @@ package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -29,10 +29,10 @@ import net.akehurst.language.typemodel.api.TypeModel
 internal class AglFormatSyntaxAnalyser(
     grammarNamespaceQualifiedName: String,
     val typeModel: TypeModel,
-    val scopeModel: CrossReferenceModel
+    val asmTransformModel: AsmTransformModel
 ) : SyntaxAnalyser<AglFormatterModel> {
 
-    private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, scopeModel)
+    private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, asmTransformModel)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 

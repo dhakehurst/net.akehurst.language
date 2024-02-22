@@ -25,6 +25,7 @@ import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
@@ -67,12 +68,13 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
     val typeModel = typeModel("test", true) {
         TODO("build type model")
     }
+    val asmTransformModel: AsmTransformModel get() = TODO()
     override val crossReferenceModel: CrossReferenceModel
         get() {
             TODO("builder for cross reference model")
         }
 
-    override val syntaxAnalyser: SyntaxAnalyser<Asm> = SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), crossReferenceModel)
+    override val syntaxAnalyser: SyntaxAnalyser<Asm> = SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
     override val semanticAnalyser: SemanticAnalyser<Asm, ContextSimple> = SemanticAnalyserDefault(typeModel, crossReferenceModel)
     override val formatter: Formatter<Asm> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(
