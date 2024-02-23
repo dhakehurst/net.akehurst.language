@@ -18,7 +18,9 @@
 package net.akehurst.language.agl.agl.default
 
 import net.akehurst.language.agl.asm.isStdString
-import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
+import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
@@ -38,7 +40,7 @@ class ScopeCreator(
     val issues: IssueHolder
 ) : AsmTreeWalker {
 
-    private val _interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
 
     val currentScope = mutableStackOf(rootScope)
 
@@ -210,11 +212,11 @@ class ScopeCreator(
     }
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
-        _interpreter.evaluateExpression(element, this)
+        _interpreter.evaluateExpression(element.toTypedObject(typeModel), this).asm
 
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
-        _interpreter.evaluateExpression(element, this)
+        _interpreter.evaluateExpression(element.toTypedObject(typeModel), this).asm
 
 
 }

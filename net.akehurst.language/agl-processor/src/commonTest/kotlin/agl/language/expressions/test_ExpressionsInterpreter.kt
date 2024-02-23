@@ -33,15 +33,15 @@ class test_ExpressionsInterpreter {
 
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
-            val interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
-            val actual = interpreter.evaluateStr(self, expression)
-            assertEquals(expected, actual)
+            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            assertEquals(expected, actual.asm)
         }
 
         fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
-            val interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
-            val actual = interpreter.evaluateStr(self, expression)
-            assertEquals(AsmNothingSimple, actual)
+            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            assertEquals(AsmNothingSimple, actual.asm)
             assertEquals(expected, interpreter.issues.all.toList())
         }
     }

@@ -19,8 +19,9 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toNoActionTrRule
+import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSelfAssignChild0TrRule
 import net.akehurst.language.agl.language.asmTransform.AsmTransformInterpreter
-import net.akehurst.language.agl.language.asmTransform.ContextNode
+import net.akehurst.language.agl.language.asmTransform.TypedObjectParseNode
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -68,11 +69,11 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
 
         val Rule.hasOnyOneRhsItem get() = this.rhsItems.size == 1 && this.rhsItems[0].size == 1
 
-        fun TransformationRule.evaluate(children: List<ChildData>) {
-            val contextNode = object : ContextNode {
-                override val children: AsmListSimple = children.map { it.value }
-            }
-            AsmTransformInterpreter().evaluate(contextNode, this)
+        fun TransformationRule.evaluate(typeModel: TypeModel, children: List<ChildData>, path: AsmPath): AsmValue {
+            val ch = children.map { it.value ?: AsmNothingSimple }
+            val contextNode = TypedObjectParseNode(typeModel, ch)
+            val v = AsmTransformInterpreter(typeModel).evaluate(contextNode, path, this)
+            return v
         }
     }
 
@@ -145,7 +146,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 val downData = downStack.pop()
                 val value: AsmValue? = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.declaration -> null
+                    typeModel.NothingType == downData.trRule.forNode.resolvedType.declaration -> null
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
@@ -235,7 +236,13 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     }
 
     private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
-        return when {
+        return this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
+            ?: TODO()
+    }
+
+    /*
+        private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
+            return when {
             null == parentTrRule -> typeModel.NothingType.type().toNoActionTrRule() // property unused
             parentTrRule.resolvedType.isNullable -> trRuleForParentOptional(parentTrRule, nodeInfo)
             nodeInfo.node.rule.isEmbedded -> trRuleForEmbedded(parentTrRule, nodeInfo)
@@ -261,7 +268,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             }
         }
     }
-
+*/
     private fun typeForParentOptional(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // nodes map to runtime-rules, not user-rules
         // if user-rule only had one optional item, then runtime-rule is 'compressed, i.e. no pseudo rule for the option
@@ -372,7 +379,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         val typeDecl = trRule.resolvedType.declaration
         return when {
             typeDecl is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
-                DownData2(p, NodeTrRules(trRule, SimpleTypeModelStdLib.String))
+                DownData2(p, NodeTrRules(trRule, SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()))
             }
 
             typeDecl is DataType && typeDecl.property.size == 1 -> {
@@ -381,14 +388,14 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     typeDecl.property.first().typeInstance.isNullable -> {
                         val fProp = typeDecl.property.first()
                         val pp = p.plus(fProp.name)
-                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance))
+                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toNoActionTrRule()))
                     }
 
                     nodeInfo.node.rule.isOptional -> DownData2(p, NodeTrRules(trRule))
                     nodeInfo.node.rule.isList -> {
                         val fProp = typeDecl.property.first()
                         val pp = p.plus(fProp.name)
-                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance))
+                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toNoActionTrRule()))
                     }
 
                     else -> DownData2(p, NodeTrRules(trRule))
@@ -398,7 +405,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             typeDecl is UnnamedSupertypeType -> when {
                 // special cases where PT is compressed for choice of concats
                 nodeInfo.node.rule.isChoice -> when {
-                    typeDecl.subtypes[nodeInfo.alt.option].declaration is TupleType -> DownData2(p, NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option]))
+                    typeDecl.subtypes[nodeInfo.alt.option].declaration is TupleType -> DownData2(p, NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option].toNoActionTrRule()))
                     else -> DownData2(p, NodeTrRules(trRule))
                 }
 
@@ -434,7 +441,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     }
 
     private fun createValueFromBranch2(downData: DownData2, children: List<ChildData>): AsmValue {
-        downData.trRule.forNode.evaluate(children)
+        return downData.trRule.forNode.evaluate(typeModel, children, downData.path)
     }
 
     private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? {
@@ -463,7 +470,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     is UnnamedSupertypeType -> {
                         val actualType = type.subtypes[target.alt.option].declaration
                         when (actualType) {
-                            is TupleType -> createTupleFrom(sentence, actualType, downData.path, ChildData(target, children))
+                            is TupleType -> createTupleFrom(sentence, actualType, downData.path, children)
                             else -> children[0].value as AsmValue
                         }
                     }
@@ -515,7 +522,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     }
 
                     is TupleType -> {
-                        createTupleFrom(sentence, type, downData.path, ChildData(target, children))
+                        createTupleFrom(sentence, type, downData.path, children)
                     }
 
                     is DataType -> {
@@ -636,7 +643,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         is PrimitiveType -> createStringValueFromBranch(sentence, childData.nodeInfo)
         is UnnamedSupertypeType -> TODO()
         is CollectionType -> TODO()
-        is TupleType -> createTupleFrom(sentence, type, path, childData)
+        is TupleType -> createTupleFrom(sentence, type, path, childData.value as List<ChildData>)
         is DataType -> createElementFrom(sentence, type, path, childData.value as List<ChildData>)
         else -> when (type) {
             typeModel.NothingType -> TODO()
@@ -690,22 +697,13 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, childData: ChildData): AsmStructure {
+    private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, children: List<ChildData>): AsmStructure {
         val el = createAsmElement(path, type.qualifiedName) // TODO: should have a createTuple method
-        val v = childData.value
+
         for (propDecl in type.property) {
-            val propType = propDecl.typeInstance
-            when (v) {
-                is List<*> -> {
-                    val propChildData = (childData.value as List<ChildData>)[propDecl.index]
-                    val propValue = propChildData.value //createValueFor(sentence, propType.type, path, propChildData)
-                    setPropertyFromDeclaration(el, propDecl, propValue as AsmValue?)
-                }
-
-                else -> TODO()
-            }
-
-
+            val propChildData = children[propDecl.index]
+            val propValue = propChildData.value //createValueFor(sentence, propType.type, path, propChildData)
+            setPropertyFromDeclaration(el, propDecl, propValue as AsmValue?)
         }
         return el
     }
@@ -747,12 +745,12 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                         else -> error("Should not happen")
                     }
 
-                    is TupleType -> createTupleFrom(sentence, propType, path, childData)
+                    is TupleType -> createTupleFrom(sentence, propType, path, childData.value as List<ChildData>)
 
                     is UnnamedSupertypeType -> {
                         val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option].declaration
                         when (actualType) {
-                            is TupleType -> createTupleFrom(sentence, actualType as TupleType, path, childData)
+                            is TupleType -> createTupleFrom(sentence, actualType as TupleType, path, childData.value as List<ChildData>)
                             else -> {
                                 TODO()
                             }

@@ -100,73 +100,99 @@ abstract class TransformationRuleAbstract : TransformationRule {
         val ass = AssignmentTransformationStatementSimple(lhsPropertyName, rhs)
         modifyStatements.add(ass)
     }
+
+    abstract override fun toString(): String
 }
 
 class CreateObjectRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), CreateObjectRule
+) : TransformationRuleAbstract(), CreateObjectRule {
+    override fun toString(): String = "$typeName { ... }"
+}
 
 class ModifyObjectRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), ModifyObjectRule
+) : TransformationRuleAbstract(), ModifyObjectRule {
+    override fun toString(): String = "{ $typeName  -> ... }"
+}
 
 class SubtypeTransformationRuleSimple(
     override val typeName: String
 ) : TransformationRuleAbstract(), SubtypeTransformationRule {
-    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
-        AssignmentTransformationStatementSimple(
-            lhsPropertyName = RootExpressionDefault.SELF,
-            rhs = NavigationDefault(
-                start = RootExpressionDefault("child"),
-                parts = listOf(
-                    IndexOperationDefault(
-                        listOf(
-                            LiteralExpressionDefault(
-                                LiteralExpressionDefault.INTEGER,
-                                0
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = run {
+        mutableListOf(
+            AssignmentTransformationStatementSimple(
+                lhsPropertyName = RootExpressionDefault.SELF,
+                rhs = NavigationDefault(
+                    start = RootExpressionDefault("child"),
+                    parts = listOf(
+                        IndexOperationDefault(
+                            listOf(
+                                LiteralExpressionDefault(
+                                    LiteralExpressionDefault.INTEGER,
+                                    0
+                                )
                             )
                         )
                     )
                 )
             )
         )
-    )
+    }
+
+    override fun toString(): String = "{ $typeName -> \$self := child[0] } //subtype"
 }
 
 class NoActionTransformationRuleSimple(
     override val typeName: String
-) : TransformationRuleAbstract(), NoActionTransformationRule
+) : TransformationRuleAbstract(), NoActionTransformationRule {
+    override fun toString(): String = "\$nothing //no action"
+}
+
+class OptionalItemTransformationRuleSimple(
+    override val typeName: String
+) : TransformationRuleAbstract(), NoActionTransformationRule {
+    override fun toString(): String = "child[0] as $typeName // optional"
+}
 
 class SelfAssignChild0TransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
     override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
-    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
-        AssignmentTransformationStatementSimple(
-            lhsPropertyName = RootExpressionDefault.SELF,
-            rhs = NavigationDefault(
-                start = RootExpressionDefault("child"),
-                parts = listOf(
-                    IndexOperationDefault(
-                        listOf(
-                            LiteralExpressionDefault(
-                                LiteralExpressionDefault.INTEGER,
-                                0
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = run {
+        mutableListOf(
+            AssignmentTransformationStatementSimple(
+                lhsPropertyName = RootExpressionDefault.SELF,
+                rhs = NavigationDefault(
+                    start = RootExpressionDefault("child"),
+                    parts = listOf(
+                        IndexOperationDefault(
+                            listOf(
+                                LiteralExpressionDefault(
+                                    LiteralExpressionDefault.INTEGER,
+                                    0
+                                )
                             )
                         )
                     )
                 )
             )
         )
-    )
+    }
+
+    override fun toString(): String = "child[0] as $typeName // self-assign"
 }
 
 class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
     override val typeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
-    override val modifyStatements: MutableList<AssignmentTransformationStatement> = mutableListOf(
-        AssignmentTransformationStatementSimple(
-            lhsPropertyName = RootExpressionDefault.SELF,
-            rhs = RootExpressionDefault("children")
+    override val modifyStatements: MutableList<AssignmentTransformationStatement> = run {
+        mutableListOf(
+            AssignmentTransformationStatementSimple(
+                lhsPropertyName = RootExpressionDefault.SELF,
+                rhs = RootExpressionDefault("children")
+            )
         )
-    )
+    }
+
+    override fun toString(): String = "child[0] as $typeName // list"
 }
 
 abstract class TransformationStatementAbstract

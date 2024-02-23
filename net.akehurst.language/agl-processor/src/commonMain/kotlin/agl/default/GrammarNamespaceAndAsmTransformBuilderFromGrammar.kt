@@ -24,7 +24,6 @@ import net.akehurst.language.agl.language.expressions.LiteralExpressionDefault
 import net.akehurst.language.agl.language.expressions.NavigationDefault
 import net.akehurst.language.agl.language.expressions.RootExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.api.language.asmTransform.CreateObjectRule
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -223,10 +222,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                         SimpleTypeModelStdLib.NothingType.declaration -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
 
                         else -> {
-                            val t = trRule.resolvedType.declaration.type(emptyList(), true)
-                            (trRule as TransformationRuleAbstract).resolveTypeAs(t) //change type to optional
-                            _grRuleItemToTrRule[ruleItem] = trRule
-                            trRule
+                            val optType = trRule.resolvedType.declaration.type(emptyList(), true)
+                            val optTr = OptionalItemTransformationRuleSimple(optType.qualifiedTypeName).also { it.resolveTypeAs(optType) }
+                            _grRuleItemToTrRule[ruleItem] = optTr
+                            optTr
                         }
                     }
                 }
@@ -349,7 +348,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun createPropertyDeclarationAndAssignment(et: StructuredType, cor: CreateObjectRule, ruleItem: RuleItem, childIndex: Int) {
+    private fun createPropertyDeclarationAndAssignment(et: StructuredType, cor: TransformationRuleAbstract, ruleItem: RuleItem, childIndex: Int) {
         when (ruleItem) {
             is EmptyRule -> Unit
             is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
@@ -425,7 +424,13 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun createPropertyDeclarationAndAssignmentForReferencedRule(refRule: GrammarRule?, et: StructuredType, cor: CreateObjectRule, ruleItem: SimpleItem, childIndex: Int) {
+    private fun createPropertyDeclarationAndAssignmentForReferencedRule(
+        refRule: GrammarRule?,
+        et: StructuredType,
+        cor: TransformationRuleAbstract,
+        ruleItem: SimpleItem,
+        childIndex: Int
+    ) {
         val rhs = refRule?.rhs
         when (rhs) {
             is Terminal -> {
@@ -478,7 +483,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     }
 
     //TODO: combine with above by passing in TypeModel
-    private fun createPropertyDeclarationForEmbedded(et: StructuredType, cor: CreateObjectRule, ruleItem: Embedded, childIndex: Int) {
+    private fun createPropertyDeclarationForEmbedded(et: StructuredType, cor: TransformationRuleAbstract, ruleItem: Embedded, childIndex: Int) {
         val embBldr = builderForEmbedded(ruleItem) //TODO: configuration
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
@@ -553,7 +558,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun createUniquePropertyDeclarationAndAssignment(et: StructuredType, cor: CreateObjectRule, name: String, type: TypeInstance, childIndex: Int) {
+    private fun createUniquePropertyDeclarationAndAssignment(et: StructuredType, trRule: TransformationRuleAbstract, name: String, type: TypeInstance, childIndex: Int) {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
         val rhs = NavigationDefault(
@@ -561,7 +566,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))))
         )
         val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
-        (cor as CreateObjectRuleSimple).appendAssignment(lhsPropertyName = uniqueName, rhs = rhs)
+        (trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhs)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: String): String {

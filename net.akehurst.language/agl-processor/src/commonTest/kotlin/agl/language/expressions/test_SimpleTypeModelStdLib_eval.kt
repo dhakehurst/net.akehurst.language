@@ -31,9 +31,9 @@ class test_SimpleTypeModelStdLib_eval {
 
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
-            val interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
-            val actual = interpreter.evaluateStr(self, expression)
-            assertEquals(expected, actual)
+            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            assertEquals(expected, actual.asm)
         }
     }
 

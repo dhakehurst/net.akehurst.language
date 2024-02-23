@@ -799,7 +799,7 @@ abstract class StructuredTypeSimpleAbstract : TypeDeclarationSimpleAbstract(), S
         property.filter { it.characteristics.contains(chr) }
 
     /**
-     * append property at the next index
+     * append property, if index < 0 then use next property number
      */
     override fun appendPropertyStored(name: String, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int): PropertyDeclaration {
         val propIndex = if (index >= 0) index else property.size

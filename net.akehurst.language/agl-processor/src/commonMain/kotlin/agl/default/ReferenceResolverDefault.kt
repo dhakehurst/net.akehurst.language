@@ -20,7 +20,9 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.asm.isStdString
-import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
+import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CollectionReferenceExpressionDefault
 import net.akehurst.language.agl.language.reference.asm.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
@@ -58,7 +60,7 @@ class ReferenceResolverDefault(
 
     private val scopeStack = mutableStackOf(rootScope)
     private val scopeForElement = mutableMapOf<AsmStructure, Scope<AsmPath>>()
-    private val _interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
 
     private fun raiseError(element: Any, message: String) {
         _issues.error(
@@ -128,7 +130,7 @@ class ReferenceResolverDefault(
             null -> scopeStack.peek()
             else -> {
                 //scope for result of navigation
-                val fromEl = _interpreter.evaluateExpression(context.element, refExpr.fromNavigation)
+                val fromEl = _interpreter.evaluateExpression(context.element.toTypedObject(typeModel), refExpr.fromNavigation)
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> scopeForElement[fromEl]!!
@@ -141,7 +143,7 @@ class ReferenceResolverDefault(
                 }
             }
         }
-        var referringValue = _interpreter.evaluateExpression(self, refExpr.referringPropertyNavigation)
+        var referringValue = _interpreter.evaluateExpression(self.toTypedObject(typeModel), refExpr.referringPropertyNavigation).asm
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
@@ -261,7 +263,7 @@ class ReferenceResolverDefault(
     }
 
     private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
-        val coll = _interpreter.evaluateExpression(self, refExpr.navigation)
+        val coll = _interpreter.evaluateExpression(self.toTypedObject(typeModel), refExpr.navigation)
         for (re in refExpr.referenceExpressionList) {
             when (coll) {
                 is AsmNothing -> Unit //do nothing
@@ -301,7 +303,7 @@ class ReferenceResolverDefault(
                     val pd = typeModel.typeOf(v).findPropertyOrNull(pn as String)
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
-                        else -> _interpreter.evaluatePropertyDeclaration(v, pd)
+                        else -> v.toTypedObject(typeModel).getPropertyValue(pd).asm
                     }
                 }
                 val lastProp = this.parts.last() as String

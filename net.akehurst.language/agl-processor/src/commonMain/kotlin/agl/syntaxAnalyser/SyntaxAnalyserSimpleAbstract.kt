@@ -627,7 +627,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         is PrimitiveType -> createStringValueFromBranch(sentence, childData.nodeInfo)
         is UnnamedSupertypeType -> TODO()
         is CollectionType -> TODO()
-        is TupleType -> createTupleFrom(sentence, type, path, childData)
+        is TupleType -> createTupleFrom(sentence, type, path, childData.value as List<ChildData>)
         is DataType -> createElementFrom(sentence, type, path, childData.value as List<ChildData>)
         else -> when (type) {
             typeModel.NothingType -> TODO()
@@ -729,12 +729,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                         else -> error("Should not happen")
                     }
 
-                    is TupleType -> createTupleFrom(sentence, propType, path, childData)
+                    is TupleType -> createTupleFrom(sentence, propType, path, childData.value as List<ChildData>)
 
                     is UnnamedSupertypeType -> {
                         val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option].declaration
                         when (actualType) {
-                            is TupleType -> createTupleFrom(sentence, actualType as TupleType, path, childData)
+                            is TupleType -> createTupleFrom(sentence, actualType as TupleType, path, childData.value as List<ChildData>)
                             else -> {
                                 TODO()
                             }

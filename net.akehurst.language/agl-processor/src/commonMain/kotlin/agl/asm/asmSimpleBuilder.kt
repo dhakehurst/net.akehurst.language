@@ -22,7 +22,8 @@ import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
-import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
+import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
@@ -153,7 +154,7 @@ class AsmElementSimpleBuilder(
             }
         }
     }
-    private val _interpreter = ExpressionsInterpreterOverAsmSimple(_typeModel)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(_typeModel)
     private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? = when (this) {
         is RootExpression -> this.createReferenceLocalToScope(scope, element)
         is NavigationExpression -> this.createReferenceLocalToScope(scope, element)
@@ -161,7 +162,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val v = _interpreter.evaluateExpression(element, this)
+        val v = _interpreter.evaluateExpression(element.toTypedObject(_typeModel), this)
         return when (v) {
             is AsmNothing -> null
             is AsmPrimitive -> v.value as String
@@ -170,7 +171,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val res = _interpreter.evaluateExpression(element, this)
+        val res = _interpreter.evaluateExpression(element.toTypedObject(_typeModel), this)
         return when (res) {
             is AsmNothing -> null
             is AsmPrimitive -> res.value as String
@@ -223,7 +224,7 @@ class AsmElementSimpleBuilder(
         } else {
             val scopeFor = es.forTypeName
             val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as NavigationExpression?
-            val res = nav?.let { ExpressionsInterpreterOverAsmSimple(_typeModel).evaluateExpression(_element, it) }
+            val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(_element.toTypedObject(_typeModel), it) }
             val referableName = when (res) {
                 null -> null
                 is AsmPrimitive -> res.value as String
