@@ -31,6 +31,11 @@ import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 
+class ConstructAndModify<TP : DataType, TR : TransformationRuleAbstract>(
+    val construct: (TP) -> TR,
+    val modify: (TR) -> Unit
+)
+
 class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     val typeModel: TypeModel,
     val grammar: Grammar,
@@ -72,19 +77,20 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         transformModel.typeModel = typeModel
     }
 
-    private fun findOrCreateTrRule(rule: GrammarRule, ifCreate: (DataType) -> TransformationRuleAbstract): TransformationRule {
+    private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, ifCreate: ConstructAndModify<TP, TR>): TransformationRule {
         val ruleName = rule.name
         val existing = _grRuleNameToTrRule[ruleName]
         return if (null == existing) {
             val tn = this.configuration?.typeNameFor(rule) ?: ruleName
-            val dt = namespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
-            val tt = dt.type()
-            val tr = ifCreate.invoke(dt)
+            val tp = namespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
+            val tt = tp.type()
+            val tr = ifCreate.construct(tp as TP)
             tr.grammarRuleName = rule.name
             tr.resolveTypeAs(tt)
             transformModel.addRule(tr)
             _grRuleNameToTrRule[ruleName] = tr
-            _grRuleNameToTrRule[ruleName]!!
+            ifCreate.modify(tr)
+            tr
         } else {
             existing
         }
@@ -117,7 +123,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             else -> {
                 val rhs = gr.rhs
                 val trRule = when (rhs) {
-                    is EmptyRule -> findOrCreateTrRule(gr) { NoActionTransformationRuleSimple(it.name) }
+                    is EmptyRule -> trRuleForRuleItemList(gr, emptyList())
                     is Terminal -> trRuleForRuleItemList(gr, listOf(rhs))
                     is NonTerminal -> trRuleForRuleItemList(gr, listOf(rhs))
                     is Embedded -> trRuleForRuleItemList(gr, listOf(rhs))
@@ -136,12 +142,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     }
 
     private fun trRuleForRuleItemList(rule: GrammarRule, items: List<RuleItem>): TransformationRule {
-        val concatType = findOrCreateTrRule(rule) { newType ->
-            val cor = CreateObjectRuleSimple(newType.name)
-            items.forEachIndexed { idx, it -> createPropertyDeclarationAndAssignment(newType, cor, it, idx) }
-            cor
-        }
-        return concatType
+        val trRule = findOrCreateTrRule(rule, ConstructAndModify({ CreateObjectRuleSimple(it.name) }, { tr ->
+            items.forEachIndexed { idx, it -> createPropertyDeclarationAndAssignment(tr, it, idx) }
+        }))
+        return trRule
     }
 
     private fun trRuleForChoiceRule(choice: Choice, choiceRule: GrammarRule): TransformationRule {
@@ -156,14 +160,16 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
             }
 
-            subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(choiceRule) { newType ->
-                val tr = SubtypeTransformationRuleSimple(newType.name)
-                subtypeTransforms.forEach {
-                    (it.resolvedType.declaration as DataType).addSupertype(newType.name)
-                    newType.addSubtype(it.resolvedType.declaration.name)
-                }
-                tr
-            }
+            subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(
+                choiceRule,
+                ConstructAndModify({ SubtypeTransformationRuleSimple(it.name) }, { tr ->
+                    val tp = tr.resolvedType.declaration as DataType
+                    subtypeTransforms.forEach {
+                        (it.resolvedType.declaration as DataType).addSupertype(tp.name)
+                        tp.addSubtype(it.resolvedType.declaration.name)
+                    }
+                })
+            )
 
             subtypeTransforms.all { it.resolvedType.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
@@ -187,7 +193,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    // Type for a GrammarRule is in some cases different than type for a rule item when part of something else in a rule
+    // Type for a GrammarRule is in some cases different to type for a rule item when part of something else in a rule
     private fun trRuleForRuleItem(ruleItem: RuleItem, forProperty: Boolean): TransformationRule {
         val existing = _grRuleItemToTrRule[ruleItem]
         return if (null != existing) {
@@ -336,7 +342,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         val ti = namespace.createTupleTypeInstance(tt, emptyList(), false)
         val cor = CreateObjectRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
         this._grRuleItemToTrRule[ruleItem] = cor
-        items.forEachIndexed { idx, it -> createPropertyDeclarationAndAssignment(tt, cor, it, idx) }
+        items.forEachIndexed { idx, it -> createPropertyDeclarationAndAssignment(cor, it, idx) }
         return when {
             tt.allProperty.isEmpty() -> {
                 val tr = SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
@@ -348,7 +354,8 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun createPropertyDeclarationAndAssignment(et: StructuredType, cor: TransformationRuleAbstract, ruleItem: RuleItem, childIndex: Int) {
+    private fun createPropertyDeclarationAndAssignment(cor: TransformationRuleAbstract, ruleItem: RuleItem, childIndex: Int) {
+        val et: StructuredType = cor.resolvedType.declaration as StructuredType
         when (ruleItem) {
             is EmptyRule -> Unit
             is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)

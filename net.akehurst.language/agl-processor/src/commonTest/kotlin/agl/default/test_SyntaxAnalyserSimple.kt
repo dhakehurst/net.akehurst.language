@@ -1299,15 +1299,15 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val tests = mutableListOf<TestData>()
-//        tests.define("v") {
-//            asmSimple {
-//                element("S") {
-//                    propertyElementExplicitType("e", "V") {
-//                        propertyString("name", "v")
-//                    }
-//                }
-//            }
-//        }
+        tests.define("v") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("e", "V") {
+                        propertyString("name", "v")
+                    }
+                }
+            }
+        }
         tests.define("v w") {
             asmSimple {
                 element("S") {

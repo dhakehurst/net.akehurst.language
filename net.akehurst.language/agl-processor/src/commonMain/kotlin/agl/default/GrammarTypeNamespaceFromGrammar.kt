@@ -36,6 +36,7 @@ object TypeModelFromGrammar {
         defaultGoalRuleName: String? = null,
         configuration: Grammar2TypeModelMapping = defaultConfiguration
     ): TypeModel { // = createFromGrammarList(listOf(grammar), configuration)
+        TODO("Deprecated")
         return grammarTypeModel(
             grammar.qualifiedName,
             grammar.name,
@@ -49,6 +50,7 @@ object TypeModelFromGrammar {
         grammarList: List<Grammar>,
         configuration: Grammar2TypeModelMapping = defaultConfiguration
     ): TypeModel {
+        TODO("Deprecated")
         val grmrTypeModel = TypeModelSimple(grammarList.last().name)
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
         for (grammar in grammarList) {
@@ -101,6 +103,7 @@ class GrammarTypeNamespaceFromGrammar(
         model: TypeModelSimple,
         context: Grammar,
     ): GrammarTypeNamespace {
+        TODO("Deprecated")
         this.contextGrammar = context
         this.model = model
         _namespace.resolveImports(model) //need to resolve std lib

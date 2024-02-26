@@ -68,17 +68,12 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         val PropertyDeclaration.isTheSingleProperty get() = this.owner.property.size == 1
 
         val Rule.hasOnyOneRhsItem get() = this.rhsItems.size == 1 && this.rhsItems[0].size == 1
-
-        fun TransformationRule.evaluate(typeModel: TypeModel, children: List<ChildData>, path: AsmPath): AsmValue {
-            val ch = children.map { it.value ?: AsmNothingSimple }
-            val contextNode = TypedObjectParseNode(typeModel, ch)
-            val v = AsmTransformInterpreter(typeModel).evaluate(contextNode, path, this)
-            return v
-        }
     }
 
     private var _asm: AsmSimple? = null
     override val asm: A get() = _asm as A
+
+    val _trf = AsmTransformInterpreter(typeModel)
 
     private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
         return asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(grmRuleName)
@@ -440,11 +435,22 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         }
     }
 
+    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? =
+        createValueFromBranch2(downData, children)
+
     private fun createValueFromBranch2(downData: DownData2, children: List<ChildData>): AsmValue {
-        return downData.trRule.forNode.evaluate(typeModel, children, downData.path)
+        val ch = children.map { it.value ?: AsmNothingSimple }
+        val contextNode = TypedObjectParseNode(typeModel, ch)
+        val asm = _trf.evaluate(contextNode, downData.path, downData.trRule.forNode)
+        if (_trf.issues.isNotEmpty()) {
+            issues.forEach {
+                super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
+            }
+        }
+        return asm
     }
 
-    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? {
+    private fun createValueFromBranch1(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? {
         val targetType = findTrRuleForGrammarRuleNamedOrNull(target.node.rule.tag)
 
         return when {

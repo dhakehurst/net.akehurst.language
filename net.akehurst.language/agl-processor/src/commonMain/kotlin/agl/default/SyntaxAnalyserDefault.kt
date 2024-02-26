@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimpleAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserForAsmTransformAbstract
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.processor.*
@@ -36,7 +36,8 @@ class SyntaxAnalyserDefault(
     typeModel: TypeModel,
     asmTransformModel: AsmTransformModel
     //scopeModel: CrossReferenceModel
-) : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {//, scopeModel) {
+) : SyntaxAnalyserForAsmTransformAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {
+    // : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {//, scopeModel) {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"

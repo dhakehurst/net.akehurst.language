@@ -23,14 +23,13 @@ import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOver
 import net.akehurst.language.agl.language.expressions.TypedObject
 import net.akehurst.language.agl.language.expressions.asm
 import net.akehurst.language.agl.language.expressions.toTypedObject
-import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.language.asmTransform.AssignmentTransformationStatement
-import net.akehurst.language.api.language.asmTransform.CreateObjectRule
+import net.akehurst.language.api.language.asmTransform.SelfStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
@@ -51,12 +50,18 @@ class TypedObjectParseNode(
                 SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
+            it.appendPropertyStored(
+                "child",
+                SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
+                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
+            )
         }
     }
 
     override val type: TypeInstance = PARSE_NODE_TYPE.type()
 
     override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
+        //TODO: should really check/test propertyDeclaration
         return AsmListSimple(children).toTypedObject(typeModel)
     }
 
@@ -67,33 +72,41 @@ class AsmTransformInterpreter(
     val typeModel: TypeModel
 ) {
 
-    val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+    val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
     fun evaluate(contextNode: TypedObjectParseNode, path: AsmPath, trRule: TransformationRule): AsmValue {
-        val asm = when (trRule) {
-            is CreateObjectRule -> AsmStructureSimple(
-                path = path,
-                qualifiedTypeName = trRule.resolvedType.qualifiedTypeName
-            )
+        val tObj = evaluateSelfStatement(contextNode, path, trRule.selfStatement)
+        val asm = tObj
+        when (asm) {
+            is AsmStructure -> {
+                for (st in trRule.modifyStatements) {
+                    executeStatementOn(contextNode, st, asm)
+                }
+            }
 
-            else -> TODO()
+            else -> {
+                issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
+            }
         }
-
-        for (st in trRule.modifyStatements) {
-            executeStatementOn(contextNode, st, asm)
-        }
-
         return asm
     }
 
-    private fun executeStatementOn(node: TypedObjectParseNode, st: AssignmentTransformationStatement, asm: AsmStructureSimple) {
+    private fun evaluateSelfStatement(contextNode: TypedObjectParseNode, path: AsmPath, selfStatement: SelfStatement): AsmValue {
+        return when (selfStatement) {
+            is ConstructSelfStatementSimple -> AsmStructureSimple(path = path, qualifiedTypeName = selfStatement.qualifiedTypeName)
+            is ExpressionSelfStatementSimple -> exprInterpreter.evaluateExpression(contextNode, selfStatement.expression).asm
+            else -> TODO()
+        }
+    }
+
+    private fun executeStatementOn(node: TypedObjectParseNode, st: AssignmentTransformationStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, node)
         asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
     }
 
-    fun evaluateExpressionOver(expr: Expression, node: TypedObjectParseNode): AsmValue {
-        val ei = ExpressionsInterpreterOverTypedObject(typeModel)
-        val res = ei.evaluateExpression(node, expr)
+    fun evaluateExpressionOver(expr: Expression, node: TypedObject): AsmValue {
+        val res = exprInterpreter.evaluateExpression(node, expr)
         return res.asm
     }
 

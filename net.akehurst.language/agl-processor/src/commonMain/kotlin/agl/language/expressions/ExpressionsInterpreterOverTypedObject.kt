@@ -164,7 +164,7 @@ class ExpressionsInterpreterOverTypedObject(
                         val idx = evaluateExpression(self, indices[0])
                         when {
                             idx.asm.isStdInteger -> {
-                                val i = (idx as AsmPrimitive).value as Int
+                                val i = (idx.asm as AsmPrimitive).value as Int
                                 asm.elements.getOrNull(i) ?: run {
                                     issues.error(null, "Index '$i' out of range")
                                     AsmNothingSimple

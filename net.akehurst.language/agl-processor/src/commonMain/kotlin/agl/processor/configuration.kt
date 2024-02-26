@@ -21,6 +21,7 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
@@ -77,7 +78,8 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault<TypeModel>(
-            TypeModelFromGrammar.create(p.grammar!!),
+//            TypeModelFromGrammar.create(p.grammar!!),
+            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name, "") {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -131,7 +133,8 @@ internal class LanguageProcessorConfigurationDefault(
     },
     override var typeModelResolver: TypeModelResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault<TypeModel>(
-            TypeModelFromGrammar.create(p.grammar!!),
+//            TypeModelFromGrammar.create(p.grammar!!),
+            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name, "") {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

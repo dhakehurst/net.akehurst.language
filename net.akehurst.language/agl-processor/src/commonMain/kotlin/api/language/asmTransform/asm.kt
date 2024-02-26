@@ -48,6 +48,7 @@ interface TransformationRule {
 
     val resolvedType: TypeInstance
 
+    val selfStatement: SelfStatement
     val modifyStatements: List<AssignmentTransformationStatement>
 }
 
@@ -56,6 +57,10 @@ interface SubtypeTransformationRule : TransformationRule
 interface SelfAssignChild0TransformationRule : TransformationRule
 interface ListTransformationRule : TransformationRule
 interface CreateObjectRule : TransformationRule {
+
+}
+
+interface SelfStatement {
 
 }
 
