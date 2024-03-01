@@ -35,6 +35,7 @@ import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
 
 class AsmTransformModelSimple(
@@ -137,13 +138,25 @@ class SubtypeTransformationRuleSimple(
 
     override val selfStatement: SelfStatement = CHILD_0
 
-    override fun toString(): String = "{ $typeName -> \$self := child[0] } //subtype"
+    override fun toString(): String = "child[0] as $typeName //subtype"
 }
 
-class NoActionTransformationRuleSimple(
-    override val typeName: String
-) : TransformationRuleAbstract(), NoActionTransformationRule {
+class UnnamedSubtypeTransformationRuleSimple() : TransformationRuleAbstract(), SubtypeTransformationRule {
 
+    override val typeName: String get() = UnnamedSupertypeTypeSimple.NAME
+
+    override val selfStatement: SelfStatement = TransformationRuleAbstract.CHILD_0
+
+    override fun toString(): String = "child[0] as $typeName //UnnamedSubtype"
+}
+
+class NothingTransformationRuleSimple() : TransformationRuleAbstract(), NoActionTransformationRule {
+
+    init {
+        super.resolveTypeAs(SimpleTypeModelStdLib.NothingType)
+    }
+
+    override val typeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
     override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionDefault(RootExpressionDefault.NOTHING))
 
     override fun toString(): String = "\$nothing //no action"
@@ -158,12 +171,12 @@ class OptionalItemTransformationRuleSimple(
     override fun toString(): String = "child[0] as $typeName // optional"
 }
 
-class SelfAssignChild0TransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
+class Child0AsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
     override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
 
     override val selfStatement: SelfStatement = CHILD_0
 
-    override fun toString(): String = "child[0] as $typeName // self-assign"
+    override fun toString(): String = "child[0] as std.String // self-assign"
 }
 
 class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {

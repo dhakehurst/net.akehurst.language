@@ -43,10 +43,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 ) {
 
     companion object {
-        fun TypeInstance.toNoActionTrRule() = this.let { t -> NoActionTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
-        fun TypeInstance.toSelfAssignChild0TrRule() = this.let { t -> SelfAssignChild0TransformationRuleSimple().also { it.resolveTypeAs(t) } }
+        fun TypeInstance.toNoActionTrRule() = this.let { t -> NothingTransformationRuleSimple().also { it.resolveTypeAs(SimpleTypeModelStdLib.NothingType) } }
+        fun TypeInstance.toSelfAssignChild0TrRule() = this.let { t -> Child0AsStringTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toListTrRule() = this.let { t -> ListTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toSubtypeTrRule() = this.let { t -> SubtypeTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
+        fun TypeInstance.toUnnamedSubtypeTrRule() = this.let { t -> UnnamedSubtypeTransformationRuleSimple().also { it.resolveTypeAs(t) } }
     }
 
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -69,9 +70,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         for (gr in nonSkipRules) {
             createOrFindTrRuleForGrammarRule(gr)
         }
+        // TODO: why iterate here?...just add to transformModel & namespace when first created !
         this._grRuleNameToTrRule.entries.forEach {
             val key = it.key
             val value = it.value
+            transformModel.addRule(value)
             namespace.allRuleNameToType[key] = value.resolvedType
         }
         transformModel.typeModel = typeModel
@@ -87,7 +90,6 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             val tr = ifCreate.construct(tp as TP)
             tr.grammarRuleName = rule.name
             tr.resolveTypeAs(tt)
-            transformModel.addRule(tr)
             _grRuleNameToTrRule[ruleName] = tr
             ifCreate.modify(tr)
             tr
@@ -116,6 +118,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             gr.isLeaf -> {
                 val t = SimpleTypeModelStdLib.String
                 val trRule = t.toSelfAssignChild0TrRule()
+                (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
             }
@@ -135,6 +138,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     is Group -> trRuleForGroup(rhs, false)
                     else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
                 }
+                (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
             }
@@ -186,10 +190,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     }
                 }
 
-                else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toSubtypeTrRule()
+                else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
             }
 
-            else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toSubtypeTrRule()
+            else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
         }
     }
 

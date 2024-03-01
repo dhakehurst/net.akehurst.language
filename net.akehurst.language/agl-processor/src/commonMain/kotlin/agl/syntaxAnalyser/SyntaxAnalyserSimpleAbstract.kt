@@ -250,7 +250,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                     else -> when (parentType) {
                         typeModel.NothingType -> typeModel.NothingType.type()
                         typeModel.AnyType -> TODO()
-                        else -> error("Shold not happen")
+                        else -> error("Should not happen")
                     }
                 }
             }

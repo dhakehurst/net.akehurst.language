@@ -47,39 +47,45 @@ class AsmTransformModelBuilder(
 ) {
     private val _rules = mutableListOf<TransformationRule>()
 
-    private fun trRule(grammarRuleName: String, typeName: String, tr: TransformationRuleAbstract) {
+    private fun trRule(grammarRuleName: String, tr: TransformationRuleAbstract) {
         tr.grammarRuleName = grammarRuleName
         _rules.add(tr)
         if (createTypes) {
             val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
-            val t = ns.findOwnedOrCreatePrimitiveTypeNamed(typeName)
+            val t = ns.findOwnedOrCreatePrimitiveTypeNamed(tr.typeName)
             tr.resolveTypeAs(t.type())
         } else {
             val ns = typeModel.namespace[this.qualifiedName]!!
-            val t = ns.findOwnedTypeNamed(typeName)!!
+            val t = ns.findOwnedTypeNamed(tr.typeName)!!
             tr.resolveTypeAs(t.type())
         }
     }
 
-    fun noActionRule(grammarRuleName: String, typeName: String) {
-        val tr = NoActionTransformationRuleSimple(typeName)
-        trRule(grammarRuleName, typeName, tr)
+    fun nothingRule(grammarRuleName: String) {
+        val tr = NothingTransformationRuleSimple()
+        trRule(grammarRuleName, tr)
     }
 
     fun stringRule(grammarRuleName: String) {
-        val tr = SelfAssignChild0TransformationRuleSimple()
+        val tr = Child0AsStringTransformationRuleSimple()
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
+        _rules.add(tr)
     }
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {
         val tr = SubtypeTransformationRuleSimple(typeName)
-        trRule(grammarRuleName, typeName, tr)
+        trRule(grammarRuleName, tr)
+    }
+
+    fun unnamedSubtypeRule(grammarRuleName: String) {
+        val tr = UnnamedSubtypeTransformationRuleSimple()
+        trRule(grammarRuleName, tr)
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
         val tr = CreateObjectRuleSimple(typeName)
-        trRule(grammarRuleName, typeName, tr)
+        trRule(grammarRuleName, tr)
         val ab = AssignmentBuilder()
         ab.modifyStatements()
         val list = ab.build(tr)

@@ -19,7 +19,9 @@ package net.akehurst.language.agl.language.asmTransform.test
 
 import net.akehurst.language.agl.language.expressions.test.ExpressionsTest
 import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
-import net.akehurst.language.api.language.asmTransform.*
+import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.AssignmentTransformationStatement
+import net.akehurst.language.api.language.asmTransform.TransformationRule
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -47,28 +49,6 @@ object AsmTransformModelTest {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
         assertEquals(expected.typeName, actual.typeName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
-        when {
-            expected is NoActionTransformationRule && actual is NoActionTransformationRule -> trAssertEquals(expected, actual, message)
-            expected is SubtypeTransformationRule && actual is SubtypeTransformationRule -> trAssertEquals(expected, actual, message)
-            expected is CreateObjectRule && actual is CreateObjectRule -> trAssertEquals(expected, actual, message)
-            expected is ModifyObjectRule && actual is ModifyObjectRule -> trAssertEquals(expected, actual, message)
-            else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
-        }
-    }
-
-    private fun trAssertEquals(expected: NoActionTransformationRule, actual: NoActionTransformationRule, message: String) {
-        //nothing else to check
-    }
-
-    private fun trAssertEquals(expected: SubtypeTransformationRule, actual: SubtypeTransformationRule, message: String) {
-        //nothing else to check
-    }
-
-    private fun trAssertEquals(expected: CreateObjectRule, actual: CreateObjectRule, message: String) {
-        trAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
-    }
-
-    private fun trAssertEquals(expected: ModifyObjectRule, actual: ModifyObjectRule, message: String) {
         trAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
     }
 

@@ -87,7 +87,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Empty ---
     @Test // S =  ;
-    fun _0_empty() {
+    fun _00_empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -106,7 +106,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Literal ---
     @Test // S = 'a' ;
-    fun _1_terminal_nonleaf_literal() {
+    fun _11_terminal_nonleaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -124,7 +124,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = a ; leaf a = 'a' ;
-    fun _1_terminal_leaf_literal() {
+    fun _12_terminal_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -145,7 +145,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Pattern ---
     @Test //  S = "[a-z]" ;
-    fun _1_terminal_nonLeaf_pattern() {
+    fun _13_terminal_nonLeaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -163,7 +163,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = v ; leaf v = "[a-z]" ;
-    fun _1_terminal_leaf_pattern() {
+    fun _14_terminal_leaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -184,7 +184,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Concatenation ---
     @Test // S = A B C ;
-    fun _2_concat_nonTerm_x3_literal() {
+    fun _21_concat_nonTerm_x3_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -210,7 +210,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun _2_concat_nonTerm_x3_literal_with_separator() {
+    fun _22_concat_nonTerm_x3_literal_with_separator() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -237,7 +237,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Choice ---
     @Test // S = 'a' | 'b' | 'c' ;
-    fun _3_choice_literal() {
+    fun _31_choice_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -254,7 +254,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x; B = b x; C = c x;
-    fun _3_choice_nonTerm() {
+    fun _32_choice_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -332,7 +332,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
-    fun _3_choice_of_choice_all_literal() {
+    fun _33_choice_of_choice_all_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -373,7 +373,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = L | M ; L = a | b | c ;  M = x | y ;
-    fun _3_choice_of_choice_all_leaf() {
+    fun _34_choice_of_choice_all_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -419,7 +419,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
-    fun _3_choice_of_choice_all_concats() {
+    fun _35_choice_of_choice_all_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -466,7 +466,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
-    fun _3_choice_of_choice_mixed_literal_and_concats() {
+    fun _36_choice_of_choice_mixed_literal_and_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -532,7 +532,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Optional ---
     @Test // S = 'a'? ;
-    fun _4_optional_literal() {
+    fun _41_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -549,7 +549,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = a 'b'? c ;
-    fun _4_concat_optional_literal() {
+    fun _42_concat_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -581,7 +581,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test //S = a? ;
-    fun _4_optional_literal_leaf() {
+    fun _43_optional_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -610,7 +610,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = a 'b'? c ;
-    fun _4_concat_optional_literal_leaf() {
+    fun _44_concat_optional_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -645,7 +645,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A?; A = a; leaf a = 'a';
-    fun _4_optional_nonTerm() {
+    fun _45_optional_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -687,7 +687,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = b A?; A = a; leaf a = 'a';
-    fun _4_concat_optional_nonTerm() {
+    fun _46_concat_optional_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -734,7 +734,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = oA; oA=A?; A = a; leaf a = 'a';
-    fun _4_nonTerm_optional_nonTerm() {
+    fun _47_nonTerm_optional_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {

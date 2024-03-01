@@ -83,7 +83,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            noActionRule("S", "S")
+            createObject("S", "S")
         }
 
         test(grammarStr, expectedTr, expectedTm)
@@ -121,11 +121,13 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
 
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
             createObject("S", "S") {
                 assignment("a", "child[0]")
             }
@@ -165,11 +167,13 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         """.trimIndent()
 
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("v")
             dataType("S", "S") {
                 propertyPrimitiveType("v", "String", false, 0)
             }
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("v")
             createObject("S", "S") {
                 assignment("v", "child[0]")
             }
@@ -501,14 +505,13 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             stringRule("a")
             stringRule("c")
             stringRule("d")
-            stringRule("e")
             stringRule("x")
-//            subtypeRule("S", "S")
+            unnamedSubtypeRule("S")
             createObject("A", "A") {
                 assignment("a", "child[0]")
                 assignment("x", "child[1]")
             }
-//            subtypeRule("B", "B")
+            unnamedSubtypeRule("B")
             createObject("C", "C") {
                 assignment("c", "child[0]")
             }
@@ -521,7 +524,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
     // --- Optional ---
     @Test //  S = 'a'? ;
-    fun _4_rhs_optional_literal() {
+    fun _41_rhs_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -541,7 +544,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     @Test // S = a 'b'? c ;
-    fun _4_concat_optional_literal() {
+    fun _42_concat_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -572,7 +575,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     @Test // S = a? ;
-    fun _4_rhs_optional_literal_leaf() {
+    fun _43_rhs_optional_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -666,6 +669,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            stringRule("a")
             createObject("S", "S") {
                 assignment("a", "children")
             }
@@ -685,12 +689,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             }
         """.trimIndent()
 
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -700,8 +699,15 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 propertyPrimitiveType("c", "String", false, 2)
             }
         }
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("b", "child[1]")
+                assignment("c", "child[2]")
+            }
+        }
 
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
+        test(grammarStr, expectedTr, expectedTm)
     }
 
     @Test //S = as ; as = a* ;

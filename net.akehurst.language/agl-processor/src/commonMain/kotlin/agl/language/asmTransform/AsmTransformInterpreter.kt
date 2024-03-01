@@ -78,15 +78,18 @@ class AsmTransformInterpreter(
     fun evaluate(contextNode: TypedObjectParseNode, path: AsmPath, trRule: TransformationRule): AsmValue {
         val tObj = evaluateSelfStatement(contextNode, path, trRule.selfStatement)
         val asm = tObj
-        when (asm) {
-            is AsmStructure -> {
-                for (st in trRule.modifyStatements) {
-                    executeStatementOn(contextNode, st, asm)
+        when {
+            trRule.modifyStatements.isEmpty() -> Unit
+            else -> when (asm) {
+                is AsmStructure -> {
+                    for (st in trRule.modifyStatements) {
+                        executeStatementOn(contextNode, st, asm)
+                    }
                 }
-            }
 
-            else -> {
-                issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
+                else -> {
+                    issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
+                }
             }
         }
         return asm
