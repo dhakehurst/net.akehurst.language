@@ -65,6 +65,14 @@ internal class RuntimeRuleRhsEmpty(
     override fun toString(): String = RuntimeRuleSet.EMPTY.tag
 }
 
+internal class RuntimeRuleRhsEmptyList(
+    rule: RuntimeRule
+) : RuntimeRuleRhsTerminal(rule) {
+    override val matchable = null
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsEmptyList(rule) //only one EMPTY_LIST rule
+    override fun toString(): String = RuntimeRuleSet.EMPTY_LIST.tag
+}
+
 internal class RuntimeRuleRhsCommonTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
@@ -313,7 +321,7 @@ internal class RuntimeRuleRhsListSimple(
 
     override val rhsItems: List<List<Rule>>
         get() = when {
-            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(RuntimeRuleSet.EMPTY))
+            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(RuntimeRuleSet.EMPTY_LIST))
             else -> listOf(listOf(repeatedRhsItem))
         }
 
@@ -364,7 +372,7 @@ internal class RuntimeRuleRhsListSimple(
 
     override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (option) {
         RulePosition.OPTION_MULTI_EMPTY -> when (position) {
-            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY)
+            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY_LIST)
             else -> emptySet()
         }
 
@@ -431,7 +439,7 @@ internal class RuntimeRuleRhsListSeparated(
 
     override val rhsItems: List<List<Rule>>
         get() = when {
-            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(separatorRhsItem), listOf(RuntimeRuleSet.EMPTY))
+            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(separatorRhsItem), listOf(RuntimeRuleSet.EMPTY_LIST))
             else -> listOf(listOf(repeatedRhsItem), listOf(separatorRhsItem))
         }
 
@@ -480,7 +488,7 @@ internal class RuntimeRuleRhsListSeparated(
 
     override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (option) {
         RulePosition.OPTION_SLIST_EMPTY -> when (position) {
-            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY)
+            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY_LIST)
             else -> emptySet()
         }
 

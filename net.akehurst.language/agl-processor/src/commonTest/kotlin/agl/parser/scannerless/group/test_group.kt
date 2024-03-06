@@ -38,16 +38,16 @@ internal class test_group : test_LeftCornerParserAbstract() {
 
         val expected = """
             R {
-              grp { A:'A' Am|1 { §empty } }
+              grp { A:'A' Am|1 { <EMPTY_LIST> } }
             }
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -63,11 +63,11 @@ internal class test_group : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -83,11 +83,11 @@ internal class test_group : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

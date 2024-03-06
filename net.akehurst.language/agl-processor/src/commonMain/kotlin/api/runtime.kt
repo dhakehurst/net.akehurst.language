@@ -36,6 +36,7 @@ interface Rule {
      */
     val isTerminal: Boolean
     val isEmptyTerminal: Boolean
+    val isEmptyListTerminal: Boolean
     val isLiteral: Boolean
     val isPattern: Boolean
     val isEmbedded: Boolean
@@ -69,6 +70,7 @@ interface RuleSetBuilder {
 @RuntimeRuleSetDslMarker
 interface ConcatenationBuilder {
     fun empty()
+    fun emptyList()
     fun literal(value: String)
     fun pattern(pattern: String)
     fun ref(name: String)

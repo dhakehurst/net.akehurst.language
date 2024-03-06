@@ -43,16 +43,16 @@ internal class test_composite_multi : test_LeftCornerParserAbstract() {
         val expected = """
             S {
                 NUM : '1'
-                cmNumMulti|1 { §empty }
+                cmNumMulti|1 { <EMPTY_LIST> }
             }
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -72,11 +72,11 @@ internal class test_composite_multi : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

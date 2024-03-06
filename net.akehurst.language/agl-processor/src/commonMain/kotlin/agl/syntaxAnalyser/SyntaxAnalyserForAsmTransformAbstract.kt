@@ -141,7 +141,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 val downData = downStack.pop()
                 val value: AsmValue? = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.resolvedType.declaration -> null
+                    typeModel.NothingType == downData.trRule.forNode.resolvedType.declaration -> AsmNothingSimple
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
@@ -468,8 +468,10 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmPrimitiveSimple? = when {
-        target.node.rule.isEmptyTerminal -> null
+    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmValue? = when {
+        target.node.rule.isEmptyTerminal -> AsmNothingSimple // for empty or optional rules
+        target.node.rule.isEmptyListTerminal -> null  // return null for empty lists
+
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
             AsmPrimitiveSimple.stdString(v)
@@ -480,7 +482,9 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         createValueFromBranch2(downData, children)
 
     private fun createValueFromBranch2(downData: DownData2, children: List<ChildData>): AsmValue {
-        val ch = children.map { it.value ?: AsmNothingSimple }
+        val type = downData.trRule.forNode.resolvedType
+        // optional children should have value Nothing, if it is an empty list then it will contain null
+        val ch = children.mapNotNull { it.value }
         val contextNode = TypedObjectParseNode(typeModel, ch)
         val asm = _trf.evaluate(contextNode, downData.path, downData.trRule.forNode)
         if (_trf.issues.isNotEmpty()) {
@@ -726,6 +730,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.List)
         return when {
             target.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
+            target.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
             target.node.rule.isList -> AsmListSimple(children.filterNotNull())
             else -> error("Internal Error: cannot create a List from '$target'")
         }
@@ -735,6 +740,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
         return when {
             target.node.rule.isEmptyTerminal -> AsmListSeparatedSimple(emptyListSeparated())
+            target.node.rule.isEmptyListTerminal -> AsmListSeparatedSimple(emptyListSeparated())
             target.node.rule.isList -> {
                 val sList = (children as List<AsmValue>).toSeparatedList<AsmValue, AsmValue, AsmValue>()
                 AsmListSeparatedSimple(sList)
@@ -774,6 +780,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                         SimpleTypeModelStdLib.List -> {
                             when {
                                 childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
+                                childData.nodeInfo.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
                                 childData.nodeInfo.node.rule.isList -> when {
                                     childData.value is AsmList -> childData.value
                                     childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList

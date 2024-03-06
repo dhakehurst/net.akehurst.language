@@ -25,6 +25,7 @@ import net.akehurst.language.agl.language.expressions.NavigationDefault
 import net.akehurst.language.agl.language.expressions.RootExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
@@ -44,10 +45,18 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 
     companion object {
         fun TypeInstance.toNoActionTrRule() = this.let { t -> NothingTransformationRuleSimple().also { it.resolveTypeAs(SimpleTypeModelStdLib.NothingType) } }
+        fun TypeInstance.toLeafAsStringTrRule() = this.let { t -> LeafAsStringTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toSelfAssignChild0TrRule() = this.let { t -> Child0AsStringTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toListTrRule() = this.let { t -> ListTransformationRuleSimple().also { it.resolveTypeAs(t) } }
         fun TypeInstance.toSubtypeTrRule() = this.let { t -> SubtypeTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
         fun TypeInstance.toUnnamedSubtypeTrRule() = this.let { t -> UnnamedSubtypeTransformationRuleSimple().also { it.resolveTypeAs(t) } }
+
+        fun EXPRESSION_CHILD(childIndex: Int) = NavigationDefault(
+            start = RootExpressionDefault("child"),
+            parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))))
+        )
+
+        val EXPRESSION_CHILDREN = RootExpressionDefault("children")
     }
 
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -117,7 +126,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             null != cor -> cor
             gr.isLeaf -> {
                 val t = SimpleTypeModelStdLib.String
-                val trRule = t.toSelfAssignChild0TrRule()
+                val trRule = t.toLeafAsStringTrRule()
                 (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
@@ -133,7 +142,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     is Concatenation -> trRuleForRuleItemList(gr, rhs.items)
                     is Choice -> trRuleForChoiceRule(rhs, gr)
                     is OptionalItem -> trRuleForRuleItemList(gr, listOf(rhs))
-                    is SimpleList -> trRuleForRuleItemList(gr, listOf(rhs)) //findOrCreateTrRule(gr) { t-> t.type().toListTrRule()}  //
+                    is SimpleList -> trRuleForSimpleList(gr, rhs)
                     is SeparatedList -> trRuleForRuleItemList(gr, listOf(rhs))
                     is Group -> trRuleForGroup(rhs, false)
                     else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
@@ -197,6 +206,25 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
+    // for when a grammar rule contains a single rhs SimpleList
+    private fun trRuleForSimpleList(rule: GrammarRule, listItem: SimpleList): TransformationRule {
+        val trRule = findOrCreateTrRule(rule, ConstructAndModify({ CreateObjectRuleSimple(it.name) }, { tr ->
+            val et: StructuredType = tr.resolvedType.declaration as StructuredType
+            val t = trRuleForRuleItem(listItem, true)
+            when {
+                // no property if list of non-leaf literals
+                t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
+                else -> {
+                    val childIndex = 0 //always first and only child
+                    val pName = propertyNameFor(et, listItem.item, t.resolvedType.declaration)
+                    val rhs = EXPRESSION_CHILDREN
+                    createUniquePropertyDeclarationAndAssignment(et, tr, pName, t.resolvedType, childIndex, rhs)
+                }
+            }
+        }))
+        return trRule
+    }
+
     // Type for a GrammarRule is in some cases different to type for a rule item when part of something else in a rule
     private fun trRuleForRuleItem(ruleItem: RuleItem, forProperty: Boolean): TransformationRule {
         val existing = _grRuleItemToTrRule[ruleItem]
@@ -205,12 +233,12 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         } else {
             val trRule: TransformationRule = when (ruleItem) {
                 is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.toNoActionTrRule() else SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
+                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.toNoActionTrRule() else SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
                 is NonTerminal -> {
                     val refRule = ruleItem.referencedRuleOrNull(this.grammar)
                     when {
                         null == refRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        refRule.isLeaf -> SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
+                        refRule.isLeaf -> SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
                         refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
                         else -> createOrFindTrRuleForGrammarRule(refRule)
                     }
@@ -377,7 +405,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val n = propertyNameFor(et, ruleItem, tr.resolvedType.declaration)
-                        createUniquePropertyDeclarationAndAssignment(et, cor, n, tr.resolvedType, childIndex)
+                        createUniquePropertyDeclarationAndAssignment(et, cor, n, tr.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                     }
                 }
             }
@@ -388,7 +416,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
-                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex)
+                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                     }
                 }
             }
@@ -399,7 +427,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
-                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex)
+                        val rhs = when {
+                            else -> EXPRESSION_CHILD(childIndex)
+                        }
+                        //createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, EXPRESSION_CHILDREN)
+                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, rhs)
                     }
                 }
             }
@@ -410,7 +442,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
-                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex)
+                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, EXPRESSION_CHILDREN)
                     }
                 }
             }
@@ -426,7 +458,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                             else -> propertyNameFor(et, ruleItem, gt.resolvedType.declaration)
                         }
 
-                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, gt.resolvedType, childIndex)
+                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, gt.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                     }
                 }
             }
@@ -447,13 +479,13 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             is Terminal -> {
                 val t = SimpleTypeModelStdLib.String
                 val pName = propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             is Concatenation -> {
                 val t = trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, t.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             is ListOfItems -> {
@@ -475,20 +507,20 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 } else {
                     val propType = trRuleForRuleItem(rhs, true) //to get list type
                     val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
-                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex)
+                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                 }
             }
 
             is Choice -> {
                 val choiceType = trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, choiceType.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             else -> {
                 val propType = trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
         }
     }
@@ -501,13 +533,13 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         when (rhs) {
             is Terminal -> {
                 val pName = propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, SimpleTypeModelStdLib.String, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, SimpleTypeModelStdLib.String, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             is Concatenation -> {
                 val t = embBldr.trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, t.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             is ListOfItems -> {
@@ -529,20 +561,20 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 } else {
                     val propType = embBldr.trRuleForRuleItem(rhs, true) //to get list type
                     val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
-                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex)
+                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                 }
             }
 
             is Choice -> {
                 val choiceType = embBldr.trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, choiceType.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             else -> {
                 val propType = embBldr.trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
-                createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex)
+                createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
         }
     }
@@ -569,15 +601,18 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun createUniquePropertyDeclarationAndAssignment(et: StructuredType, trRule: TransformationRuleAbstract, name: String, type: TypeInstance, childIndex: Int) {
+    private fun createUniquePropertyDeclarationAndAssignment(
+        et: StructuredType,
+        trRule: TransformationRuleAbstract,
+        name: String,
+        type: TypeInstance,
+        childIndex: Int,
+        rhsExpression: Expression
+    ) {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        val rhs = NavigationDefault(
-            start = RootExpressionDefault("child"),
-            parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))))
-        )
         val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
-        (trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhs)
+        (trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: String): String {

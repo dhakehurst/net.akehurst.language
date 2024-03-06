@@ -42,14 +42,14 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S|1 { §empty }"
+        val expected = "S|1 { <EMPTY_LIST> }"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -61,11 +61,11 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val expected = "S { a { 'a' } }"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -74,15 +74,17 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val (sppt,issues) = super.testFail(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1
+        val (sppt, issues) = super.testFail(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1
         )
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^a", setOf("<EOT>","','"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>", "','"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -93,11 +95,11 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val expected = "S {a{'a'} ',' a{'a'}}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -106,15 +108,17 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val (sppt,issues) = super.testFail(
+        val (sppt, issues) = super.testFail(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1
         )
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(3,4,1,1),"a,a^a", setOf("<EOT>","','"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(3, 4, 1, 1), "a,a^a", setOf("<EOT>", "','"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -125,27 +129,27 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         val expected = "S {a{'a'} ',' a{'a'} ',' a{'a'}}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun acax100() {
         val goal = "S"
-        val sentence = "a"+",a".repeat(99)
+        val sentence = "a" + ",a".repeat(99)
 
-        val expected = "S {a{'a'}"+" ',' a{'a'}".repeat(99)+"}"
+        val expected = "S {a{'a'}" + " ',' a{'a'}".repeat(99) + "}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

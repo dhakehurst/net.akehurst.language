@@ -33,7 +33,7 @@ internal abstract class test_ExpectedTerminasAtAbstract {
             goalRuleName(goal)
         })
 
-        val actual = result.filter { it.isEmptyTerminal.not() && it.isSkip.not() }.map { it.rhs.toString() }.toSet()
+        val actual = result.filter { it.isEmptyTerminal.not() && it.isEmptyListTerminal.not() && it.isSkip.not() }.map { it.rhs.toString() }.toSet()
         val expected = data.expected
         assertEquals(expected, actual, data.toString())
     }

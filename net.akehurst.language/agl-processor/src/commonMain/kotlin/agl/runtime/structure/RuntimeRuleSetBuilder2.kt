@@ -31,6 +31,7 @@ internal interface RuntimeRuleRhsBuilder {
 internal data class RuntimeRuleRef(val tag: String) {
     fun resolve(ruleMap: Map<String, RuntimeRule>) = when (tag) {
         RuntimeRuleSet.EMPTY_RULE_TAG -> RuntimeRuleSet.EMPTY
+        RuntimeRuleSet.EMPTY_LIST_RULE_TAG -> RuntimeRuleSet.EMPTY_LIST
         else -> ruleMap[tag] ?: error("Rule with tag $tag not found")
     }
 }
@@ -50,6 +51,7 @@ internal class RuntimeRuleSetBuilder2(
             Pair(rb.tag, rr)
         }
             .plus(Pair("<EMPTY>", RuntimeRuleSet.EMPTY))
+            .plus(Pair("<EMPTY_LIST>", RuntimeRuleSet.EMPTY_LIST))
             .plus(Pair("<EOT>", RuntimeRuleSet.END_OF_TEXT))
             .associate { it }
         val rules = this._ruleBuilders.values.map { rb ->
@@ -194,6 +196,11 @@ internal class RuntimeRuleConcatenationBuilder(
     override fun empty() {
         itemRefs.add(RuntimeRuleRef(RuntimeRuleSet.EMPTY.tag))
         /* only used in testing no need to - if (Debug.CHECK) */ check(1 == itemRefs.size) { "'empty' must be the only item in a rhs" }
+    }
+
+    override fun emptyList() {
+        itemRefs.add(RuntimeRuleRef(RuntimeRuleSet.EMPTY_LIST.tag))
+        /* only used in testing no need to - if (Debug.CHECK) */ check(1 == itemRefs.size) { "'emptyList' must be the only item in a rhs" }
     }
 
     override fun literal(value: String) {

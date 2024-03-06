@@ -45,6 +45,7 @@ class RuntimeRule(
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     override val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
+    override val isEmptyListTerminal get() = this.rhs is RuntimeRuleRhsEmptyList
     override val isEmbedded get() = this.rhs is RuntimeRuleRhsEmbedded
     override val isPattern get() = this.rhs is RuntimeRuleRhsPattern
     override val isLiteral get() = this.rhs is RuntimeRuleRhsLiteral
@@ -56,6 +57,7 @@ class RuntimeRule(
         get() = when (this.rhs) {
             is RuntimeRuleRhsNonTerminal -> false
             is RuntimeRuleRhsEmpty -> true
+            is RuntimeRuleRhsEmptyList -> true
             is RuntimeRuleRhsLiteral -> true
             is RuntimeRuleRhsPattern -> true
             is RuntimeRuleRhsEmbedded -> true

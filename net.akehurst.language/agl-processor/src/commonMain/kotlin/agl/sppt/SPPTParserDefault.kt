@@ -29,6 +29,7 @@ import net.akehurst.language.collections.mutableStackOf
 internal object Tokens {
     val WS = regexMatcher("\\s+")
     val EMPTY = regexMatcher("§empty|<EMPTY>")
+    val EMPTY_LIST = regexMatcher("<EMPTY_LIST>")
     val QNAME = regexMatcher("[a-zA-Z_§][.a-zA-Z_0-9§]*")
     val ID = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
     val EMBED = regexMatcher("::")
@@ -174,6 +175,7 @@ internal class TreeParser(
         while (scanner.hasMore()) {
             when {
                 scanner.hasNext(Tokens.EMPTY) -> scanEmpty()
+                scanner.hasNext(Tokens.EMPTY_LIST) -> scanEmptyList()
                 scanner.hasNext(Tokens.ID, Tokens.COLON, Tokens.LITERAL) -> scanLeafLiteral()
                 scanner.hasNext(Tokens.ID, Tokens.COLON, Tokens.ID, Tokens.EMBED, Tokens.ID, Tokens.CHILDREN_START) -> scanEmbedded()
                 scanner.hasNext(Tokens.ID, Tokens.OPTION, Tokens.CHILDREN_START) -> scanBranchStartWithOption()
@@ -213,6 +215,14 @@ internal class TreeParser(
         scanner.next(Tokens.EMPTY)
         sentenceStartPosition = sentenceNextInputPosition
         val emptyNode = this.emptyLeaf(sentenceStartPosition, sentenceNextInputPosition)
+        childrenStack.peek().add(emptyNode)
+    }
+
+    // EMPTY_LIST
+    private fun scanEmptyList() {
+        scanner.next(Tokens.EMPTY_LIST)
+        sentenceStartPosition = sentenceNextInputPosition
+        val emptyNode = this.emptyListLeaf(sentenceStartPosition, sentenceNextInputPosition)
         childrenStack.peek().add(emptyNode)
     }
 
@@ -306,6 +316,11 @@ internal class TreeParser(
 
     private fun emptyLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
         val terminalRule = RuntimeRuleSet.EMPTY
+        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
+    }
+
+    private fun emptyListLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
+        val terminalRule = RuntimeRuleSet.EMPTY_LIST
         return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
     }
 

@@ -45,6 +45,7 @@ internal class RuntimeRuleSet(
         const val ANY_LOOKAHEAD_RULE_NUMBER = -7
         const val UNDEFINED_LOOKAHEAD_RULE_NUMBER = -8
         const val EMPTY_RULE_NUMBER = -9
+        const val EMPTY_LIST_RULE_NUMBER = -10
 
         const val END_OF_TEXT_TAG = "<EOT>"
         const val GOAL_TAG = "<GOAL>"
@@ -54,6 +55,7 @@ internal class RuntimeRuleSet(
         const val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
         const val UNDEFINED_LOOKAHEAD_RULE_TAG = "<UNDEFINED>"
         const val EMPTY_RULE_TAG = "<EMPTY>"
+        const val EMPTY_LIST_RULE_TAG = "<EMPTY_LIST>"
 
         val END_OF_TEXT = RuntimeRule(NO_RRS, EOT_RULE_NUMBER, END_OF_TEXT_TAG, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
@@ -65,6 +67,8 @@ internal class RuntimeRuleSet(
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
         val EMPTY = RuntimeRule(NO_RRS, EMPTY_RULE_NUMBER, EMPTY_RULE_TAG, false)
             .also { it.setRhs(RuntimeRuleRhsEmpty(it)) }
+        val EMPTY_LIST = RuntimeRule(NO_RRS, EMPTY_LIST_RULE_NUMBER, EMPTY_LIST_RULE_TAG, false)
+            .also { it.setRhs(RuntimeRuleRhsEmptyList(it)) }
     }
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()

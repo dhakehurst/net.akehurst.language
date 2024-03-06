@@ -55,8 +55,9 @@ internal class test_multiple_the_same : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^", setOf("X"))
-            ), issues.errors)
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("X"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -64,7 +65,7 @@ internal class test_multiple_the_same : test_LeftCornerParserAbstract() {
         val sentence = "x"
 
         val expected = """
-            S { X:'x' Ls|1 { §empty } }
+            S { X:'x' Ls|1 { <EMPTY_LIST> } }
         """.trimIndent()
 
         super.test(

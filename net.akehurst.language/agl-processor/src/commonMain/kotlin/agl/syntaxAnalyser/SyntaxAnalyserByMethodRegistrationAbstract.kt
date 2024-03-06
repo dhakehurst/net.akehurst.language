@@ -50,6 +50,10 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                         stack.push(null)
                     }
 
+                    nodeInfo.node.rule.isEmptyListTerminal -> {
+                        stack.push(null)
+                    }
+
                     else -> {
                         val handlerName = nodeInfo.node.rule.tag
                         val handler = syntaxAnalyserStack.peek().findBranchHandler<Any>(handlerName, false)

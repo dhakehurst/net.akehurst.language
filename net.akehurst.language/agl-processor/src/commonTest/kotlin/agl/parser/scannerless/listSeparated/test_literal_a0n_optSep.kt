@@ -38,7 +38,7 @@ internal class test_literal_a0n_optSep : test_LeftCornerParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S|1 { §empty }"
+        val expected = "S|1 { <EMPTY_LIST> }"
 
         super.test(
             rrs = rrs,

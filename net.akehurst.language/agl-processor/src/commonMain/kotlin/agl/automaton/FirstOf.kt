@@ -164,6 +164,7 @@ internal class FirstOf(
                 val rhs = item.rhs
                 when {
                     item.isEmptyTerminal -> needsNext = true //should not happen
+                    item.isEmptyListTerminal -> needsNext = true //should not happen
                     else -> when (rhs) {
                         is RuntimeRuleRhsGoal -> error("should never happen")
                         is RuntimeRuleRhsEmbedded -> {

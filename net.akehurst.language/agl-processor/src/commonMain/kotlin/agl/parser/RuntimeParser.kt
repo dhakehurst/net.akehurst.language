@@ -716,7 +716,7 @@ internal class RuntimeParser(
         // Use current/growing runtimeLookahead
         return when {
             parseArgs.heightGraftOnly -> false
-            parseArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
+            parseArgs.nonEmptyWidthOnly && (transition.to.firstRule.isEmptyTerminal || transition.to.firstRule.isEmptyListTerminal) -> false
             else -> {
                 val l = this.graph.scanner.findOrTryCreateLeaf(sentence, head.nextInputPositionAfterSkip, transition.to.firstRule)
                 if (null != l) {

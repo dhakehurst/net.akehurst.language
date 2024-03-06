@@ -25,8 +25,8 @@ internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
     // S = 'a'*
     private companion object {
         val rrs = runtimeRuleSet {
-            multi("S",0,-1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, -1, "'a'")
+            literal("'a'", "a")
         }
         val goal = "S"
     }
@@ -36,7 +36,7 @@ internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
         val sentence = ""
 
         val expected = """
-            S|1 { §empty }
+            S|1 { <EMPTY_LIST> }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
@@ -91,7 +91,7 @@ internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
     fun a50() {
         val sentence = "a".repeat(50)
 
-        val expected = "S { "+"'a' ".repeat(50)+" }"
+        val expected = "S { " + "'a' ".repeat(50) + " }"
 
         super.test(rrs, goal, sentence, 1, expected)
     }
@@ -100,7 +100,7 @@ internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
     fun a500() {
         val sentence = "a".repeat(500)
 
-        val expected = "S { "+"'a' ".repeat(500)+" }"
+        val expected = "S { " + "'a' ".repeat(500) + " }"
 
         super.test(rrs, goal, sentence, 1, expected)
     }
@@ -109,7 +109,7 @@ internal class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
     fun a2000() {
         val sentence = "a".repeat(2000)
 
-        val expected = "S { "+"'a' ".repeat(2000)+" }"
+        val expected = "S { " + "'a' ".repeat(2000) + " }"
 
         super.test(rrs, goal, sentence, 1, expected)
     }

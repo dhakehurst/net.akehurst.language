@@ -16,10 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.automaton.ParseAction
 
 internal abstract class test_AutomatonUtilsAbstract {
     companion object {
@@ -33,6 +33,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         const val p5 = 5
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val EMPTY = RuntimeRuleSet.EMPTY
+        val EMPTY_LIST = RuntimeRuleSet.EMPTY_LIST
         val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
         val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
         val UNDEFINED = RuntimeRuleSet.UNDEFINED_RULE

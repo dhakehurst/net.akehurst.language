@@ -422,6 +422,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
 
     private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmValue? = when {
         target.node.rule.isEmptyTerminal -> null
+        target.node.rule.isEmptyListTerminal -> null
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
             AsmPrimitiveSimple.stdString(v)
@@ -663,6 +664,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.List)
         return when {
             target.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
+            target.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
             target.node.rule.isList -> AsmListSimple(children.filterNotNull())
             else -> error("Internal Error: cannot create a List from '$target'")
         }
@@ -672,6 +674,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
         return when {
             target.node.rule.isEmptyTerminal -> AsmListSeparatedSimple(emptyListSeparated())
+            target.node.rule.isEmptyListTerminal -> AsmListSeparatedSimple(emptyListSeparated())
             target.node.rule.isList -> {
                 val sList = (children as List<AsmValue>).toSeparatedList<AsmValue, AsmValue, AsmValue>()
                 AsmListSeparatedSimple(sList)
@@ -711,6 +714,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                         SimpleTypeModelStdLib.List -> {
                             when {
                                 childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
+                                childData.nodeInfo.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
                                 childData.nodeInfo.node.rule.isList -> when {
                                     childData.value is AsmList -> childData.value
                                     childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList

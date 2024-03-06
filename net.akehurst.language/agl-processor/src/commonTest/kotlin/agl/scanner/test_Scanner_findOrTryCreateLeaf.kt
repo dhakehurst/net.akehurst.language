@@ -33,7 +33,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
 
         fun test(text: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
             val sentence = SentenceDefault(text)
-            val terms = rrs.terminals.filterNot { it.isEmptyTerminal }
+            val terms = rrs.terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
             val scanners = listOf(
                 ScannerOnDemand(RegexEnginePlatform, terms),
                 ScannerClassic(RegexEnginePlatform, terms)

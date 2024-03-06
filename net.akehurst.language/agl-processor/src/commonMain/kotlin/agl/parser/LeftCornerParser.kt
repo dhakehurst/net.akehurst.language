@@ -173,6 +173,7 @@ internal class LeftCornerParser(
                             val rhs = fr.transition.to.firstRule.rhs
                             when {
                                 rhs.rule.isEmptyTerminal -> true
+                                rhs.rule.isEmptyListTerminal -> true
                                 else -> (rhs as RuntimeRuleRhsTerminal).matchable!!.isLookingAt(sentence.text, fr.position)
                             }
                         }

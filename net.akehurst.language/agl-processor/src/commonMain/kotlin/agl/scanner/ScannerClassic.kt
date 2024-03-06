@@ -42,7 +42,7 @@ class ScannerClassic(
     }
 
     //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
-    override val validTerminals = terminals.filterNot { it.isEmptyTerminal }
+    override val validTerminals = terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
 
     init {
         this.matchables // iterate this to set the regexengine
@@ -65,6 +65,7 @@ class ScannerClassic(
         val l = _leaves[position]
         val res = when {
             terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0)
+            terminalRule.isEmptyListTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY_LIST, position, position, position, 0)
             null == l -> {
                 val lf = scanAt(sentence, position)
                 _leaves[position] = lf

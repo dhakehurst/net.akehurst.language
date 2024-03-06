@@ -40,6 +40,8 @@ interface AsmTransformModel {
 
 
     fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule?
+
+    fun asString(indent: String = "", increment: String = "  "): String
 }
 
 interface TransformationRule {
@@ -50,6 +52,8 @@ interface TransformationRule {
 
     val selfStatement: SelfStatement
     val modifyStatements: List<AssignmentTransformationStatement>
+
+    fun asString(indent: String = "", increment: String = "  "): String
 }
 
 interface NoActionTransformationRule : TransformationRule
@@ -70,4 +74,6 @@ interface ModifyObjectRule : TransformationRule {
 interface AssignmentTransformationStatement {
     val lhsPropertyName: String
     val rhs: Expression
+
+    fun asString(indent: String = "", increment: String = "  "): String
 }

@@ -53,7 +53,7 @@ internal class test_arglist : test_LeftCornerParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { 'a' tail { §empty } }
+            S { 'a' tail { <EMPTY_LIST> } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)

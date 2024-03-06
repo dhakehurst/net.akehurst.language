@@ -28,9 +28,9 @@ internal class test_literal_a01 : test_LeftCornerParserAbstract() {
     // S = ['a' / ',']?
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S",0,1,"'a'","','")
-            literal("','",",")
-            literal("'a'","a")
+            sList("S", 0, 1, "'a'", "','")
+            literal("','", ",")
+            literal("'a'", "a")
         }
         val goal = "S"
     }
@@ -39,9 +39,9 @@ internal class test_literal_a01 : test_LeftCornerParserAbstract() {
     fun empty() {
         val sentence = ""
 
-        val expected = "S|1 { §empty }"
+        val expected = "S|1 { <EMPTY_LIST> }"
 
-        super.test(rrs, goal, sentence,1,expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -50,29 +50,33 @@ internal class test_literal_a01 : test_LeftCornerParserAbstract() {
 
         val expected = "S {'a'}"
 
-        super.test(rrs, goal, sentence,1,expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aa_fails() {
         val sentence = "aa"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^a",setOf("<EOT>"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun ac_fails() {
         val sentence = "a,"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^,",setOf("<EOT>"))
-       ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^,", setOf("<EOT>"))
+            ), issues.errors
+        )
 
     }
 
@@ -80,11 +84,13 @@ internal class test_literal_a01 : test_LeftCornerParserAbstract() {
     fun aca_fails() {
         val sentence = "a,a"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^,a",setOf("<EOT>"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^,a", setOf("<EOT>"))
+            ), issues.errors
+        )
 
     }
 

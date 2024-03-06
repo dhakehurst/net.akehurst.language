@@ -29,9 +29,9 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val goal = "S"
     }
@@ -41,14 +41,14 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
     fun empty() {
         val sentence = ""
 
-        val expected = "S|1 { §empty }"
+        val expected = "S|1 { <EMPTY_LIST> }"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -59,11 +59,11 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
         val expected = "S { 'a' }"
 
         super.test(
-                rrs = rrs,
-                goal = Companion.goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = Companion.goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -71,11 +71,13 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
     fun aa_fails() {
         val sentence = "aa"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^a",setOf("','","<EOT>"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("','", "<EOT>"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -85,11 +87,11 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
         val expected = "S {'a' ',' 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -97,11 +99,13 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
     fun acaa_fails() {
         val sentence = "a,aa"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(3, 4, 1, 1), "a,a^a", setOf("','", "<EOT>"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -111,26 +115,26 @@ internal class test_literal_a0n : test_LeftCornerParserAbstract() {
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun acax100() {
-        val sentence = "a"+",a".repeat(99)
+        val sentence = "a" + ",a".repeat(99)
 
-        val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
+        val expected = "S {'a'" + " ',' 'a'".repeat(99) + "}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

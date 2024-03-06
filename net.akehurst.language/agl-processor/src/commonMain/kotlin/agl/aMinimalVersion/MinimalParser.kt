@@ -410,7 +410,7 @@ internal class MinimalParser private constructor(
             null
         } else {
             val slh = firstTerminals(ss.rp, ss.rp, eot)
-                .filterNot { it.terminalRule.isEmptyTerminal }
+                .filterNot { it.terminalRule.isEmptyTerminal || it.terminalRule.isEmptyListTerminal }
                 .map { it.terminalRule }
                 .let { LookaheadSetPart.createFromRuntimeRules(it.toSet()) }
                 .union(eot)

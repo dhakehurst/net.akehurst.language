@@ -53,7 +53,7 @@ internal class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val expected = "S { <EMPTY_LIST> }"
 
         super.test(
             rrs = rrs,

@@ -56,7 +56,7 @@ class AsmTransformModelBuilder(
             tr.resolveTypeAs(t.type())
         } else {
             val ns = typeModel.namespace[this.qualifiedName]!!
-            val t = ns.findOwnedTypeNamed(tr.typeName)!!
+            val t = ns.findOwnedTypeNamed(tr.typeName) ?: error("Type '${tr.typeName}' not found")
             tr.resolveTypeAs(t.type())
         }
     }
@@ -66,7 +66,14 @@ class AsmTransformModelBuilder(
         trRule(grammarRuleName, tr)
     }
 
-    fun stringRule(grammarRuleName: String) {
+    fun leafStringRule(grammarRuleName: String) {
+        val tr = LeafAsStringTransformationRuleSimple()
+        tr.grammarRuleName = grammarRuleName
+        tr.resolveTypeAs(SimpleTypeModelStdLib.String)
+        _rules.add(tr)
+    }
+
+    fun child0StringRule(grammarRuleName: String) {
         val tr = Child0AsStringTransformationRuleSimple()
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
@@ -78,9 +85,16 @@ class AsmTransformModelBuilder(
         trRule(grammarRuleName, tr)
     }
 
-    fun unnamedSubtypeRule(grammarRuleName: String) {
+    fun unnamedSubtypeRule(grammarRuleName: String, subtypeNames: List<String>) {
         val tr = UnnamedSubtypeTransformationRuleSimple()
-        trRule(grammarRuleName, tr)
+        tr.grammarRuleName = grammarRuleName
+        val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
+        val stList = subtypeNames.map { n ->
+            _rules.first { it.grammarRuleName == n }.resolvedType
+        }
+        val t = ns.createUnnamedSupertypeType(stList)
+        tr.resolveTypeAs(t.type())
+        _rules.add(tr)
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {

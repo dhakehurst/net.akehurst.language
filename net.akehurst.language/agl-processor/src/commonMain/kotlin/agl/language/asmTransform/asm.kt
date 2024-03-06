@@ -82,6 +82,17 @@ class AsmTransformModelSimple(
     fun addRule(tr: TransformationRule) {
         _rules[tr.grammarRuleName] = tr
     }
+
+    override fun asString(indent: String, increment: String): String {
+        val ni = indent + increment
+        val rulesStr = rules.values.sortedBy { it.grammarRuleName }.joinToString(separator = "\n") { it.asString(ni, increment) }
+        val sb = StringBuilder()
+        sb.append("${indent}namespace $qualifiedName\n")
+        sb.append("${indent}transform $qualifiedName {\n")
+        sb.append("$rulesStr\n")
+        sb.append("${indent}}")
+        return sb.toString()
+    }
 }
 
 abstract class TransformationRuleAbstract : TransformationRule {
@@ -111,6 +122,10 @@ abstract class TransformationRuleAbstract : TransformationRule {
         modifyStatements.add(ass)
     }
 
+    override fun asString(indent: String, increment: String): String {
+        return "$indent${grammarRuleName}: ${this}"
+    }
+
     abstract override fun toString(): String
 }
 
@@ -120,6 +135,15 @@ class CreateObjectRuleSimple(
 
     override val selfStatement: SelfStatement = ConstructSelfStatementSimple(typeName)
 
+    override fun asString(indent: String, increment: String): String {
+        val ni = indent + increment
+        val sb = StringBuilder()
+        sb.append("$indent${grammarRuleName}: $typeName {\n")
+        sb.append("${modifyStatements.joinToString(separator = "\n") { it.asString(ni, increment) }}\n")
+        sb.append("$indent}")
+        return sb.toString()
+    }
+
     override fun toString(): String = "$typeName { ... }"
 }
 
@@ -128,6 +152,15 @@ class ModifyObjectRuleSimple(
 ) : TransformationRuleAbstract(), ModifyObjectRule {
 
     override val selfStatement: SelfStatement = LambdaSelfStatementSimple(typeName)
+
+    override fun asString(indent: String, increment: String): String {
+        val ni = indent + increment
+        val sb = StringBuilder()
+        sb.append("$indent${grammarRuleName}: { $typeName ->\n")
+        sb.append("$ni${modifyStatements.joinToString(separator = "\n$ni") { it.asString(ni, increment) }}\n")
+        sb.append("$indent}")
+        return sb.toString()
+    }
 
     override fun toString(): String = "{ $typeName  -> ... }"
 }
@@ -179,6 +212,14 @@ class Child0AsStringTransformationRuleSimple() : TransformationRuleAbstract(), S
     override fun toString(): String = "child[0] as std.String // self-assign"
 }
 
+class LeafAsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
+    override val typeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
+
+    override val selfStatement: SelfStatement get() = TODO()
+
+    override fun toString(): String = "leaf as std.String"
+}
+
 class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
     override val typeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
 
@@ -221,5 +262,9 @@ class AssignmentTransformationStatementSimple(
     fun resolveLhsAs(propertyDeclaration: PropertyDeclaration) {
         _resolvedLhs = propertyDeclaration
     }
+
+    override fun asString(indent: String, increment: String): String = "$indent$this"
+
+    override fun toString(): String = "$lhsPropertyName := $rhs"
 
 }

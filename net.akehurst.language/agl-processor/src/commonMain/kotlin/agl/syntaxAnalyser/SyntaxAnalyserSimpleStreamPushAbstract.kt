@@ -521,6 +521,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                                             val childData = children[propDecl.index]
                                             when {
                                                 childData.nodeInfo.node.rule.isEmptyTerminal -> emptyList<Any>()
+                                                childData.nodeInfo.node.rule.isEmptyListTerminal -> emptyList<Any>()
                                                 target.node.rule.isList -> children.map { it.value }.toSeparatedList<Any?, Any, Any>()
                                                 childData.nodeInfo.node.rule.isList -> when {
                                                     childData.value is List<*> -> childData.value
@@ -599,6 +600,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
     private fun createPrimitiveValue(sentence: Sentence, type: PrimitiveType, nodeInfo: SpptDataNodeInfo) {
         val text = when {
             nodeInfo.node.rule.isEmptyTerminal -> null
+            nodeInfo.node.rule.isEmptyListTerminal -> null
             else -> sentence.matchedTextNoSkip(nodeInfo.node)
         }
         primitive(type, text)
@@ -639,6 +641,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                     is PrimitiveType -> {
                         val text = when {
                             childData.nodeInfo.node.rule.isEmptyTerminal -> null
+                            childData.nodeInfo.node.rule.isEmptyListTerminal -> null
                             else -> sentence.matchedTextNoSkip(childData.nodeInfo.node)
                         }
                         primitive(propType, text)

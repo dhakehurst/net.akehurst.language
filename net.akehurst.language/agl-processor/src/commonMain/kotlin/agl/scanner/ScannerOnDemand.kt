@@ -21,10 +21,7 @@ import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.regex.RegexEngine
 import net.akehurst.language.agl.runtime.graph.CompletedNodesStore
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmpty
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.processor.ScannerKind
 import net.akehurst.language.api.sppt.Sentence
@@ -52,7 +49,7 @@ class ScannerOnDemand(
 
     internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(terminals.size)
 
-    override val validTerminals: List<Rule> = terminals.filterNot { it.isEmptyTerminal }
+    override val validTerminals: List<Rule> = terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
 
     init {
         this.matchables // iterate this to set the regexengine
@@ -147,20 +144,30 @@ class ScannerOnDemand(
     }
 
     private fun tryCreateLeaf(sentence: Sentence, position: Int, terminalRuntimeRule: RuntimeRule): CompleteTreeDataNode {
-        return if (terminalRuntimeRule.rhs is RuntimeRuleRhsEmpty) {
-            val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, 0)
-            this.leaves[terminalRuntimeRule, position] = leaf
-            leaf
-        } else {
-            val matchLength = this.tryMatchText(sentence, position, terminalRuntimeRule)
-            if (-1 == matchLength) {
-                this.leaves[terminalRuntimeRule, position] = LEAF_NONE
-                LEAF_NONE
-            } else {
-                val nextInputPosition = position + matchLength
-                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, nextInputPosition, nextInputPosition, 0)
+        return when (terminalRuntimeRule.rhs) {
+            is RuntimeRuleRhsEmpty -> {
+                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, 0)
                 this.leaves[terminalRuntimeRule, position] = leaf
                 leaf
+            }
+
+            is RuntimeRuleRhsEmptyList -> {
+                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, 0)
+                this.leaves[terminalRuntimeRule, position] = leaf
+                leaf
+            }
+
+            else -> {
+                val matchLength = this.tryMatchText(sentence, position, terminalRuntimeRule)
+                if (-1 == matchLength) {
+                    this.leaves[terminalRuntimeRule, position] = LEAF_NONE
+                    LEAF_NONE
+                } else {
+                    val nextInputPosition = position + matchLength
+                    val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, nextInputPosition, nextInputPosition, 0)
+                    this.leaves[terminalRuntimeRule, position] = leaf
+                    leaf
+                }
             }
         }
     }

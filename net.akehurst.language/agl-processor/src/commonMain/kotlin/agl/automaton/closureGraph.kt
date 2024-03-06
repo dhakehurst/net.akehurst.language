@@ -231,6 +231,7 @@ internal class ClosureGraph(
                 val str = when {
                     rr.isGoal -> "G"
                     rr.isEmptyTerminal -> "<E>"
+                    rr.isEmptyListTerminal -> "<EL>"
                     rr.isNonTerminal -> when (rr.rhs) {
                         is RuntimeRuleRhsGoal -> rr.tag
                         is RuntimeRuleRhsConcatenation -> when {

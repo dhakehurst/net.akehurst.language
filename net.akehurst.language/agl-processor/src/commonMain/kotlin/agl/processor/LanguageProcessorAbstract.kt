@@ -243,6 +243,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             when {
                 it == RuntimeRuleSet.END_OF_TEXT -> null
                 it == RuntimeRuleSet.EMPTY -> null
+                it == RuntimeRuleSet.EMPTY_LIST -> null
                 else -> {
                     when {
                         it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)

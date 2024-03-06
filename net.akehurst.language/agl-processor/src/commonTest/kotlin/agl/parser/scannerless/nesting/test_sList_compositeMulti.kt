@@ -50,7 +50,7 @@ internal class test_sList_compositeMulti : test_LeftCornerParserAbstract() {
         val expected = """
               S { nl {
                   N : '1'
-                  cnm|1 { §empty }
+                  cnm|1 { <EMPTY_LIST> }
                 } }
         """.trimIndent()
 
@@ -94,12 +94,12 @@ internal class test_sList_compositeMulti : test_LeftCornerParserAbstract() {
          S {
           nl {
             N : '1'
-            cnm|1 { §empty }
+            cnm|1 { <EMPTY_LIST> }
           }
           SMI:';'
           nl {
             N : '2'
-            cnm|1 { §empty }
+            cnm|1 { <EMPTY_LIST> }
           }
         }
         """.trimIndent()

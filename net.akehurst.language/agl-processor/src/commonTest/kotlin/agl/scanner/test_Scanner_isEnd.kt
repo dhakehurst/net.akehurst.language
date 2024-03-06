@@ -30,7 +30,7 @@ internal class test_Scanner_isEnd {
 
         fun test(text: String, rrs: RuntimeRuleSet, position: Int, expected: Boolean) {
             val sentence = SentenceDefault(text)
-            val terms = rrs.terminals.filterNot { it.isEmptyTerminal }
+            val terms = rrs.terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
             val scanners = listOf(
                 ScannerOnDemand(RegexEnginePlatform, terms),
                 ScannerClassic(RegexEnginePlatform, terms)
