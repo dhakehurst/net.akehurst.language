@@ -18,8 +18,8 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toNoActionTrRule
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSelfAssignChild0TrRule
+import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
+import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.language.asmTransform.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -222,7 +222,6 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             }
 
             else -> when (parentType) {
-
                 typeModel.NothingType -> parentPath.plus("<error>")
                 typeModel.AnyType -> TODO()
                 else -> error("Should not happen")
@@ -231,11 +230,11 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     }
 
     private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
-        val parentType = parentTrRule?.resolvedType?.declaration
+        val parentTypeDecl = parentTrRule?.resolvedType?.declaration
         return when {
-            null == parentType -> NothingTransformationRuleSimple() //TODO: check, not sure if/when this happens!
+            null == parentTypeDecl -> NothingTransformationRuleSimple() //TODO: check, not sure if/when this happens!
             nodeInfo.node.rule.isOptional -> when {
-                1 == parentType.property.size -> {
+                1 == parentTypeDecl.property.size -> {
                     // special case compressed rule
                     this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
@@ -243,7 +242,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 else -> {
                     // pseudo node for optional item
                     // return child[0] or Nothing if child[0] is the empty node
-                    val propType = parentTrRule.resolvedType.declaration.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
                         null -> NothingTransformationRuleSimple() // no property when non-term is a literal
                         else -> OptionalItemTransformationRuleSimple(propType.qualifiedTypeName).also { it.resolveTypeAs(propType) }
@@ -252,15 +251,15 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             }
 
             nodeInfo.node.rule.isList -> when {
-                1 == parentType.property.size -> {
-                    // special case compressed rule
+                1 >= parentTypeDecl.property.size -> {  // 1 (one property) or 0 (subtype)
+                    // special case compressed rule - no pseudo node for list
                     this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
 
                 else -> {
                     // pseudo node for list item
                     // return child[0] or Nothing if child[0] is the empty node
-                    val propType = parentTrRule.resolvedType.declaration.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
                         null -> NothingTransformationRuleSimple() // no property when non-term is a literal
                         else -> ListTransformationRuleSimple().also { it.resolveTypeAs(propType) }
@@ -411,7 +410,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         val typeDecl = trRule.resolvedType.declaration
         return when {
             typeDecl is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
-                DownData2(p, NodeTrRules(trRule, SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()))
+                DownData2(p, NodeTrRules(trRule, SimpleTypeModelStdLib.String.toLeafAsStringTrRule()))
             }
 
             typeDecl is DataType && typeDecl.property.size == 1 -> {
@@ -420,14 +419,16 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     typeDecl.property.first().typeInstance.isNullable -> {
                         val fProp = typeDecl.property.first()
                         val pp = p.plus(fProp.name)
-                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toNoActionTrRule()))
+                        //DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toSelfAssignChild0TrRule()))
+                        DownData2(p, NodeTrRules(trRule))
                     }
 
                     nodeInfo.node.rule.isOptional -> DownData2(p, NodeTrRules(trRule))
                     nodeInfo.node.rule.isList -> {
                         val fProp = typeDecl.property.first()
                         val pp = p.plus(fProp.name)
-                        DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toNoActionTrRule()))
+                        //DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toSelfAssignChild0TrRule()))
+                        DownData2(p, NodeTrRules(trRule))//, fProp.typeInstance))
                     }
 
                     else -> DownData2(p, NodeTrRules(trRule))
@@ -439,7 +440,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 nodeInfo.node.rule.isChoice -> when {
                     typeDecl.subtypes[nodeInfo.alt.option].declaration is TupleType -> DownData2(
                         p,
-                        NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option].toNoActionTrRule())
+                        NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option].toSubtypeTrRule())
                     )
 
                     else -> DownData2(p, NodeTrRules(trRule))

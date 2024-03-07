@@ -19,10 +19,7 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.language.asmTransform.*
-import net.akehurst.language.agl.language.expressions.IndexOperationDefault
-import net.akehurst.language.agl.language.expressions.LiteralExpressionDefault
-import net.akehurst.language.agl.language.expressions.NavigationDefault
-import net.akehurst.language.agl.language.expressions.RootExpressionDefault
+import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.Expression
@@ -54,6 +51,14 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         fun EXPRESSION_CHILD(childIndex: Int) = NavigationDefault(
             start = RootExpressionDefault("child"),
             parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))))
+        )
+
+        fun EXPRESSION_CHILD_i_prop(childIndex: Int, pName: String) = NavigationDefault(
+            start = RootExpressionDefault("child"),
+            parts = listOf(
+                IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))),
+                PropertyCallDefault(pName)
+            )
         )
 
         val EXPRESSION_CHILDREN = RootExpressionDefault("children")
@@ -507,7 +512,13 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 } else {
                     val propType = trRuleForRuleItem(rhs, true) //to get list type
                     val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
-                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
+                    val colItem = when (rhs) {
+                        is SimpleList -> rhs.item
+                        is SeparatedList -> rhs.item
+                        else -> error("Internal Error: not handled ${rhs::class.simpleName}")
+                    }
+                    val colPName = propertyNameFor(et, colItem, propType.resolvedType.declaration)
+                    createUniquePropertyDeclarationAndAssignment(et, cor, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD_i_prop(childIndex, colPName))
                 }
             }
 

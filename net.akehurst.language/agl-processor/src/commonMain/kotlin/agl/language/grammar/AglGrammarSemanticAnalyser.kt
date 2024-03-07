@@ -40,7 +40,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
     private var _analyseAmbiguities = true
 
     // Grammar -> Set<Rules>, used rules have an entry in the set
-    private val _usedRules = mutableMapOf<Grammar, MutableSet<GrammarRule>>()
+    private val _unusedRules = mutableMapOf<Grammar, MutableSet<GrammarRule>>()
 
     private fun issueWarn(item: Any?, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
@@ -53,7 +53,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
     }
 
     override fun clear() {
-        _usedRules.clear()
+        _unusedRules.clear()
         this.issues.clear()
         _locationMap = null
     }
@@ -110,7 +110,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
     }
 
     private fun checkRuleUsage(grammar: Grammar) {
-        _usedRules[grammar]!!.forEach {
+        _unusedRules[grammar]!!.forEach {
             when {
                 it is OverrideRule -> Unit // don't report it may be overriding something used in a base rule, TODO: check this
                 else -> issueWarn(it, "Rule '${it.name}' is not used in grammar ${grammar.name}.", null)
@@ -119,12 +119,12 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
     }
 
     private fun recordUnusedRule(grammar: Grammar, rule: GrammarRule) {
-        val set = this._usedRules[grammar]!!
+        val set = this._unusedRules[grammar]!!
         set.add(rule)
     }
 
     private fun analyseGrammar(context: ContextFromGrammarRegistry?, grammar: Grammar) {
-        _usedRules[grammar] = mutableSetOf()
+        _unusedRules[grammar] = mutableSetOf()
         // default usage is unused for all rules in this grammar
         grammar.grammarRule.forEach {
             when {
@@ -133,7 +133,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
             }
         }
         // first rule is default goal rule //TODO: adjust for 'option defaultGoalRule'
-        this._usedRules[grammar]!!.remove(grammar.grammarRule[0])
+        this._unusedRules[grammar]!!.remove(grammar.grammarRule.first { it.isSkip.not() })
 
         grammar.grammarRule.forEach {
             when (it) {
@@ -239,7 +239,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
                     }
 
                     else -> {
-                        this._usedRules[grammar]!!.remove(rule)
+                        this._unusedRules[grammar]!!.remove(rule)
                     }
                 }
             }

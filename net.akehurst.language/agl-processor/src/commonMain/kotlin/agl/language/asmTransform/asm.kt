@@ -209,7 +209,7 @@ class Child0AsStringTransformationRuleSimple() : TransformationRuleAbstract(), S
 
     override val selfStatement: SelfStatement = CHILD_0
 
-    override fun toString(): String = "child[0] as std.String // self-assign"
+    override fun toString(): String = "child[0] as $typeName // self-assign"
 }
 
 class LeafAsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
