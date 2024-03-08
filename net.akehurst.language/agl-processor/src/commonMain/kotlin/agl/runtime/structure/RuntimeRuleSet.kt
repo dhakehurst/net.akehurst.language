@@ -57,17 +57,17 @@ internal class RuntimeRuleSet(
         const val EMPTY_RULE_TAG = "<EMPTY>"
         const val EMPTY_LIST_RULE_TAG = "<EMPTY_LIST>"
 
-        val END_OF_TEXT = RuntimeRule(NO_RRS, EOT_RULE_NUMBER, END_OF_TEXT_TAG, false)
+        val END_OF_TEXT = RuntimeRule(NO_RRS, EOT_RULE_NUMBER, END_OF_TEXT_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
-        val USE_RUNTIME_LOOKAHEAD = RuntimeRule(NO_RRS, RUNTIME_LOOKAHEAD_RULE_NUMBER, RUNTIME_LOOKAHEAD_RULE_TAG, false)
+        val USE_RUNTIME_LOOKAHEAD = RuntimeRule(NO_RRS, RUNTIME_LOOKAHEAD_RULE_NUMBER, RUNTIME_LOOKAHEAD_RULE_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
-        val ANY_LOOKAHEAD = RuntimeRule(NO_RRS, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, false)
+        val ANY_LOOKAHEAD = RuntimeRule(NO_RRS, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
-        val UNDEFINED_RULE = RuntimeRule(NO_RRS, UNDEFINED_LOOKAHEAD_RULE_NUMBER, UNDEFINED_LOOKAHEAD_RULE_TAG, false)
+        val UNDEFINED_RULE = RuntimeRule(NO_RRS, UNDEFINED_LOOKAHEAD_RULE_NUMBER, UNDEFINED_LOOKAHEAD_RULE_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
-        val EMPTY = RuntimeRule(NO_RRS, EMPTY_RULE_NUMBER, EMPTY_RULE_TAG, false)
+        val EMPTY = RuntimeRule(NO_RRS, EMPTY_RULE_NUMBER, EMPTY_RULE_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsEmpty(it)) }
-        val EMPTY_LIST = RuntimeRule(NO_RRS, EMPTY_LIST_RULE_NUMBER, EMPTY_LIST_RULE_TAG, false)
+        val EMPTY_LIST = RuntimeRule(NO_RRS, EMPTY_LIST_RULE_NUMBER, EMPTY_LIST_RULE_TAG, false, false)
             .also { it.setRhs(RuntimeRuleRhsEmptyList(it)) }
     }
 
@@ -77,7 +77,7 @@ internal class RuntimeRuleSet(
 
     val goalRuleFor = lazyMutableMapNonNull<RuntimeRule, RuntimeRule> {
         val ug = it //this.findRuntimeRule(it)
-        val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false)
+        val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false, false)
         gr.setRhs(RuntimeRuleRhsGoal(gr, ug))
         gr
     }
@@ -143,14 +143,14 @@ internal class RuntimeRuleSet(
         if (skipRules.isEmpty()) {
             null
         } else {
-            val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
+            val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false, false).also {
                 val options = skipRules.map { skpRl ->
                     RuntimeRuleRhsConcatenation(it, listOf(skpRl))
                 }
                 val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                 it.setRhs(rhs)
             }
-            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false)
+            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false, false)
                 .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
 
             //TODO: how to set AutomatonKind here!
@@ -441,7 +441,7 @@ internal class RuntimeRuleSet(
     internal fun clone(): RuntimeRuleSet {
         val cloneNumber = nextRuntimeRuleSetNumber++
         val clonedRules = this.runtimeRules.associate { rr ->
-            val cr = RuntimeRule(cloneNumber, rr.ruleNumber, rr.name, rr.isSkip)
+            val cr = RuntimeRule(cloneNumber, rr.ruleNumber, rr.name, rr.isSkip, rr.isPseudo)
             Pair(rr.tag, cr)
         }
         this.runtimeRules.forEach {

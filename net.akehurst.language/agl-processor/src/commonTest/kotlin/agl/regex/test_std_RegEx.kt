@@ -27,7 +27,7 @@ class test_std_RegEx {
     @Test
     fun t() {
         //'(', ID, chSep, ';'
-        val rr = RuntimeRule(0, 0, "x", false).also {
+        val rr = RuntimeRule(0, 0, "x", false, false).also {
             it.setRhs(RuntimeRuleRhsPattern(it, "|"))
         }
         val text = "?"

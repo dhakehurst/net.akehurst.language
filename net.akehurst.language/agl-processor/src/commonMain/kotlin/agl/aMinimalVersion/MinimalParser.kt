@@ -255,14 +255,14 @@ internal class MinimalParser private constructor(
             return if (skipRules.isEmpty()) {
                 null
             } else {
-                val skipChoiceRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER, RuntimeRuleSet.SKIP_CHOICE_RULE_TAG, false).also {
+                val skipChoiceRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER, RuntimeRuleSet.SKIP_CHOICE_RULE_TAG, false, false).also {
                     val options = skipRules.mapIndexed { index, skpRl ->
                         RuntimeRuleRhsConcatenation(it, listOf(skpRl))
                     }
                     val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                     it.setRhs(rhs)
                 }
-                val skipMultiRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_RULE_NUMBER, RuntimeRuleSet.SKIP_RULE_TAG, false)
+                val skipMultiRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_RULE_NUMBER, RuntimeRuleSet.SKIP_RULE_TAG, false, false)
                     .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
                 Automaton(runtimeRuleSet, skipMultiRule)
             }

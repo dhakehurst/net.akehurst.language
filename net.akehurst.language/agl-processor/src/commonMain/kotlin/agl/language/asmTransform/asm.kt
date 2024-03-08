@@ -21,10 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.expressions.IndexOperationDefault
-import net.akehurst.language.agl.language.expressions.LiteralExpressionDefault
-import net.akehurst.language.agl.language.expressions.NavigationDefault
-import net.akehurst.language.agl.language.expressions.RootExpressionDefault
+import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.language.asmTransform.*
@@ -226,6 +223,19 @@ class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransfo
     override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionDefault("children"))
 
     override fun toString(): String = "children as $typeName // list"
+}
+
+class SepListItemsTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
+    override val typeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
+
+    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(
+        NavigationDefault(
+            start = RootExpressionDefault("children"),
+            parts = listOf(PropertyCallDefault("items"))
+        )
+    )
+
+    override fun toString(): String = "children.items as $typeName // SepList"
 }
 
 abstract class TransformationStatementAbstract

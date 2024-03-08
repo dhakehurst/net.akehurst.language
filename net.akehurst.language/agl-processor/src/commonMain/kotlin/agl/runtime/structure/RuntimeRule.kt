@@ -25,7 +25,8 @@ class RuntimeRule(
     val runtimeRuleSetNumber: Int,
     val ruleNumber: Int,
     val name: String?,
-    val isSkip: Boolean
+    override val isSkip: Boolean,
+    override val isPseudo: Boolean
 ) : Rule {
 
     private lateinit var _rhs: RuntimeRuleRhs

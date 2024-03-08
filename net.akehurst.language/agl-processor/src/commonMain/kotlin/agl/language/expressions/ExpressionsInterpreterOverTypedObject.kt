@@ -147,7 +147,7 @@ class ExpressionsInterpreterOverTypedObject(
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
             null -> {
-                issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
+                issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
                 AsmNothingSimple.toTypedObject(typeModel)
             }
 

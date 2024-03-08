@@ -231,10 +231,11 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
 
     private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
         val parentTypeDecl = parentTrRule?.resolvedType?.declaration
+        val nodeRule = nodeInfo.node.rule
         return when {
             null == parentTypeDecl -> NothingTransformationRuleSimple() //TODO: check, not sure if/when this happens!
-            nodeInfo.node.rule.isOptional -> when {
-                1 == parentTypeDecl.property.size -> {
+            nodeRule.isOptional -> when {
+                nodeRule.isPseudo.not() -> {
                     // special case compressed rule
                     this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
@@ -250,8 +251,8 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 }
             }
 
-            nodeInfo.node.rule.isList -> when {
-                1 >= parentTypeDecl.property.size -> {  // 1 (one property) or 0 (subtype)
+            nodeRule.isList -> when {
+                nodeRule.isPseudo.not() -> {  // 1 (one property) or 0 (subtype)
                     // special case compressed rule - no pseudo node for list
                     this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
@@ -480,18 +481,26 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     }
 
     private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? =
-        createValueFromBranch2(downData, children)
+        createValueFromBranch2(downData, target, children)
 
-    private fun createValueFromBranch2(downData: DownData2, children: List<ChildData>): AsmValue {
-        val type = downData.trRule.forNode.resolvedType
+    private fun createValueFromBranch2(downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue {
         // optional children should have value Nothing, if it is an empty list then it will contain null
-        val ch = children.mapNotNull { it.value }
-        val contextNode = TypedObjectParseNode(typeModel, ch)
+        val contextNode = when {
+            target.node.rule.isListSeparated -> TypedObjectParseNode(
+                typeModel,
+                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SEPARATED.type(),
+                children.mapNotNull { it.value }
+            )
+
+            else -> TypedObjectParseNode(
+                typeModel,
+                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SIMPLE.type(),
+                children.mapNotNull { it.value }
+            )
+        }
         val asm = _trf.evaluate(contextNode, downData.path, downData.trRule.forNode)
-        if (_trf.issues.isNotEmpty()) {
-            issues.forEach {
-                super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
-            }
+        _trf.issues.forEach {
+            super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
         }
         return asm
     }

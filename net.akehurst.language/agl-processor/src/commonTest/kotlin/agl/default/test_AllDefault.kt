@@ -1038,7 +1038,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt1"); ref("c") }
-            optional("§S§opt1", "'b'")
+            optional("§S§opt1", "'b'", isPseudo = true)
             literal("a", "a")
             literal("b")
             literal("c", "c")
@@ -1097,7 +1097,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt1"); ref("c") }
-            optional("§S§opt1", "b")
+            optional("§S§opt1", "b", isPseudo = true)
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")
@@ -1220,7 +1220,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("b"); ref("§S§opt1") }
-            optional("§S§opt1", "A")
+            optional("§S§opt1", "A", isPseudo = true)
             concatenation("A") { ref("a") }
             literal("a", "a")
             literal("b", "b")
@@ -1405,7 +1405,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§multi1"); ref("c") }
-            multi("§S§multi1", 0, -1, "'b'")
+            multi("§S§multi1", 0, -1, "'b'", isPseudo = true)
             literal("a", "a")
             literal("b")
             literal("c", "c")
@@ -1544,7 +1544,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§multi1"); ref("c") }
-            multi("§S§multi1", 0, -1, "b")
+            multi("§S§multi1", 0, -1, "b", isPseudo = true)
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")
@@ -1702,7 +1702,7 @@ class test_AllDefault {
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("b"); ref("§S§multi1"); ref("c") }
-            multi("§S§multi1", 0, -1, "A")
+            multi("§S§multi1", 0, -1, "A", isPseudo = true)
             concatenation("A") { ref("a") }
             literal("a", "a")
             literal("b", "b")
@@ -1781,8 +1781,67 @@ class test_AllDefault {
         }
     }
 
-    @Test //S = as ; as = a* ;
+    @Test //S = as ; as = 'a'* ;
     fun _507_nonTerm_list_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = 'a'* ;
+            }
+        """.trimIndent()
+        val expectedRrs = runtimeRuleSet("test.Test") {
+            concatenation("S") { ref("as") }
+            multi("as", 0, -1, "'a'")
+            literal("a")
+        }
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+            dataType("S", "S") {
+            }
+            dataType("as", "As") {
+            }
+        }
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S") {
+            }
+            createObject("as", "As") {
+            }
+        }
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "a", sppt = "S { as { 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "aa", sppt = "S { as { 'a' 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "aaa", sppt = "S { as { 'a' 'a' 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test //S = as ; as = a* ;
+    fun _508_nonTerm_list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1853,7 +1912,7 @@ class test_AllDefault {
     }
 
     @Test //S = as ; as = ao* ; ao= a? ;
-    fun _508_nonTerm_list_literal_leaf() {
+    fun _509_nonTerm_list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1935,7 +1994,7 @@ class test_AllDefault {
     }
 
     @Test //S = abs; abs = ab*; ab = A | B;
-    fun _509_list_of_supertype() {
+    fun _510_list_of_supertype() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -2105,7 +2164,7 @@ class test_AllDefault {
     }
 
     @Test // S = E; E = V | A ; A = E{2+} ; V = NAME ;
-    fun _510_supertype_of_list() {
+    fun _511_supertype_of_list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -2376,14 +2435,28 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("as") }
+            sList("as", 0, -1, "a", "','")
+            literal(",")
+            literal("a", "a")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyListTypeOf("as", "String", false, 0) // of String
             }
+            dataType("as", "As") {
+                propertyListTypeOf("a", "String", false, 0) // of String
+            }
+            stringTypeFor("a")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("as", "child[0].a")
+            }
+            createObject("as", "As") {
+                assignment("a", "children.items")
+            }
+            leafStringRule("a")
         }
         test(
             grammarStr = grammarStr,
@@ -2391,9 +2464,38 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
                 asmSimple {
                     element("S") {
+                        propertyListOfString("as", listOf())
+                    }
+                }
+            }
+            define(sentence = "a", sppt = "S { as { a:'a' } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfString("as", listOf("a"))
+                    }
+                }
+            }
+            define(sentence = "a,a", sppt = "S { as { a:'a' ',' a:'a' } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfString("as", listOf("a", "a"))
+                    }
+                }
+            }
+            define(sentence = "a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfString("as", listOf("a", "a", "a"))
+                    }
+                }
+            }
+            define(sentence = "a,a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' ',' a:'a' } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfString("as", listOf("a", "a", "a", "a"))
                     }
                 }
             }
@@ -2415,14 +2517,53 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("abs") }
+            sList("abs", 0, -1, "AB", "','")
+            choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("A")
+                ref("B")
+            }
+            concatenation("A") { ref("a") }
+            concatenation("B") { ref("b") }
+            literal(",")
+            literal("a", "a")
+            literal("b", "b")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyListTypeOf("abs", "AB", false, 0)
             }
+            dataType("abs", "Abs") {
+                propertyListTypeOf("ab", "AB", false, 0)
+            }
+            dataType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+            dataType("B", "B") {
+                propertyPrimitiveType("b", "String", false, 0)
+            }
+            dataType("AB", "AB") {
+                subtypes("A", "B")
+            }
+            stringTypeFor("a")
+            stringTypeFor("b")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("abs", "child[0].ab")
+            }
+            createObject("abs", "Abs") {
+                assignment("ab", "children.items")
+            }
+            createObject("A", "A") {
+                assignment("a", "child[0]")
+            }
+            createObject("B", "B") {
+                assignment("b", "child[0]")
+            }
+            subtypeRule("AB", "AB")
+            leafStringRule("a")
+            leafStringRule("b")
         }
         test(
             grammarStr = grammarStr,
@@ -2430,9 +2571,102 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "", sppt = "S{ abs{ <EMPTY_LIST> } }") {
                 asmSimple {
                     element("S") {
+                        propertyListOfElement("abs") {
+
+                        }
+                    }
+                }
+            }
+            define(sentence = "a", sppt = "S{ abs{ AB{ A{a:'a'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                        }
+                    }
+                }
+            }
+            define(sentence = "b", sppt = "S{ abs{ AB{ B{b:'b'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                        }
+                    }
+                }
+            }
+            define(sentence = "a,a", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ A{a:'a'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                        }
+                    }
+                }
+            }
+            define(sentence = "b,b", sppt = "S{ abs{ AB{ B{b:'b'} } ',' AB{ B{b:'b'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                        }
+                    }
+                }
+            }
+            define(sentence = "a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                        }
+                    }
+                }
+            }
+            define(sentence = "a,b,a,b,a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
+                asmSimple {
+                    element("S") {
+                        propertyListOfElement("abs") {
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                            element("A") {
+                                propertyString("a", "a")
+                            }
+                            element("B") {
+                                propertyString("b", "b")
+                            }
+                        }
                     }
                 }
             }
@@ -2450,14 +2684,31 @@ class test_AllDefault {
             }
         """
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("A"); ref("§S§opt1") }
+            optional("§S§opt1", "B", isPseudo = true)
+            sList("A", 1, -1, "'a'", "'.'")
+            concatenation("B") { literal("b") }
+            literal("a")
+            literal(".")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                // no property 'a' because it is list of non-leaf literals
+                propertyDataTypeOf("b", "B", true, 1)
+            }
+            dataType("A", "A") {
+                // no properties because rule list contains only literals
+            }
+            dataType("B", "B") {
+                // no properties because rule contains only literals
             }
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("b", "child[1]")
+            }
+            createObject("A", "A") {}
+            createObject("B", "B") {}
         }
         test(
             grammarStr = grammarStr,
@@ -2465,9 +2716,45 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "a", sppt = "S { A { 'a' } §S§opt1 { <EMPTY> } }") {
                 asmSimple {
                     element("S") {
+                        propertyNothing("b")
+                    }
+                }
+            }
+            define(sentence = "a.a", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
+                asmSimple {
+                    element("S") {
+                        propertyNothing("b")
+                    }
+                }
+            }
+            define(sentence = "a.a.a", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
+                asmSimple {
+                    element("S") {
+                        propertyNothing("b")
+                    }
+                }
+            }
+            define(sentence = "ab", sppt = "S { A { 'a' } §S§opt1 { B{'b'} } }") {
+                asmSimple {
+                    element("S") {
+                        propertyElementExplicitType("b", "B") {}
+                    }
+                }
+            }
+            define(sentence = "a.ab", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
+                asmSimple {
+                    element("S") {
+                        propertyElementExplicitType("b", "B") {}
+                    }
+                }
+            }
+            define(sentence = "a.a.ab", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
+                asmSimple {
+                    element("S") {
+                        propertyElementExplicitType("b", "B") {}
                     }
                 }
             }
@@ -2502,6 +2789,72 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test // S = ass ; ass = [as / ',']* ; as = a* ;
+    fun _67_sepList_multi_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = ass ;
+                ass = [as / ',']* ;
+                as = a* ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+        val expectedRrs = runtimeRuleSet("test.Test") {
+            concatenation("S") { ref("as") }
+            sList("as", 0, -1, "'a'", "','")
+            literal("a")
+            literal(",")
+        }
+        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+            dataType("S", "S") {
+            }
+            dataType("as", "As") {
+            }
+        }
+        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+            createObject("S", "S")
+            createObject("as", "As")
+        }
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "a", sppt = "S { as { 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "a,a", sppt = "S { as { 'a' ',' 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' } }") {
+                asmSimple {
+                    element("S") {
+                    }
+                }
+            }
+            define(sentence = "a,a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' ',' 'a' } }") {
                 asmSimple {
                     element("S") {
                     }

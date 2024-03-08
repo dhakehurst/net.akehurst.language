@@ -31,6 +31,13 @@ interface RuleSet {
 interface Rule {
     val tag: String
 
+    val isSkip: Boolean
+
+    /**
+     * pseudo rules are created where there is not a 1:1 mapping from (user-defined) grammar-rule to runtime-rule
+     */
+    val isPseudo: Boolean
+
     /**
      * Empty, Literal, Pattern, Embedded
      */
@@ -62,9 +69,13 @@ internal annotation class RuntimeRuleSetDslMarker
 
 @RuntimeRuleSetDslMarker
 interface RuleSetBuilder {
-    fun concatenation(ruleName: String, isSkip: Boolean = false, init: ConcatenationBuilder.() -> Unit)
-    fun choiceLongest(ruleName: String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
-    fun choicePriority(ruleName: String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun concatenation(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ConcatenationBuilder.() -> Unit)
+    fun choiceLongest(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun choicePriority(ruleName: String, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun optional(ruleName: String, itemRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
+    fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
+    fun sList(ruleName: String, min: Int, max: Int, itemRef: String, sepRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
+    fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRuleName: String, isSkip: Boolean = false, isPseudo: Boolean = false)
 }
 
 @RuntimeRuleSetDslMarker

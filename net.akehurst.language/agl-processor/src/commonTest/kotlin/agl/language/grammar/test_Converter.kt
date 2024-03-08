@@ -516,7 +516,7 @@ internal class test_Converter {
 
         val expected = runtimeRuleSet {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY, isPseudo = true) {
                 concatenation { ref("b"); ref("c") }
                 concatenation { ref("d") }
             }
@@ -549,12 +549,12 @@ internal class test_Converter {
 
         val expected = runtimeRuleSet {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
             }
             concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            multi("§S§multi1", 1, -1, "d", isPseudo = true)
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")

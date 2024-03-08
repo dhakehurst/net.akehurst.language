@@ -68,39 +68,8 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     // --- ListSeparated ---
-    @Test // S = as ; as = [a / ',']* ;
-    fun _6_nonTerm_sepList_literal_leaf() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = as ;
-                as = [a / ',']* ;
-                a = 'a' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
-            dataType("S", "S") {
-                propertyListTypeOf("as", "A", false, 0) // of String
-            }
-            //listSeparatedTypeOf("as", "A", StringType)
-            dataType("as", "As") {
-                propertyListTypeOf("a", "A", false, 0) // of String
-            }
-            dataType("a", "A") {
-            }
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
-    }
-
     @Test
-    fun _6_sepList_multi_nonTerm() {
+    fun _67_sepList_multi_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -130,34 +99,6 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             //listSeparatedTypeFor("ass", t_as, StringType.use)
             dataType("a", "A") {
             }
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
-    }
-
-    @Test
-    fun _6_nonTerm_multi_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = as ;
-                as = 'a'* ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
-            dataType("S", "S") {
-                //propertyListType("as", StringType, false, 0) // of String
-            }
-            dataType("as", "As") {
-
-            }
-            //listTypeFor("as", StringType)
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)

@@ -66,15 +66,15 @@ internal class ConverterToRuntimeRules(
         this._originalRuleItem[Pair(runtimeRule.runtimeRuleSetNumber, runtimeRule.ruleNumber)] = originalRuleItem
     }
 
-    private fun nextRule(name: String, isSkip: Boolean): RuntimeRule {
+    private fun nextRule(name: String, isSkip: Boolean, isPseudo: Boolean): RuntimeRule {
         if (Debug.CHECK) check(this._runtimeRules.containsKey(name).not())
-        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip)
+        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip, isPseudo)
         _runtimeRules[name] = newRule
         return newRule
     }
 
     private fun terminalRule(name: String?, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
-        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip).also {
+        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip, false).also {
             if (isPattern) {
                 val unescaped = RuntimeRuleRhsPattern.unescape(value)
                 it.setRhs(RuntimeRuleRhsPattern(it, unescaped))
@@ -95,7 +95,7 @@ internal class ConverterToRuntimeRules(
         val embeddedConverter = _embeddedConverters[embeddedGrammar]
         val embeddedRuntimeRuleSet = embeddedConverter.runtimeRuleSet
         val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
-        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, embeddedRuleName, isSkip).also {
+        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, embeddedRuleName, isSkip, false).also {
             it.setRhs(RuntimeRuleRhsEmbedded(it, embeddedRuntimeRuleSet, embeddedStartRuntimeRule))
         }
         _runtimeRules[newRule.tag] = newRule
@@ -212,7 +212,7 @@ internal class ConverterToRuntimeRules(
                 }
 
                 else -> {
-                    val nrule = this.nextRule(target.name, target.isSkip)
+                    val nrule = this.nextRule(target.name, target.isSkip, false)
                     val rrhs = createRhs(nrule, target.rhs, target.name)
                     nrule.setRhs(rrhs)
                     Pair(nrule, target.rhs)
@@ -336,14 +336,14 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createPseudoRule(target: RuleItem, psudeoRuleName: String): RuntimeRule {
-        val nrule = this.nextRule(psudeoRuleName, false)
+        val nrule = this.nextRule(psudeoRuleName, false, true)
         this.recordOriginalRuleItem(nrule, target)
         return nrule
     }
 
     private fun createPseudoRuleForOptionalItem(target: OptionalItem, arg: String): RuntimeRule {
         val optRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
-        val nrule = this.nextRule(optRuleName, false)
+        val nrule = this.nextRule(optRuleName, false, true)
         nrule.setRhs(this.createRhsForOptional(nrule, target, optRuleName))
         this.recordOriginalRuleItem(nrule, target)
         return nrule
@@ -351,7 +351,7 @@ internal class ConverterToRuntimeRules(
 
     private fun createPseudoRuleForSimpleList(target: SimpleList, arg: String): RuntimeRule {
         val multiRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
-        val nrule = this.nextRule(multiRuleName, false)
+        val nrule = this.nextRule(multiRuleName, false, true)
         nrule.setRhs(this.createRhsForSimpleList(nrule, target, multiRuleName))
         this.recordOriginalRuleItem(nrule, target)
         return nrule
@@ -359,7 +359,7 @@ internal class ConverterToRuntimeRules(
 
     private fun createPseudoRuleForSeparatedList(target: SeparatedList, arg: String): RuntimeRule {
         val sListRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSeparatedListRuleName(arg)
-        val nrule = this.nextRule(sListRuleName, false)
+        val nrule = this.nextRule(sListRuleName, false, true)
         nrule.setRhs(this.createRhsForSeparatedList(nrule, target, sListRuleName))
         this.recordOriginalRuleItem(nrule, target)
         return nrule

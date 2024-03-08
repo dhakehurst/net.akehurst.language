@@ -34,6 +34,7 @@ internal object RuntimeRuleSetTest {
     fun RuntimeRule.matches(other: RuntimeRule): Boolean = when {
         this.name != other.name -> false
         this.isSkip != other.isSkip -> false
+        this.isPseudo != other.isPseudo -> false
         this.rhs.matches(other.rhs).not() -> false
         else -> true
     }

@@ -28,7 +28,7 @@ class test_ParseGraph {
 
     @Test
     fun construct() {
-        val goalRule = RuntimeRule(0, 0, "a", false)
+        val goalRule = RuntimeRule(0, 0, "a", false, false)
         val text = ""
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
@@ -39,7 +39,7 @@ class test_ParseGraph {
 
     @Test
     fun canGrow_empty() {
-        val goalRule = RuntimeRule(0, 0, "a", false)
+        val goalRule = RuntimeRule(0, 0, "a", false, false)
         val text = ""
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
@@ -51,7 +51,7 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val userGoalRule = RuntimeRule(0, 0, "a", false)
+        val userGoalRule = RuntimeRule(0, 0, "a", false, false)
         val text = "a"
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)

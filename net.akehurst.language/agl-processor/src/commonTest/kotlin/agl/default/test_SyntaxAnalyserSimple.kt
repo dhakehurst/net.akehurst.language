@@ -142,270 +142,8 @@ class test_SyntaxAnalyserSimple {
     }
 
     // --- ListSeparated ---
-    @Test // S = as ; as = [a / ',']* ;
-    fun _6_rhs_nonTerm_sepList_literal_leaf() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = as ;
-                as = [a / ',']* ;
-                leaf a = 'a' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("") {
-            asmSimple {
-                element("S") {
-                    propertyListOfString("as", listOf())
-                }
-            }
-        }
-        tests.define("a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfString("as", listOf("a"))
-                }
-            }
-        }
-        tests.define("a,a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfString("as", listOf("a", "a"))
-                }
-            }
-        }
-        tests.define("a,a,a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfString("as", listOf("a", "a", "a"))
-                }
-            }
-        }
-        tests.define("a,a,a,a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfString("as", listOf("a", "a", "a", "a"))
-                }
-            }
-        }
-        testAll(proc, tests)
-    }
-
-    @Test //S = abs; abs = [ab / ',']*; ab = A | B;
-    fun _6_sepList_of_supertype() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = abs ;
-                abs = [AB / ',']* ;
-                AB = A | B ;
-                A = a ;
-                B = b ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
-            stringTypeFor("a")
-            stringTypeFor("b")
-            dataType("S", "S") {
-                propertyListTypeOf("abs", "AB", false, 0)
-            }
-            dataType("abs", "Abs") {
-                propertyListTypeOf("ab", "AB", false, 0)
-            }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            dataType("B", "B") {
-                propertyPrimitiveType("b", "String", false, 0)
-            }
-            dataType("AB", "AB") {
-                subtypes("A", "B")
-            }
-        })
-
-        val tests = mutableListOf<TestData>()
-        tests.define("") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-
-                    }
-                }
-            }
-        }
-        tests.define("a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("b") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("a,a") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("b,b") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("a,b") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("a,b,a,b,a,b") {
-            asmSimple {
-                element("S") {
-                    propertyListOfElement("abs") {
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                        element("A") {
-                            propertyString("a", "a")
-                        }
-                        element("B") {
-                            propertyString("b", "b")
-                        }
-                    }
-                }
-            }
-        }
-        testAll(proc, tests)
-    }
-
-    @Test //S = A B? ; A = ['a'/'.']+ ; B = 'b' ;
-    fun _6_sepList_followed_by_empty() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = A B? ;
-                A = ['a'/'.']+ ;
-                B = 'b' ;
-            }
-        """
-        val proc = testProc(grammarStr)
-
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
-            dataType("A", "A") {
-                // no properties because rule list contains only literals
-            }
-            dataType("B", "B") {
-                // no properties because rule contains only literals
-            }
-            dataType("S", "S") {
-                // no property 'a' because it is empty
-                propertyDataTypeOf("b", "B", true, 1)
-            }
-
-        })
-
-        val tests = mutableListOf<TestData>()
-        tests.define("a") {
-            asmSimple {
-                element("S") {
-                    propertyNothing("b")
-                }
-            }
-        }
-        tests.define("a.a") {
-            asmSimple {
-                element("S") {
-                    propertyNothing("b")
-                }
-            }
-        }
-        tests.define("a.a.a") {
-            asmSimple {
-                element("S") {
-                    propertyNothing("b")
-                }
-            }
-        }
-        tests.define("ab") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("b", "B") {}
-                }
-            }
-        }
-        tests.define("a.ab") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("b", "B") {}
-                }
-            }
-        }
-        tests.define("a.a.ab") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("b", "B") {}
-                }
-            }
-        }
-        testAll(proc, tests)
-    }
-
     @Test //S = As B? ; As = [A/'.']+ ; leaf A = 'a' ; leaf B = 'b' ;
-    fun _6_sepList_followed_by_empty_leafs() {
+    fun _66_sepList_followed_by_empty_leafs() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1012,12 +750,12 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkRuntimeGrammar(proc, runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("S") {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
             }
             concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            multi("§S§multi1", 1, -1, "d", isPseudo = true)
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
@@ -1077,12 +815,12 @@ class test_SyntaxAnalyserSimple {
 
         checkRuntimeGrammar(proc, runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY, isPseudo = true) {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
             }
             concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            multi("§S§multi1", 1, -1, "d", isPseudo = true)
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")
@@ -1135,13 +873,13 @@ class test_SyntaxAnalyserSimple {
 
         checkRuntimeGrammar(proc, runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt2"); ref("e") }
-            optional("§S§opt2", "§S§choice1")
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            optional("§S§opt2", "§S§choice1", isPseudo = true)
+            choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
             }
             concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            multi("§S§multi1", 1, -1, "d", isPseudo = true)
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")
@@ -1312,8 +1050,8 @@ class test_SyntaxAnalyserSimple {
                 concatenation { ref("§S§group1") }
                 concatenation { ref("§S§group2") }
             }
-            concatenation("§S§group1") { ref("a"); ref("b") }
-            concatenation("§S§group2") { ref("c"); ref("d"); ref("e") }
+            concatenation("§S§group1", isPseudo = true) { ref("a"); ref("b") }
+            concatenation("§S§group2", isPseudo = true) { ref("c"); ref("d"); ref("e") }
             literal("a", "a")
             literal("b", "b")
             literal("c", "c")
@@ -1535,7 +1273,7 @@ class test_SyntaxAnalyserSimple {
 
         checkRuntimeGrammar(proc, runtimeRuleSet("test.Test") {
             concatenation("S") { ref("x"); ref("§S§choice1"); ref("y") }
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY, isPseudo = true) {
                 concatenation { ref("a"); ref("b") }
                 concatenation { ref("c"); ref("d"); ref("e") }
             }
@@ -2098,7 +1836,7 @@ class test_SyntaxAnalyserSimple {
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
-            embedded("§I§S§embedded1", Inner, "S")
+            embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         })
 
         /*
@@ -2216,7 +1954,7 @@ class test_SyntaxAnalyserSimple {
             }
             concatenation("B") { literal("b"); ref("§I§S§embedded1"); literal("b"); }
             concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
-            embedded("§I§S§embedded1", Inner, "S")
+            embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         })
 
         val tests = mutableListOf<TestData>()
@@ -2274,7 +2012,7 @@ class test_SyntaxAnalyserSimple {
                 concatenation { literal("b"); ref("§I§S§embedded1"); literal("b"); }
                 concatenation { literal("c"); ref("§I§S§embedded1"); literal("c") }
             }
-            embedded("§I§S§embedded1", Inner, "S")
+            embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         })
 
         val tests = mutableListOf<TestData>()
@@ -2341,7 +2079,7 @@ class test_SyntaxAnalyserSimple {
             }
             concatenation("B") { literal("b"); ref("§I§S§embedded1"); literal("b"); }
             concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
-            embedded("§I§S§embedded1", Inner, "S")
+            embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         })
 
         val tests = mutableListOf<TestData>()

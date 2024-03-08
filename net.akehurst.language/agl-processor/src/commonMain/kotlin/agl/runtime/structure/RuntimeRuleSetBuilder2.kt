@@ -67,10 +67,11 @@ internal class RuntimeRuleSetBuilder2(
     private fun _rule(
         name: String,
         isSkip: Boolean,
+        isPseudo: Boolean,
         build: (rule: RuntimeRule, ruleMap: Map<String, RuntimeRule>) -> RuntimeRuleRhs
     ) {
         val tag = name
-        val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, ruleMap ->
+        val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, isPseudo) { rule, ruleMap ->
             build(rule, ruleMap)
         }
         this._ruleBuilders[name] = rb
@@ -82,7 +83,7 @@ internal class RuntimeRuleSetBuilder2(
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
-            val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
+            val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, false) { rule, _ ->
                 RuntimeRuleRhsLiteral(rule, literalUnescaped)
             }
             this._ruleBuilders[tag] = rb
@@ -95,62 +96,64 @@ internal class RuntimeRuleSetBuilder2(
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
-            val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
+            val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, false) { rule, _ ->
                 RuntimeRuleRhsPattern(rule, patternUnescaped)
             }
             this._ruleBuilders[tag] = rb
         }
     }
 
-    override fun choiceLongest(ruleName: String, isSkip: Boolean, init: ChoiceBuilder.() -> Unit) = choice(ruleName, RuntimeRuleChoiceKind.LONGEST_PRIORITY, isSkip, init)
+    override fun choiceLongest(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
+        choice(ruleName, RuntimeRuleChoiceKind.LONGEST_PRIORITY, isSkip, isPseudo, init)
 
-    override fun choicePriority(ruleName: String, isSkip: Boolean, init: ChoiceBuilder.() -> Unit) = choice(ruleName, RuntimeRuleChoiceKind.PRIORITY_LONGEST, isSkip, init)
+    override fun choicePriority(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ChoiceBuilder.() -> Unit) =
+        choice(ruleName, RuntimeRuleChoiceKind.PRIORITY_LONGEST, isSkip, isPseudo, init)
 
-    fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit) {
+    fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, isSkip: Boolean = false, isPseudo: Boolean = false, init: ChoiceBuilder.() -> Unit) {
         val b = RuntimeRuleChoiceBuilder(this)
         b.init()
         val tag = name
-        val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, ruleMap ->
+        val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, isPseudo) { rule, ruleMap ->
             val options = b.choices.map { rhsB -> rhsB.buildRhs(rule, ruleMap) }
             RuntimeRuleRhsChoice(rule, choiceKind, options)
         }
         this._ruleBuilders[name] = rb
     }
 
-    override fun concatenation(ruleName: String, isSkip: Boolean, init: ConcatenationBuilder.() -> Unit) {
+    override fun concatenation(ruleName: String, isSkip: Boolean, isPseudo: Boolean, init: ConcatenationBuilder.() -> Unit) {
         val b = RuntimeRuleConcatenationBuilder(this)
         b.init()
-        _rule(ruleName, isSkip) { rule, ruleMap ->
+        _rule(ruleName, isSkip, isPseudo) { rule, ruleMap ->
             b.buildRhs(rule, ruleMap)
         }
     }
 
-    fun optional(ruleName: String, itemRef: String, isSkip: Boolean = false) {
-        _rule(ruleName, isSkip) { rule, ruleMap ->
+    override fun optional(ruleName: String, itemRef: String, isSkip: Boolean, isPseudo: Boolean) {
+        _rule(ruleName, isSkip, isPseudo) { rule, ruleMap ->
             val item = RuntimeRuleRef(itemRef).resolve(ruleMap)
             RuntimeRuleRhsOptional(rule, item)
         }
     }
 
-    fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean = false) {
-        _rule(ruleName, isSkip) { rule, ruleMap ->
+    override fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean, isPseudo: Boolean) {
+        _rule(ruleName, isSkip, isPseudo) { rule, ruleMap ->
             val item = RuntimeRuleRef(itemRef).resolve(ruleMap)
             RuntimeRuleRhsListSimple(rule, min, max, item)
         }
     }
 
-    fun sList(ruleName: String, min: Int, max: Int, itemRef: String, sepRef: String, isSkip: Boolean = false) {
-        _rule(ruleName, isSkip) { rule, ruleMap ->
+    override fun sList(ruleName: String, min: Int, max: Int, itemRef: String, sepRef: String, isSkip: Boolean, isPseudo: Boolean) {
+        _rule(ruleName, isSkip, isPseudo) { rule, ruleMap ->
             val item = RuntimeRuleRef(itemRef).resolve(ruleMap)
             val sep = RuntimeRuleRef(sepRef).resolve(ruleMap)
             RuntimeRuleRhsListSeparated(rule, min, max, item, sep)
         }
     }
 
-    fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRuleName: String, isSkip: Boolean = false) {
+    override fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRuleName: String, isSkip: Boolean, isPseudo: Boolean) {
         val startRule = (embeddedRuleSet as RuntimeRuleSet).findRuntimeRule(startRuleName)
         val tag = ruleName
-        val rb = RuntimeRuleBuilder(ruleSetNumber, ruleName, tag, isSkip) { rule, _ ->
+        val rb = RuntimeRuleBuilder(ruleSetNumber, ruleName, tag, isSkip, false) { rule, _ ->
             RuntimeRuleRhsEmbedded(rule, embeddedRuleSet as RuntimeRuleSet, startRule as RuntimeRule)
         }
         this._ruleBuilders[ruleName] = rb
@@ -169,13 +172,14 @@ internal class RuntimeRuleBuilder(
     val name: String?,
     val tag: String,
     val isSkip: Boolean,
+    val isPseudo: Boolean,
     val rhsBuilder: (rule: RuntimeRule, ruleMap: Map<String, RuntimeRule>) -> RuntimeRuleRhs
 ) {
     var rule: RuntimeRule? = null
 
     fun buildRule(number: Int): RuntimeRule {
         if (null == this.rule) {
-            this.rule = RuntimeRule(ruleSetNumber, number, name, isSkip)
+            this.rule = RuntimeRule(ruleSetNumber, number, name, isSkip, isPseudo)
         }
         return this.rule!!
     }

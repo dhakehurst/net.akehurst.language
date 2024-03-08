@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
+import net.akehurst.language.agl.asm.AsmListSeparatedSimple
 import net.akehurst.language.agl.asm.AsmListSimple
 import net.akehurst.language.agl.asm.AsmStructureSimple
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
@@ -30,11 +31,13 @@ import net.akehurst.language.api.language.asmTransform.AssignmentTransformationS
 import net.akehurst.language.api.language.asmTransform.SelfStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 class TypedObjectParseNode(
     val typeModel: TypeModel,
+    override val type: TypeInstance,
     val children: List<AsmValue>
 ) : TypedObject {
     companion object {
@@ -44,7 +47,7 @@ class TypedObjectParseNode(
             }
         }
         val parseNodeNamespace = parseNodeTypeModel.namespace["parse"]!!
-        val PARSE_NODE_TYPE = parseNodeNamespace.createTupleType().also {
+        val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
             it.appendPropertyStored(
                 "children",
                 SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
@@ -56,13 +59,31 @@ class TypedObjectParseNode(
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
         }
+        val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
+            it.appendPropertyStored(
+                "children",
+                SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType, SimpleTypeModelStdLib.AnyType)),
+                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
+            )
+            it.appendPropertyStored(
+                "child",
+                SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType)),
+                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
+            )
+        }
     }
-
-    override val type: TypeInstance = PARSE_NODE_TYPE.type()
 
     override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
         //TODO: should really check/test propertyDeclaration
-        return AsmListSimple(children).toTypedObject(typeModel)
+        return when {
+            propertyDeclaration.typeInstance.declaration.conformsTo(SimpleTypeModelStdLib.ListSeparated) ->
+                AsmListSeparatedSimple(children.toSeparatedList()).toTypedObject(typeModel)
+
+            propertyDeclaration.typeInstance.declaration.conformsTo(SimpleTypeModelStdLib.List) ->
+                AsmListSimple(children).toTypedObject(typeModel)
+
+            else -> TODO("not supported")
+        }
     }
 
     override fun asString(): String = "ParseNode"
