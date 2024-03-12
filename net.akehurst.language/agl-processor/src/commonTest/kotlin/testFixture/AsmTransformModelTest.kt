@@ -20,7 +20,6 @@ package net.akehurst.language.agl.language.asmTransform.test
 import net.akehurst.language.agl.language.expressions.test.ExpressionsTest
 import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
-import net.akehurst.language.api.language.asmTransform.AssignmentTransformationStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -47,22 +46,10 @@ object AsmTransformModelTest {
 
     private fun trAssertEquals(expected: TransformationRule, actual: TransformationRule, message: String) {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
-        assertEquals(expected.typeName, actual.typeName)
+        assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
-        trAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
+        ExpressionsTest.exAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
     }
 
-    private fun trAssertEquals(expected: List<AssignmentTransformationStatement>, actual: List<AssignmentTransformationStatement>, message: String) {
-        assertEquals(expected.size, actual.size, "number of AssignmentTransformationStatement is different")
-        for (i in expected.indices) {
-            val expEl = expected[i]
-            val actEl = actual[i]
-            trAssertEquals(expEl, actEl, "AssignmentTransformationStatement")
-        }
-    }
 
-    private fun trAssertEquals(expected: AssignmentTransformationStatement, actual: AssignmentTransformationStatement, message: String) {
-        assertEquals(expected.lhsPropertyName, actual.lhsPropertyName)
-        ExpressionsTest.exAssertEquals(expected.rhs, actual.rhs)
-    }
 }

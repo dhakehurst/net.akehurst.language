@@ -18,10 +18,7 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.asm.AsmListSimple
-import net.akehurst.language.agl.asm.AsmNothingSimple
-import net.akehurst.language.agl.asm.AsmPrimitiveSimple
-import net.akehurst.language.agl.asm.isStdInteger
+import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.*
@@ -99,6 +96,8 @@ class ExpressionsInterpreterOverTypedObject(
         is RootExpression -> this.evaluateRootExpression(self, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is NavigationExpression -> this.evaluateNavigation(self, expression)
+        is CreateTupleExpression -> this.evaluateCreateTuple(self, expression)
+        is WithExpression -> this.evaluateWith(self, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
@@ -115,10 +114,10 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.typeName) {
-        LiteralExpressionDefault.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value)
-        LiteralExpressionDefault.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value)
-        LiteralExpressionDefault.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value)
-        LiteralExpressionDefault.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value)
+        LiteralExpressionSimple.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value)
+        LiteralExpressionSimple.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value)
+        LiteralExpressionSimple.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value)
+        LiteralExpressionSimple.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value)
         else -> error("should not happen")
     }.toTypedObject(typeModel)
 
@@ -190,6 +189,17 @@ class ExpressionsInterpreterOverTypedObject(
                 AsmNothingSimple
             }
         }.toTypedObject(typeModel)
+    }
+
+    fun evaluateWith(self: TypedObject, expression: WithExpression): TypedObject {
+        val newSelf = evaluateExpression(self, expression.withContext)
+        val result = evaluateExpression(newSelf, expression.expression)
+        return result
+    }
+
+    fun evaluateCreateTuple(self: TypedObject, expression: CreateTupleExpression): TypedObject {
+        val ns = typeModel.findOrCreateNamespace("interpreter")
+        val tuple = AsmStructureSimple()
     }
 
 }

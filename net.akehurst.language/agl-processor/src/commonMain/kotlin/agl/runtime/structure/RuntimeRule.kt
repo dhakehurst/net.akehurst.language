@@ -119,10 +119,13 @@ class RuntimeRule(
     //val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
 
     val asString: String
-        get() = when {
-            isTerminal -> if (tag == rhs.asString) tag else "$tag(${rhs.asString})"
-            isNonTerminal -> "$tag = ${rhs.asString}"
-            else -> error("All rules should be either Terminal or NonTerminal")
+        get() {
+            val ps = if (isPseudo) "pseudo " else ""
+            return when {
+                isTerminal -> if (tag == rhs.asString) tag else "$tag(${rhs.asString})"
+                isNonTerminal -> "$ps$tag = ${rhs.asString}"
+                else -> error("All rules should be either Terminal or NonTerminal")
+            }
         }
 
     // --- Any ---

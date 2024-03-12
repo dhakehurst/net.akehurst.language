@@ -31,7 +31,9 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.rule("expression").choiceLongestFromConcatenationItem(
             b.nonTerminal("root"),
             b.nonTerminal("literal"),
-            b.nonTerminal("navigation")
+            b.nonTerminal("navigation"),
+            b.nonTerminal("tuple"),
+            b.nonTerminal("with")
         )
         b.rule("root").choiceLongestFromConcatenationItem(
             b.nonTerminal("NOTHING"),
@@ -58,6 +60,28 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("methodCall"),
             b.nonTerminal("indexOperation")
         )
+
+        b.rule("tuple").concatenation(
+            b.terminalLiteral("tuple"),
+            b.terminalLiteral("{"),
+            b.nonTerminal("assignmentList"),
+            b.terminalLiteral("}")
+        )
+        b.rule("assignmentList").multi(1, -1, b.nonTerminal("assignment"))
+        b.rule("assignment").concatenation(
+            b.nonTerminal("IDENTIFIER"),
+            b.terminalLiteral(":="),
+            b.nonTerminal("expression"),
+        )
+
+        b.rule("with").concatenation(
+            b.terminalLiteral("with"),
+            b.terminalLiteral("("),
+            b.nonTerminal("expression"),
+            b.terminalLiteral(")"),
+            b.nonTerminal("expression"),
+        )
+
         b.rule("propertyCall").concatenation(
             b.terminalLiteral("."),
             b.nonTerminal("IDENTIFIER")
@@ -102,6 +126,8 @@ grammar Expression extends Base {
       = root
       | literal
       | navigation
+      | tuple
+      | with
       ;
     root = NOTHING | SELF | propertyReference ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
@@ -116,7 +142,13 @@ grammar Expression extends Base {
      | methodCall
      | indexOperation
     ;
-     
+    
+    tuple = 'tuple' '{' assignmentList  '}' ;
+    assignmentList = assignment* ;
+    assignment = IDENTIFIER ':=' expression ;
+    
+    with = 'with' '(' expression ')' expression ;
+    
     propertyCall = "." propertyReference ;
     methodCall = "." methodReference '(' argumentList ')' ;
     argumentList = [expression / ',']* ;

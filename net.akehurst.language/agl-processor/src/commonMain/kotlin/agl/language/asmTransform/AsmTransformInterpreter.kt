@@ -27,9 +27,9 @@ import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
-import net.akehurst.language.api.language.asmTransform.AssignmentTransformationStatement
 import net.akehurst.language.api.language.asmTransform.SelfStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
@@ -118,13 +118,14 @@ class AsmTransformInterpreter(
 
     private fun evaluateSelfStatement(contextNode: TypedObjectParseNode, path: AsmPath, selfStatement: SelfStatement): AsmValue {
         return when (selfStatement) {
-            is ConstructSelfStatementSimple -> AsmStructureSimple(path = path, qualifiedTypeName = selfStatement.qualifiedTypeName)
+            is ConstructObjectSelfStatementSimple -> AsmStructureSimple(path = path, qualifiedTypeName = selfStatement.qualifiedTypeName)
             is ExpressionSelfStatementSimple -> exprInterpreter.evaluateExpression(contextNode, selfStatement.expression).asm
+
             else -> TODO()
         }
     }
 
-    private fun executeStatementOn(node: TypedObjectParseNode, st: AssignmentTransformationStatement, asm: AsmStructure) {
+    private fun executeStatementOn(node: TypedObjectParseNode, st: AssignmentStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, node)
         asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
     }

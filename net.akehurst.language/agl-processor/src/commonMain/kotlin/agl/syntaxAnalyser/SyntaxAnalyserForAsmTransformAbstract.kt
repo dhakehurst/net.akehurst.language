@@ -268,7 +268,18 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 }
             }
 
-            else -> this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
+            else -> when {
+                nodeRule.isPseudo -> { //must be group or choice
+                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                    when (propType) {
+                        null -> NothingTransformationRuleSimple() // no property when non-term is a literal
+                        else -> ListTransformationRuleSimple().also { it.resolveTypeAs(propType) }
+                    }
+                }
+
+                else -> this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
+                    ?: error("Should not happen")
+            }
         }
     }
 

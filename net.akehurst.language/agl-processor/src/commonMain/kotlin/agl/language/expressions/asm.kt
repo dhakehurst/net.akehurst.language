@@ -17,12 +17,43 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.api.language.expressions.*
+import net.akehurst.language.typemodel.api.PropertyDeclaration
 
 
 abstract class ExpressionAbstract : Expression {
+
+    /**
+     * defaults to 'toString' if not overriden in subclass
+     */
+    override fun asString(indent: String, increment: String): String = toString()
 }
 
-data class RootExpressionDefault(
+data class CreateTupleExpressionSimple(
+    override val propertyAssignments: List<AssignmentStatement>
+) : ExpressionAbstract(), CreateTupleExpression {
+
+    override fun asString(indent: String, increment: String): String {
+        val sb = StringBuilder()
+        sb.append("${indent}Tuple{\n")
+        val ni = indent + increment
+        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
+        sb.append(props)
+        sb.append("${indent}}")
+        return sb.toString()
+    }
+
+    override fun toString(): String = "Tuple{ ... }"
+}
+
+class WithExpressionSimple(
+    override val withContext: Expression,
+    override val expression: Expression
+) : ExpressionAbstract(), WithExpression {
+
+    override fun toString(): String = "with($withContext) { $expression }"
+}
+
+data class RootExpressionSimple(
     override val name: String
 ) : ExpressionAbstract(), RootExpression {
     companion object {
@@ -36,10 +67,10 @@ data class RootExpressionDefault(
     override fun toString(): String = name
 }
 
-data class LiteralExpressionDefault(
+data class LiteralExpressionSimple(
     override val typeName: String,
     override val value: Any
-) : LiteralExpression {
+) : ExpressionAbstract(), LiteralExpression {
 
     companion object {
         const val BOOLEAN = "std.Boolean"
@@ -51,7 +82,7 @@ data class LiteralExpressionDefault(
     override fun toString(): String = value.toString()
 }
 
-data class NavigationDefault(
+data class NavigationSimple(
     override val start: Expression,
     override val parts: List<NavigationPart>
 ) : ExpressionAbstract(), NavigationExpression {
@@ -59,13 +90,13 @@ data class NavigationDefault(
     override fun toString(): String = "$start${parts.joinToString(separator = "")}"
 }
 
-data class PropertyCallDefault(
+data class PropertyCallSimple(
     override val propertyName: String
 ) : PropertyCall {
     override fun toString(): String = ".$propertyName"
 }
 
-data class MethodCallDefault(
+data class MethodCallSimple(
     override val methodName: String,
     override val arguments: List<Expression>
 ) : MethodCall {
@@ -73,9 +104,28 @@ data class MethodCallDefault(
     override fun toString(): String = ".$methodName(${arguments.joinToString()})"
 }
 
-data class IndexOperationDefault(
+data class IndexOperationSimple(
     override val indices: List<Expression>
 ) : IndexOperation {
 
     override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
+}
+
+class AssignmentStatementSimple(
+    override val lhsPropertyName: String,
+    override val rhs: Expression
+) : AssignmentStatement {
+
+    val resolvedLhs get() = _resolvedLhs
+
+    private lateinit var _resolvedLhs: PropertyDeclaration
+
+    fun resolveLhsAs(propertyDeclaration: PropertyDeclaration) {
+        _resolvedLhs = propertyDeclaration
+    }
+
+    override fun asString(indent: String, increment: String): String = "$indent$this"
+
+    override fun toString(): String = "$lhsPropertyName := $rhs"
+
 }

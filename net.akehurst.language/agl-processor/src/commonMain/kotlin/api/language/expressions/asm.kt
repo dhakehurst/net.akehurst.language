@@ -17,7 +17,9 @@
 
 package net.akehurst.language.api.language.expressions
 
-interface Expression
+interface Expression {
+    fun asString(indent: String, increment: String): String
+}
 
 interface RootExpression : Expression {
     val name: String
@@ -28,6 +30,10 @@ interface RootExpression : Expression {
 interface LiteralExpression : Expression {
     val typeName: String
     val value: Any
+}
+
+interface CreateTupleExpression : Expression {
+    val propertyAssignments: List<AssignmentStatement>
 }
 
 interface NavigationExpression : Expression {
@@ -50,3 +56,14 @@ interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }
 
+interface AssignmentStatement {
+    val lhsPropertyName: String
+    val rhs: Expression
+
+    fun asString(indent: String, increment: String): String
+}
+
+interface WithExpression : Expression {
+    val withContext: Expression
+    val expression: Expression
+}

@@ -28,6 +28,8 @@ object ExpressionsTest {
             expected is RootExpression && actual is RootExpression -> exAssertEquals(expected, actual)
             expected is LiteralExpression && actual is LiteralExpression -> exAssertEquals(expected, actual)
             expected is NavigationExpression && actual is NavigationExpression -> exAssertEquals(expected, actual)
+            expected is CreateTupleExpression && actual is CreateTupleExpression -> exAssertEquals(expected, actual)
+            expected is WithExpression && actual is WithExpression -> exAssertEquals(expected, actual)
             else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
         }
     }
@@ -64,6 +66,15 @@ object ExpressionsTest {
         }
     }
 
+    fun exAssertEquals(expected: CreateTupleExpression, actual: CreateTupleExpression) {
+        exAssertEquals(expected.propertyAssignments, actual.propertyAssignments, "propertyAssignments")
+    }
+
+    fun exAssertEquals(expected: WithExpression, actual: WithExpression) {
+        exAssertEquals(expected.withContext, actual.withContext)
+        exAssertEquals(expected.expression, actual.expression)
+    }
+
     fun exAssertEquals(expected: PropertyCall, actual: PropertyCall) {
         assertEquals(expected.propertyName, actual.propertyName)
     }
@@ -85,5 +96,19 @@ object ExpressionsTest {
             val act = actual.indices[i]
             exAssertEquals(exp, act)
         }
+    }
+
+    fun exAssertEquals(expected: List<AssignmentStatement>, actual: List<AssignmentStatement>, message: String) {
+        assertEquals(expected.size, actual.size, "number of AssignmentStatement is different")
+        for (i in expected.indices) {
+            val expEl = expected[i]
+            val actEl = actual[i]
+            exAssertEquals(expEl, actEl, "AssignmentStatement")
+        }
+    }
+
+    private fun exAssertEquals(expected: AssignmentStatement, actual: AssignmentStatement, message: String) {
+        assertEquals(expected.lhsPropertyName, actual.lhsPropertyName)
+        ExpressionsTest.exAssertEquals(expected.rhs, actual.rhs)
     }
 }

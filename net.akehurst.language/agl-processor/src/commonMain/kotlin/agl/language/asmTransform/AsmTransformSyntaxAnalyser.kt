@@ -19,11 +19,12 @@ package net.akehurst.language.agl.agl.language.asmTransform
 
 import net.akehurst.language.agl.agl.language.base.BaseSyntaxAnalyser
 import net.akehurst.language.agl.language.asmTransform.*
+import net.akehurst.language.agl.language.expressions.AssignmentStatementSimple
 import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
 import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
-import net.akehurst.language.api.language.asmTransform.AssignmentTransformationStatement
+import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
@@ -99,20 +100,20 @@ class AsmTransformSyntaxAnalyser(
     // createRule = typeName optStatementBlock ;
     private fun createRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectRuleSimple {
         val typeName = children[0] as String
-        val statements = children[1]?.let { it as List<AssignmentTransformationStatement> } ?: emptyList()
+        val statements = children[1]?.let { it as List<AssignmentStatement> } ?: emptyList()
         val tr = CreateObjectRuleSimple(typeName)
         tr.modifyStatements.addAll(statements)
         return tr
     }
 
     // statementBlock = '{' statementList '}' ;
-    private fun statementBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentTransformationStatement> =
-        children[1] as List<AssignmentTransformationStatement>
+    private fun statementBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
+        children[1] as List<AssignmentStatement>
 
     // modifyRule = '{' typeName '->' statementList '}' ;
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ModifyObjectRuleSimple {
         val typeName = children[1] as String
-        val statements = children[3] as List<AssignmentTransformationStatement>
+        val statements = children[3] as List<AssignmentStatement>
         val tr = ModifyObjectRuleSimple(typeName)
         tr.modifyStatements.addAll(statements)
         return tr
@@ -123,10 +124,10 @@ class AsmTransformSyntaxAnalyser(
         children as List<TransformationStatementAbstract>
 
     // assignmentStatement = propertyName ':=' Expression.expression ;
-    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentTransformationStatementSimple {
+    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementSimple {
         val propName = children[0] as String
         val expr = children[2] as Expression
-        return AssignmentTransformationStatementSimple(propName, expr)
+        return AssignmentStatementSimple(propName, expr)
     }
 
     // propertyName = IDENTIFIER ;

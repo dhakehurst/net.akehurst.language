@@ -67,46 +67,9 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         }
     }
 
-    // --- ListSeparated ---
-    @Test
-    fun _67_sepList_multi_nonTerm() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = ass ;
-                ass = [as / ',']* ;
-                as = a* ;
-                a = 'a' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
-            dataType("S", "S") {
-                propertyListTypeOf("ass", "As", false, 0) // of String
-            }
-            dataType("ass", "Ass") {
-                propertyListTypeOf("as", "As", false, 0)
-            }
-            dataType("as", "As") {
-                propertyListTypeOf("a", "A", false, 0)
-            }
-            //val t_as = listTypeOf("as", "A")
-            //listSeparatedTypeFor("ass", t_as, StringType.use)
-            dataType("a", "A") {
-            }
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
-    }
-
     // --- Group ---
     @Test // S = a ('b' 'c' 'e') e ;
-    fun _7_concat_group_concat_nonLeaf_literal() {
+    fun _701_concat_group_concat_nonLeaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -134,7 +97,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     @Test // S = a (b c d) e ;
-    fun _7_concat_group_concat_leaf_literal() {
+    fun _702_concat_group_concat_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {

@@ -49,20 +49,20 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         fun TypeInstance.toSubtypeTrRule() = this.let { t -> SubtypeTransformationRuleSimple(t.typeName).also { it.resolveTypeAs(t) } }
         fun TypeInstance.toUnnamedSubtypeTrRule() = this.let { t -> UnnamedSubtypeTransformationRuleSimple().also { it.resolveTypeAs(t) } }
 
-        fun EXPRESSION_CHILD(childIndex: Int) = NavigationDefault(
-            start = RootExpressionDefault("child"),
-            parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))))
+        fun EXPRESSION_CHILD(childIndex: Int) = NavigationSimple(
+            start = RootExpressionSimple("child"),
+            parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, childIndex))))
         )
 
-        fun EXPRESSION_CHILD_i_prop(childIndex: Int, pName: String) = NavigationDefault(
-            start = RootExpressionDefault("child"),
+        fun EXPRESSION_CHILD_i_prop(childIndex: Int, pName: String) = NavigationSimple(
+            start = RootExpressionSimple("child"),
             parts = listOf(
-                IndexOperationDefault(listOf(LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, childIndex))),
-                PropertyCallDefault(pName)
+                IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, childIndex))),
+                PropertyCallSimple(pName)
             )
         )
 
-        val EXPRESSION_CHILDREN = RootExpressionDefault("children")
+        val EXPRESSION_CHILDREN = RootExpressionSimple("children")
     }
 
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -150,7 +150,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     is OptionalItem -> trRuleForRuleItemList(gr, listOf(rhs))
                     is SimpleList -> trRuleForSimpleList(gr, rhs)
                     is SeparatedList -> trRuleForSepList(gr, rhs)
-                    is Group -> trRuleForGroup(rhs, false)
+                    is Group -> trRuleForGroupGrRule(gr, rhs)
                     else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
                 }
                 (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
@@ -211,6 +211,9 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
         }
     }
+
+    private fun trRuleForGroupGrRule(rule: GrammarRule, group: Group): TransformationRule =
+        trRuleForGroupGrRuleItem(group, false)
 
     // for when a grammar rule contains a single rhs SimpleList
     private fun trRuleForSimpleList(rule: GrammarRule, listItem: SimpleList): TransformationRule {
@@ -278,7 +281,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 
                 is Choice -> trRuleForChoiceRuleItem(ruleItem, forProperty)
                 is Concatenation -> trRuleForTupleType(ruleItem, ruleItem.items)
-                is Group -> trRuleForGroup(ruleItem, forProperty)
+                is Group -> trRuleForGroupGrRuleItem(ruleItem, forProperty)
                 is OptionalItem -> {
                     val trRule = trRuleForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
                     when (trRule.resolvedType.declaration) {
@@ -380,7 +383,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun trRuleForGroup(group: Group, forProperty: Boolean): TransformationRule {
+    private fun trRuleForGroupGrRuleItem(group: Group, forProperty: Boolean): TransformationRule {
         val content = group.groupedContent
         return when (content) {
             is Choice -> trRuleForChoiceRuleItem(content, forProperty)
@@ -397,7 +400,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     private fun trRuleForTupleType(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
         val tt = namespace.createTupleType()
         val ti = namespace.createTupleTypeInstance(tt, emptyList(), false)
-        val cor = CreateObjectRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
+        val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
         this._grRuleItemToTrRule[ruleItem] = cor
         items.forEachIndexed { idx, it -> createPropertyDeclarationAndAssignment(cor, it, idx) }
         return when {
@@ -473,7 +476,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             }
 
             is Group -> {
-                val gt = trRuleForGroup(ruleItem, true)
+                val gt = trRuleForGroupGrRuleItem(ruleItem, true)
                 when (gt.resolvedType.declaration) {
                     SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
@@ -482,8 +485,14 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                             is Choice -> propertyNameFor(et, content, gt.resolvedType.declaration)
                             else -> propertyNameFor(et, ruleItem, gt.resolvedType.declaration)
                         }
-
-                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, gt.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
+                        val rhs = WithExpressionSimple(
+                            withContext = EXPRESSION_CHILD(childIndex),
+                            expression = CreateTupleExpressionSimple(
+                                //gt.resolvedType.namespace.qualifiedName,
+                                gt.modifyStatements
+                            )
+                        )
+                        createUniquePropertyDeclarationAndAssignment(et, cor, pName, gt.resolvedType, childIndex, rhs)
                     }
                 }
             }

@@ -37,6 +37,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationRoot)
         super.register(this::navigationPartList)
         super.register(this::navigationPart)
+        super.register(this::tuple)
+        super.register(this::assignmentList)
+        super.register(this::assignment)
+        super.register(this::with)
         super.register(this::propertyCall)
         super.register(this::methodCall)
         super.register(this::indexOperation)
@@ -54,26 +58,26 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // root = NOTHING | SELF | propertyReference ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression = when (nodeInfo.alt.option) {
-        0 -> RootExpressionDefault(RootExpressionDefault.NOTHING)
-        1 -> RootExpressionDefault(RootExpressionDefault.SELF)
-        2 -> RootExpressionDefault(children[0] as String)
+        0 -> RootExpressionSimple(RootExpressionSimple.NOTHING)
+        1 -> RootExpressionSimple(RootExpressionSimple.SELF)
+        2 -> RootExpressionSimple(children[0] as String)
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'root'")
     }
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option) {
-        0 -> LiteralExpressionDefault(LiteralExpressionDefault.BOOLEAN, (children[0] as String).toBoolean())
-        1 -> LiteralExpressionDefault(LiteralExpressionDefault.INTEGER, (children[0] as String).toInt())
-        2 -> LiteralExpressionDefault(LiteralExpressionDefault.REAL, (children[0] as String).toDouble())
-        3 -> LiteralExpressionDefault(LiteralExpressionDefault.STRING, (children[0] as String))
+        0 -> LiteralExpressionSimple(LiteralExpressionSimple.BOOLEAN, (children[0] as String).toBoolean())
+        1 -> LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, (children[0] as String).toInt())
+        2 -> LiteralExpressionSimple(LiteralExpressionSimple.REAL, (children[0] as String).toDouble())
+        3 -> LiteralExpressionSimple(LiteralExpressionSimple.STRING, (children[0] as String))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
     // navigation = navigationRoot navigationPartList ;
-    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault {
+    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationSimple {
         val navigationRoot = children[0] as Expression
         val parts = children[1] as List<NavigationPart>
-        return NavigationDefault(navigationRoot, parts)
+        return NavigationSimple(navigationRoot, parts)
     }
 
     // navigationRoot = root | literal ;
@@ -91,23 +95,47 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun navigationPart(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0]
 
+    // tuple = 'tuple' '{' assignmentList  '}' ;
+    private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {
+        val propertyAssignments = children[2] as List<AssignmentStatement>
+        return CreateTupleExpressionSimple(propertyAssignments)
+    }
+
+    // assignmentList = assignment* ;
+    private fun assignmentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
+        children as List<AssignmentStatement>
+
+    // assignment = IDENTIFIER ':=' expression ;
+    private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
+        val lhsPropertyName = children[0] as String
+        val rhs = children[2] as Expression
+        return AssignmentStatementSimple(lhsPropertyName, rhs)
+    }
+
+    //    with = 'with' '(' expression ')' expression ;
+    private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
+        val withContext = children[2] as Expression
+        val expression = children[4] as Expression
+        return WithExpressionSimple(withContext, expression)
+    }
+
     // propertyCall = '.' IDENTIFIER ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
         val id = children[1] as String
-        return PropertyCallDefault(id)
+        return PropertyCallSimple(id)
     }
 
     // methodCall = '.' IDENTIFIER '(' ')' ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
         val id = children[1] as String
         //TODO: arguments
-        return MethodCallDefault(id, emptyList())
+        return MethodCallSimple(id, emptyList())
     }
 
     // indexOperation = '[' expression+ ']' ;
     private fun indexOperation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IndexOperation {
         val expr = children[1] as List<Expression>
-        return IndexOperationDefault(expr)
+        return IndexOperationSimple(expr)
     }
 
     // propertyReference = IDENTIFIER

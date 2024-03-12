@@ -52,11 +52,11 @@ class AsmTransformModelBuilder(
         _rules.add(tr)
         if (createTypes) {
             val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
-            val t = ns.findOwnedOrCreatePrimitiveTypeNamed(tr.typeName)
+            val t = ns.findOwnedOrCreatePrimitiveTypeNamed(tr.qualifiedTypeName)
             tr.resolveTypeAs(t.type())
         } else {
             val ns = typeModel.namespace[this.qualifiedName]!!
-            val t = ns.findOwnedTypeNamed(tr.typeName) ?: error("Type '${tr.typeName}' not found")
+            val t = ns.findOwnedTypeNamed(tr.qualifiedTypeName) ?: error("Type '${tr.qualifiedTypeName}' not found")
             tr.resolveTypeAs(t.type())
         }
     }
