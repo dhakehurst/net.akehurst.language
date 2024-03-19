@@ -36,6 +36,7 @@ import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
@@ -162,7 +163,8 @@ class AsmElementSimpleBuilder(
     }
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val v = _interpreter.evaluateExpression(element.toTypedObject(_typeModel), this)
+        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val v = _interpreter.evaluateExpression(element.toTypedObject(elType), this)
         return when (v) {
             is AsmNothing -> null
             is AsmPrimitive -> v.value as String
@@ -171,7 +173,8 @@ class AsmElementSimpleBuilder(
     }
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val res = _interpreter.evaluateExpression(element.toTypedObject(_typeModel), this)
+        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val res = _interpreter.evaluateExpression(element.toTypedObject(elType), this)
         return when (res) {
             is AsmNothing -> null
             is AsmPrimitive -> res.value as String
@@ -224,7 +227,8 @@ class AsmElementSimpleBuilder(
         } else {
             val scopeFor = es.forTypeName
             val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as NavigationExpression?
-            val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(_element.toTypedObject(_typeModel), it) }
+            val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+            val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(_element.toTypedObject(elType), it) }
             val referableName = when (res) {
                 null -> null
                 is AsmPrimitive -> res.value as String

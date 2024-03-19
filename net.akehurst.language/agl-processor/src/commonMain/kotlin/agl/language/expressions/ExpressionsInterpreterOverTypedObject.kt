@@ -23,14 +23,8 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.TypeDeclaration
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.PropertyDeclarationDerived
-import net.akehurst.language.typemodel.simple.PropertyDeclarationPrimitive
-import net.akehurst.language.typemodel.simple.PropertyDeclarationStored
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.simple.*
 
 interface TypedObject {
     val type: TypeInstance
@@ -41,12 +35,9 @@ interface TypedObject {
 }
 
 class TypedObjectAsmValue(
-    val typeModel: TypeModel,
+    override val type: TypeInstance,
     val self: AsmValue
 ) : TypedObject {
-    override val type
-        get() = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type()
-            ?: SimpleTypeModelStdLib.AnyType
 
     override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
         val ao = when (propertyDeclaration) {
@@ -66,13 +57,13 @@ class TypedObjectAsmValue(
 
             else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
         }
-        return TypedObjectAsmValue(typeModel, ao)
+        return TypedObjectAsmValue(propertyDeclaration.typeInstance, ao)
     }
 
     override fun asString(): String = self.asString()
 }
 
-fun AsmValue.toTypedObject(typeModel: TypeModel) = TypedObjectAsmValue(typeModel, this)
+fun AsmValue.toTypedObject(type: TypeInstance) = TypedObjectAsmValue(type, this)
 val TypedObject.asm
     get() = when (this) {
         is TypedObjectAsmValue -> this.self
@@ -103,7 +94,7 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateRootExpression(self: TypedObject, expression: RootExpression): TypedObject {
         return when {
-            expression.isNothing -> AsmNothingSimple.toTypedObject(typeModel)
+            expression.isNothing -> AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
             expression.isSelf -> {
                 //_issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
                 self
@@ -114,12 +105,12 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.typeName) {
-        LiteralExpressionSimple.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value)
-        LiteralExpressionSimple.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value)
-        LiteralExpressionSimple.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value)
-        LiteralExpressionSimple.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value)
+        LiteralExpressionSimple.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Boolean)
+        LiteralExpressionSimple.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Integer)
+        LiteralExpressionSimple.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Real)
+        LiteralExpressionSimple.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.String)
         else -> error("should not happen")
-    }.toTypedObject(typeModel)
+    }
 
     private fun evaluateNavigation(self: TypedObject, expression: NavigationExpression): TypedObject {
         // start should be a RootExpression or LiteralExpression
@@ -145,9 +136,18 @@ class ExpressionsInterpreterOverTypedObject(
         val type = self.type
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
-            null -> {
-                issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
-                AsmNothingSimple.toTypedObject(typeModel)
+            null -> when {
+                self.asm is AsmStructure -> {
+                    // try with no type
+                    val pv = (self.asm as AsmStructure).getProperty(propertyName)
+                    val tp = typeModel.findByQualifiedNameOrNull(pv.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                    TypedObjectAsmValue(tp, pv)
+                }
+
+                else -> {
+                    issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
+                    AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+                }
             }
 
             else -> self.getPropertyValue(pd)
@@ -155,40 +155,40 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     fun evaluateIndexOperation(self: TypedObject, indices: List<Expression>): TypedObject {
-        val asm = self.asm
-        return when (asm) {
-            is AsmList -> {
+        return when {
+            self.type.declaration.conformsTo(SimpleTypeModelStdLib.List) -> {
                 when (indices.size) {
                     1 -> {
                         val idx = evaluateExpression(self, indices[0])
                         when {
-                            idx.asm.isStdInteger -> {
+                            idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
+                                val listElementType = self.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asm as AsmPrimitive).value as Int
-                                asm.elements.getOrNull(i) ?: run {
+                                (self.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
                                     issues.error(null, "Index '$i' out of range")
-                                    AsmNothingSimple
+                                    AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                 }
                             }
 
                             else -> {
                                 issues.error(null, "Index value must evaluate to an Integer for Lists")
-                                AsmNothingSimple
+                                AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                             }
                         }
                     }
 
                     else -> {
                         issues.error(null, "Only one index value should be used for Lists")
-                        AsmNothingSimple
+                        AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                     }
                 }
             }
 
             else -> {
                 issues.error(null, "Index operation on non List value is not possible: ${self.asString()}")
-                AsmNothingSimple
+                AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
             }
-        }.toTypedObject(typeModel)
+        }
     }
 
     fun evaluateWith(self: TypedObject, expression: WithExpression): TypedObject {
@@ -198,8 +198,15 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     fun evaluateCreateTuple(self: TypedObject, expression: CreateTupleExpression): TypedObject {
-        val ns = typeModel.findOrCreateNamespace("interpreter")
-        val tuple = AsmStructureSimple()
+        val ns = typeModel.findOrCreateNamespace("\$interpreter", listOf(SimpleTypeModelStdLib.qualifiedName))
+        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
+        val tupleType = ns.createTupleType()
+        expression.propertyAssignments.forEach {
+            val value = evaluateExpression(self, it.rhs)
+            tuple.setProperty(it.lhsPropertyName, value.asm, tuple.property.size)
+            tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
+        }
+        return tuple.toTypedObject(tupleType.type())
     }
 
 }

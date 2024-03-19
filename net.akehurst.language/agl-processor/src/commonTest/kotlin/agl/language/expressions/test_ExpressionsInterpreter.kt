@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -33,14 +34,16 @@ class test_ExpressionsInterpreter {
 
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
+            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
             assertEquals(expected, actual.asm)
         }
 
         fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
+            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
             assertEquals(AsmNothingSimple, actual.asm)
             assertEquals(expected, interpreter.issues.all.toList())
         }
@@ -62,10 +65,7 @@ class test_ExpressionsInterpreter {
         }
         val self = asm.root[0]
 
-        val expectedIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET, null, "")
-        )
-        test_fail(tm, self, "\$nothing", expectedIssues)
+        test(tm, self, "\$nothing", AsmNothingSimple)
     }
 
     @Test
@@ -156,7 +156,7 @@ class test_ExpressionsInterpreter {
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
-                    propertyPrimitiveType("prop1", "String", false, 0)
+                    propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
         }
@@ -182,7 +182,7 @@ class test_ExpressionsInterpreter {
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
-                    propertyPrimitiveType("prop1", "String", false, 0)
+                    propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
         }
@@ -208,7 +208,7 @@ class test_ExpressionsInterpreter {
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
-                    propertyPrimitiveType("prop1", "String", false, 0)
+                    propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
         }
@@ -234,7 +234,7 @@ class test_ExpressionsInterpreter {
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
-                    propertyPrimitiveType("prop1", "String", false, 0)
+                    propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
         }

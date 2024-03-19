@@ -24,6 +24,7 @@ import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -31,8 +32,9 @@ class test_SimpleTypeModelStdLib_eval {
 
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
+            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(typeModel), expression)
+            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
             assertEquals(expected, actual.asm)
         }
     }

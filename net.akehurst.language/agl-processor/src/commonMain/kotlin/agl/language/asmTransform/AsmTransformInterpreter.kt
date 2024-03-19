@@ -17,13 +17,10 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
-import net.akehurst.language.agl.asm.AsmListSeparatedSimple
-import net.akehurst.language.agl.asm.AsmListSimple
 import net.akehurst.language.agl.asm.AsmStructureSimple
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.TypedObject
 import net.akehurst.language.agl.language.expressions.asm
-import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
@@ -31,15 +28,15 @@ import net.akehurst.language.api.language.asmTransform.SelfStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.api.PropertyCharacteristic
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
-class TypedObjectParseNode(
-    val typeModel: TypeModel,
-    override val type: TypeInstance,
-    val children: List<AsmValue>
-) : TypedObject {
+class AsmTransformInterpreter(
+    val typeModel: TypeModel
+) {
+
     companion object {
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
@@ -73,38 +70,18 @@ class TypedObjectParseNode(
         }
     }
 
-    override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
-        //TODO: should really check/test propertyDeclaration
-        return when {
-            propertyDeclaration.typeInstance.declaration.conformsTo(SimpleTypeModelStdLib.ListSeparated) ->
-                AsmListSeparatedSimple(children.toSeparatedList()).toTypedObject(typeModel)
-
-            propertyDeclaration.typeInstance.declaration.conformsTo(SimpleTypeModelStdLib.List) ->
-                AsmListSimple(children).toTypedObject(typeModel)
-
-            else -> TODO("not supported")
-        }
-    }
-
-    override fun asString(): String = "ParseNode"
-}
-
-class AsmTransformInterpreter(
-    val typeModel: TypeModel
-) {
-
     val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)
     val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
-    fun evaluate(contextNode: TypedObjectParseNode, path: AsmPath, trRule: TransformationRule): AsmValue {
-        val tObj = evaluateSelfStatement(contextNode, path, trRule.selfStatement)
+    fun evaluate(self: TypedObject, path: AsmPath, trRule: TransformationRule): AsmValue {
+        val tObj = evaluateSelfStatement(self, path, trRule.selfStatement)
         val asm = tObj
         when {
             trRule.modifyStatements.isEmpty() -> Unit
             else -> when (asm) {
                 is AsmStructure -> {
                     for (st in trRule.modifyStatements) {
-                        executeStatementOn(contextNode, st, asm)
+                        executeStatementOn(self, st, asm)
                     }
                 }
 
@@ -116,7 +93,7 @@ class AsmTransformInterpreter(
         return asm
     }
 
-    private fun evaluateSelfStatement(contextNode: TypedObjectParseNode, path: AsmPath, selfStatement: SelfStatement): AsmValue {
+    private fun evaluateSelfStatement(contextNode: TypedObject, path: AsmPath, selfStatement: SelfStatement): AsmValue {
         return when (selfStatement) {
             is ConstructObjectSelfStatementSimple -> AsmStructureSimple(path = path, qualifiedTypeName = selfStatement.qualifiedTypeName)
             is ExpressionSelfStatementSimple -> exprInterpreter.evaluateExpression(contextNode, selfStatement.expression).asm
@@ -125,7 +102,7 @@ class AsmTransformInterpreter(
         }
     }
 
-    private fun executeStatementOn(node: TypedObjectParseNode, st: AssignmentStatement, asm: AsmStructure) {
+    private fun executeStatementOn(node: TypedObject, st: AssignmentStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, node)
         asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
     }

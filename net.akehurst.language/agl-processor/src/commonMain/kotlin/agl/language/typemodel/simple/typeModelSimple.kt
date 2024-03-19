@@ -501,7 +501,7 @@ abstract class TypeNamespaceAbstract(
 
     override fun createTupleType(): TupleType {
         val td = TupleTypeSimple(this, _nextTupleTypeTypeId++)
-        ownedTupleTypes.add(td)
+        ownedTupleTypes.add(td) //FIXME: don't think this is needed
         return td
     }
 

@@ -130,7 +130,8 @@ class ReferenceResolverDefault(
             null -> scopeStack.peek()
             else -> {
                 //scope for result of navigation
-                val fromEl = _interpreter.evaluateExpression(context.element.toTypedObject(typeModel), refExpr.fromNavigation)
+                val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                val fromEl = _interpreter.evaluateExpression(context.element.toTypedObject(elType), refExpr.fromNavigation)
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> scopeForElement[fromEl]!!
@@ -143,7 +144,8 @@ class ReferenceResolverDefault(
                 }
             }
         }
-        var referringValue = _interpreter.evaluateExpression(self.toTypedObject(typeModel), refExpr.referringPropertyNavigation).asm
+        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        var referringValue = _interpreter.evaluateExpression(self.toTypedObject(elType), refExpr.referringPropertyNavigation).asm
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
@@ -263,7 +265,8 @@ class ReferenceResolverDefault(
     }
 
     private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
-        val coll = _interpreter.evaluateExpression(self.toTypedObject(typeModel), refExpr.navigation)
+        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val coll = _interpreter.evaluateExpression(self.toTypedObject(elType), refExpr.navigation)
         for (re in refExpr.referenceExpressionList) {
             when (coll) {
                 is AsmNothing -> Unit //do nothing
@@ -303,7 +306,10 @@ class ReferenceResolverDefault(
                     val pd = typeModel.typeOf(v).findPropertyOrNull(pn as String)
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
-                        else -> v.toTypedObject(typeModel).getPropertyValue(pd).asm
+                        else -> {
+                            val elType = typeModel.findByQualifiedNameOrNull(v.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                            v.toTypedObject(elType).getPropertyValue(pd).asm
+                        }
                     }
                 }
                 val lastProp = this.parts.last() as String

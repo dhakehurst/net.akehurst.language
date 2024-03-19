@@ -21,6 +21,7 @@ import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.language.asmTransform.*
+import net.akehurst.language.agl.language.expressions.TypedObjectAsmValue
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -34,6 +35,7 @@ import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 data class NodeTrRules(
     val forNode: TransformationRule,
@@ -273,7 +275,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
                         null -> NothingTransformationRuleSimple() // no property when non-term is a literal
-                        else -> ListTransformationRuleSimple().also { it.resolveTypeAs(propType) }
+                        else -> SelfTransformationRuleSimple(propType.qualifiedTypeName).also { it.resolveTypeAs(propType) }
                     }
                 }
 
@@ -496,20 +498,36 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
 
     private fun createValueFromBranch2(downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue {
         // optional children should have value Nothing, if it is an empty list then it will contain null
-        val contextNode = when {
-            target.node.rule.isListSeparated -> TypedObjectParseNode(
-                typeModel,
-                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SEPARATED.type(),
-                children.mapNotNull { it.value }
-            )
-
-            else -> TypedObjectParseNode(
-                typeModel,
-                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SIMPLE.type(),
-                children.mapNotNull { it.value }
-            )
+        val tupleType = when {
+            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
+            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
         }
-        val asm = _trf.evaluate(contextNode, downData.path, downData.trRule.forNode)
+        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
+        val asmChildren = children.mapNotNull { it.value }
+        val asmValue = when {
+            target.node.rule.isListSeparated -> AsmListSeparatedSimple(asmChildren.toSeparatedList())
+            else -> AsmListSimple(asmChildren)
+        }
+        tuple.setProperty("child", asmValue, 0)
+        tuple.setProperty("children", asmValue, 1)
+        val self = TypedObjectAsmValue(
+            tupleType,
+            tuple
+        )
+//        val contextNode = when {
+//            target.node.rule.isListSeparated -> TypedObjectParseNode(
+//                typeModel,
+//                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SEPARATED.type(),
+//                children.mapNotNull { it.value }
+//            )
+//
+//            else -> TypedObjectParseNode(
+//                typeModel,
+//                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SIMPLE.type(),
+//                children.mapNotNull { it.value }
+//            )
+//        }
+        val asm = _trf.evaluate(self, downData.path, downData.trRule.forNode)
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
         }

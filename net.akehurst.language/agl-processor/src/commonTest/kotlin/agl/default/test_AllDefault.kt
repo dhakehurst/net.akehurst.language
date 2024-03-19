@@ -3115,8 +3115,11 @@ class test_AllDefault {
             define(sentence = "bcd", sppt = "S{ §S§group1 { b:'b' c:'c' d:'d' } }") {
                 asmSimple {
                     element("S") {
-                        propertyString("a", "a")
-                        propertyString("e", "e")
+                        propertyTuple("\$group") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                            propertyString("d", "d")
+                        }
                     }
                 }
             }
@@ -3213,7 +3216,7 @@ class test_AllDefault {
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("\$group", "Tuple { b:=child[1].child[0], c:=child[1].child[1], d:= child[1].child[2] }")
+                assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
                 assignment("e", "child[2]")
             }
             leafStringRule("a")
@@ -3228,9 +3231,16 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abcde", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$group") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                            propertyString("d", "d")
+                        }
+                        propertyString("e", "e")
                     }
                 }
             }
@@ -3251,14 +3261,48 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§group1"); ref("§S§group2"); ref("e") }
+            concatenation("§S§group1", isPseudo = true) { ref("b"); ref("c"); ref("d") }
+            concatenation("§S§group2", isPseudo = true) { ref("b"); ref("a"); ref("c") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                    propertyPrimitiveType("d", "String", false, 2)
+                }
+                propertyTupleType("\$group2", false, 2) {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("a", "String", false, 1)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                propertyPrimitiveType("e", "String", false, 3)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
+                assignment("\$group2", "with(child[2]) tuple { b:=child[0] a:=child[1] c:=child[2] }")
+                assignment("e", "child[3]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
         }
         test(
             grammarStr = grammarStr,
@@ -3266,9 +3310,21 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abcdbace", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} §S§group2 {b:'b' a:'a' c:'c'} e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$group") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                            propertyString("d", "d")
+                        }
+                        propertyTuple("\$group2") {
+                            propertyString("b", "b")
+                            propertyString("a", "a")
+                            propertyString("c", "c")
+                        }
+                        propertyString("e", "e")
                     }
                 }
             }
@@ -3287,14 +3343,33 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§group1"); ref("e") }
+            concatenation("§S§group1", isPseudo = true) { ref("b") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("e", "e")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyPrimitiveType("b", "String", false, 0)
+                }
+                propertyPrimitiveType("e", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("e")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$group", "with(child[1]) tuple{ b:=child[0] }")
+                assignment("e", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("e")
         }
         test(
             grammarStr = grammarStr,
@@ -3302,9 +3377,14 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abe", sppt = "S { a:'a' §S§group1 { b:'b' }  e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$group") {
+                            propertyString("b", "b")
+                        }
+                        propertyString("e", "e")
                     }
                 }
             }
@@ -3325,14 +3405,54 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§group2"); ref("e") }
+            concatenation("§S§group2", isPseudo = true) { ref("b"); ref("§S§group1"); ref("d") }
+            concatenation("§S§group1", isPseudo = true) { ref("c") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        propertyPrimitiveType("c", "String", false, 0)
+                    }
+                    propertyPrimitiveType("d", "String", false, 2)
+                }
+                propertyPrimitiveType("e", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment(
+                    "\$group", """
+                    with(child[1])
+                      tuple {
+                        b:=child[0]
+                        ${'$'}group:=with(child[1]) tuple { c:=child[0] }
+                        d:=child[2]
+                      }
+                    
+                """.trimMargin()
+                )
+                assignment("e", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
         }
         test(
             grammarStr = grammarStr,
@@ -3340,9 +3460,18 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abcde", sppt = "S { a:'a' §S§group2{ b:'b' §S§group1{c:'c'} d:'d' }  e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$group") {
+                            propertyString("b", "b")
+                            propertyTuple("\$group") {
+                                propertyString("c", "c")
+                            }
+                            propertyString("d", "d")
+                        }
+                        propertyString("e", "e")
                     }
                 }
             }

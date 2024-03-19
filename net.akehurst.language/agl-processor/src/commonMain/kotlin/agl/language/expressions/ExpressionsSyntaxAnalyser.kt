@@ -22,6 +22,7 @@ import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.collections.toSeparatedList
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
@@ -40,10 +41,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::tuple)
         super.register(this::assignmentList)
         super.register(this::assignment)
+        super.register(this::propertyName)
         super.register(this::with)
         super.register(this::propertyCall)
         super.register(this::methodCall)
         super.register(this::indexOperation)
+        super.register(this::indexList)
         super.register(this::propertyReference)
     }
 
@@ -56,11 +59,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = NOTHING | SELF | propertyReference ;
+    // root = NOTHING | SELF | propertyReference | SPECIAL ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression = when (nodeInfo.alt.option) {
         0 -> RootExpressionSimple(RootExpressionSimple.NOTHING)
         1 -> RootExpressionSimple(RootExpressionSimple.SELF)
         2 -> RootExpressionSimple(children[0] as String)
+        3 -> RootExpressionSimple(children[0] as String)
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'root'")
     }
 
@@ -105,11 +109,16 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun assignmentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
         children as List<AssignmentStatement>
 
-    // assignment = IDENTIFIER ':=' expression ;
+    // assignment = propertyName ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
         val rhs = children[2] as Expression
         return AssignmentStatementSimple(lhsPropertyName, rhs)
+    }
+
+    // propertyName = IDENTIFIER | SPECIAL
+    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
+        return children[0] as String
     }
 
     //    with = 'with' '(' expression ')' expression ;
@@ -132,13 +141,17 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return MethodCallSimple(id, emptyList())
     }
 
-    // indexOperation = '[' expression+ ']' ;
+    // indexOperation = '[' indexList ']' ;
     private fun indexOperation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IndexOperation {
         val expr = children[1] as List<Expression>
         return IndexOperationSimple(expr)
     }
 
-    // propertyReference = IDENTIFIER
+    // indexList = [expression / ',']+ ;
+    private fun indexList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> =
+        children.toSeparatedList<Any?, Expression, String>().items
+
+    // propertyReference = IDENTIFIER | SPECIAL
     private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return children[0] as String
     }

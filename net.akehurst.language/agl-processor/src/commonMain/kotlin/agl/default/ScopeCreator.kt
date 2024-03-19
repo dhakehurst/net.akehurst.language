@@ -31,6 +31,7 @@ import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 class ScopeCreator(
     val typeModel: TypeModel,
@@ -211,12 +212,16 @@ class ScopeCreator(
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
-    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
-        _interpreter.evaluateExpression(element.toTypedObject(typeModel), this).asm
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
+        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        return _interpreter.evaluateExpression(element.toTypedObject(elType), this).asm
+    }
 
 
-    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
-        _interpreter.evaluateExpression(element.toTypedObject(typeModel), this).asm
+    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
+        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        return _interpreter.evaluateExpression(element.toTypedObject(elType), this).asm
+    }
 
 
 }

@@ -217,6 +217,15 @@ class LeafAsStringTransformationRuleSimple() : TransformationRuleAbstract(), Sel
     override fun toString(): String = "leaf as std.String"
 }
 
+class SelfTransformationRuleSimple(
+    override val qualifiedTypeName: String
+) : TransformationRuleAbstract(), ListTransformationRule {
+
+    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple(RootExpressionSimple.SELF))
+
+    override fun toString(): String = "self"
+}
+
 class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
 

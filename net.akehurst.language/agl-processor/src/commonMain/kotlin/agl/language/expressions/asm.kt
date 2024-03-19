@@ -57,8 +57,8 @@ data class RootExpressionSimple(
     override val name: String
 ) : ExpressionAbstract(), RootExpression {
     companion object {
-        const val NOTHING = "§nothing"
-        const val SELF = "§self"
+        const val NOTHING = "\$nothing"
+        const val SELF = "\$self"
     }
 
     override val isNothing: Boolean get() = NOTHING == this.name
