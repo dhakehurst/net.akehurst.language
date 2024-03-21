@@ -33,7 +33,8 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("literal"),
             b.nonTerminal("navigation"),
             b.nonTerminal("tuple"),
-            b.nonTerminal("with")
+            b.nonTerminal("with"),
+            b.nonTerminal("when")
         )
         b.rule("root").choiceLongestFromConcatenationItem(
             b.nonTerminal("NOTHING"),
@@ -86,6 +87,19 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("expression"),
         )
 
+        b.rule("when").concatenation(
+            b.terminalLiteral("when"),
+            b.terminalLiteral("{"),
+            b.nonTerminal("whenOptionList"),
+            b.terminalLiteral("}")
+        )
+        b.rule("whenOptionList").multi(1, -1, b.nonTerminal("whenOption"))
+        b.rule("whenOption").concatenation(
+            b.nonTerminal("expression"),
+            b.terminalLiteral("->"),
+            b.nonTerminal("expression"),
+        )
+
         b.rule("propertyCall").concatenation(
             b.terminalLiteral("."),
             b.nonTerminal("IDENTIFIER")
@@ -134,6 +148,7 @@ grammar Expression extends Base {
       | navigation
       | tuple
       | with
+      | when
       ;
     root = NOTHING | SELF | propertyReference | SPECIAL ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
@@ -155,6 +170,10 @@ grammar Expression extends Base {
     propertyName = IDENTIFIER | SPECIAL ;
     
     with = 'with' '(' expression ')' expression ;
+    
+    when = 'when' '{' whenOptionList '}' ;
+    whenOptionList = whenOption+ ;
+    whenOption = expression '->' expression ;
     
     propertyCall = "." propertyReference ;
     methodCall = "." methodReference '(' argumentList ')' ;

@@ -126,6 +126,23 @@ abstract class TransformationRuleAbstract : TransformationRule {
     abstract override fun toString(): String
 }
 
+class TransformationRuleSimple(
+    override val qualifiedTypeName: String,
+    override val selfStatement: SelfStatement
+) : TransformationRuleAbstract() {
+    override fun toString(): String = "${selfStatement} as $qualifiedTypeName"
+}
+
+fun transformationRule(type: TypeInstance, selfExpression: Expression): TransformationRuleSimple {
+    val selfStatement = ExpressionSelfStatementSimple(selfExpression)
+    return TransformationRuleSimple(
+        type.qualifiedTypeName,
+        selfStatement
+    ).also {
+        it.resolveTypeAs(type)
+    }
+}
+
 class CreateObjectRuleSimple(
     override val qualifiedTypeName: String
 ) : TransformationRuleAbstract(), CreateObjectRule {
@@ -263,23 +280,23 @@ abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfSt
 class ConstructObjectSelfStatementSimple(
     val qualifiedTypeName: String
 ) : SelfStatementAbstract() {
-
+    override fun toString(): String = "${qualifiedTypeName}()"
 }
 
 class ConstructTupleSelfStatementSimple(
     val qualifiedTypeName: String
 ) : SelfStatementAbstract() {
-
+    override fun toString(): String = "tuple {}"
 }
 
 class LambdaSelfStatementSimple(
     val qualifiedTypeName: String
 ) : SelfStatementAbstract() {
-
+    override fun toString(): String = "{ -> }"
 }
 
 class ExpressionSelfStatementSimple(
     val expression: Expression
 ) : SelfStatementAbstract() {
-
+    override fun toString(): String = "$expression"
 }

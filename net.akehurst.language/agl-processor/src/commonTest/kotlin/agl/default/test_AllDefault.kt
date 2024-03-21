@@ -37,6 +37,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -451,7 +452,7 @@ class test_AllDefault {
             stringTypeFor("S")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            child0StringRule("S")
+            transRule("S", SimpleTypeModelStdLib.String, "child[0]")
         }
         test(
             grammarStr = grammarStr,
@@ -3492,14 +3493,41 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
+            choiceLongest("§S§choice1", isPseudo = true) {
+                ref("b")
+                ref("c")
+                ref("d")
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("\$choice", "String", false, 1)
+                propertyPrimitiveType("e", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$choice", "with(child[1]) child[0]")
+                assignment("e", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
         }
         test(
             grammarStr = grammarStr,
@@ -3507,9 +3535,30 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abe", sppt = "S { a:'a' §S§choice1 { b:'b' } e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyString("\$choice", "b")
+                        propertyString("e", "e")
+                    }
+                }
+            }
+            define(sentence = "ace", sppt = "S { a:'a' §S§choice1 { c:'c' } e:'e' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyString("\$choice", "c")
+                        propertyString("e", "e")
+                    }
+                }
+            }
+            define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyString("\$choice", "d")
+                        propertyString("e", "e")
                     }
                 }
             }
@@ -3517,7 +3566,7 @@ class test_AllDefault {
     }
 
     @Test // S = a (b c | d) e ;
-    fun _707_concat_group_choice_concat_leaf_literal() {
+    fun _722_concat_group_choice_concat_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3530,14 +3579,46 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
+            choiceLongest("§S§choice1", isPseudo = true) {
+                concatenation { ref("b"); ref("c") }
+                ref("d")
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
+                    }
+                    primitiveRef("String")
+                }
+                propertyPrimitiveType("e", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$choice", "with(child[1]) when { x -> tuple { b:=child[0] c:=child[1] } y -> child[0] }")
+                assignment("e", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
         }
         test(
             grammarStr = grammarStr,
@@ -3545,9 +3626,24 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abce", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } e:'e' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                        }
+                        propertyString("e", "e")
+                    }
+                }
+            }
+            define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyString("\$choice", "d")
+                        propertyString("e", "e")
                     }
                 }
             }
@@ -3555,7 +3651,7 @@ class test_AllDefault {
     }
 
     @Test // S = a (b c | d e) f ;
-    fun _708_concat_group_choice_concat_leaf_literal_2() {
+    fun _723_concat_group_choice_concat_leaf_literal_2() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3594,7 +3690,7 @@ class test_AllDefault {
     }
 
     @Test // S = a ( ('x' | 'y') b c | d e) f ;
-    fun _709_concat_group_choice_concat_leaf_literal_3() {
+    fun _724_concat_group_choice_concat_leaf_literal_3() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3633,7 +3729,7 @@ class test_AllDefault {
     }
 
     @Test // S = a (b c | d e)? f ;
-    fun _7_concat_group_choice_concat_leaf_literal_4() {
+    fun _725_concat_group_choice_concat_leaf_literal_4() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3672,7 +3768,7 @@ class test_AllDefault {
     }
 
     @Test //  S = a (b? c) e ;
-    fun _7_concat_group_concat_optional() {
+    fun _726_concat_group_concat_optional() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3710,7 +3806,7 @@ class test_AllDefault {
     }
 
     @Test // S = a ( (b | c) (d?) e ) f ;
-    fun _7_concat_group_choice_group_concat_optional() {
+    fun _727_concat_group_choice_group_concat_optional() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3749,7 +3845,7 @@ class test_AllDefault {
     }
 
     @Test // S = (BC | d+) ;
-    fun _7_rhs_group_choice_concat_nonTerm_list() {
+    fun _728_rhs_group_choice_concat_nonTerm_list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3786,7 +3882,7 @@ class test_AllDefault {
     }
 
     @Test // S = a (BC | d+) e ;
-    fun _7_concat_group_choice_concat_nonTerm_list() {
+    fun _729_concat_group_choice_concat_nonTerm_list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3825,7 +3921,7 @@ class test_AllDefault {
     }
 
     @Test // S = a (BC | d+)? e ;
-    fun _7_concat_group_choice_concat_nonTerm_list_2() {
+    fun _730_concat_group_choice_concat_nonTerm_list_2() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3864,7 +3960,7 @@ class test_AllDefault {
     }
 
     @Test // S = a b | c d e ;
-    fun _7_1a_rhs_choice_concat_nonTerm() {
+    fun _740_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3902,7 +3998,7 @@ class test_AllDefault {
     }
 
     @Test // S = (a b) | (c d e) ;
-    fun _7_1b_rhs_choice_concat_nonTerm() {
+    fun _741_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3940,7 +4036,7 @@ class test_AllDefault {
     }
 
     @Test // S = (a b | c d e) ;
-    fun _7_1c_rhs_choice_concat_nonTerm() {
+    fun _742_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -3978,7 +4074,7 @@ class test_AllDefault {
     }
 
     @Test // S = ((a b) | (c d e)) ;
-    fun _7_2_rhs_choice_concat_nonTerm() {
+    fun _743_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4016,7 +4112,7 @@ class test_AllDefault {
     }
 
     @Test // S = x (a b | c d e) y ;
-    fun _7_3_rhs_choice_concat_nonTerm() {
+    fun _744_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4056,7 +4152,7 @@ class test_AllDefault {
     }
 
     @Test // S = CH; CH = a b | c d e ;
-    fun _7_4_rhs_choice_concat_nonTerm() {
+    fun _745_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4095,7 +4191,7 @@ class test_AllDefault {
     }
 
     @Test // S = CH; CH = (a b | c d e) ;
-    fun _7_5_rhs_choice_concat_nonTerm() {
+    fun _746_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4134,7 +4230,7 @@ class test_AllDefault {
     }
 
     @Test // S = x CH y ; CH = a b | c d e
-    fun _7_6_rhs_choice_concat_nonTerm() {
+    fun _7_47_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4175,7 +4271,7 @@ class test_AllDefault {
     }
 
     @Test // S = x C y ; C = (a b | c d e)
-    fun _7_7_rhs_choice_concat_nonTerm() {
+    fun _748_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -4217,17 +4313,17 @@ class test_AllDefault {
 
 
     @Test
-    fun _7_where_root_is_UnnamedSuperType() {
+    fun _760_where_root_is_UnnamedSuperType() {
         TODO()
     }
 
     @Test
-    fun _7_group_where_tuple_property_is_UnnamedSuperType() {
+    fun _761_group_where_tuple_property_is_UnnamedSuperType() {
         TODO()
     }
 
     @Test
-    fun _7_UnnamedSuperType_of_UnnamedSuperType() {
+    fun _762_UnnamedSuperType_of_UnnamedSuperType() {
         val grammarStr = """
             namespace test
             grammar Test {

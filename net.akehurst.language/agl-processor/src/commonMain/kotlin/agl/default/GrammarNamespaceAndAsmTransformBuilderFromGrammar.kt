@@ -175,9 +175,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 t.toNoActionTrRule()
             }
 
-            subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> {
-                SimpleTypeModelStdLib.String.toSelfAssignChild0TrRule()
-            }
+            subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> transformationRule(
+                type = SimpleTypeModelStdLib.String,
+                selfExpression = EXPRESSION_CHILD(0)
+            )
 
             subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(
                 choiceRule,
@@ -357,7 +358,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 t.toNoActionTrRule()
             }
 
-            subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> SimpleTypeModelStdLib.String.toNoActionTrRule()
+            subtypeTransforms.all { it.resolvedType == SimpleTypeModelStdLib.String } -> transformationRule(
+                SimpleTypeModelStdLib.String,
+                EXPRESSION_CHILD(0)
+            )
+
             subtypeTransforms.all { it.resolvedType.declaration is DataType } -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 .toSubtypeTrRule()
 
@@ -379,7 +384,19 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toSubtypeTrRule()
             }
 
-            else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toSubtypeTrRule()
+            else -> {
+                val subType = namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+                val options = subtypeTransforms.map {
+                    WhenOptionSimple(
+                        condition = RootExpressionSimple("?"),
+                        expression = (it.selfStatement as ExpressionSelfStatementSimple).expression
+                    )
+                }
+                transformationRule(
+                    type = subType,
+                    selfExpression = WhenExpressionSimple(options)
+                )
+            }
         }
     }
 
@@ -433,7 +450,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val n = propertyNameFor(et, ruleItem, tr.resolvedType.declaration)
-                        createUniquePropertyDeclarationAndAssignment(et, cor, n, tr.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
+                        val rhs = WithExpressionSimple(
+                            withContext = EXPRESSION_CHILD(childIndex),
+                            expression = (tr.selfStatement as ExpressionSelfStatementSimple).expression
+                        )
+                        createUniquePropertyDeclarationAndAssignment(et, cor, n, tr.resolvedType, childIndex, rhs)
                     }
                 }
             }

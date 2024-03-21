@@ -50,7 +50,21 @@ class WithExpressionSimple(
     override val expression: Expression
 ) : ExpressionAbstract(), WithExpression {
 
-    override fun toString(): String = "with($withContext) { $expression }"
+    override fun toString(): String = "with($withContext) $expression"
+}
+
+class WhenExpressionSimple(
+    override val options: List<WhenOption>
+) : ExpressionAbstract(), WhenExpression {
+
+    override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
+}
+
+class WhenOptionSimple(
+    override val condition: Expression,
+    override val expression: Expression
+) : WhenOption {
+    override fun toString(): String = "$condition -> $expression"
 }
 
 data class RootExpressionSimple(

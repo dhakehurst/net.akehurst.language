@@ -67,3 +67,12 @@ interface WithExpression : Expression {
     val withContext: Expression
     val expression: Expression
 }
+
+interface WhenExpression : Expression {
+    val options: List<WhenOption>
+}
+
+interface WhenOption {
+    val condition: Expression
+    val expression: Expression
+}

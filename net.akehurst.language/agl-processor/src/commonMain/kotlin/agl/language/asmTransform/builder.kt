@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
@@ -73,12 +74,20 @@ class AsmTransformModelBuilder(
         _rules.add(tr)
     }
 
-    fun child0StringRule(grammarRuleName: String) {
-        val tr = Child0AsStringTransformationRuleSimple()
+    fun transRule(grammarRuleName: String, type: TypeInstance, expressionStr: String) {
+        val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
+        check(res.issues.isEmpty()) { res.issues.toString() }
+        val expr = res.asm!!
+        val tr = transformationRule(
+            type = type,
+            selfExpression = expr
+        )
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
     }
+
+    fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, SimpleTypeModelStdLib.String, "child[0]")
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {
         val tr = SubtypeTransformationRuleSimple(typeName)

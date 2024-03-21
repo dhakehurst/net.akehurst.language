@@ -48,10 +48,10 @@ interface FormatExpressionTemplate : FormatExpression {
 }
 
 interface FormatExpressionWhen : FormatExpression {
-    val options: List<WhenOption>
+    val options: List<FormatWhenOption>
 }
 
-interface WhenOption {
+interface FormatWhenOption {
     val condition: Expression
     val format: FormatExpression
 }

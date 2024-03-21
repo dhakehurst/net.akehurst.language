@@ -43,6 +43,9 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::assignment)
         super.register(this::propertyName)
         super.register(this::with)
+        super.registerFor("when", this::when_)
+        super.register(this::whenOptionList)
+        super.register(this::whenOption)
         super.register(this::propertyCall)
         super.register(this::methodCall)
         super.register(this::indexOperation)
@@ -121,11 +124,28 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return children[0] as String
     }
 
-    //    with = 'with' '(' expression ')' expression ;
+    // with = 'with' '(' expression ')' expression ;
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
         val withContext = children[2] as Expression
         val expression = children[4] as Expression
         return WithExpressionSimple(withContext, expression)
+    }
+
+    // when = 'when' '{' whenOptionList '}' ;
+    private fun when_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenExpression {
+        val optionList = children[2] as List<WhenOption>
+        return WhenExpressionSimple(optionList)
+    }
+
+    // whenOptionList = whenOption+ ;
+    private fun whenOptionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<WhenOption> =
+        children as List<WhenOption>
+
+    // whenOption = expression '->' expression ;
+    private fun whenOption(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOption {
+        val condition = children[0] as Expression
+        val expression = children[2] as Expression
+        return WhenOptionSimple(condition, expression)
     }
 
     // propertyCall = '.' IDENTIFIER ;

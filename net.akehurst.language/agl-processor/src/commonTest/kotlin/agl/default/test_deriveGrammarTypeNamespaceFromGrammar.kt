@@ -68,41 +68,6 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     // --- Group ---
-    @Test // S = a (b | c | d) e ;
-    fun _7_concat_group_choice_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b | c | d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar.create(result.asm!!.last())
-        val expected = grammarTypeModel("test.Test", "Test", "S") {
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("\$choice", "String", false, 1)
-                propertyPrimitiveType("e", "String", false, 2)
-            }
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
-    }
-
     @Test // S = a (b c | d) e ;
     fun _7_concat_group_choice_concat_leaf_literal() {
         val grammarStr = """
