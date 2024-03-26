@@ -21,7 +21,7 @@ import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.language.asmTransform.*
-import net.akehurst.language.agl.language.expressions.TypedObjectAsmValue
+import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -235,7 +235,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         val parentTypeDecl = parentTrRule?.resolvedType?.declaration
         val nodeRule = nodeInfo.node.rule
         return when {
-            null == parentTypeDecl -> NothingTransformationRuleSimple() //TODO: check, not sure if/when this happens!
+            null == parentTypeDecl -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING))
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo.not() -> {
                     // special case compressed rule
@@ -247,8 +247,13 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     // return child[0] or Nothing if child[0] is the empty node
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> NothingTransformationRuleSimple() // no property when non-term is a literal
-                        else -> OptionalItemTransformationRuleSimple(propType.qualifiedTypeName).also { it.resolveTypeAs(propType) }
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING)) // no property when non-term is a literal
+                        else -> transformationRule(
+                            propType, NavigationSimple(
+                                start = RootExpressionSimple("child"),
+                                parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, 0))))
+                            )
+                        )
                     }
                 }
             }
@@ -264,8 +269,8 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     // return child[0] or Nothing if child[0] is the empty node
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> NothingTransformationRuleSimple() // no property when non-term is a literal
-                        else -> ListTransformationRuleSimple().also { it.resolveTypeAs(propType) }
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING))// no property when non-term is a literal
+                        else -> transformationRule(propType, RootExpressionSimple("children"))
                     }
                 }
             }
@@ -274,8 +279,8 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 nodeRule.isPseudo -> { //must be group or choice
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> NothingTransformationRuleSimple() // no property when non-term is a literal
-                        else -> SelfTransformationRuleSimple(propType.qualifiedTypeName).also { it.resolveTypeAs(propType) }
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING)) // no property when non-term is a literal
+                        else -> transformationRule(propType, RootExpressionSimple(RootExpressionSimple.SELF))
                     }
                 }
 

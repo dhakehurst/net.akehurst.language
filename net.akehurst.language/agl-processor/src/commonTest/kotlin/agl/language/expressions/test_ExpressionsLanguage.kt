@@ -28,14 +28,19 @@ class test_ExpressionsLanguage {
 
     private companion object {
         val sentences = listOf(
+            // root
             "\$self",
             "\$nothing",
+            "\$group",
+            "prop",
+            // literal
             "true",
             "false",
             "0",
             "456",
             "3.141",
             "'hello world!'",
+            // navigation
             "aaa.bbb.ccc.ddd.ee",
             "a.method()",
             "a.b.method()",
@@ -46,6 +51,23 @@ class test_ExpressionsLanguage {
             "a.b.c[1]",
             "a.b[1].c",
             "a[1].b.c",
+            // tuple
+            "tuple {}",
+            "tuple { a:= 1 }",
+            "tuple { a:= 1 b:=\$self }",
+            "tuple { a:= 1 b:=x.y.x c:= a[1].f().z }",
+            // object
+            "A()",
+            "A() {}",
+            "A(true) { a:= 1 }",
+            "A('d',x.y.z,\$self) { a:= 1 b:=\$self }",
+            "A(a[1].f(), \$self.f(), true) { a:= 1 b:=x.y.x c:= a[1].f().z }",
+            // with
+            "with(1) true",
+            "with(a[1].f().z) A('d',x.y.z,\$self) { a:= 1 b:=\$self }",
+            // when
+            "when { true -> 1 }",
+            "when { 1 -> 2 x -> x.y a[7].f() -> x.y().d[9] }",
         )
     }
 

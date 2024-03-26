@@ -48,7 +48,7 @@ object AsmTransformModelTest {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
         assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
-        ExpressionsTest.exAssertEquals(expected.modifyStatements, actual.modifyStatements, "")
+        ExpressionsTest.exAssertEquals(expected.expression, actual.expression)
     }
 
 

@@ -32,7 +32,18 @@ interface LiteralExpression : Expression {
     val value: Any
 }
 
+interface CreateObjectExpression : Expression {
+    val qualifiedTypeName: String
+    val arguments: List<Expression>
+    val propertyAssignments: List<AssignmentStatement>
+}
+
 interface CreateTupleExpression : Expression {
+    val propertyAssignments: List<AssignmentStatement>
+}
+
+interface OnExpression : Expression {
+    val expression: Expression
     val propertyAssignments: List<AssignmentStatement>
 }
 

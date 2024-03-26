@@ -21,18 +21,18 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.expressions.*
+import net.akehurst.language.agl.language.expressions.IndexOperationSimple
+import net.akehurst.language.agl.language.expressions.LiteralExpressionSimple
+import net.akehurst.language.agl.language.expressions.NavigationSimple
+import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.language.asmTransform.*
-import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
 
 class AsmTransformModelSimple(
@@ -112,12 +112,12 @@ abstract class TransformationRuleAbstract : TransformationRule {
         _resolvedType = type
     }
 
-    override val modifyStatements = mutableListOf<AssignmentStatement>()
+    //override val modifyStatements = mutableListOf<AssignmentStatement>()
 
-    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
-        val ass = AssignmentStatementSimple(lhsPropertyName, rhs)
-        modifyStatements.add(ass)
-    }
+//    fun appendAssignment(lhsPropertyName: String, rhs: Expression) {
+//        val ass = AssignmentStatementSimple(lhsPropertyName, rhs)
+//        modifyStatements.add(ass)
+//    }
 
     override fun asString(indent: String, increment: String): String {
         return "$indent${grammarRuleName}: ${this}"
@@ -128,166 +128,165 @@ abstract class TransformationRuleAbstract : TransformationRule {
 
 class TransformationRuleSimple(
     override val qualifiedTypeName: String,
-    override val selfStatement: SelfStatement
+    override val expression: Expression
 ) : TransformationRuleAbstract() {
-    override fun toString(): String = "${selfStatement} as $qualifiedTypeName"
+    override fun toString(): String = "${expression} as $qualifiedTypeName"
 }
 
-fun transformationRule(type: TypeInstance, selfExpression: Expression): TransformationRuleSimple {
-    val selfStatement = ExpressionSelfStatementSimple(selfExpression)
+fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleSimple {
     return TransformationRuleSimple(
         type.qualifiedTypeName,
-        selfStatement
+        expression
     ).also {
         it.resolveTypeAs(type)
     }
 }
 
-class CreateObjectRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract(), CreateObjectRule {
+//class CreateObjectRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract(), CreateObjectRule {
+//
+//    override val selfStatement: SelfStatement = ConstructObjectSelfStatementSimple(qualifiedTypeName)
+//
+//    override fun asString(indent: String, increment: String): String {
+//        val ni = indent + increment
+//        val sb = StringBuilder()
+//        sb.append("$indent${grammarRuleName}: $qualifiedTypeName {\n")
+////        sb.append("${modifyStatements.joinToString(separator = "\n") { it.asString(ni, increment) }}\n")
+//        sb.append("$indent}")
+//        return sb.toString()
+//    }
+//
+//    override fun toString(): String = "$qualifiedTypeName { ... }"
+//}
 
-    override val selfStatement: SelfStatement = ConstructObjectSelfStatementSimple(qualifiedTypeName)
+//class ModifyObjectRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract(), ModifyObjectRule {
+//
+//    override val selfStatement: SelfStatement = LambdaSelfStatementSimple(qualifiedTypeName)
+//
+//    override fun asString(indent: String, increment: String): String {
+//        val ni = indent + increment
+//        val sb = StringBuilder()
+//        sb.append("$indent${grammarRuleName}: { $qualifiedTypeName ->\n")
+//        sb.append("$ni${modifyStatements.joinToString(separator = "\n$ni") { it.asString(ni, increment) }}\n")
+//        sb.append("$indent}")
+//        return sb.toString()
+//    }
+//
+//    override fun toString(): String = "{ $qualifiedTypeName  -> ... }"
+//}
 
-    override fun asString(indent: String, increment: String): String {
-        val ni = indent + increment
-        val sb = StringBuilder()
-        sb.append("$indent${grammarRuleName}: $qualifiedTypeName {\n")
-        sb.append("${modifyStatements.joinToString(separator = "\n") { it.asString(ni, increment) }}\n")
-        sb.append("$indent}")
-        return sb.toString()
-    }
+//class SubtypeTransformationRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract(), SubtypeTransformationRule {
+//
+//    override val selfStatement: SelfStatement = CHILD_0
+//
+//    override fun toString(): String = "child[0] as $qualifiedTypeName //subtype"
+//}
+//
+//class UnnamedSubtypeTransformationRuleSimple() : TransformationRuleAbstract(), SubtypeTransformationRule {
+//
+//    override val qualifiedTypeName: String get() = UnnamedSupertypeTypeSimple.NAME
+//
+//    override val selfStatement: SelfStatement = TransformationRuleAbstract.CHILD_0
+//
+//    override fun toString(): String = "child[0] as $qualifiedTypeName //UnnamedSubtype"
+//}
+//
+//class NothingTransformationRuleSimple() : TransformationRuleAbstract(), NoActionTransformationRule {
+//
+//    init {
+//        super.resolveTypeAs(SimpleTypeModelStdLib.NothingType)
+//    }
+//
+//    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+//    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple(RootExpressionSimple.NOTHING))
+//
+//    override fun toString(): String = "\$nothing //no action"
+//}
+//
+//class OptionalItemTransformationRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract(), NoActionTransformationRule {
+//
+//    override val selfStatement: SelfStatement = CHILD_0
+//
+//    override fun toString(): String = "child[0] as $qualifiedTypeName // optional"
+//}
+//
+//class Child0AsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
+//    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
+//
+//    override val selfStatement: SelfStatement = CHILD_0
+//
+//    override fun toString(): String = "child[0] as $qualifiedTypeName // self-assign"
+//}
+//
+//class LeafAsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
+//    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
+//
+//    override val selfStatement: SelfStatement get() = TODO()
+//
+//    override fun toString(): String = "leaf as std.String"
+//}
+//
+//class SelfTransformationRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract(), ListTransformationRule {
+//
+//    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple(RootExpressionSimple.SELF))
+//
+//    override fun toString(): String = "self"
+//}
+//
+//class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
+//    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
+//
+//    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple("children"))
+//
+//    override fun toString(): String = "children as $qualifiedTypeName // list"
+//}
+//
+//class SepListItemsTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
+//    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
+//
+//    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(
+//        NavigationSimple(
+//            start = RootExpressionSimple("children"),
+//            parts = listOf(PropertyCallSimple("items"))
+//        )
+//    )
+//
+//    override fun toString(): String = "children.items as $qualifiedTypeName // SepList"
+//}
 
-    override fun toString(): String = "$qualifiedTypeName { ... }"
-}
-
-class ModifyObjectRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract(), ModifyObjectRule {
-
-    override val selfStatement: SelfStatement = LambdaSelfStatementSimple(qualifiedTypeName)
-
-    override fun asString(indent: String, increment: String): String {
-        val ni = indent + increment
-        val sb = StringBuilder()
-        sb.append("$indent${grammarRuleName}: { $qualifiedTypeName ->\n")
-        sb.append("$ni${modifyStatements.joinToString(separator = "\n$ni") { it.asString(ni, increment) }}\n")
-        sb.append("$indent}")
-        return sb.toString()
-    }
-
-    override fun toString(): String = "{ $qualifiedTypeName  -> ... }"
-}
-
-class SubtypeTransformationRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract(), SubtypeTransformationRule {
-
-    override val selfStatement: SelfStatement = CHILD_0
-
-    override fun toString(): String = "child[0] as $qualifiedTypeName //subtype"
-}
-
-class UnnamedSubtypeTransformationRuleSimple() : TransformationRuleAbstract(), SubtypeTransformationRule {
-
-    override val qualifiedTypeName: String get() = UnnamedSupertypeTypeSimple.NAME
-
-    override val selfStatement: SelfStatement = TransformationRuleAbstract.CHILD_0
-
-    override fun toString(): String = "child[0] as $qualifiedTypeName //UnnamedSubtype"
-}
-
-class NothingTransformationRuleSimple() : TransformationRuleAbstract(), NoActionTransformationRule {
-
-    init {
-        super.resolveTypeAs(SimpleTypeModelStdLib.NothingType)
-    }
-
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
-    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple(RootExpressionSimple.NOTHING))
-
-    override fun toString(): String = "\$nothing //no action"
-}
-
-class OptionalItemTransformationRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract(), NoActionTransformationRule {
-
-    override val selfStatement: SelfStatement = CHILD_0
-
-    override fun toString(): String = "child[0] as $qualifiedTypeName // optional"
-}
-
-class Child0AsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
-
-    override val selfStatement: SelfStatement = CHILD_0
-
-    override fun toString(): String = "child[0] as $qualifiedTypeName // self-assign"
-}
-
-class LeafAsStringTransformationRuleSimple() : TransformationRuleAbstract(), SelfAssignChild0TransformationRule {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.String.qualifiedTypeName
-
-    override val selfStatement: SelfStatement get() = TODO()
-
-    override fun toString(): String = "leaf as std.String"
-}
-
-class SelfTransformationRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract(), ListTransformationRule {
-
-    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple(RootExpressionSimple.SELF))
-
-    override fun toString(): String = "self"
-}
-
-class ListTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
-
-    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(RootExpressionSimple("children"))
-
-    override fun toString(): String = "children as $qualifiedTypeName // list"
-}
-
-class SepListItemsTransformationRuleSimple() : TransformationRuleAbstract(), ListTransformationRule {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.type().qualifiedTypeName
-
-    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(
-        NavigationSimple(
-            start = RootExpressionSimple("children"),
-            parts = listOf(PropertyCallSimple("items"))
-        )
-    )
-
-    override fun toString(): String = "children.items as $qualifiedTypeName // SepList"
-}
-
-class CreateTupleTransformationRuleSimple(
-    override val qualifiedTypeName: String
-) : TransformationRuleAbstract() {
-
-    override val selfStatement: SelfStatement = ConstructTupleSelfStatementSimple(qualifiedTypeName)
-
-    override fun toString(): String = "children as $qualifiedTypeName // Tuple"
-}
+//class CreateTupleTransformationRuleSimple(
+//    override val qualifiedTypeName: String
+//) : TransformationRuleAbstract() {
+//
+//    override val selfStatement: SelfStatement = ExpressionSelfStatementSimple(CreateTupleExpressionSimple(super.modifyStatements))
+//
+//    override fun toString(): String = "children as $qualifiedTypeName // Tuple"
+//}
 
 abstract class TransformationStatementAbstract
 
 abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfStatement
 
-class ConstructObjectSelfStatementSimple(
-    val qualifiedTypeName: String
-) : SelfStatementAbstract() {
-    override fun toString(): String = "${qualifiedTypeName}()"
-}
+//class ConstructObjectSelfStatementSimple(
+//    val qualifiedTypeName: String
+//) : SelfStatementAbstract() {
+//    override fun toString(): String = "${qualifiedTypeName}()"
+//}
 
-class ConstructTupleSelfStatementSimple(
-    val qualifiedTypeName: String
-) : SelfStatementAbstract() {
-    override fun toString(): String = "tuple {}"
-}
+//class ConstructTupleSelfStatementSimple(
+//    val qualifiedTypeName: String
+//) : SelfStatementAbstract() {
+//    override fun toString(): String = "tuple {}"
+//}
 
 class LambdaSelfStatementSimple(
     val qualifiedTypeName: String

@@ -17,14 +17,12 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
-import net.akehurst.language.agl.asm.AsmStructureSimple
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.TypedObject
 import net.akehurst.language.agl.language.expressions.asm
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
-import net.akehurst.language.api.language.asmTransform.SelfStatement
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
@@ -74,32 +72,27 @@ class AsmTransformInterpreter(
     val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
     fun evaluate(self: TypedObject, path: AsmPath, trRule: TransformationRule): AsmValue {
-        val tObj = evaluateSelfStatement(self, path, trRule.selfStatement)
+        val tObj = evaluateSelfStatement(self, path, trRule.expression)
         val asm = tObj
-        when {
-            trRule.modifyStatements.isEmpty() -> Unit
-            else -> when (asm) {
-                is AsmStructure -> {
-                    for (st in trRule.modifyStatements) {
-                        executeStatementOn(self, st, asm)
-                    }
-                }
-
-                else -> {
-                    issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
-                }
-            }
-        }
+//        when {
+//            trRule.modifyStatements.isEmpty() -> Unit
+//            else -> when (asm) {
+//                is AsmStructure -> {
+//                    for (st in trRule.modifyStatements) {
+//                        executeStatementOn(self, st, asm)
+//                    }
+//                }
+//
+//                else -> {
+//                    issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
+//                }
+//            }
+//        }
         return asm
     }
 
-    private fun evaluateSelfStatement(contextNode: TypedObject, path: AsmPath, selfStatement: SelfStatement): AsmValue {
-        return when (selfStatement) {
-            is ConstructObjectSelfStatementSimple -> AsmStructureSimple(path = path, qualifiedTypeName = selfStatement.qualifiedTypeName)
-            is ExpressionSelfStatementSimple -> exprInterpreter.evaluateExpression(contextNode, selfStatement.expression).asm
-
-            else -> TODO()
-        }
+    private fun evaluateSelfStatement(contextNode: TypedObject, path: AsmPath, expression: Expression): AsmValue {
+        return exprInterpreter.evaluateExpression(contextNode, expression).asm
     }
 
     private fun executeStatementOn(node: TypedObject, st: AssignmentStatement, asm: AsmStructure) {

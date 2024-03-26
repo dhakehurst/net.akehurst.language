@@ -45,6 +45,26 @@ data class CreateTupleExpressionSimple(
     override fun toString(): String = "Tuple{ ... }"
 }
 
+data class CreateObjectExpressionSimple(
+    override val qualifiedTypeName: String,
+    override val arguments: List<Expression>
+) : ExpressionAbstract(), CreateObjectExpression {
+
+    override var propertyAssignments: List<AssignmentStatement> = emptyList()
+
+    override fun asString(indent: String, increment: String): String {
+        val sb = StringBuilder()
+        sb.append("${indent}Tuple{\n")
+        val ni = indent + increment
+        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
+        sb.append(props)
+        sb.append("${indent}}")
+        return sb.toString()
+    }
+
+    override fun toString(): String = "Tuple{ ... }"
+}
+
 class WithExpressionSimple(
     override val withContext: Expression,
     override val expression: Expression
@@ -58,6 +78,12 @@ class WhenExpressionSimple(
 ) : ExpressionAbstract(), WhenExpression {
 
     override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
+}
+
+class OnExpressionSimple(
+    override val expression: Expression
+) : ExpressionAbstract(), OnExpression {
+    override var propertyAssignments: List<AssignmentStatement> = emptyList()
 }
 
 class WhenOptionSimple(

@@ -41,6 +41,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::tuple)
         super.register(this::assignmentList)
         super.register(this::assignment)
+        super.registerFor("object", this::object_)
         super.register(this::propertyName)
         super.register(this::with)
         super.registerFor("when", this::when_)
@@ -58,7 +59,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val value: String
     )
 
-    // expression = root | literal | navigation
+    // expression = root | literal | navigation | tuple  | object | with | when
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
@@ -102,11 +103,25 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun navigationPart(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0]
 
-    // tuple = 'tuple' '{' assignmentList  '}' ;
+    // object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
+    private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
+        val typeName = children[0] as String
+        val args = children[2] as List<Expression>
+        val propertyAssignments = children[4] as List<AssignmentStatement>
+        val exp = CreateObjectExpressionSimple(typeName, args)
+        exp.propertyAssignments = propertyAssignments
+        return exp
+    }
+
+    // tuple = 'tuple' assignmentBlock ;
     private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {
-        val propertyAssignments = children[2] as List<AssignmentStatement>
+        val propertyAssignments = children[1] as List<AssignmentStatement>
         return CreateTupleExpressionSimple(propertyAssignments)
     }
+
+    // assignmentBlock = '{' assignmentList  '}' ;
+    private fun assignmentBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
+        children[1] as List<AssignmentStatement>
 
     // assignmentList = assignment* ;
     private fun assignmentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =

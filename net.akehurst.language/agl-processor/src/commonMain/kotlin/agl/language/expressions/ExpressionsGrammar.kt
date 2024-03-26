@@ -33,6 +33,7 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("literal"),
             b.nonTerminal("navigation"),
             b.nonTerminal("tuple"),
+            b.nonTerminal("object"),
             b.nonTerminal("with"),
             b.nonTerminal("when")
         )
@@ -64,6 +65,9 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
 
         b.rule("tuple").concatenation(
             b.terminalLiteral("tuple"),
+            b.nonTerminal("assignmentBlock"),
+        )
+        b.rule("assignmentBlock").concatenation(
             b.terminalLiteral("{"),
             b.nonTerminal("assignmentList"),
             b.terminalLiteral("}")
@@ -78,6 +82,15 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("IDENTIFIER"),
             b.nonTerminal("SPECIAL")
         )
+
+        b.rule("object").concatenation(
+            b.nonTerminal("IDENTIFIER"),
+            b.terminalLiteral("("),
+            b.nonTerminal("argumentList"),
+            b.terminalLiteral(")"),
+            b.nonTerminal("optAssignmentBlock")
+        )
+        b.rule("optAssignmentBlock").optional(b.nonTerminal("assignmentBlock"))
 
         b.rule("with").concatenation(
             b.terminalLiteral("with"),
@@ -147,6 +160,7 @@ grammar Expression extends Base {
       | literal
       | navigation
       | tuple
+      | object
       | with
       | when
       ;
@@ -164,11 +178,14 @@ grammar Expression extends Base {
      | indexOperation
     ;
     
-    tuple = 'tuple' '{' assignmentList  '}' ;
+    object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
+
+    tuple = 'tuple' assignmentBlock ;
+    assignmentBlock = '{' assignmentList  '}' ;
     assignmentList = assignment* ;
     assignment = propertyName ':=' expression ;
     propertyName = IDENTIFIER | SPECIAL ;
-    
+        
     with = 'with' '(' expression ')' expression ;
     
     when = 'when' '{' whenOptionList '}' ;

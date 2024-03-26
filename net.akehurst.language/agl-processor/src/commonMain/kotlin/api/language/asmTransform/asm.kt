@@ -17,7 +17,7 @@
 
 package net.akehurst.language.api.language.asmTransform
 
-import net.akehurst.language.api.language.expressions.AssignmentStatement
+import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
@@ -50,8 +50,8 @@ interface TransformationRule {
 
     val resolvedType: TypeInstance
 
-    val selfStatement: SelfStatement
-    val modifyStatements: List<AssignmentStatement>
+    val expression: Expression
+    // val modifyStatements: List<AssignmentStatement>
 
     fun asString(indent: String = "", increment: String = "  "): String
 }

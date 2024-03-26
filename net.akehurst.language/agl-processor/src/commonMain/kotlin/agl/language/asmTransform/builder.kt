@@ -18,12 +18,17 @@
 package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.language.expressions.AssignmentStatementSimple
+import net.akehurst.language.agl.language.expressions.CreateObjectExpressionSimple
+import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
 @DslMarker
 annotation class AsmTransformModelDslMarker
@@ -48,6 +53,12 @@ class AsmTransformModelBuilder(
 ) {
     private val _rules = mutableListOf<TransformationRule>()
 
+    public fun expression(expressionStr: String): Expression {
+        val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
+        check(res.issues.isEmpty()) { res.issues.toString() }
+        return res.asm!!
+    }
+
     private fun trRule(grammarRuleName: String, tr: TransformationRuleAbstract) {
         tr.grammarRuleName = grammarRuleName
         _rules.add(tr)
@@ -63,39 +74,36 @@ class AsmTransformModelBuilder(
     }
 
     fun nothingRule(grammarRuleName: String) {
-        val tr = NothingTransformationRuleSimple()
+        val tr = TransformationRuleSimple(SimpleTypeModelStdLib.NothingType.qualifiedTypeName, RootExpressionSimple(RootExpressionSimple.NOTHING))
         trRule(grammarRuleName, tr)
     }
 
     fun leafStringRule(grammarRuleName: String) {
-        val tr = LeafAsStringTransformationRuleSimple()
+        val tr = TransformationRuleSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, RootExpressionSimple("leaf"))
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
     }
 
-    fun transRule(grammarRuleName: String, type: TypeInstance, expressionStr: String) {
-        val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(res.issues.isEmpty()) { res.issues.toString() }
-        val expr = res.asm!!
+    fun transRule(grammarRuleName: String, type: TypeInstance, expression: Expression) {
         val tr = transformationRule(
             type = type,
-            selfExpression = expr
+            expression = expression
         )
         tr.grammarRuleName = grammarRuleName
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
     }
 
-    fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, SimpleTypeModelStdLib.String, "child[0]")
+    fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, SimpleTypeModelStdLib.String, expression("child[0]"))
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {
-        val tr = SubtypeTransformationRuleSimple(typeName)
+        val tr = TransformationRuleSimple(typeName, expression("child[0]"))
         trRule(grammarRuleName, tr)
     }
 
     fun unnamedSubtypeRule(grammarRuleName: String, subtypeNames: List<String>) {
-        val tr = UnnamedSubtypeTransformationRuleSimple()
+        val tr = TransformationRuleSimple(UnnamedSupertypeTypeSimple.NAME, expression("child[0]"))
         tr.grammarRuleName = grammarRuleName
         val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
         val stList = subtypeNames.map { n ->
@@ -107,11 +115,13 @@ class AsmTransformModelBuilder(
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
-        val tr = CreateObjectRuleSimple(typeName)
+        val expr = CreateObjectExpressionSimple(typeName, emptyList())
+        val tr = TransformationRuleSimple(typeName, expr)
         trRule(grammarRuleName, tr)
         val ab = AssignmentBuilder()
         ab.modifyStatements()
-        val list = ab.build(tr)
+        val ass = ab.build()
+        expr.propertyAssignments = ass
     }
 
     fun build(): AsmTransformModel {
@@ -134,15 +144,7 @@ class AssignmentBuilder() {
         _assignments.add(Pair(lhsPropertyName, expr))
     }
 
-    fun build(tr: TransformationRuleAbstract) {
-        when (tr) {
-            is CreateObjectRuleSimple -> {
-                _assignments.forEach { (lhs, expr) -> tr.appendAssignment(lhs, expr) }
-            }
-
-            is ModifyObjectRuleSimple -> {
-                _assignments.forEach { (lhs, expr) -> tr.appendAssignment(lhs, expr) }
-            }
-        }
+    fun build(): List<AssignmentStatement> {
+        return _assignments.map { AssignmentStatementSimple(it.first, it.second) }
     }
 }

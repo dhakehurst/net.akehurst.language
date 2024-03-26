@@ -452,7 +452,7 @@ class test_AllDefault {
             stringTypeFor("S")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            transRule("S", SimpleTypeModelStdLib.String, "child[0]")
+            transRule("S", SimpleTypeModelStdLib.String, expression("child[0]"))
         }
         test(
             grammarStr = grammarStr,

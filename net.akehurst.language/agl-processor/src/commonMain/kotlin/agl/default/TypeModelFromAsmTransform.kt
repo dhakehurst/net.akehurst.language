@@ -18,7 +18,6 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.agl.language.expressions.typeOfExpressionFor
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
@@ -62,15 +61,15 @@ object TypeModelFromAsmTransform {
         // create properties
         for (tr in trm.rules.values) {
             val dt = ns.findOwnedTypeNamed(tr.qualifiedTypeName) ?: error("No type named ${tr.qualifiedTypeName}")
-            for (ass in tr.modifyStatements) {
-                val grmRule = grammar.findAllResolvedGrammarRule(tr.grammarRuleName) ?: error("No rule found with name ${tr.grammarRuleName}")
-                val defaultType = nsFromGrmr.typeForGrammarRule(grmRule)
-                dt.appendPropertyPrimitive(
-                    name = ass.lhsPropertyName,
-                    typeInstance = ass.rhs.typeOfExpressionFor(defaultType) ?: error("should not happen"),
-                    description = ""
-                )
-            }
+//            for (ass in tr.modifyStatements) {
+//                val grmRule = grammar.findAllResolvedGrammarRule(tr.grammarRuleName) ?: error("No rule found with name ${tr.grammarRuleName}")
+//                val defaultType = nsFromGrmr.typeForGrammarRule(grmRule)
+//                dt.appendPropertyPrimitive(
+//                    name = ass.lhsPropertyName,
+//                    typeInstance = ass.rhs.typeOfExpressionFor(defaultType) ?: error("should not happen"),
+//                    description = ""
+//                )
+//            }
         }
         return ns
     }
