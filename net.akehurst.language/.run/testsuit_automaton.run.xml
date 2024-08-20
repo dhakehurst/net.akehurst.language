@@ -10,8 +10,8 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value="cleanJvm8Test" />
-          <option value="jvm8Test" />
+          <option value=":agl-processor:cleanJvm8Test" />
+          <option value=":agl-processor:jvm8Test" />
           <option value="--tests" />
           <option value="&quot;net.akehurst.language.agl.automaton.*&quot;" />
         </list>
@@ -21,7 +21,7 @@
     <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <DebugAllEnabled>false</DebugAllEnabled>
-    <ForceTestExec>false</ForceTestExec>
+    <RunAsTest>true</RunAsTest>
     <method v="2" />
   </configuration>
 </component>

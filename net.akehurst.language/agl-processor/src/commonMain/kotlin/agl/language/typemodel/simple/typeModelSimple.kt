@@ -297,8 +297,8 @@ class UnnamedSupertypeTypeInstance(
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
 
-    override val typeName: String get() = "UnnamedSupertypeType"
-    override val qualifiedTypeName: String get() = "UnnamedSupertypeType"
+    override val typeName: String get() = UnnamedSupertypeTypeSimple.NAME
+    override val qualifiedTypeName: String get() = UnnamedSupertypeTypeSimple.NAME
 
     override val typeOrNull: TypeDeclaration get() = declaration
 
@@ -759,7 +759,7 @@ class UnnamedSupertypeTypeSimple(
 ) : TypeDeclarationSimpleAbstract(), UnnamedSupertypeType {
 
     companion object {
-        val NAME = "\$UnnamedSuperTypeType"
+        val NAME = "\$UnnamedSupertypeType"
     }
 
     override val name: String = NAME

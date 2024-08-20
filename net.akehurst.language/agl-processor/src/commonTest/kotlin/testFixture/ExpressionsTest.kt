@@ -23,13 +23,16 @@ import kotlin.test.fail
 
 object ExpressionsTest {
 
-    fun exAssertEquals(expected: Expression, actual: Expression) {
+    fun exAssertEquals(expected: Expression, actual: Expression, message: String = "") {
         when {
             expected is RootExpression && actual is RootExpression -> exAssertEquals(expected, actual)
             expected is LiteralExpression && actual is LiteralExpression -> exAssertEquals(expected, actual)
             expected is NavigationExpression && actual is NavigationExpression -> exAssertEquals(expected, actual)
+            expected is InfixExpression && actual is InfixExpression -> exAssertEquals(expected, actual)
             expected is CreateTupleExpression && actual is CreateTupleExpression -> exAssertEquals(expected, actual)
+            expected is CreateObjectExpression && actual is CreateObjectExpression -> exAssertEquals(expected, actual)
             expected is WithExpression && actual is WithExpression -> exAssertEquals(expected, actual)
+            expected is WhenExpression && actual is WhenExpression -> exAssertEquals(expected, actual)
             else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
         }
     }
@@ -66,12 +69,42 @@ object ExpressionsTest {
         }
     }
 
+    fun exAssertEquals(expected: InfixExpression, actual: InfixExpression) {
+        assertEquals(expected.expressions.size, actual.expressions.size, "number of expressions is different")
+        assertEquals(expected.operators, actual.operators, "operators are different")
+        for (i in expected.expressions.indices) {
+            val expEl = expected.expressions[i]
+            val actEl = actual.expressions[i]
+            exAssertEquals(expEl, actEl)
+        }
+    }
+
+    fun exAssertEquals(expected: CreateObjectExpression, actual: CreateObjectExpression) {
+        assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName, "qualifiedTypeName")
+        exAssertEqualsExprList(expected.arguments, actual.arguments, "arguments")
+        exAssertEquals(expected.propertyAssignments, actual.propertyAssignments, "propertyAssignments")
+    }
+
     fun exAssertEquals(expected: CreateTupleExpression, actual: CreateTupleExpression) {
         exAssertEquals(expected.propertyAssignments, actual.propertyAssignments, "propertyAssignments")
     }
 
     fun exAssertEquals(expected: WithExpression, actual: WithExpression) {
         exAssertEquals(expected.withContext, actual.withContext)
+        exAssertEquals(expected.expression, actual.expression)
+    }
+
+    fun exAssertEquals(expected: WhenExpression, actual: WhenExpression) {
+        assertEquals(expected.options.size, actual.options.size, "number of WhenOptions is different")
+        for (i in expected.options.indices) {
+            val expEl = expected.options[i]
+            val actEl = actual.options[i]
+            exAssertEquals(expEl, actEl)//, "WhenOption")
+        }
+    }
+
+    fun exAssertEquals(expected: WhenOption, actual: WhenOption) {
+        exAssertEquals(expected.condition, actual.condition)
         exAssertEquals(expected.expression, actual.expression)
     }
 
@@ -110,5 +143,14 @@ object ExpressionsTest {
     private fun exAssertEquals(expected: AssignmentStatement, actual: AssignmentStatement, message: String) {
         assertEquals(expected.lhsPropertyName, actual.lhsPropertyName)
         ExpressionsTest.exAssertEquals(expected.rhs, actual.rhs)
+    }
+
+    fun <E : Expression> exAssertEqualsExprList(expected: List<E>, actual: List<E>, message: String) {
+        assertEquals(expected.size, actual.size, "number of $message is different")
+        for (i in expected.indices) {
+            val expEl = expected[i]
+            val actEl = actual[i]
+            exAssertEquals(expEl, actEl, message)
+        }
     }
 }

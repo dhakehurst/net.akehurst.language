@@ -84,9 +84,6 @@ interface AsmStructure : AsmValue {
      */
     fun getProperty(name: String): AsmValue
 
-    @Deprecated("use getProperty(<name>) or property[<name>]")
-    fun getPropertyOrNull(name: String): AsmValue?
-
     fun setProperty(name: String, value: AsmValue, childIndex: Int)
 }
 

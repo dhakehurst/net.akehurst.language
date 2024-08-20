@@ -32,15 +32,15 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("root"),
             b.nonTerminal("literal"),
             b.nonTerminal("navigation"),
+            b.nonTerminal("infix"),
             b.nonTerminal("tuple"),
             b.nonTerminal("object"),
             b.nonTerminal("with"),
             b.nonTerminal("when")
         )
         b.rule("root").choiceLongestFromConcatenationItem(
-            b.nonTerminal("NOTHING"),
-            b.nonTerminal("SELF"),
-            b.nonTerminal("propertyReference")
+            b.nonTerminal("propertyReference"),
+            b.nonTerminal("SPECIAL"),
         )
         b.rule("literal").choiceLongestFromConcatenationItem(
             b.nonTerminal("BOOLEAN"),
@@ -63,6 +63,19 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("indexOperation")
         )
 
+        b.rule("infix").separatedList(
+            2, -1,
+            b.nonTerminal("INFIX_OPERATOR"),
+            b.nonTerminal("expression")
+        )
+        b.leaf("INFIX_OPERATOR").choiceLongestFromConcatenationItem(
+            b.terminalLiteral("or"), b.terminalLiteral("and"), b.terminalLiteral("xor"),
+            b.terminalLiteral("=="), b.terminalLiteral("!="),
+            b.terminalLiteral("<="), b.terminalLiteral(">="), b.terminalLiteral("<"), b.terminalLiteral(">"),
+            b.terminalLiteral("/"), b.terminalLiteral("*"), b.terminalLiteral("%"),
+            b.terminalLiteral("+"), b.terminalLiteral("-"),
+        )
+
         b.rule("tuple").concatenation(
             b.terminalLiteral("tuple"),
             b.nonTerminal("assignmentBlock"),
@@ -79,8 +92,8 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
             b.nonTerminal("expression"),
         )
         b.rule("propertyName").choiceLongestFromConcatenationItem(
-            b.nonTerminal("IDENTIFIER"),
-            b.nonTerminal("SPECIAL")
+            b.nonTerminal("SPECIAL"),
+            b.nonTerminal("IDENTIFIER")
         )
 
         b.rule("object").concatenation(
@@ -115,7 +128,7 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
 
         b.rule("propertyCall").concatenation(
             b.terminalLiteral("."),
-            b.nonTerminal("IDENTIFIER")
+            b.nonTerminal("propertyReference")
         )
         b.rule("methodCall").concatenation(
             b.terminalLiteral("."),
@@ -133,12 +146,10 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.rule("indexList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("expression"))
 
         b.rule("propertyReference").choiceLongestFromConcatenationItem(
-            b.nonTerminal("IDENTIFIER"),
-            b.nonTerminal("SPECIAL")
+            b.nonTerminal("SPECIAL"),
+            b.nonTerminal("IDENTIFIER")
         )
-        b.leaf("NOTHING").concatenation(b.terminalLiteral("\$nothing"))
-        b.leaf("SELF").concatenation(b.terminalLiteral("\$self"))
-        b.leaf("SPECIAL").concatenation(b.terminalLiteral("\$group"))
+        b.leaf("SPECIAL").concatenation(b.terminalLiteral("\$"), b.nonTerminal("IDENTIFIER"))
         b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"))
         b.leaf("INTEGER").concatenation(b.terminalPattern("[0-9]+"))
         b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"))
@@ -159,12 +170,13 @@ grammar Expression extends Base {
       = root
       | literal
       | navigation
+      | infix
       | tuple
       | object
       | with
       | when
       ;
-    root = NOTHING | SELF | propertyReference | SPECIAL ;
+    root = propertyReference | SPECIAL ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
     
     navigation = navigationRoot navigationPart+ ;
@@ -178,13 +190,20 @@ grammar Expression extends Base {
      | indexOperation
     ;
     
+    infix = [expression / INFIX_OPERATOR]2+ ;
+    leaf INFIX_OPERATOR
+      = 'or' | 'and' | 'xor'  // logical 
+      | '==' | '!=' | '<=' | '>=' | '<' | '>'  // comparison
+      | '/' | '*' | '%' | '+' | '-' // arithmetic
+      ;
+    
     object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
 
     tuple = 'tuple' assignmentBlock ;
     assignmentBlock = '{' assignmentList  '}' ;
     assignmentList = assignment* ;
     assignment = propertyName ':=' expression ;
-    propertyName = IDENTIFIER | SPECIAL ;
+    propertyName = SPECIAL | IDENTIFIER ;
         
     with = 'with' '(' expression ')' expression ;
     
@@ -195,15 +214,12 @@ grammar Expression extends Base {
     propertyCall = "." propertyReference ;
     methodCall = "." methodReference '(' argumentList ')' ;
     argumentList = [expression / ',']* ;
-    propertyCall = "." propertyReference ;
-    propertyReference = IDENTIFIER | SPECIAL ;
+    propertyReference = SPECIAL | IDENTIFIER ;
     methodReference = IDENTIFIER ;
     indexOperation = '[' indexList ']' ;
     indexList = [expression / ',']+ ;
     
-    leaf NOTHING = '${"$"}nothing' ;
-    leaf SELF = '${"$"}self' ;
-    leaf SPECIAL = '${"$"}group' ; // autogenerated name
+    leaf SPECIAL = '${"$"}' IDENTIFIER ;
     leaf BOOLEAN = "true|false" ;
     leaf INTEGER = "[0-9]+" ;
     leaf REAL = "[0-9]+[.][0-9]+" ;

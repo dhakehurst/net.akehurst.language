@@ -44,7 +44,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 ) {
 
     companion object {
-        fun TypeInstance.toNoActionTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple(RootExpressionSimple.NOTHING)) }
+        fun TypeInstance.toNoActionTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple.NOTHING) }
         fun TypeInstance.toLeafAsStringTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("leaf")) }
         fun TypeInstance.toListTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("children")) }
         fun TypeInstance.toSListItemsTrRule() = this.let { t -> transformationRule(t, NavigationSimple(RootExpressionSimple("children"), listOf(PropertyCallSimple("items")))) }
@@ -168,7 +168,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 construct = {
                     transformationRule(
                         type = it.type(),
-                        expression = CreateObjectExpressionSimple(it.name, emptyList())
+                        expression = CreateObjectExpressionSimple(it.qualifiedName, emptyList())
                     )
                 },
                 modify = { tr ->
@@ -244,7 +244,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 construct = {
                     transformationRule(
                         type = it.type(),
-                        expression = CreateObjectExpressionSimple(it.name, emptyList())
+                        expression = CreateObjectExpressionSimple(it.qualifiedName, emptyList())
                     )
                 },
                 modify = { tr ->
@@ -272,7 +272,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             construct = {
                 transformationRule(
                     type = it.type(),
-                    expression = CreateObjectExpressionSimple(it.name, emptyList())
+                    expression = CreateObjectExpressionSimple(it.qualifiedName, emptyList())
                 )
             },
             modify = { tr ->
@@ -428,7 +428,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 val subType = namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 val options = subtypeTransforms.mapIndexed { idx, it ->
                     WhenOptionSimple(
-                        condition = RootExpressionSimple("$idx == alternative"),
+                        condition = InfixExpressionSimple(
+                            listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, idx), RootExpressionSimple("\$alternative")),
+                            listOf("==")
+                        ),
                         expression = it.expression
                     )
                 }

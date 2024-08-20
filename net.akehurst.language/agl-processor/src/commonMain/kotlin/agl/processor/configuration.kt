@@ -84,7 +84,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         )
     },
     override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = { p ->
-        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.typeModel)
+        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(

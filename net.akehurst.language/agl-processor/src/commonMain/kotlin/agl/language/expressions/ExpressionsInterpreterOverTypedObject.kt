@@ -26,6 +26,20 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.*
 
+data class EvaluationContext(
+    val parent: EvaluationContext?,
+    val namedValues: Map<String, TypedObject>
+) {
+    companion object {
+        fun of(namedValues: Map<String, TypedObject>, parent: EvaluationContext? = null) = EvaluationContext(parent, namedValues)
+        fun ofSelf(self: TypedObject) = of(mapOf(RootExpressionSimple.SELF.name to self))
+    }
+
+    val self = namedValues[RootExpressionSimple.SELF.name]
+
+    fun child(namedValues: Map<String, TypedObject>) = of(namedValues, this)
+}
+
 interface TypedObject {
     val type: TypeInstance
 
@@ -76,32 +90,49 @@ class ExpressionsInterpreterOverTypedObject(
 
     val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
 
-    fun evaluateStr(self: TypedObject, expression: String): TypedObject {
+    /**
+     * if more than one value is to be passed in as an 'evaluation-context'
+     * self can contain a 'tuple' of all the necessary named values
+     */
+    fun evaluateStr(evc: EvaluationContext, expression: String): TypedObject {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
         check(result.issues.errors.isEmpty()) { result.issues.toString() }
         val asm = result.asm!!
-        return this.evaluateExpression(self, asm)
+        return this.evaluateExpression(evc, asm)
     }
 
-    fun evaluateExpression(self: TypedObject, expression: Expression): TypedObject = when (expression) {
-        is RootExpression -> this.evaluateRootExpression(self, expression)
+    /**
+     * if more than one value is to be passed in as an 'evaluation-context'
+     * self can contain a 'tuple' of all the necessary named values
+     */
+    fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
+        is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
-        is NavigationExpression -> this.evaluateNavigation(self, expression)
-        is CreateTupleExpression -> this.evaluateCreateTuple(self, expression)
-        is WithExpression -> this.evaluateWith(self, expression)
+        is NavigationExpression -> this.evaluateNavigation(evc, expression)
+        is InfixExpression -> this.evaluateInfix(evc, expression)
+        is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
+        is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
+        is WithExpression -> this.evaluateWith(evc, expression)
+        is WhenExpression -> this.evaluateWhen(evc, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
-    private fun evaluateRootExpression(self: TypedObject, expression: RootExpression): TypedObject {
+    private fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject {
         return when {
             expression.isNothing -> AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
             expression.isSelf -> {
                 //_issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
-                self
+                evc.self ?: error("No '\$self' value defined in Evaluation Context")
             }
 
-            else -> evaluatePropertyName(self, expression.name)
+            expression.name.startsWith("\$") -> evaluateSpecial(evc, expression.name)
+            else -> evaluatePropertyName(evc, expression.name)
         }
+    }
+
+    private fun evaluateSpecial(evc: EvaluationContext, name: String): TypedObject {
+        // the name must exist as a property of the self which must be a tuple
+        return evaluatePropertyName(evc, name)
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.typeName) {
@@ -112,12 +143,12 @@ class ExpressionsInterpreterOverTypedObject(
         else -> error("should not happen")
     }
 
-    private fun evaluateNavigation(self: TypedObject, expression: NavigationExpression): TypedObject {
+    private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {
         // start should be a RootExpression or LiteralExpression
         val st = expression.start
         val start = when (st) {
             is LiteralExpression -> evaluateLiteralExpression(st)
-            is RootExpression -> evaluateRootExpression(self, st)
+            is RootExpression -> evaluateRootExpression(evc, st)
             else -> error("should not happen")
         }
         val result =
@@ -132,16 +163,27 @@ class ExpressionsInterpreterOverTypedObject(
         return result
     }
 
-    fun evaluatePropertyName(self: TypedObject, propertyName: String): TypedObject {
+    private fun evaluatePropertyName(evc: EvaluationContext, propertyName: String): TypedObject {
         val type = self.type
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
             null -> when {
                 self.asm is AsmStructure -> {
                     // try with no type
-                    val pv = (self.asm as AsmStructure).getProperty(propertyName)
-                    val tp = typeModel.findByQualifiedNameOrNull(pv.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-                    TypedObjectAsmValue(tp, pv)
+                    val p = (self.asm as AsmStructure).property[propertyName]
+                    when (p) {
+                        null -> {
+                            issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
+                            AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+                        }
+
+                        else -> {
+                            val pv = p.value
+                            val tp = typeModel.findByQualifiedNameOrNull(pv.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                            TypedObjectAsmValue(tp, pv)
+                        }
+                    }
+
                 }
 
                 else -> {
@@ -154,17 +196,17 @@ class ExpressionsInterpreterOverTypedObject(
         }
     }
 
-    fun evaluateIndexOperation(self: TypedObject, indices: List<Expression>): TypedObject {
+    private fun evaluateIndexOperation(evc: EvaluationContext, indices: List<Expression>): TypedObject {
         return when {
-            self.type.declaration.conformsTo(SimpleTypeModelStdLib.List) -> {
+            evc.self!!.type.declaration.conformsTo(SimpleTypeModelStdLib.List) -> {
                 when (indices.size) {
                     1 -> {
-                        val idx = evaluateExpression(self, indices[0])
+                        val idx = evaluateExpression(evc, indices[0])
                         when {
                             idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
-                                val listElementType = self.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
+                                val listElementType = evc.self.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asm as AsmPrimitive).value as Int
-                                (self.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
+                                (evc.self.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
                                     issues.error(null, "Index '$i' out of range")
                                     AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                 }
@@ -191,24 +233,82 @@ class ExpressionsInterpreterOverTypedObject(
         }
     }
 
-    fun evaluateWith(self: TypedObject, expression: WithExpression): TypedObject {
-        val newSelf = evaluateExpression(self, expression.withContext)
-        val result = evaluateExpression(newSelf, expression.expression)
+    private fun evaluateInfix(evc: EvaluationContext, expression: InfixExpression): TypedObject {
+        //TODO: Operator precedence
+        var result = evaluateExpression(evc, expression.expressions.first())
+        for (i in expression.operators.indices) {
+            val op = expression.operators[i]
+            val rhsExpr = expression.expressions[i + 1]
+            val rhs = evaluateExpression(evc, rhsExpr)
+            result = evaluateInfixOperator(result, op, rhs)
+        }
         return result
     }
 
-    fun evaluateCreateTuple(self: TypedObject, expression: CreateTupleExpression): TypedObject {
+    private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
+        "==" -> when {
+            lhs.type == rhs.type -> {
+                AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, "true").toTypedObject(SimpleTypeModelStdLib.Boolean)
+            }
+
+            else -> error("'$op' must have same type for lhs and rhs")
+        }
+
+        else -> error("Unsupported Operator '$op'")
+    }
+
+    private fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
+        val newSelf = evaluateExpression(evc, expression.withContext)
+        val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
+        val result = evaluateExpression(newEvc, expression.expression)
+        return result
+    }
+
+    private fun evaluateWhen(evc: EvaluationContext, expression: WhenExpression): TypedObject {
+        for (opt in expression.options) {
+            val condValue = evaluateExpression(evc, opt.condition)
+            when (condValue.type) {
+                SimpleTypeModelStdLib.Boolean -> {
+                    val result = evaluateExpression(evc, opt.expression)
+                    return result
+                }
+
+                else -> error("Conditions/Options in a when extpression must result in a Boolean value")
+            }
+        }
+        return AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+    }
+
+    private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
         val ns = typeModel.findOrCreateNamespace("\$interpreter", listOf(SimpleTypeModelStdLib.qualifiedName))
         val tuple = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
         val tupleType = ns.createTupleType()
         expression.propertyAssignments.forEach {
-            val value = evaluateExpression(self, it.rhs)
+            val value = evaluateExpression(evc, it.rhs)
             tuple.setProperty(it.lhsPropertyName, value.asm, tuple.property.size)
             tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
         }
         return tuple.toTypedObject(tupleType.type())
     }
 
+    private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
+        val typeDecl = typeModel.findByQualifiedNameOrNull(expression.qualifiedTypeName) ?: error("Type not found ${expression.qualifiedTypeName}")
+        val obj = AsmStructureSimple(AsmPathSimple(""), typeDecl.qualifiedName)
+
+        val args = expression.arguments.map { evaluateExpression(evc, it) }
+        val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
+        if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
+        consProps.forEachIndexed { idx, pd ->
+            val value = args[idx]
+            obj.setProperty(pd.name, value.asm, obj.property.size)
+        }
+
+        expression.propertyAssignments.forEach {
+            val value = evaluateExpression(evc, it.rhs)
+            obj.setProperty(it.lhsPropertyName, value.asm, obj.property.size)
+        }
+        return obj.toTypedObject(typeDecl.type())
+    }
 }
 
 object StdLibPrimitiveExecutions {

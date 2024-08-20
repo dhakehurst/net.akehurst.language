@@ -38,10 +38,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationRoot)
         super.register(this::navigationPartList)
         super.register(this::navigationPart)
+        super.register(this::infix)
+        super.registerFor("object", this::object_)
         super.register(this::tuple)
+        super.register(this::assignmentBlock)
         super.register(this::assignmentList)
         super.register(this::assignment)
-        super.registerFor("object", this::object_)
         super.register(this::propertyName)
         super.register(this::with)
         super.registerFor("when", this::when_)
@@ -63,13 +65,18 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = NOTHING | SELF | propertyReference | SPECIAL ;
-    private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression = when (nodeInfo.alt.option) {
-        0 -> RootExpressionSimple(RootExpressionSimple.NOTHING)
-        1 -> RootExpressionSimple(RootExpressionSimple.SELF)
-        2 -> RootExpressionSimple(children[0] as String)
-        3 -> RootExpressionSimple(children[0] as String)
-        else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'root'")
+    // root = propertyReference | SPECIAL ;
+    private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
+        val v = children[0] as String
+        return when {
+            v.startsWith("\$") -> when (v) {
+                RootExpressionSimple.NOTHING.name -> RootExpressionSimple.NOTHING
+                RootExpressionSimple.SELF.name -> RootExpressionSimple.SELF
+                else -> RootExpressionSimple(v)
+            }
+
+            else -> RootExpressionSimple(v)
+        }
     }
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
@@ -103,13 +110,21 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun navigationPart(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0]
 
+    // infix = expression INFIX_OPERATOR expression ;
+    // infix = [expression / INFIX_OPERATOR]2+ ;
+    private fun infix(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
+        val expressions = children.filterIsInstance<Expression>()
+        val operators = children.filterIsInstance<String>()
+        return InfixExpressionSimple(expressions, operators)
+    }
+
     // object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val typeName = children[0] as String
         val args = children[2] as List<Expression>
-        val propertyAssignments = children[4] as List<AssignmentStatement>
+        val propertyAssignments = children[4] as List<AssignmentStatement>?
         val exp = CreateObjectExpressionSimple(typeName, args)
-        exp.propertyAssignments = propertyAssignments
+        exp.propertyAssignments = propertyAssignments ?: emptyList()
         return exp
     }
 

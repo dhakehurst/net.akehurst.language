@@ -254,11 +254,10 @@ class AsmStructureSimple(
 
     override fun hasProperty(name: String): Boolean = property.containsKey(name)
 
-    override fun getPropertyOrNull(name: String): AsmValue? = property[name]?.value
-    fun getPropertyAsStringOrNull(name: String): String? = getPropertyOrNull(name) as String?
-    fun getPropertyAsAsmElementOrNull(name: String): AsmStructureSimple? = getPropertyOrNull(name) as AsmStructureSimple?
-    fun getPropertyAsReferenceOrNull(name: String): AsmReferenceSimple? = getPropertyOrNull(name) as AsmReferenceSimple?
-    fun getPropertyAsListOrNull(name: String): List<Any>? = getPropertyOrNull(name) as List<Any>?
+    fun getPropertyAsStringOrNull(name: String): String? = property[name]?.value as String?
+    fun getPropertyAsAsmElementOrNull(name: String): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
+    fun getPropertyAsReferenceOrNull(name: String): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
+    fun getPropertyAsListOrNull(name: String): List<Any>? = property[name]?.value as List<Any>?
 
     override fun getProperty(name: String): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
     fun getPropertyAsString(name: String): String = (getProperty(name) as AsmPrimitive).value as String

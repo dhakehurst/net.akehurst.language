@@ -75,7 +75,7 @@ class test_AglStyle {
         val result = process(text)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(0, result.asm?.rules?.size)
+        assertEquals(1, result.asm?.rules?.size) // 1 default nostyle rule
 
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
@@ -93,7 +93,7 @@ class test_AglStyle {
         val result = process(text)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(0, result.asm?.rules?.size)
+        assertEquals(1, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -107,7 +107,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(2, result.asm?.rules?.size)
         assertEquals(
             setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 3), "Grammar Rule 'xxx' not found for style rule", null)
@@ -125,7 +125,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(2, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -142,9 +142,9 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.rules?.size)
-        assertEquals("ID", result.asm!!.rules[0].selector.first().value)
-        assertEquals(2, result.asm!!.rules[0].styles.size)
+        assertEquals(2, result.asm?.rules?.size)
+        assertEquals("ID", result.asm!!.rules[1].selector.first().value)
+        assertEquals(2, result.asm!!.rules[1].styles.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -165,7 +165,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(2, result.asm?.rules?.size)
+        assertEquals(3, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -195,7 +195,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(2, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
     //TODO more tests
@@ -256,7 +256,7 @@ NAME {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(12, result.asm?.rules?.size)
+        assertEquals(13, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 }

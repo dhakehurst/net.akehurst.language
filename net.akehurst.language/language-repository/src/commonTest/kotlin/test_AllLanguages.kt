@@ -23,6 +23,7 @@ import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -43,7 +44,7 @@ class GrammarData(
 ) {
     constructor(vfsFile: VfsFile) : this(vfsFile.path, vfsFile)
 
-    suspend fun grammarStr() = vfsFile.readString()
+    suspend fun grammarStr() = GrammarString(vfsFile.readString())
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {

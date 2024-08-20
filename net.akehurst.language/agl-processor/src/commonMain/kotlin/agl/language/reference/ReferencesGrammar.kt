@@ -66,7 +66,7 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         )
         b.rule("propertyReferenceExpression").concatenation(
             b.terminalLiteral("property"),
-            b.nonTerminal("navigation"),
+            b.nonTerminal("rootOrNavigation"),
             b.terminalLiteral("refers-to"),
             b.nonTerminal("typeReferences"),
             b.nonTerminal("fromOpt")
@@ -78,12 +78,18 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         )
         b.rule("collectionReferenceExpression").concatenation(
             b.terminalLiteral("forall"),
-            b.nonTerminal("navigation"),
+            b.nonTerminal("rootOrNavigation"),
             b.nonTerminal("ofTypeOpt"),
             b.terminalLiteral("{"),
             b.nonTerminal("referenceExpressionList"),
             b.terminalLiteral("}"),
         )
+
+        b.rule("rootOrNavigation").choiceLongestFromConcatenationItem(
+            b.nonTerminal("root"),
+            b.nonTerminal("navigation")
+        )
+
         b.rule("ofTypeOpt").optional(b.nonTerminal("ofType"))
         b.rule("ofType").concatenation(b.terminalLiteral("of-type"), b.nonTerminal("typeReference"))
 
@@ -115,10 +121,12 @@ grammar References extends Expressions {
     referenceDefinitions = referenceDefinition* ;
     referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
-    propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
+    propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
     from = 'from' navigation ;
-    collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
+    collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
     ofType = 'of-type' typeReference ;
+    
+    rootOrNavigation = root | navigation ;
     
     typeReferences = [typeReference / '|']+ ;
     typeReference = qualifiedName ;

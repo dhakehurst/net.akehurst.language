@@ -235,7 +235,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         val parentTypeDecl = parentTrRule?.resolvedType?.declaration
         val nodeRule = nodeInfo.node.rule
         return when {
-            null == parentTypeDecl -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING))
+            null == parentTypeDecl -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING)
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo.not() -> {
                     // special case compressed rule
@@ -247,7 +247,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     // return child[0] or Nothing if child[0] is the empty node
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING)) // no property when non-term is a literal
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
                         else -> transformationRule(
                             propType, NavigationSimple(
                                 start = RootExpressionSimple("child"),
@@ -269,7 +269,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     // return child[0] or Nothing if child[0] is the empty node
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING))// no property when non-term is a literal
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING)// no property when non-term is a literal
                         else -> transformationRule(propType, RootExpressionSimple("children"))
                     }
                 }
@@ -279,8 +279,8 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 nodeRule.isPseudo -> { //must be group or choice
                     val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                     when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple(RootExpressionSimple.NOTHING)) // no property when non-term is a literal
-                        else -> transformationRule(propType, RootExpressionSimple(RootExpressionSimple.SELF))
+                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
+                        else -> transformationRule(propType, RootExpressionSimple.SELF)
                     }
                 }
 
@@ -513,8 +513,10 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             target.node.rule.isListSeparated -> AsmListSeparatedSimple(asmChildren.toSeparatedList())
             else -> AsmListSimple(asmChildren)
         }
-        tuple.setProperty("child", asmValue, 0)
-        tuple.setProperty("children", asmValue, 1)
+        val altAsmValue = AsmPrimitiveSimple.stdInteger(target.alt.index)
+        tuple.setProperty(AsmTransformInterpreter.CHILD, asmValue, 0)
+        tuple.setProperty(AsmTransformInterpreter.CHILDREN, asmValue, 1)
+        tuple.setProperty(AsmTransformInterpreter.ALTERNATIVE, altAsmValue, 2)
         val self = TypedObjectAsmValue(
             tupleType,
             tuple

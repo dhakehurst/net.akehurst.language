@@ -33,7 +33,7 @@ dependencies {
     commonTestImplementation(project(":agl-processor"))
 
 //    commonTestImplementation("com.soywiz.korlibs.korge:korio:$version_korio")
-    commonMainApi("com.soywiz.korge:korge-core:$version_korge")
+    commonMainApi(libs.korlibs.korio)
 
     commonTestImplementation("io.kotest:kotest-assertions-core:$version_kotest")
     commonTestImplementation("io.kotest:kotest-framework-engine:$version_kotest")

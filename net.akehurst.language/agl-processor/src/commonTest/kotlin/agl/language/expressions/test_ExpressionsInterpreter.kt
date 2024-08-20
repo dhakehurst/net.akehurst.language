@@ -51,6 +51,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_nothing() {
+        val expression = "\$nothing"
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
@@ -65,11 +66,12 @@ class test_ExpressionsInterpreter {
         }
         val self = asm.root[0]
 
-        test(tm, self, "\$nothing", AsmNothingSimple)
+        test(tm, self, expression, AsmNothingSimple)
     }
 
     @Test
     fun structure_self() {
+        val expression = "\$self"
         val tm = typeModel("test", true) {
             namespace("ns") {
                 dataType("Test") {
@@ -84,7 +86,7 @@ class test_ExpressionsInterpreter {
         }
         val self = asm.root[0]
 
-        test(tm, self, "\$self", self)
+        test(tm, self, expression, self)
     }
 
     @Test

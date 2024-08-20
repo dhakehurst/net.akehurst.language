@@ -36,6 +36,9 @@ class AsmTransformInterpreter(
 ) {
 
     companion object {
+        const val ALTERNATIVE = "\$alternative"
+        const val CHILD = "child"
+        const val CHILDREN = "children"
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
 
@@ -43,25 +46,27 @@ class AsmTransformInterpreter(
         }
         val parseNodeNamespace = parseNodeTypeModel.namespace["parse"]!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
+            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
             it.appendPropertyStored(
-                "children",
+                CHILDREN,
                 SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
             it.appendPropertyStored(
-                "child",
+                CHILD,
                 SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
         }
         val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
+            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
             it.appendPropertyStored(
-                "children",
+                CHILDREN,
                 SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType, SimpleTypeModelStdLib.AnyType)),
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
             it.appendPropertyStored(
-                "child",
+                CHILD,
                 SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType)),
                 setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
             )
@@ -100,7 +105,7 @@ class AsmTransformInterpreter(
         asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
     }
 
-    fun evaluateExpressionOver(expr: Expression, node: TypedObject): AsmValue {
+    private fun evaluateExpressionOver(expr: Expression, node: TypedObject): AsmValue {
         val res = exprInterpreter.evaluateExpression(node, expr)
         return res.asm
     }

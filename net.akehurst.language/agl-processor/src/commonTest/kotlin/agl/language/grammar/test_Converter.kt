@@ -25,7 +25,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-internal class test_Converter {
+class test_Converter {
 
     @Test
     fun construct() {

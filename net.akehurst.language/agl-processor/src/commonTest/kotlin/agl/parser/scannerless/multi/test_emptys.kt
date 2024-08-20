@@ -15,7 +15,7 @@
  *
  */
 
-package agl.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet

@@ -17,9 +17,9 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.reference.asm.builder.crossReferenceModel
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -30,6 +30,8 @@ import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -41,7 +43,10 @@ class test_CrossReferences {
 
         fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
             val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]
-            val tm = TypeModelFromGrammar.create(grammar)
+            val grmrTypeModel = TypeModelSimple(grammar.name)
+            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+            AsmTransformModelSimple.fromGrammar(grammar, grmrTypeModel)
+            val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespace(it.namespace.values) }
             val ctx = ContextFromTypeModel(tm)
             val result = aglProc.process(

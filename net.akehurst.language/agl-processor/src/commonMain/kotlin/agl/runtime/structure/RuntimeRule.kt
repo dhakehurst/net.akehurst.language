@@ -86,7 +86,7 @@ class RuntimeRule(
     override val isListSimple: Boolean get() = this.rhs is RuntimeRuleRhsListSimple
     override val isListSeparated: Boolean get() = this.rhs is RuntimeRuleRhsListSeparated
 
-    @Deprecated("use 'rhs is'")
+//    @Deprecated("use 'rhs is'")
 //    val kind
 //        get() = when {
 //            isEmbedded -> RuntimeRuleKind.EMBEDDED

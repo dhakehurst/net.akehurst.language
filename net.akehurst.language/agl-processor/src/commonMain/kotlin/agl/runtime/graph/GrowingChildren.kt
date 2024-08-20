@@ -140,7 +140,7 @@ internal class GrowingChildren {
         //null == ruleOption -> null //skip will not have alternatives
         else -> this._firstChildAlternatives!!.entries.firstOrNull {
             it.key.isEmpty() || // initial skip is first child for anything, emptyList is used to mark initialSkip
-            it.key==ruleOptionSet
+                    it.key == ruleOptionSet
         }?.value?.get(this.nextChildAlt(0, ruleOptionSet))
     }
 
@@ -153,9 +153,9 @@ internal class GrowingChildren {
         }?.value?.get(this.nextChildAlt(0, ruleOption))
     }
 
-    fun lastChild(ruleOption: Set<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives[ruleOption]
+    fun lastChild(ruleOption: Set<RuleOptionId>): GrowingChildNode? = this._lastChildAlternatives[ruleOption]
 
-    fun lastChild2(ruleOption: Set<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives.entries.firstOrNull {
+    fun lastChild2(ruleOption: Set<RuleOptionId>): GrowingChildNode? = this._lastChildAlternatives.entries.firstOrNull {
         it.key.containsAll(ruleOption)
     }?.value
 
@@ -182,7 +182,7 @@ internal class GrowingChildren {
             }
         }
         this.setLastChild(ruleOptionList, node)
-        if (node.isSkip.not()) this.numberNonSkip=1
+        if (node.isSkip.not()) this.numberNonSkip = 1
         this.length = 1
         this.containedFor.add(ruleOptionList)
     }
@@ -195,7 +195,7 @@ internal class GrowingChildren {
      * create new GrowingChildren unless empty
      */
     //TODO: do we need to create new object or can we reuse existing because it may not be used anymore ?
-    fun appendChild(ruleOptionList: Set<RuleOptionId>, nextChildAlts: List<SPPTNode>): GrowingChildren {
+    fun appendChild(ruleOptionList: Set<RuleOptionId>, nextChildAlts: List<SPPTNode>): GrowingChildren? {
         val nextChild = GrowingChildNode(ruleOptionList, nextChildAlts, false)
         return when {
             isEmpty -> {
@@ -204,6 +204,7 @@ internal class GrowingChildren {
                 this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
                 this
             }
+
             ruleOptionList.isEmpty() -> {
                 TODO("I think this never happens")
                 val lisc = lastInitialSkipChild
@@ -224,6 +225,7 @@ internal class GrowingChildren {
                         res.containedFor.add(ruleOptionList)
                         res
                     }
+
                     else -> { // must be initial skip and duplicate of existing goal
                         val changeLength = lisc.isLast
                         val appended = lisc.appendLast(this, this.length - 1, nextChild)
@@ -247,7 +249,7 @@ internal class GrowingChildren {
             this.containedFor.all { it.isEmpty() } -> {
                 var res = GrowingChildren()
                 var nc = this._firstChild
-                while(null!=nc) {
+                while (null != nc) {
                     //TODO: find a more perf way to do this if needed..but maybe this is ok as only doen for initial skip
                     res = res.appendSkipIfNotEmpty(ruleOptionList, nc.children)
                     nc = nc.nextChild
@@ -261,9 +263,10 @@ internal class GrowingChildren {
                 res.containedFor.add(ruleOptionList)
                 res
             }
+
             else -> {
                 val res = this.clone()
-                val lastChild = res.lastChild(ruleOptionList)?: res.lastChild2(ruleOptionList)?: error("should never be null!")
+                val lastChild = res.lastChild(ruleOptionList) ?: res.lastChild2(ruleOptionList) ?: error("should never be null!")
                 val appended = lastChild.appendLast(res, res.length, nextChild)
                 res.setLastChild(ruleOptionList, appended)
                 res.length++
@@ -281,7 +284,7 @@ internal class GrowingChildren {
      */
     //TODO: do we need to create new object or can we reuse existing because it may not be used anymore ?
     fun appendSkipIfNotEmpty(ruleOptionList: Set<RuleOptionId>, skipChildren: List<SPPTNode>): GrowingChildren {
-        val nextChild = GrowingChildNode(ruleOptionList, skipChildren,true)
+        val nextChild = GrowingChildNode(ruleOptionList, skipChildren, true)
         return if (skipChildren.isEmpty()) {
             //do nothing
             this
@@ -294,7 +297,7 @@ internal class GrowingChildren {
             } else {
                 val res = this.clone()
                 res.containedFor.add(ruleOptionList)
-                val lastChild = res.lastChild(ruleOptionList)?: TODO("?")
+                val lastChild = res.lastChild(ruleOptionList) ?: TODO("?")
                 val appended = lastChild.appendLast(res, res.length, nextChild)
                 res.setLastChild(ruleOptionList, appended)
                 res.length++
@@ -372,6 +375,7 @@ internal class GrowingChildren {
                 this.numberNonSkip = other.numberNonSkip
                 this.nextInputPosition = other.nextInputPosition //FIXME: not really correct, are all children same length?
             }
+
             this.startPosition != other.startPosition -> error("Cannot merge children starting at a different position")
             else -> {
                 for (ruleOption in other.containedFor) {
@@ -391,10 +395,10 @@ internal class GrowingChildren {
                 var n = firstChild(ruleOptionList)
                 var skip = ""
                 var index = 1
-                while (null != n && n!=this._lastChildAlternatives[ruleOptionList]) {
-                    for(ro in ruleOptionList) {
+                while (null != n && n != this._lastChildAlternatives[ruleOptionList]) {
+                    for (ro in ruleOptionList) {
                         when {
-                            n!!.isSkip ->res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { it.name }
+                            n!!.isSkip -> res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { it.name }
                             else -> res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { "${it.name}|${it.option}" }
                         }
                         n = n.next(this.nextChildAlt(index, ro), ro)
@@ -403,9 +407,10 @@ internal class GrowingChildren {
                 }
                 when {
                     ruleOptionList.isEmpty() -> when { //only contains initialskip
-                        null==n -> (res[null] ?: emptyList())+"-X"
-                        else -> res[null] = (res[null] ?: emptyList())+ n[null].joinToString() { it.name }
+                        null == n -> (res[null] ?: emptyList()) + "-X"
+                        else -> res[null] = (res[null] ?: emptyList()) + n[null].joinToString() { it.name }
                     }
+
                     else -> {
                         for (ro in ruleOptionList) {
                             if (null == n) {
@@ -426,82 +431,82 @@ internal class GrowingChildren {
                 .joinToString(separator = "\n")
         }
     }
-/*
-     fun toString1(): String = when {
-        isEmpty -> "{}"
-        else -> {
-            val res = mutableMapOf<RuleOptionId?, List<String>>()
-            val initialSkip = mutableListOf<String>()
+    /*
+         fun toString1(): String = when {
+            isEmpty -> "{}"
+            else -> {
+                val res = mutableMapOf<RuleOptionId?, List<String>>()
+                val initialSkip = mutableListOf<String>()
 
-            var sn = _firstChild
-            var lastSkip = sn
-            while (sn != null && sn.isSkip) {
-                initialSkip.add(sn.children.joinToString() { it.name })
-                lastSkip = sn
-                sn = sn.nextChild
-            }
-            val rpIds = when {
-                // there are no skips
-                null != _firstChildAlternatives -> _firstChildAlternatives!!.entries.mapNotNull { it.key }.flatten()
-                null == sn -> when {
-                    //lastSkip.next has alts
-                    null != lastSkip!!.nextChildAlternatives -> lastSkip.nextChildAlternatives!!.entries.mapNotNull { it.key }.flatten()
-                    //nothing after skips
-                    else -> emptyList()
+                var sn = _firstChild
+                var lastSkip = sn
+                while (sn != null && sn.isSkip) {
+                    initialSkip.add(sn.children.joinToString() { it.name })
+                    lastSkip = sn
+                    sn = sn.nextChild
                 }
-                //sn (lastSkip.next) is the first nonSkip node
-                else -> sn.ruleOptionList ?: emptyList()
-            }
-            when {
-                rpIds.isEmpty() -> res[null] = initialSkip
-                else -> {
-                    for (rpId in rpIds) {
-                        res[rpId] = initialSkip
-                        var n = firstNonSkipChild(rpId)
-                        var skip = ""
-                        var index = 1
-                        while (null != n && _lastChildAlternatives.values.contains(n).not()) {
-                            when {
-                                n.isSkip -> skip += n.children.joinToString { it.name } //skipNodes
-                                else -> {
-                                    if (skip.isNotBlank()) {
-                                        res[rpId] = res[rpId]!! + skip
-                                        skip = ""
+                val rpIds = when {
+                    // there are no skips
+                    null != _firstChildAlternatives -> _firstChildAlternatives!!.entries.mapNotNull { it.key }.flatten()
+                    null == sn -> when {
+                        //lastSkip.next has alts
+                        null != lastSkip!!.nextChildAlternatives -> lastSkip.nextChildAlternatives!!.entries.mapNotNull { it.key }.flatten()
+                        //nothing after skips
+                        else -> emptyList()
+                    }
+                    //sn (lastSkip.next) is the first nonSkip node
+                    else -> sn.ruleOptionList ?: emptyList()
+                }
+                when {
+                    rpIds.isEmpty() -> res[null] = initialSkip
+                    else -> {
+                        for (rpId in rpIds) {
+                            res[rpId] = initialSkip
+                            var n = firstNonSkipChild(rpId)
+                            var skip = ""
+                            var index = 1
+                            while (null != n && _lastChildAlternatives.values.contains(n).not()) {
+                                when {
+                                    n.isSkip -> skip += n.children.joinToString { it.name } //skipNodes
+                                    else -> {
+                                        if (skip.isNotBlank()) {
+                                            res[rpId] = res[rpId]!! + skip
+                                            skip = ""
+                                        }
+                                        res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                     }
-                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                 }
+                                n = n.next(this.nextChildAlt(index, rpId), rpId)
+                                index++
                             }
-                            n = n.next(this.nextChildAlt(index, rpId), rpId)
-                            index++
-                        }
-                        if (null == n) {
-                            //this list of children died
-                            res[rpId] = res[rpId]!! + "-X"
-                        } else {
-                            when {
-                                n.isSkip -> {
-                                    skip += n.children.joinToString { it.name } //skipNodes
-                                    if (skip.isNotBlank()) {
-                                        res[rpId] = res[rpId]!! + skip
-                                        skip = ""
+                            if (null == n) {
+                                //this list of children died
+                                res[rpId] = res[rpId]!! + "-X"
+                            } else {
+                                when {
+                                    n.isSkip -> {
+                                        skip += n.children.joinToString { it.name } //skipNodes
+                                        if (skip.isNotBlank()) {
+                                            res[rpId] = res[rpId]!! + skip
+                                            skip = ""
+                                        }
                                     }
-                                }
-                                else -> {
-                                    if (skip.isNotBlank()) {
-                                        res[rpId] = res[rpId]!! + skip
-                                        skip = ""
+                                    else -> {
+                                        if (skip.isNotBlank()) {
+                                            res[rpId] = res[rpId]!! + skip
+                                            skip = ""
+                                        }
+                                        res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                     }
-                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }
-                .joinToString(separator = "\n")
+                res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }
+                    .joinToString(separator = "\n")
+            }
         }
-    }
-*/
+    */
 }

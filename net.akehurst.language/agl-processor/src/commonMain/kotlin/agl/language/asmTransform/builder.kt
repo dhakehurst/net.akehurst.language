@@ -68,13 +68,13 @@ class AsmTransformModelBuilder(
             tr.resolveTypeAs(t.type())
         } else {
             val ns = typeModel.namespace[this.qualifiedName]!!
-            val t = ns.findOwnedTypeNamed(tr.qualifiedTypeName) ?: error("Type '${tr.qualifiedTypeName}' not found")
+            val t = ns.findOwnedTypeNamed(tr.qualifiedTypeName.substringAfter("$qualifiedName.")) ?: error("Type '${tr.qualifiedTypeName}' not found")
             tr.resolveTypeAs(t.type())
         }
     }
 
     fun nothingRule(grammarRuleName: String) {
-        val tr = TransformationRuleSimple(SimpleTypeModelStdLib.NothingType.qualifiedTypeName, RootExpressionSimple(RootExpressionSimple.NOTHING))
+        val tr = TransformationRuleSimple(SimpleTypeModelStdLib.NothingType.qualifiedTypeName, RootExpressionSimple.NOTHING)
         trRule(grammarRuleName, tr)
     }
 
@@ -98,7 +98,8 @@ class AsmTransformModelBuilder(
     fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, SimpleTypeModelStdLib.String, expression("child[0]"))
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {
-        val tr = TransformationRuleSimple(typeName, expression("child[0]"))
+        val qName = if (typeName.contains(".")) typeName else "$qualifiedName.$typeName"
+        val tr = TransformationRuleSimple(qName, expression("child[0]"))
         trRule(grammarRuleName, tr)
     }
 
@@ -115,8 +116,9 @@ class AsmTransformModelBuilder(
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
-        val expr = CreateObjectExpressionSimple(typeName, emptyList())
-        val tr = TransformationRuleSimple(typeName, expr)
+        val qName = if (typeName.contains(".")) typeName else "$qualifiedName.$typeName"
+        val expr = CreateObjectExpressionSimple(qName, emptyList())
+        val tr = TransformationRuleSimple(qName, expr)
         trRule(grammarRuleName, tr)
         val ab = AssignmentBuilder()
         ab.modifyStatements()

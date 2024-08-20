@@ -29,6 +29,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.StructuredType
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -49,7 +50,15 @@ fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance? = when (th
 fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = when {
     this.isNothing -> SimpleTypeModelStdLib.NothingType
     this.isSelf -> self
-    else -> error("type of RootExpression not handled")
+    else -> {
+        when (self.declaration) {
+            is StructuredType -> {
+                self.resolvedProperty.get(this.name)?.typeInstance ?: error("type of RootExpression '$self' not handled")
+            }
+
+            else -> error("type of RootExpression '$self' not handled")
+        }
+    }
 }
 
 fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): TypeInstance? {

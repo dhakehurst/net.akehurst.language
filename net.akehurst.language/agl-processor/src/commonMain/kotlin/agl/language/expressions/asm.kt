@@ -97,14 +97,20 @@ data class RootExpressionSimple(
     override val name: String
 ) : ExpressionAbstract(), RootExpression {
     companion object {
-        const val NOTHING = "\$nothing"
-        const val SELF = "\$self"
+        val NOTHING = RootExpressionSimple("\$nothing")
+        val SELF = RootExpressionSimple("\$self")
+        val ERROR = RootExpressionSimple("\$error")
     }
 
-    override val isNothing: Boolean get() = NOTHING == this.name
-    override val isSelf: Boolean get() = SELF == this.name
+    override val isNothing: Boolean get() = NOTHING == this
+    override val isSelf: Boolean get() = SELF == this
 
     override fun toString(): String = name
+    override fun hashCode(): Int = name.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is RootExpressionSimple -> false
+        else -> other.name == this.name
+    }
 }
 
 data class LiteralExpressionSimple(
@@ -168,4 +174,13 @@ class AssignmentStatementSimple(
 
     override fun toString(): String = "$lhsPropertyName := $rhs"
 
+}
+
+class InfixExpressionSimple(
+    override val expressions: List<Expression>,
+    override val operators: List<String>
+) : InfixExpression {
+    override fun asString(indent: String, increment: String): String = "$indent$this"
+
+    override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
 }

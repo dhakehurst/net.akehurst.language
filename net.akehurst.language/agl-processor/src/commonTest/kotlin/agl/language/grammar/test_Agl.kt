@@ -22,7 +22,7 @@ import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_Agl {
+class test_Agl {
 
     @Test
     fun parser_grammarDefinitionStr1() {
@@ -80,7 +80,15 @@ internal class test_Agl {
     @Test
     fun grammar_styleStr() {
         val actual = Agl.registry.agl.grammar.styleStr
-        val expected = AglGrammarGrammar.styleStr
+        // there is a default '$nostyle' added
+        val expected = """
+${'$'}nostyle {
+  foreground: black;
+  background: white;
+  font-style: normal;
+}
+${AglGrammarGrammar.styleStr}
+        """.trimIndent()
 
         assertEquals(expected, actual)
 

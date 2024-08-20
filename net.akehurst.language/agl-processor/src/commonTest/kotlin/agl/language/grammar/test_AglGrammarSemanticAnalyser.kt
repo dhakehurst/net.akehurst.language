@@ -78,12 +78,12 @@ class test_AglGrammarSemanticAnalyser {
     @Test
     fun duplicateRule() {
         val grammarStr = """
-            namespace test
-            grammar Test {
-                a = b ;
-                b = 'a' ;
-                b = 'b' ;
-            }
+namespace test
+grammar Test {
+    a = b ;
+    b = 'a' ;
+    b = 'b' ;
+}
         """.trimIndent()
         val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expected = setOf(

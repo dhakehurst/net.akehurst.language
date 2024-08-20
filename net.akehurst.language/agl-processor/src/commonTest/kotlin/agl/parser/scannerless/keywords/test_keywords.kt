@@ -15,7 +15,7 @@
  *
  */
 
-package agl.parser.scannerless.keywords
+package net.akehurst.language.parser.scanondemand.keywords
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet

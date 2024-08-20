@@ -28,10 +28,12 @@ class test_ExpressionsLanguage {
 
     private companion object {
         val sentences = listOf(
+            "when{z==1->2}",
             // root
             "\$self",
             "\$nothing",
             "\$group",
+            "\$alternative",
             "prop",
             // literal
             "true",
@@ -51,14 +53,25 @@ class test_ExpressionsLanguage {
             "a.b.c[1]",
             "a.b[1].c",
             "a[1].b.c",
+            "tup.\$group",
+            // infix
+            "0 == 0",
+            "0==0",
+            "0!=true",
+            "a>=0",
+            "a<=b",
+            "1.34!=0",
+            "a<b",
+            "a>b",
+            "a+b+c-d",
+            "a*b/c%d+e-d",
             // tuple
-            "tuple {}",
             "tuple { a:= 1 }",
             "tuple { a:= 1 b:=\$self }",
             "tuple { a:= 1 b:=x.y.x c:= a[1].f().z }",
+            "tuple { \$group:= 'a' }",
             // object
             "A()",
-            "A() {}",
             "A(true) { a:= 1 }",
             "A('d',x.y.z,\$self) { a:= 1 b:=\$self }",
             "A(a[1].f(), \$self.f(), true) { a:= 1 b:=x.y.x c:= a[1].f().z }",
@@ -67,7 +80,7 @@ class test_ExpressionsLanguage {
             "with(a[1].f().z) A('d',x.y.z,\$self) { a:= 1 b:=\$self }",
             // when
             "when { true -> 1 }",
-            "when { 1 -> 2 x -> x.y a[7].f() -> x.y().d[9] }",
+            "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] }",
         )
     }
 
@@ -87,10 +100,10 @@ class test_ExpressionsLanguage {
         val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions", "") {
             stringTypeFor("BOOLEAN")
             stringTypeFor("IDENTIFIER")
+            stringTypeFor("INFIX_OPERATOR")
             stringTypeFor("INTEGER")
-            stringTypeFor("NOTHING")
+            stringTypeFor("SPECIAL")
             stringTypeFor("REAL")
-            stringTypeFor("SELF")
             stringTypeFor("STRING")
             stringTypeFor("root")
             stringTypeFor("literal")

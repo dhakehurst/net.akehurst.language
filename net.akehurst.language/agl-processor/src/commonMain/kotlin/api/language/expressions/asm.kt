@@ -87,3 +87,8 @@ interface WhenOption {
     val condition: Expression
     val expression: Expression
 }
+
+interface InfixExpression : Expression {
+    val expressions: List<Expression>
+    val operators: List<String>
+}

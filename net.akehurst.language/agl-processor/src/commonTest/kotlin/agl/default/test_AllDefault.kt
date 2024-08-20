@@ -3611,7 +3611,7 @@ class test_AllDefault {
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("\$choice", "with(child[1]) when { x -> tuple { b:=child[0] c:=child[1] } y -> child[0] }")
+                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> leaf }")
                 assignment("e", "child[2]")
             }
             leafStringRule("a")

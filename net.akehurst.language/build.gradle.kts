@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-import com.github.gmazzo.gradle.plugins.BuildConfigExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
+import com.github.gmazzo.buildconfig.BuildConfigExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.9.22") apply false
-    id("org.jetbrains.dokka") version ("1.9.10") apply false
-    id("com.github.gmazzo.buildconfig") version ("4.1.2") apply false
-    id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.22") apply false
+    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.buildconfig) apply false
+    alias(libs.plugins.credentials) apply true
+    alias(libs.plugins.exportPublic) apply false
 }
-val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
-val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
+val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
+val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 allprojects {
@@ -39,11 +38,8 @@ allprojects {
         mavenCentral()
     }
 
-    val version_project: String by project
-    val group_project = rootProject.name
-
-    group = group_project
-    version = version_project
+    group = rootProject.name
+    version = "4.2.0.20-RC"
 
     project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
 }
@@ -77,27 +73,28 @@ subprojects {
         jvm("jvm8") {
             compilations {
                 val main by getting {
-                    compilerOptions.configure {
-                        languageVersion.set(kotlin_languageVersion)
-                        apiVersion.set(kotlin_apiVersion)
-                        jvmTarget.set(jvmTargetVersion)
+                    compileTaskProvider.configure {
+                        compilerOptions {
+                            languageVersion.set(kotlin_languageVersion)
+                            apiVersion.set(kotlin_apiVersion)
+                            jvmTarget.set(jvmTargetVersion)
+                        }
                     }
                 }
                 val test by getting {
-                    compilerOptions.configure {
-                        languageVersion.set(kotlin_languageVersion)
-                        apiVersion.set(kotlin_apiVersion)
-                        jvmTarget.set(jvmTargetVersion)
+                    compileTaskProvider.configure {
+                        compilerOptions {
+                            languageVersion.set(kotlin_languageVersion)
+                            apiVersion.set(kotlin_apiVersion)
+                            jvmTarget.set(jvmTargetVersion)
+                        }
                     }
                 }
             }
         }
         js("js", IR) {
-            useEsModules()
-            tasks.withType<KotlinJsCompile>().configureEach {
-                kotlinOptions {
-                    useEsClasses = true
-                }
+            compilerOptions {
+                target.set("es2015")
             }
             nodejs {
                 testTask {
@@ -155,7 +152,7 @@ subprojects {
     fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
     val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD") as String?
+    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD")
         ?: getProjectProperty("SONATYPE_PASSWORD")
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)

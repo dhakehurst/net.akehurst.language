@@ -201,8 +201,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             val synxResult = this.syntaxAnalysis(parseResult.sppt!!, opts)
             if (null == synxResult.asm || opts.semanticAnalysis.active.not() || null == this.semanticAnalyser) {
                 val issues = parseResult.issues + synxResult.issues
-                if (null == semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
-                if (null == semanticAnalyser) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
+                if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
+                if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
+                if (opts.semanticAnalysis.active.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
                 ProcessResultDefault(synxResult.asm, issues)
             } else {
                 opts.semanticAnalysis.locationMap = synxResult.locationMap

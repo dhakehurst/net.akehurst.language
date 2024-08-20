@@ -31,14 +31,16 @@ import kotlin.test.assertTrue
 class test_typemodel {
 
     companion object {
-        fun test(grammarStr: String, typeModelStr: String, expected: TypeModel) {
+        fun test(grammarStr: String, transformStr: String, expected: TypeModel) {
             val res = Agl.processorFromStringDefault(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                transformStr = TransformString(typeModelStr),
+                transformStr = TransformString(transformStr),
                 crossReferenceModelStr = null
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
-            assertEquals(expected.asString(), res.processor!!.typeModel.asString())
+            val actualTm = res.processor!!.typeModel
+            assertTrue(res.processor!!.issues.isEmpty(), res.processor!!.issues.toString())
+            assertEquals(expected.asString(), actualTm.asString())
         }
     }
 
@@ -51,18 +53,19 @@ class test_typemodel {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val typeModelStr = """
-            transform {
-                S -> S2
+        val transformStr = """
+            namespace test
+            transform Test {
+                S : S2
             }
         """.trimIndent()
 
-        val expected = grammarTypeModel("test", "Test", "") {
+        val expected = grammarTypeModel("test.Test", "Test", "") {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
-        test(grammarStr, typeModelStr, expected)
+        test(grammarStr, transformStr, expected)
     }
 
     @Test
@@ -74,11 +77,12 @@ class test_typemodel {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val typeModelStr = """
-            transform {
+        val transformStr = """
+            namespace test
+            transform Test {
                 import types.*
 
-                S -> S2
+                S : S2
             }
         """.trimIndent()
 
@@ -94,7 +98,7 @@ class test_typemodel {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
-        test(grammarStr, typeModelStr, expected)
+        test(grammarStr, transformStr, expected)
     }
 
     @Test
@@ -106,16 +110,19 @@ class test_typemodel {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val typeModelStr = """
+        val extTypeModel = """
             namespace types {
                 datatype S2 {
                     composite val a: String
                 }
-            }
-            transform {
+            }            
+        """
+        val transformStr = """
+            namespace test
+            transform Test {
                 import types.*
 
-                S -> S2
+                S : S2
             }
         """.trimIndent()
 
@@ -131,6 +138,6 @@ class test_typemodel {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
-        test(grammarStr, typeModelStr, expected)
+        test(grammarStr, transformStr, expected)
     }
 }

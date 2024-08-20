@@ -1,0 +1,21 @@
+[versions]
+
+kotlin = "2.0.20-RC"
+dokka = "1.9.20"
+exportPublic = "2.0.20-RC"
+
+buildconfig = "5.4.0"
+credentials = "3.0"
+
+korlibs = "6.0.0-alpha9"
+
+
+[libraries]
+korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
+credentials = { id = "nu.studer.credentials", version.ref = "credentials" }

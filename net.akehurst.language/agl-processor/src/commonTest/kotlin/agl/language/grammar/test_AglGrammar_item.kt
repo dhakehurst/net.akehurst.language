@@ -164,7 +164,7 @@ class test_AglGrammar_item {
     @Test
     fun PATTERN__double_quote_string() {
         val result = parse("PATTERN", "\"([^\\\"\\\\]|\\.)*\"")
-        val expected = this.sppt("PATTERN  : '\"([^\\\"\\\\]|\\.)*\"' ")
+        val expected = this.sppt("PATTERN  : '\"([^\\\"\\\\\\]|\\.)*\"' ")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -176,7 +176,7 @@ class test_AglGrammar_item {
             "[\\]"
         """.trimIndent()
         val result = parse("PATTERN", text)
-        val expected = this.sppt("PATTERN  : '\"[\\\\]\"' ")
+        val expected = this.sppt("PATTERN  : '\"[\\\\\\]\"' ")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -1136,7 +1136,7 @@ grammar {
   extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
-  options { <EMPTY> }
+  options { <EMPTY_LIST> }
   rules { rule { grammarRule {
     ruleTypeLabels {
       isSkip { §empty }
@@ -1178,7 +1178,7 @@ grammar {
   extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
-  options { <EMPTY> }
+  options { <EMPTY_LIST> }
   rules { rule { grammarRule {
     ruleTypeLabels {
       isSkip {

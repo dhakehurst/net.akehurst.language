@@ -489,7 +489,7 @@ class test_AglGrammar {
         val result1 = pr.processor!!.parse("");
         val expected1 = pr.processor!!.spptParser.parse(
             """
-             a { §empty }
+             a { <EMPTY_LIST> }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -872,7 +872,7 @@ class test_AglGrammar {
         val result1 = pr.processor!!.parse("");
         val expected1 = pr.processor!!.spptParser.parse(
             """
-             S { §empty }
+             S { <EMPTY_LIST> }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -1182,7 +1182,7 @@ class test_AglGrammar {
         val result0 = pr.processor!!.parse("");
         val expected0 = pr.processor!!.spptParser.parse(
             """
-             S { §empty }
+             S { <EMPTY_LIST> }
         """
         )
         assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
@@ -1225,7 +1225,7 @@ class test_AglGrammar {
         val result0 = pr.processor!!.parse("")
         val expected0 = pr.processor!!.spptParser.parse(
             """
-             S { §empty }
+             S { <EMPTY_LIST> }
         """
         )
         assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)

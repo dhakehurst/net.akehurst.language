@@ -17,10 +17,13 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
+import net.akehurst.language.agl.language.expressions.NavigationSimple
+import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
+import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.DeclarationsForNamespace
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
@@ -48,6 +51,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::propertyReferenceExpression)
         super.register(this::from)
         super.register(this::collectionReferenceExpression)
+        super.register(this::rootOrNavigation)
         super.register(this::ofType)
         super.register(this::typeReferences)
         super.register(this::typeReference)
@@ -167,11 +171,21 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun referenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionAbstract =
         children[0] as ReferenceExpressionAbstract
 
-    //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
+    //propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpressionDefault {
-        val navigation = children[1] as NavigationExpression
+        val expr = children[1] as Expression
         val typeReferences = children[3] as List<String>
         val from = children[4] as NavigationExpression?
+
+        val navigation = when (expr) {
+            is NavigationExpression -> expr
+            is RootExpression -> NavigationSimple(RootExpressionSimple(expr.name), emptyList())
+            else -> {
+                issues.error(locationMap[expr], "", null)
+                NavigationSimple(RootExpressionSimple.ERROR, emptyList())
+            }
+        }
+
         return PropertyReferenceExpressionDefault(navigation, typeReferences, from)
     }
 
@@ -179,13 +193,17 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpression =
         children[1] as NavigationExpression
 
-    // collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
+    // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
         val navigation = children[1] as NavigationExpression
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
         val ofType = children[2] as String?
         return CollectionReferenceExpressionDefault(navigation, ofType, referenceExpression)
     }
+
+    //rootOrNavigation = root | navigation ;
+    private fun rootOrNavigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[0] as Expression
 
     // ofType = 'of-type' typeReference ;
     private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
