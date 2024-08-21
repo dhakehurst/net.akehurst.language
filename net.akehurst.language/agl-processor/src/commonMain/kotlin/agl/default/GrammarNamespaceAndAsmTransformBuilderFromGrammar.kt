@@ -31,6 +31,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
+import kotlin.reflect.KClass
 
 class ConstructAndModify<TP : DataType, TR : TransformationRuleAbstract>(
     val construct: (TP) -> TR,
@@ -65,6 +66,11 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         )
 
         val EXPRESSION_CHILDREN = RootExpressionSimple("children")
+
+        private fun List<TransformationRule>.allOfType(typeDecl: TypeDeclaration) = this.all { it.resolvedType.declaration == typeDecl }
+        private fun List<TransformationRule>.allOfTypeIs(klass: KClass<*>) = this.all { klass.isInstance(it.resolvedType.declaration) }
+        private fun List<TransformationRule>.allTupleTypesMatch() =
+            1 == this.map { tr -> (tr.resolvedType.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size
     }
 
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -393,35 +399,31 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     private fun trRuleForChoiceRuleItem(choice: Choice, forProperty: Boolean): TransformationRule {
         val subtypeTransforms = choice.alternative.map { trRuleForRuleItem(it, forProperty) }
         return when {
-            subtypeTransforms.all { it.resolvedType == SimpleTypeModelStdLib.NothingType } -> {
+            subtypeTransforms.allOfType(SimpleTypeModelStdLib.NothingType.declaration) -> {
                 val t = SimpleTypeModelStdLib.NothingType.declaration.type(emptyList(), subtypeTransforms.any { it.resolvedType.isNullable })
                 t.toNoActionTrRule()
             }
 
-            subtypeTransforms.all { it.resolvedType == SimpleTypeModelStdLib.String } -> transformationRule(
+            subtypeTransforms.allOfType(SimpleTypeModelStdLib.String.declaration) -> transformationRule(
                 SimpleTypeModelStdLib.String,
                 EXPRESSION_CHILD(0)
             )
 
-            subtypeTransforms.all { it.resolvedType.declaration is DataType } -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+            subtypeTransforms.allOfTypeIs(DataType::class) -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 .toSubtypeTrRule()
 
-            subtypeTransforms.all { it.resolvedType.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
+            subtypeTransforms.allOfType(SimpleTypeModelStdLib.List) -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
                 val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType))
                 choiceType.toSubtypeTrRule() //TODO: ??
             }
 
-            subtypeTransforms.all { it.resolvedType.declaration is TupleType } -> when {
-                1 == subtypeTransforms.map { (it.resolvedType.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
-                    val t = subtypeTransforms.first()
-                    when {
-                        t.resolvedType.declaration is TupleType && (t.resolvedType.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        else -> t
-                    }
+            subtypeTransforms.allOfTypeIs(TupleType::class) && subtypeTransforms.allTupleTypesMatch() -> {
+                val t = subtypeTransforms.first()
+                when {
+                    t.resolvedType.declaration is TupleType && (t.resolvedType.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+                    else -> t
                 }
-
-                else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toSubtypeTrRule()
             }
 
             else -> {

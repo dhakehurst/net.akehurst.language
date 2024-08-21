@@ -3665,14 +3665,52 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("f") }
+            choiceLongest("§S§choice1", isPseudo = true) {
+                concatenation { ref("b"); ref("c") }
+                concatenation { ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+            literal("f", "f")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("d", "String", false, 0)
+                        propertyPrimitiveType("e", "String", false, 1)
+                    }
+                }
+                propertyPrimitiveType("f", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("f")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> tuple { d:=child[0] e:=child[1] } }")
+                assignment("f", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
+            leafStringRule("f")
         }
         test(
             grammarStr = grammarStr,
@@ -3680,9 +3718,27 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "abcf", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } f:'f' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                        }
+                        propertyString("f", "f")
+                    }
+                }
+            }
+            define(sentence = "adef", sppt = "S { a:'a' §S§choice1 { d:'d' e:'e' } f:'f' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("d", "d")
+                            propertyString("e", "e")
+                        }
+                        propertyString("f", "f")
                     }
                 }
             }
@@ -3704,14 +3760,63 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§choice2"); ref("f") }
+            choiceLongest("§S§choice2", isPseudo = true) {
+                concatenation { ref("§S§choice1"); ref("b"); ref("c") }
+                concatenation { ref("d"); ref("e") }
+            }
+            choiceLongest("§S§choice1", isPseudo = true) {
+                literal("x")
+                literal("y")
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+            literal("f", "f")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("d", "String", false, 0)
+                        propertyPrimitiveType("e", "String", false, 1)
+                    }
+                }
+                propertyPrimitiveType("f", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("f")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment(
+                    "\$choice", """
+                    with(child[1]) when {
+                      0==§alternative -> tuple { b:=child[1] c:=child[2] }
+                      1==§alternative -> tuple { d:=child[0] e:=child[1] }
+                    }
+                """.trimMargin().replace("§", "$")
+                )
+                assignment("f", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
+            leafStringRule("f")
         }
         test(
             grammarStr = grammarStr,
@@ -3719,9 +3824,27 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "axbcf", sppt = "S { a:'a' §S§choice2 { §S§choice1 { 'x' } b:'b' c:'c' } f:'f' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                        }
+                        propertyString("f", "f")
+                    }
+                }
+            }
+            define(sentence = "adef", sppt = "S { a:'a' §S§choice2 { d:'d' e:'e' } f:'f' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("d", "d")
+                            propertyString("e", "e")
+                        }
+                        propertyString("f", "f")
                     }
                 }
             }
@@ -3743,14 +3866,53 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = runtimeRuleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            concatenation("S") { ref("a"); ref("§S§opt1"); ref("f") }
+            optional("§S§opt1", "§S§choice1", isPseudo = true)
+            choiceLongest("§S§choice1", isPseudo = true) {
+                concatenation { ref("b"); ref("c") }
+                concatenation { ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+            literal("f", "f")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", true, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("d", "String", false, 0)
+                        propertyPrimitiveType("e", "String", false, 1)
+                    }
+                }
+                propertyPrimitiveType("f", "String", false, 2)
             }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("f")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("a", "child[0]")
+                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> tuple { d:=child[0] e:=child[1] } }")
+                assignment("f", "child[2]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+            leafStringRule("e")
+            leafStringRule("f")
         }
         test(
             grammarStr = grammarStr,
@@ -3758,9 +3920,36 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "af", sppt = "S { 'a' §S§opt1 { <EMPTY> } 'f' }") {
                 asmSimple {
                     element("S") {
+                        propertyString("a", "a")
+                        propertyNothing("\$choice")
+                        propertyString("f", "f")
+                    }
+                }
+            }
+            define(sentence = "abcf", sppt = "S { 'a' §S§opt1 { §S§choice1 { 'b' 'c' } } 'f' }") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("b", "b")
+                            propertyString("c", "c")
+                        }
+                        propertyString("f", "f")
+                    }
+                }
+            }
+            define(sentence = "adef", sppt = "") {
+                asmSimple {
+                    element("S") {
+                        propertyString("a", "a")
+                        propertyTuple("\$choice") {
+                            propertyString("d", "d")
+                            propertyString("e", "e")
+                        }
+                        propertyString("f", "f")
                     }
                 }
             }

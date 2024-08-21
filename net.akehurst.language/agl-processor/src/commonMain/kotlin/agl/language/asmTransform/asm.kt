@@ -130,6 +130,11 @@ class TransformationRuleSimple(
     override val qualifiedTypeName: String,
     override val expression: Expression
 ) : TransformationRuleAbstract() {
+
+    override fun asString(indent: String, increment: String): String {
+        return "$indent${grammarRuleName}: ${expression.asString(indent, increment)} as $qualifiedTypeName"
+    }
+
     override fun toString(): String = "${expression} as $qualifiedTypeName"
 }
 

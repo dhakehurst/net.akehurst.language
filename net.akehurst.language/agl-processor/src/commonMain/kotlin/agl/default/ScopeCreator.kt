@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.agl.default
 
 import net.akehurst.language.agl.asm.isStdString
+import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.asm
 import net.akehurst.language.agl.language.expressions.toTypedObject
@@ -214,13 +215,13 @@ class ScopeCreator(
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        return _interpreter.evaluateExpression(element.toTypedObject(elType), this).asm
+        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asm
     }
 
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        return _interpreter.evaluateExpression(element.toTypedObject(elType), this).asm
+        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asm
     }
 
 

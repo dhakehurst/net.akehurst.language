@@ -37,7 +37,24 @@ data class EvaluationContext(
 
     val self = namedValues[RootExpressionSimple.SELF.name]
 
+    fun getOrInParent(name: String): TypedObject? = namedValues[name] ?: parent?.getOrInParent(name)
+
     fun child(namedValues: Map<String, TypedObject>) = of(namedValues, this)
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        this.parent?.let {
+            sb.append(it.toString())
+            sb.append("----------\n")
+        }
+        this.namedValues.forEach {
+            sb.append(it.key)
+            sb.append(" := ")
+            sb.append(it.value.toString())
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
 }
 
 interface TypedObject {
@@ -75,6 +92,8 @@ class TypedObjectAsmValue(
     }
 
     override fun asString(): String = self.asString()
+
+    override fun toString(): String = "$self : ${type.qualifiedTypeName}"
 }
 
 fun AsmValue.toTypedObject(type: TypeInstance) = TypedObjectAsmValue(type, this)
@@ -122,17 +141,22 @@ class ExpressionsInterpreterOverTypedObject(
             expression.isNothing -> AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
             expression.isSelf -> {
                 //_issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
-                evc.self ?: error("No '\$self' value defined in Evaluation Context")
+                evc.self
+                    ?: error("No '\$self' value defined in Evaluation Context: $evc")
             }
 
             expression.name.startsWith("\$") -> evaluateSpecial(evc, expression.name)
-            else -> evaluatePropertyName(evc, expression.name)
+            else -> evc.getOrInParent(expression.name)
+                ?: evc.self?.let { evaluatePropertyName(it, expression.name) }
+                ?: error("Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
         }
     }
 
     private fun evaluateSpecial(evc: EvaluationContext, name: String): TypedObject {
         // the name must exist as a property of the self which must be a tuple
-        return evaluatePropertyName(evc, name)
+        return evc.getOrInParent(name)
+            ?: evc.self?.let { evaluatePropertyName(it, name) }
+            ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.typeName) {
@@ -156,24 +180,24 @@ class ExpressionsInterpreterOverTypedObject(
                 when (it) {
                     is PropertyCall -> evaluatePropertyName(acc, it.propertyName)
                     is MethodCall -> TODO()
-                    is IndexOperation -> evaluateIndexOperation(acc, it.indices)
+                    is IndexOperation -> evaluateIndexOperation(evc, acc, it.indices)
                     else -> error("should not happen")
                 }
             }
         return result
     }
 
-    private fun evaluatePropertyName(evc: EvaluationContext, propertyName: String): TypedObject {
-        val type = self.type
+    private fun evaluatePropertyName(obj: TypedObject, propertyName: String): TypedObject {
+        val type = obj.type
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
             null -> when {
-                self.asm is AsmStructure -> {
+                obj.asm is AsmStructure -> {
                     // try with no type
-                    val p = (self.asm as AsmStructure).property[propertyName]
+                    val p = (obj.asm as AsmStructure).property[propertyName]
                     when (p) {
                         null -> {
-                            issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
+                            issues.error(null, "Property '$propertyName' not found on type '${obj.type.typeName}'")
                             AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                         }
 
@@ -187,26 +211,26 @@ class ExpressionsInterpreterOverTypedObject(
                 }
 
                 else -> {
-                    issues.error(null, "Property '$propertyName' not found on type '${self.type.typeName}'")
+                    issues.error(null, "Property '$propertyName' not found on type '${obj.type.typeName}'")
                     AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                 }
             }
 
-            else -> self.getPropertyValue(pd)
+            else -> obj.getPropertyValue(pd)
         }
     }
 
-    private fun evaluateIndexOperation(evc: EvaluationContext, indices: List<Expression>): TypedObject {
+    private fun evaluateIndexOperation(evc: EvaluationContext, obj: TypedObject, indices: List<Expression>): TypedObject {
         return when {
-            evc.self!!.type.declaration.conformsTo(SimpleTypeModelStdLib.List) -> {
+            obj.type.declaration.conformsTo(SimpleTypeModelStdLib.List) -> {
                 when (indices.size) {
                     1 -> {
                         val idx = evaluateExpression(evc, indices[0])
                         when {
                             idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
-                                val listElementType = evc.self.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
+                                val listElementType = obj.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asm as AsmPrimitive).value as Int
-                                (evc.self.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
+                                (obj.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
                                     issues.error(null, "Index '$i' out of range")
                                     AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                 }
@@ -227,7 +251,7 @@ class ExpressionsInterpreterOverTypedObject(
             }
 
             else -> {
-                issues.error(null, "Index operation on non List value is not possible: ${self.asString()}")
+                issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
                 AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
             }
         }
@@ -248,7 +272,13 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
         "==" -> when {
             lhs.type == rhs.type -> {
-                AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, "true").toTypedObject(SimpleTypeModelStdLib.Boolean)
+                val lhsv = lhs.asm
+                val rhsv = rhs.asm
+                if (lhsv == rhsv) {
+                    AsmPrimitiveSimple.stdBoolean(true).toTypedObject(SimpleTypeModelStdLib.Boolean)
+                } else {
+                    AsmPrimitiveSimple.stdBoolean(false).toTypedObject(SimpleTypeModelStdLib.Boolean)
+                }
             }
 
             else -> error("'$op' must have same type for lhs and rhs")
@@ -269,11 +299,15 @@ class ExpressionsInterpreterOverTypedObject(
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
                 SimpleTypeModelStdLib.Boolean -> {
-                    val result = evaluateExpression(evc, opt.expression)
-                    return result
+                    if ((condValue.asm as AsmPrimitive).value as Boolean) {
+                        val result = evaluateExpression(evc, opt.expression)
+                        return result
+                    } else {
+                        //condition not true
+                    }
                 }
 
-                else -> error("Conditions/Options in a when extpression must result in a Boolean value")
+                else -> error("Conditions/Options in a when expression must result in a Boolean value")
             }
         }
         return AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)

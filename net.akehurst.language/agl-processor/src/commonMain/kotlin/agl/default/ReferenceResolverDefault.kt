@@ -20,6 +20,7 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.asm.isStdString
+import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.asm
 import net.akehurst.language.agl.language.expressions.toTypedObject
@@ -131,7 +132,9 @@ class ReferenceResolverDefault(
             else -> {
                 //scope for result of navigation
                 val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-                val fromEl = _interpreter.evaluateExpression(context.element.toTypedObject(elType), refExpr.fromNavigation)
+                val fromEl = _interpreter.evaluateExpression(
+                    EvaluationContext.ofSelf(context.element.toTypedObject(elType)), refExpr.fromNavigation
+                )
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> scopeForElement[fromEl]!!
@@ -145,7 +148,7 @@ class ReferenceResolverDefault(
             }
         }
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        var referringValue = _interpreter.evaluateExpression(self.toTypedObject(elType), refExpr.referringPropertyNavigation).asm
+        var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.referringPropertyNavigation).asm
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
@@ -266,7 +269,7 @@ class ReferenceResolverDefault(
 
     private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        val coll = _interpreter.evaluateExpression(self.toTypedObject(elType), refExpr.navigation)
+        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.navigation)
         for (re in refExpr.referenceExpressionList) {
             when (coll) {
                 is AsmNothing -> Unit //do nothing

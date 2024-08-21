@@ -36,14 +36,14 @@ class test_ExpressionsInterpreter {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(expected, actual.asm)
         }
 
         fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(AsmNothingSimple, actual.asm)
             assertEquals(expected, interpreter.issues.all.toList())
         }

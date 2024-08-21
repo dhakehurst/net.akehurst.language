@@ -32,7 +32,10 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.collections.*
+import net.akehurst.language.collections.MutableStack
+import net.akehurst.language.collections.emptyListSeparated
+import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
@@ -503,38 +506,34 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
 
     private fun createValueFromBranch2(downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue {
         // optional children should have value Nothing, if it is an empty list then it will contain null
-        val tupleType = when {
-            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
-            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
-        }
-        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
         val asmChildren = children.mapNotNull { it.value }
-        val asmValue = when {
+        val childrenAsmList = when {
             target.node.rule.isListSeparated -> AsmListSeparatedSimple(asmChildren.toSeparatedList())
             else -> AsmListSimple(asmChildren)
         }
-        val altAsmValue = AsmPrimitiveSimple.stdInteger(target.alt.index)
-        tuple.setProperty(AsmTransformInterpreter.CHILD, asmValue, 0)
-        tuple.setProperty(AsmTransformInterpreter.CHILDREN, asmValue, 1)
-        tuple.setProperty(AsmTransformInterpreter.ALTERNATIVE, altAsmValue, 2)
-        val self = TypedObjectAsmValue(
-            tupleType,
-            tuple
+
+        val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option)
+        val leaf = when {
+            children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
+            else -> AsmNothingSimple
+        }
+        val self = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
+        self.setProperty(AsmTransformInterpreter.ALTERNATIVE, alternative, 0)
+        self.setProperty(AsmTransformInterpreter.LEAF, leaf, 1)
+        self.setProperty(AsmTransformInterpreter.CHILDREN, childrenAsmList, 2)
+        self.setProperty(AsmTransformInterpreter.CHILD, childrenAsmList, 3)
+        val selfType = when {
+            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
+            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
+        }
+
+        val evc = EvaluationContext.of(
+            mapOf(
+                AsmTransformInterpreter.SELF to self.toTypedObject(selfType)
+            )
         )
-//        val contextNode = when {
-//            target.node.rule.isListSeparated -> TypedObjectParseNode(
-//                typeModel,
-//                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SEPARATED.type(),
-//                children.mapNotNull { it.value }
-//            )
-//
-//            else -> TypedObjectParseNode(
-//                typeModel,
-//                TypedObjectParseNode.PARSE_NODE_TYPE_LIST_SIMPLE.type(),
-//                children.mapNotNull { it.value }
-//            )
-//        }
-        val asm = _trf.evaluate(self, downData.path, downData.trRule.forNode)
+
+        val asm = _trf.evaluate(evc, downData.path, downData.trRule.forNode)
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
         }

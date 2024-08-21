@@ -34,15 +34,15 @@ data class CreateTupleExpressionSimple(
 
     override fun asString(indent: String, increment: String): String {
         val sb = StringBuilder()
-        sb.append("${indent}Tuple{\n")
+        sb.append("tuple {\n")
         val ni = indent + increment
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
-        sb.append(props)
+        sb.append("${props}\n")
         sb.append("${indent}}")
         return sb.toString()
     }
 
-    override fun toString(): String = "Tuple{ ... }"
+    override fun toString(): String = "tuple { ... }"
 }
 
 data class CreateObjectExpressionSimple(
@@ -54,15 +54,15 @@ data class CreateObjectExpressionSimple(
 
     override fun asString(indent: String, increment: String): String {
         val sb = StringBuilder()
-        sb.append("${indent}Tuple{\n")
+        sb.append("$qualifiedTypeName {\n")
         val ni = indent + increment
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
-        sb.append(props)
+        sb.append("${props}\n")
         sb.append("${indent}}")
         return sb.toString()
     }
 
-    override fun toString(): String = "Tuple{ ... }"
+    override fun toString(): String = "$qualifiedTypeName { ... }"
 }
 
 class WithExpressionSimple(
@@ -70,12 +70,31 @@ class WithExpressionSimple(
     override val expression: Expression
 ) : ExpressionAbstract(), WithExpression {
 
+    override fun asString(indent: String, increment: String): String {
+        val sb = StringBuilder()
+        sb.append("with(${withContext.asString(indent, increment)}) {\n")
+        val ni = indent + increment
+        sb.append("${ni}${expression.asString(ni, increment)}\n")
+        sb.append("${indent}}")
+        return sb.toString()
+    }
+
     override fun toString(): String = "with($withContext) $expression"
 }
 
 class WhenExpressionSimple(
     override val options: List<WhenOption>
 ) : ExpressionAbstract(), WhenExpression {
+
+    override fun asString(indent: String, increment: String): String {
+        val sb = StringBuilder()
+        sb.append("when {\n")
+        val ni = indent + increment
+        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, increment)} -> ${it.expression.asString(ni + increment, increment)}" }
+        sb.append("${opts}\n")
+        sb.append("${indent}}")
+        return sb.toString()
+    }
 
     override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
 }
@@ -170,7 +189,7 @@ class AssignmentStatementSimple(
         _resolvedLhs = propertyDeclaration
     }
 
-    override fun asString(indent: String, increment: String): String = "$indent$this"
+    override fun asString(indent: String, increment: String): String = "$lhsPropertyName := ${rhs.asString(indent, increment)}"
 
     override fun toString(): String = "$lhsPropertyName := $rhs"
 

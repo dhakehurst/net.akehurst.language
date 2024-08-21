@@ -34,7 +34,7 @@ class test_SimpleTypeModelStdLib_eval {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-            val actual = interpreter.evaluateStr(self.toTypedObject(st), expression)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(expected, actual.asm)
         }
     }

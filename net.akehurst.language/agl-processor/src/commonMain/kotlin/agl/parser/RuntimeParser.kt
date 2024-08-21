@@ -535,6 +535,43 @@ internal class RuntimeParser(
         return Pair(grownHeight, grownGraft)
     }
 
+    private fun resolveGrafts1(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
+        // if multiple GRAFT trans to same rule, prefer left most target
+        grafts.sortedWith(Comparator { t1, t2 ->
+            val p1 = t1.first.to.rulePositions.first().position
+            val p2 = t2.first.to.rulePositions.first().position
+            when {
+                p1 == p2 -> 0
+                RulePosition.END_OF_RULE == p1 -> 1
+                RulePosition.END_OF_RULE == p2 -> -1
+                p1 > p2 -> 1
+                p1 < p2 -> -1
+                else -> 0// should never happen !
+            }
+        })
+        return listOf(grafts.last().first)
+    }
+
+    private fun resolveGrafts2(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
+        // if multiple GRAFT trans to same rule with same lh, prefer left most target
+        val graftsGrpByLh = grafts.groupBy { it.second }
+        return graftsGrpByLh.map {
+            val sorted = it.value.sortedWith(Comparator { t1, t2 ->
+                val p1 = t1.first.to.rulePositions.first().position
+                val p2 = t2.first.to.rulePositions.first().position
+                when {
+                    p1 == p2 -> 0
+                    RulePosition.END_OF_RULE == p1 -> 1
+                    RulePosition.END_OF_RULE == p2 -> -1
+                    p1 > p2 -> 1
+                    p1 < p2 -> -1
+                    else -> 0// should never happen !
+                }
+            })
+            sorted.last().first
+        }
+    }
+
     private fun resolvePrecedence(transitions: List<Pair<Transition, LookaheadSetPart>>, head: GrowingNodeIndex): List<Transition> {
         return when {
             2 > transitions.size -> transitions.map { it.first }
@@ -550,23 +587,7 @@ internal class RuntimeParser(
                                 2 > actGrp.size -> it.value.map { it.first }
                                 else -> {
                                     val grafts = actGrp[ParseAction.GRAFT]!!
-                                    // if multiple GRAFT trans to same rule with same lh, prefer left most target
-                                    val graftsGrpByLh = grafts.groupBy { it.second }
-                                    graftsGrpByLh.map {
-                                        val sorted = it.value.sortedWith(Comparator { t1, t2 ->
-                                            val p1 = t1.first.to.rulePositions.first().position
-                                            val p2 = t2.first.to.rulePositions.first().position
-                                            when {
-                                                p1 == p2 -> 0
-                                                RulePosition.END_OF_RULE == p1 -> 1
-                                                RulePosition.END_OF_RULE == p2 -> -1
-                                                p1 > p2 -> 1
-                                                p1 < p2 -> -1
-                                                else -> 0// should never happen !
-                                            }
-                                        })
-                                        sorted.last().first
-                                    }
+                                    resolveGrafts1(grafts)
                                 }
                             }
                         }

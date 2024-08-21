@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
+import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.TypedObject
 import net.akehurst.language.agl.language.expressions.asm
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
@@ -36,48 +36,39 @@ class AsmTransformInterpreter(
 ) {
 
     companion object {
+        const val SELF = "\$self"
         const val ALTERNATIVE = "\$alternative"
+        const val LEAF = "leaf"
         const val CHILD = "child"
         const val CHILDREN = "children"
+        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType))
+        val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType))
+        val COMPOSITE_MEMBER = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
+
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
-
             }
         }
         val parseNodeNamespace = parseNodeTypeModel.namespace["parse"]!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
-            it.appendPropertyStored(
-                CHILDREN,
-                SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
-                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
-            )
-            it.appendPropertyStored(
-                CHILD,
-                SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType)),
-                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
-            )
+            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)
+            it.appendPropertyStored(CHILDREN, LIST_OF_ANY, COMPOSITE_MEMBER)
+            it.appendPropertyStored(CHILD, LIST_OF_ANY, COMPOSITE_MEMBER)
         }
         val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
-            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
-            it.appendPropertyStored(
-                CHILDREN,
-                SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType, SimpleTypeModelStdLib.AnyType)),
-                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
-            )
-            it.appendPropertyStored(
-                CHILD,
-                SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType)),
-                setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
-            )
+            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, COMPOSITE_MEMBER)
+            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)
+            it.appendPropertyStored(CHILDREN, SLIST_OF_ANY, COMPOSITE_MEMBER)
+            it.appendPropertyStored(CHILD, SLIST_OF_ANY, COMPOSITE_MEMBER)
         }
     }
 
     val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)
     val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
-    fun evaluate(self: TypedObject, path: AsmPath, trRule: TransformationRule): AsmValue {
-        val tObj = evaluateSelfStatement(self, path, trRule.expression)
+    fun evaluate(evc: EvaluationContext, path: AsmPath, trRule: TransformationRule): AsmValue {
+        val tObj = evaluateSelfStatement(evc, path, trRule.expression)
         val asm = tObj
 //        when {
 //            trRule.modifyStatements.isEmpty() -> Unit
@@ -96,17 +87,17 @@ class AsmTransformInterpreter(
         return asm
     }
 
-    private fun evaluateSelfStatement(contextNode: TypedObject, path: AsmPath, expression: Expression): AsmValue {
-        return exprInterpreter.evaluateExpression(contextNode, expression).asm
+    private fun evaluateSelfStatement(evc: EvaluationContext, path: AsmPath, expression: Expression): AsmValue {
+        return exprInterpreter.evaluateExpression(evc, expression).asm
     }
 
-    private fun executeStatementOn(node: TypedObject, st: AssignmentStatement, asm: AsmStructure) {
-        val propValue = evaluateExpressionOver(st.rhs, node)
+    private fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
+        val propValue = evaluateExpressionOver(st.rhs, evc)
         asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
     }
 
-    private fun evaluateExpressionOver(expr: Expression, node: TypedObject): AsmValue {
-        val res = exprInterpreter.evaluateExpression(node, expr)
+    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): AsmValue {
+        val res = exprInterpreter.evaluateExpression(evc, expr)
         return res.asm
     }
 
