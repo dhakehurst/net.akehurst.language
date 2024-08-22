@@ -54,6 +54,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::indexOperation)
         super.register(this::indexList)
         super.register(this::propertyReference)
+        super.register(this::methodReference)
     }
 
     data class PropertyValue(
@@ -184,7 +185,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return PropertyCallSimple(id)
     }
 
-    // methodCall = '.' IDENTIFIER '(' ')' ;
+    // methodCall = '.' methodReference '(' ')' ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
         val id = children[1] as String
         //TODO: arguments
@@ -205,5 +206,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return children[0] as String
     }
+
+    //methodReference = IDENTIFIER ;
+    private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
+
 
 }

@@ -87,6 +87,7 @@ internal class ConverterToRuntimeRules(
 //TODO: warn in analyser        check(this.terminalRules.containsKey(value).not()) { "Already got terminal rule with value '$value'" }
         _runtimeRules[newRule.tag] = newRule
         _terminalRules[value] = newRule
+        name?.let { _terminalRules[it] = newRule } // add terminal by leaf name
         return newRule
     }
 

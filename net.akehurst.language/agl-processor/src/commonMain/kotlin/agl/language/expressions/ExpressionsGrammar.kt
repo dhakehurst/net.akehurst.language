@@ -19,12 +19,20 @@ package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.language.base.BaseGrammar
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.builder.grammar
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.api.language.grammar.GrammarRule
 
-internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "Expressions") {
+internal object ExpressionsGrammar : GrammarAbstract(
+    namespace = NamespaceDefault("net.akehurst.language.agl"),
+    name = "Expressions"
+) {
     const val goalRuleName = "expression"
-    private fun createRules(): List<GrammarRule> {
+    private fun createGrammarRules(): List<GrammarRule> {
         val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "Expressions")
         b.extendsGrammar(BaseGrammar)
 
@@ -155,7 +163,126 @@ internal object ExpressionsGrammar : GrammarAbstract(NamespaceDefault("net.akehu
         b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"))
         b.leaf("STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
 
+
+
         return b.grammar.grammarRule
+    }
+
+    init {
+        grammar(grammar = this) {
+            extendsGrammar(BaseGrammar)
+            choice("expression") {
+                ref("root")
+                ref("literal")
+                ref("navigation")
+                ref("infix")
+                ref("tuple")
+                ref("object")
+                ref("with")
+                ref("when")
+            }
+            choice("root") {
+                ref("propertyReference")
+                ref("SPECIAL")
+            }
+            choice("literal") {
+                ref("BOOLEAN")
+                ref("INTEGER")
+                ref("REAL")
+                ref("STRING")
+            }
+            concatenation("navigation") {
+                ref("navigationRoot"); list(1, -1) { ref("navigationPart") }
+            }
+            choice("navigationRoot") {
+                ref("root")
+                ref("literal")
+            }
+            choice("navigationPart") {
+                ref("propertyCall")
+                ref("methodCall")
+                ref("indexOperation")
+            }
+            separatedList("infix", 2, -1) {
+                ref("expression"); ref("INFIX_OPERATOR")
+            }
+            choice("INFIX_OPERATOR", isLeaf = true) {
+                // logical
+                literal("or"); literal("and"); literal("xor")
+                // comparison
+                literal("=="); literal("!="); literal("<="); literal(">="); literal("<"); literal(">");
+                // arithmetic
+                literal("/"); literal("*"); literal("%"); literal("+"); literal("-");
+            }
+            concatenation("object") {
+                ref("IDENTIFIER"); literal("("); ref("argumentList"); literal(")"); optional { ref("assignmentBlock") }
+            }
+            concatenation("tuple") {
+                literal("tuple"); ref("assignmentBlock")
+            }
+            concatenation("assignmentBlock") {
+                literal("{"); ref("assignmentList"); literal("}")
+            }
+            list("assignmentList", 0, -1) {
+                ref("assignment")
+            }
+            concatenation("assignment") {
+                ref("propertyName"); literal(":="); ref("expression")
+            }
+            choice("propertyName") {
+                ref("SPECIAL")
+                ref("IDENTIFIER")
+            }
+            concatenation("with") {
+                literal("with"); literal("("); ref("expression"); literal(")"); ref("expression")
+            }
+            concatenation("when") {
+                literal("when"); literal("{"); ref("whenOptionList"); literal("}")
+            }
+            list("whenOptionList", 1, -1) {
+                ref("whenOption")
+            }
+            concatenation("whenOption") {
+                ref("expression"); literal("->"); ref("expression")
+            }
+            concatenation("propertyCall") {
+                literal("."); ref("propertyReference")
+            }
+            concatenation("methodCall") {
+                literal("."); ref("methodReference"); literal("("); ref("argumentList"); literal(")")
+            }
+            separatedList("argumentList", 0, -1) {
+                ref("expression"); literal(",")
+            }
+            choice("propertyReference") {
+                ref("SPECIAL")
+                ref("IDENTIFIER")
+            }
+            concatenation("methodReference") { ref("IDENTIFIER") }
+            concatenation("indexOperation") {
+                literal("["); ref("indexList"); literal("]")
+            }
+            separatedList("indexList", 1, -1) {
+                ref("expression"); literal(",")
+            }
+
+            concatenation("SPECIAL", isLeaf = true) { literal("$"); ref("IDENTIFIER") }
+            concatenation("BOOLEAN", isLeaf = true) { pattern("true|false") }
+            concatenation("INTEGER", isLeaf = true) { pattern("[0-9]+") }
+            concatenation("REAL", isLeaf = true) { pattern("[0-9]+[.][0-9]+") }
+            concatenation("STRING", isLeaf = true) { pattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
+
+            // If we have an 'expression'
+            // ideally graft it into a 'whenOption'
+            // next best thing is to graft into an infix an end it if lh=='->'
+            preference("expression") {
+                optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("INFIX_OPERATOR"))
+                // really want to match the 'ER' position ??
+                optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("->"))
+                optionRight("whenOption", 0, listOf("->"))
+            }
+        }
+
     }
 
     override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
@@ -211,8 +338,8 @@ grammar Expression extends Base {
     whenOptionList = whenOption+ ;
     whenOption = expression '->' expression ;
     
-    propertyCall = "." propertyReference ;
-    methodCall = "." methodReference '(' argumentList ')' ;
+    propertyCall = '.' propertyReference ;
+    methodCall = '.' methodReference '(' argumentList ')' ;
     argumentList = [expression / ',']* ;
     propertyReference = SPECIAL | IDENTIFIER ;
     methodReference = IDENTIFIER ;
@@ -235,14 +362,15 @@ grammar Expression extends Base {
     const val formatterStr = """
     """
 
-    init {
-        super.extends.add(
-            GrammarReferenceDefault(namespace, qualifiedName).also {
-                it.resolveAs(BaseGrammar)
-            }
-        )
-        super.grammarRule.addAll(createRules())
-    }
+//    init {
+//        super.extends.add(
+//            GrammarReferenceDefault(namespace, qualifiedName).also {
+//                it.resolveAs(BaseGrammar)
+//            }
+//        )
+//        super.grammarRule.addAll(createGrammarRules())
+//        super.preferenceRule.addAll(createPreferenceRules())
+//    }
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()

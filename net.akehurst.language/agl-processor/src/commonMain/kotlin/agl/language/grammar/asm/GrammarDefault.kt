@@ -24,8 +24,8 @@ import net.akehurst.language.collections.*
  * ID -> qualifiedName
  */
 class GrammarDefault(
-    override val namespace: Namespace,
-    override val name: String,
+    namespace: Namespace,
+    name: String,
     override val options: List<GrammarOption>
 ) : GrammarAbstract(namespace, name) {
 
@@ -56,8 +56,8 @@ data class GrammarReferenceDefault(
 }
 
 abstract class GrammarAbstract(
-    override val namespace: Namespace,
-    override val name: String
+    final override val namespace: Namespace,
+    final override val name: String
 ) : Grammar {
 
     private companion object {
@@ -88,6 +88,8 @@ abstract class GrammarAbstract(
             }
         }
     }
+
+    val selfReference = GrammarReferenceDefault(this.namespace, this.name)
 
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 

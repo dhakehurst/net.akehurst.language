@@ -553,6 +553,8 @@ internal class RuntimeParser(
     }
 
     private fun resolveGrafts2(grafts: List<Pair<Transition, LookaheadSetPart>>): List<Transition> {
+        // this approach causes issues
+
         // if multiple GRAFT trans to same rule with same lh, prefer left most target
         val graftsGrpByLh = grafts.groupBy { it.second }
         return graftsGrpByLh.map {
@@ -593,7 +595,6 @@ internal class RuntimeParser(
                         }
                     }
 
-                    2 > transitions.size -> transitions.map { it.first }
                     else -> {
                         val precedence = transitions.flatMap { (tr, lh) ->
                             val lhf = lh//.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }

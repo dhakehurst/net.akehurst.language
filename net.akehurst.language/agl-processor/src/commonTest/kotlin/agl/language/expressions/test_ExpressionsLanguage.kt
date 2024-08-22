@@ -28,7 +28,7 @@ class test_ExpressionsLanguage {
 
     private companion object {
         val sentences = listOf(
-            "when{z==1->2}",
+            "when{1+1->2}",
             // root
             "\$self",
             "\$nothing",
@@ -81,6 +81,7 @@ class test_ExpressionsLanguage {
             // when
             "when { true -> 1 }",
             "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] }",
+            "when { a+b-c -> 2 }"
         )
     }
 
