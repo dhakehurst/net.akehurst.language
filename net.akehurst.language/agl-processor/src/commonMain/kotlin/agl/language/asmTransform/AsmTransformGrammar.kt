@@ -17,10 +17,13 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
-import net.akehurst.language.agl.language.base.BaseGrammar
-import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
+import net.akehurst.language.agl.language.base.AglBase
+import net.akehurst.language.agl.language.expressions.AglExpressions
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 object AsmTransformGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AsmTransform") {
@@ -29,7 +32,7 @@ object AsmTransformGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.lang
 
     private fun createRules(): List<GrammarRule> {
         val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AsmTransform")
-        b.extendsGrammar(BaseGrammar)
+        b.extendsGrammar(AglBase.grammar)
 
         b.rule("unit").concatenation(
             b.nonTerminal("namespace"),
@@ -84,7 +87,7 @@ object AsmTransformGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.lang
     }
 
     override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
-    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(ExpressionsGrammar.goalRuleName)!!
+    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(AglExpressions.goalRuleName)!!
 
     const val grammarStr = """
 namespace net.akehurst.language.agl
@@ -116,19 +119,15 @@ grammar AsmTransform {
     """
 
     init {
-        super.extends.add(
-            GrammarReferenceDefault(BaseGrammar.namespace, BaseGrammar.name).also {
-                it.resolveAs(BaseGrammar)
-            }
-        )
+        super.extends.add(AglBase.grammar.selfReference)
 
         super.grammarRule.addAll(createRules())
         //should only be one embedded grammar rule
         super.allResolvedEmbeddedRules.forEach {
-            it.embeddedGrammarReference.resolveAs(ExpressionsGrammar)
+            it.embeddedGrammarReference.resolveAs(AglExpressions.grammar)
         }
     }
 
     //TODO: gen this from the ASM
-    override fun toString(): String = ExpressionsGrammar.grammarStr.trimIndent()
+    override fun toString(): String = AglExpressions.grammarStr.trimIndent()
 }

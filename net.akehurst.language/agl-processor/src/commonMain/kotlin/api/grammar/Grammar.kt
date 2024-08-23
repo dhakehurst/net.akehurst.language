@@ -42,6 +42,8 @@ interface GrammarOption {
  */
 interface Grammar {
 
+    val selfReference: GrammarReference
+
     /**
      *
      * the namespace of this grammar;

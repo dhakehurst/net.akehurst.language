@@ -16,19 +16,21 @@
 
 package net.akehurst.language.agl.language.reference
 
-import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
-import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.expressions.AglExpressions
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 /**
 
  */
-internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {
+internal object AglCrossReferences {
+    //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
         val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "References");
-        b.extendsGrammar(ExpressionsGrammar)
+        b.extendsGrammar(AglExpressions.grammar)
 
         b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
         b.rule("namespace").concatenation(
@@ -99,11 +101,60 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         return b.grammar.grammarRule
     }
 
-    override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
-    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
+    //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
+    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
-    const val grammarStr = """
-namespace net.akehurst.language.agl.language
+    val grammar = grammar(
+        namespace = "net.akehurst.language.agl.language",
+        name = "CrossReferences"
+    ) {
+        extendsGrammar(AglExpressions.grammar)
+        list("unit", 0, -1) { ref("namespace") }
+        concatenation("namespace") {
+            lit("namespace"); ref("qualifiedName"); lit("{"); ref("imports"); ref("declarations"); lit("}")
+        }
+        list("imports", 0, -1) { ref("import") }
+        concatenation("declarations") {
+            ref("rootIdentifiables"); ref("scopes"); opt { ref("references") }
+        }
+        list("rootIdentifiables", 0, -1) { ref("identifiable") }
+        list("scopes", 0, -1) { ref("scope") }
+        concatenation("scope") {
+            lit("scope"); ref("typeReference"); lit("{"); ref("identifiables"); lit("}")
+        }
+        list("identifiables", 0, -1) { ref("identifiable") }
+        concatenation("identifiable") {
+            lit("identify"); ref("typeReference"); lit("by"); ref("expression")
+        }
+        concatenation("references") {
+            lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
+        }
+        list("referenceDefinitions", 0, -1) { ref("referenceDefinition") }
+        concatenation("referenceDefinition") {
+            lit("in"); ref("typeReference"); lit("{"); ref("referenceExpressionList"); lit("}")
+        }
+        list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
+        choice("referenceExpression") {
+            ref("propertyReferenceExpression")
+            ref("collectionReferenceExpression")
+        }
+        concatenation("propertyReferenceExpression") {
+            lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
+        }
+        concatenation("from") { lit("from"); ref("navigation") }
+        concatenation("collectionReferenceExpression") {
+            lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
+        }
+        concatenation("ofType") { lit("of-type"); ref("typeReference") }
+        choice("rootOrNavigation") {
+            ref("root")
+            ref("navigation")
+        }
+        separatedList("typeReferences", 1, -1) { ref("typeReference"); lit("|") }
+        concatenation("typeReference") { ref("qualifiedName") }
+    }
+
+    const val grammarStr = """namespace net.akehurst.language.agl.language
 
 grammar References extends Expressions {
 
@@ -153,14 +204,10 @@ ReferenceDefinitions -> [referenceDefinition / '\n']
 ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
     """
 
-    init {
-        super.extends.add(
-            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.name).also {
-                it.resolveAs(ExpressionsGrammar)
-            }
-        )
-        super.grammarRule.addAll(createRules())
-    }
+    //init {
+    //    super.extends.add(AglExpressions.grammar.selfReference)
+    //    super.grammarRule.addAll(createRules())
+    // }
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()

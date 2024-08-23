@@ -336,7 +336,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 
                         else -> {
                             val optType = trRule.resolvedType.declaration.type(emptyList(), true)
-                            val optTr = transformationRule(optType, EXPRESSION_CHILD(0))
+                            val optTr = transformationRule(
+                                optType,
+                                trRule.expression //EXPRESSION_CHILD(0)
+                            )
                             _grRuleItemToTrRule[ruleItem] = optTr
                             optTr
                         }
@@ -509,6 +512,15 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 val t = trRuleForRuleItem(ruleItem, true)
                 when {
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
+                    ruleItem.item is Choice -> {
+                        val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
+                        val withExp = WithExpressionSimple(
+                            withContext = EXPRESSION_CHILD(childIndex),
+                            expression = t.expression
+                        )
+                        createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, withExp)
+                    }
+
                     else -> {
                         val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
                         createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))

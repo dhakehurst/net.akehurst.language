@@ -89,7 +89,9 @@ abstract class GrammarAbstract(
         }
     }
 
-    val selfReference = GrammarReferenceDefault(this.namespace, this.name)
+    override val selfReference = GrammarReferenceDefault(this.namespace, this.name).also {
+        it.resolveAs(this)
+    }
 
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 

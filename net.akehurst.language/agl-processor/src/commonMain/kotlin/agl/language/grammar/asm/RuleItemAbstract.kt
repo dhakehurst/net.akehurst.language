@@ -125,7 +125,11 @@ class OptionalItemDefault(
 
     override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
 
-    override fun toString(): String = "$item?"
+    override fun toString(): String = when (item) {
+        is Choice -> "($item)?"
+        is Concatenation -> "($item)?"
+        else -> "$item?"
+    }
 
 }
 

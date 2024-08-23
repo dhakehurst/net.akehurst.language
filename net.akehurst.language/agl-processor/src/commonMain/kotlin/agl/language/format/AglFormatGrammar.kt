@@ -15,9 +15,12 @@
  */
 package net.akehurst.language.agl.language.format
 
-import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
+import net.akehurst.language.agl.language.expressions.AglExpressions
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 
@@ -25,7 +28,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
         val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
-        b.extendsGrammar(ExpressionsGrammar)
+        b.extendsGrammar(AglExpressions.grammar)
 
         b.rule("unit").concatenation(
             b.nonTerminal("namespace"),
@@ -109,11 +112,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     """
 
     init {
-        super.extends.add(
-            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.name).also {
-                it.resolveAs(ExpressionsGrammar)
-            }
-        )
+        super.extends.add(AglExpressions.grammar.selfReference)
         super.grammarRule.addAll(AglFormatGrammar.createRules())
     }
 

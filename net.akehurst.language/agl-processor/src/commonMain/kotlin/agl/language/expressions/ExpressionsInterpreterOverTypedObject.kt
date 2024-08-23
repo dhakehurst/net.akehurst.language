@@ -289,9 +289,14 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
         val newSelf = evaluateExpression(evc, expression.withContext)
-        val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
-        val result = evaluateExpression(newEvc, expression.expression)
-        return result
+        return when {
+            newSelf.asm is AsmNothing -> newSelf
+            else -> {
+                val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
+                val result = evaluateExpression(newEvc, expression.expression)
+                result
+            }
+        }
     }
 
     private fun evaluateWhen(evc: EvaluationContext, expression: WhenExpression): TypedObject {

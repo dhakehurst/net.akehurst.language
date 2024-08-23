@@ -16,9 +16,12 @@
 
 package net.akehurst.language.agl.language.style
 
-import net.akehurst.language.agl.language.base.BaseGrammar
+import net.akehurst.language.agl.language.base.AglBase
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle") {
@@ -26,7 +29,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
     const val goalRuleName = "rules"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-        b.extendsGrammar(BaseGrammar)
+        b.extendsGrammar(AglBase.grammar)
 
         b.rule("rules").multi(0, -1, b.nonTerminal("rule"))
         b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
@@ -82,11 +85,7 @@ references {
     """
 
     init {
-        super.extends.add(
-            GrammarReferenceDefault(BaseGrammar.namespace, BaseGrammar.name).also {
-                it.resolveAs(BaseGrammar)
-            }
-        )
+        super.extends.add(AglBase.grammar.selfReference)
         super.grammarRule.addAll(createRules())
     }
 

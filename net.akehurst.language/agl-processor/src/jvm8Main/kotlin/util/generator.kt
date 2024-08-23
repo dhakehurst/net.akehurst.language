@@ -18,10 +18,10 @@
 package net.akehurst.language.agl.util
 
 import net.akehurst.language.agl.agl.syntaxAnalyser.SyntaxAnalyserGeneratorKotlin
-import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
+import net.akehurst.language.agl.language.expressions.AglExpressions
 
 fun main() {
 
-    val str = SyntaxAnalyserGeneratorKotlin().generateFor(ExpressionsGrammar)
+    val str = SyntaxAnalyserGeneratorKotlin().generateFor(AglExpressions.grammar)
     println(str)
 }

@@ -3920,7 +3920,7 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "af", sppt = "S { 'a' §S§opt1 { <EMPTY> } 'f' }") {
+            define(sentence = "af", sppt = "S { a:'a' §S§opt1 { <EMPTY> } f:'f' }") {
                 asmSimple {
                     element("S") {
                         propertyString("a", "a")
@@ -3929,7 +3929,7 @@ class test_AllDefault {
                     }
                 }
             }
-            define(sentence = "abcf", sppt = "S { 'a' §S§opt1 { §S§choice1 { 'b' 'c' } } 'f' }") {
+            define(sentence = "abcf", sppt = "S { a:'a' §S§opt1 { §S§choice1 { b:'b' c:'c' } } f:'f' }") {
                 asmSimple {
                     element("S") {
                         propertyString("a", "a")
@@ -3941,7 +3941,7 @@ class test_AllDefault {
                     }
                 }
             }
-            define(sentence = "adef", sppt = "") {
+            define(sentence = "adef", sppt = "S { a:'a' §S§opt1 { §S§choice1 { d:'d' e:'e' } } f:'f' }") {
                 asmSimple {
                     element("S") {
                         propertyString("a", "a")

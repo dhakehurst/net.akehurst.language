@@ -76,25 +76,25 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         return terminal(value, true)
     }
 
-    fun choice(grammarRuleName: String, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun choice(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder()
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, false, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
         gr.rhs = ChoiceLongestDefault(items)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun concatenation(grammarRuleName: String, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
+    fun concatenation(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
         val ib = ConcatenationItemBuilder()
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, false, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
         gr.rhs = ConcatenationDefault(items)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun list(grammarRuleName: String, min: Int, max: Int, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun list(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder()
         ib.init()
         val items = ib.build()
@@ -103,12 +103,12 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
             1 -> Unit
             else -> error("A simple list must have only one item defined")
         }
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, false, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
         gr.rhs = SimpleListDefault(min, max, items[0])
         this.grammar.grammarRule.add(gr)
     }
 
-    fun separatedList(grammarRuleName: String, min: Int, max: Int, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun separatedList(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder()
         ib.init()
         val items = ib.build()
@@ -118,7 +118,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
             2 -> Unit
             else -> error("A simple list must have only two items defined - item & separator")
         }
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, false, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
         gr.rhs = SeparatedListDefault(min, max, items[0], items[1])
         this.grammar.grammarRule.add(gr)
     }
@@ -143,11 +143,11 @@ open class SimpleItemsBuilder() {
         items.add(item as SimpleItem)
     }
 
-    fun literal(value: String) {
+    fun lit(value: String) {
         addItem(TerminalDefault(value, false))
     }
 
-    fun pattern(value: String) {
+    fun pat(value: String) {
         addItem(TerminalDefault(value, true))
     }
 
@@ -157,7 +157,7 @@ open class SimpleItemsBuilder() {
     }
 
     /** a grouped concatenation **/
-    fun group(init: GroupConcatBuilder.() -> Unit) {
+    fun grp(init: GroupConcatBuilder.() -> Unit) {
         val gb = GroupConcatBuilder()
         gb.init()
         val groupedContent = gb.build()
@@ -165,7 +165,7 @@ open class SimpleItemsBuilder() {
     }
 
     /** a grouped choice **/
-    fun choice(init: GroupConcatBuilder.() -> Unit) {
+    fun chc(init: GroupConcatBuilder.() -> Unit) {
         val gb = GroupConcatBuilder()
         gb.init()
         val groupedContent = gb.build()
@@ -185,7 +185,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
         items.add(item)
     }
 
-    fun optional(init: SimpleItemsBuilder.() -> Unit) {
+    fun opt(init: SimpleItemsBuilder.() -> Unit) {
         val b = SimpleItemsBuilder()
         b.init()
         val items = b.build()
@@ -197,7 +197,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
         addItem(OptionalItemDefault(items[0]))
     }
 
-    fun list(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
+    fun lst(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
         val b = SimpleItemsBuilder()
         b.init()
         val items = b.build()
@@ -209,7 +209,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
         addItem(SimpleListDefault(min, max, items[0]))
     }
 
-    fun separatedList(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
+    fun spLst(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
         val b = SimpleItemsBuilder()
         b.init()
         val items = b.build()

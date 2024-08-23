@@ -16,8 +16,11 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.language.base.BaseGrammar
-import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.agl.language.base.AglBase
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
@@ -26,7 +29,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
     const val goalRuleName = "grammarDefinition"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
-        b.extendsGrammar(BaseGrammar)
+        b.extendsGrammar(AglBase.grammar)
 
         b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"))
         b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
@@ -188,11 +191,7 @@ namespace net.akehurst.language.agl.AglGrammar {
 """.trimIndent().replace("§", "\$")
 
     init {
-        super.extends.add(
-            GrammarReferenceDefault(BaseGrammar.namespace, BaseGrammar.name).also {
-                it.resolveAs(BaseGrammar)
-            }
-        )
+        super.extends.add(AglBase.grammar.selfReference)
         super.grammarRule.addAll(createRules())
     }
 
