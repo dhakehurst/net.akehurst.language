@@ -144,7 +144,7 @@ class test_AsmTransform {
     @Test
     fun check_typeModel() {
         val actual = Agl.registry.agl.asmTransform.processor!!.typeModel
-        val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform", "") {
+        val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
             //formatRule = typeReference '->' formatExpression ;

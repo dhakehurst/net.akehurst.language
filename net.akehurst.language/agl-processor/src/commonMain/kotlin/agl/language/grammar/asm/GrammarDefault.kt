@@ -16,7 +16,9 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.api.language.base.Indent
+import net.akehurst.language.agl.api.language.base.Namespace
+import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.collections.*
 
@@ -24,7 +26,7 @@ import net.akehurst.language.collections.*
  * ID -> qualifiedName
  */
 class GrammarDefault(
-    namespace: Namespace,
+    namespace: Namespace<Grammar>,
     name: String,
     override val options: List<GrammarOption>
 ) : GrammarAbstract(namespace, name) {
@@ -36,7 +38,7 @@ class GrammarDefault(
     }
 
     override val defaultGoalRule: GrammarRule
-        get() = options.firstOrNull { it.name == AglGrammarGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(it.value) }
+        get() = options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(it.value) }
             ?: this.allResolvedGrammarRule.first { it.isSkip.not() }
 }
 
@@ -46,7 +48,7 @@ data class GrammarOptionDefault(
 ) : GrammarOption
 
 data class GrammarReferenceDefault(
-    override val localNamespace: Namespace,
+    override val localNamespace: Namespace<Grammar>,
     override val nameOrQName: String
 ) : GrammarReference {
     override var resolved: Grammar? = null
@@ -56,7 +58,7 @@ data class GrammarReferenceDefault(
 }
 
 abstract class GrammarAbstract(
-    final override val namespace: Namespace,
+    final override val namespace: Namespace<Grammar>,
     final override val name: String
 ) : Grammar {
 
@@ -254,6 +256,10 @@ abstract class GrammarAbstract(
             all.size > 1 -> error("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")
         }
         return all.first()
+    }
+
+    override fun asString(indent: Indent, increment: String): String {
+        TODO("not implemented")
     }
 
     override fun hashCode(): Int = this.qualifiedName.hashCode()

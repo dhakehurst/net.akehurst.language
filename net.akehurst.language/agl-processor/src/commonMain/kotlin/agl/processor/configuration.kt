@@ -79,7 +79,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault<TypeModel>(
 //            TypeModelFromGrammar.create(p.grammar!!),
-            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name, "") {},
+            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name) {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -134,7 +134,7 @@ internal class LanguageProcessorConfigurationDefault(
     override var typeModelResolver: TypeModelResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault<TypeModel>(
 //            TypeModelFromGrammar.create(p.grammar!!),
-            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name, "") {},
+            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name) {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

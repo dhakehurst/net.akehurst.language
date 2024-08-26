@@ -37,7 +37,6 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -147,7 +146,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { empty() }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -182,7 +181,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -218,7 +217,7 @@ class test_AllDefault {
             literal("a", "a")
 
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
@@ -258,7 +257,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { pattern("[a-z]") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -293,7 +292,7 @@ class test_AllDefault {
             concatenation("S") { ref("v") }
             pattern("v", "[a-z]")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("v")
             dataType("S", "S") {
                 propertyPrimitiveType("v", "String", false, 0)
@@ -339,7 +338,7 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("b", "String", false, 1)
@@ -394,7 +393,7 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("b", "String", false, 2)
@@ -448,11 +447,11 @@ class test_AllDefault {
                 literal("c")
             }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("S")
         }
         val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
-            transRule("S", SimpleTypeModelStdLib.String, expression("child[0]"))
+            transRule("S", "String", "child[0]")
         }
         test(
             grammarStr = grammarStr,
@@ -497,7 +496,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 subtypes("A", "B", "C")
             }
@@ -598,7 +597,7 @@ class test_AllDefault {
                 literal("y")
             }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
@@ -677,7 +676,7 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
@@ -765,7 +764,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 subtypes("A", "B", "C")
             }
@@ -873,7 +872,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
             unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
             dataType("A", "A") {
@@ -953,7 +952,7 @@ class test_AllDefault {
             optional("S", "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -992,7 +991,7 @@ class test_AllDefault {
             optional("S", "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", true, 0)
             }
@@ -1044,7 +1043,7 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 2)
@@ -1103,7 +1102,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("b", "String", true, 1)
@@ -1165,7 +1164,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyDataTypeOf("a", "A", true, 0)
             }
@@ -1226,7 +1225,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyDataTypeOf("a", "A", true, 1)
@@ -1292,7 +1291,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyDataTypeOf("oA", "OA", false, 0)
             }
@@ -1358,7 +1357,7 @@ class test_AllDefault {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -1411,7 +1410,7 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 2)
@@ -1483,7 +1482,7 @@ class test_AllDefault {
             multi("S", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListType("a", false, 0) { primitiveRef("String") }
             }
@@ -1550,7 +1549,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyListType("b", false, 1) { primitiveRef("String") }
@@ -1630,7 +1629,7 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("a", "A", false, 0)
             }
@@ -1709,7 +1708,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyListTypeOf("a", "A", false, 1)
@@ -1796,7 +1795,7 @@ class test_AllDefault {
             multi("as", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
             dataType("as", "As") {
@@ -1856,7 +1855,7 @@ class test_AllDefault {
             multi("as", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListType("as", false, 0) { primitiveRef("String") }
             }
@@ -1929,7 +1928,7 @@ class test_AllDefault {
             optional("ao", "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("as", "Ao", false, 0)
             }
@@ -2020,7 +2019,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
@@ -2188,7 +2187,7 @@ class test_AllDefault {
             concatenation("V") { ref("N") }
             pattern("N", "[a-zA-Z]+")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyDataTypeOf("e", "E", false, 0)
             }
@@ -2288,7 +2287,7 @@ class test_AllDefault {
             literal("a")
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
             dataType("as", "As") {
@@ -2356,7 +2355,7 @@ class test_AllDefault {
             literal(",")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 2)
@@ -2441,7 +2440,7 @@ class test_AllDefault {
             literal(",")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("as", "String", false, 0) // of String
             }
@@ -2530,7 +2529,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
@@ -2692,7 +2691,7 @@ class test_AllDefault {
             literal("a")
             literal(".")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 // no property 'a' because it is list of non-leaf literals
                 propertyDataTypeOf("b", "B", true, 1)
@@ -2781,7 +2780,7 @@ class test_AllDefault {
             literal("A", "a")
             literal("B", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListType("as", false, 0) { primitiveRef("String") }
                 propertyPrimitiveType("b", "String", true, 1)
@@ -2878,7 +2877,7 @@ class test_AllDefault {
             concatenation("a") { literal("a") }
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyListTypeOf("ass", "As", false, 0) // of String
             }
@@ -3046,7 +3045,7 @@ class test_AllDefault {
             concatenation("S") { ref("§S§group1") }
             concatenation("§S§group1", isPseudo = true) { literal("b"); literal("c"); literal("d") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -3087,7 +3086,7 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyTupleType("\$group", false, 0) {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -3143,7 +3142,7 @@ class test_AllDefault {
             literal("a", "a")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("e", "String", false, 2)
@@ -3198,7 +3197,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
@@ -3271,7 +3270,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
@@ -3350,7 +3349,7 @@ class test_AllDefault {
             literal("b", "b")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
@@ -3415,7 +3414,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
@@ -3505,7 +3504,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("\$choice", "String", false, 1)
@@ -3590,7 +3589,7 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
@@ -3677,7 +3676,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
@@ -3776,7 +3775,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
@@ -3879,7 +3878,7 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", true, 1) {
@@ -3972,7 +3971,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4011,7 +4010,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4048,7 +4047,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4087,7 +4086,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4126,7 +4125,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4164,7 +4163,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4202,7 +4201,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4240,7 +4239,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4278,7 +4277,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4318,7 +4317,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4357,7 +4356,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4396,7 +4395,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4437,7 +4436,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4478,7 +4477,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4530,7 +4529,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4575,7 +4574,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4618,7 +4617,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4658,7 +4657,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4700,7 +4699,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4739,7 +4738,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4775,7 +4774,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4812,7 +4811,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4853,7 +4852,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4890,7 +4889,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4927,7 +4926,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -4964,7 +4963,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5001,7 +5000,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5038,7 +5037,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5077,7 +5076,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5118,7 +5117,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5161,7 +5160,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
@@ -5204,7 +5203,7 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test", "S") {
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }

@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.AglGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -87,7 +87,7 @@ ${'$'}nostyle {
   background: white;
   font-style: normal;
 }
-${AglGrammarGrammar.styleStr}
+${AglGrammar.styleStr}
         """.trimIndent()
 
         assertEquals(expected, actual)

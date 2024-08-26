@@ -23,7 +23,7 @@ import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
-import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.parser.LeftCornerParser
@@ -79,7 +79,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     protected val defaultGoalRuleName: String? by lazy {
         configuration.defaultGoalRuleName
-            ?: grammar.options.firstOrNull { it.name == AglGrammarGrammar.OPTION_defaultGoalRule }?.value
+            ?: grammar.options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.value
             ?: grammar.grammarRule.first { it.isSkip.not() }.name
     }
 
@@ -87,7 +87,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
-            ?: grammarTypeModel(this.grammar.qualifiedName, this.grammar.name, "None") {}
+            ?: grammarTypeModel(this.grammar.qualifiedName, this.grammar.name) {}
     }
 
     override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")

@@ -98,7 +98,7 @@ class test_ExpressionsLanguage {
         val actual = proc.typeModel
         assertTrue(Agl.registry.agl.expressions.issues.errors.isEmpty(), Agl.registry.agl.expressions.issues.toString())
 
-        val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions", "") {
+        val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions") {
             stringTypeFor("BOOLEAN")
             stringTypeFor("IDENTIFIER")
             stringTypeFor("INFIX_OPERATOR")

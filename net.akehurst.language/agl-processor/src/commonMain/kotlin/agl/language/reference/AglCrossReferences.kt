@@ -17,89 +17,11 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.AglExpressions
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
-import net.akehurst.language.api.language.grammar.GrammarRule
 
-/**
-
- */
 internal object AglCrossReferences {
     //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {
     const val goalRuleName = "unit"
-    private fun createRules(): List<GrammarRule> {
-        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language"), "References");
-        b.extendsGrammar(AglExpressions.grammar)
-
-        b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
-        b.rule("namespace").concatenation(
-            b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"),
-            b.nonTerminal("imports"),
-            b.nonTerminal("declarations"),
-            b.terminalLiteral("}")
-        )
-        b.rule("imports").multi(0, -1, b.nonTerminal("import"))
-        b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"), b.nonTerminal("referencesOpt"))
-        b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
-        b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
-        b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
-        b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
-        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("expression"))
-        b.rule("referencesOpt").optional(b.nonTerminal("references"))
-        b.rule("references").concatenation(
-            b.terminalLiteral("references"),
-            b.terminalLiteral("{"),
-            b.nonTerminal("referenceDefinitions"),
-            b.terminalLiteral("}")
-        )
-        b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
-        b.rule("referenceDefinition").concatenation(
-            b.terminalLiteral("in"),
-            b.nonTerminal("typeReference"),
-            b.terminalLiteral("{"),
-            b.nonTerminal("referenceExpressionList"),
-            b.terminalLiteral("}"),
-        )
-        b.rule("referenceExpressionList").multi(0, -1, b.nonTerminal("referenceExpression"))
-        b.rule("referenceExpression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("propertyReferenceExpression"),
-            b.nonTerminal("collectionReferenceExpression"),
-        )
-        b.rule("propertyReferenceExpression").concatenation(
-            b.terminalLiteral("property"),
-            b.nonTerminal("rootOrNavigation"),
-            b.terminalLiteral("refers-to"),
-            b.nonTerminal("typeReferences"),
-            b.nonTerminal("fromOpt")
-        )
-        b.rule("fromOpt").optional(b.nonTerminal("from"))
-        b.rule("from").concatenation(
-            b.terminalLiteral("from"),
-            b.nonTerminal("navigation")
-        )
-        b.rule("collectionReferenceExpression").concatenation(
-            b.terminalLiteral("forall"),
-            b.nonTerminal("rootOrNavigation"),
-            b.nonTerminal("ofTypeOpt"),
-            b.terminalLiteral("{"),
-            b.nonTerminal("referenceExpressionList"),
-            b.terminalLiteral("}"),
-        )
-
-        b.rule("rootOrNavigation").choiceLongestFromConcatenationItem(
-            b.nonTerminal("root"),
-            b.nonTerminal("navigation")
-        )
-
-        b.rule("ofTypeOpt").optional(b.nonTerminal("ofType"))
-        b.rule("ofType").concatenation(b.terminalLiteral("of-type"), b.nonTerminal("typeReference"))
-
-        b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
-        b.rule("typeReference").concatenation(b.nonTerminal("qualifiedName"))
-
-        return b.grammar.grammarRule
-    }
 
     //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
@@ -108,7 +30,7 @@ internal object AglCrossReferences {
         namespace = "net.akehurst.language.agl.language",
         name = "CrossReferences"
     ) {
-        extendsGrammar(AglExpressions.grammar)
+        extendsGrammar(AglExpressions.grammar.selfReference)
         list("unit", 0, -1) { ref("namespace") }
         concatenation("namespace") {
             lit("namespace"); ref("qualifiedName"); lit("{"); ref("imports"); ref("declarations"); lit("}")

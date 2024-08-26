@@ -18,155 +18,17 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.language.base.AglBase
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglExpressions {
     const val goalRuleName = "expression"
-    private fun createGrammarRules(): List<GrammarRule> {
-        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "Expressions")
-        b.extendsGrammar(AglBase.grammar)
-
-        b.rule("expression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("root"),
-            b.nonTerminal("literal"),
-            b.nonTerminal("navigation"),
-            b.nonTerminal("infix"),
-            b.nonTerminal("tuple"),
-            b.nonTerminal("object"),
-            b.nonTerminal("with"),
-            b.nonTerminal("when")
-        )
-        b.rule("root").choiceLongestFromConcatenationItem(
-            b.nonTerminal("propertyReference"),
-            b.nonTerminal("SPECIAL"),
-        )
-        b.rule("literal").choiceLongestFromConcatenationItem(
-            b.nonTerminal("BOOLEAN"),
-            b.nonTerminal("INTEGER"),
-            b.nonTerminal("REAL"),
-            b.nonTerminal("STRING"),
-        )
-        b.rule("navigation").concatenation(
-            b.nonTerminal("navigationRoot"),
-            b.nonTerminal("navigationPartList")
-        )
-        b.rule("navigationRoot").choiceLongestFromConcatenationItem(
-            b.nonTerminal("root"),
-            b.nonTerminal("literal"),
-        )
-        b.rule("navigationPartList").multi(1, -1, b.nonTerminal("navigationPart"))
-        b.rule("navigationPart").choiceLongestFromConcatenationItem(
-            b.nonTerminal("propertyCall"),
-            b.nonTerminal("methodCall"),
-            b.nonTerminal("indexOperation")
-        )
-
-        b.rule("infix").separatedList(
-            2, -1,
-            b.nonTerminal("INFIX_OPERATOR"),
-            b.nonTerminal("expression")
-        )
-        b.leaf("INFIX_OPERATOR").choiceLongestFromConcatenationItem(
-            b.terminalLiteral("or"), b.terminalLiteral("and"), b.terminalLiteral("xor"),
-            b.terminalLiteral("=="), b.terminalLiteral("!="),
-            b.terminalLiteral("<="), b.terminalLiteral(">="), b.terminalLiteral("<"), b.terminalLiteral(">"),
-            b.terminalLiteral("/"), b.terminalLiteral("*"), b.terminalLiteral("%"),
-            b.terminalLiteral("+"), b.terminalLiteral("-"),
-        )
-
-        b.rule("tuple").concatenation(
-            b.terminalLiteral("tuple"),
-            b.nonTerminal("assignmentBlock"),
-        )
-        b.rule("assignmentBlock").concatenation(
-            b.terminalLiteral("{"),
-            b.nonTerminal("assignmentList"),
-            b.terminalLiteral("}")
-        )
-        b.rule("assignmentList").multi(1, -1, b.nonTerminal("assignment"))
-        b.rule("assignment").concatenation(
-            b.nonTerminal("propertyName"),
-            b.terminalLiteral(":="),
-            b.nonTerminal("expression"),
-        )
-        b.rule("propertyName").choiceLongestFromConcatenationItem(
-            b.nonTerminal("SPECIAL"),
-            b.nonTerminal("IDENTIFIER")
-        )
-
-        b.rule("object").concatenation(
-            b.nonTerminal("IDENTIFIER"),
-            b.terminalLiteral("("),
-            b.nonTerminal("argumentList"),
-            b.terminalLiteral(")"),
-            b.nonTerminal("optAssignmentBlock")
-        )
-        b.rule("optAssignmentBlock").optional(b.nonTerminal("assignmentBlock"))
-
-        b.rule("with").concatenation(
-            b.terminalLiteral("with"),
-            b.terminalLiteral("("),
-            b.nonTerminal("expression"),
-            b.terminalLiteral(")"),
-            b.nonTerminal("expression"),
-        )
-
-        b.rule("when").concatenation(
-            b.terminalLiteral("when"),
-            b.terminalLiteral("{"),
-            b.nonTerminal("whenOptionList"),
-            b.terminalLiteral("}")
-        )
-        b.rule("whenOptionList").multi(1, -1, b.nonTerminal("whenOption"))
-        b.rule("whenOption").concatenation(
-            b.nonTerminal("expression"),
-            b.terminalLiteral("->"),
-            b.nonTerminal("expression"),
-        )
-
-        b.rule("propertyCall").concatenation(
-            b.terminalLiteral("."),
-            b.nonTerminal("propertyReference")
-        )
-        b.rule("methodCall").concatenation(
-            b.terminalLiteral("."),
-            b.nonTerminal("IDENTIFIER"),
-            b.terminalLiteral("("),
-            b.nonTerminal("argumentList"),
-            b.terminalLiteral(")"),
-        )
-        b.rule("indexOperation").concatenation(
-            b.terminalLiteral("["),
-            b.nonTerminal("indexList"),
-            b.terminalLiteral("]"),
-        )
-        b.rule("argumentList").separatedList(0, -1, b.terminalLiteral(","), b.nonTerminal("expression"))
-        b.rule("indexList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("expression"))
-
-        b.rule("propertyReference").choiceLongestFromConcatenationItem(
-            b.nonTerminal("SPECIAL"),
-            b.nonTerminal("IDENTIFIER")
-        )
-        b.leaf("SPECIAL").concatenation(b.terminalLiteral("\$"), b.nonTerminal("IDENTIFIER"))
-        b.leaf("BOOLEAN").concatenation(b.terminalPattern("true|false"))
-        b.leaf("INTEGER").concatenation(b.terminalPattern("[0-9]+"))
-        b.leaf("REAL").concatenation(b.terminalPattern("[0-9]+[.][0-9]+"))
-        b.leaf("STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
-
-
-
-        return b.grammar.grammarRule
-    }
 
     val grammar = grammar(
         namespace = "net.akehurst.language.agl.language",
         name = "Expressions"
     ) {
-        extendsGrammar(AglBase.grammar)
+        extendsGrammar(AglBase.grammar.selfReference)
         choice("expression") {
             ref("root")
             ref("literal")

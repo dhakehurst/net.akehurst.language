@@ -60,7 +60,7 @@ class test_typemodel {
             }
         """.trimIndent()
 
-        val expected = grammarTypeModel("test.Test", "Test", "") {
+        val expected = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -93,7 +93,7 @@ class test_typemodel {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", "", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -133,7 +133,7 @@ class test_typemodel {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", "", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }

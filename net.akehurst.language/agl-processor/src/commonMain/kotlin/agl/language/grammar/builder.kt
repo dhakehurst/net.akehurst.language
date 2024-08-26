@@ -17,6 +17,9 @@
 
 package net.akehurst.language.agl.language.grammar.asm.builder
 
+import net.akehurst.language.agl.api.language.base.Namespace
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.language.base.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.*
 
@@ -24,7 +27,7 @@ import net.akehurst.language.api.language.grammar.*
 annotation class GrammarBuilderMarker
 
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
-    val b = GrammarBuilder(GrammarDefault(NamespaceDefault(namespace), name, emptyList()))
+    val b = GrammarBuilder(GrammarDefault(NamespaceDefault(QualifiedName(namespace)), name, emptyList()))
     b.init()
     return b.build()
 }
@@ -44,12 +47,8 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         grammar.extends.add(GrammarReferenceDefault(grammar.namespace, nameOrQName))
     }
 
-    fun extendsGrammar(extended: Grammar) {
-        grammar.extends.add(
-            GrammarReferenceDefault(grammar.namespace, extended.qualifiedName).also {
-                it.resolveAs(extended)
-            }
-        )
+    fun extendsGrammar(extended: GrammarReference) {
+        grammar.extends.add(extended)
     }
 
     private fun terminal(value: String, isPattern: Boolean): Terminal {
@@ -76,8 +75,14 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         return terminal(value, true)
     }
 
+    fun empty(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false) {
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        gr.rhs = EmptyRuleDefault()
+        this.grammar.grammarRule.add(gr)
+    }
+
     fun choice(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder()
+        val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
         val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
@@ -86,7 +91,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
     }
 
     fun concatenation(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
-        val ib = ConcatenationItemBuilder()
+        val ib = ConcatenationItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
         val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
@@ -94,8 +99,22 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         this.grammar.grammarRule.add(gr)
     }
 
+    fun optional(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+        val ib = SimpleItemsBuilder(grammar.namespace)
+        ib.init()
+        val items = ib.build()
+        when (items.size) {
+            0 -> error("An optional must have one item defined")
+            1 -> Unit
+            else -> error("An optional must have only one item defined")
+        }
+        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        gr.rhs = OptionalItemDefault(items[0])
+        this.grammar.grammarRule.add(gr)
+    }
+
     fun list(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder()
+        val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
         when (items.size) {
@@ -109,7 +128,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
     }
 
     fun separatedList(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder()
+        val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
         when (items.size) {
@@ -135,7 +154,9 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
 }
 
 @GrammarBuilderMarker
-open class SimpleItemsBuilder() {
+open class SimpleItemsBuilder(
+    val localNamespace: Namespace<Grammar>
+) {
 
     private val items = mutableListOf<SimpleItem>()
 
@@ -149,6 +170,15 @@ open class SimpleItemsBuilder() {
 
     fun pat(value: String) {
         addItem(TerminalDefault(value, true))
+    }
+
+    fun ebd(embeddedGrammarReference: String, embeddedGoalName: String) {
+        val gr = GrammarReferenceDefault(localNamespace, embeddedGrammarReference)
+        addItem(EmbeddedDefault(embeddedGoalName, gr))
+    }
+
+    fun ebd(embeddedGrammarReference: GrammarReference, embeddedGoalName: String) {
+        addItem(EmbeddedDefault(embeddedGoalName, embeddedGrammarReference))
     }
 
     /** ref(erence) to grammar rule - non-terminal **/
@@ -178,7 +208,7 @@ open class SimpleItemsBuilder() {
 }
 
 @GrammarBuilderMarker
-class ConcatenationItemBuilder() : SimpleItemsBuilder() {
+class ConcatenationItemBuilder(localNamespace: Namespace<Grammar>) : SimpleItemsBuilder(localNamespace) {
     private val items = mutableListOf<RuleItem>()
 
     override fun addItem(item: RuleItem) {
@@ -186,7 +216,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
     }
 
     fun opt(init: SimpleItemsBuilder.() -> Unit) {
-        val b = SimpleItemsBuilder()
+        val b = SimpleItemsBuilder(super.localNamespace)
         b.init()
         val items = b.build()
         when (items.size) {
@@ -198,7 +228,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
     }
 
     fun lst(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
-        val b = SimpleItemsBuilder()
+        val b = SimpleItemsBuilder(super.localNamespace)
         b.init()
         val items = b.build()
         when (items.size) {
@@ -210,7 +240,7 @@ class ConcatenationItemBuilder() : SimpleItemsBuilder() {
     }
 
     fun spLst(min: Int, max: Int, init: SimpleItemsBuilder.() -> Unit) {
-        val b = SimpleItemsBuilder()
+        val b = SimpleItemsBuilder(super.localNamespace)
         b.init()
         val items = b.build()
         when (items.size) {

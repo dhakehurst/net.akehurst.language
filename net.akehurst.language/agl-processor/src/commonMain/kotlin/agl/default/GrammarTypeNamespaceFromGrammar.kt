@@ -40,7 +40,6 @@ object TypeModelFromGrammar {
         return grammarTypeModel(
             grammar.qualifiedName,
             grammar.name,
-            "",
             imports = listOf(SimpleTypeModelStdLib)
         ) {
         }

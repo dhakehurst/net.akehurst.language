@@ -25,7 +25,6 @@ import net.akehurst.language.api.language.asmTransform.AsmTransformModel
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
@@ -85,9 +84,11 @@ class AsmTransformModelBuilder(
         _rules.add(tr)
     }
 
-    fun transRule(grammarRuleName: String, type: TypeInstance, expression: Expression) {
+    fun transRule(grammarRuleName: String, typeName: String, expressionStr: String) {
+        val expression = expression(expressionStr)
+        val typeDef = typeModel.findFirstByNameOrNull(typeName) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
         val tr = transformationRule(
-            type = type,
+            type = typeDef.type(),
             expression = expression
         )
         tr.grammarRuleName = grammarRuleName
@@ -95,7 +96,7 @@ class AsmTransformModelBuilder(
         _rules.add(tr)
     }
 
-    fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, SimpleTypeModelStdLib.String, expression("child[0]"))
+    fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, "String", "child[0]")
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {
         val qName = if (typeName.contains(".")) typeName else "$qualifiedName.$typeName"

@@ -83,7 +83,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test.Test", "Test", "Unit") {
+        val expected = grammarTypeModel("test.Test", "Test") {
             //unit = declaration* ;
             dataType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)

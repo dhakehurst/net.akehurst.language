@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.language.style
 
 import net.akehurst.language.agl.language.base.AglBase
-import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
@@ -51,7 +51,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         return b.grammar.grammarRule
     }
 
-    override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, "rules"))
+    override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "rules"))
     override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
     const val styleStr = """META_IDENTIFIER {

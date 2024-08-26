@@ -24,12 +24,11 @@ import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 fun grammarTypeModel(
     namespaceQualifiedName: String,
-    name: String,
-    rootTypeName: String,
+    modelName: String,
     imports: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
     init: GrammarTypeModelBuilder.() -> Unit
 ): TypeModel {
-    val model = TypeModelSimple(name)
+    val model = TypeModelSimple(modelName)
     imports.forEach { model.addNamespace(it) }
     val b = GrammarTypeModelBuilder(model, namespaceQualifiedName, imports.map { it.qualifiedName }.toMutableList())
     b.init()
@@ -52,38 +51,38 @@ class GrammarTypeModelBuilder(
 
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.declaration as PrimitiveType
 
-    fun stringTypeFor(name: String, isNullable: Boolean = false) {
-        _namespace.addTypeFor(name, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
+    fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
+        _namespace.addTypeFor(grammarRuleName, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
-    fun listTypeFor(name: String, elementType: TypeDeclaration): TypeInstance {
+    fun listTypeFor(grammarRuleName: String, elementType: TypeDeclaration): TypeInstance {
         val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type()))
-        _namespace.addTypeFor(name, t)
+        _namespace.addTypeFor(grammarRuleName, t)
         return t
     }
 
-    fun listTypeOf(name: String, elementTypeName: String): TypeInstance {
+    fun listTypeOf(grammarRuleName: String, elementTypeName: String): TypeInstance {
         val elementType = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
-        return listTypeFor(name, elementType)
+        return listTypeFor(grammarRuleName, elementType)
     }
 
-    fun listSeparatedTypeFor(name: String, itemType: TypeInstance, separatorType: TypeInstance) {
+    fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeInstance, separatorType: TypeInstance) {
         val t = SimpleTypeModelStdLib.ListSeparated.type(listOf(itemType, separatorType))
-        _namespace.addTypeFor(name, t)
+        _namespace.addTypeFor(grammarRuleName, t)
     }
 
-    fun listSeparatedTypeFor(name: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
-        listSeparatedTypeFor(name, itemType.type(), separatorType.type())
+    fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
+        listSeparatedTypeFor(grammarRuleName, itemType.type(), separatorType.type())
 
-    fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDeclaration) {
+    fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorType: TypeDeclaration) {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
-        listSeparatedTypeFor(name, itemType, separatorType)
+        listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
 
-    fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorTypeName: String) {
+    fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorTypeName: String) {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         val separatorType = _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
-        listSeparatedTypeFor(name, itemType, separatorType)
+        listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
 
     fun dataType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {

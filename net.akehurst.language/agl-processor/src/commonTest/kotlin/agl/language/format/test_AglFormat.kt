@@ -137,7 +137,7 @@ class test_AglFormat {
     @Test
     fun check_typeModel() {
         val actual = Agl.registry.agl.formatter.processor!!.typeModel
-        val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat", "") {
+        val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
             //formatRule = typeReference '->' formatExpression ;

@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.language.grammar
 
+import net.akehurst.language.agl.api.language.base.Definition
+import net.akehurst.language.agl.api.language.base.Namespace
 import net.akehurst.language.collections.OrderedSet
 
 
@@ -24,7 +26,7 @@ interface GrammarItem {
 }
 
 interface GrammarReference {
-    val localNamespace: Namespace
+    val localNamespace: Namespace<Grammar>
     val nameOrQName: String
     val resolved: Grammar?
     fun resolveAs(resolved: Grammar)
@@ -40,7 +42,7 @@ interface GrammarOption {
  * The definition of a Grammar. A grammar defines a list of rules and may be defined to extend a number of other Grammars.
  *
  */
-interface Grammar {
+interface Grammar : Definition<Grammar> {
 
     val selfReference: GrammarReference
 
@@ -48,13 +50,13 @@ interface Grammar {
      *
      * the namespace of this grammar;
      */
-    val namespace: Namespace
+    override val namespace: Namespace<Grammar>
 
     /**
      *
      * the name of this grammar
      */
-    val name: String
+    override val name: String
 
     /**
      * namespace.name

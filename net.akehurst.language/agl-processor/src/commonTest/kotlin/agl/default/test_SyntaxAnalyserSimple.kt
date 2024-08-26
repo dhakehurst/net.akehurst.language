@@ -302,7 +302,7 @@ class test_SyntaxAnalyserSimple {
             literal("d", "d")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("b")
             stringTypeFor("c")
             stringTypeFor("d")
@@ -428,7 +428,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -522,7 +522,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -600,7 +600,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -684,7 +684,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -753,7 +753,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -827,7 +827,7 @@ class test_SyntaxAnalyserSimple {
             literal("y", "y")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -923,7 +923,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -1011,7 +1011,7 @@ class test_SyntaxAnalyserSimple {
             literal("e", "e")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -1103,7 +1103,7 @@ class test_SyntaxAnalyserSimple {
             literal("y", "y")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -1203,7 +1203,7 @@ class test_SyntaxAnalyserSimple {
             literal("y", "y")
         })
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
@@ -1665,7 +1665,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
             stringTypeFor("NAME")
             // S = type ;
             dataType("S", "S") {
