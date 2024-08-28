@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
@@ -39,8 +40,8 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
 
     abstract val asm: AsmType
 
-    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
 
     override fun clear() {
         this.locationMap.clear()

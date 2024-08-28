@@ -17,7 +17,10 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.typemodel.api.PropertyName
 
 interface AsmPath {
     val value: String
@@ -40,12 +43,12 @@ interface Asm {
 
 interface AsmValue {
 
-    val qualifiedTypeName: String
+    val qualifiedTypeName: QualifiedName
 
     /**
      * last segment of the qualifiedTypeName
      */
-    val typeName: String
+    val typeName: SimpleName
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
     fun equalTo(other: AsmValue): Boolean
@@ -65,7 +68,7 @@ interface AsmReference {
 interface AsmStructure : AsmValue {
     val path: AsmPath
 
-    val property: Map<String, AsmStructureProperty>
+    val property: Map<PropertyName, AsmStructureProperty>
 
     val propertyOrdered: List<AsmStructureProperty>
 
@@ -77,18 +80,18 @@ interface AsmStructure : AsmValue {
     /**
      * true if the value has the named property
      */
-    fun hasProperty(name: String): Boolean
+    fun hasProperty(name: PropertyName): Boolean
 
     /**
      * the value of the named property, AsmNothing if no property with that name
      */
-    fun getProperty(name: String): AsmValue
+    fun getProperty(name: PropertyName): AsmValue
 
-    fun setProperty(name: String, value: AsmValue, childIndex: Int)
+    fun setProperty(name: PropertyName, value: AsmValue, childIndex: Int)
 }
 
 interface AsmStructureProperty {
-    val name: String
+    val name: PropertyName
     val value: AsmValue
     val index: Int
 

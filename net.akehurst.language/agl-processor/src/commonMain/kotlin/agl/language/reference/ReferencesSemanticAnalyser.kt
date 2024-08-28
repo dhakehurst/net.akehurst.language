@@ -24,6 +24,8 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -59,15 +61,15 @@ class ReferencesSemanticAnalyser(
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
-                val importedNamespaces = it.importedNamespaces.mapNotNull {
-                    val impNs = context.typeModel.namespace[it]
+                val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
+                    val impNs = context.typeModel.findNamespaceOrNull(impNs)
                     when (impNs) {
                         null -> raiseError(it, "Namespace to import not found")
                     }
                     impNs
                 }
 
-                val ns = context.typeModel.namespace[it.qualifiedName]
+                val ns = context.typeModel.findNamespaceOrNull(it.qualifiedName)
                 when (ns) {
                     null -> issues.raise(
                         LanguageIssueKind.ERROR,
@@ -263,9 +265,9 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    fun findReferredToType(name: String, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
+    fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
         return _grammarNamespace?.findTypeNamed(name)
-            ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
+            ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name as SimpleName) }
     }
 
 }

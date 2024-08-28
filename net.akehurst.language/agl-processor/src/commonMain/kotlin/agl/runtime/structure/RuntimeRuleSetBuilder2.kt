@@ -16,10 +16,11 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.*
 
 internal fun runtimeRuleSet(qualifiedName: String = "Grammar", init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
-    val b = RuntimeRuleSetBuilder2(qualifiedName)
+    val b = RuntimeRuleSetBuilder2(QualifiedName(qualifiedName))
     b.init()
     return b.build()
 }
@@ -38,7 +39,7 @@ internal data class RuntimeRuleRef(val tag: String) {
 
 @RuntimeRuleSetDslMarker
 internal class RuntimeRuleSetBuilder2(
-    val qualifiedName: String
+    val qualifiedName: QualifiedName
 ) : RuleSetBuilder {
 
     private val ruleSetNumber = RuntimeRuleSet.nextRuntimeRuleSetNumber++

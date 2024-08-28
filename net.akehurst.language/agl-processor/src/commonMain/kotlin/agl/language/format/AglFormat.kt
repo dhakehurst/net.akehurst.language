@@ -27,7 +27,7 @@ internal object AglFormat {
 
     val grammar = grammar(
         namespace = "net.akehurst.language.agl.language",
-        name = "AglFormat"
+        name = "Format"
     ) {
         extendsGrammar(AglExpressions.grammar.selfReference)
 

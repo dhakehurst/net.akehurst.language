@@ -16,8 +16,13 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.*
+import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 
 abstract class ExpressionAbstract : Expression {
@@ -46,7 +51,7 @@ data class CreateTupleExpressionSimple(
 }
 
 data class CreateObjectExpressionSimple(
-    override val qualifiedTypeName: String,
+    override val possiblyQualifiedTypeName: PossiblyQualifiedName,
     override val arguments: List<Expression>
 ) : ExpressionAbstract(), CreateObjectExpression {
 
@@ -54,7 +59,7 @@ data class CreateObjectExpressionSimple(
 
     override fun asString(indent: String, increment: String): String {
         val sb = StringBuilder()
-        sb.append("$qualifiedTypeName {\n")
+        sb.append("$possiblyQualifiedTypeName {\n")
         val ni = indent + increment
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
         sb.append("${props}\n")
@@ -62,7 +67,7 @@ data class CreateObjectExpressionSimple(
         return sb.toString()
     }
 
-    override fun toString(): String = "$qualifiedTypeName { ... }"
+    override fun toString(): String = "$possiblyQualifiedTypeName { ... }"
 }
 
 class WithExpressionSimple(
@@ -133,15 +138,15 @@ data class RootExpressionSimple(
 }
 
 data class LiteralExpressionSimple(
-    override val typeName: String,
+    override val qualifiedTypeName: QualifiedName,
     override val value: Any
 ) : ExpressionAbstract(), LiteralExpression {
 
     companion object {
-        const val BOOLEAN = "std.Boolean"
-        const val INTEGER = "std.Integer"
-        const val REAL = "std.Real"
-        const val STRING = "std.String"
+        val BOOLEAN = SimpleTypeModelStdLib.Boolean.qualifiedTypeName
+        val INTEGER = SimpleTypeModelStdLib.Integer.qualifiedTypeName
+        val REAL = SimpleTypeModelStdLib.Real.qualifiedTypeName
+        val STRING = SimpleTypeModelStdLib.String.qualifiedTypeName
     }
 
     override fun toString(): String = value.toString()
@@ -156,13 +161,13 @@ data class NavigationSimple(
 }
 
 data class PropertyCallSimple(
-    override val propertyName: String
+    override val propertyName: PropertyName
 ) : PropertyCall {
     override fun toString(): String = ".$propertyName"
 }
 
 data class MethodCallSimple(
-    override val methodName: String,
+    override val methodName: MethodName,
     override val arguments: List<Expression>
 ) : MethodCall {
 
@@ -177,7 +182,7 @@ data class IndexOperationSimple(
 }
 
 class AssignmentStatementSimple(
-    override val lhsPropertyName: String,
+    override val lhsPropertyName: PropertyName,
     override val rhs: Expression
 ) : AssignmentStatement {
 

@@ -18,7 +18,9 @@
 package net.akehurst.language.agl.asm
 
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 class AsmPathSimple(
@@ -85,8 +87,8 @@ open class AsmSimple() : Asm {
         (this.root as MutableList).remove(root)
     }
 
-    fun createStructure(asmPath: AsmPath, typeName: String): AsmStructureSimple {
-        val el = AsmStructureSimple(asmPath, typeName)// this, typeName)
+    fun createStructure(asmPath: AsmPath, typeName: QualifiedName): AsmStructureSimple {
+        val el = AsmStructureSimple(asmPath, typeName)
         this.elementIndex[asmPath] = el
         return el
     }
@@ -135,11 +137,11 @@ open class AsmSimple() : Asm {
 }
 
 abstract class AsmValueAbstract() : AsmValue {
-    override val typeName: String get() = qualifiedTypeName.split(".").last()
+    override val typeName get() = qualifiedTypeName.last
 }
 
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+    override val qualifiedTypeName: QualifiedName get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
     override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmNothing -> false
@@ -156,7 +158,7 @@ object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
 }
 
 class AsmPrimitiveSimple(
-    override val qualifiedTypeName: String,
+    override val qualifiedTypeName: QualifiedName,
     override val value: Any
 ) : AsmValueAbstract(), AsmPrimitive {
 
@@ -193,7 +195,7 @@ class AsmReferenceSimple(
     override var value: AsmStructure?
 ) : AsmValueAbstract(), AsmReference {
 
-    override val qualifiedTypeName: String
+    override val qualifiedTypeName: QualifiedName
         get() = when (value) {
             null -> SimpleTypeModelStdLib.NothingType.qualifiedTypeName
             else -> value!!.qualifiedTypeName
@@ -225,12 +227,12 @@ class AsmReferenceSimple(
 
 class AsmStructureSimple(
     override val path: AsmPath,
-    override val qualifiedTypeName: String
+    override val qualifiedTypeName: QualifiedName
 ) : AsmValueAbstract(), AsmStructure {
 
-    private var _properties = mutableMapOf<String, AsmStructurePropertySimple>()
+    private var _properties = mutableMapOf<PropertyName, AsmStructurePropertySimple>()
 
-    override val property: Map<String, AsmStructureProperty> = _properties
+    override val property: Map<PropertyName, AsmStructureProperty> = _properties
     override val propertyOrdered
         get() = property.values.sortedWith { a, b ->
             val aIdx = a.index
@@ -252,21 +254,21 @@ class AsmStructureSimple(
             .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
             .filterIsInstance<AsmStructureSimple>()
 
-    override fun hasProperty(name: String): Boolean = property.containsKey(name)
+    override fun hasProperty(name: PropertyName): Boolean = property.containsKey(name)
 
-    fun getPropertyAsStringOrNull(name: String): String? = property[name]?.value as String?
-    fun getPropertyAsAsmElementOrNull(name: String): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
-    fun getPropertyAsReferenceOrNull(name: String): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
-    fun getPropertyAsListOrNull(name: String): List<Any>? = property[name]?.value as List<Any>?
+    fun getPropertyAsStringOrNull(name: PropertyName): String? = property[name]?.value as String?
+    fun getPropertyAsAsmElementOrNull(name: PropertyName): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
+    fun getPropertyAsReferenceOrNull(name: PropertyName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
+    fun getPropertyAsListOrNull(name: PropertyName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getProperty(name: String): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
-    fun getPropertyAsString(name: String): String = (getProperty(name) as AsmPrimitive).value as String
-    fun getPropertyAsAsmElement(name: String): AsmStructureSimple = getProperty(name) as AsmStructureSimple
-    fun getPropertyAsReference(name: String): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
-    fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
-    fun getPropertyAsListOfElement(name: String): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
+    override fun getProperty(name: PropertyName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
+    fun getPropertyAsString(name: PropertyName): String = (getProperty(name) as AsmPrimitive).value as String
+    fun getPropertyAsAsmElement(name: PropertyName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
+    fun getPropertyAsReference(name: PropertyName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
+    fun getPropertyAsList(name: PropertyName): List<Any> = getProperty(name) as List<Any>
+    fun getPropertyAsListOfElement(name: PropertyName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
 
-    override fun setProperty(name: String, value: AsmValue, childIndex: Int) {
+    override fun setProperty(name: PropertyName, value: AsmValue, childIndex: Int) {
         _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
     }
 
@@ -315,7 +317,7 @@ class AsmStructureSimple(
 }
 
 class AsmStructurePropertySimple(
-    override val name: String,
+    override val name: PropertyName,
     override val index: Int,
     value: AsmValue
 ) : AsmStructureProperty {
@@ -382,7 +384,7 @@ class AsmStructurePropertySimple(
 class AsmListSimple(
     override val elements: List<AsmValue>
 ) : AsmValueAbstract(), AsmList {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.qualifiedName
+    override val qualifiedTypeName get() = SimpleTypeModelStdLib.List.qualifiedName
 
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
@@ -412,7 +414,7 @@ class AsmListSimple(
 class AsmListSeparatedSimple(
     override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 ) : AsmValueAbstract(), AsmListSeparated {
-    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
+    override val qualifiedTypeName get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
 
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()

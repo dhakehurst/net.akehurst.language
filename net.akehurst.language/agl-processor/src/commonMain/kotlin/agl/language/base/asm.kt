@@ -17,12 +17,32 @@
 
 package net.akehurst.language.agl.language.base
 
-import net.akehurst.language.agl.api.language.base.*
+import net.akehurst.language.api.language.base.*
 
 
-class DefinitionBlockDefault<DT : Definition<DT>> : DefinitionBlock<DT> {
+class DefinitionBlockDefault<DT : Definition<DT>>(
+    namespace: List<Namespace<DT>>
+) : DefinitionBlockAbstract<DT>(namespace) {
 
-    override val namespace: List<Namespace<DT>> = mutableListOf()
+}
+
+class NamespaceDefault<DT : Definition<DT>>(
+    qualifiedName: QualifiedName
+) : NamespaceAbstract<DT>(qualifiedName) {
+
+}
+
+abstract class DefinitionBlockAbstract<DT : Definition<DT>>(
+    override val namespace: List<Namespace<DT>>
+) : DefinitionBlock<DT> {
+
+    override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
+
+    override val isEmpty: Boolean get() = allDefinitions.isEmpty()
+
+    override fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>? {
+        return namespace.firstOrNull { it.qualifiedName == qualifiedName }
+    }
 
     // --- Formatable ---
     override fun asString(indent: Indent, increment: String): String {
@@ -33,7 +53,7 @@ class DefinitionBlockDefault<DT : Definition<DT>> : DefinitionBlock<DT> {
     }
 }
 
-class NamespaceDefault<DT : Definition<DT>>(
+abstract class NamespaceAbstract<DT : Definition<DT>>(
     override val qualifiedName: QualifiedName
 ) : Namespace<DT> {
 
@@ -44,11 +64,16 @@ class NamespaceDefault<DT : Definition<DT>>(
     // --- Formatable ---
     override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
-        sb.append("namespace {\n")
+        sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc(increment)
-        val defs = definition.joinToString(separator = "\n") { "$newIndent${it.asString(newIndent, increment)}" }
+        sb.append("\n")
+        val importStr = import.joinToString(separator = "\n") { "$newIndent${it.value}" }
+        sb.append(importStr)
+        sb.append("\n")
+        val defs = definition
+            .sortedBy { it.name.value }
+            .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent, increment)}" }
         sb.append(defs)
-        sb.append("\n$indent}")
         return sb.toString()
     }
 
@@ -60,5 +85,10 @@ class NamespaceDefault<DT : Definition<DT>>(
     }
 
     override fun toString(): String = "namespace $qualifiedName"
+
+    // --- Implementation ---
+    fun addDefinition(value: DT) {
+        (this.definition as MutableList).add(value)
+    }
 }
 

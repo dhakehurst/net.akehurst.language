@@ -19,10 +19,11 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.reference.asm.builder.crossReferenceModel
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -42,12 +43,12 @@ class test_CrossReferences {
         val aglProc = Agl.registry.agl.crossReference.processor!!
 
         fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
-            val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]
+            val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.allDefinitions[0]
             val grmrTypeModel = TypeModelSimple(grammar.name)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            AsmTransformModelSimple.fromGrammar(grammar, grmrTypeModel)
+            TransformModelDefault.fromGrammar(grammar, grmrTypeModel)
             val tm = grmrTypeModel
-            typemodel?.let { tm.addAllNamespace(it.namespace.values) }
+            typemodel?.let { tm.addAllNamespace(it.namespace) }
             val ctx = ContextFromTypeModel(tm)
             val result = aglProc.process(
                 sentence = sentence,
@@ -59,8 +60,8 @@ class test_CrossReferences {
             assertEquals(expIssues, result.issues.all, result.issues.toString())
             val actual = result.asm!!
             assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace?.toMap())
-            val expNs = expected.declarationsForNamespace["test.Test"]!!
-            val actNs = actual.declarationsForNamespace["test.Test"]!!
+            val expNs = expected.declarationsForNamespace[QualifiedName("test.Test")]!!
+            val actNs = actual.declarationsForNamespace[QualifiedName("test.Test")]!!
             assertEquals(expNs.scopeDefinition, actNs.scopeDefinition)
             assertEquals(expNs.scopeDefinition.flatMap { it.value.identifiables }, actNs.scopeDefinition.flatMap { it.value.identifiables })
             assertEquals(expNs.references, actNs.references)

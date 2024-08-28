@@ -17,9 +17,12 @@
 
 package net.akehurst.language.typemodel.simple
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
+
 object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
 
-    override val qualifiedName: String = "std"
+    override val qualifiedName: QualifiedName = "std".asQualifiedName
 
     //TODO: need some other kinds of type for these really
     val AnyType = super.findOrCreateSpecialTypeNamed("Any").type()

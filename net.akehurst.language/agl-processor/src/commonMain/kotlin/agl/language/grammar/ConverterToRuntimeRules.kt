@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.api.language.base.Namespace
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
@@ -120,7 +121,7 @@ internal class ConverterToRuntimeRules(
         return rule
     }
 
-    private fun visitNamespace(target: Namespace, arg: String): Set<RuntimeRule> {
+    private fun visitNamespace(target: Namespace<Grammar>, arg: String): Set<RuntimeRule> {
         return emptySet()
     }
 

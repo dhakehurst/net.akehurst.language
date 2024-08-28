@@ -17,6 +17,8 @@
 
 package net.akehurst.language.agl.grammarTypeModel
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -30,7 +32,7 @@ fun grammarTypeModel(
 ): TypeModel {
     val model = TypeModelSimple(modelName)
     imports.forEach { model.addNamespace(it) }
-    val b = GrammarTypeModelBuilder(model, namespaceQualifiedName, imports.map { it.qualifiedName }.toMutableList())
+    val b = GrammarTypeModelBuilder(model, namespaceQualifiedName.asQualifiedName, imports.map { it.qualifiedName }.toMutableList())
     b.init()
     val ns = b.build()
     model.addNamespace(ns)
@@ -41,8 +43,8 @@ fun grammarTypeModel(
 @TypeModelDslMarker
 class GrammarTypeModelBuilder(
     typeModel: TypeModel,
-    namespaceQualifiedName: String,
-    imports: MutableList<String>
+    namespaceQualifiedName: QualifiedName,
+    imports: MutableList<QualifiedName>
 ) {
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
         it.resolveImports(typeModel)

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -44,7 +45,7 @@ data class ChildDataAny(
 )
 
 abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
-    val grammarNamespaceQualifiedName: String,
+    val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {

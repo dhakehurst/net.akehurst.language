@@ -29,7 +29,9 @@ import net.akehurst.language.agl.language.reference.asm.PropertyReferenceExpress
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.expressions.NavigationExpression
+import net.akehurst.language.api.language.expressions.PropertyCall
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.ReferenceExpression
 import net.akehurst.language.api.language.reference.Scope
@@ -155,10 +157,10 @@ class ReferenceResolverDefault(
         when {
             referringValue is AsmPrimitive -> {
                 val referringStr = referringValue.value as String
-                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByNameOrNull(it) }
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.findItemsNamedConformingTo(referringStr) {
-                        val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -210,10 +212,10 @@ class ReferenceResolverDefault(
 
             referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                 val list = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByNameOrNull(it) }
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.rootScope.findItemsByQualifiedNameConformingTo(list) {
-                        val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -289,8 +291,8 @@ class ReferenceResolverDefault(
         }
     }
 
-    private fun AsmValue.conformsToType(typeName: String): Boolean {
-        val type = typeModel.findFirstByNameOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.declaration
+    private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
+        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.declaration
         val selfType = typeModel.typeOf(this)
         return selfType.conformsTo(type)
     }
@@ -306,7 +308,7 @@ class ReferenceResolverDefault(
                 val front = this.parts.dropLast(1)
                 var v = root
                 for (pn in front) {
-                    val pd = typeModel.typeOf(v).findPropertyOrNull(pn as String)
+                    val pd = typeModel.typeOf(v).findPropertyOrNull((pn as PropertyCall).propertyName)
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> {
@@ -315,7 +317,7 @@ class ReferenceResolverDefault(
                         }
                     }
                 }
-                val lastProp = this.parts.last() as String
+                val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {
                         v.property[lastProp] ?: error("Cannot navigate '$this' from null value")

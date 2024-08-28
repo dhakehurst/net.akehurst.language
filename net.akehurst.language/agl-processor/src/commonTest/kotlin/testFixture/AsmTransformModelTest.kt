@@ -19,14 +19,24 @@ package net.akehurst.language.agl.language.asmTransform.test
 
 import net.akehurst.language.agl.language.expressions.test.ExpressionsTest
 import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.asmTransform.TransformNamespace
+import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 object AsmTransformModelTest {
 
-    fun trAssertEquals(expected: AsmTransformModel?, actual: AsmTransformModel?) {
+    fun trAssertEquals(expected: TransformModel?, actual: TransformModel?) {
+        TODO()
+    }
+
+    fun trAssertEquals(expected: TransformNamespace?, actual: TransformNamespace?) {
+        TODO()
+    }
+
+    private fun trAssertEquals(expected: TransformRuleSet?, actual: TransformRuleSet?) {
         when {
             (expected == null && actual == null) -> Unit // pass
             expected == null -> fail()

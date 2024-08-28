@@ -21,6 +21,8 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
+import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.expressions.IndexOperationSimple
 import net.akehurst.language.agl.language.expressions.LiteralExpressionSimple
 import net.akehurst.language.agl.language.expressions.NavigationSimple
@@ -28,19 +30,23 @@ import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.language.asmTransform.*
+import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
-
-class AsmTransformModelSimple(
-    override val qualifiedName: String
-) : AsmTransformModel {
+class TransformModelDefault(
+    override val typeModel: TypeModel?,
+    override val namespace: List<TransformNamespace>
+) : TransformModel, DefinitionBlockAbstract<TransformRuleSet>(namespace) {
 
     companion object {
-        fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<List<AsmTransformModel>> {
+        fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<List<TransformModel>> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             return proc.process(
                 sentence = transformStr,
@@ -54,41 +60,43 @@ class AsmTransformModelSimple(
             grammar: Grammar,
             typeModel: TypeModel,
             configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration
-        ): ProcessResult<List<AsmTransformModel>> {
+        ): ProcessResult<List<TransformModel>> {
             val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(typeModel, grammar, configuration)
-            atfg.build()
-            return ProcessResultDefault<List<AsmTransformModel>>(listOf(atfg.transformModel), atfg.issues)
+            val trModel = atfg.build()
+            return ProcessResultDefault<List<TransformModel>>(listOf(trModel), atfg.issues)
         }
     }
 
-    override val name: String get() = this.qualifiedName.split(".").last()
+}
 
-    override var typeModel: TypeModel? = null
+class TransformNamespaceDefault(
+    qualifiedName: QualifiedName,
+) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(qualifiedName) {
 
-    override val rules get() = _rules
+}
+
+class TransformRuleSetDefault(
+    override val namespace: TransformNamespace,
+    override val name: SimpleName,
+    _rules: List<TransformationRule>
+) : TransformRuleSet {
+
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+
+    override val rules: Map<GrammarRuleName, TransformationRule> = _rules.associateBy(TransformationRule::grammarRuleName).toMutableMap()
 
     override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
     override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
 
-    override fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? =
+    override fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule? =
         rules[grmRuleName]
 
-    // GrammarRuleName -> TransformationRule
-    private val _rules = mutableMapOf<String, TransformationRule>()
-
     fun addRule(tr: TransformationRule) {
-        _rules[tr.grammarRuleName] = tr
+        (rules as MutableMap)[tr.grammarRuleName] = tr
     }
 
-    override fun asString(indent: String, increment: String): String {
-        val ni = indent + increment
-        val rulesStr = rules.values.sortedBy { it.grammarRuleName }.joinToString(separator = "\n") { it.asString(ni, increment) }
-        val sb = StringBuilder()
-        sb.append("${indent}namespace $qualifiedName\n")
-        sb.append("${indent}transform $qualifiedName {\n")
-        sb.append("$rulesStr\n")
-        sb.append("${indent}}")
-        return sb.toString()
+    override fun asString(indent: Indent, increment: String): String {
+        TODO("not implemented")
     }
 }
 
@@ -103,7 +111,7 @@ abstract class TransformationRuleAbstract : TransformationRule {
         )
     }
 
-    override lateinit var grammarRuleName: String
+    override var grammarRuleName: GrammarRuleName = GrammarRuleName("<unset>")
     override val resolvedType: TypeInstance get() = _resolvedType
 
     private lateinit var _resolvedType: TypeInstance
@@ -119,27 +127,27 @@ abstract class TransformationRuleAbstract : TransformationRule {
 //        modifyStatements.add(ass)
 //    }
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         return "$indent${grammarRuleName}: ${this}"
     }
 
     abstract override fun toString(): String
 }
 
-class TransformationRuleSimple(
-    override val qualifiedTypeName: String,
+class TransformationRuleDefault(
+    override val qualifiedTypeName: QualifiedName,
     override val expression: Expression
 ) : TransformationRuleAbstract() {
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         return "$indent${grammarRuleName}: ${expression.asString(indent, increment)} as $qualifiedTypeName"
     }
 
     override fun toString(): String = "${expression} as $qualifiedTypeName"
 }
 
-fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleSimple {
-    return TransformationRuleSimple(
+fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {
+    return TransformationRuleDefault(
         type.qualifiedTypeName,
         expression
     ).also {

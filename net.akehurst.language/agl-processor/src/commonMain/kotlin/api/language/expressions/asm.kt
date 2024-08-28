@@ -17,8 +17,14 @@
 
 package net.akehurst.language.api.language.expressions
 
+import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.typemodel.api.MethodName
+import net.akehurst.language.typemodel.api.PropertyName
+
 interface Expression {
-    fun asString(indent: String, increment: String): String
+    fun asString(indent: Indent, increment: String): String
 }
 
 interface RootExpression : Expression {
@@ -28,12 +34,12 @@ interface RootExpression : Expression {
 }
 
 interface LiteralExpression : Expression {
-    val typeName: String
+    val qualifiedTypeName: QualifiedName
     val value: Any
 }
 
 interface CreateObjectExpression : Expression {
-    val qualifiedTypeName: String
+    val possiblyQualifiedTypeName: PossiblyQualifiedName
     val arguments: List<Expression>
     val propertyAssignments: List<AssignmentStatement>
 }
@@ -55,11 +61,11 @@ interface NavigationExpression : Expression {
 interface NavigationPart
 
 interface PropertyCall : NavigationPart {
-    val propertyName: String
+    val propertyName: PropertyName
 }
 
 interface MethodCall : NavigationPart {
-    val methodName: String
+    val methodName: MethodName
     val arguments: List<Expression>
 }
 
@@ -68,7 +74,7 @@ interface IndexOperation : NavigationPart {
 }
 
 interface AssignmentStatement {
-    val lhsPropertyName: String
+    val lhsPropertyName: PropertyName
     val rhs: Expression
 
     fun asString(indent: String, increment: String): String

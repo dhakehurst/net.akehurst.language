@@ -87,7 +87,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
-            ?: grammarTypeModel(this.grammar.qualifiedName, this.grammar.name) {}
+            ?: grammarTypeModel(this.grammar.qualifiedName.value, this.grammar.name) {}
     }
 
     override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")

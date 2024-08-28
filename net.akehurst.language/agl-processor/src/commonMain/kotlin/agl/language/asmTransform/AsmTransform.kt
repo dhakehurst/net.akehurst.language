@@ -29,8 +29,8 @@ object AsmTransform {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(AglExpressions.goalRuleName)!!
 
     val grammar = grammar(
-        namespace = "",
-        name = ""
+        namespace = "net.akehurst.language.agl.language",
+        name = "Transform"
     ) {
         extendsGrammar(AglBase.grammar.selfReference)
 
@@ -38,7 +38,9 @@ object AsmTransform {
             ref("namespace"); lst(1, -1) { ref("transform") }
         }
         concatenation("transform") {
-            lit("transform");ref("qualifiedName");lit("{"); lst(1, -1) { ref("transformRule") };lit("}")
+            lit("transform");ref("IDENTIFIER");lit("{")
+            lst(1, -1) { ref("transformRule") }
+            lit("}")
         }
         concatenation("transformRule") {
             ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
@@ -67,11 +69,11 @@ object AsmTransform {
     const val grammarStr = """
 namespace net.akehurst.language.agl
 
-grammar AsmTransform {
+grammar Transform : Base {
 
     unit = namespace transform+ ;
     namespace = 'namespace' qualifiedName ;
-    transform = 'transform' NAME '{' transformRule+ '} ;
+    transform = 'transform' IDENTIFIER '{' transformRule+ '} ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
     createRule = typeName statementBlock? ;

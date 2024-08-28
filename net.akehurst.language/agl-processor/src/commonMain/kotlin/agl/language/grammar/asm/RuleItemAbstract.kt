@@ -134,14 +134,14 @@ class OptionalItemDefault(
 }
 
 sealed class SimpleItemAbstract : ConcatenationItemAbstract(), SimpleItem {
-    abstract val name: String
+    //abstract val name: RuleName
 }
 
 class GroupDefault(
     override val groupedContent: RuleItem
 ) : SimpleItemAbstract(), Group {
 
-    override val name: String = "${'$'}group"
+    //override val name: RuleName = RuleName("${'$'}group")
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -167,7 +167,7 @@ sealed class TangibleItemAbstract() : SimpleItemAbstract(), TangibleItem {}
 
 class EmptyRuleDefault : TangibleItemAbstract(), EmptyRule {
 
-    override val name: String = "<empty>"
+    //override val name: RuleName = "<empty>"
 
     override val allTerminal: Set<Terminal> get() = emptySet()
 
@@ -194,7 +194,7 @@ class TerminalDefault(
 
     override lateinit var grammar: Grammar
 
-    override val name: String = if (isPattern) "\"$value\"" else "'${value}'"
+    //override val name: String = if (isPattern) "\"$value\"" else "'${value}'"
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -216,16 +216,16 @@ class TerminalDefault(
 
 class NonTerminalDefault(
     override val targetGrammar: GrammarReference?,
-    override val name: String
+    override val ruleReference: GrammarRuleName
 ) : TangibleItemAbstract(), NonTerminal {
 
     override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? =
-        this.targetGrammar?.resolved?.findAllResolvedGrammarRule(this.name)
-            ?: targetGrammar.findAllResolvedGrammarRule(this.name)
+        this.targetGrammar?.resolved?.findAllResolvedGrammarRule(this.ruleReference)
+            ?: targetGrammar.findAllResolvedGrammarRule(this.ruleReference)
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return referencedRuleOrNull(targetGrammar)
-            ?: error("Grammar Rule ($name) not found in grammar (${targetGrammar.name})")
+            ?: error("Grammar Rule ($ruleReference) not found in grammar (${targetGrammar.name})")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
@@ -243,18 +243,18 @@ class NonTerminalDefault(
 
     override val allEmbedded: Set<Embedded> get() = emptySet()
 
-    override fun toString(): String = name
+    override fun toString(): String = ruleReference.value
 }
 
 class EmbeddedDefault(
-    override val embeddedGoalName: String,
+    override val embeddedGoalName: GrammarRuleName,
     override val embeddedGrammarReference: GrammarReference
 ) : TangibleItemAbstract(), Embedded {
 
-    override val name: String get() = this.embeddedGoalName
+    //override val name: String get() = this.embeddedGoalName
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
-        return targetGrammar.findAllResolvedGrammarRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
+        return targetGrammar.findAllResolvedGrammarRule(this.embeddedGoalName) ?: error("Grammar GrammarRule '$embeddedGoalName' not found in grammar '${targetGrammar.name}'")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

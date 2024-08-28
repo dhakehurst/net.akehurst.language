@@ -16,17 +16,19 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.asDefinitionBlock
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
-    override val identity: String,
+    override val identity: QualifiedName,
     grammar: Grammar,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    listOf(grammar),
+    grammar.asDefinitionBlock(),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -38,7 +40,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         }
 
     override var grammarStr: String?
-        get() = this.grammarList.joinToString(separator = "\n") { it.toString() } //TODO:
+        get() = this.grammarList.asString()
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }

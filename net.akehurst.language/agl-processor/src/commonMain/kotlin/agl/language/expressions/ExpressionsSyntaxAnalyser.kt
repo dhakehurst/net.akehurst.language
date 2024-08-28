@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.agl.language.base.BaseSyntaxAnalyser
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.sppt.Sentence
@@ -26,8 +27,8 @@ import net.akehurst.language.collections.toSeparatedList
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
-    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
-        "Base" to BaseSyntaxAnalyser()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Base") to BaseSyntaxAnalyser()
     )
 
     override fun registerHandlers() {

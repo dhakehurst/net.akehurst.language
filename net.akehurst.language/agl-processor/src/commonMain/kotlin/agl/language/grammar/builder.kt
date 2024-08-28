@@ -81,8 +81,8 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         this.grammar.grammarRule.add(gr)
     }
 
-    fun choice(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder(grammar.namespace)
+    fun choice(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: ChoiceItemBuilder.() -> Unit) {
+        val ib = ChoiceItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
         val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
@@ -203,6 +203,26 @@ open class SimpleItemsBuilder(
     }
 
     open fun build(): List<RuleItem> {
+        return items
+    }
+}
+
+@GrammarBuilderMarker
+class ChoiceItemBuilder(localNamespace: Namespace<Grammar>) : SimpleItemsBuilder(localNamespace) {
+    private val items = mutableListOf<RuleItem>()
+
+    override fun addItem(item: RuleItem) {
+        items.add(item)
+    }
+
+    fun concat(init: ConcatenationItemBuilder.() -> Unit) {
+        val b = ConcatenationItemBuilder(super.localNamespace)
+        b.init()
+        val items = b.build()
+        addItem(ConcatenationDefault(items))
+    }
+
+    override fun build(): List<RuleItem> {
         return items
     }
 }

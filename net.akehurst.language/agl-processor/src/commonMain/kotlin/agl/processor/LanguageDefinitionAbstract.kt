@@ -17,7 +17,10 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -29,15 +32,15 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    grammarList: List<Grammar>,
+    grammarList: DefinitionBlock<Grammar>,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
 
-    abstract override val identity: String
+    abstract override val identity: QualifiedName
     abstract override var grammarStr: String?
 
-    override var grammarList: List<Grammar> by Delegates.observable(grammarList) { _, oldValue, newValue ->
+    override var grammarList: DefinitionBlock<Grammar> by Delegates.observable(grammarList) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -46,7 +49,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override val targetGrammar: Grammar? get() = this.grammarList.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarList.lastOrNull()
+    override val targetGrammar: Grammar? get() = this.grammarList.allDefinitions.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarList.primary
 
     abstract override val isModifiable: Boolean
 
@@ -99,7 +102,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
             }
         }
 */
-    //abstract override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+    //abstract override var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
@@ -134,7 +137,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val grammarObservers = mutableListOf<(oldValue: List<Grammar>, newValue: List<Grammar>) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: DefinitionBlock<Grammar>, newValue: DefinitionBlock<Grammar>) -> Unit>()
     override val crossReferenceModelStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
 
     //override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
@@ -144,7 +147,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     //override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
-    override fun toString(): String = identity
+    override fun toString(): String = identity.value
 
     // --- implementation ---
 

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.formatter
 
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
@@ -47,13 +48,13 @@ internal class AglFormatterModelSimple : AglFormatterModel {
             else -> error("Internal error: subtype of RuleItem not handled: '${ruleItem::class.simpleName}'")
         }
 
-        fun fromGrammar(grammarList: List<Grammar>, typeModel: TypeModel): ProcessResult<AglFormatterModel> {
+        fun fromGrammar(grammarList: DefinitionBlock<Grammar>, typeModel: TypeModel): ProcessResult<AglFormatterModel> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
             val formatModel = AglFormatterModelSimple()
             for (ns in typeModel.allNamespace) {
                 when {
                     ns is GrammarTypeNamespace -> {
-                        val grammar = grammarList.firstOrNull { it.qualifiedName == ns.qualifiedName }
+                        val grammar = grammarList.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }
                         when {
                             null != grammar -> {
                                 for ((rn, ty) in ns.allRuleNameToType) {

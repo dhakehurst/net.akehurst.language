@@ -21,7 +21,8 @@ import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessResult
@@ -31,13 +32,13 @@ import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 object TypeModelFromAsmTransform {
 
-    fun build(grammarList: List<Grammar>, asmTransformList: List<AsmTransformModel>): ProcessResult<TypeModel> {
+    fun build(grammarList: DefinitionBlock<Grammar>, asmTransformList: List<TransformModel>): ProcessResult<TypeModel> {
         val grmrTypeModel = TypeModelSimple(asmTransformList.last().name)
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-        check(grammarList.size == asmTransformList.size) { "Must pass in same number of Grammars and AsmTransforms" }
+        check(grammarList.allDefinitions.size == asmTransformList.size) { "Must pass in same number of Grammars and AsmTransforms" }
         for (i in asmTransformList.indices) {
             val trm = asmTransformList[i]
-            val grm = grammarList[i]
+            val grm = grammarList.allDefinitions[i]
             val ns = buildNamespace(grm, trm)
             grmrTypeModel.addNamespace(ns)
         }
@@ -46,7 +47,7 @@ object TypeModelFromAsmTransform {
         return ProcessResultDefault(grmrTypeModel, issues)
     }
 
-    fun buildNamespace(grammar: Grammar, trm: AsmTransformModel): GrammarTypeNamespace {
+    fun buildNamespace(grammar: Grammar, trm: TransformModel): GrammarTypeNamespace {
         val nsFromGrmr = GrammarTypeNamespaceFromGrammar(grammar)
         val ns = GrammarTypeNamespaceSimple(
             qualifiedName = trm.qualifiedName,

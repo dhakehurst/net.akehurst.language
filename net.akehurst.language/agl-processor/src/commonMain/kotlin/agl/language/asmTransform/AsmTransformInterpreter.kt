@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
+import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.asm
@@ -49,7 +50,7 @@ class AsmTransformInterpreter(
             namespace("parse") {
             }
         }
-        val parseNodeNamespace = parseNodeTypeModel.namespace["parse"]!!
+        val parseNodeNamespace = parseNodeTypeModel.namespace["parse".asQualifiedName]!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)

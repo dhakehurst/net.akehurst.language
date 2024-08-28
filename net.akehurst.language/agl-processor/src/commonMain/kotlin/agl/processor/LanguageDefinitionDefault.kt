@@ -17,6 +17,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -28,13 +31,13 @@ import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
-    override val identity: String,
+    override val identity: QualifiedName,
     grammarStrArg: String?,
-    private val aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
+    private val aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    emptyList(),
+    DefinitionBlockDefault(emptyList()),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -129,11 +132,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     private fun updateGrammarStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<List<Grammar>, ContextFromGrammarRegistry>(newValue, aglOptions)
+            val res = Agl.grammarFromString<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammarList = when {
-                res.issues.errors.isNotEmpty() -> emptyList()
-                else -> res.asm ?: emptyList()
+                res.issues.errors.isNotEmpty() -> DefinitionBlockDefault(emptyList())
+                else -> res.asm ?: DefinitionBlockDefault(emptyList())
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

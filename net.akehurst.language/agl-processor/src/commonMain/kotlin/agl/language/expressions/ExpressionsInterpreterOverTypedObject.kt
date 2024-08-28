@@ -21,10 +21,14 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.*
+import net.akehurst.language.typemodel.simple.PropertyDeclarationDerived
+import net.akehurst.language.typemodel.simple.PropertyDeclarationPrimitive
+import net.akehurst.language.typemodel.simple.PropertyDeclarationStored
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 data class EvaluationContext(
     val parent: EvaluationContext?,
@@ -147,7 +151,7 @@ class ExpressionsInterpreterOverTypedObject(
 
             expression.name.startsWith("\$") -> evaluateSpecial(evc, expression.name)
             else -> evc.getOrInParent(expression.name)
-                ?: evc.self?.let { evaluatePropertyName(it, expression.name) }
+                ?: evc.self?.let { evaluatePropertyName(it, PropertyName(expression.name)) }
                 ?: error("Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
         }
     }
@@ -155,11 +159,11 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateSpecial(evc: EvaluationContext, name: String): TypedObject {
         // the name must exist as a property of the self which must be a tuple
         return evc.getOrInParent(name)
-            ?: evc.self?.let { evaluatePropertyName(it, name) }
+            ?: evc.self?.let { evaluatePropertyName(it, PropertyName(name)) }
             ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
     }
 
-    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.typeName) {
+    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.qualifiedTypeName) {
         LiteralExpressionSimple.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Boolean)
         LiteralExpressionSimple.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Integer)
         LiteralExpressionSimple.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Real)
@@ -187,7 +191,7 @@ class ExpressionsInterpreterOverTypedObject(
         return result
     }
 
-    private fun evaluatePropertyName(obj: TypedObject, propertyName: String): TypedObject {
+    private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
         val type = obj.type
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
@@ -319,8 +323,8 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
-        val ns = typeModel.findOrCreateNamespace("\$interpreter", listOf(SimpleTypeModelStdLib.qualifiedName))
-        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
+        val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(SimpleTypeModelStdLib.qualifiedName))
+        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
         val tupleType = ns.createTupleType()
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
@@ -331,7 +335,7 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
-        val typeDecl = typeModel.findByQualifiedNameOrNull(expression.qualifiedTypeName) ?: error("Type not found ${expression.qualifiedTypeName}")
+        val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName) ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
         val obj = AsmStructureSimple(AsmPathSimple(""), typeDecl.qualifiedName)
 
         val args = expression.arguments.map { evaluateExpression(evc, it) }
@@ -354,37 +358,37 @@ object StdLibPrimitiveExecutions {
 
     val property = mapOf<TypeDeclaration, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
         SimpleTypeModelStdLib.List to mapOf(
-            SimpleTypeModelStdLib.List.findPropertyOrNull("size")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmPrimitiveSimple.stdInteger(self.elements.size)
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull("first")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.elements.first()
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull("last")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("last"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.elements.last()
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull("back")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("back"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.drop(1))
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull("front")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("front"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.dropLast(1))
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull("join")!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("join"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
             }
         ),
         SimpleTypeModelStdLib.ListSeparated to mapOf(
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("items")!! to { self, prop ->
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull(PropertyName("items"))!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.items)
             },
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("separators")!! to { self, prop ->
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull(PropertyName("separators"))!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.separators)
             },

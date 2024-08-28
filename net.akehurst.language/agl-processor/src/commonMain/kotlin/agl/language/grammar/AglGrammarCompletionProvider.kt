@@ -17,13 +17,14 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.Spine
 
-class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, ContextFromGrammarRegistry>() {
+class AglGrammarCompletionProvider : CompletionProviderAbstract<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>() {
 
     override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
         //TODO

@@ -21,6 +21,10 @@ import net.akehurst.language.agl.language.expressions.NavigationSimple
 import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
@@ -47,6 +51,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::references)
         super.register(this::referenceDefinitions)
         super.register(this::referenceDefinition)
+        super.register(this::referenceExpressionList)
         super.register(this::referenceExpression)
         super.register(this::propertyReferenceExpression)
         super.register(this::from)
@@ -62,8 +67,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val value: String
     )
 
-    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
-        "Expressions" to ExpressionsSyntaxAnalyser()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
     )
 
     // unit = namespace* ;
@@ -76,21 +81,21 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // namespace = namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DeclarationsForNamespace {
-        val qualifiedName = children[1] as List<String>
-        val imports = children[3] as List<String>
+        val qualifiedName = children[1] as QualifiedName
+        val imports = children[3] as List<Import>
         val declarations = children[4] as (DeclarationsForNamespace) -> Unit
-        val result = DeclarationsForNamespaceDefault(qualifiedName.joinToString(separator = "."), imports)
+        val result = DeclarationsForNamespaceDefault(qualifiedName, imports)
         declarations.invoke(result)
         return result
     }
 
     // imports = import*;
-    private fun imports(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        children as List<String>
+    private fun imports(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Import> =
+        children as List<Import>
 
     // import = 'import' qualifiedName ;
-    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        (children[1] as List<String>).joinToString(separator = ".")
+    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
+        Import((children[1] as List<String>).joinToString(separator = "."))
 
     // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
@@ -114,13 +119,13 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeDefinitionDefault> =
         children as List<ScopeDefinitionDefault>
 
-    // scope = 'scope' typeReference '{' identifiables '}
+    // scope = 'scope' simpleTypeName '{' identifiables '}
     private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeDefinitionDefault {
-        val typeReference = children[1] as String
+        val simpleTypeName = children[1] as SimpleName
         val identifiables = children[3] as List<IdentifiableDefault>
-        val scope = ScopeDefinitionDefault(typeReference)
+        val scope = ScopeDefinitionDefault(simpleTypeName)
         scope.identifiables.addAll(identifiables)
-        locationMap[PropertyValue(scope, "typeReference")] = locationMap[typeReference]!!
+        locationMap[PropertyValue(scope, "typeReference")] = locationMap[simpleTypeName]!!
         return scope
     }
 
@@ -128,12 +133,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
         (children as List<IdentifiableDefault>?) ?: emptyList()
 
-    // identifiable = 'identify' typeReference 'by' expression
+    // identifiable = 'identify' simpleTypeName 'by' expression
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
-        val typeReference = children[1] as String
+        val simpleTypeName = children[1] as SimpleName
         val expression = children[3] as Expression
-        val identifiable = IdentifiableDefault(typeReference, expression)
-        locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeReference]!!
+        val identifiable = IdentifiableDefault(simpleTypeName, expression)
+        locationMap[PropertyValue(identifiable, "simpleTypeName")] = locationMap[simpleTypeName]!!
         locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
         return identifiable
     }
@@ -150,9 +155,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
         children as List<ReferenceDefinitionDefault>
 
-    // referenceDefinition = 'in' typeReference '{' referenceExpressionList '}'
+    // referenceDefinition = 'in' simpleTypeName '{' referenceExpressionList '}'
     private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceDefinitionDefault {
-        val inTypeName = children[1] as String
+        val inTypeName = children[1] as SimpleName
         val referenceExpressionList = children[3] as List<ReferenceExpressionAbstract>
         val def = ReferenceDefinitionDefault(inTypeName, referenceExpressionList)
         //locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
@@ -174,7 +179,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     //propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpressionDefault {
         val expr = children[1] as Expression
-        val typeReferences = children[3] as List<String>
+        val typeReferences = children[3] as List<PossiblyQualifiedName>
         val from = children[4] as NavigationExpression?
 
         val navigation = when (expr) {
@@ -197,7 +202,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
         val navigation = children[1] as NavigationExpression
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
-        val ofType = children[2] as String?
+        val ofType = children[2] as QualifiedName?
         return CollectionReferenceExpressionDefault(navigation, ofType, referenceExpression)
     }
 
@@ -205,23 +210,27 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun rootOrNavigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // ofType = 'of-type' typeReference ;
-    private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[1] as String
+    // ofType = 'of-type' possiblyQualifiedTypeReference ;
+    private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        children[1] as PossiblyQualifiedName
 
-
-    // typeReferences = [typeReference / '|']+
-    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> { //List<Pair<String, InputLocation>> {
-        return (children as List<String>).toSeparatedList<String, String, String>().items
-//            .mapIndexed { i, n ->
-//            val ref = n as String
-//            Pair(ref, sentence.locationFor(nodeInfo.node))
-//        }
+    // typeReferences = [possiblyQualifiedTypeReference / '|']+
+    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> { //List<Pair<String, InputLocation>> {
+        return (children as List<PossiblyQualifiedName>).toSeparatedList<Any, QualifiedName, String>().items
     }
 
-    // typeReference = qualifiedName
-    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return (children[0] as List<String>).joinToString(separator = ".")
+    // possiblyQualifiedTypeReference = qualifiedName
+    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName {
+        val parts = children[0] as List<String>
+        return when (parts.size) {
+            0 -> error("")
+            1 -> SimpleName(parts[0])
+            else -> QualifiedName(parts.joinToString(separator = "."))
+        }
     }
 
+    // simpleTypeName = IDENTIFIER ;
+    private fun simpleTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName {
+        return SimpleName((children[0] as String))
+    }
 }

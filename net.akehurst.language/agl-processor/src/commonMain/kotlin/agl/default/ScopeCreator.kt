@@ -80,8 +80,8 @@ class ScopeCreator(
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
     private fun createScope(parentScope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
-        val exp = crossReferenceModel.identifyingExpressionFor(parentScope.forTypeName, el.qualifiedTypeName)
-        return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)) {
+        val exp = crossReferenceModel.identifyingExpressionFor(parentScope.forTypeName, el.qualifiedTypeName.value)
+        return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName.value)) {
             val refInParent = exp.createReferenceLocalToScope(parentScope, el)
             when {
                 // Nothing
@@ -90,8 +90,8 @@ class ScopeCreator(
                 refInParent is AsmPrimitive && refInParent.isStdString -> parentScope.createOrGetChildScope((refInParent.value as String), el.typeName, el.path)
                 // List<String>
                 refInParent is AsmList && refInParent.isNotEmpty && refInParent.elements.all { it is AsmPrimitive && it.isStdString } -> {
-                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
-                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.qualifiedTypeName, el.qualifiedTypeName)
+                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName.value)
+                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.qualifiedTypeName.value, el.qualifiedTypeName.value)
                     when {
                         // and scope defined with the same expression
                         scopeDefined && exp == idExprDefinedInScope -> {
@@ -123,7 +123,7 @@ class ScopeCreator(
     }
 
     private fun addToScope(scope: Scope<AsmPath>, el: AsmStructure) {
-        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.qualifiedTypeName)
+        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.qualifiedTypeName.value)
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
@@ -134,7 +134,7 @@ class ScopeCreator(
 //                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
 //                )
                     val contextRef = el.path
-                    val added = scope.addToScope(el.qualifiedTypeName, el.qualifiedTypeName, contextRef)
+                    val added = scope.addToScope(el.qualifiedTypeName.value, el.qualifiedTypeName.value, contextRef)
                     when (added) {
                         true -> Unit
                         else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
@@ -144,7 +144,7 @@ class ScopeCreator(
                 scopeLocalReference is AsmPrimitive && scopeLocalReference.isStdString -> {
                     val contextRef = el.path
                     val ref = (scopeLocalReference.value) as String
-                    val added = scope.addToScope(ref, el.qualifiedTypeName, contextRef)
+                    val added = scope.addToScope(ref, el.qualifiedTypeName.value, contextRef)
                     when (added) {
                         true -> Unit
                         else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")
@@ -153,8 +153,8 @@ class ScopeCreator(
 
                 // List<String>
                 scopeLocalReference is AsmList && scopeLocalReference.isNotEmpty && scopeLocalReference.elements.all { it is AsmPrimitive && it.isStdString } -> {
-                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
-                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.typeName, el.qualifiedTypeName)
+                    val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName.value)
+                    val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.typeName, el.qualifiedTypeName.value)
                     when {
                         scopeDefined.not() -> {
                             issues.error(
@@ -182,7 +182,7 @@ class ScopeCreator(
                             val contextRef = el.path
                             var nextScope = scope
                             for (ref in refList) {
-                                val added = nextScope.addToScope(ref, el.qualifiedTypeName, contextRef)
+                                val added = nextScope.addToScope(ref, el.qualifiedTypeName.value, contextRef)
                                 when (added) {
                                     true -> Unit
                                     else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")

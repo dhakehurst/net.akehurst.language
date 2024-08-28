@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.style
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.sppt.Sentence
@@ -36,7 +37,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::style)
     }
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglStyleModel>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
     // rules : rule* ;
     fun rules(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleModelDefault =
@@ -46,7 +47,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule {
         val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
-        val styles: List<AglStyle> = children[2] as List<AglStyle>
+        val styles: List<AglStyleDeclaration> = children[2] as List<AglStyleDeclaration>
         styles.forEach { rule.styles[it.name] = it }
         return rule
     }
@@ -92,13 +93,13 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // styleList = style* ;
-    fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyle> =
-        children as List<AglStyle>
+    fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleDeclaration> =
+        children as List<AglStyleDeclaration>
 
     // style = STYLE_ID ':' STYLE_VALUE ';' ;
-    fun style(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyle {
+    fun style(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleDeclaration {
         val name = children[0] as String
         val value = children[2] as String
-        return AglStyle(name, value)
+        return AglStyleDeclaration(name, value)
     }
 }

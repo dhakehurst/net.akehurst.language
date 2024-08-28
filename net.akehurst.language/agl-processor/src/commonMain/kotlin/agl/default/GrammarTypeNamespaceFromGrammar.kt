@@ -21,6 +21,8 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -38,21 +40,21 @@ object TypeModelFromGrammar {
     ): TypeModel { // = createFromGrammarList(listOf(grammar), configuration)
         TODO("Deprecated")
         return grammarTypeModel(
-            grammar.qualifiedName,
-            grammar.name,
+            grammar.qualifiedName.value,
+            grammar.name.value,
             imports = listOf(SimpleTypeModelStdLib)
         ) {
         }
     }
 
     fun createFromGrammarList(
-        grammarList: List<Grammar>,
+        grammarList: DefinitionBlock<Grammar>,
         configuration: Grammar2TypeModelMapping = defaultConfiguration
     ): TypeModel {
         TODO("Deprecated")
-        val grmrTypeModel = TypeModelSimple(grammarList.last().name)
+        val grmrTypeModel = TypeModelSimple(grammarList.primary!!.name)
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-        for (grammar in grammarList) {
+        for (grammar in grammarList.allDefinitions) {
             //val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
             //val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
             val ns = GrammarTypeNamespaceFromGrammar(grammar, configuration).build(grmrTypeModel, grammar)
@@ -91,11 +93,11 @@ class GrammarTypeNamespaceFromGrammar(
 ) {
 
     companion object {
-        const val UNNAMED_PRIMITIVE_PROPERTY_NAME = "\$value"
-        const val UNNAMED_LIST_PROPERTY_NAME = "\$list"
-        const val UNNAMED_TUPLE_PROPERTY_NAME = "\$tuple"
-        const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
-        const val UNNAMED_CHOICE_PROPERTY_NAME = "\$choice"
+        val UNNAMED_PRIMITIVE_PROPERTY_NAME = PropertyName("\$value")
+        val UNNAMED_LIST_PROPERTY_NAME = PropertyName("\$list")
+        val UNNAMED_TUPLE_PROPERTY_NAME = PropertyName("\$tuple")
+        val UNNAMED_GROUP_PROPERTY_NAME = PropertyName("\$group")
+        val UNNAMED_CHOICE_PROPERTY_NAME = PropertyName("\$choice")
     }
 
     fun build(
@@ -121,7 +123,7 @@ class GrammarTypeNamespaceFromGrammar(
     }
 
     private val _namespace = GrammarTypeNamespaceSimple(
-        qualifiedName = "${grammar.namespace.qualifiedName}.${grammar.name}",
+        qualifiedName = QualifiedName("${grammar.namespace.qualifiedName}.${grammar.name}"),
         imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
     )
 
@@ -339,8 +341,8 @@ class GrammarTypeNamespaceFromGrammar(
             subtypes.all { it.declaration is PrimitiveType } -> SimpleTypeModelStdLib.String
             subtypes.all { it.declaration is DataType } -> findOrCreateElementType(choiceRule) { newType ->
                 subtypes.forEach {
-                    (it.declaration as DataType).addSupertype(newType.name)
-                    newType.addSubtype(it.declaration.name)
+                    (it.declaration as DataType).addSupertype(newType.qualifiedName)
+                    newType.addSubtype(it.declaration.qualifiedName)
                 }
             }
 

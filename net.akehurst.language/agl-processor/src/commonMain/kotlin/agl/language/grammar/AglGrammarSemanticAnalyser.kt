@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.automaton.ParseAction
@@ -28,7 +29,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFromGrammarRegistry> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, ContextFromGrammarRegistry> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
@@ -59,10 +60,10 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
     }
 
     override fun analyse(
-        asm: List<Grammar>,
+        asm: DefinitionBlock<Grammar>,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammarRegistry?,
-        options: SemanticAnalysisOptions<List<Grammar>, ContextFromGrammarRegistry>
+        options: SemanticAnalysisOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
@@ -71,20 +72,26 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
             issueWarn(null, "No ContextFromGrammarRegistry supplied, grammar references cannot be resolved", null)
         }
 
-        asm.forEach { context?.grammarRegistry?.registerGrammar(it) }
+        asm.namespace.forEach { ns ->
+            ns.definition.forEach {
+                context?.grammarRegistry?.registerGrammar(it)
+            }
+        }
 
         checkGrammar(context, asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: List<Grammar>, automatonKind: AutomatonKind) {
-        grammarList.forEach { grammar ->
-            this.resolveGrammarRefs(context, grammar)
-            this.analyseGrammar(context, grammar)
-            this.checkRuleUsage(grammar)
-            this.checkForDuplicates(grammar)
-            if (issues.errors.isEmpty() && _analyseAmbiguities) {
-                this.checkForAmbiguities(grammar, automatonKind)
+    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: DefinitionBlock<Grammar>, automatonKind: AutomatonKind) {
+        grammarList.namespace.forEach { ns ->
+            ns.definition.forEach { grammar ->
+                this.resolveGrammarRefs(context, grammar)
+                this.analyseGrammar(context, grammar)
+                this.checkRuleUsage(grammar)
+                this.checkForDuplicates(grammar)
+                if (issues.errors.isEmpty() && _analyseAmbiguities) {
+                    this.checkForAmbiguities(grammar, automatonKind)
+                }
             }
         }
     }

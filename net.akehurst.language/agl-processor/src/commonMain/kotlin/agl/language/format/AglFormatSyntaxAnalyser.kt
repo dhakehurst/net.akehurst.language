@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.language.format
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.language.asmTransform.AsmTransformModel
@@ -27,7 +28,7 @@ import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class AglFormatSyntaxAnalyser(
-    grammarNamespaceQualifiedName: String,
+    grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
     val asmTransformModel: AsmTransformModel
 ) : SyntaxAnalyser<AglFormatterModel> {
@@ -36,8 +37,8 @@ internal class AglFormatSyntaxAnalyser(
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 
-    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglFormatterModel>> = emptyMap()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglFormatterModel>> = emptyMap()
 
     override fun clear() {
     }

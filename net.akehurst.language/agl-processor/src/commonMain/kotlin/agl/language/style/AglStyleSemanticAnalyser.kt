@@ -23,13 +23,14 @@ import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.grammar.GrammarRuleName
+import net.akehurst.language.api.language.style.AglStyleModel
+import net.akehurst.language.api.language.style.AglStyleSelectorKind
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.style.AglStyleModel
-import net.akehurst.language.api.style.AglStyleSelectorKind
 
 class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGrammar> {
 
@@ -37,9 +38,9 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
         private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName
         private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
         private val aglGrammarNamespace: GrammarTypeNamespace
-            get() = aglGrammarTypeModel.namespace[aglGrammarQualifiedName] as GrammarTypeNamespace? ?: error("Internal error")
+            get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
-        private val grammarRule = aglGrammarNamespace.findTypeForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
     }
 
     override fun clear() {
@@ -55,19 +56,19 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
         val locMap = locationMap ?: mapOf()
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (null != context) {
-            asm.rules.forEach { rule ->
+            asm.allDefinitions.forEach { rule ->
                 rule.selector.forEach { sel ->
                     val loc = locMap[sel]
                     // TODO: user types
                     when (sel.kind) {
                         AglStyleSelectorKind.LITERAL -> {
-                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == "LITERAL" }.isEmpty()) {
+                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
                                 issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                             }
                         }
 
                         AglStyleSelectorKind.PATTERN -> {
-                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == "PATTERN" }.isEmpty()) {
+                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
                                 issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
                             }
                         }
@@ -76,7 +77,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                             if (AglStyleModelDefault.KEYWORD_STYLE_ID == sel.value) { //TODO: redundant check I think!
                                 // its OK
                             } else {
-                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
+                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.name }.isEmpty()) {
                                     issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                                 }
                             }

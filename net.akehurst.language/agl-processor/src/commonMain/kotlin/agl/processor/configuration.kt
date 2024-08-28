@@ -34,11 +34,12 @@ import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : Any>(
-    override var targetGrammarName: String? = null,
+    override var targetGrammarName: SimpleName? = null,
     override var defaultGoalRuleName: String? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -55,7 +56,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : Any>(
-    override var targetGrammarName: String? = null,
+    override var targetGrammarName: SimpleName? = null,
     override var defaultGoalRuleName: String? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -79,7 +80,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault<TypeModel>(
 //            TypeModelFromGrammar.create(p.grammar!!),
-            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name) {},
+            grammarTypeModel(p.grammar!!.qualifiedName.value, p.grammar!!.name.value) {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -110,7 +111,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class LanguageProcessorConfigurationDefault(
-    override var targetGrammarName: String? = null,
+    override var targetGrammarName: SimpleName? = null,
     override var defaultGoalRuleName: String? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
@@ -134,7 +135,7 @@ internal class LanguageProcessorConfigurationDefault(
     override var typeModelResolver: TypeModelResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault<TypeModel>(
 //            TypeModelFromGrammar.create(p.grammar!!),
-            grammarTypeModel(p.grammar!!.qualifiedName, p.grammar!!.name) {},
+            grammarTypeModel(p.grammar!!.qualifiedName.value, p.grammar!!.name.value) {},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

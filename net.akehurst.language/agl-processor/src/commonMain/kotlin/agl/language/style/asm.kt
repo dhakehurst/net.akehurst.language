@@ -16,23 +16,36 @@
 package net.akehurst.language.agl.language.style.asm
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault.Companion.DEFAULT_NO_STYLE
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault.Companion.NO_STYLE_ID
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.base.SimpleName.Companion.asSimpleName
+import net.akehurst.language.api.language.style.*
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.style.*
 
 class AglStyleModelDefault(
-    _rules: List<AglStyleRule>
-) : AglStyleModel {
+    namespace: List<StyleNamespace>
+) : DefinitionBlockAbstract<AglStyleRule>(namespace) {
 
     companion object {
         //not sure if this should be here or in grammar object
         const val KEYWORD_STYLE_ID = "\$keyword"
         const val NO_STYLE_ID = "\$nostyle"
 
-        val DEFAULT_NO_STYLE = AglStyleRule(listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))).also {
-            it.styles["foreground"] = AglStyle("foreground", "black")
-            it.styles["background"] = AglStyle("background", "white")
-            it.styles["font-style"] = AglStyle("font-style", "normal")
+        private val _defaultRules = mutableListOf<AglStyleRule>()
+        val DEFAULT_NO_STYLE = AglStyleRuleDefault(
+            namespace = StyleNamespaceDefault(QualifiedName("std"), emptyList(), _defaultRules),
+            listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))
+        ).also {
+            it.declaration["foreground"] = AglStyleDeclaration("foreground", "black")
+            it.declaration["background"] = AglStyleDeclaration("background", "white")
+            it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
+            _defaultRules.add(it)
         }
 
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
@@ -44,25 +57,60 @@ class AglStyleModelDefault(
         }
     }
 
-    override val rules: List<AglStyleRule>
 
-    init {
-        rules = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
-            // NO_STYLE defined
-            _rules
-        } else {
-            listOf(DEFAULT_NO_STYLE) + _rules
-        }
+}
+
+class StyleNamespaceDefault(
+    override val qualifiedName: QualifiedName,
+    override val import: List<Import>,
+    _rules: List<AglStyleRule>
+) : StyleNamespace {
+
+    override val definition: List<AglStyleRule> get() = rules
+
+    override val rules: List<AglStyleRule> = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
+        // NO_STYLE defined
+        _rules
+    } else {
+        listOf(DEFAULT_NO_STYLE) + _rules
     }
 
-    override fun toString(): String {
+
+    override fun asString(indent: Indent, increment: String): String {
         return rules.joinToString(separator = "\n") {
-            val stylesStr = it.styles.values.joinToString(separator = "\n  ") { "${it.name}: ${it.value};" }
+            val stylesStr = it.declaration.values.joinToString(separator = "\n  ") { "${it.name}: ${it.value};" }
             """
 ${it.selector.joinToString { it.value }} {
   $stylesStr
 }
 """.trimIndent()
         }
+    }
+
+}
+
+data class AglStyleRuleDefault(
+    override val namespace: StyleNamespace,
+    override val selector: List<AglStyleSelector>
+) : AglStyleRule {
+
+    override val name: SimpleName
+        get() = selector.joinToString(separator = ".") { it.value }.asSimpleName
+
+    override val qualifiedName: QualifiedName
+        get() = TODO("not implemented")
+
+    override var declaration = mutableMapOf<String, AglStyleDeclaration>()
+
+    override fun asString(indent: Indent, increment: String): String {
+        TODO("not implemented")
+    }
+
+    override fun toCss(): String {
+        return """
+            ${this.selector.joinToString(separator = ", ") { it.value }} {
+                ${this.declaration.values.joinToString(separator = "\n") { it.toCss() }}
+            }
+         """.trimIndent()
     }
 }

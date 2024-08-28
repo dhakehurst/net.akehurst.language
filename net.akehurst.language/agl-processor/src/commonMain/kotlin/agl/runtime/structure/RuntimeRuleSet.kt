@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.automaton.Automaton
@@ -25,7 +26,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal class RuntimeRuleSet(
     val number: Int,
-    val qualifiedName: String,
+    val qualifiedName: QualifiedName,
     val runtimeRules: List<RuntimeRule>,
     val precedenceRules: List<RuntimePreferenceRule>
 ) : RuleSet {

@@ -18,7 +18,8 @@
 package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
+import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
@@ -29,7 +30,10 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.asDefinitionBlock
+import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.jvm.JvmInline
@@ -129,20 +133,20 @@ object Agl {
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         base: LanguageProcessorConfiguration<Asm, ContextSimple> = configurationDefault(),
-        grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm, ContextSimple> {
         val config = Agl.configuration(base) {
             if (null != typeModelStr) {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p -> AsmTransformModelSimple.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), transformStr.value) }
+                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asDefinitionBlock()), transformStr.value) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr.value) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr.value) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asDefinitionBlock()), styleModelStr.value) }
             }
             if (null != formatterModelStr) {
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr.value) }
@@ -162,20 +166,20 @@ object Agl {
     fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = configurationBase(),
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
-            val res = Agl.grammarFromString<List<Grammar>, ContextFromGrammarRegistry>(
+            val res = Agl.grammarFromString<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>(
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
-            if (null == res.asm || 0 == res.asm!!.size) {
+            if (null == res.asm || res.asm!!.isEmpty) {
                 LanguageProcessorResult(null, res.issues)
             } else {
                 val grammar = if (null == configuration?.targetGrammarName) {
-                    res.asm?.lastOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
+                    res.asm?.primary ?: error("Unable to create processor for $grammarDefinitionStr")
                 } else {
-                    res.asm?.firstOrNull { it.name == configuration.targetGrammarName }
+                    res.asm?.allDefinitions?.firstOrNull { it.name == configuration.targetGrammarName }
                         ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
                 }
                 val proc = processorFromGrammar(
@@ -205,13 +209,13 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
-    ): ProcessResult<List<Grammar>> {
+        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+    ): ProcessResult<DefinitionBlock<Grammar>> {
         return if (null == sentence) {
             ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
         } else {
             val res = Agl.registry.agl.grammar.processor!!.process(sentence, aglOptions)
-            ProcessResultDefault(res.asm ?: emptyList(), res.issues)
+            ProcessResultDefault(res.asm ?: DefinitionBlockDefault(emptyList()), res.issues)
         }
     }
 }

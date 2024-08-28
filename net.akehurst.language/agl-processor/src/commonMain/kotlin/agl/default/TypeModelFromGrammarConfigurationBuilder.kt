@@ -17,12 +17,13 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
 
 interface Grammar2TypeModelMapping {
-    fun typeNameFor(rule: GrammarRule): String
-    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String
+    fun typeNameFor(rule: GrammarRule): SimpleName
+    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): PropertyName
 }
 
 fun String.lower() = when {
@@ -31,8 +32,8 @@ fun String.lower() = when {
 }
 
 class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
-    override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
-    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String {
+    override fun typeNameFor(rule: GrammarRule): SimpleName = SimpleName(rule.name.value.replaceFirstChar { it.titlecase() })
+    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): PropertyName {
 //        val prefix = when (context) {
 //            ruleItem.owningRule.grammar -> ""
 //            else -> "${ruleItem.owningRule.grammar.name.lower()}_"
@@ -46,8 +47,8 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
             }
 
             //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
-            is Embedded -> "${ruleItem.embeddedGoalName.lower()}"
-            is NonTerminal -> ruleItem.name.lower()
+            is Embedded -> ruleItem.embeddedGoalName.value.lower()
+            is NonTerminal -> ruleItem.ruleReference.value.lower()
             is Group -> GrammarTypeNamespaceFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
             is Choice -> GrammarTypeNamespaceFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME
             else -> error("Internal error, unhandled subtype of SimpleItem")
@@ -56,7 +57,7 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
             is PrimitiveType -> baseName
             is UnnamedSupertypeType -> baseName
             is CollectionType -> when (ruleItem) {
-                is NonTerminal -> ruleItem.name.lower()
+                is NonTerminal -> ruleItem.ruleReference.value.lower()
                 is Terminal -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 is Group -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 else -> "${baseName}List"
@@ -66,6 +67,6 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
             is DataType -> baseName
             else -> baseName
         }
-        return name //prefix + name
+        return PropertyName(name) //prefix + name
     }
 }

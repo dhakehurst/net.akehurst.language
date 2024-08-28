@@ -17,48 +17,47 @@
 
 package net.akehurst.language.typemodel.api
 
-interface TypeModel {
+import net.akehurst.language.api.language.base.*
+import kotlin.jvm.JvmInline
+
+interface TypeModel : DefinitionBlock<TypeDeclaration> {
 
     val AnyType: TypeDeclaration
     val NothingType: TypeDeclaration
 
-    val name: String
+    val name: SimpleName
     //val rootTypeName: String?
 
     /**
      * namespace qualified named --> namespace
      */
-    val namespace: Map<String, TypeNamespace>
+    override val namespace: List<TypeNamespace>
 
     val allNamespace: List<TypeNamespace>
 
     fun resolveImports()
 
-    fun findOrCreateNamespace(qualifiedName: String, imports: List<String>): TypeNamespace
+    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypeNamespace
 
-    fun findFirstByNameOrNull(typeName: String): TypeDeclaration?
+    fun findFirstByPossiblyQualifiedOrNull(typeNAme: PossiblyQualifiedName): TypeDeclaration?
 
-    fun findByQualifiedNameOrNull(qualifiedName: String): TypeDeclaration?
+    fun findFirstByNameOrNull(typeName: SimpleName): TypeDeclaration?
+
+    fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDeclaration?
 
     fun addAllNamespace(namespaces: Iterable<TypeNamespace>)
 
-    fun asString(): String
+    // --- DefinitionBlock ---
+    override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace?
+
 }
 
-interface TypeNamespace {
-
-    val qualifiedName: String
-
-    /**
-     * Things in these namespaces can be referenced non-qualified
-     * ordered so that 'first' imported name takes priority
-     */
-    val imports: List<String>
+interface TypeNamespace : Namespace<TypeDeclaration> {
 
     /**
      * TypeDefinition.name --> TypeDefinition
      */
-    val ownedTypesByName: Map<String, TypeDeclaration>
+    val ownedTypesByName: Map<SimpleName, TypeDeclaration>
 
     val ownedTypes: Collection<TypeDeclaration>
 
@@ -70,30 +69,30 @@ interface TypeNamespace {
 
     val elementType: Set<DataType>
 
-    fun addImport(qualifiedName: String)
+    fun addImport(import: Import)
 
     fun resolveImports(model: TypeModel)
 
-    fun isImported(qualifiedNamespaceName: String): Boolean
+    fun isImported(qualifiedNamespaceName: QualifiedName): Boolean
 
     /**
      * find type in this namespace with given name
      */
-    fun findOwnedTypeNamed(typeName: String): TypeDeclaration?
+    fun findOwnedTypeNamed(typeName: SimpleName): TypeDeclaration?
 
     /**
      * find type in this namespace OR imports with given name
      */
-    fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDeclaration?
+    fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDeclaration?
 
-    fun findOwnedOrCreateSingletonTypeNamed(typeName: String): SingletonType
-    fun findOwnedOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
-    fun findOwnedOrCreateEnumTypeNamed(typeName: String, literals: List<String>): EnumType
-    fun findOwnedOrCreateDataTypeNamed(typeName: String): DataType
-    fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
+    fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType
+    fun findOwnedOrCreatePrimitiveTypeNamed(typeName: SimpleName): PrimitiveType
+    fun findOwnedOrCreateEnumTypeNamed(typeName: SimpleName, literals: List<String>): EnumType
+    fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
+    fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
 
     fun createTypeInstance(
-        context: TypeDeclaration?, qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false
+        context: TypeDeclaration?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
     fun createTupleTypeInstance(declaration: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
@@ -102,8 +101,6 @@ interface TypeNamespace {
     fun createUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
 
     fun createTupleType(): TupleType
-
-    fun asString(): String
 
 }
 
@@ -116,9 +113,9 @@ interface TypeInstance {
      * the name of the TypeDeclaration, if it is resolvable,
      * or the name the instance refers to (e.g. a type parameter)
      */
-    val typeName: String
+    val typeName: SimpleName
 
-    val qualifiedTypeName: String
+    val qualifiedTypeName: QualifiedName
 
     /**
      * {derived} type is resolved via the namespace
@@ -128,9 +125,9 @@ interface TypeInstance {
     /**
      * properties from the type, with type parameters resolved
      */
-    val resolvedProperty: Map<String, PropertyDeclaration>
+    val resolvedProperty: Map<PropertyName, PropertyDeclaration>
 
-    fun resolved(resolvingTypeArguments: Map<String, TypeInstance>): TypeInstance
+    fun resolved(resolvingTypeArguments: Map<SimpleName, TypeInstance>): TypeInstance
 
     fun notNullable(): TypeInstance
     fun nullable(): TypeInstance
@@ -140,13 +137,11 @@ interface TypeInstance {
     fun conformsTo(other: TypeInstance): Boolean
 }
 
-interface TypeDeclaration {
-    val namespace: TypeNamespace
-    val name: String
-    val qualifiedName: String
+interface TypeDeclaration : Definition<TypeDeclaration> {
+    override val namespace: TypeNamespace
 
     val supertypes: List<TypeInstance>
-    val typeParameters: List<String>
+    val typeParameters: List<SimpleName>
 
     val property: List<PropertyDeclaration>
     val method: List<MethodDeclaration>
@@ -159,7 +154,7 @@ interface TypeDeclaration {
     /**
      * all properties from this and transitive closure of supertypes
      */
-    val allProperty: Map<String, PropertyDeclaration>
+    val allProperty: Map<PropertyName, PropertyDeclaration>
 
     /**
      * information about this type
@@ -173,16 +168,23 @@ interface TypeDeclaration {
     fun conformsTo(other: TypeDeclaration): Boolean
 
     fun getPropertyByIndexOrNull(i: Int): PropertyDeclaration?
-    fun findPropertyOrNull(name: String): PropertyDeclaration?
-    fun findMethodOrNull(name: String): MethodDeclaration?
+    fun findPropertyOrNull(name: PropertyName): PropertyDeclaration?
+    fun findMethodOrNull(name: MethodName): MethodDeclaration?
 
     fun asString(context: TypeNamespace): String
 
-    fun addSupertype(qualifiedTypeName: String)
-    fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String)
-    fun appendPropertyDerived(name: String, typeInstance: TypeInstance, description: String, expression: String)
-    fun appendMethodPrimitive(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
-    fun appendMethodDerived(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String)
+    fun addSupertype(qualifiedTypeName: QualifiedName)
+    fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String)
+    fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String)
+    fun appendMethodPrimitive(
+        name: MethodName,
+        parameters: List<ParameterDeclaration>,
+        typeInstance: TypeInstance,
+        description: String,
+        body: (self: Any, arguments: List<Any>) -> Any
+    )
+
+    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String)
 }
 
 interface SingletonType : TypeDeclaration {
@@ -202,12 +204,16 @@ interface StructuredType : TypeDeclaration {
     /**
      * append property at the next index
      */
-    fun appendPropertyStored(name: String, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+    fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
 
 }
 
 interface TupleType : StructuredType {
-    val entries: List<Pair<String, TypeInstance>>
+    companion object {
+        val NAME = QualifiedName("\$TupleType")
+    }
+
+    val entries: List<Pair<PropertyName, TypeInstance>>
 
     /**
      * The compares two Tuple types by checking for the same name:Type of all entries.
@@ -221,10 +227,13 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
-    fun addSubtype(qualifiedTypeName: String)
+    fun addSubtype(qualifiedTypeName: QualifiedName)
 }
 
 interface UnnamedSupertypeType : TypeDeclaration {
+    companion object {
+        val NAME = QualifiedName("\$UnnamedSupertypeType")
+    }
 
     // identifier, needs a number else can't implement equals without a recursive loop
     val id: Int
@@ -241,9 +250,12 @@ interface CollectionType : StructuredType {
 //    val isMap: Boolean
 }
 
+@JvmInline
+value class PropertyName(val value: String)
+
 interface PropertyDeclaration {
     val owner: TypeDeclaration
-    val name: String
+    val name: PropertyName
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
     val description: String
@@ -265,7 +277,7 @@ interface PropertyDeclaration {
     val isMember: Boolean
     val isDerived: Boolean
 
-    fun resolved(typeArguments: Map<String, TypeInstance>): PropertyDeclaration
+    fun resolved(typeArguments: Map<SimpleName, TypeInstance>): PropertyDeclaration
 }
 
 enum class PropertyCharacteristic {
@@ -308,15 +320,21 @@ enum class PropertyCharacteristic {
     PRIMITIVE
 }
 
+@JvmInline
+value class MethodName(val value: String)
+
 interface MethodDeclaration {
     val owner: TypeDeclaration
-    val name: String
+    val name: MethodName
     val parameters: List<ParameterDeclaration>
     val description: String
 }
 
+@JvmInline
+value class ParameterName(val value: String)
+
 interface ParameterDeclaration {
-    val name: String
+    val name: ParameterName
     val typeInstance: TypeInstance
     val defaultValue: String?
 }

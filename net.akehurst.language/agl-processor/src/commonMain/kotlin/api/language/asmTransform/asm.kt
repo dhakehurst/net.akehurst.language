@@ -17,49 +17,51 @@
 
 package net.akehurst.language.api.language.asmTransform
 
+import net.akehurst.language.api.language.base.*
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
-interface AsmTransformModel {
-    val name: String
-    val qualifiedName: String
+interface TransformModel : DefinitionBlock<TransformRuleSet> {
 
     /**
      * Access to the TypeModel ensuring that the AsmTransform has first been evaluated
      */
     val typeModel: TypeModel?
 
+}
+
+interface TransformNamespace : Namespace<TransformRuleSet> {
+
+}
+
+interface TransformRuleSet : Definition<TransformRuleSet> {
+
+    override val namespace: TransformNamespace
+
     /**
      * map from grammar-rule name to TransformationRule
      */
-    val rules: Map<String, TransformationRule>
+    val rules: Map<GrammarRuleName, TransformationRule>
 
     val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
 
-
-    fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule?
-
-    fun asString(indent: String = "", increment: String = "  "): String
+    fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
 }
 
-interface TransformationRule {
-    val grammarRuleName: String
-    val qualifiedTypeName: String
+interface TransformationRule : Formatable {
+    val grammarRuleName: GrammarRuleName
+    val qualifiedTypeName: QualifiedName
 
     val resolvedType: TypeInstance
 
     val expression: Expression
     // val modifyStatements: List<AssignmentStatement>
 
-    fun asString(indent: String = "", increment: String = "  "): String
 }
 
-interface NoActionTransformationRule : TransformationRule
-interface SubtypeTransformationRule : TransformationRule
-interface SelfAssignChild0TransformationRule : TransformationRule
-interface ListTransformationRule : TransformationRule
 interface CreateObjectRule : TransformationRule {
 
 }

@@ -18,7 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.api.automaton.Automaton
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.Parser
@@ -73,7 +73,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      * The transformation from parse-tree to ASM
      * Evaluating this may or may not modify the typeModel depending on the AsmTransformModel options specified
      */
-    val asmTransformModel: AsmTransformModel
+    val asmTransformModel: TransformModel
 
     /**
      * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor

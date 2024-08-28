@@ -18,15 +18,20 @@ package net.akehurst.language.agl.language.reference.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.reference.*
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.typemodel.api.PropertyName
 
 class CrossReferenceModelDefault
     : CrossReferenceModel {
     companion object {
-        val ROOT_SCOPE_TYPE_NAME = "§root"
+        val ROOT_SCOPE_TYPE_NAME = SimpleName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
 
         fun fromString(context: ContextFromTypeModel?, aglScopeModelSentence: String): ProcessResult<CrossReferenceModel> {
@@ -40,76 +45,85 @@ class CrossReferenceModelDefault
         }
     }
 
-    override val declarationsForNamespace = mutableMapOf<String, DeclarationsForNamespace>()
+    override val declarationsForNamespace = mutableMapOf<QualifiedName, DeclarationsForNamespace>()
 
     override val isEmpty: Boolean get() = declarationsForNamespace.isEmpty() || declarationsForNamespace.values.all { it.isEmpty }
 
-    override fun isScopeDefinedFor(possiblyQualifiedTypeName: String): Boolean {
-        return when {
-            possiblyQualifiedTypeName.contains(".") -> {
-                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
-                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+    override fun isScopeDefinedFor(possiblyQualifiedTypeName: PossiblyQualifiedName): Boolean {
+        return when (possiblyQualifiedTypeName) {
+            is QualifiedName -> {
+                val qn = possiblyQualifiedTypeName
+                val qName = qn.front
+                val tName = qn.last
                 val ns = this.declarationsForNamespace[qName]
                 return ns?.isScopeDefinedFor(tName) ?: false
             }
 
-            else -> {
+            is SimpleName -> {
                 declarationsForNamespace.values.any {
                     it.isScopeDefinedFor(possiblyQualifiedTypeName)
                 }
             }
+
+            else -> error("Unsupported")
         }
     }
 
-    override fun referencesFor(possiblyQualifiedTypeName: String): List<ReferenceExpression> {
-        return when {
-            possiblyQualifiedTypeName.contains(".") -> {
-                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
-                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+    override fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression> {
+        return when (possiblyQualifiedTypeName) {
+            is QualifiedName -> {
+                val qn = possiblyQualifiedTypeName
+                val qName = qn.front
+                val tName = qn.last
                 val ns = this.declarationsForNamespace[qName]
                 return ns?.referencesFor(tName) ?: emptyList()
             }
 
-            else -> {
+            is SimpleName -> {
                 declarationsForNamespace.values.flatMap {
                     it.referencesFor(possiblyQualifiedTypeName)
                 }
             }
+
+            else -> error("Unsupported")
         }
     }
 
-    fun identifyingExpressionFor(scopeForTypeName: String, possiblyQualifiedTypeName: String): Expression? {
-        return when {
-            possiblyQualifiedTypeName.contains(".") -> {
-                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
-                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+    fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression? {
+        return when (possiblyQualifiedTypeName) {
+            is QualifiedName -> {
+                val qn = possiblyQualifiedTypeName
+                val qName = qn.front
+                val tName = qn.last
                 val ns = this.declarationsForNamespace[qName]
                 return ns?.identifyingExpressionFor(scopeForTypeName, tName)
             }
 
-            else -> {
+            is SimpleName -> {
                 declarationsForNamespace.values.firstNotNullOfOrNull {
                     it.identifyingExpressionFor(scopeForTypeName, possiblyQualifiedTypeName)
                 }
             }
+
+            else -> error("Unsupported")
         }
     }
 
-    override fun referenceForProperty(typeQualifiedName: String, propertyName: String): List<String> =
+    override fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName): List<QualifiedName> =
         _referenceForProperty[Pair(typeQualifiedName, propertyName)] ?: emptyList()
 
-    fun addRecordReferenceForProperty(typeQualifiedName: String, propertyName: String, refersToQualifiedTypeNames: List<String>) {
+    fun addRecordReferenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName, refersToQualifiedTypeNames: List<QualifiedName>) {
         _referenceForProperty[Pair(typeQualifiedName, propertyName)] = refersToQualifiedTypeNames
     }
 
-    private val _referenceForProperty = mutableMapOf<Pair<String, String>, List<String>>()
+    private val _referenceForProperty = mutableMapOf<Pair<QualifiedName, PropertyName>, List<QualifiedName>>()
 }
 
 data class DeclarationsForNamespaceDefault(
-    override val qualifiedName: String,
-    override val importedNamespaces: List<String>
+    override val qualifiedName: QualifiedName,
+    override val importedNamespaces: List<Import>
 ) : DeclarationsForNamespace {
-    override val scopeDefinition = mutableMapOf<String, ScopeDefinition>()
+    override val scopeDefinition = mutableMapOf<SimpleName, ScopeDefinition>()
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {
@@ -118,11 +132,11 @@ data class DeclarationsForNamespaceDefault(
 
     override val isEmpty: Boolean get() = scopeDefinition.isEmpty() && references.isEmpty()
 
-    override fun isScopeDefinedFor(typeName: String): Boolean {
+    override fun isScopeDefinedFor(typeName: SimpleName): Boolean {
         return scopeDefinition.containsKey(typeName)
     }
 
-    override fun referencesFor(typeName: String): List<ReferenceExpression> {
+    override fun referencesFor(typeName: SimpleName): List<ReferenceExpression> {
         return references.filter {
             it.inTypeName == typeName
         }.flatMap {
@@ -130,12 +144,12 @@ data class DeclarationsForNamespaceDefault(
         }
     }
 
-    override fun referenceForPropertyOrNull(typeName: String, propertyName: String): ReferenceExpression? {
+    override fun referenceForPropertyOrNull(typeName: SimpleName, propertyName: PropertyName): ReferenceExpression? {
         val refs = referencesFor(typeName)
         return refs.firstOrNull { it is PropertyReferenceExpressionDefault }
     }
 
-    override fun identifyingExpressionFor(scopeForTypeName: String, typeName: String): Expression? {
+    override fun identifyingExpressionFor(scopeForTypeName: SimpleName, typeName: SimpleName): Expression? {
         val scope = scopeDefinition[scopeForTypeName]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
         return identifiable?.identifiedBy
@@ -143,13 +157,13 @@ data class DeclarationsForNamespaceDefault(
 }
 
 data class ScopeDefinitionDefault(
-    override val scopeForTypeName: String
+    override val scopeForTypeName: SimpleName
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
 }
 
 data class IdentifiableDefault(
-    override val typeName: String,
+    override val typeName: SimpleName,
     override val identifiedBy: Expression
 ) : Identifiable
 
@@ -157,7 +171,7 @@ data class ReferenceDefinitionDefault(
     /**
      * name of the asm type in which the property is a reference
      */
-    override val inTypeName: String,
+    override val inTypeName: SimpleName,
 
     override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {
@@ -174,7 +188,7 @@ data class PropertyReferenceExpressionDefault(
     /**
      * type of the asm element referred to
      */
-    val refersToTypeName: List<String>,
+    val refersToTypeName: List<PossiblyQualifiedName>,
 
     val fromNavigation: NavigationExpression?
 ) : ReferenceExpressionAbstract() {
@@ -191,7 +205,7 @@ data class PropertyReferenceExpressionDefault(
 
 data class CollectionReferenceExpressionDefault(
     val navigation: NavigationExpression,
-    val ofType: String?,
+    val ofType: QualifiedName?,
     val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract() {
     /*    override fun isReference(propertyName: String): Boolean {

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -56,7 +57,7 @@ data class ChildData(
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
-    val grammarNamespaceQualifiedName: String,
+    val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
     val asmTransformModel: AsmTransformModel
     //val scopeModel: CrossReferenceModel
@@ -197,7 +198,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         this._asm!!.removeRoot(value)
     }
 
-    private fun createAsmElement(path: AsmPath, name: String): AsmStructure =
+    private fun createAsmElement(path: AsmPath, name: QualifiedName): AsmStructure =
         this._asm!!.createStructure(path, name)
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {

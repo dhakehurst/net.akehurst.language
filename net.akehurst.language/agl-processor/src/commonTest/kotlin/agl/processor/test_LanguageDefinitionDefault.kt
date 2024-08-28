@@ -17,7 +17,10 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
@@ -36,8 +39,8 @@ class test_LanguageDefinitionDefault {
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
-    val grammarObserverCalled = mutableListOf<Pair<List<Grammar>, List<Grammar>>>()
-    val grammarObserver: (List<Grammar>, List<Grammar>) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
+    val grammarObserverCalled = mutableListOf<Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>>()
+    val grammarObserver: (DefinitionBlock<Grammar>, DefinitionBlock<Grammar>) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
 
     val crossReferenceModelStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val crossReferenceModelStrObserver: (String?, String?) -> Unit = { old, new -> crossReferenceModelStrObserverCalled.add(Pair(old, new)) }
@@ -59,9 +62,9 @@ class test_LanguageDefinitionDefault {
 
     @BeforeTest
     fun before() {
-        Agl.registry.unregister("ns.test")
+        Agl.registry.unregister(QualifiedName("ns.test"))
         this.sut = Agl.registry.register<Asm, ContextSimple>(
-            identity = "ns.test",
+            identity = QualifiedName("ns.test"),
             grammarStr = null,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
@@ -104,7 +107,7 @@ class test_LanguageDefinitionDefault {
     fun createFromStr() {
         val g = "namespace ns grammar Test1 { S = 'b'; }"
         val def = Agl.registry.register<Asm, ContextSimple>(
-            identity = "ns.Test1",
+            identity = QualifiedName("ns.Test1"),
             grammarStr = g,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
@@ -240,7 +243,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty(), sut.issues.toString())
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(emptyList(), sut.grammarList)), grammarObserverCalled)
+        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(DefinitionBlockDefault(emptyList()), sut.grammarList)), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
@@ -265,7 +268,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, emptyList())), grammarObserverCalled)
+        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(oldGrammar, DefinitionBlockDefault(emptyList()))), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
@@ -317,7 +320,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g1, g2)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, sut.grammarList)), grammarObserverCalled)
+        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(oldGrammar, sut.grammarList)), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(

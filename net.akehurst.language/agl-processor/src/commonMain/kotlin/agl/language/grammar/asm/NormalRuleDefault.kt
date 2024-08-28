@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.GrammarExeception
 import net.akehurst.language.api.language.grammar.NormalRule
@@ -23,7 +24,7 @@ import net.akehurst.language.api.language.grammar.RuleItem
 
 class NormalRuleDefault(
     override val grammar: Grammar,
-    override val name: String,
+    override val name: SimpleName,
     override val isSkip: Boolean,
     override val isLeaf: Boolean
 ) : GrammarRuleAbstract(), NormalRule {

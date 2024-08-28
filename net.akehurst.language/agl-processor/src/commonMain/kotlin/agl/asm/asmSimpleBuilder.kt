@@ -29,17 +29,15 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TupleTypeSimple
-import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -82,7 +80,7 @@ class AsmSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
-        element(TupleTypeSimple.NAME, init)
+        element(TupleType.NAME.value, init)
 
     fun listOfString(vararg items: String): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
@@ -132,11 +130,12 @@ class AsmElementSimpleBuilder(
     _isRoot: Boolean,
     _parentScope: ScopeSimple<AsmPath>?
 ) {
-    private val _elementQualifiedTypeName = _typeName.let {
-        when (it) {
-            TupleTypeSimple.NAME -> it
-            UnnamedSupertypeTypeSimple.NAME -> it
-            else -> _typeModel.findFirstByNameOrNull(_typeName)?.qualifiedName ?: _typeName //?: error("Cannot find type for name '$it'")
+    private val _elementQualifiedTypeName: QualifiedName = _typeName.let {
+        val qtn = QualifiedName(it)
+        when (qtn) {
+            TupleType.NAME -> TupleType.NAME
+            UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
+            else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName ?: QualifiedName(_typeName)
         }
     }
     private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
@@ -147,7 +146,7 @@ class AsmElementSimpleBuilder(
             if (_crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
                 val expr = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(_parentScope.forTypeName, _element.qualifiedTypeName)
                 val refInParent = expr?.createReferenceLocalToScope(_parentScope, _element)
-                    ?: _element.typeName //error("Trying to create child scope but cannot create a reference for $_element")
+                    ?: _element.typeName.value //error("Trying to create child scope but cannot create a reference for $_element")
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.path)
                 _scopeMap[_asmPath] = newScope
                 newScope
@@ -184,41 +183,43 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: AsmValue) {
-        _element.setProperty(name, value, 0)//TODO childIndex
+        _element.setProperty(PropertyName(name), value, 0)//TODO childIndex
     }
 
-    fun propertyUnnamedString(value: String?) = this.propertyString(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
+    fun propertyUnnamedString(value: String?) = this.propertyString(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
     fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
     fun propertyNothing(name: String) = this._property(name, AsmNothingSimple)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
-        propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
+        propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 
-    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, TupleTypeSimple.NAME, init)
+    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, TupleType.NAME.value, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _element.path + name
         val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name, el, 0)//TODO childIndex
+        this._element.setProperty(PropertyName(name), el, 0)//TODO childIndex
         return el
     }
 
-    fun propertyUnnamedListOfString(list: List<String>) = this.propertyListOfString(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, list)
+    fun propertyUnnamedListOfString(list: List<String>) = this.propertyListOfString(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value, list)
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, AsmListSimple(list.map { AsmPrimitiveSimple.stdString(it) }))
-    fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) = this.propertyListOfElement(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, init)
+    fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) =
+        this.propertyListOfElement(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value, init)
+
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val newPath = _element.path + name
         val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(name, list, 0)//TODO childIndex
+        this._element.setProperty(PropertyName(name), list, 0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
         val ref = AsmReferenceSimple(elementReference, null)
-        _element.setProperty(name, ref, 0)//TODO childIndex
+        _element.setProperty(PropertyName(name), ref, 0)//TODO childIndex
     }
 
     fun build(): AsmStructure {
@@ -276,7 +277,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = element(TupleTypeSimple.NAME, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = element(TupleType.NAME.value, init)
 
     fun build(): AsmList {
         return AsmListSimple(this._list)

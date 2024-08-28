@@ -39,7 +39,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     private val _localStore = mutableMapOf<String, Any>()
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<List<Grammar>>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<DefinitionBlock<Grammar>>> = emptyMap()
 
     override fun registerHandlers() {
         this.register(this::unit)
@@ -93,9 +93,9 @@ internal class AglGrammarSyntaxAnalyser(
 
     // unit : namespace definitions ;
     private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DefinitionBlock<Grammar> {
-        val namespace = children[0]
+        val namespace = children[0] as Namespace<Grammar>
         val definitions = children[1] as List<Grammar>
-        val unit = DefinitionBlockDefault<Grammar>()
+        val unit = DefinitionBlockDefault<Grammar>(listOf(namespace))
         return unit
     }
 

@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.language.reference.asm.builder
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.language.expressions.NavigationSimple
 import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.reference.asm.*
@@ -41,7 +43,7 @@ class CrossReferenceModelBuilder(
     private var _declarationsFor = mutableListOf<DeclarationsForNamespace>()
 
     fun declarationsFor(namespaceQualifiedName: String, init: DeclarationsForNamespaceBuilder.() -> Unit) {
-        val b = DeclarationsForNamespaceBuilder(namespaceQualifiedName)
+        val b = DeclarationsForNamespaceBuilder(namespaceQualifiedName.asQualifiedName)
         b.init()
         _declarationsFor.add(b.build())
     }
@@ -57,15 +59,15 @@ class CrossReferenceModelBuilder(
 
 @CrossReferenceModelBuilderMarker
 class DeclarationsForNamespaceBuilder(
-    private val _qualifiedName: String
+    private val _qualifiedName: QualifiedName
 ) {
-    private val _importedNamespaces = mutableListOf<String>()
+    private val _importedNamespaces = mutableListOf<QualifiedName>()
     private val _references = mutableListOf<ReferenceDefinition>()
     private val _scopes = mutableListOf<ScopeDefinition>()
 
 
     fun import(namespaceQualifiedName: String) {
-        _importedNamespaces.add(namespaceQualifiedName)
+        _importedNamespaces.add(namespaceQualifiedName.asQualifiedName)
     }
 
     fun scope(forTypeName: String, init: ScopeDefinitionBuilder.() -> Unit) {

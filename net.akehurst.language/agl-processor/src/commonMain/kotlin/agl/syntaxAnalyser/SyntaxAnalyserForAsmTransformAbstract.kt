@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
@@ -38,7 +40,6 @@ import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 data class NodeTrRules(
     val forNode: TransformationRule,
@@ -59,7 +60,7 @@ data class DownData2(
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
-    val grammarNamespaceQualifiedName: String,
+    val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
     val asmTransformModel: AsmTransformModel
     //val scopeModel: CrossReferenceModel
@@ -203,7 +204,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         this._asm!!.removeRoot(value)
     }
 
-    private fun createAsmElement(path: AsmPath, name: String): AsmStructure =
+    private fun createAsmElement(path: AsmPath, name: QualifiedName): AsmStructure =
         this._asm!!.createStructure(path, name)
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {
@@ -517,7 +518,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
         }
-        val self = AsmStructureSimple(AsmPathSimple(""), TupleTypeSimple.NAME)
+        val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME.asQualifiedName)
         self.setProperty(AsmTransformInterpreter.ALTERNATIVE, alternative, 0)
         self.setProperty(AsmTransformInterpreter.LEAF, leaf, 1)
         self.setProperty(AsmTransformInterpreter.CHILDREN, childrenAsmList, 2)

@@ -18,37 +18,41 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.simple.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
-    override val qualifiedName: String,
-    imports: List<String>
+    override val qualifiedName: QualifiedName,
+    imports: List<Import>
 ) : GrammarTypeNamespaceAbstract(imports)
 
 abstract class GrammarTypeNamespaceAbstract(
-    imports: List<String>
+    imports: List<Import>
 ) : TypeNamespaceAbstract(imports), GrammarTypeNamespace {
 
-    fun addTypeFor(grammarRuleName: String, typeUse: TypeInstance) {
+    fun addTypeFor(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
         if (typeUse.declaration is DataType) {
             super.ownedTypesByName[typeUse.declaration.name] = typeUse.declaration
         }
     }
 
-    override var allRuleNameToType = mutableMapOf<String, TypeInstance>()
+    override var allRuleNameToType = mutableMapOf<GrammarRuleName, TypeInstance>()
 
-    override val allTypesByRuleName: Collection<Pair<String, TypeInstance>>
+    override val allTypesByRuleName: Collection<Pair<GrammarRuleName, TypeInstance>>
         get() = allRuleNameToType.entries.map { Pair(it.key, it.value) }
 
-    override fun findTypeForRule(ruleName: String): TypeInstance? = allRuleNameToType[ruleName]
+    override fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance? = allRuleNameToType[ruleName]
 
-    override fun asString(): String {
-        val rules = this.allRuleNameToType.entries.sortedBy { it.key }
-        val ruleToType = rules.joinToString(separator = "\n") { it.key + "->" + it.value.signature(this, 0) }
-        val types = this.ownedTypesByName.entries.sortedBy { it.key }.joinToString(separator = "\n") { it.value.asString(this) }
+    override fun asString(indent: Indent, increment: String): String {
+        val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }
+        val ruleToType = rules.joinToString(separator = "\n") { it.key.value + "->" + it.value.signature(this, 0) }
+        val types = this.ownedTypesByName.entries.sortedBy { it.key.value }.joinToString(separator = "\n") { it.value.asString(this) }
         val s = """namespace '$qualifiedName' {
 $ruleToType
 

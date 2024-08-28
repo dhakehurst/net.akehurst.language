@@ -17,8 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,8 +27,9 @@ class test_SPPTParser {
 
     @Test
     fun construct() {
-        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        val grammar = gb.grammar
+        val grammar = grammar("test", "test") {
+
+        }
 
         val converter = ConverterToRuntimeRules(grammar)
         val sut = SPPTParserDefault(converter.runtimeRuleSet)

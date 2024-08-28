@@ -42,18 +42,18 @@ internal object AglCrossReferences {
         list("rootIdentifiables", 0, -1) { ref("identifiable") }
         list("scopes", 0, -1) { ref("scope") }
         concatenation("scope") {
-            lit("scope"); ref("typeReference"); lit("{"); ref("identifiables"); lit("}")
+            lit("scope"); ref("simpleTypeName"); lit("{"); ref("identifiables"); lit("}")
         }
         list("identifiables", 0, -1) { ref("identifiable") }
         concatenation("identifiable") {
-            lit("identify"); ref("typeReference"); lit("by"); ref("expression")
+            lit("identify"); ref("simpleTypeName"); lit("by"); ref("expression")
         }
         concatenation("references") {
             lit("references"); lit("{"); ref("referenceDefinitions"); lit("}")
         }
         list("referenceDefinitions", 0, -1) { ref("referenceDefinition") }
         concatenation("referenceDefinition") {
-            lit("in"); ref("typeReference"); lit("{"); ref("referenceExpressionList"); lit("}")
+            lit("in"); ref("simpleTypeName"); lit("{"); ref("referenceExpressionList"); lit("}")
         }
         list("referenceExpressionList", 0, -1) { ref("referenceExpression") }
         choice("referenceExpression") {
@@ -67,13 +67,14 @@ internal object AglCrossReferences {
         concatenation("collectionReferenceExpression") {
             lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
         }
-        concatenation("ofType") { lit("of-type"); ref("typeReference") }
+        concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
         choice("rootOrNavigation") {
             ref("root")
             ref("navigation")
         }
         separatedList("typeReferences", 1, -1) { ref("typeReference"); lit("|") }
-        concatenation("typeReference") { ref("qualifiedName") }
+        concatenation("possiblyQualifiedTypeReference") { ref("qualifiedName") }
+        concatenation("simpleTypeName") { ref("IDENTIFIER") }
     }
 
     const val grammarStr = """namespace net.akehurst.language.agl.language
@@ -86,24 +87,24 @@ grammar References extends Expressions {
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
     scopes = scope* ;
-    scope = 'scope' typeReference '{' identifiables '}' ;
+    scope = 'scope' simpleTypeName '{' identifiables '}' ;
     identifiables = identifiable* ;
-    identifiable = 'identify' typeReference 'by' expression ;
+    identifiable = 'identify' simpleTypeName 'by' expression ;
 
     references = 'references' '{' referenceDefinitions '}' ;
     referenceDefinitions = referenceDefinition* ;
-    referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
+    referenceDefinition = 'in' simpleTypeName '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
     propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
     from = 'from' navigation ;
     collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
-    ofType = 'of-type' typeReference ;
+    ofType = 'of-type' possiblyQualifiedTypeReference ;
     
     rootOrNavigation = root | navigation ;
     
-    typeReferences = [typeReference / '|']+ ;
-    typeReference = qualifiedName ;
-
+    typeReferences = [possiblyQualifiedTypeReference / '|']+ ;
+    possiblyQualifiedTypeReference = qualifiedName ;
+    simpleTypeName = IDENTIFIER ;
 }
 """
 

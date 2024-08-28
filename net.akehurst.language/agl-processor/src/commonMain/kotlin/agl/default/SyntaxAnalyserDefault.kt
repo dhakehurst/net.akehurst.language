@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserForAsmTransformAbstract
 import net.akehurst.language.api.asm.*
@@ -32,7 +33,7 @@ import net.akehurst.language.typemodel.api.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserDefault(
-    grammarNamespaceQualifiedName: String,
+    grammarNamespaceQualifiedName: QualifiedName,
     typeModel: TypeModel,
     asmTransformModel: AsmTransformModel
     //scopeModel: CrossReferenceModel
@@ -44,7 +45,7 @@ class SyntaxAnalyserDefault(
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
     }
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<Asm>> = lazyMap { embGramName ->
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramName ->
         SyntaxAnalyserDefault(embGramName, typeModel, asmTransformModel)//, this.scopeModel) //TODO: needs embedded asmTransform
     }
 

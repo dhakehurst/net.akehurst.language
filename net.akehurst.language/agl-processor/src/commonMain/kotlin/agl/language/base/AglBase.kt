@@ -17,32 +17,14 @@
 
 package net.akehurst.language.agl.language.base
 
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
-import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglBase {
     //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "Base") {
     const val goalRuleName = "qualifiedName"
-    private fun createRules(): List<GrammarRule> {
-        val b = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "Base")
-        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"))
-        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
-        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"))
-
-        b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"))
-        b.rule("import").concatenation(b.terminalLiteral("import"), b.nonTerminal("qualifiedName"))
-
-        b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-
-        return b.grammar.grammarRule
-    }
 
     //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
-
 
     val grammar = grammar(
         namespace = "net.akehurst.language.agl.language",

@@ -17,12 +17,13 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
@@ -30,7 +31,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScannerResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<Scanner>
 typealias ParserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<Parser>
-typealias AsmTransformModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<List<AsmTransformModel>>
+typealias AsmTransformModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<List<TransformModel>>
 typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
 typealias CrossReferenceModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CrossReferenceModel>
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
@@ -49,7 +50,7 @@ typealias CompletionProviderResolver<AsmType, ContextType> = (LanguageProcessor<
  */
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     //val grammarResolver: GrammarResolver?
-    val targetGrammarName: String?
+    val targetGrammarName: SimpleName?
     val defaultGoalRuleName: String?
 
     val regexEngineKind: RegexEngineKind

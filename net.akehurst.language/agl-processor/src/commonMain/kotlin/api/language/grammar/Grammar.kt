@@ -1,25 +1,34 @@
-/**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package net.akehurst.language.api.language.grammar
 
-import net.akehurst.language.agl.api.language.base.Definition
-import net.akehurst.language.agl.api.language.base.Namespace
+import net.akehurst.language.agl.language.base.DefinitionBlockDefault
+import net.akehurst.language.api.language.base.Definition
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.Namespace
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.collections.OrderedSet
 
+/**
+ * The last grammar defined in the last namespace
+ */
+val DefinitionBlock<Grammar>.primary get() = this.namespace.last().definition.lastOrNull()
+fun Grammar.asDefinitionBlock() = DefinitionBlockDefault(listOf(this.namespace))
 
 interface GrammarItem {
     val grammar: Grammar
@@ -27,7 +36,7 @@ interface GrammarItem {
 
 interface GrammarReference {
     val localNamespace: Namespace<Grammar>
-    val nameOrQName: String
+    val nameOrQName: PossiblyQualifiedName
     val resolved: Grammar?
     fun resolveAs(resolved: Grammar)
 }
@@ -45,23 +54,6 @@ interface GrammarOption {
 interface Grammar : Definition<Grammar> {
 
     val selfReference: GrammarReference
-
-    /**
-     *
-     * the namespace of this grammar;
-     */
-    override val namespace: Namespace<Grammar>
-
-    /**
-     *
-     * the name of this grammar
-     */
-    override val name: String
-
-    /**
-     * namespace.name
-     */
-    val qualifiedName: String
 
     /**
      * the List of grammar references directly extended by this one (non-transitive)
@@ -144,19 +136,19 @@ interface Grammar : Definition<Grammar> {
 
     val allResolvedEmbeddedGrammars: Set<Grammar>
 
-    fun findOwnedGrammarRuleOrNull(ruleName: String): GrammarRule?
+    fun findOwnedGrammarRuleOrNull(ruleName: GrammarRuleName): GrammarRule?
 
     /**
      * find rule with given name in all rules that this grammar extends - but not in this grammar
      */
-    fun findAllSuperGrammarRule(ruleName: String): List<GrammarRule>
+    fun findAllSuperGrammarRule(ruleName: GrammarRuleName): List<GrammarRule>
 
     /**
      * find rule with given name in all rules from this grammar and ones that this grammar extends
      */
-    fun findAllGrammarRuleList(ruleName: String): List<GrammarRule>
+    fun findAllGrammarRuleList(ruleName: GrammarRuleName): List<GrammarRule>
 
-    fun findAllResolvedGrammarRule(ruleName: String): GrammarRule?
+    fun findAllResolvedGrammarRule(ruleName: GrammarRuleName): GrammarRule?
 
     fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
 

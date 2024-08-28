@@ -17,6 +17,11 @@
 
 package net.akehurst.language.typemodel.api
 
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
@@ -30,7 +35,7 @@ fun typeModel(
     namespaces: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
     init: TypeModelBuilder.() -> Unit
 ): TypeModel {
-    val b = TypeModelBuilder(name, resolveImports, namespaces)
+    val b = TypeModelBuilder(SimpleName(name), resolveImports, namespaces)
     b.init()
     val m = b.build()
     return m
@@ -38,14 +43,14 @@ fun typeModel(
 
 @TypeModelDslMarker
 class TypeModelBuilder(
-    val name: String,
+    val name: SimpleName,
     private val resolveImports: Boolean,
     val namespaces: List<TypeNamespace>
 ) {
     val _model = TypeModelSimple(name)
 
     fun namespace(qualifiedName: String, imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
-        val b = TypeNamespaceBuilder(qualifiedName, imports)
+        val b = TypeNamespaceBuilder(QualifiedName(qualifiedName), imports.map { Import(it) })
         b.init()
         val ns = b.build()
         _model.addNamespace(ns)
@@ -65,19 +70,21 @@ class TypeModelBuilder(
 
 @TypeModelDslMarker
 class TypeNamespaceBuilder(
-    val qualifiedName: String,
-    imports: List<String>
+    val qualifiedName: QualifiedName,
+    imports: List<Import>
 ) {
 
     private val _namespace = TypeNamespaceSimple(qualifiedName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
-    fun primitiveType(typeName: String): PrimitiveType = _namespace.findOwnedOrCreatePrimitiveTypeNamed(typeName)
+    fun primitiveType(typeName: String): PrimitiveType =
+        _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
 
-    fun enumType(typeName: String, literals: List<String>): EnumType = _namespace.findOwnedOrCreateEnumTypeNamed(typeName, literals)
+    fun enumType(typeName: String, literals: List<String>): EnumType =
+        _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
 
     fun collectionType(typeName: String, typeParams: List<String>): CollectionType =
-        _namespace.findOwnedOrCreateCollectionTypeNamed(typeName).also { (it.typeParameters as MutableList).addAll(typeParams) }
+        _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also { (it.typeParameters as MutableList).addAll(typeParams.map { tp -> SimpleName(tp) }) }
 
     /**
      * create a list type of the indicated typeName
@@ -102,7 +109,7 @@ class TypeNamespaceBuilder(
     */
 
     fun dataType(typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
-        val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
+        val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         val et = b.build()
         return et
@@ -111,7 +118,7 @@ class TypeNamespaceBuilder(
     fun unnamedSuperTypeTypeFor(subtypes: List<Any>): UnnamedSupertypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
+                is String -> _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!!
                 is TypeDeclaration -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
@@ -120,7 +127,7 @@ class TypeNamespaceBuilder(
         return t
     }
 
-    fun singleton(typeName: String) = _namespace.findOwnedOrCreateSingletonTypeNamed(typeName)
+    fun singleton(typeName: String) = _namespace.findOwnedOrCreateSingletonTypeNamed(SimpleName(typeName))
 
     fun build(): TypeNamespace {
         return _namespace
@@ -151,14 +158,14 @@ abstract class StructuredTypeBuilder(
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
         val btargs = tab.build()
-        val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it, emptyList(), false) }
+        val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it.asPossiblyQualifiedName, emptyList(), false) }
         val targs = if (btargs.isEmpty()) atargs else btargs
-        val ti = _namespace.createTypeInstance(_structuredType, typeName, targs, isNullable)
-        return _structuredType.appendPropertyStored(propertyName, ti, characteristics)
+        val ti = _namespace.createTypeInstance(_structuredType, typeName.asPossiblyQualifiedName, targs, isNullable)
+        return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics)
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, this._namespace.createTypeInstance(_structuredType, typeName, emptyList(), isNullable), childIndex)
+        property(propertyName, this._namespace.createTypeInstance(_structuredType, typeName.asPossiblyQualifiedName, emptyList(), isNullable), childIndex)
 
     fun propertyListTypeOf(propertyName: String, dataTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(propertyName, nullable, childIndex) {
@@ -176,13 +183,13 @@ abstract class StructuredTypeBuilder(
 
     // ListSeparated
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
-        val separatorType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findTypeNamed(itemTypeName.asPossiblyQualifiedName) ?: _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
+        val separatorType = _namespace.findTypeNamed(itemTypeName.asPossiblyQualifiedName) ?: _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(separatorTypeName))
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
@@ -219,10 +226,10 @@ abstract class StructuredTypeBuilder(
 
     //
     fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = if (elementTypeName.contains(".")) {
-            _namespace.findTypeNamed(elementTypeName)!!
+        val t = if (elementTypeName.isQualifiedName) {
+            _namespace.findTypeNamed(QualifiedName(elementTypeName)) ?: error("Type named '$elementTypeName' not found")
         } else {
-            _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
+            _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(elementTypeName))
         }
         return property(propertyName, t.type(emptyList(), isNullable), childIndex)
     }
@@ -230,7 +237,7 @@ abstract class StructuredTypeBuilder(
     fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {
         check(childIndex >= _structuredType.property.size) { "Incorrect property index" }
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        return _structuredType.appendPropertyStored(propertyName, typeUse, characteristics, childIndex)
+        return _structuredType.appendPropertyStored(PropertyName(propertyName), typeUse, characteristics, childIndex)
     }
 }
 
@@ -251,26 +258,26 @@ class TupleTypeBuilder(
 class DataTypeBuilder(
     _namespace: TypeNamespace,
     _typeReferences: MutableList<TypeUsageReferenceBuilder>,
-    _elementName: String
+    _elementName: SimpleName
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
     private val _elementType = _namespace.findOwnedOrCreateDataTypeNamed(_elementName) as DataType
     override val _structuredType: StructuredType get() = _elementType
 
     fun typeParameters(vararg parameters: String) {
-        ((_elementType as DataType).typeParameters as MutableList).addAll(parameters)
+        (_elementType.typeParameters as MutableList).addAll(parameters.map { SimpleName(it) })
     }
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _elementType.addSupertype(it)
+            _elementType.addSupertype(QualifiedName(it))
         }
     }
 
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
-            _elementType.addSubtype(it)
-            (_namespace.findOwnedTypeNamed(it) as DataType?)?.addSupertype(_elementType.name)
+            _elementType.addSubtype(QualifiedName(it))
+            (_namespace.findOwnedTypeNamed(SimpleName(it)) as DataType?)?.addSupertype(_elementType.qualifiedName)
         }
     }
 
@@ -290,15 +297,15 @@ class TypeUsageReferenceBuilder(
     private val _args = mutableListOf<TypeInstance>()
 
     fun primitiveRef(typeName: String) {
-        _args.add(_namespace.createTypeInstance(context, typeName, emptyList(), nullable))
+        _args.add(_namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), nullable))
     }
 
     fun elementRef(typeName: String) {
-        _args.add(_namespace.createTypeInstance(context, typeName, emptyList(), nullable))
+        _args.add(_namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), nullable))
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        val subtypes = subtypeNames.map { _namespace.createTypeInstance(context, it, emptyList(), false) }
+        val subtypes = subtypeNames.map { _namespace.createTypeInstance(context, it.asPossiblyQualifiedName, emptyList(), false) }
         val t = _namespace.createUnnamedSupertypeType(subtypes)
         _args.add(t.type(emptyList(), nullable))
     }
@@ -318,7 +325,7 @@ class TypeArgumentBuilder(
         val tab = TypeArgumentBuilder(_context, _namespace)
         tab.typeArguments()
         val typeArgs = tab.build()
-        val tref = _namespace.createTypeInstance(_context, qualifiedTypeName, typeArgs, false)
+        val tref = _namespace.createTypeInstance(_context, QualifiedName(qualifiedTypeName), typeArgs, false)
         list.add(tref)
         return tref
     }
@@ -337,12 +344,14 @@ class SubtypeListBuilder(
     val _subtypeList = mutableListOf<TypeInstance>()
 
     fun primitiveRef(typeName: String) {
-        val ti = _namespace.createTypeInstance(null, typeName, emptyList(), false)
+        val pqn = typeName.asPossiblyQualifiedName
+        val ti = _namespace.createTypeInstance(null, pqn, emptyList(), false)
         _subtypeList.add(ti)
     }
 
     fun elementRef(elementTypeName: String) {
-        val ti = _namespace.createTypeInstance(null, elementTypeName, emptyList(), false)
+        val pqn = elementTypeName.asPossiblyQualifiedName
+        val ti = _namespace.createTypeInstance(null, pqn, emptyList(), false)
         _subtypeList.add(ti)
     }
 
@@ -363,7 +372,7 @@ class SubtypeListBuilder(
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        val sts = subtypeNames.map { _namespace.findOwnedOrCreateDataTypeNamed(it)!! }
+        val sts = subtypeNames.map { _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!! }
         val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
         _subtypeList.add(t.type())
     }

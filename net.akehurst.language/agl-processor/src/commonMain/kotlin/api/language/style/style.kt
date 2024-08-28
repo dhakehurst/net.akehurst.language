@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,26 @@
  *
  */
 
-package net.akehurst.language.api.style
+package net.akehurst.language.api.language.style
 
-interface AglStyleModel {
+import net.akehurst.language.api.language.base.Definition
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.Namespace
+
+interface AglStyleModel : DefinitionBlock<AglStyleRule> {
+
+}
+
+interface StyleNamespace : Namespace<AglStyleRule> {
     val rules: List<AglStyleRule>
 }
 
-data class AglStyleRule(
+interface AglStyleRule : Definition<AglStyleRule> {
     val selector: List<AglStyleSelector>
-) {
-    var styles = mutableMapOf<String, AglStyle>()
 
-    fun getStyle(name: String): AglStyle? {
-        return this.styles[name]
-    }
+    val declaration: Map<String, AglStyleDeclaration>
 
-    fun toCss(): String {
-        return """
-            ${this.selector.joinToString(separator = ", ") { it.value }} {
-                ${this.styles.values.joinToString(separator = "\n") { it.toCss() }}
-            }
-         """.trimIndent()
-    }
+    fun toCss(): String
 }
 
 enum class AglStyleSelectorKind { LITERAL, PATTERN, RULE_NAME, META }
@@ -45,7 +43,7 @@ data class AglStyleSelector(
     val kind: AglStyleSelectorKind
 )
 
-data class AglStyle(
+data class AglStyleDeclaration(
     val name: String,
     val value: String
 ) {

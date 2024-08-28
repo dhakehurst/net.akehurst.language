@@ -39,7 +39,7 @@ class CompletionProviderDefault(
     val crossReferenceModel: CrossReferenceModel
 ) : CompletionProviderAbstract<Asm, ContextSimple>() {
 
-    val targetNamespace = typeModel.namespace[targetGrammar.qualifiedName] as GrammarTypeNamespaceSimple?
+    val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
@@ -89,12 +89,12 @@ class CompletionProviderDefault(
                 val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                 val items = refTypes.flatMap { refType ->
                     context.rootScope.findItemsConformingTo {
-                        val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
                         itemType.conformsTo(refType)
                     }
                 }
                 items.map {
-                    CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.substringAfterLast("."))
+                    CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.last.value)
                 }
             }
         }

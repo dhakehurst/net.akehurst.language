@@ -18,28 +18,31 @@
 package net.akehurst.language.agl.agl.language.asmTransform
 
 import net.akehurst.language.agl.agl.language.base.BaseSyntaxAnalyser
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
-import net.akehurst.language.agl.language.asmTransform.TransformationRuleAbstract
-import net.akehurst.language.agl.language.asmTransform.TransformationRuleSimple
-import net.akehurst.language.agl.language.asmTransform.TransformationStatementAbstract
+import net.akehurst.language.agl.language.asmTransform.*
 import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.asmTransform.TransformNamespace
+import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.typemodel.api.PropertyName
 
 class AsmTransformSyntaxAnalyser(
-) : SyntaxAnalyserByMethodRegistrationAbstract<List<AsmTransformModel>>() {
+) : SyntaxAnalyserByMethodRegistrationAbstract<TransformModel>() {
 
-    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
-        "Base" to BaseSyntaxAnalyser()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Base") to BaseSyntaxAnalyser()
     )
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         AglExpressions.grammar.qualifiedName to ExpressionsSyntaxAnalyser()
     )
 
@@ -60,36 +63,44 @@ class AsmTransformSyntaxAnalyser(
     }
 
     // unit = namespace transformList ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AsmTransformModel> {
-        val namespaceQName = (children[0] as List<String>).joinToString(separator = ".")
-        val trMdls = children[1] as List<(String) -> AsmTransformModel>
-        val asm = trMdls.map { it.invoke(namespaceQName) }
-        return asm
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
+        val namespaceQName = QualifiedName((children[0] as List<String>).joinToString(separator = "."))
+        val namespace = TransformNamespaceDefault(namespaceQName)
+        val transformBuilders = children[1] as List<(TransformNamespace) -> TransformRuleSet>
+        transformBuilders.map {
+            val tr = it.invoke(namespace)
+            namespace.addDefinition(tr)
+            tr
+        }
+        return TransformModelDefault(
+            null,
+            listOf(namespace)
+        )
     }
 
     // transformList = transform+ ;
-    private fun transformList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(String) -> AsmTransformModel> =
-        children as List<(String) -> AsmTransformModel>
+    private fun transformList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(TransformNamespace) -> TransformRuleSet> =
+        children as List<(TransformNamespace) -> TransformRuleSet>
 
-    // transform = 'transform' qualifiedName '{' transformRuleList '}' ;
-    private fun transform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (String) -> AsmTransformModel {
-        val name = (children[1] as List<String>).joinToString(separator = ".")
-        val rules = children[3] as List<TransformationRuleAbstract>
+    // transform = 'transform' IDENTIFIER '{' transformRuleList '}' ;
+    private fun transform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TransformNamespace) -> TransformRuleSet {
+        val name = SimpleName(children[1] as String)
+        val rules = children[3] as List<TransformationRule>
 
-        return { namespaceQName ->
-            val asm = AsmTransformModelSimple("$namespaceQName.$name")
+        return { namespace ->
+            val asm = TransformRuleSetDefault(namespace, name, rules)
             rules.forEach { asm.addRule(it) }
             asm
         }
     }
 
     // transformRuleList = transformRule+ ;
-    private fun transformRuleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TransformationRuleAbstract> =
+    private fun transformRuleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TransformationRule> =
         children as List<TransformationRuleAbstract>
 
     // transformRule = grammarRuleName ':' transformRuleRhs ;
-    private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRuleAbstract {
-        val grammarRuleName = children[0] as String
+    private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
+        val grammarRuleName = GrammarRuleName(children[0] as String)
         val trRule = children[2] as TransformationRuleAbstract
         trRule.grammarRuleName = grammarRuleName
         return trRule
@@ -101,12 +112,12 @@ class AsmTransformSyntaxAnalyser(
 
     // createRule = typeName optStatementBlock ;
     private fun createRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val typeName = children[0] as String
+        val typeName = children[0] as QualifiedName
         val statements = children[1]?.let { it as List<AssignmentStatement> } ?: emptyList()
         val expr = CreateObjectExpressionSimple(typeName, emptyList()).also {
             it.propertyAssignments = statements
         }
-        val tr = TransformationRuleSimple(typeName, expr)
+        val tr = TransformationRuleDefault(typeName, expr)
         return tr
     }
 
@@ -116,11 +127,11 @@ class AsmTransformSyntaxAnalyser(
 
     // modifyRule = '{' typeName '->' statementList '}' ;
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val typeName = children[1] as String
+        val typeName = children[1] as QualifiedName
         val statements = children[3] as List<AssignmentStatement>
         val expr = OnExpressionSimple(RootExpressionSimple("\$it"))
         expr.propertyAssignments = statements
-        val tr = TransformationRuleSimple(typeName, expr)
+        val tr = TransformationRuleDefault(typeName, expr)
         return tr
     }
 
@@ -130,7 +141,7 @@ class AsmTransformSyntaxAnalyser(
 
     // assignmentStatement = propertyName ':=' Expression.expression ;
     private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementSimple {
-        val propName = children[0] as String
+        val propName = PropertyName(children[0] as String)
         val expr = children[2] as Expression
         return AssignmentStatementSimple(propName, expr)
     }
@@ -144,6 +155,6 @@ class AsmTransformSyntaxAnalyser(
         children[0] as String
 
     // typeName = qualifiedName ;
-    private fun typeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        (children[0] as List<String>).joinToString(separator = ".")
+    private fun typeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
+        QualifiedName((children[0] as List<String>).joinToString(separator = "."))
 }

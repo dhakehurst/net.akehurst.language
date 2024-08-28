@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
+import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
@@ -38,12 +39,12 @@ interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argume
     /**
      * map of Extends GrammarName -> SyntaxAnalyser for extended Language
      */
-    val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>>
+    val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>>
 
     /**
      * map of Embedded GrammarName -> SyntaxAnalyser for embedded Language
      */
-    val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<*>>
+    val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>>
 
     /**
      * reset the sppt2ast, clearing any cached values

@@ -32,7 +32,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
@@ -50,7 +50,7 @@ class test_AllDefault {
             val grammarStr: String,
             val expectedRrs: RuntimeRuleSet,
             val expectedTm: TypeModel,
-            val expectedTr: AsmTransformModel
+            val expectedTr: TransformModel
         ) {
             val sentenceData = mutableListOf<TestDataForSentenceParse>()
 
@@ -119,7 +119,7 @@ class test_AllDefault {
             grammarStr: String,
             expectedRrs: RuntimeRuleSet,
             expectedTm: TypeModel,
-            expectedTr: AsmTransformModel,
+            expectedTr: TransformModel,
             sentenceIndex: Int? = null,
             sentenceData: TestDataForGeneratedParser.() -> Unit
         ) {

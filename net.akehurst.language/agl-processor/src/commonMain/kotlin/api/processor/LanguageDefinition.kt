@@ -18,17 +18,19 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.Namespace
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.Namespace
 import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)
-    fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar?
+    fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: String): Grammar?
 }
 
 interface LanguageRegistry : GrammarRegistry {
@@ -39,31 +41,31 @@ interface LanguageRegistry : GrammarRegistry {
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(
-        identity: String,
+        identity: QualifiedName,
         grammarStr: String?,
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
 
-    fun unregister(identity: String)
+    fun unregister(identity: QualifiedName)
 
-    fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>?
+    fun <AsmType : Any, ContextType : Any> findOrNull(identity: QualifiedName): LanguageDefinition<AsmType, ContextType>?
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
-        identity: String,
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
+        identity: QualifiedName,
+        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType>
 }
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
-    val identity: String
+    val identity: QualifiedName
     val isModifiable: Boolean
 
     var grammarStr: String?
-    var grammarList: List<Grammar>
+    var grammarList: DefinitionBlock<Grammar>
     val targetGrammar: Grammar?
     var targetGrammarName: String?
     var defaultGoalRule: String?
@@ -83,7 +85,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val formatter: Formatter<AsmType>?
 
     /** the options for parsing/processing the grammarStr for this language */
-    //var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+    //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
     val processor: LanguageProcessor<AsmType, ContextType>?
 
     var styleStr: String?
@@ -93,7 +95,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(String?, String?) -> Unit>
-    val grammarObservers: MutableList<(List<Grammar>, List<Grammar>) -> Unit>
+    val grammarObservers: MutableList<(DefinitionBlock<Grammar>, DefinitionBlock<Grammar>) -> Unit>
     val crossReferenceModelStrObservers: MutableList<(String?, String?) -> Unit>
 
     //val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>

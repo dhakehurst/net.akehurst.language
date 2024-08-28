@@ -25,6 +25,7 @@ import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -56,6 +57,6 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val automata: Map<String, Automaton>
 
     val grammar: Grammar by lazy {
-        Agl.registry.agl.grammar.processor!!.process(grammarString).asm!!.first() //FIXME
+        Agl.registry.agl.grammar.processor!!.process(grammarString).asm!!.primary!! //FIXME
     }
 }

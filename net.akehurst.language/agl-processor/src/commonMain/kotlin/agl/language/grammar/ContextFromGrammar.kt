@@ -17,25 +17,28 @@
 package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 // used by other languages that reference rules  in a grammar
 class ContextFromGrammar(
 ) : SentenceContext<String> {
     companion object {
-        fun createContextFrom(grammars: List<Grammar>): ContextFromGrammar {
+        fun createContextFrom(grammars: DefinitionBlock<Grammar>): ContextFromGrammar {
             val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
-            val namespace: GrammarTypeNamespace = aglGrammarTypeModel.namespace[Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName] as GrammarTypeNamespace? ?: error("")
+            val namespace: GrammarTypeNamespace =
+                aglGrammarTypeModel.namespace[Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName] as GrammarTypeNamespace? ?: error("")
             val context = ContextFromGrammar()
-            val scope = ScopeSimple<String>(null, grammars.last().name, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
-            grammars.forEach { g ->
+            val scope = ScopeSimple<String>(null, grammars.primary!!.name, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+            grammars.allDefinitions.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
                     val rType = namespace.findTypeForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
-                    scope.addToScope(it.name, rType.declaration.qualifiedName, it.name)
+                    scope.addToScope(it.name, rType.declaration.qualifiedName.value, it.name)
                 }
                 g.allResolvedTerminal.forEach {
                     val rTypeName = when {
