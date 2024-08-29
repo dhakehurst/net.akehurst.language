@@ -37,7 +37,7 @@ class GrammarDefault(
     }
 
     override val defaultGoalRule: GrammarRule
-        get() = options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(SimpleName(it.value)) }
+        get() = options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(GrammarRuleName(it.value)) }
             ?: this.allResolvedGrammarRule.first { it.isSkip.not() }
 }
 
@@ -148,7 +148,7 @@ abstract class GrammarAbstract(
     }
 
     override val directInheritedResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
-        val resolvedRules = linkedMapOf<SimpleName, GrammarRule>() //use linkedMap so order stays the same
+        val resolvedRules = linkedMapOf<GrammarRuleName, GrammarRule>() //use linkedMap so order stays the same
         val inheritedRules = this.extends.flatMap { it.resolved?.resolvedGrammarRule ?: emptyList() }
         inheritedRules.forEach { rule ->
             val r = resolve(rule, inheritedRules) ?: rule
@@ -169,7 +169,7 @@ abstract class GrammarAbstract(
     }
 
     override val resolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
-        val resolvedRules = linkedMapOf<SimpleName, GrammarRule>() //use linkedMap so order stays the same
+        val resolvedRules = linkedMapOf<GrammarRuleName, GrammarRule>() //use linkedMap so order stays the same
         val inheritedRules = emptyList<GrammarRule>()
         this.grammarRule.forEach { rule ->
             val r = resolve(rule, inheritedRules) ?: rule
@@ -179,7 +179,7 @@ abstract class GrammarAbstract(
     }
 
     override val allResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
-        val resolvedRules = linkedMapOf<SimpleName, GrammarRule>() //use linkedMap so order stayes the same
+        val resolvedRules = linkedMapOf<GrammarRuleName, GrammarRule>() //use linkedMap so order stayes the same
         val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
 
         inheritedRules.forEach { rule ->
@@ -227,19 +227,19 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
-    override fun findOwnedGrammarRuleOrNull(ruleName: SimpleName): GrammarRule? {
+    override fun findOwnedGrammarRuleOrNull(ruleName: GrammarRuleName): GrammarRule? {
         return grammarRule.firstOrNull { it.name == ruleName }
     }
 
-    override fun findAllSuperGrammarRule(ruleName: SimpleName): List<GrammarRule> {
+    override fun findAllSuperGrammarRule(ruleName: GrammarRuleName): List<GrammarRule> {
         val rules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }.toMutableOrderedSet()
         return rules.filter { it.grammar != this && it.name == ruleName }
     }
 
-    override fun findAllGrammarRuleList(ruleName: SimpleName): List<GrammarRule> =
+    override fun findAllGrammarRuleList(ruleName: GrammarRuleName): List<GrammarRule> =
         this.allGrammarRule.filter { it.name == ruleName }
 
-    override fun findAllResolvedGrammarRule(ruleName: SimpleName): GrammarRule? {
+    override fun findAllResolvedGrammarRule(ruleName: GrammarRuleName): GrammarRule? {
         val all = this.allResolvedGrammarRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null

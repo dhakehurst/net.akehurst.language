@@ -20,10 +20,12 @@ import net.akehurst.language.agl.language.format.AglFormatExpressionFromAsm
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.formatter.api.*
+import net.akehurst.language.typemodel.api.PropertyName
 
 class FormatterSimple<AsmType>(
     val model: AglFormatterModel?
@@ -97,26 +99,26 @@ class FormatterSimple<AsmType>(
 
     private fun AglFormatExpressionFromAsm.execute(model: AglFormatterModel?, el: AsmStructure): String {
         return when (this.asm.typeName) {
-            "LiteralString" -> (el.getProperty("literal_string") as AsmPrimitive).value.toString()
-            "TemplateString" -> {
-                val templateContentList = (this.asm.getProperty("templateContentList") as AsmList).elements
+            SimpleName("LiteralString") -> (el.getProperty(PropertyName("literal_string")) as AsmPrimitive).value.toString()
+            SimpleName("TemplateString") -> {
+                val templateContentList = (this.asm.getProperty(PropertyName("templateContentList")) as AsmList).elements
                 templateContentList.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it.typeName) {
-                        "Text" -> ((it as AsmStructure).getProperty("raw_text") as AsmPrimitive).value.toString()
-                        "TemplateExpressionSimple" -> {
-                            val id1 = (it as AsmStructure).getProperty("dollar_identifier")
+                        SimpleName("Text") -> ((it as AsmStructure).getProperty(PropertyName("raw_text")) as AsmPrimitive).value.toString()
+                        SimpleName("TemplateExpressionSimple") -> {
+                            val id1 = (it as AsmStructure).getProperty(PropertyName("dollar_identifier"))
                             val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
-                            val pv = el.getProperty(id)
+                            val pv = el.getProperty(PropertyName(id))
                             pv.format(model)
                         }
 
-                        "TemplateExpressionEmbedded" -> TODO()
+                        SimpleName("TemplateExpressionEmbedded") -> TODO()
                         else -> error("Element type ${it.typeName} not handled")
                     }
                 }
             }
 
-            "WhenExpression" -> TODO()
+            SimpleName("WhenExpression") -> TODO()
             else -> error("Element type ${this.asm.typeName} not handled")
         }
     }

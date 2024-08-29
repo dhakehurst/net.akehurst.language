@@ -26,7 +26,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
     companion object {
         class CompressedLeafRule(
-            override val name: String,
+            val name: String,
             override val value: String,
             override val isPattern: Boolean
         ) : Terminal, RuleItemAbstract() {
@@ -114,5 +114,5 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
     override val isOneEmbedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
 
-    override val compressedLeaf: Terminal by lazy { compressRuleItem(this.name, this.rhs) }
+    override val compressedLeaf: Terminal by lazy { compressRuleItem(this.name.value, this.rhs) }
 }

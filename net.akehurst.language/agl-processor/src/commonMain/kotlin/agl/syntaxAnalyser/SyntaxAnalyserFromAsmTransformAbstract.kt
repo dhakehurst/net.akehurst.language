@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
-import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
@@ -31,8 +29,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.emptyListSeparated
@@ -59,10 +59,10 @@ data class DownData2(
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
+abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
-    val asmTransformModel: AsmTransformModel
+    val asmTransformModel: TransformModel
     //val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserFromTreeDataAbstract<A>() {
 
@@ -79,10 +79,12 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     private var _asm: AsmSimple? = null
     override val asm: A get() = _asm as A
 
+    val relevantRuleSet = asmTransformModel.findNamespaceOrNull(grammarNamespaceQualifiedName.front)?.findDefinitionOrNull(grammarNamespaceQualifiedName.last)
+        ?: error("Relevant TransformRuleSet not Found for '$grammarNamespaceQualifiedName'")
     val _trf = AsmTransformInterpreter(typeModel)
 
     private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
-        return asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(grmRuleName)
+        return relevantRuleSet.findTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
     override fun clear() {
@@ -91,7 +93,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
     }
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserForAsmTransformAbstract<A>> = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<A>> = mutableStackOf(this)
         val downStack = mutableStackOf<DownData2>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
         val walker = object : SpptWalker {
@@ -161,7 +163,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser for '${grammarNamespaceQualifiedName}'")
-                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserForAsmTransformAbstract<A>)
+                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<A>)
                 val parentDownData = downStack.peek()!!
                 val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.trRule.forChildren.resolvedType.declaration, nodeInfo)
                 val tu = syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(embRuleName)
@@ -214,7 +216,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
                 val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
             }
 
             is DataType -> {
@@ -222,7 +224,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
                         val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                        prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                        prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
                     }
                 }
             }
@@ -243,7 +245,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo.not() -> {
                     // special case compressed rule
-                    this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
+                    this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
 
                 else -> {
@@ -265,7 +267,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             nodeRule.isList -> when {
                 nodeRule.isPseudo.not() -> {  // 1 (one property) or 0 (subtype)
                     // special case compressed rule - no pseudo node for list
-                    this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
+                    this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
 
                 else -> {
@@ -288,7 +290,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     }
                 }
 
-                else -> this.asmTransformModel.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
+                else -> this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
                     ?: error("Should not happen")
             }
         }
@@ -441,7 +443,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                 when {
                     typeDecl.property.first().typeInstance.isNullable -> {
                         val fProp = typeDecl.property.first()
-                        val pp = p.plus(fProp.name)
+                        val pp = p.plus(fProp.name.value)
                         //DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toSelfAssignChild0TrRule()))
                         DownData2(p, NodeTrRules(trRule))
                     }
@@ -449,7 +451,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
                     nodeInfo.node.rule.isOptional -> DownData2(p, NodeTrRules(trRule))
                     nodeInfo.node.rule.isList -> {
                         val fProp = typeDecl.property.first()
-                        val pp = p.plus(fProp.name)
+                        val pp = p.plus(fProp.name.value)
                         //DownData2(pp, NodeTrRules(trRule, fProp.typeInstance.toSelfAssignChild0TrRule()))
                         DownData2(p, NodeTrRules(trRule))//, fProp.typeInstance))
                     }
@@ -518,7 +520,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
         }
-        val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME.asQualifiedName)
+        val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
         self.setProperty(AsmTransformInterpreter.ALTERNATIVE, alternative, 0)
         self.setProperty(AsmTransformInterpreter.LEAF, leaf, 1)
         self.setProperty(AsmTransformInterpreter.CHILDREN, childrenAsmList, 2)
@@ -814,7 +816,7 @@ abstract class SyntaxAnalyserForAsmTransformAbstract<A : Asm>(
         } else {
             val el = createAsmElement(path, type.qualifiedName)
             for (propDecl in type.property) {
-                val propPath = path + propDecl.name
+                val propPath = path + propDecl.name.value
                 val propType = propDecl.typeInstance.declaration
                 val childData = children[propDecl.index]
                 val propValue: AsmValue? = when (propType) {

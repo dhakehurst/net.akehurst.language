@@ -20,7 +20,6 @@ package net.akehurst.language.agl.language.asmTransform
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.expressions.IndexOperationSimple
@@ -41,12 +40,13 @@ import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
 class TransformModelDefault(
+    override val name: SimpleName,
     override val typeModel: TypeModel?,
     override val namespace: List<TransformNamespace>
 ) : TransformModel, DefinitionBlockAbstract<TransformRuleSet>(namespace) {
 
     companion object {
-        fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<List<TransformModel>> {
+        fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<TransformModel> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             return proc.process(
                 sentence = transformStr,
@@ -59,11 +59,11 @@ class TransformModelDefault(
         fun fromGrammar(
             grammar: Grammar,
             typeModel: TypeModel,
-            configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration
-        ): ProcessResult<List<TransformModel>> {
+            configuration: Grammar2TypeModelMapping? = GrammarNamespaceAndAsmTransformBuilderFromGrammar.defaultConfiguration
+        ): ProcessResult<TransformModel> {
             val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(typeModel, grammar, configuration)
             val trModel = atfg.build()
-            return ProcessResultDefault<List<TransformModel>>(listOf(trModel), atfg.issues)
+            return ProcessResultDefault<TransformModel>(trModel, atfg.issues)
         }
     }
 

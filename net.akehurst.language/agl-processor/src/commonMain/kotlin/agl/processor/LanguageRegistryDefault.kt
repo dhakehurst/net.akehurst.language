@@ -41,9 +41,7 @@ import net.akehurst.language.agl.language.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.language.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.base.DefinitionBlock
-import net.akehurst.language.api.language.base.Namespace
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.*
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -60,9 +58,10 @@ interface AglLanguages {
     val styleLanguageIdentity: QualifiedName
     val formatLanguageIdentity: QualifiedName
 
+    val base: LanguageDefinition<Any, SentenceContext<String>>
     val expressions: LanguageDefinition<Expression, SentenceContext<String>>
     val grammar: LanguageDefinition<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>
-    val asmTransform: LanguageDefinition<List<TransformModel>, ContextFromGrammar>
+    val asmTransform: LanguageDefinition<TransformModel, ContextFromGrammar>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
     val formatter: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
@@ -82,7 +81,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val formatLanguageIdentity: QualifiedName = AglFormat.grammar.qualifiedName
         override val crossReferenceLanguageIdentity: QualifiedName = AglCrossReferences.grammar.qualifiedName
 
-        val base: LanguageDefinition<Any, SentenceContext<String>> = this@LanguageRegistryDefault.registerFromDefinition(
+        override val base: LanguageDefinition<Any, SentenceContext<String>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm<Any, SentenceContext<String>>(
                 identity = baseLanguageIdentity,
                 AglBase.grammar,
@@ -164,7 +163,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         )
 
-        override val asmTransform: LanguageDefinition<List<TransformModel>, ContextFromGrammar> = this@LanguageRegistryDefault.registerFromDefinition(
+        override val asmTransform: LanguageDefinition<TransformModel, ContextFromGrammar> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = asmTransformLanguageIdentity,
                 AsmTransform.grammar,
@@ -340,8 +339,13 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     fun findGrammarOrNullByQualifiedName(qualifiedName: QualifiedName): Grammar? = _grammars[qualifiedName]
 
-    override fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: String): Grammar? =
-        findGrammarOrNullByQualifiedName(QualifiedName("${localNamespace.qualifiedName}.$nameOrQName")) ?: findGrammarOrNullByQualifiedName(QualifiedName(nameOrQName))
+    override fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar? =
+        when (nameOrQName) {
+            is QualifiedName -> findGrammarOrNullByQualifiedName(nameOrQName)
+            is SimpleName -> findGrammarOrNullByQualifiedName(nameOrQName.asQualifiedName(localNamespace.qualifiedName))
+            else -> error("Unsupported")
+        }
+
 
     override fun registerGrammar(grammar: Grammar) {
         _grammars[grammar.qualifiedName] = grammar

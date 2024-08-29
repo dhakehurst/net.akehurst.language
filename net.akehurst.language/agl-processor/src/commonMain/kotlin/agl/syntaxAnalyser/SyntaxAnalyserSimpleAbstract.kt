@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -27,7 +26,8 @@ import net.akehurst.language.agl.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.*
 import net.akehurst.language.typemodel.api.*
@@ -59,7 +59,7 @@ data class ChildData(
 abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
-    val asmTransformModel: AsmTransformModel
+    //val asmTransformModel: TransformModel
     //val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserFromTreeDataAbstract<A>() {
 
@@ -76,8 +76,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     override val asm: A get() = _asm as A
 
     private fun findTypeUsageForRule(ruleName: String): TypeInstance? {
-        val ns = this.typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace?
-        return ns?.findTypeForRule(ruleName)
+        val ns = this.typeModel.findNamespaceOrNull(grammarNamespaceQualifiedName) as GrammarTypeNamespace?
+        return ns?.findTypeForRule(GrammarRuleName(ruleName))
     }
 
     override fun clear() {
@@ -208,7 +208,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
                 val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
             }
 
             is DataType -> {
@@ -216,7 +216,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
                         val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                        prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                        prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
                     }
                 }
             }
@@ -376,14 +376,14 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                 when {
                     type.property.first().typeInstance.isNullable -> {
                         val fProp = type.property.first()
-                        val pp = p.plus(fProp.name)
+                        val pp = p.plus(fProp.name.value)
                         DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
                     }
 
                     nodeInfo.node.rule.isOptional -> DownData(p, NodeTypes(typeUsage))
                     nodeInfo.node.rule.isList -> {
                         val fProp = type.property.first()
-                        val pp = p.plus(fProp.name)
+                        val pp = p.plus(fProp.name.value)
                         DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
                     }
 
@@ -703,7 +703,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         } else {
             val el = createAsmElement(path, type.qualifiedName)
             for (propDecl in type.property) {
-                val propPath = path + propDecl.name
+                val propPath = path + propDecl.name.value
                 val propType = propDecl.typeInstance.declaration
                 val childData = children[propDecl.index]
                 val propValue: AsmValue? = when (propType) {

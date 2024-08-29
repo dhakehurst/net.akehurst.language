@@ -24,6 +24,7 @@ import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
 interface TransformModel : DefinitionBlock<TransformRuleSet> {
+    val name: SimpleName
 
     /**
      * Access to the TypeModel ensuring that the AsmTransform has first been evaluated

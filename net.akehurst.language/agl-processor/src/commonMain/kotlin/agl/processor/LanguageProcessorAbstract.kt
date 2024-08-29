@@ -22,15 +22,17 @@ import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.Parser
@@ -77,9 +79,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         SPPTParserDefault((parser as LeftCornerParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }
 
-    protected val defaultGoalRuleName: String? by lazy {
+    protected val defaultGoalRuleName: GrammarRuleName? by lazy {
         configuration.defaultGoalRuleName
-            ?: grammar.options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.value
+            ?: grammar.options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.value?.let { GrammarRuleName(it) }
             ?: grammar.grammarRule.first { it.isSkip.not() }.name
     }
 
@@ -87,16 +89,21 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
-            ?: grammarTypeModel(this.grammar.qualifiedName.value, this.grammar.name) {}
+            ?: grammarTypeModel(this.grammar.qualifiedName.value, this.grammar.name.value) {}
     }
 
     override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
 
-    override val asmTransformModel: AsmTransformModel by lazy {
+    override val asmTransformModel: TransformModel by lazy {
         val res = configuration.asmTransformModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm?.firstOrNull { it.qualifiedName == grammar.qualifiedName }
-            ?: AsmTransformModelSimple.fromGrammar(this.grammar, this.baseTypeModel).asm?.first()
+        res?.asm
+            ?: TransformModelDefault.fromGrammar(this.grammar, this.baseTypeModel).asm
+            ?: error("should not happen")
+    }
+
+    val asmTransformRuleSet: TransformRuleSet by lazy {
+        asmTransformModel.findNamespaceOrNull(grammar.namespace.qualifiedName)?.findOwnedDefinitionOrNull(grammar.name)
             ?: error("should not happen")
     }
 
@@ -144,17 +151,17 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun parseOptionsDefault(): ParseOptions = ParseOptionsDefault(
-        this.defaultGoalRuleName
+        this.defaultGoalRuleName?.value
     )
 
     override fun optionsDefault(): ProcessOptions<AsmType, ContextType> =
         ProcessOptionsDefault<AsmType, ContextType>().also {
-            it.parse.goalRuleName = this.defaultGoalRuleName
+            it.parse.goalRuleName = this.defaultGoalRuleName?.value
         }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
         val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
+        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
         this.parser?.buildFor(opts.goalRuleName!!)
         return this
     }
@@ -166,7 +173,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val opts = options ?: parseOptionsDefault()
-        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
+        if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName?.value
         return this.parser?.parse(sentence, opts)?.also { scanner?.reset(); parser?.reset() }
             ?: error("The processor for grammar '${this.grammar.qualifiedName}' was not configured with a Parser")
     }
@@ -274,7 +281,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
         val opts = options ?: optionsDefault()
-        if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName
+        if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName?.value
         return opts
     }
 }

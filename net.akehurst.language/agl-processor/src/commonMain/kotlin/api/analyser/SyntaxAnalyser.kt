@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult

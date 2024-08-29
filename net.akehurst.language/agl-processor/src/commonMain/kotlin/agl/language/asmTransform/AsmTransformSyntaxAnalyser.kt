@@ -73,6 +73,7 @@ class AsmTransformSyntaxAnalyser(
             tr
         }
         return TransformModelDefault(
+            name = SimpleName(""), //TODO
             null,
             listOf(namespace)
         )

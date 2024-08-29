@@ -64,22 +64,22 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
         return when (item) {
-            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
+            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name.value, item.embeddedGoalName.value)))
             is Terminal -> emptySet()
             is NonTerminal -> emptySet()
             is EmptyRule -> emptySet()
-            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
+            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name.value))
             is Concatenation -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
             //is Concatenation -> when (item.items.size) {
             //    1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
             //    else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
             // }
-            is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
-            is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
-            is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
+            is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name.value))
+            is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name.value))
+            is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name.value))
             is Group -> when (item.groupedContent) {
-                is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name))
-                else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
+                is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name.value))
+                else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name.value))
             }
 
             else -> error("Internal Error: subtype of ${RuleItem::class.simpleName} ${item::class.simpleName} not handled")

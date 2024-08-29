@@ -16,10 +16,10 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMutableMapNonNull

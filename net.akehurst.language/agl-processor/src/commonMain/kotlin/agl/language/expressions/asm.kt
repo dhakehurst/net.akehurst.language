@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.*
@@ -30,17 +31,17 @@ abstract class ExpressionAbstract : Expression {
     /**
      * defaults to 'toString' if not overriden in subclass
      */
-    override fun asString(indent: String, increment: String): String = toString()
+    override fun asString(indent: Indent, increment: String): String = toString()
 }
 
 data class CreateTupleExpressionSimple(
     override val propertyAssignments: List<AssignmentStatement>
 ) : ExpressionAbstract(), CreateTupleExpression {
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
         sb.append("tuple {\n")
-        val ni = indent + increment
+        val ni = indent.inc(increment)
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
         sb.append("${props}\n")
         sb.append("${indent}}")
@@ -57,10 +58,10 @@ data class CreateObjectExpressionSimple(
 
     override var propertyAssignments: List<AssignmentStatement> = emptyList()
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
         sb.append("$possiblyQualifiedTypeName {\n")
-        val ni = indent + increment
+        val ni = indent.inc(increment)
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, increment)}" }
         sb.append("${props}\n")
         sb.append("${indent}}")
@@ -75,10 +76,10 @@ class WithExpressionSimple(
     override val expression: Expression
 ) : ExpressionAbstract(), WithExpression {
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
         sb.append("with(${withContext.asString(indent, increment)}) {\n")
-        val ni = indent + increment
+        val ni = indent.inc(increment)
         sb.append("${ni}${expression.asString(ni, increment)}\n")
         sb.append("${indent}}")
         return sb.toString()
@@ -91,11 +92,11 @@ class WhenExpressionSimple(
     override val options: List<WhenOption>
 ) : ExpressionAbstract(), WhenExpression {
 
-    override fun asString(indent: String, increment: String): String {
+    override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
         sb.append("when {\n")
-        val ni = indent + increment
-        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, increment)} -> ${it.expression.asString(ni + increment, increment)}" }
+        val ni = indent.inc(increment)
+        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, increment)} -> ${it.expression.asString(ni.inc(increment), increment)}" }
         sb.append("${opts}\n")
         sb.append("${indent}}")
         return sb.toString()
@@ -194,7 +195,7 @@ class AssignmentStatementSimple(
         _resolvedLhs = propertyDeclaration
     }
 
-    override fun asString(indent: String, increment: String): String = "$lhsPropertyName := ${rhs.asString(indent, increment)}"
+    override fun asString(indent: Indent, increment: String): String = "$lhsPropertyName := ${rhs.asString(indent, increment)}"
 
     override fun toString(): String = "$lhsPropertyName := $rhs"
 
@@ -204,7 +205,7 @@ class InfixExpressionSimple(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
-    override fun asString(indent: String, increment: String): String = "$indent$this"
+    override fun asString(indent: Indent, increment: String): String = "$indent$this"
 
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
 }

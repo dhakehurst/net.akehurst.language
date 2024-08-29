@@ -22,6 +22,7 @@ import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.processor.*
 
 @DslMarker
@@ -35,7 +36,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _regexEngineKind: RegexEngineKind = base.regexEngineKind
     private var _scannerKind: ScannerKind = base.scannerKind
     private var _targetGrammarName: SimpleName? = base.targetGrammarName
-    private var _defaultGoalRuleName: String? = base.defaultGoalRuleName
+    private var _defaultGoalRuleName: GrammarRuleName? = base.defaultGoalRuleName
     private var _scannerResolver: ScannerResolver<AsmType, ContextType>? = base.scannerResolver
     private var _parserResolver: ParserResolver<AsmType, ContextType>? = base.parserResolver
     private var _asmTransformResolver: AsmTransformModelResolver<AsmType, ContextType>? = base.asmTransformModelResolver
@@ -52,7 +53,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun defaultGoalRuleName(value: String?) {
-        _defaultGoalRuleName = value
+        _defaultGoalRuleName = value?.let { GrammarRuleName(it) }
     }
 
     fun scanner(scannerKind: ScannerKind, regexEngineKind: RegexEngineKind) {

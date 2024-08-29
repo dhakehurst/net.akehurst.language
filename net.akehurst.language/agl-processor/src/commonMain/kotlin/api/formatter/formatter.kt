@@ -16,6 +16,7 @@
 
 package net.akehurst.language.formatter.api
 
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
 
 interface AglFormatterModel {
@@ -25,13 +26,13 @@ interface AglFormatterModel {
     /**
      * all format rules indexed by the type name that the rule applies to
      */
-    val rules: Map<String, AglFormatterRule>
+    val rules: Map<SimpleName, AglFormatterRule>
 
 }
 
 interface AglFormatterRule {
     val model: AglFormatterModel
-    val forTypeName: String
+    val forTypeName: SimpleName
     val formatExpression: FormatExpression
 }
 

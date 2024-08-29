@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.asDefinitionBlock
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration

@@ -18,10 +18,9 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.language.base.DefinitionBlock
-import net.akehurst.language.api.language.base.Namespace
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.*
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -30,7 +29,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)
-    fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: String): Grammar?
+    fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
 }
 
 interface LanguageRegistry : GrammarRegistry {
@@ -67,8 +66,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var grammarStr: String?
     var grammarList: DefinitionBlock<Grammar>
     val targetGrammar: Grammar?
-    var targetGrammarName: String?
-    var defaultGoalRule: String?
+    var targetGrammarName: SimpleName?
+    var defaultGoalRule: GrammarRuleName?
 
     val typeModel: TypeModel?
 

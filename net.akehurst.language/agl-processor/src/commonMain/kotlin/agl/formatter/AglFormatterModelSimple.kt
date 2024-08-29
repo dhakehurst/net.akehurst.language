@@ -17,10 +17,11 @@
 
 package net.akehurst.language.agl.formatter
 
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessResult
@@ -81,16 +82,16 @@ internal class AglFormatterModelSimple : AglFormatterModel {
 
     override val defaultWhiteSpace: String get() = " "
 
-    override val rules = mutableMapOf<String, AglFormatterRule>()
+    override val rules = mutableMapOf<SimpleName, AglFormatterRule>()
 
-    fun addRule(typeName: String) {
+    fun addRule(typeName: SimpleName) {
 
     }
 }
 
 class AglFormatterRuleSimple(
     override val model: AglFormatterModel,
-    override val forTypeName: String
+    override val forTypeName: SimpleName
 ) : AglFormatterRule {
 
     override val formatExpression: FormatExpression

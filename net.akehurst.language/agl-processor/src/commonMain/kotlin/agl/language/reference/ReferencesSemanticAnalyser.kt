@@ -62,7 +62,7 @@ class ReferencesSemanticAnalyser(
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
-                    val impNs = context.typeModel.findNamespaceOrNull(impNs)
+                    val impNs = context.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
                     when (impNs) {
                         null -> raiseError(it, "Namespace to import not found")
                     }
@@ -107,7 +107,7 @@ class ReferencesSemanticAnalyser(
     }
 
     private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {
-        val msgStart = if (CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME == scopeDef.scopeForTypeName) {
+        val msgStart = if (CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last == scopeDef.scopeForTypeName) {
             //do nothing
             "In root scope"
         } else {

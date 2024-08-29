@@ -31,7 +31,7 @@ import net.akehurst.language.typemodel.api.PropertyName
 class CrossReferenceModelDefault
     : CrossReferenceModel {
     companion object {
-        val ROOT_SCOPE_TYPE_NAME = SimpleName("§root")
+        val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
 
         fun fromString(context: ContextFromTypeModel?, aglScopeModelSentence: String): ProcessResult<CrossReferenceModel> {
@@ -127,7 +127,7 @@ data class DeclarationsForNamespaceDefault(
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {
-        scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+        scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last)
     }
 
     override val isEmpty: Boolean get() = scopeDefinition.isEmpty() && references.isEmpty()

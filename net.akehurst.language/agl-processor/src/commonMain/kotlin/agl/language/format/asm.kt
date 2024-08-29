@@ -21,11 +21,13 @@ import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.AsmList
 import net.akehurst.language.api.asm.AsmPrimitive
 import net.akehurst.language.api.asm.AsmStructure
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.formatter.api.AglFormatterRule
 import net.akehurst.language.formatter.api.FormatExpression
+import net.akehurst.language.typemodel.api.PropertyName
 
 class AglFormatterModelFromAsm(
     val asm: Asm?
@@ -45,10 +47,10 @@ class AglFormatterModelFromAsm(
 
     override val defaultWhiteSpace: String get() = " "
 
-    override val rules: Map<String, AglFormatterRule> by lazy {
+    override val rules: Map<SimpleName, AglFormatterRule> by lazy {
         when (asm) {
             null -> emptyMap()
-            else -> ((asm.root[0] as AsmStructure).getProperty("ruleList") as AsmList).elements.associate {
+            else -> ((asm.root[0] as AsmStructure).getProperty(PropertyName("ruleList")) as AsmList).elements.associate {
                 when (it) {
                     is AsmStructure -> {
                         val rule = AglFormatterRuleFromAsm(this, it)
@@ -67,12 +69,16 @@ class AglFormatterRuleFromAsm(
     override val model: AglFormatterModel,
     val asm: AsmStructure
 ) : AglFormatterRule {
-    override val forTypeName: String
-        get() = ((asm.getProperty("typeReference") as AsmStructure).getProperty("identifier") as AsmPrimitive).value.toString()
+    override val forTypeName: SimpleName
+        get() {
+            val typeRef = asm.getProperty(PropertyName("typeReference")) as AsmStructure
+            val id = (typeRef.getProperty(PropertyName("identifier")) as AsmPrimitive).value.toString()
+            return SimpleName(id)
+        }
 
     override val formatExpression: FormatExpression
         get() {
-            val fmAsm = asm.getProperty("formatExpression") as AsmStructure
+            val fmAsm = asm.getProperty(PropertyName("formatExpression")) as AsmStructure
             return AglFormatExpressionFromAsm(fmAsm)
         }
 }

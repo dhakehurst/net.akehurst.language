@@ -39,7 +39,7 @@ interface TypeModel : DefinitionBlock<TypeDeclaration> {
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypeNamespace
 
-    fun findFirstByPossiblyQualifiedOrNull(typeNAme: PossiblyQualifiedName): TypeDeclaration?
+    fun findFirstByPossiblyQualifiedOrNull(typeName: PossiblyQualifiedName): TypeDeclaration?
 
     fun findFirstByNameOrNull(typeName: SimpleName): TypeDeclaration?
 

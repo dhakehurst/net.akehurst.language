@@ -42,10 +42,19 @@ class ConstructAndModify<TP : DataType, TR : TransformationRuleAbstract>(
 class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     val typeModel: TypeModel,
     val grammar: Grammar,
-    val configuration: Grammar2TypeModelMapping? = TypeModelFromGrammar.defaultConfiguration
+    val configuration: Grammar2TypeModelMapping? = defaultConfiguration
 ) {
 
     companion object {
+        val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
+
+        val UNNAMED_PRIMITIVE_PROPERTY_NAME = PropertyName("\$value")
+        val UNNAMED_LIST_PROPERTY_NAME = PropertyName("\$list")
+        val UNNAMED_TUPLE_PROPERTY_NAME = PropertyName("\$tuple")
+        val UNNAMED_GROUP_PROPERTY_NAME = PropertyName("\$group")
+        val UNNAMED_CHOICE_PROPERTY_NAME = PropertyName("\$choice")
+
+
         fun TypeInstance.toNoActionTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple.NOTHING) }
         fun TypeInstance.toLeafAsStringTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("leaf")) }
         fun TypeInstance.toListTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("children")) }
@@ -80,7 +89,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     val namespace = typeModel.findNamespaceOrNull(grammar.qualifiedName) as GrammarTypeNamespaceSimple? ?: let {
         val ns = GrammarTypeNamespaceSimple(
             qualifiedName = grammar.qualifiedName,
-            imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
+            imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
         )
         typeModel.addAllNamespace(listOf(ns))
         ns
@@ -105,6 +114,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             namespace.allRuleNameToType[key] = value.resolvedType
         }
         return TransformModelDefault(
+            name = grammar.name,
             typeModel = typeModel,
             namespace = listOf(transformNamespace)
         )
@@ -706,16 +716,16 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
                 is Terminal -> when (ruleItemType) {
-                    is PrimitiveType -> GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
-                    is CollectionType -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                    is TupleType -> GrammarTypeNamespaceFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
-                    else -> GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                    is PrimitiveType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                    is CollectionType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                    is TupleType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
+                    else -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
                 }
 
                 is Embedded -> PropertyName(ruleItem.embeddedGoalName.value.lower())
                 //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName}"
                 is NonTerminal -> PropertyName(ruleItem.ruleReference.value)
-                is Group -> GrammarTypeNamespaceFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
+                is Group -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
                 else -> error("Internal error, unhandled subtype of SimpleItem")
             }
 

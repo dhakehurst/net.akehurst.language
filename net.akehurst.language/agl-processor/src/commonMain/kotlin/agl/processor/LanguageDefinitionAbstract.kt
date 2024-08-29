@@ -17,14 +17,16 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
-import net.akehurst.language.agl.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
@@ -53,13 +55,13 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     abstract override val isModifiable: Boolean
 
-    override var targetGrammarName: String? by Delegates.observable(initialConfiguration.targetGrammarName) { _, oldValue, newValue ->
+    override var targetGrammarName: SimpleName? by Delegates.observable(initialConfiguration.targetGrammarName) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    override var defaultGoalRule: String? by Delegates.observable(initialConfiguration.defaultGoalRuleName) { _, oldValue, newValue ->
+    override var defaultGoalRule: GrammarRuleName? by Delegates.observable(initialConfiguration.defaultGoalRuleName) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

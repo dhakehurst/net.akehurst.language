@@ -17,9 +17,11 @@
 
 package net.akehurst.language.agl.grammarTypeModel
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
-import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
@@ -30,9 +32,9 @@ fun grammarTypeModel(
     imports: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
     init: GrammarTypeModelBuilder.() -> Unit
 ): TypeModel {
-    val model = TypeModelSimple(modelName)
+    val model = TypeModelSimple(SimpleName(modelName))
     imports.forEach { model.addNamespace(it) }
-    val b = GrammarTypeModelBuilder(model, namespaceQualifiedName.asQualifiedName, imports.map { it.qualifiedName }.toMutableList())
+    val b = GrammarTypeModelBuilder(model, QualifiedName(namespaceQualifiedName), imports.map { Import(it.qualifiedName.value) }.toMutableList())
     b.init()
     val ns = b.build()
     model.addNamespace(ns)
@@ -44,7 +46,7 @@ fun grammarTypeModel(
 class GrammarTypeModelBuilder(
     typeModel: TypeModel,
     namespaceQualifiedName: QualifiedName,
-    imports: MutableList<QualifiedName>
+    imports: MutableList<Import>
 ) {
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
         it.resolveImports(typeModel)
@@ -54,57 +56,57 @@ class GrammarTypeModelBuilder(
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.declaration as PrimitiveType
 
     fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
-        _namespace.addTypeFor(grammarRuleName, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
     fun listTypeFor(grammarRuleName: String, elementType: TypeDeclaration): TypeInstance {
         val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type()))
-        _namespace.addTypeFor(grammarRuleName, t)
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
         return t
     }
 
     fun listTypeOf(grammarRuleName: String, elementTypeName: String): TypeInstance {
-        val elementType = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
+        val elementType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(elementTypeName))!!
         return listTypeFor(grammarRuleName, elementType)
     }
 
     fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeInstance, separatorType: TypeInstance) {
         val t = SimpleTypeModelStdLib.ListSeparated.type(listOf(itemType, separatorType))
-        _namespace.addTypeFor(grammarRuleName, t)
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
     }
 
     fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
         listSeparatedTypeFor(grammarRuleName, itemType.type(), separatorType.type())
 
     fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorType: TypeDeclaration) {
-        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))!!
         listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
 
     fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorTypeName: String) {
-        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
-        val separatorType = _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))!!
+        val separatorType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(separatorTypeName))!!
         listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
 
     fun dataType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
-        val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
+        val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         val et = b.build()
-        _namespace.addTypeFor(grammarRuleName, et.type())
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), et.type())
         return et
     }
 
     fun unnamedSuperTypeTypeOf(grammarRuleName: String, subtypes: List<Any>): UnnamedSupertypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
+                is String -> _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!!
                 is TypeDeclaration -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
         val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
-        _namespace.addTypeFor(grammarRuleName, t.type())
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t.type())
         return t
     }
 
@@ -113,7 +115,7 @@ class GrammarTypeModelBuilder(
         b.init()
         val stu = b.build()
         val t = _namespace.createUnnamedSupertypeType(stu)
-        _namespace.addTypeFor(grammarRuleName, t.type())
+        _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t.type())
         return t
     }
 

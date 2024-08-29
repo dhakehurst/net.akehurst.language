@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.language.asmTransform.AsmTransformRuleSetBuilder
 import net.akehurst.language.agl.language.asmTransform.asmTransform
 import net.akehurst.language.agl.language.asmTransform.test.AsmTransformModelTest
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
@@ -33,6 +34,7 @@ import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
@@ -45,6 +47,14 @@ import kotlin.test.assertTrue
 class test_AllDefault {
 
     private companion object {
+        fun asmGrammarTransform(qualifiedName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
+            val qn = QualifiedName(qualifiedName)
+            return asmTransform(qn.last.value, typeModel, createTypes) {
+                namespace(qn.value) {
+                    transform(qn.last.value, init)
+                }
+            }
+        }
 
         class TestDataForGeneratedParser(
             val grammarStr: String,
@@ -150,8 +160,10 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("Test", typeModel = expectedTm, false) {
+
             createObject("S", "S")
+
         }
         test(
             grammarStr = grammarStr,
@@ -185,7 +197,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -223,7 +235,7 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             leafStringRule("a")
             createObject("S", "S") {
                 assignment("a", "child[0]")
@@ -261,7 +273,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -298,7 +310,7 @@ class test_AllDefault {
                 propertyPrimitiveType("v", "String", false, 0)
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             leafStringRule("v")
             createObject("S", "S") {
                 assignment("v", "child[0]")
@@ -348,7 +360,7 @@ class test_AllDefault {
             dataType("B", "B") {}
             dataType("C", "C") {}
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("b", "child[1]")
@@ -403,7 +415,7 @@ class test_AllDefault {
             dataType("B", "B") {}
             dataType("C", "C") {}
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("b", "child[2]")
@@ -450,7 +462,7 @@ class test_AllDefault {
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             stringTypeFor("S")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             transRule("S", "String", "child[0]")
         }
         test(
@@ -520,7 +532,7 @@ class test_AllDefault {
             stringTypeFor("c")
             stringTypeFor("x")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             subtypeRule("S", "S")
             createObject("A", "A") {
                 assignment("a", "child[0]")
@@ -602,7 +614,7 @@ class test_AllDefault {
             stringTypeFor("L")
             stringTypeFor("M")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             child0StringRule("S")
             child0StringRule("L")
             child0StringRule("M")
@@ -686,7 +698,7 @@ class test_AllDefault {
             stringTypeFor("x")
             stringTypeFor("y")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             child0StringRule("S")
             child0StringRule("L")
             child0StringRule("M")
@@ -792,7 +804,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("x")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             subtypeRule("S", "S")
             createObject("A", "A") {
                 assignment("a", "child[0]")
@@ -890,7 +902,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("x")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("A", "A") {
                 assignment("a", "child[0]")
                 assignment("x", "child[1]")
@@ -956,7 +968,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -997,7 +1009,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
             }
@@ -1051,7 +1063,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("c", "child[2]")
@@ -1112,7 +1124,7 @@ class test_AllDefault {
             stringTypeFor("b")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("b", "child[1]")
@@ -1173,7 +1185,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
             }
@@ -1236,7 +1248,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("b")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("b", "child[0]")
                 assignment("a", "child[1]")
@@ -1303,7 +1315,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("oA", "child[0]")
             }
@@ -1361,7 +1373,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -1418,7 +1430,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("c", "child[2]")
@@ -1488,7 +1500,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "children")
             }
@@ -1559,7 +1571,7 @@ class test_AllDefault {
             stringTypeFor("b")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("b", "child[1]")
@@ -1638,7 +1650,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "children")
             }
@@ -1721,7 +1733,7 @@ class test_AllDefault {
             stringTypeFor("b")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("b", "child[0]")
                 assignment("a", "child[1]")
@@ -1801,7 +1813,7 @@ class test_AllDefault {
             dataType("as", "As") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
             }
             createObject("as", "As") {
@@ -1865,7 +1877,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("as", "child[0].a")
             }
@@ -1940,7 +1952,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("as", "child[0].ao")
             }
@@ -2038,7 +2050,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("b")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("abs", "child[0].ab")
             }
@@ -2204,7 +2216,7 @@ class test_AllDefault {
             }
             stringTypeFor("N")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("e", "child[0]")
             }
@@ -2293,7 +2305,7 @@ class test_AllDefault {
             dataType("as", "As") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
             createObject("as", "As")
         }
@@ -2366,7 +2378,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("c")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("c", "child[2]")
@@ -2449,7 +2461,7 @@ class test_AllDefault {
             }
             stringTypeFor("a")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("as", "child[0].a")
             }
@@ -2548,7 +2560,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("b")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("abs", "child[0].ab")
             }
@@ -2703,7 +2715,7 @@ class test_AllDefault {
                 // no properties because rule contains only literals
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("b", "child[1]")
             }
@@ -2791,7 +2803,7 @@ class test_AllDefault {
             stringTypeFor("A")
             stringTypeFor("B")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("as", "child[0].a")
                 assignment("b", "child[1]")
@@ -2890,7 +2902,7 @@ class test_AllDefault {
             dataType("a", "A") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("ass", "child[0].as")
             }
@@ -3049,7 +3061,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
             }
         }
@@ -3098,7 +3110,7 @@ class test_AllDefault {
             stringTypeFor("c")
             stringTypeFor("d")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("\$group", "with(child[0]) tuple{ b:=child[0] c:=child[1] d:=child[2] }")
             }
@@ -3150,7 +3162,7 @@ class test_AllDefault {
             stringTypeFor("a")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("e", "child[2]")
@@ -3213,7 +3225,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
@@ -3291,7 +3303,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
@@ -3361,7 +3373,7 @@ class test_AllDefault {
             stringTypeFor("b")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$group", "with(child[1]) tuple{ b:=child[0] }")
@@ -3432,7 +3444,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
@@ -3516,7 +3528,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$choice", "with(child[1]) child[0]")
@@ -3607,7 +3619,7 @@ class test_AllDefault {
             stringTypeFor("d")
             stringTypeFor("e")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> leaf }")
@@ -3698,7 +3710,7 @@ class test_AllDefault {
             stringTypeFor("e")
             stringTypeFor("f")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> tuple { d:=child[0] e:=child[1] } }")
@@ -3797,7 +3809,7 @@ class test_AllDefault {
             stringTypeFor("e")
             stringTypeFor("f")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
@@ -3900,7 +3912,7 @@ class test_AllDefault {
             stringTypeFor("e")
             stringTypeFor("f")
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> tuple { d:=child[0] e:=child[1] } }")
@@ -3975,7 +3987,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4014,7 +4026,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4051,7 +4063,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4090,7 +4102,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4129,7 +4141,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4167,7 +4179,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4205,7 +4217,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4243,7 +4255,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4281,7 +4293,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4321,7 +4333,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4360,7 +4372,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4399,7 +4411,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4440,7 +4452,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4481,7 +4493,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4533,7 +4545,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4578,7 +4590,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4621,7 +4633,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4661,7 +4673,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4703,7 +4715,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4742,7 +4754,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4778,7 +4790,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4815,7 +4827,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4856,7 +4868,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4893,7 +4905,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4930,7 +4942,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -4967,7 +4979,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5004,7 +5016,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5041,7 +5053,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5080,7 +5092,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5121,7 +5133,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5164,7 +5176,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(
@@ -5207,7 +5219,7 @@ class test_AllDefault {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmTransform("test.Test", typeModel = expectedTm, false) {
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
         }
         test(

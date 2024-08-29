@@ -77,7 +77,7 @@ interface AssignmentStatement {
     val lhsPropertyName: PropertyName
     val rhs: Expression
 
-    fun asString(indent: String, increment: String): String
+    fun asString(indent: Indent, increment: String): String
 }
 
 interface WithExpression : Expression {

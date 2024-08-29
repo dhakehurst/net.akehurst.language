@@ -20,7 +20,7 @@ import net.akehurst.language.api.language.grammar.*
 
 data class OverrideRuleDefault(
     override val grammar: Grammar,
-    override val name: String,
+    override val name: GrammarRuleName,
     override val isSkip: Boolean,
     override val isLeaf: Boolean,
     override val overrideKind: OverrideKind
@@ -50,7 +50,7 @@ data class OverrideRuleDefault(
                             this.grammar.allExtendsResolved.any { eg -> tg == eg } -> {
                                 val or = tg.findAllResolvedGrammarRule(this.name)
                                 when {
-                                    null == or -> error("Cannot find rule '${(overridenRhs as NonTerminal).name}' in grammar '${tg.name}' for override substitution.")
+                                    null == or -> error("Cannot find rule '${(overridenRhs as NonTerminal).ruleReference}' in grammar '${tg.name}' for override substitution.")
                                     else -> {
                                         or.rhs
                                     }

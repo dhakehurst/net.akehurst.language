@@ -18,11 +18,11 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.default.CompletionProviderDefault
+import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
@@ -35,12 +35,13 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : Any>(
     override var targetGrammarName: SimpleName? = null,
-    override var defaultGoalRuleName: String? = null,
+    override var defaultGoalRuleName: GrammarRuleName? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
     override val scannerResolver: ScannerResolver<AsmType, ContextType>? = null,
@@ -57,7 +58,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
 
 internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : Any>(
     override var targetGrammarName: SimpleName? = null,
-    override var defaultGoalRuleName: String? = null,
+    override var defaultGoalRuleName: GrammarRuleName? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
     override val scannerResolver: ScannerResolver<AsmType, ContextType>? = {
@@ -85,7 +86,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         )
     },
     override var asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? = { p ->
-        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.baseTypeModel)
+        TransformModelDefault.fromGrammar(p.grammar!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
@@ -112,7 +113,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
 
 internal class LanguageProcessorConfigurationDefault(
     override var targetGrammarName: SimpleName? = null,
-    override var defaultGoalRuleName: String? = null,
+    override var defaultGoalRuleName: GrammarRuleName? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
     override val scannerResolver: ScannerResolver<Asm, ContextSimple>? = {
@@ -140,7 +141,7 @@ internal class LanguageProcessorConfigurationDefault(
         )
     },
     override val asmTransformModelResolver: AsmTransformModelResolver<Asm, ContextSimple>? = { p ->
-        AsmTransformModelSimple.fromGrammar(p.grammar!!, p.baseTypeModel)
+        TransformModelDefault.fromGrammar(p.grammar!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<Asm, ContextSimple>? = { p ->
         CrossReferenceModelDefault.fromString(
@@ -171,7 +172,7 @@ internal class LanguageProcessorConfigurationDefault(
     },
     override var completionProvider: CompletionProviderResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
-            CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+            CompletionProviderDefault(p.grammar!!, GrammarNamespaceAndAsmTransformBuilderFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     }

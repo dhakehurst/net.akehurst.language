@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -323,7 +324,7 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
-        val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(SimpleTypeModelStdLib.qualifiedName))
+        val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(Import(SimpleTypeModelStdLib.qualifiedName.value)))
         val tuple = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
         val tupleType = ns.createTupleType()
         expression.propertyAssignments.forEach {

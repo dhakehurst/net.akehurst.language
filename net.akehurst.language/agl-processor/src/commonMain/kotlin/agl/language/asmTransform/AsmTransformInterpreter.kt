@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
-import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.asm
@@ -25,9 +24,11 @@ import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
+import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -38,10 +39,10 @@ class AsmTransformInterpreter(
 
     companion object {
         const val SELF = "\$self"
-        const val ALTERNATIVE = "\$alternative"
-        const val LEAF = "leaf"
-        const val CHILD = "child"
-        const val CHILDREN = "children"
+        val ALTERNATIVE = PropertyName("\$alternative")
+        val LEAF = PropertyName("leaf")
+        val CHILD = PropertyName("child")
+        val CHILDREN = PropertyName("children")
         val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType))
         val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType))
         val COMPOSITE_MEMBER = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
@@ -50,7 +51,7 @@ class AsmTransformInterpreter(
             namespace("parse") {
             }
         }
-        val parseNodeNamespace = parseNodeTypeModel.namespace["parse".asQualifiedName]!!
+        val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)

@@ -17,17 +17,19 @@
 
 package net.akehurst.language.agl.language.grammar.asm.builder
 
-import net.akehurst.language.agl.api.language.base.Namespace
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.language.base.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.*
+import net.akehurst.language.api.language.base.Namespace
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.*
 
 @DslMarker
 annotation class GrammarBuilderMarker
 
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
-    val b = GrammarBuilder(GrammarDefault(NamespaceDefault(QualifiedName(namespace)), name, emptyList()))
+    val b = GrammarBuilder(GrammarDefault(NamespaceDefault(QualifiedName(namespace)), SimpleName(name), emptyList()))
     b.init()
     return b.build()
 }
@@ -44,7 +46,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
     private val _terminals = mutableMapOf<String, Terminal>()
 
     fun extends(nameOrQName: String) {
-        grammar.extends.add(GrammarReferenceDefault(grammar.namespace, nameOrQName))
+        grammar.extends.add(GrammarReferenceDefault(grammar.namespace, nameOrQName.asPossiblyQualifiedName))
     }
 
     fun extendsGrammar(extended: GrammarReference) {
@@ -76,7 +78,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
     }
 
     fun empty(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false) {
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = EmptyRuleDefault()
         this.grammar.grammarRule.add(gr)
     }
@@ -85,7 +87,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         val ib = ChoiceItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = ChoiceLongestDefault(items)
         this.grammar.grammarRule.add(gr)
     }
@@ -94,7 +96,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         val ib = ConcatenationItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = ConcatenationDefault(items)
         this.grammar.grammarRule.add(gr)
     }
@@ -108,7 +110,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
             1 -> Unit
             else -> error("An optional must have only one item defined")
         }
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = OptionalItemDefault(items[0])
         this.grammar.grammarRule.add(gr)
     }
@@ -122,7 +124,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
             1 -> Unit
             else -> error("A simple list must have only one item defined")
         }
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = SimpleListDefault(min, max, items[0])
         this.grammar.grammarRule.add(gr)
     }
@@ -137,13 +139,13 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
             2 -> Unit
             else -> error("A simple list must have only two items defined - item & separator")
         }
-        val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
         gr.rhs = SeparatedListDefault(min, max, items[0], items[1])
         this.grammar.grammarRule.add(gr)
     }
 
     fun preference(itemReference: String, init: PreferenceRuleBuilder.() -> Unit) {
-        val forItem = NonTerminalDefault(this.grammar.selfReference, itemReference)
+        val forItem = NonTerminalDefault(this.grammar.selfReference, GrammarRuleName(itemReference))
         val prb = PreferenceRuleBuilder(this.grammar, forItem)
         prb.init()
         val pr = prb.build()
@@ -173,17 +175,17 @@ open class SimpleItemsBuilder(
     }
 
     fun ebd(embeddedGrammarReference: String, embeddedGoalName: String) {
-        val gr = GrammarReferenceDefault(localNamespace, embeddedGrammarReference)
-        addItem(EmbeddedDefault(embeddedGoalName, gr))
+        val gr = GrammarReferenceDefault(localNamespace, embeddedGrammarReference.asPossiblyQualifiedName)
+        addItem(EmbeddedDefault(GrammarRuleName(embeddedGoalName), gr))
     }
 
     fun ebd(embeddedGrammarReference: GrammarReference, embeddedGoalName: String) {
-        addItem(EmbeddedDefault(embeddedGoalName, embeddedGrammarReference))
+        addItem(EmbeddedDefault(GrammarRuleName(embeddedGoalName), embeddedGrammarReference))
     }
 
     /** ref(erence) to grammar rule - non-terminal **/
     fun ref(ruleReference: String) {
-        addItem(NonTerminalDefault(null, ruleReference))
+        addItem(NonTerminalDefault(null, GrammarRuleName(ruleReference)))
     }
 
     /** a grouped concatenation **/
@@ -307,7 +309,7 @@ class PreferenceRuleBuilder(
     fun optionLeft(nonTerminalName: String, choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
-                item = NonTerminalDefault(null, nonTerminalName),
+                item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
                 choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 PreferenceOption.Associativity.LEFT
@@ -318,7 +320,7 @@ class PreferenceRuleBuilder(
     fun optionRight(nonTerminalName: String, choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
-                item = NonTerminalDefault(null, nonTerminalName),
+                item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
                 choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 PreferenceOption.Associativity.RIGHT

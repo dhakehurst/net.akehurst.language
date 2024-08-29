@@ -77,7 +77,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                             if (AglStyleModelDefault.KEYWORD_STYLE_ID == sel.value) { //TODO: redundant check I think!
                                 // its OK
                             } else {
-                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.name }.isEmpty()) {
+                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
                                     issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                                 }
                             }

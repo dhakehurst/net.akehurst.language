@@ -17,11 +17,13 @@
 package net.akehurst.language.agl.language.reference.asm.builder
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.api.language.base.QualifiedName
-import net.akehurst.language.agl.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.agl.language.expressions.NavigationSimple
 import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.reference.asm.*
+import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.*
@@ -43,7 +45,7 @@ class CrossReferenceModelBuilder(
     private var _declarationsFor = mutableListOf<DeclarationsForNamespace>()
 
     fun declarationsFor(namespaceQualifiedName: String, init: DeclarationsForNamespaceBuilder.() -> Unit) {
-        val b = DeclarationsForNamespaceBuilder(namespaceQualifiedName.asQualifiedName)
+        val b = DeclarationsForNamespaceBuilder(QualifiedName(namespaceQualifiedName))
         b.init()
         _declarationsFor.add(b.build())
     }
@@ -61,23 +63,23 @@ class CrossReferenceModelBuilder(
 class DeclarationsForNamespaceBuilder(
     private val _qualifiedName: QualifiedName
 ) {
-    private val _importedNamespaces = mutableListOf<QualifiedName>()
+    private val _importedNamespaces = mutableListOf<Import>()
     private val _references = mutableListOf<ReferenceDefinition>()
     private val _scopes = mutableListOf<ScopeDefinition>()
 
 
     fun import(namespaceQualifiedName: String) {
-        _importedNamespaces.add(namespaceQualifiedName.asQualifiedName)
+        _importedNamespaces.add(Import(namespaceQualifiedName))
     }
 
     fun scope(forTypeName: String, init: ScopeDefinitionBuilder.() -> Unit) {
-        val b = ScopeDefinitionBuilder(forTypeName)
+        val b = ScopeDefinitionBuilder(SimpleName(forTypeName))
         b.init()
         _scopes.add(b.build())
     }
 
     fun reference(inType: String, init: ReferenceDefinitionBuilder.() -> Unit) {
-        val b = ReferenceDefinitionBuilder(inType)
+        val b = ReferenceDefinitionBuilder(SimpleName(inType))
         b.init()
         _references.add(b.build())
     }
@@ -92,7 +94,7 @@ class DeclarationsForNamespaceBuilder(
 
 @CrossReferenceModelBuilderMarker
 class ScopeDefinitionBuilder(
-    private val _forTypeName: String
+    private val _forTypeName: SimpleName
 ) {
     private val _identifiables = mutableListOf<Identifiable>()
 
@@ -100,7 +102,7 @@ class ScopeDefinitionBuilder(
         val exprResult = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(exprResult.issues.errors.isEmpty()) { exprResult.issues.toString() }
         val expression = exprResult.asm ?: error("No expression created from given expressionStr")
-        val i = IdentifiableDefault(typeName, expression)
+        val i = IdentifiableDefault(SimpleName(typeName), expression)
         _identifiables.add(i)
     }
 
@@ -113,7 +115,7 @@ class ScopeDefinitionBuilder(
 
 @CrossReferenceModelBuilderMarker
 class ReferenceDefinitionBuilder(
-    private val _inType: String
+    private val _inType: SimpleName
 ) {
     val _refExpressionList = mutableListOf<ReferenceExpression>()
 
@@ -134,7 +136,7 @@ class ReferenceDefinitionBuilder(
             fromResult.asm?.let { if (it is NavigationExpression) it else null } ?: error("Navigation not created from given fromExpressionStr")
         }
 
-        _refExpressionList.add(PropertyReferenceExpressionDefault(refPropNav, refersToTypes, fromNav))
+        _refExpressionList.add(PropertyReferenceExpressionDefault(refPropNav, refersToTypes.map { it.asPossiblyQualifiedName }, fromNav))
     }
 
     fun collection() {

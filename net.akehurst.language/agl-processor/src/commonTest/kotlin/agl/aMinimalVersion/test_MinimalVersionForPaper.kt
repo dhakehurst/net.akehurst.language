@@ -686,7 +686,7 @@ grammar Dot  {
 }
         """
         val grammars = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
-        val rrs = grammars.map {
+        val rrs = grammars.allDefinitions.map {
             ConverterToRuntimeRules(it).runtimeRuleSet
         }
         val sentences = listOf(
@@ -1223,7 +1223,7 @@ grammar Packages extends Interfaces {
                 }
             }
         ).asm!!
-        val rrs = grammars.map {
+        val rrs = grammars.allDefinitions.map {
             ConverterToRuntimeRules(it).runtimeRuleSet
         }
         val sentences = listOf(

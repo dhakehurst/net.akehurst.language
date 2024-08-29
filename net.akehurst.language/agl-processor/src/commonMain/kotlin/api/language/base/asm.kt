@@ -31,6 +31,9 @@ interface PossiblyQualifiedName {
     }
 
     val simpleName: SimpleName
+
+    /** if this is a SimpleName, append it to the give qualifiedName, else return the QualifiedName **/
+    fun asQualifiedName(namespace: QualifiedName): QualifiedName
 }
 
 /**
@@ -45,6 +48,8 @@ value class QualifiedName(val value: String) : PossiblyQualifiedName {
 
     constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
 
+    val isQualified: Boolean get() = value.isQualifiedName
+
     val parts: List<SimpleName> get() = value.split(".").map { it.asSimpleName }
     val last: SimpleName get() = parts.last()
     val front: QualifiedName get() = QualifiedName(parts.dropLast(1).joinToString(separator = "."))
@@ -52,6 +57,8 @@ value class QualifiedName(val value: String) : PossiblyQualifiedName {
     fun append(lastPart: SimpleName) = QualifiedName(this, lastPart)
 
     override val simpleName: SimpleName get() = last
+    override fun asQualifiedName(namespace: QualifiedName) = this
+    val asImport: Import get() = Import(this.value)
 }
 
 @JvmInline
@@ -62,6 +69,7 @@ value class SimpleName(val value: String) : PossiblyQualifiedName {
     }
 
     override val simpleName: SimpleName get() = this
+    override fun asQualifiedName(namespace: QualifiedName) = namespace.append(this)
 }
 
 /**
@@ -109,6 +117,12 @@ interface Namespace<DT : Definition<DT>> : Formatable {
     val import: List<Import>
 
     val definition: List<DT>
+
+    /** find owned or imported definition **/
+    fun findDefinitionOrNull(simpleName: SimpleName): DT?
+
+    /** find owned definition (not imported) **/
+    fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT?
 }
 
 interface Definition<DT : Definition<DT>> : Formatable {

@@ -61,6 +61,14 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     override val definition: List<DT> = mutableListOf()
 
+    override fun findDefinitionOrNull(simpleName: SimpleName): DT? {
+        TODO("not implemented")
+    }
+
+    override fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT? {
+        TODO("not implemented")
+    }
+
     // --- Formatable ---
     override fun asString(indent: Indent, increment: String): String {
         val sb = StringBuilder()
@@ -87,8 +95,13 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     override fun toString(): String = "namespace $qualifiedName"
 
     // --- Implementation ---
+
     fun addDefinition(value: DT) {
         (this.definition as MutableList).add(value)
+    }
+
+    fun addAllDefinition(value: Iterable<DT>) {
+        (this.definition as MutableList).addAll(value)
     }
 }
 

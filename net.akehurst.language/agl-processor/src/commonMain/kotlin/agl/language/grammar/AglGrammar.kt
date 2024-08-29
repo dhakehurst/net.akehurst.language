@@ -20,6 +20,7 @@ import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.asmTransform.asmTransform
 import net.akehurst.language.agl.language.base.AglBase
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
+import net.akehurst.language.api.language.base.SimpleName
 
 internal object AglGrammar {
     //companion object {
@@ -173,8 +174,8 @@ internal object AglGrammar {
 
     /** implemented as kotlin classes **/
     val typeModel = grammarTypeModel(
-        namespaceQualifiedName = "net.akehurst.language.agl.language.grammar.asm",
-        modelName = "AglGrammar",
+        namespaceQualifiedName = grammar.qualifiedName.append(SimpleName("asm")).value,
+        modelName = "Grammar",
         imports = listOf(),
     ) {
         listTypeOf("unit", "DefinitionBlock")
@@ -187,43 +188,47 @@ internal object AglGrammar {
     }
 
     val asmTransform = asmTransform(
-        qualifiedName = "net.akehurst.language.agl.language.grammar.asm.Transform",
+        name = grammar.name.value,
         typeModel = typeModel,
         createTypes = false
     ) {
-        createObject("unit", "DefinitionBlock") {
-            assignment("definitions", "child[1]")
-        }
-        createObject("grammar", "Grammar") {
-            assignment("namespace", "child[1]")
-            assignment("name", "child[1]")
-            assignment("options", "child[4]")
-        }
+        namespace(qualifiedName = grammar.qualifiedName.append(SimpleName("transform")).value) {
+            transform("Grammar") {
+                createObject("unit", "DefinitionBlock") {
+                    assignment("definitions", "child[1]")
+                }
+                createObject("grammar", "Grammar") {
+                    assignment("namespace", "child[1]")
+                    assignment("name", "child[1]")
+                    assignment("options", "child[4]")
+                }
 
 
-        createObject("embedded", "Embedded") {
-            assignment("embeddedGoalName", "child[2].name")
-            assignment(
-                "embeddedGrammarReference",
-                """
+                createObject("embedded", "Embedded") {
+                    assignment("embeddedGoalName", "child[2].name")
+                    assignment(
+                        "embeddedGrammarReference",
+                        """
                 GrammarReference {
                     localNamespace := ???
                     nameOrQName := child[0]
                 }
                 """.trimIndent()
-            )
-        }
-        createObject("terminal", "Terminal") {
-            assignment("value", "child[0].dropAtBothEnds(1)")
-            assignment("isPattern", "1 == §alternative")
-        }
+                    )
+                }
+                createObject("terminal", "Terminal") {
+                    assignment("value", "child[0].dropAtBothEnds(1)")
+                    assignment("isPattern", "1 == §alternative")
+                }
 
-        transRule("qualifiedName", "String", "children.join()")
+                transRule("qualifiedName", "String", "children.join()")
 
-        leafStringRule("LITERAL")
-        leafStringRule("PATTERN")
-        leafStringRule("POSITIVE_INTEGER")
-        leafStringRule("POSITIVE_INTEGER_GT_ZERO")
+                leafStringRule("LITERAL")
+                leafStringRule("PATTERN")
+                leafStringRule("POSITIVE_INTEGER")
+                leafStringRule("POSITIVE_INTEGER_GT_ZERO")
+            }
+        }
     }
 
     const val styleStr: String = """'namespace' {

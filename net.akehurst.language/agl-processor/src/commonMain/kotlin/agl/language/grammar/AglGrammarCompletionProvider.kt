@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem

@@ -18,12 +18,12 @@
 package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class AsmTransformCompletionProvider : CompletionProviderAbstract<List<AsmTransformModel>, SentenceContext<String>>() {
+class AsmTransformCompletionProvider : CompletionProviderAbstract<TransformModel, SentenceContext<String>>() {
     override fun provide(nextExpected: Set<Spine>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
         TODO("not implemented")
     }

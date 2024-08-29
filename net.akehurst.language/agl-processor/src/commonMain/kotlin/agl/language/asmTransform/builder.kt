@@ -21,27 +21,30 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.expressions.AssignmentStatementSimple
 import net.akehurst.language.agl.language.expressions.CreateObjectExpressionSimple
 import net.akehurst.language.agl.language.expressions.RootExpressionSimple
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.asmTransform.TransformNamespace
+import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.grammar.GrammarRuleName
+import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 @DslMarker
 annotation class AsmTransformModelDslMarker
 
 fun asmTransform(
-    qualifiedName: String,
+    name: String,
     typeModel: TypeModel,
     createTypes: Boolean,
     init: AsmTransformModelBuilder.() -> Unit
-): AsmTransformModel {
-    val b = AsmTransformModelBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
+): TransformModel {
+    val b = AsmTransformModelBuilder(SimpleName(name), typeModel, createTypes)
     b.init()
     val m = b.build()
     return m
@@ -49,27 +52,65 @@ fun asmTransform(
 
 @AsmTransformModelDslMarker
 class AsmTransformModelBuilder(
+    val name: SimpleName,
+    val typeModel: TypeModel,
+    val createTypes: Boolean
+) {
+
+    private val namespaces = mutableListOf<TransformNamespace>()
+
+    fun namespace(qualifiedName: String, init: AsmTransformNamespaceBuilder.() -> Unit) {
+        val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
+        b.init()
+        val v = b.build()
+        namespaces.add(v)
+    }
+
+    fun build(): TransformModel = TransformModelDefault(name, typeModel, namespaces)
+}
+
+@AsmTransformModelDslMarker
+class AsmTransformNamespaceBuilder(
     val qualifiedName: QualifiedName,
+    val typeModel: TypeModel,
+    val createTypes: Boolean
+) {
+
+    private val namespace = TransformNamespaceDefault(qualifiedName)
+
+    fun transform(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
+        val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typeModel, createTypes)
+        b.init()
+        b.build()
+    }
+
+    fun build(): TransformNamespace = namespace
+}
+
+@AsmTransformModelDslMarker
+class AsmTransformRuleSetBuilder(
+    val namespace: TransformNamespaceDefault,
+    val name: SimpleName,
     val typeModel: TypeModel,
     val createTypes: Boolean
 ) {
     private val _rules = mutableListOf<TransformationRule>()
 
-    public fun expression(expressionStr: String): Expression {
+    fun expression(expressionStr: String): Expression {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(res.issues.isEmpty()) { res.issues.toString() }
         return res.asm!!
     }
 
     private fun trRule(grammarRuleName: String, tr: TransformationRuleAbstract) {
-        tr.grammarRuleName = grammarRuleName
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         _rules.add(tr)
         if (createTypes) {
-            val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
+            val ns = typeModel.findOrCreateNamespace(namespace.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
             val t = ns.findOwnedOrCreatePrimitiveTypeNamed(tr.qualifiedTypeName.last)
             tr.resolveTypeAs(t.type())
         } else {
-            val ns = typeModel.findNamespaceOrNull(this.qualifiedName)!!
+            val ns = typeModel.findNamespaceOrNull(namespace.qualifiedName)!!
             val t = ns.findOwnedTypeNamed(tr.qualifiedTypeName.last) ?: error("Type '${tr.qualifiedTypeName}' not found")
             tr.resolveTypeAs(t.type())
         }
@@ -82,7 +123,7 @@ class AsmTransformModelBuilder(
 
     fun leafStringRule(grammarRuleName: String) {
         val tr = TransformationRuleDefault(SimpleTypeModelStdLib.String.qualifiedTypeName, RootExpressionSimple("leaf"))
-        tr.grammarRuleName = grammarRuleName
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
     }
@@ -94,23 +135,25 @@ class AsmTransformModelBuilder(
             type = typeDef.type(),
             expression = expression
         )
-        tr.grammarRuleName = grammarRuleName
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
     }
 
     fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, "String", "child[0]")
 
+    /*
     fun subtypeRule(grammarRuleName: String, typeName: String) {
-        val qName = if (typeName.contains(".")) typeName else "$qualifiedName.$typeName"
+        val qName = typeName.asPossiblyQualifiedName.asQualifiedName(qualifiedName)
         val tr = TransformationRuleDefault(qName, expression("child[0]"))
         trRule(grammarRuleName, tr)
     }
 
+
     fun unnamedSubtypeRule(grammarRuleName: String, subtypeNames: List<String>) {
         val tr = TransformationRuleDefault(UnnamedSupertypeType.NAME, expression("child[0]"))
-        tr.grammarRuleName = grammarRuleName
-        val ns = typeModel.findOrCreateNamespace(this.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
+        val ns = typeModel.findOrCreateNamespace(namespace.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
         val stList = subtypeNames.map { it.asPossiblyQualifiedName }.map { n ->
             _rules.first { it.grammarRuleName == n }.resolvedType
         }
@@ -118,9 +161,9 @@ class AsmTransformModelBuilder(
         tr.resolveTypeAs(t.type())
         _rules.add(tr)
     }
-
+*/
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
-        val qName = if (typeName.contains(".")) typeName else "$qualifiedName.$typeName"
+        val qName = typeName.asPossiblyQualifiedName.asQualifiedName(namespace.qualifiedName)
         val expr = CreateObjectExpressionSimple(qName, emptyList())
         val tr = TransformationRuleDefault(qName, expr)
         trRule(grammarRuleName, tr)
@@ -130,24 +173,23 @@ class AsmTransformModelBuilder(
         expr.propertyAssignments = ass
     }
 
-    fun build(): AsmTransformModel {
-        val res = AsmTransformModelSimple(qualifiedName)
-        res.typeModel = typeModel
-        _rules.forEach { res.addRule(it) }
-        return res
+    fun build(): TransformRuleSet {
+        val rule = TransformRuleSetDefault(namespace, name, _rules)
+        namespace.addDefinition(rule)
+        return rule
     }
 }
 
 @AsmTransformModelDslMarker
 class AssignmentBuilder() {
 
-    private val _assignments = mutableListOf<Pair<String, Expression>>()
+    private val _assignments = mutableListOf<Pair<PropertyName, Expression>>()
 
     fun assignment(lhsPropertyName: String, expressionStr: String) {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(res.issues.isEmpty()) { res.issues.toString() }
         val expr = res.asm!!
-        _assignments.add(Pair(lhsPropertyName, expr))
+        _assignments.add(Pair(PropertyName(lhsPropertyName), expr))
     }
 
     fun build(): List<AssignmentStatement> {

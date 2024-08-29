@@ -30,7 +30,7 @@ class SyntaxAnalyserGeneratorKotlin {
         val register = grammar.grammarRule.joinToString(separator = lineSep) {
             val fName = functionNameFor(it)
             when {
-                fName == it.name -> "super.register(this::${functionNameFor(it)})"
+                fName == it.name.value -> "super.register(this::${functionNameFor(it)})"
                 else -> "super.registerFor(\"${it.name}\", this::${functionNameFor(it)})"
             }
         }
@@ -62,7 +62,7 @@ $functions
     }
 
     private fun functionNameFor(rule: GrammarRule): String {
-        return rule.name.replace("[^a-zA-Z0-9_]", "_")
+        return rule.name.value.replace("[^a-zA-Z0-9_]", "_")
     }
 
 }

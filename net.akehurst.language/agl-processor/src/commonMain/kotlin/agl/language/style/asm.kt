@@ -17,9 +17,8 @@ package net.akehurst.language.agl.language.style.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
+import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault.Companion.DEFAULT_NO_STYLE
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault.Companion.NO_STYLE_ID
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.base.QualifiedName
@@ -30,22 +29,22 @@ import net.akehurst.language.api.processor.ProcessResult
 
 class AglStyleModelDefault(
     namespace: List<StyleNamespace>
-) : DefinitionBlockAbstract<AglStyleRule>(namespace) {
+) : AglStyleModel, DefinitionBlockAbstract<AglStyleRule>(namespace) {
 
     companion object {
         //not sure if this should be here or in grammar object
         const val KEYWORD_STYLE_ID = "\$keyword"
         const val NO_STYLE_ID = "\$nostyle"
 
-        private val _defaultRules = mutableListOf<AglStyleRule>()
+        val STD_NS = StyleNamespaceDefault(QualifiedName("std"), emptyList())
         val DEFAULT_NO_STYLE = AglStyleRuleDefault(
-            namespace = StyleNamespaceDefault(QualifiedName("std"), emptyList(), _defaultRules),
+            namespace = STD_NS,
             listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))
         ).also {
             it.declaration["foreground"] = AglStyleDeclaration("foreground", "black")
             it.declaration["background"] = AglStyleDeclaration("background", "white")
             it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
-            _defaultRules.add(it)
+            STD_NS.addDefinition(it)
         }
 
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
@@ -61,31 +60,18 @@ class AglStyleModelDefault(
 }
 
 class StyleNamespaceDefault(
-    override val qualifiedName: QualifiedName,
-    override val import: List<Import>,
-    _rules: List<AglStyleRule>
-) : StyleNamespace {
+    qualifiedName: QualifiedName,
+    override val import: List<Import>
+) : StyleNamespace, NamespaceAbstract<AglStyleRule>(qualifiedName) {
 
-    override val definition: List<AglStyleRule> get() = rules
+    //override val rules: List<AglStyleRule> = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
+    //    // NO_STYLE defined
+    //    _rules
+    //} else {
+    //    listOf(DEFAULT_NO_STYLE) + _rules
+    //}
 
-    override val rules: List<AglStyleRule> = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
-        // NO_STYLE defined
-        _rules
-    } else {
-        listOf(DEFAULT_NO_STYLE) + _rules
-    }
-
-
-    override fun asString(indent: Indent, increment: String): String {
-        return rules.joinToString(separator = "\n") {
-            val stylesStr = it.declaration.values.joinToString(separator = "\n  ") { "${it.name}: ${it.value};" }
-            """
-${it.selector.joinToString { it.value }} {
-  $stylesStr
-}
-""".trimIndent()
-        }
-    }
+    override val rules: List<AglStyleRule> get() = super.definition
 
 }
 

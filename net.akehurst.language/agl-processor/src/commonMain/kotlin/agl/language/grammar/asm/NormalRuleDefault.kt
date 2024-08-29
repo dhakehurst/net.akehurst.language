@@ -16,15 +16,11 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarExeception
-import net.akehurst.language.api.language.grammar.NormalRule
-import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.*
 
 class NormalRuleDefault(
     override val grammar: Grammar,
-    override val name: SimpleName,
+    override val name: GrammarRuleName,
     override val isSkip: Boolean,
     override val isLeaf: Boolean
 ) : GrammarRuleAbstract(), NormalRule {

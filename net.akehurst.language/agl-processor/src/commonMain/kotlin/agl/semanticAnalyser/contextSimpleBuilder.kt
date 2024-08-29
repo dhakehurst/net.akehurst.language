@@ -19,6 +19,7 @@ package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.api.language.base.QualifiedName
 
 fun contextSimple(init: ScopeBuilder.() -> Unit): ContextSimple {
     val context = ContextSimple()
@@ -37,21 +38,21 @@ class ScopeBuilder(
 
     fun item(id: String, qualifiedTypeName: String, pathStr: String) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, qualifiedTypeName, path)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path)
     }
 
     fun scope(forReferenceInParent: String, forTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
         val path = AsmPathSimple(pathStr)
-        val chScope = _scope.createOrGetChildScope(forReferenceInParent, forTypeName, path)
+        val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName), path)
         val b = ScopeBuilder(chScope)
         b.init()
     }
 
     fun scopedItem(id: String, qualifiedTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, qualifiedTypeName, path)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path)
         val forTypeName = qualifiedTypeName.substringAfterLast(".")
-        val chScope = _scope.createOrGetChildScope(id, forTypeName, path)
+        val chScope = _scope.createOrGetChildScope(id, QualifiedName(forTypeName), path)
         val b = ScopeBuilder(chScope)
         b.init()
     }

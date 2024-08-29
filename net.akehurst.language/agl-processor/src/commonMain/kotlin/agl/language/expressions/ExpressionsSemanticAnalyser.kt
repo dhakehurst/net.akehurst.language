@@ -28,10 +28,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.StructuredType
-import net.akehurst.language.typemodel.api.TypeDeclaration
-import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance? {
@@ -53,7 +50,7 @@ fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = w
     else -> {
         when (self.declaration) {
             is StructuredType -> {
-                self.resolvedProperty.get(this.name)?.typeInstance ?: error("type of RootExpression '$self' not handled")
+                self.resolvedProperty[PropertyName(this.name)]?.typeInstance ?: error("type of RootExpression '$self' not handled")
             }
 
             else -> error("type of RootExpression '$self' not handled")
@@ -69,7 +66,7 @@ fun NavigationExpression.typeOfNavigationExpressionFor(self: TypeInstance): Type
             st.isNothing -> SimpleTypeModelStdLib.NothingType
             st.isSelf -> self
             else -> {
-                self.resolvedProperty[st.name]?.typeInstance
+                self.resolvedProperty[PropertyName(st.name)]?.typeInstance
             }
         }
 
@@ -97,7 +94,7 @@ fun NavigationExpression.lastPropertyDeclarationFor(self: TypeInstance): Propert
             st.isNothing -> null
             st.isSelf -> null
             else -> {
-                self.resolvedProperty[st.name]
+                self.resolvedProperty[PropertyName(st.name)]
             }
         }
 

@@ -16,14 +16,15 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
-import net.akehurst.language.agl.api.language.base.Namespace
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.base.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.Namespace
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.Sentence
@@ -116,7 +117,7 @@ internal class AglGrammarSyntaxAnalyser(
     // grammar : 'grammar' IDENTIFIER extendsOpt '{' options rules '}' ;
     private fun grammar(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Grammar {
         val namespace = _localStore["namespace"] as Namespace<Grammar>
-        val name = children[1] as String
+        val name = SimpleName(children[1] as String)
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
         val options = children[4] as List<GrammarOption>
         val rules = children[5] as List<(Grammar) -> GrammarItem>
@@ -170,8 +171,8 @@ internal class AglGrammarSyntaxAnalyser(
     // extendsList = [qualifiedName / ',']+ ;
     private fun extendsList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         val localNamespace = _localStore["namespace"] as Namespace<Grammar>
-        val extendNameList = children as List<String>
-        val sl = extendNameList.toSeparatedList<String, String, String>()
+        val extendNameList = children as List<QualifiedName>
+        val sl = extendNameList.toSeparatedList<Any, QualifiedName, String>()
         val extendedGrammars = sl.items.map {
             // need to manually add the GrammarReference as it is not seen by the super class
             GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationForNode(target.node) }
@@ -192,7 +193,7 @@ internal class AglGrammarSyntaxAnalyser(
         val type = children[0] as List<String>
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
-        val name = children[1] as String
+        val name = GrammarRuleName(children[1] as String)
         val rhs = children[3] as RuleItem
 
         return { grammar ->
@@ -208,7 +209,7 @@ internal class AglGrammarSyntaxAnalyser(
         val type = children[1] as List<String>
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
-        val identifier = children[2] as String
+        val identifier = GrammarRuleName(children[2] as String)
         val overrideOperator = children[3] as String
         val overrideKind = when (overrideOperator) {
             "==" -> OverrideKind.SUBSTITUTION
@@ -399,28 +400,30 @@ internal class AglGrammarSyntaxAnalyser(
 
     // nonTerminal : qualifiedName ;
     private fun nonTerminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NonTerminal {
-        val qualifiedName = children[0] as String
-        return if (qualifiedName.contains(".")) {
-            val localNamespace = _localStore["namespace"] as Namespace<Grammar>
-            val nonTerminalQualified = children[0] as String
-            val nonTerminalRef = nonTerminalQualified.substringAfterLast(".")
-            val grammarRef = nonTerminalQualified.substringBeforeLast(".")
-            val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationForNode(target.node) }
-            val nt = NonTerminalDefault(gr, nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
-            return nt
-        } else {
-            val nt = NonTerminalDefault(null, qualifiedName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
-            nt
+        val qualifiedName = children[0] as QualifiedName
+        return when {
+            qualifiedName.isQualified -> {
+                val localNamespace = _localStore["namespace"] as Namespace<Grammar>
+                val nonTerminalRef = GrammarRuleName(qualifiedName.last.value)
+                val grammarRef = qualifiedName.front
+                val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationForNode(target.node) }
+                val nt = NonTerminalDefault(gr, nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+                return nt
+            }
+
+            else -> {
+                NonTerminalDefault(null, GrammarRuleName(qualifiedName.last.value))//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            }
         }
     }
 
     // embedded = qualifiedName '::' nonTerminal ;
     private fun embedded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Embedded {
         val namespace = _localStore["namespace"] as Namespace<Grammar>
-        val embeddedGrammarStr = children[0] as String
+        val embeddedGrammarStr = QualifiedName(children[0] as String)
         val embeddedStartRuleRef = children[2] as NonTerminal
         val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarStr)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
-        return EmbeddedDefault(embeddedStartRuleRef.name, embeddedGrammarRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return EmbeddedDefault(embeddedStartRuleRef.ruleReference, embeddedGrammarRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // terminal : LITERAL | PATTERN ;
@@ -442,9 +445,9 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // qualifiedName : (IDENTIFIER / '.')+ ;
-    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return (children as List<String>).joinToString(separator = "")
-    }
+    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
+        QualifiedName((children as List<String>).joinToString(separator = ""))
+
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
     private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> PreferenceRule {

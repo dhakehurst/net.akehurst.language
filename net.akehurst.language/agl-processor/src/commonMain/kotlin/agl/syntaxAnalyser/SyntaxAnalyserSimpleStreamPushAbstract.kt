@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -29,6 +28,8 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -82,8 +83,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
     abstract fun finishProperty(declaration: PropertyDeclaration, isRef: Boolean)
 
     private fun findTypeUsageForRule(ruleName: String): TypeInstance? {
-        val ns = this.typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace?
-        return ns?.findTypeForRule(ruleName)
+        val ns = this.typeModel.findNamespaceOrNull(grammarNamespaceQualifiedName) as GrammarTypeNamespace?
+        return ns?.findTypeForRule(GrammarRuleName(ruleName))
     }
 
 //    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
@@ -215,7 +216,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
                 val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
             }
 
             is DataType -> {
@@ -223,7 +224,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
                         val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                        prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+                        prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
                     }
                 }
             }
@@ -635,7 +636,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
             children[0].value
         } else {
             for (propDecl in type.property) {
-                val propPath = path + propDecl.name
+                val propPath = path + propDecl.name.value
                 val propType = propDecl.typeInstance.declaration
                 val childData = children[propDecl.index]
                 when (propType) {

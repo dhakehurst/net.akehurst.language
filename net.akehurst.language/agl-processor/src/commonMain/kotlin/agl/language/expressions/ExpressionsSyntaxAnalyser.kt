@@ -17,13 +17,16 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.agl.language.base.BaseSyntaxAnalyser
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.*
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.typemodel.api.MethodName
+import net.akehurst.language.typemodel.api.PropertyName
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
@@ -122,7 +125,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
-        val typeName = children[0] as String
+        val typeName = SimpleName(children[0] as String)
         val args = children[2] as List<Expression>
         val propertyAssignments = children[4] as List<AssignmentStatement>?
         val exp = CreateObjectExpressionSimple(typeName, args)
@@ -146,15 +149,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // assignment = propertyName ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
-        val lhsPropertyName = children[0] as String
+        val lhsPropertyName = PropertyName(children[0] as String)
         val rhs = children[2] as Expression
         return AssignmentStatementSimple(lhsPropertyName, rhs)
     }
 
     // propertyName = IDENTIFIER | SPECIAL
-    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return children[0] as String
-    }
+    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        PropertyName(children[0] as String)
 
     // with = 'with' '(' expression ')' expression ;
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
@@ -182,15 +184,15 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // propertyCall = '.' IDENTIFIER ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
-        val id = children[1] as String
+        val id = PropertyName(children[1] as String)
         return PropertyCallSimple(id)
     }
 
     // methodCall = '.' methodReference '(' ')' ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
-        val id = children[1] as String
+        val methodReference = children[1] as MethodName
         //TODO: arguments
-        return MethodCallSimple(id, emptyList())
+        return MethodCallSimple(methodReference, emptyList())
     }
 
     // indexOperation = '[' indexList ']' ;
@@ -204,13 +206,13 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         children.toSeparatedList<Any?, Expression, String>().items
 
     // propertyReference = IDENTIFIER | SPECIAL
-    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return children[0] as String
-    }
+    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        PropertyName(children[0] as String)
+
 
     //methodReference = IDENTIFIER ;
-    private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[0] as String
+    private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        MethodName(children[0] as String)
 
 
 }

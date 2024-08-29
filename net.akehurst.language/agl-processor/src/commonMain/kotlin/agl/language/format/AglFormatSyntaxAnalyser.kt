@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.agl.language.format
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
@@ -30,7 +30,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 internal class AglFormatSyntaxAnalyser(
     grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
-    val asmTransformModel: AsmTransformModel
+    val asmTransformModel: TransformModel
 ) : SyntaxAnalyser<AglFormatterModel> {
 
     private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, asmTransformModel)

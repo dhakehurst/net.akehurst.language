@@ -17,8 +17,8 @@
 
 package net.akehurst.language.typemodel.simple
 
+import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.api.language.base.*
-import net.akehurst.language.api.language.base.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.collections.indexOfOrNull
 import net.akehurst.language.typemodel.api.*
@@ -79,6 +79,10 @@ abstract class TypeModelSimpleAbstract(
         }
     }
 
+    override fun findFirstByPossiblyQualifiedOrNull(typeName: PossiblyQualifiedName): TypeDeclaration? {
+        TODO("not implemented")
+    }
+
     override fun findFirstByNameOrNull(typeName: SimpleName): TypeDeclaration? {
         for (ns in allNamespace) {
             val t = ns.findOwnedTypeNamed(typeName)
@@ -107,7 +111,7 @@ abstract class TypeModelSimpleAbstract(
     override val isEmpty: Boolean
         get() = TODO("not implemented")
 
-    override fun findNamespace(qualifiedName: QualifiedName): TypeNamespace {
+    override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace? {
         TODO("not implemented")
     }
 
@@ -281,8 +285,8 @@ class TupleTypeInstance(
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
 
-    override val typeName: SimpleName get() = TupleType.NAME
-    override val qualifiedTypeName: QualifiedName get() = TupleType.NAME.value.asQualifiedName
+    override val typeName: SimpleName get() = TupleType.NAME.last
+    override val qualifiedTypeName: QualifiedName get() = TupleType.NAME
     override val typeOrNull: TypeDeclaration get() = declaration
 
     override fun resolved(resolvingTypeArguments: Map<SimpleName, TypeInstance>): TypeInstance {
@@ -310,8 +314,8 @@ class UnnamedSupertypeTypeInstance(
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
 
-    override val typeName: SimpleName get() = UnnamedSupertypeType.NAME
-    override val qualifiedTypeName: QualifiedName get() = UnnamedSupertypeType.NAME.value.asQualifiedName
+    override val typeName: SimpleName get() = UnnamedSupertypeType.NAME.last
+    override val qualifiedTypeName: QualifiedName get() = UnnamedSupertypeType.NAME
 
     override val typeOrNull: TypeDeclaration get() = declaration
 
@@ -334,15 +338,16 @@ class UnnamedSupertypeTypeInstance(
 }
 
 class TypeNamespaceSimple(
-    override val qualifiedName: QualifiedName,
+    qualifiedName: QualifiedName,
     imports: List<Import>
-) : TypeNamespaceAbstract(imports) {
+) : TypeNamespaceAbstract(qualifiedName, imports) {
 
 }
 
 abstract class TypeNamespaceAbstract(
+    qualifiedName: QualifiedName,
     imports: List<Import>
-) : TypeNamespace {
+) : TypeNamespace, NamespaceAbstract<TypeDeclaration>(qualifiedName) {
 
     private var _nextUnnamedSuperTypeTypeId = 0
     private val _unnamedSuperTypes = hashMapOf<List<TypeInstance>, UnnamedSupertypeType>()
@@ -373,12 +378,12 @@ abstract class TypeNamespaceAbstract(
     override fun resolveImports(model: TypeModel) {
         // check explicit imports
         this.import.forEach {
-            val ns = model.findNamespace(it.asQualifiedName) ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+            val ns = model.findNamespaceOrNull(it.asQualifiedName) ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
             _requiredNamespaces[it.asQualifiedName] = ns
         }
         // check required namespaces
         _requiredNamespaces.keys.forEach {
-            val ns = model.findNamespace(it) ?: error("namespace '$it' is required but cannot be resolved in the TypeModel '${model.name}'")
+            val ns = model.findNamespaceOrNull(it) ?: error("namespace '$it' is required but cannot be resolved in the TypeModel '${model.name}'")
             _requiredNamespaces[it] = ns
         }
     }
@@ -795,7 +800,7 @@ class UnnamedSupertypeTypeSimple(
 ) : TypeDeclarationSimpleAbstract(), UnnamedSupertypeType {
 
 
-    override val name = UnnamedSupertypeType.NAME
+    override val name = UnnamedSupertypeType.NAME.last
 
     override fun type(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
         return namespace.createUnnamedSupertypeTypeInstance(this, arguments, nullable)
@@ -848,7 +853,7 @@ class TupleTypeSimple(
     val id: Int // must be public for serialisation
 ) : StructuredTypeSimpleAbstract(), TupleType {
 
-    override val name = TupleType.NAME
+    override val name = TupleType.NAME.last
 
     override val entries get() = property.map { Pair(it.name, it.typeInstance) }
 
@@ -1072,7 +1077,7 @@ class MethodDeclarationDerived(
 }
 
 class ParameterDefinitionSimple(
-    override val name: ParameterName,
+    override val name: net.akehurst.language.typemodel.api.ParameterName,
     override val typeInstance: TypeInstance,
     override val defaultValue: String?
 ) : ParameterDeclaration {

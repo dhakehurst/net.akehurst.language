@@ -20,14 +20,14 @@ package net.akehurst.language.agl.agl.language.asmTransform
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
-class AsmTransformSemanticAnalyser() : SemanticAnalyser<List<AsmTransformModel>, ContextFromGrammar> {
+class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextFromGrammar> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
 
@@ -36,10 +36,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<List<AsmTransformModel>,
     }
 
     override fun analyse(
-        asm: List<AsmTransformModel>,
+        asm: TransformModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammar?,
-        options: SemanticAnalysisOptions<List<AsmTransformModel>, ContextFromGrammar>
+        options: SemanticAnalysisOptions<TransformModel, ContextFromGrammar>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(_issues)
     }

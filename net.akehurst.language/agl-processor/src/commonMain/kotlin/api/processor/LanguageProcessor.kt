@@ -71,7 +71,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     /**
      * The transformation from parse-tree to ASM
-     * Evaluating this may or may not modify the typeModel depending on the AsmTransformModel options specified
+     * Evaluating this may or may not modify the typeModel depending on the specifics of the TransformModel
      */
     val asmTransformModel: TransformModel
 

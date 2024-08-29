@@ -111,7 +111,7 @@ interface Scope<ItemType> {
      * unqualified TypeName from the ScopeDefinition,
      * i.e., the identity of the ScopeDefinition
      */
-    val forTypeName: SimpleName
+    val forTypeName: QualifiedName
 
     val scopeIdentity: String
 

@@ -16,10 +16,10 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.automaton.ParseAction
+import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
@@ -163,7 +163,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
     }
 
     private fun checkForDuplicates(grammar: Grammar) {
-        val rules1 = mutableMapOf<String, MutableList<GrammarRule>>() // must be a list for cheking in same grammar because rules would have the same id
+        val rules1 = mutableMapOf<GrammarRuleName, MutableList<GrammarRule>>() // must be a list for cheking in same grammar because rules would have the same id
         grammar.grammarRule.forEach {
             val list = rules1[it.name]
             if (null == list) {
@@ -183,7 +183,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
             }
         }
 
-        val rules2 = mutableMapOf<String, MutableSet<GrammarRule>>()
+        val rules2 = mutableMapOf<GrammarRuleName, MutableSet<GrammarRule>>()
         grammar.allInheritedResolvedGrammarRule.forEach {
             val set = rules2[it.name]
             if (null == set) {
@@ -238,11 +238,11 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
 
             is NonTerminal -> {
                 rhs.targetGrammar?.let { checkGrammarExistsAndResolve(context, it) }
-                val rule = grammar.findAllResolvedGrammarRule(rhs.name)
+                val rule = grammar.findAllResolvedGrammarRule(rhs.ruleReference)
                 //    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {
                     null == rule -> {
-                        issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
+                        issueError(rhs, "GrammarRule '${rhs.ruleReference}' not found in grammar '${grammar.name}'", null)
                     }
 
                     else -> {
@@ -259,7 +259,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
-        val goalRuleName = grammar.defaultGoalRule.name
+        val goalRuleName = grammar.defaultGoalRule.name.value
         //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
         // and if built want to  reuse the build
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)

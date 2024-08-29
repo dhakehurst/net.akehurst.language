@@ -16,11 +16,12 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.api.language.base.QualifiedName
+
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserForAsmTransformAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.asmTransform.AsmTransformModel
+import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.lazyMap
@@ -35,9 +36,9 @@ import net.akehurst.language.typemodel.api.*
 class SyntaxAnalyserDefault(
     grammarNamespaceQualifiedName: QualifiedName,
     typeModel: TypeModel,
-    asmTransformModel: AsmTransformModel
+    asmTransformModel: TransformModel
     //scopeModel: CrossReferenceModel
-) : SyntaxAnalyserForAsmTransformAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {
+) : SyntaxAnalyserFromAsmTransformAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {
     // : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {//, scopeModel) {
 
     companion object {

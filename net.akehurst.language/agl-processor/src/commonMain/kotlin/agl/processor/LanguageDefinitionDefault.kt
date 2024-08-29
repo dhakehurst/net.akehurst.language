@@ -17,12 +17,12 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
-import net.akehurst.language.agl.api.language.base.QualifiedName
 import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.processor.LanguageProcessorPhase

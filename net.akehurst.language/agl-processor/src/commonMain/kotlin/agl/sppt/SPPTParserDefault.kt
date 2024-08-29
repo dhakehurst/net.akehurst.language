@@ -21,6 +21,7 @@ import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -115,7 +116,7 @@ internal class SimpleScanner(
 
 internal class SPPTParserDefault(
     val rootRuntimeRuleSet: RuntimeRuleSet,
-    val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap()
+    val embeddedRuntimeRuleSets: Map<SimpleName, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
     private var _oldTreeData: TreeData? = null
@@ -164,7 +165,7 @@ internal data class NodeStart(
 
 internal class TreeParser(
     val treeAsString: String,
-    val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet>
+    val embeddedRuntimeRuleSets: Map<SimpleName, RuntimeRuleSet>
 ) {
 
     val sentence: String get() = this._sentenceBuilder.toString()
@@ -293,7 +294,7 @@ internal class TreeParser(
         scanner.next(Tokens.EMBED)
         val embGoal = scanner.next(Tokens.ID)
         scanner.next(Tokens.CHILDREN_START)
-        beginEmbedded(leafId, embGram, embGoal)
+        beginEmbedded(leafId, SimpleName(embGram), embGoal)
         RuleReference(QName(embGram), embGoal)
     }
 
@@ -354,12 +355,12 @@ internal class TreeParser(
         }
     }
 
-    private fun beginEmbedded(embLeafName: String, embGramName: String, embGoalName: String) {
+    private fun beginEmbedded(embLeafName: String, embGramName: SimpleName, embGoalName: String) {
         // outer leaf
         nodeNamesStack.push(NodeStart(RuleReference(null, embLeafName), 0, sentenceStartPosition, sentenceNextInputPosition))
 
         // embedded branch start
-        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramName), embGoalName), 0, sentenceStartPosition, sentenceNextInputPosition))
+        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramName.value), embGoalName), 0, sentenceStartPosition, sentenceNextInputPosition))
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
 
         // embedded tree
