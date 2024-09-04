@@ -18,7 +18,7 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
@@ -142,7 +142,7 @@ class test_Dot_SyntaxAnalyser {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
+                    propertyPrimitiveType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true, 0)
                     propertyDataTypeOf("expression", "expression", false, 1)
                 }
             }

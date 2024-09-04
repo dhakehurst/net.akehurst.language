@@ -341,7 +341,7 @@ class test_AglGrammar_item {
             multiplicity|3 { range {
               rangeUnBraced {
                 POSITIVE_INTEGER : '2'
-                rangeMaxOpt { rangeMax { rangeMaxUnbounded { '+' } } }
+                §rangeUnBraced§opt1 { rangeMax { rangeMaxUnbounded { '+' } } }
               }
             } }
         """.trimIndent()
@@ -360,7 +360,7 @@ class test_AglGrammar_item {
               rangeBraced {
                 '{'
                 POSITIVE_INTEGER : '2'
-                rangeMaxOpt { rangeMax { rangeMaxUnbounded { '+' } } }
+                §rangeBraced§opt1 { rangeMax { rangeMaxUnbounded { '+' } } }
                 '}'
               }
             } }
@@ -379,7 +379,7 @@ class test_AglGrammar_item {
             multiplicity|3 { range {
               rangeUnBraced {
                 POSITIVE_INTEGER : '2'
-                rangeMaxOpt { rangeMax {
+                §rangeUnBraced§opt1 { rangeMax {
                   rangeMaxBounded {'..' POSITIVE_INTEGER_GT_ZERO  : '5' }
                 } }
               }
@@ -400,7 +400,7 @@ class test_AglGrammar_item {
               rangeBraced {
                 '{'
                 POSITIVE_INTEGER : '2'
-                rangeMaxOpt { rangeMax {
+                §rangeBraced§opt1 { rangeMax {
                   rangeMaxBounded {'..' POSITIVE_INTEGER_GT_ZERO  : '5' }
                 } }
                 '}'
@@ -652,13 +652,13 @@ class test_AglGrammar_item {
         val gstr = """
             s=(b);
         """.trimIndent()
-        val result = parse("rules", gstr)
+        val result = parse("§grammar§multi3", gstr)
         val expected = this.sppt(
             """
-            rules { rule { grammarRule {
+            §grammar§multi3 { rule { grammarRule {
                 ruleTypeLabels {
-                    isSkip|1 { §empty }
-                    isLeaf|1 { §empty }
+                    §ruleTypeLabels§opt1 { §empty }
+                    §ruleTypeLabels§opt2 { §empty }
                 }
                 IDENTIFIER : 's'
                 '='
@@ -782,12 +782,12 @@ class test_AglGrammar_item {
             """
             rule { grammarRule {
                 ruleTypeLabels {
-                    isSkip { §empty }
-                    isLeaf { §empty }
+                    §ruleTypeLabels§opt1 { §empty }
+                    §ruleTypeLabels§opt2 { §empty }
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|2 { choice { priorityChoice {
+                rhs { choice { priorityChoice {
                     concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { qualifiedName {
                         IDENTIFIER : 'a' WHITESPACE : ' '
                     } } } } } }
@@ -843,11 +843,8 @@ class test_AglGrammar_item {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isSkip {
-      'skip'
-      WHITESPACE : ' '
-    }
-    isLeaf { §empty }
+    §ruleTypeLabels§opt1 { 'skip' WHITESPACE : ' ' }
+    §ruleTypeLabels§opt2 { §empty }
   }
   IDENTIFIER : 'r'
   WHITESPACE : ' '
@@ -876,8 +873,8 @@ rule { grammarRule {
             """
             rule { grammarRule {
                 ruleTypeLabels {
-                    isSkip|1 {  §empty } 
-                    isLeaf {  'leaf' WHITESPACE : ' ' } 
+                    §ruleTypeLabels§opt1 {  §empty } 
+                    §ruleTypeLabels§opt2 {  'leaf' WHITESPACE : ' ' } 
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
@@ -904,14 +901,8 @@ rule { grammarRule {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isSkip {
-      'skip'
-      WHITESPACE : ' '
-    }
-    isLeaf {
-      'leaf'
-      WHITESPACE : ' '
-    }
+    §ruleTypeLabels§opt1 { 'skip' WHITESPACE : ' ' }
+    §ruleTypeLabels§opt2 { 'leaf' WHITESPACE : ' ' }
   }
   IDENTIFIER : 'r'
   WHITESPACE : ' '
@@ -940,8 +931,8 @@ rule { grammarRule {
             """
             rule { grammarRule {
               ruleTypeLabels {
-                isSkip { §empty }
-                isLeaf { §empty }
+                §ruleTypeLabels§opt1 { §empty }
+                §ruleTypeLabels§opt2 { §empty }
               }
               IDENTIFIER : 'list'
               WHITESPACE : ' '
@@ -973,8 +964,8 @@ rule { grammarRule {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isSkip { §empty }
-    isLeaf { §empty }
+    §ruleTypeLabels§opt1 { §empty }
+    §ruleTypeLabels§opt2 { §empty }
   }
   IDENTIFIER : 'list'
   '='
@@ -1000,13 +991,13 @@ rule { grammarRule {
         val gstr = """
             s=(b c);
         """.trimIndent()
-        val result = parse("rules", gstr)
+        val result = parse("§grammar§multi3", gstr)
         val expected = this.sppt(
             """
-            rules { rule { grammarRule {
+            §grammar§multi3 { rule { grammarRule {
               ruleTypeLabels {
-                isSkip { §empty }
-                isLeaf { §empty }
+                §ruleTypeLabels§opt1 { §empty }
+                §ruleTypeLabels§opt2 { §empty }
               }
               IDENTIFIER : 's'
               '='
@@ -1035,13 +1026,13 @@ rule { grammarRule {
         val gstr = """
             s=a(b c?);
         """.trimIndent()
-        val result = parse("rules", gstr)
+        val result = parse("§grammar§multi3", gstr)
         val expected = this.sppt(
             """
-            rules { rule { grammarRule {
+            §grammar§multi3 { rule { grammarRule {
               ruleTypeLabels {
-                isSkip { §empty }
-                isLeaf { §empty }
+                §ruleTypeLabels§opt1 { §empty }
+                §ruleTypeLabels§opt2 { §empty }
               }
               IDENTIFIER : 's'
               '='
@@ -1076,13 +1067,13 @@ rule { grammarRule {
         val gstr = """
             s = (a b | c?) ;
         """.trimIndent()
-        val result = parse("rules", gstr)
+        val result = parse("§grammar§multi3", gstr)
         val expected = this.sppt(
             """
-rules { rule { grammarRule {
+§grammar§multi3 { rule { grammarRule {
   ruleTypeLabels {
-    isSkip { §empty }
-    isLeaf { §empty }
+    §ruleTypeLabels§opt1 { §empty }
+    §ruleTypeLabels§opt2 { §empty }
   }
   IDENTIFIER : 's'
   WHITESPACE : ' '
@@ -1133,14 +1124,14 @@ grammar {
   WHITESPACE : ' '
   IDENTIFIER : 'Test'
   WHITESPACE : ' '
-  extendsOpt { §empty }
+  §grammar§opt1 { §empty }
   '{'
   WHITESPACE : ' '
-  options { <EMPTY_LIST> }
-  rules { rule { grammarRule {
+  §grammar§multi2 { <EMPTY_LIST> }
+  §grammar§multi3 { rule { grammarRule {
     ruleTypeLabels {
-      isSkip { §empty }
-      isLeaf { §empty }
+      §ruleTypeLabels§opt1 { §empty }
+      §ruleTypeLabels§opt2 { §empty }
     }
     IDENTIFIER : 's'
     WHITESPACE : ' '
@@ -1175,17 +1166,14 @@ grammar {
   WHITESPACE : ' '
   IDENTIFIER : 'Test'
   WHITESPACE : ' '
-  extendsOpt { §empty }
+  §grammar§opt1 { §empty }
   '{'
   WHITESPACE : ' '
-  options { <EMPTY_LIST> }
-  rules { rule { grammarRule {
+  §grammar§multi2 { <EMPTY_LIST> }
+  §grammar§multi3 { rule { grammarRule {
     ruleTypeLabels {
-      isSkip {
-        'skip'
-        WHITESPACE : ' '
-      }
-      isLeaf { §empty }
+      §ruleTypeLabels§opt1 { 'skip'  WHITESPACE : ' ' }
+      §ruleTypeLabels§opt2 { §empty }
     }
     IDENTIFIER : 's'
     WHITESPACE : ' '
@@ -1222,7 +1210,7 @@ grammar {
                 IDENTIFIER : 's' WHITESPACE : ' '
               } } }
               '{' WHITESPACE : '⏎  '
-              preferenceOptionList { preferenceOption {
+              §preferenceRule§multi1 { preferenceOption {
                 nonTerminal { qualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }

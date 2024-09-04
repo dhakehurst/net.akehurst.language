@@ -35,7 +35,7 @@ internal object AglFormat {
             ref("namespace"); lst(1, -1) { ref("format") }
         }
         concatenation("format") {
-            lit("format"); ref("qualifiedName"); ref("{");
+            lit("format"); ref("qualifiedName"); lit("{");
             lst(1, -1) { ref("formatRule") }
             lit("}")
         }
@@ -54,7 +54,7 @@ internal object AglFormat {
             ref("expression"); lit("->"); ref("formatExpression")
         }
         concatenation("templateString") {
-            lit("\""); lst(0, -1) { ref("templateContentList") }; lit("\"")
+            lit("\""); lst(0, -1) { ref("templateContent") }; lit("\"")
         }
         choice("templateContent") {
             ref("text")

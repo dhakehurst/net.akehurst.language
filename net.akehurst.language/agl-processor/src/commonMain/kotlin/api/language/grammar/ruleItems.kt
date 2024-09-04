@@ -68,7 +68,12 @@ interface TangibleItem : SimpleItem {
 }
 
 interface EmptyRule : TangibleItem
-interface Terminal : TangibleItem, GrammarItem {
+interface Terminal : TangibleItem {
+    //, GrammarItem {
+    /**
+     * id of the terminal is its value encosed in '' or ""
+     */
+    val id: String
     val isPattern: Boolean
     val value: String
 }

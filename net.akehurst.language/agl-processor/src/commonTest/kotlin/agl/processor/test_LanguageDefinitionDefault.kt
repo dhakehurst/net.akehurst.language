@@ -17,19 +17,18 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.api.language.base.DefinitionBlock
-import net.akehurst.language.agl.api.language.base.QualifiedName
-import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.formatter.api.AglFormatterModel
 import kotlin.test.*
 
@@ -39,8 +38,8 @@ class test_LanguageDefinitionDefault {
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
-    val grammarObserverCalled = mutableListOf<Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>>()
-    val grammarObserver: (DefinitionBlock<Grammar>, DefinitionBlock<Grammar>) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
+    val grammarObserverCalled = mutableListOf<Pair<GrammarModel, GrammarModel>>()
+    val grammarObserver: (GrammarModel, GrammarModel) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
 
     val crossReferenceModelStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val crossReferenceModelStrObserver: (String?, String?) -> Unit = { old, new -> crossReferenceModelStrObserverCalled.add(Pair(old, new)) }
@@ -114,7 +113,7 @@ class test_LanguageDefinitionDefault {
             Agl.configuration {
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
-                typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+//                typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 crossReferenceModelResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -243,7 +242,10 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty(), sut.issues.toString())
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(DefinitionBlockDefault(emptyList()), sut.grammarList)), grammarObserverCalled)
+        assertEquals(
+            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("Test"), emptyList()), sut.grammarList)),
+            grammarObserverCalled
+        )
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
@@ -268,7 +270,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(oldGrammar, DefinitionBlockDefault(emptyList()))), grammarObserverCalled)
+        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("Test"), emptyList()))), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
@@ -320,7 +322,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g1, g2)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<DefinitionBlock<Grammar>, DefinitionBlock<Grammar>>(oldGrammar, sut.grammarList)), grammarObserverCalled)
+        assertEquals(listOf(Pair(oldGrammar, sut.grammarList)), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(

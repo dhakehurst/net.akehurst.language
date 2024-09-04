@@ -271,12 +271,12 @@ class ReferenceResolverDefault(
 
     private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.navigation)
+        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
-            when (coll) {
+            when (coll.asm) {
                 is AsmNothing -> Unit //do nothing
                 is AsmList -> {
-                    for (el in coll.elements) {
+                    for (el in (coll.asm as AsmList).elements) {
                         when {
                             el is AsmNothing -> Unit //do nothing
                             null == refExpr.ofType -> handleReferenceExpression(re, context, el)

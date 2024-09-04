@@ -72,7 +72,7 @@ internal object AglCrossReferences {
             ref("root")
             ref("navigation")
         }
-        separatedList("typeReferences", 1, -1) { ref("typeReference"); lit("|") }
+        separatedList("typeReferences", 1, -1) { ref("possiblyQualifiedTypeReference"); lit("|") }
         concatenation("possiblyQualifiedTypeReference") { ref("qualifiedName") }
         concatenation("simpleTypeName") { ref("IDENTIFIER") }
     }

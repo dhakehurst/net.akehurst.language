@@ -58,7 +58,7 @@ class test_Hannes : test_ProcessorAbstract() {
         val text = "123"
 
         val expected = """
-             S|1 { INT : '123' }
+             S { INT : '123' }
         """.trimIndent()
 
         super.test(processor, "S", text, expected)

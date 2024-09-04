@@ -20,18 +20,16 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 // used by other languages that reference rules  in a grammar
 class ContextFromGrammar(
 ) : SentenceContext<String> {
     companion object {
-        fun createContextFrom(grammars: DefinitionBlock<Grammar>): ContextFromGrammar {
+        fun createContextFrom(grammars: GrammarModel): ContextFromGrammar {
             val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
             val namespace: GrammarTypeNamespace =
                 aglGrammarTypeModel.findNamespaceOrNull(Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName) as GrammarTypeNamespace? ?: error("")
@@ -47,7 +45,7 @@ class ContextFromGrammar(
                         it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
                         else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
                     }
-                    scope.addToScope(it.value, QualifiedName(rTypeName), it.value)
+                    scope.addToScope(it.id, QualifiedName(rTypeName), it.value)
                 }
             }
             context.rootScope = scope

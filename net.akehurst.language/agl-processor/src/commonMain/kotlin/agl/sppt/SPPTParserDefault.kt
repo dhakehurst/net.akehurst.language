@@ -21,7 +21,7 @@ import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -116,7 +116,7 @@ internal class SimpleScanner(
 
 internal class SPPTParserDefault(
     val rootRuntimeRuleSet: RuntimeRuleSet,
-    val embeddedRuntimeRuleSets: Map<SimpleName, RuntimeRuleSet> = emptyMap()
+    val embeddedRuntimeRuleSets: Map<QualifiedName, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
     private var _oldTreeData: TreeData? = null
@@ -165,7 +165,7 @@ internal data class NodeStart(
 
 internal class TreeParser(
     val treeAsString: String,
-    val embeddedRuntimeRuleSets: Map<SimpleName, RuntimeRuleSet>
+    val embeddedRuntimeRuleSets: Map<QualifiedName, RuntimeRuleSet>
 ) {
 
     val sentence: String get() = this._sentenceBuilder.toString()
@@ -294,7 +294,7 @@ internal class TreeParser(
         scanner.next(Tokens.EMBED)
         val embGoal = scanner.next(Tokens.ID)
         scanner.next(Tokens.CHILDREN_START)
-        beginEmbedded(leafId, SimpleName(embGram), embGoal)
+        beginEmbedded(leafId, QualifiedName(embGram), embGoal)
         RuleReference(QName(embGram), embGoal)
     }
 
@@ -355,7 +355,7 @@ internal class TreeParser(
         }
     }
 
-    private fun beginEmbedded(embLeafName: String, embGramName: SimpleName, embGoalName: String) {
+    private fun beginEmbedded(embLeafName: String, embGramName: QualifiedName, embGoalName: String) {
         // outer leaf
         nodeNamesStack.push(NodeStart(RuleReference(null, embLeafName), 0, sentenceStartPosition, sentenceNextInputPosition))
 

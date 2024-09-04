@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
+import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.grammar.*
 
 class NormalRuleDefault(
@@ -36,6 +37,14 @@ class NormalRuleDefault(
             value.setOwningRule(this, listOf(0))
             this._rhs = value
         }
+
+    override fun asString(indent: Indent): String {
+        var f = ""
+        if (isSkip) f += "skip "
+        if (isLeaf) f += "leaf "
+        val rhsStr = rhs.toString() //TODO: rhs.asString(indent)
+        return "$f$name = $rhsStr ;"
+    }
 
     override fun hashCode(): Int = listOf(name, grammar).hashCode()
     override fun equals(other: Any?): Boolean = when (other) {

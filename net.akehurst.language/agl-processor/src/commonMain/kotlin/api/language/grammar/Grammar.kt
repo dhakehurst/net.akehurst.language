@@ -17,20 +17,17 @@
 
 package net.akehurst.language.api.language.grammar
 
-import net.akehurst.language.agl.language.base.DefinitionBlockDefault
-import net.akehurst.language.api.language.base.Definition
-import net.akehurst.language.api.language.base.DefinitionBlock
-import net.akehurst.language.api.language.base.Namespace
-import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.*
 import net.akehurst.language.collections.OrderedSet
 
-/**
- * The last grammar defined in the last namespace
- */
-val DefinitionBlock<Grammar>.primary get() = this.namespace.last().definition.lastOrNull()
-fun Grammar.asDefinitionBlock() = DefinitionBlockDefault(listOf(this.namespace))
+interface GrammarModel : Model<GrammarNamespace, Grammar> {
 
-interface GrammarItem {
+    val primary get() = this.namespace.last().definition.lastOrNull()
+}
+
+interface GrammarNamespace : Namespace<Grammar>
+
+interface GrammarItem : Formatable {
     val grammar: Grammar
 }
 

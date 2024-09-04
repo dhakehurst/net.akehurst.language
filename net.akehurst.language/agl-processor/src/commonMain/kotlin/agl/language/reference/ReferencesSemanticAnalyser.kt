@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.lastPropertyDeclarationFor
+import net.akehurst.language.agl.language.expressions.typeOfExpressionFor
 import net.akehurst.language.agl.language.expressions.typeOfNavigationExpressionFor
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
@@ -199,12 +200,12 @@ class ReferencesSemanticAnalyser(
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
             when (type) {
-                null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.navigation}', the of-type '$it' is not found")
+                null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
             }
         }
 
-        val collTypeInstance = refExpr.navigation.typeOfNavigationExpressionFor(contextType.type())
-        when (collTypeInstance) {
+        val collTypeInstance = refExpr.expression.typeOfExpressionFor(contextType.type())
+        when (collTypeInstance?.declaration) {
             null -> TODO()
             is CollectionType -> {
                 val loopVarType = collTypeInstance.typeArguments[0].declaration

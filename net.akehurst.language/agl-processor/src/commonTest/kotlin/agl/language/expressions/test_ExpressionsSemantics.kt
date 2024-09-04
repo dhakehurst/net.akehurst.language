@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
@@ -36,7 +37,7 @@ class test_ExpressionsSemantics {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull("Test")!!
+        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list"
 
@@ -57,7 +58,7 @@ class test_ExpressionsSemantics {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull("Test")!!
+        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list.front"
 
@@ -78,7 +79,7 @@ class test_ExpressionsSemantics {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull("Test")!!
+        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list.front.join"
 

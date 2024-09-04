@@ -204,8 +204,8 @@ data class PropertyReferenceExpressionDefault(
 }
 
 data class CollectionReferenceExpressionDefault(
-    val navigation: NavigationExpression,
-    val ofType: QualifiedName?,
+    val expression: Expression,
+    val ofType: PossiblyQualifiedName?,
     val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract() {
     /*    override fun isReference(propertyName: String): Boolean {

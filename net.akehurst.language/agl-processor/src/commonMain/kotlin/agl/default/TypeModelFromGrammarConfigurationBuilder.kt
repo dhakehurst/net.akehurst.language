@@ -40,17 +40,17 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
 //        }
         val baseName = when (ruleItem) {
             is Terminal -> when (ruleItemType) {
-                is PrimitiveType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
-                is CollectionType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value
-                is TupleType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME.value
-                else -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
+                is PrimitiveType -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
+                is CollectionType -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value
+                is TupleType -> Grammar2TransformRuleSet.UNNAMED_TUPLE_PROPERTY_NAME.value
+                else -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
             }
 
             //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
             is Embedded -> ruleItem.embeddedGoalName.value.lower()
             is NonTerminal -> ruleItem.ruleReference.value.lower()
-            is Group -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_GROUP_PROPERTY_NAME.value
-            is Choice -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME.value
+            is Group -> Grammar2TransformRuleSet.UNNAMED_GROUP_PROPERTY_NAME.value
+            is Choice -> Grammar2TransformRuleSet.UNNAMED_CHOICE_PROPERTY_NAME.value
             else -> error("Internal error, unhandled subtype of SimpleItem")
         }.replaceFirstChar { it.lowercase() }
         val name = when (ruleItemType) {
@@ -58,8 +58,8 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
             is UnnamedSupertypeType -> baseName
             is CollectionType -> when (ruleItem) {
                 is NonTerminal -> ruleItem.ruleReference.value.lower()
-                is Terminal -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value
-                is Group -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value
+                is Terminal -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value
+                is Group -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value
                 else -> "${baseName}List"
             }
 

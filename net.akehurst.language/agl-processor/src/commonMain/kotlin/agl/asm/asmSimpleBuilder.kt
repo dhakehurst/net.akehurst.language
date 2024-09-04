@@ -19,7 +19,7 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.agl.default.ScopeCreator
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
 import net.akehurst.language.agl.language.expressions.EvaluationContext
@@ -186,11 +186,11 @@ class AsmElementSimpleBuilder(
         _element.setProperty(PropertyName(name), value, 0)//TODO childIndex
     }
 
-    fun propertyUnnamedString(value: String?) = this.propertyString(GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
+    fun propertyUnnamedString(value: String?) = this.propertyString(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
     fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
     fun propertyNothing(name: String) = this._property(name, AsmNothingSimple)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
-        propertyElementExplicitType(GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
+        propertyElementExplicitType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 
     fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, TupleType.NAME.value, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
@@ -203,10 +203,10 @@ class AsmElementSimpleBuilder(
         return el
     }
 
-    fun propertyUnnamedListOfString(list: List<String>) = this.propertyListOfString(GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value, list)
+    fun propertyUnnamedListOfString(list: List<String>) = this.propertyListOfString(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, list)
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, AsmListSimple(list.map { AsmPrimitiveSimple.stdString(it) }))
     fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) =
-        this.propertyListOfElement(GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME.value, init)
+        this.propertyListOfElement(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, init)
 
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val newPath = _element.path + name
@@ -228,7 +228,7 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName.last
-            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as NavigationExpression?
+            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName)
             val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(EvaluationContext.ofSelf(_element.toTypedObject(elType)), it) }
             val referableName = when (res) {

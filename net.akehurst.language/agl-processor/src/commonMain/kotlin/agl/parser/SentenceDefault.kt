@@ -55,7 +55,7 @@ abstract class SentenceAbstract() : Sentence {
             0 > line -> error("Line number must be >= 1")
             eolPositions.size < line -> error("Number of lines in this text is ${eolPositions.size}, requested line number was $line")
             else -> {
-                val col = position - positionOfLine(line)
+                val col = position - positionOfLine(line) + 1
                 InputLocation(position, col, line + 1, length)
             }
         }

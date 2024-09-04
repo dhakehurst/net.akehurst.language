@@ -74,7 +74,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
             val cvt = ConverterToRuntimeRules(it)
             val rrs = cvt.runtimeRuleSet
-            Pair(it.name, rrs)
+            Pair(it.qualifiedName, rrs)
         }.associate { it }
         SPPTParserDefault((parser as LeftCornerParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }

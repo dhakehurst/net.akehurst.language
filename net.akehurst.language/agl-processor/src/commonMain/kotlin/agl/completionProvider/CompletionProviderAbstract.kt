@@ -65,7 +65,7 @@ abstract class CompletionProviderAbstract<in AsmType, in ContextType> : Completi
     protected fun provideForTerminal(terminalItem: Terminal): List<CompletionItem> {
         val name = when {
             terminalItem.owningRule.isLeaf -> terminalItem.owningRule.name.value
-            else -> terminalItem.value
+            else -> terminalItem.id
         }
         val ci = when {
             terminalItem.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<$name>", terminalItem.value)

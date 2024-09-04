@@ -26,11 +26,11 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
     companion object {
         class CompressedLeafRule(
-            val name: String,
+            override val id: String,
             override val value: String,
             override val isPattern: Boolean
         ) : Terminal, RuleItemAbstract() {
-            override lateinit var grammar: Grammar
+            //override lateinit var grammar: Grammar
 
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
@@ -43,6 +43,11 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
             override fun subItem(index: Int): RuleItem {
                 TODO("not implemented")
             }
+
+            //override fun asString(indent: Indent): String = when {
+            ////     isPattern -> "\"$value\""
+            //    else -> "'$value'"
+            //}
         }
 
         private fun toRegEx(value: String): String {
@@ -106,7 +111,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
                 else -> throw GrammarExeception("GrammarRule ${item.owningRule.name}, compressing ${item::class.simpleName} to leaf is not yet supported", null)
             }
-            cr.grammar = grammar
+            //cr.grammar = grammar
             return cr
         }
 

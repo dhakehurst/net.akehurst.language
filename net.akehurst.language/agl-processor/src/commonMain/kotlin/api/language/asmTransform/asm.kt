@@ -23,14 +23,13 @@ import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
-interface TransformModel : DefinitionBlock<TransformRuleSet> {
-    val name: SimpleName
-
+interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
     /**
      * Access to the TypeModel ensuring that the AsmTransform has first been evaluated
      */
     val typeModel: TypeModel?
 
+    override val namespace: List<TransformNamespace>
 }
 
 interface TransformNamespace : Namespace<TransformRuleSet> {
@@ -54,7 +53,7 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
 
 interface TransformationRule : Formatable {
     val grammarRuleName: GrammarRuleName
-    val qualifiedTypeName: QualifiedName
+    val possiblyQualifiedTypeName: PossiblyQualifiedName
 
     val resolvedType: TypeInstance
 

@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.thridparty
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.language.base.SimpleName
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -504,7 +505,7 @@ grammar Packages extends Interfaces {
     @Test
     fun parse_blocks_empty() {
         val processor = Agl.processorFromString(grammarStr, Agl.configuration {
-            targetGrammarName("BlocksAndStatements");
+            targetGrammarName(SimpleName("BlocksAndStatements"))
             defaultGoalRuleName("Block")
         }).processor!!
         val goal = "Block"
@@ -519,7 +520,7 @@ grammar Packages extends Interfaces {
     @Test
     fun process_blocks_empty() {
         val processor = Agl.processorFromString(grammarStr, Agl.configuration(Agl.configurationDefault()) {
-            targetGrammarName("BlocksAndStatements");
+            targetGrammarName(SimpleName("BlocksAndStatements"))
             defaultGoalRuleName("Block")
         }).processor!!
         val goal = "Block"

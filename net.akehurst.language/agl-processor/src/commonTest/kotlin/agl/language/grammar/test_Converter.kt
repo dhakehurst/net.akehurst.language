@@ -16,12 +16,11 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.language.grammar.primary
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -92,7 +91,7 @@ class test_Converter {
     fun leaf_terminalPatternRule() {
         // S = "[a-c]" ;
         val grammar = grammar("test", "test") {
-            concatenation("ABC") { pat("[a-c]") }
+            concatenation("ABC", isLeaf = true) { pat("[a-c]") }
         }
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
@@ -323,18 +322,18 @@ class test_Converter {
     @Test
     fun multi_0_n_LiteralRule() {
         // S = 'a'* ;
-        val grammar = grammar("test", "test") {
-            list("s", 0, -1) { lit("a") }
+        val grammar = grammar("test", "Test") {
+            list("S", 0, -1) { lit("a") }
         }
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = runtimeRuleSet("test.Test") {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
 
-        assertTrue(expected.matches(actual))
+        RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 
     @Test
@@ -455,40 +454,50 @@ class test_Converter {
         // S = [a / c]+ ;
         // a = 'a' ;
         // c = ',' ;
-        val grammar = grammar("test", "test") {
-            separatedList("S", 1, -1) { ref("a"); lit(",") }
+        val grammar = grammar("test", "Test") {
+            separatedList("S", 1, -1) { ref("a"); ref("c") }
             concatenation("a") { lit("a") }
             concatenation("c") { lit(",") }
         }
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = runtimeRuleSet("test.Test") {
             sList("S", 1, -1, "a", "c")
             concatenation("a") { literal("a") }
             concatenation("c") { literal(",") }
         }
 
-        assertTrue(expected.matches(actual))
+        RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 
     @Test
     fun group_choice_concat_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b c | d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
+        // S = a (b c | d) e ;
+        // leaf a = 'a' ;
+        // leaf b = 'b' ;
+        // leaf c = 'c' ;
+        // leaf d = 'd' ;
+        // leaf e = 'e' ;
+
+        val grammar = grammar("test", "Test") {
+            concatenation("S") {
+                ref("a")
+                chc {
+                    alt { ref("b"); ref("c") }
+                    alt { ref("d") }
+                }
+                ref("e")
             }
-        """.trimIndent()
-        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.primary
+            concatenation("a", isLeaf = true) { lit("a") }
+            concatenation("b", isLeaf = true) { lit("b") }
+            concatenation("c", isLeaf = true) { lit("c") }
+            concatenation("d", isLeaf = true) { lit("d") }
+            concatenation("e", isLeaf = true) { lit("e") }
+        }
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY, isPseudo = true) {
                 concatenation { ref("b"); ref("c") }
@@ -501,27 +510,37 @@ class test_Converter {
             literal("e", "e")
         }
 
-        assertTrue(expected.matches(actual))
+        RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 
     @Test
     fun group_choice_concat_nonTerm_list() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (BC | d+) e ;
-                BC = b c ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
+        // S = a (BC | d+) e ;
+        // BC = b c ;
+        // leaf a = 'a' ;
+        // leaf b = 'b' ;
+        // leaf c = 'c' ;
+        // leaf d = 'd' ;
+        // leaf e = 'e' ;
+        val grammar = grammar("test", "Test") {
+            concatenation("S") {
+                ref("a")
+                chc {
+                    alt { ref("BC") }
+                    alt { lst(1, -1) { ref("d") } }
+                }
+                ref("e")
             }
-        """.trimIndent()
-        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.primary
+            concatenation("BC") { ref("b"); ref("c") }
+            concatenation("a", isLeaf = true) { lit("a") }
+            concatenation("b", isLeaf = true) { lit("b") }
+            concatenation("c", isLeaf = true) { lit("c") }
+            concatenation("d", isLeaf = true) { lit("d") }
+            concatenation("e", isLeaf = true) { lit("e") }
+        }
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = runtimeRuleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("BC") }
@@ -536,7 +555,7 @@ class test_Converter {
             literal("e", "e")
         }
 
-        assertTrue(expected.matches(actual))
+        RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 
     @Test

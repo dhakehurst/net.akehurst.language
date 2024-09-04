@@ -39,7 +39,7 @@ abstract class GrammarTypeNamespaceAbstract(
     fun addTypeFor(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
         if (typeUse.declaration is DataType) {
-            super.ownedTypesByName[typeUse.declaration.name] = typeUse.declaration
+            addDefinition(typeUse.declaration)
         }
     }
 
@@ -50,10 +50,10 @@ abstract class GrammarTypeNamespaceAbstract(
 
     override fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance? = allRuleNameToType[ruleName]
 
-    override fun asString(indent: Indent, increment: String): String {
+    override fun asString(indent: Indent): String {
         val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }
         val ruleToType = rules.joinToString(separator = "\n") { it.key.value + "->" + it.value.signature(this, 0) }
-        val types = this.ownedTypesByName.entries.sortedBy { it.key.value }.joinToString(separator = "\n") { it.value.asString(this) }
+        val types = this.ownedTypesByName.entries.sortedBy { it.key.value }.joinToString(separator = "\n") { it.value.asStringInContext(this) }
         val s = """namespace '$qualifiedName' {
 $ruleToType
 

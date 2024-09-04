@@ -24,6 +24,7 @@ package net.akehurst.language.agl.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +47,7 @@ class test_Java8Agl_Literals(val data: Data) {
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration { targetGrammarName("Literals"); defaultGoalRuleName("Literal") },
+                Agl.configuration { targetGrammarName(SimpleName("Literals")); defaultGoalRuleName("Literal") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         context(ContextFromGrammarRegistry(Agl.registry))

@@ -128,7 +128,7 @@ class test_AsmTransform {
             assertNotNull(result.asm, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
             data.expectedAsm.forEachIndexed { idx, it ->
-                AsmTransformModelTest.trAssertEquals(it, result.asm!![idx])
+                AsmTransformModelTest.trAssertEquals(it, result.asm!!)
             }
         }
 

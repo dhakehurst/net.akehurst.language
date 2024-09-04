@@ -50,20 +50,20 @@ object AsmTransform {
             ref("modifyRule")
         }
         concatenation("createRule") {
-            ref("typeName"); opt { ref("statementBlock") }
+            ref("possiblyQualifiedTypeName"); opt { ref("statementBlock") }
         }
         concatenation("statementBlock") {
-            lit("{");ref("statementList");lit("}")
+            lit("{"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
         }
         concatenation("modifyRule") {
-            lit("{"); ref("typeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
+            lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
         }
         concatenation("assignmentStatement") {
             ref("propertyName"); lit(":="); ebd(AglExpressions.grammar.selfReference, "expression")
         }
         concatenation("propertyName") { ref("IDENTIFIER") }
         concatenation("grammarRuleName") { ref("IDENTIFIER") }
-        concatenation("typeName") { ref("qualifiedName") }
+        concatenation("possiblyQualifiedTypeName") { ref("qualifiedName") }
     }
 
     const val grammarStr = """
@@ -76,9 +76,9 @@ grammar Transform : Base {
     transform = 'transform' IDENTIFIER '{' transformRule+ '} ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
-    createRule = typeName statementBlock? ;
+    createRule = possiblyQualifiedTypeName statementBlock? ;
     statementBlock = '{' statement+ '}' ;
-    modifyRule = '{' typeName '->' statement+ '}' ;
+    modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
     statement
       = assignmentStatement
       ;
@@ -87,7 +87,7 @@ grammar Transform : Base {
     expression = Expression::expression ;
    
     grammarRuleName = IDENTIFIER ;
-    typeName = qualifiedName ;
+    possiblyQualifiedTypeName = qualifiedName ;
 
 }
     """

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
+import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.grammar.*
 
 data class PreferenceRuleDefault(
@@ -23,6 +24,12 @@ data class PreferenceRuleDefault(
     override val forItem: SimpleItem,
     override val optionList: List<PreferenceOption>
 ) : GrammarItemAbstract(), PreferenceRule {
+
+    override fun asString(indent: Indent): String {
+        val ni = indent.inc
+        val optStr = optionList.joinToString(separator = "\n") { it.asString(ni) }
+        return "preference $forItem {\n${optStr}\n$indent}"
+    }
 
     override fun toString(): String = "preference $forItem { ... }"
 }
@@ -33,5 +40,9 @@ data class PreferenceOptionDefault(
     override val onTerminals: List<SimpleItem>,
     override val associativity: PreferenceOption.Associativity
 ) : PreferenceOption {
+
+    override fun asString(indent: Indent): String {
+        return "$item $choiceNumber 'on' ${onTerminals.joinToString(separator = ", ")} $associativity ;"
+    }
 
 }

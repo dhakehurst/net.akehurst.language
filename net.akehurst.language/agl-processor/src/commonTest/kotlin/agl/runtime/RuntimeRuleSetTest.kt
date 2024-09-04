@@ -17,8 +17,15 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.collections.CollectionsTest.matches
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal object RuntimeRuleSetTest {
+
+    fun assertRrsEquals(expected: RuntimeRuleSet, actual: RuntimeRuleSet) {
+        assertEquals(expected.toString(), actual.toString())
+        assertTrue(expected.matches(actual))
+    }
 
     fun RuntimeRuleSet.matches(other: RuntimeRuleSet) = when {
         this.runtimeRules.size != other.runtimeRules.size -> false

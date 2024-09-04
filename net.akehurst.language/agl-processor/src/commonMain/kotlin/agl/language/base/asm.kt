@@ -20,9 +20,10 @@ package net.akehurst.language.agl.language.base
 import net.akehurst.language.api.language.base.*
 
 
-class DefinitionBlockDefault<DT : Definition<DT>>(
-    namespace: List<Namespace<DT>>
-) : DefinitionBlockAbstract<DT>(namespace) {
+class DefinitionBlockDefault<NT : Namespace<DT>, DT : Definition<DT>>(
+    override val name: SimpleName,
+    namespace: List<NT>
+) : DefinitionBlockAbstract<NT, DT>(namespace) {
 
 }
 
@@ -32,9 +33,9 @@ class NamespaceDefault<DT : Definition<DT>>(
 
 }
 
-abstract class DefinitionBlockAbstract<DT : Definition<DT>>(
-    override val namespace: List<Namespace<DT>>
-) : DefinitionBlock<DT> {
+abstract class DefinitionBlockAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
+    override val namespace: List<NT>
+) : Model<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
 
@@ -45,9 +46,9 @@ abstract class DefinitionBlockAbstract<DT : Definition<DT>>(
     }
 
     // --- Formatable ---
-    override fun asString(indent: Indent, increment: String): String {
+    override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        val ns = namespace.joinToString(separator = "\n") { "$indent${it.asString(indent, increment)}" }
+        val ns = namespace.joinToString(separator = "\n") { "$indent${it.asString(indent)}" }
         sb.append(ns)
         return sb.toString()
     }
@@ -59,28 +60,42 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     override val import: List<Import> = mutableListOf()
 
-    override val definition: List<DT> = mutableListOf()
+    override val definition: List<DT> get() = _definition.values.toList()
 
-    override fun findDefinitionOrNull(simpleName: SimpleName): DT? {
-        TODO("not implemented")
+    override val definitionByName: Map<SimpleName, DT> get() = _definition
+
+    override fun resolveImports(model: Model<Namespace<DT>, DT>) {
+        // check explicit imports
+        this.import.forEach {
+            val ns = model.findNamespaceOrNull(it.asQualifiedName) ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+            _importedNamespaces[it.asQualifiedName] = ns
+        }
     }
 
-    override fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT? {
-        TODO("not implemented")
-    }
+    override fun findDefinitionOrNull(simpleName: SimpleName): DT? =
+        findOwnedDefinitionOrNull(simpleName)
+            ?: import.firstNotNullOfOrNull {
+                val tns = _importedNamespaces[it.asQualifiedName]
+                //    ?: error("namespace '$it' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
+                tns?.findOwnedDefinitionOrNull(simpleName)
+            }
+
+    override fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT? = _definition[simpleName]
 
     // --- Formatable ---
-    override fun asString(indent: Indent, increment: String): String {
+    override fun asString(indent: Indent): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
-        val newIndent = indent.inc(increment)
+        val newIndent = indent.inc
         sb.append("\n")
-        val importStr = import.joinToString(separator = "\n") { "$newIndent${it.value}" }
-        sb.append(importStr)
-        sb.append("\n")
+        if (import.isNotEmpty()) {
+            val importStr = import.joinToString(separator = "\n") { "$newIndent${it.value}" }
+            sb.append(importStr)
+            sb.append("\n")
+        }
         val defs = definition
             .sortedBy { it.name.value }
-            .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent, increment)}" }
+            .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent)}" }
         sb.append(defs)
         return sb.toString()
     }
@@ -95,13 +110,17 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     override fun toString(): String = "namespace $qualifiedName"
 
     // --- Implementation ---
+    private val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
+    private val _definition = mutableMapOf<SimpleName, DT>()
 
     fun addDefinition(value: DT) {
-        (this.definition as MutableList).add(value)
+        _definition[value.name] = value
     }
 
     fun addAllDefinition(value: Iterable<DT>) {
-        (this.definition as MutableList).addAll(value)
+        value.forEach {
+            _definition[it.name] = it
+        }
     }
 }
 

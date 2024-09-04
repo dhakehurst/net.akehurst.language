@@ -67,7 +67,7 @@ class test_Agl {
         val grammarStr = """
             namespace test
 
-            grammar test {
+            grammar Test {
               a = "[a-z]" ;
             }
         """.trimIndent()
@@ -82,6 +82,7 @@ class test_Agl {
         val actual = Agl.registry.agl.grammar.styleStr
         // there is a default '$nostyle' added
         val expected = """
+namespace test
 ${'$'}nostyle {
   foreground: black;
   background: white;

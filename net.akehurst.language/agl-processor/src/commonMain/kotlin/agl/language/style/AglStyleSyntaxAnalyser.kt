@@ -23,10 +23,10 @@ import net.akehurst.language.agl.language.style.asm.StyleNamespaceDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.style.*
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
-
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 
@@ -41,6 +41,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::selectorSingle)
         super.register(this::styleList)
         super.register(this::style)
+        super.register(this::qualifiedName)
     }
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
@@ -48,14 +49,14 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     // unit = namespace rule* ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleModelDefault {
         val ns = children[0] as StyleNamespaceDefault
-        val ruleBuilder = children[1] as List<(ns: StyleNamespaceDefault) -> Unit>
-        ruleBuilder.forEach { it.invoke(ns) }
-        return AglStyleModelDefault(listOf(ns))
+        val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)?>
+        ruleBuilder.filterNotNull().forEach { it.invoke(ns) }
+        return AglStyleModelDefault(SimpleName("ParsedUnit"), listOf(AglStyleModelDefault.STD_NS, ns))
     }
 
     // namespace = namespace qualifiedName ;
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
-        val qualifiedName = children[0] as QualifiedName
+        val qualifiedName = children[1] as QualifiedName
         val imports = emptyList<Import>()
         return StyleNamespaceDefault(qualifiedName, imports)
     }
@@ -64,7 +65,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
         val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
 
-        val styles: List<AglStyleDeclaration> = children[2] as List<AglStyleDeclaration>
+        val styles: List<AglStyleDeclaration> = (children[2] as List<AglStyleDeclaration?>).filterNotNull()
         return { ns ->
             val rule = AglStyleRuleDefault(ns, selector)
             ns.addDefinition(rule)
@@ -122,4 +123,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val value = children[2] as String
         return AglStyleDeclaration(name, value)
     }
+
+    // qualifiedName : (IDENTIFIER / '.')+ ;
+    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
+        QualifiedName((children as List<String>).joinToString(separator = ""))
 }

@@ -17,13 +17,13 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.base.DefinitionBlockDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessOptions
@@ -33,11 +33,11 @@ import kotlin.properties.Delegates
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: QualifiedName,
     grammarStrArg: String?,
-    private val aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
+    private val aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    DefinitionBlockDefault(emptyList()),
+    GrammarModelDefault(identity.last, emptyList()),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -132,11 +132,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     private fun updateGrammarStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>(newValue, aglOptions)
+            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammarList = when {
-                res.issues.errors.isNotEmpty() -> DefinitionBlockDefault(emptyList())
-                else -> res.asm ?: DefinitionBlockDefault(emptyList())
+                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"), emptyList())
+                else -> res.asm ?: GrammarModelDefault(identity.last, emptyList())
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

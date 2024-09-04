@@ -113,7 +113,10 @@ object TypeModelTest {
         for (i in expected.property.indices) {
             val expEl = expected.property[i]
             val actEl = actual.property[i]
-            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
+            assertNotNull(
+                actEl,
+                "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name.value }}]"
+            )
             tmAssertEquals(expEl, actEl)
         }
     }
@@ -130,7 +133,10 @@ object TypeModelTest {
         for (i in expected.property.indices) {
             val expEl = expected.property[i]
             val actEl = actual.property[i]
-            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
+            assertNotNull(
+                actEl,
+                "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name.value }}]"
+            )
             tmAssertEquals(expEl, actEl)
         }
     }
@@ -140,7 +146,10 @@ object TypeModelTest {
         for (i in expected.property.indices) {
             val expEl = expected.property[i]
             val actEl = actual.property[i]
-            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual TupleType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
+            assertNotNull(
+                actEl,
+                "expected PropertyDeclaration '${expEl.name}' not found in actual TupleType '${expected.name}'. [${actual.property.joinToString { it.name.value }}]"
+            )
             tmAssertEquals(expEl, actEl)
         }
     }

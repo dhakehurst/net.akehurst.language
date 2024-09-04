@@ -47,10 +47,15 @@ import kotlin.test.assertTrue
 class test_AllDefault {
 
     private companion object {
+        /**
+         * TrModel.name = qualifiedName.last
+         * TrNamespace.name = qualifiedName.front
+         * TrRuleSet.name = qualifiedName.last
+         */
         fun asmGrammarTransform(qualifiedName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
             val qn = QualifiedName(qualifiedName)
             return asmTransform(qn.last.value, typeModel, createTypes) {
-                namespace(qn.value) {
+                namespace(qn.front.value) {
                     transform(qn.last.value, init)
                 }
             }
@@ -156,14 +161,22 @@ class test_AllDefault {
         val expectedRrs = runtimeRuleSet("test.Test") {
             concatenation("S") { empty() }
         }
+        /*
+          namespace test.Test
+          S -> datatype S
+         */
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
             }
         }
-        val expectedTr = asmGrammarTransform("Test", typeModel = expectedTm, false) {
-
+        /*
+          namespace test
+          grammar-transform Test {
+             S: S
+          }
+         */
+        val expectedTr = asmGrammarTransform("test.Test", typeModel = expectedTm, false) {
             createObject("S", "S")
-
         }
         test(
             grammarStr = grammarStr,
@@ -173,7 +186,7 @@ class test_AllDefault {
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
                 asmSimple {
-                    element("S") {
+                    element("test.Test.S") {
                     }
                 }
             }

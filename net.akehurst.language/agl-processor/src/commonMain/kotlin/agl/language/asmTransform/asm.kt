@@ -18,8 +18,9 @@
 package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
+import net.akehurst.language.agl.default.GrammarModel2TransformModel
 import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.expressions.IndexOperationSimple
@@ -27,23 +28,28 @@ import net.akehurst.language.agl.language.expressions.LiteralExpressionSimple
 import net.akehurst.language.agl.language.expressions.NavigationSimple
 import net.akehurst.language.agl.language.expressions.RootExpressionSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.language.asmTransform.*
 import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
+import net.akehurst.language.api.language.grammar.GrammarNamespace
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 
-class TransformModelDefault(
+internal class TransformModelDefault(
     override val name: SimpleName,
     override val typeModel: TypeModel?,
-    override val namespace: List<TransformNamespace>
-) : TransformModel, DefinitionBlockAbstract<TransformRuleSet>(namespace) {
+    namespace: List<TransformNamespace>
+) : TransformModel, DefinitionBlockAbstract<TransformNamespace, TransformRuleSet>(namespace) {
 
     companion object {
         fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<TransformModel> {
@@ -56,26 +62,39 @@ class TransformModelDefault(
             )
         }
 
-        fun fromGrammar(
-            grammar: Grammar,
-            typeModel: TypeModel,
-            configuration: Grammar2TypeModelMapping? = GrammarNamespaceAndAsmTransformBuilderFromGrammar.defaultConfiguration
+        fun fromGrammarModel(
+            grammarModel: GrammarModel,
+            typeModel: TypeModel = TypeModelSimple(grammarModel.allDefinitions.last().name),
+            configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
         ): ProcessResult<TransformModel> {
-            val atfg = GrammarNamespaceAndAsmTransformBuilderFromGrammar(typeModel, grammar, configuration)
+            val atfg = GrammarModel2TransformModel(typeModel, grammarModel, configuration)
             val trModel = atfg.build()
             return ProcessResultDefault<TransformModel>(trModel, atfg.issues)
         }
+
+        fun fromGrammar(
+            grammar: Grammar,
+            typeModel: TypeModel = TypeModelSimple(grammar.name),
+            configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
+        ): ProcessResult<TransformModel> {
+            val grammarModel = GrammarModelDefault(grammar.name, listOf(grammar.namespace as GrammarNamespace))
+            return fromGrammarModel(grammarModel, typeModel, configuration)
+        }
+
     }
+
+    override val namespace: List<TransformNamespace>
+        get() = super.namespace
 
 }
 
-class TransformNamespaceDefault(
+internal class TransformNamespaceDefault(
     qualifiedName: QualifiedName,
 ) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(qualifiedName) {
 
 }
 
-class TransformRuleSetDefault(
+internal class TransformRuleSetDefault(
     override val namespace: TransformNamespace,
     override val name: SimpleName,
     _rules: List<TransformationRule>
@@ -95,12 +114,19 @@ class TransformRuleSetDefault(
         (rules as MutableMap)[tr.grammarRuleName] = tr
     }
 
-    override fun asString(indent: Indent, increment: String): String {
-        TODO("not implemented")
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        sb.append("grammar-transform {\n")
+        val rulesStr = rules.map {
+            "${it.key}: ${it.value}"
+        }.joinToString(separator = "\n")
+        sb.append("rulesStr")
+        sb.append("}")
+        return sb.toString()
     }
 }
 
-abstract class TransformationRuleAbstract : TransformationRule {
+internal abstract class TransformationRuleAbstract : TransformationRule {
 
     companion object {
         val CHILD_0 = ExpressionSelfStatementSimple(
@@ -127,26 +153,26 @@ abstract class TransformationRuleAbstract : TransformationRule {
 //        modifyStatements.add(ass)
 //    }
 
-    override fun asString(indent: Indent, increment: String): String {
+    override fun asString(indent: Indent): String {
         return "$indent${grammarRuleName}: ${this}"
     }
 
     abstract override fun toString(): String
 }
 
-class TransformationRuleDefault(
-    override val qualifiedTypeName: QualifiedName,
+internal class TransformationRuleDefault(
+    override val possiblyQualifiedTypeName: PossiblyQualifiedName,
     override val expression: Expression
 ) : TransformationRuleAbstract() {
 
-    override fun asString(indent: Indent, increment: String): String {
-        return "$indent${grammarRuleName}: ${expression.asString(indent, increment)} as $qualifiedTypeName"
+    override fun asString(indent: Indent): String {
+        return "$indent${grammarRuleName}: ${expression.asString(indent)} as $possiblyQualifiedTypeName"
     }
 
-    override fun toString(): String = "${expression} as $qualifiedTypeName"
+    override fun toString(): String = "${expression} as $possiblyQualifiedTypeName"
 }
 
-fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {
+internal fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {
     return TransformationRuleDefault(
         type.qualifiedTypeName,
         expression
@@ -285,9 +311,9 @@ fun transformationRule(type: TypeInstance, expression: Expression): Transformati
 //    override fun toString(): String = "children as $qualifiedTypeName // Tuple"
 //}
 
-abstract class TransformationStatementAbstract
+internal abstract class TransformationStatementAbstract
 
-abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfStatement
+internal abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfStatement
 
 //class ConstructObjectSelfStatementSimple(
 //    val qualifiedTypeName: String
@@ -301,13 +327,13 @@ abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfSt
 //    override fun toString(): String = "tuple {}"
 //}
 
-class LambdaSelfStatementSimple(
+internal class LambdaSelfStatementSimple(
     val qualifiedTypeName: String
 ) : SelfStatementAbstract() {
     override fun toString(): String = "{ -> }"
 }
 
-class ExpressionSelfStatementSimple(
+internal class ExpressionSelfStatementSimple(
     val expression: Expression
 ) : SelfStatementAbstract() {
     override fun toString(): String = "$expression"

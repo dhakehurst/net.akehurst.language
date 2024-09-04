@@ -28,12 +28,13 @@ import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class AglFormatSyntaxAnalyser(
-    grammarNamespaceQualifiedName: QualifiedName,
-    val typeModel: TypeModel,
-    val asmTransformModel: TransformModel
+    //grammarNamespaceQualifiedName: QualifiedName,
+    typeModel: TypeModel,
+    asmTransformModel: TransformModel,
+    relevantTrRuleSet: QualifiedName
 ) : SyntaxAnalyser<AglFormatterModel> {
 
-    private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, asmTransformModel)
+    private val _sa = SyntaxAnalyserDefault(typeModel, asmTransformModel, relevantTrRuleSet)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 

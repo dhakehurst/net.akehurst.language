@@ -270,14 +270,15 @@ class DataTypeBuilder(
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _elementType.addSupertype(QualifiedName(it))
+            _elementType.addSupertype(it.asPossiblyQualifiedName)
         }
     }
 
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
-            _elementType.addSubtype(QualifiedName(it))
-            (_namespace.findOwnedTypeNamed(SimpleName(it)) as DataType?)?.addSupertype(_elementType.qualifiedName)
+            val pqn = it.asPossiblyQualifiedName
+            _elementType.addSubtype(pqn)
+            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_elementType.qualifiedName)
         }
     }
 
@@ -325,7 +326,7 @@ class TypeArgumentBuilder(
         val tab = TypeArgumentBuilder(_context, _namespace)
         tab.typeArguments()
         val typeArgs = tab.build()
-        val tref = _namespace.createTypeInstance(_context, QualifiedName(qualifiedTypeName), typeArgs, false)
+        val tref = _namespace.createTypeInstance(_context, qualifiedTypeName.asPossiblyQualifiedName, typeArgs, false)
         list.add(tref)
         return tref
     }

@@ -25,6 +25,8 @@ import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.asmTransform.TransformNamespace
 import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.asmTransform.TransformationRule
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
@@ -55,11 +57,10 @@ class AsmTransformSyntaxAnalyser(
         super.register(this::transformRuleRhs)
         super.register(this::createRule)
         super.register(this::modifyRule)
-        super.register(this::statementList)
         super.register(this::assignmentStatement)
         super.register(this::propertyName)
         super.register(this::grammarRuleName)
-        super.register(this::typeName)
+        super.register(this::possiblyQualifiedTypeName)
     }
 
     // unit = namespace transformList ;
@@ -101,7 +102,7 @@ class AsmTransformSyntaxAnalyser(
 
     // transformRule = grammarRuleName ':' transformRuleRhs ;
     private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val grammarRuleName = GrammarRuleName(children[0] as String)
+        val grammarRuleName = children[0] as GrammarRuleName
         val trRule = children[2] as TransformationRuleAbstract
         trRule.grammarRuleName = grammarRuleName
         return trRule
@@ -111,9 +112,9 @@ class AsmTransformSyntaxAnalyser(
     private fun transformRuleRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule =
         children[0] as TransformationRuleAbstract
 
-    // createRule = typeName optStatementBlock ;
+    // createRule = possiblyQualifiedTypeName optStatementBlock ;
     private fun createRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val typeName = children[0] as QualifiedName
+        val typeName = children[0] as PossiblyQualifiedName
         val statements = children[1]?.let { it as List<AssignmentStatement> } ?: emptyList()
         val expr = CreateObjectExpressionSimple(typeName, emptyList()).also {
             it.propertyAssignments = statements
@@ -122,40 +123,37 @@ class AsmTransformSyntaxAnalyser(
         return tr
     }
 
-    // statementBlock = '{' statementList '}' ;
-    private fun statementBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
-        children[1] as List<AssignmentStatement>
+    // statementBlock = '{' assignmentStatement+ '}' ;
+    private fun statementBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> {
+        return children[1] as List<AssignmentStatement>
+    }
 
-    // modifyRule = '{' typeName '->' statementList '}' ;
+    // modifyRule = '{' possiblyQualifiedTypeName '->' statementList '}' ;
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val typeName = children[1] as QualifiedName
+        val possiblyQualifiedTypeName = children[1] as PossiblyQualifiedName
         val statements = children[3] as List<AssignmentStatement>
         val expr = OnExpressionSimple(RootExpressionSimple("\$it"))
         expr.propertyAssignments = statements
-        val tr = TransformationRuleDefault(typeName, expr)
+        val tr = TransformationRuleDefault(possiblyQualifiedTypeName, expr)
         return tr
     }
 
-    // statementList = assignmentStatement+ ;
-    private fun statementList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TransformationStatementAbstract> =
-        children as List<TransformationStatementAbstract>
-
     // assignmentStatement = propertyName ':=' Expression.expression ;
     private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementSimple {
-        val propName = PropertyName(children[0] as String)
+        val propName = children[0] as PropertyName
         val expr = children[2] as Expression
         return AssignmentStatementSimple(propName, expr)
     }
 
     // propertyName = IDENTIFIER ;
-    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[0] as String
+    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyName =
+        PropertyName(children[0] as String)
 
     // grammarRuleName = IDENTIFIER ;
-    private fun grammarRuleName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[0] as String
+    private fun grammarRuleName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRuleName =
+        GrammarRuleName(children[0] as String)
 
-    // typeName = qualifiedName ;
-    private fun typeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
-        QualifiedName((children[0] as List<String>).joinToString(separator = "."))
+    // possiblyQualifiedTypeName = qualifiedName ;
+    private fun possiblyQualifiedTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        ((children[0] as List<String>).joinToString(separator = ".")).asPossiblyQualifiedName
 }

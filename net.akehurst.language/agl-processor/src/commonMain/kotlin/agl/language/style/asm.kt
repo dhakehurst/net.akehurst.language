@@ -28,8 +28,9 @@ import net.akehurst.language.api.language.style.*
 import net.akehurst.language.api.processor.ProcessResult
 
 class AglStyleModelDefault(
+    override val name: SimpleName,
     namespace: List<StyleNamespace>
-) : AglStyleModel, DefinitionBlockAbstract<AglStyleRule>(namespace) {
+) : AglStyleModel, DefinitionBlockAbstract<StyleNamespace, AglStyleRule>(namespace) {
 
     companion object {
         //not sure if this should be here or in grammar object
@@ -88,7 +89,7 @@ data class AglStyleRuleDefault(
 
     override var declaration = mutableMapOf<String, AglStyleDeclaration>()
 
-    override fun asString(indent: Indent, increment: String): String {
+    override fun asString(indent: Indent): String {
         TODO("not implemented")
     }
 

@@ -29,11 +29,27 @@ import kotlin.test.fail
 object AsmTransformModelTest {
 
     fun trAssertEquals(expected: TransformModel?, actual: TransformModel?) {
-        TODO()
+        assertEquals(expected?.name, actual?.name)
+        assertEquals(expected?.namespace?.size, actual?.namespace?.size, "Different number of namespaces")
+        if (expected?.namespace != null && actual?.namespace != null) {
+            for (i in expected.namespace.indices) {
+                val exp = expected.namespace[i]
+                val act = actual.namespace[i]
+                trAssertEquals(exp, act)
+            }
+        }
     }
 
     fun trAssertEquals(expected: TransformNamespace?, actual: TransformNamespace?) {
-        TODO()
+        assertEquals(expected?.qualifiedName, actual?.qualifiedName)
+        assertEquals(expected?.definition?.size, actual?.definition?.size, "Different number of definitions")
+        if (expected?.definition != null && actual?.definition != null) {
+            for (i in expected.definition.indices) {
+                val exp = expected.definition[i]
+                val act = actual.definition[i]
+                trAssertEquals(exp, act)
+            }
+        }
     }
 
     private fun trAssertEquals(expected: TransformRuleSet?, actual: TransformRuleSet?) {
@@ -56,7 +72,7 @@ object AsmTransformModelTest {
 
     private fun trAssertEquals(expected: TransformationRule, actual: TransformationRule, message: String) {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
-        assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName)
+        assertEquals(expected.possiblyQualifiedTypeName, actual.possiblyQualifiedTypeName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
         ExpressionsTest.exAssertEquals(expected.expression, actual.expression)
     }

@@ -18,12 +18,12 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -47,7 +47,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         class SyntaxAnalyserToString(
             typeModel: TypeModel,
             scopeModel: CrossReferenceModel
-        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>("ns", typeModel, scopeModel) {
+        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(QualifiedName("ns"), typeModel, scopeModel) {
 
             private val sb = StringBuilder()
             private var indent = ""
@@ -60,7 +60,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 indent = indent.substring(1)
             }
 
-            override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<String>>
+            override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<String>>
                 get() = TODO("not implemented")
 
             override val asm: String get() = sb.toString()
@@ -150,7 +150,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         fun processor(grammarStr: String) = Agl.processorFromString<String, ContextSimple>(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
-                typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.crossReferenceModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
             }

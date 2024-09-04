@@ -20,18 +20,10 @@ package net.akehurst.language.typemodel.api
 import net.akehurst.language.api.language.base.*
 import kotlin.jvm.JvmInline
 
-interface TypeModel : DefinitionBlock<TypeDeclaration> {
+interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
 
     val AnyType: TypeDeclaration
     val NothingType: TypeDeclaration
-
-    val name: SimpleName
-    //val rootTypeName: String?
-
-    /**
-     * namespace qualified named --> namespace
-     */
-    override val namespace: List<TypeNamespace>
 
     val allNamespace: List<TypeNamespace>
 
@@ -171,9 +163,9 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
     fun findPropertyOrNull(name: PropertyName): PropertyDeclaration?
     fun findMethodOrNull(name: MethodName): MethodDeclaration?
 
-    fun asString(context: TypeNamespace): String
+    fun asStringInContext(context: TypeNamespace): String
 
-    fun addSupertype(qualifiedTypeName: QualifiedName)
+    fun addSupertype(qualifiedTypeName: PossiblyQualifiedName)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String)
     fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String)
     fun appendMethodPrimitive(
@@ -227,7 +219,7 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
-    fun addSubtype(qualifiedTypeName: QualifiedName)
+    fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
 }
 
 interface UnnamedSupertypeType : TypeDeclaration {
@@ -251,7 +243,9 @@ interface CollectionType : StructuredType {
 }
 
 @JvmInline
-value class PropertyName(val value: String)
+value class PropertyName(val value: String) {
+    override fun toString(): String = value
+}
 
 interface PropertyDeclaration {
     val owner: TypeDeclaration

@@ -20,7 +20,7 @@ import net.akehurst.language.agl.language.base.AglBase
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 
 internal object AglStyle {
-    const val goalRuleName = "rules"
+    const val goalRuleName = "unit"
 
     //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "rules"))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!

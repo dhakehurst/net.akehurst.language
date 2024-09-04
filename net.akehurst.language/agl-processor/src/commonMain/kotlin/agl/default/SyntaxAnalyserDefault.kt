@@ -34,11 +34,12 @@ import net.akehurst.language.typemodel.api.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserDefault(
-    grammarNamespaceQualifiedName: QualifiedName,
+    //grammarNamespaceQualifiedName: QualifiedName,
     typeModel: TypeModel,
-    asmTransformModel: TransformModel
+    asmTransformModel: TransformModel,
+    relevantTrRuleSet: QualifiedName
     //scopeModel: CrossReferenceModel
-) : SyntaxAnalyserFromAsmTransformAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {
+) : SyntaxAnalyserFromAsmTransformAbstract<Asm>(typeModel, asmTransformModel, relevantTrRuleSet) {
     // : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {//, scopeModel) {
 
     companion object {
@@ -46,8 +47,9 @@ class SyntaxAnalyserDefault(
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
     }
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramName ->
-        SyntaxAnalyserDefault(embGramName, typeModel, asmTransformModel)//, this.scopeModel) //TODO: needs embedded asmTransform
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramQName ->
+        val ruleSetQname = embGramQName
+        SyntaxAnalyserDefault(typeModel, asmTransformModel, ruleSetQname)//, this.scopeModel) //TODO: needs embedded asmTransform
     }
 
 }

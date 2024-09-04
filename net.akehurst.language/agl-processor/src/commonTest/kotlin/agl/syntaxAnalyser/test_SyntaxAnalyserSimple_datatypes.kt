@@ -18,10 +18,9 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.AsmTransformModelSimple
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
@@ -60,16 +59,22 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
+        val grammar = grammarProc.process(grammarStr).asm!!
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.create(result.asm!!.last())
+            val tr = TransformModelDefault.fromGrammarModel(result.asm!!)
+            assertNotNull(tr.asm)
+            assertTrue(tr.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
+            tr.asm!!.typeModel!!
         }
-        val asmTransformModel = AsmTransformModelSimple.fromGrammar(grammar, typeModel).asm!!.first()
+        val asmTransformModel by lazy {
+            val result = grammarProc.process(grammarStr)
+            TransformModelDefault.fromGrammarModel(result.asm!!).asm!!
+        }
         val scopeModel = CrossReferenceModelDefault()
-        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, asmTransformModel)
+        val syntaxAnalyser = SyntaxAnalyserDefault(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
         val processor = Agl.processorFromString<Asm, ContextSimple>(
             grammarStr,
             Agl.configuration {

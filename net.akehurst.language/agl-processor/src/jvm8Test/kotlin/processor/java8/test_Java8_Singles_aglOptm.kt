@@ -23,6 +23,7 @@ import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -87,7 +88,7 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration() {
-                targetGrammarName("Types")
+                targetGrammarName(SimpleName("Types"))
                 defaultGoalRuleName(goal)
             },
             aglOptions = Agl.options {

@@ -27,10 +27,6 @@ kotlin {
 
     macosArm64()
 
-    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-    wasmJs() {
-        binaries.library()
-    }
 
     sourceSets {
         commonTest.configure {
@@ -40,7 +36,13 @@ kotlin {
     }
 }
 
-val signTasks = arrayOf("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication", "signWasmJsPublication", "signMacosArm64Publication")
+val signTasks = arrayOf(
+    "signKotlinMultiplatformPublication",
+    "signJvm8Publication",
+    "signJsPublication",
+    //"signWasmJsPublication",
+    "signMacosArm64Publication"
+)
 
 tasks.forEach {
 

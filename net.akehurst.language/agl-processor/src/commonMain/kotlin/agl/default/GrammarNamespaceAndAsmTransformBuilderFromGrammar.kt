@@ -21,9 +21,13 @@ import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.language.asmTransform.*
 import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.api.language.asmTransform.TransformNamespace
+import net.akehurst.language.api.language.asmTransform.TransformRuleSet
 import net.akehurst.language.api.language.asmTransform.TransformationRule
 import net.akehurst.language.api.language.base.Import
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
@@ -31,18 +35,112 @@ import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.reflect.KClass
 
-class ConstructAndModify<TP : DataType, TR : TransformationRuleAbstract>(
+
+internal class ConstructAndModify<TP : DataType, TR : TransformationRuleAbstract>(
     val construct: (TP) -> TR,
     val modify: (TR) -> Unit
 )
 
-class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
+/**
+ * A GrammarModel contains a number of Grammar Definitions grouped into various namespaces.
+ * Each Grammar maps to:
+ *   - A TransformRuleSet with a TransformRule for each GrammarRule.
+ *   - A TypeNamespace that contains the type-definition of the result of each GrammarRules TransformRule
+ *
+ *   The default mapping is as follows:
+ *   transform GrammarModel2TransformModel {
+ *     relate Grammar2Namespaces {
+ *       grm : Grammar {
+ *          ns <-> namespace.qualifiedName
+ *          gqn <-> qualifiedName
+ *       }
+ *       tgt: Tuple(tpNs:TypeNamespace, trNs:TransformNamespace, trRs:TransformRuleSet) {
+ *          tpNs <-> TypeNamespace { gqn <-> qualifiedName }
+ *          trNs <-> TransformNamespace {  ns <-> qualifiedName  }
+ *       }
+ *       where {  Grammar2TransformRuleSet(grm, tgt.trRs)  }
+ *     }
+ *
+ *     relate Grammar2TransformRuleSet {
+ *        grm : Grammar { n <-> name }
+ *        trRs:TransformRuleSet { n <-> name }
+ *        where { GrammarRule2TransformRule.foreachOf(grm.grammarRules, trRs.rules) }
+ *     }
+ *
+ *     relate GrammarRule2TransformRule {
+ *       gr : GrammarRule
+ *       tr : TransformRule
+ *     }
+ *   }
+ *
+ */
+internal class GrammarModel2TransformModel(
+    /** base type model, could be empty if can create types, else must hold all tyeps needed **/
+    val typeModel: TypeModel,
+    val grammarModel: GrammarModel,
+    val configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
+) {
+    val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
+
+    fun build(): TransformModel {
+        val transformNamespaces = mutableListOf<TransformNamespace>()
+        for (grammar in grammarModel.allDefinitions) {
+            val rel = Grammar2Namespaces(issues, typeModel, grammar, configuration)
+            rel.build()
+            transformNamespaces.add(rel.trNs!!)
+        }
+        return TransformModelDefault(
+            name = grammarModel.allDefinitions.last().name,
+            typeModel = typeModel,
+            namespace = transformNamespaces
+        )
+    }
+
+}
+
+internal class Grammar2Namespaces(
+    val issues: IssueHolder,
     val typeModel: TypeModel,
     val grammar: Grammar,
-    val configuration: Grammar2TypeModelMapping? = defaultConfiguration
+    val configuration: Grammar2TypeModelMapping?
+) {
+    var tpNs: GrammarTypeNamespace? = null
+    var trNs: TransformNamespace? = null
+    var g2rs: Grammar2TransformRuleSet? = null
+
+    fun build() {
+        val ns = grammar.namespace.qualifiedName
+        val gqn = grammar.qualifiedName
+        tpNs = finsOrCreateGrammarNamespace(gqn)//.append(SimpleName("asm")))
+        trNs = TransformNamespaceDefault(ns)//.append(SimpleName("transform")))
+
+        g2rs = Grammar2TransformRuleSet(issues, typeModel, tpNs!!, trNs!!, grammar, configuration)
+        val rs = g2rs!!.build()
+        (trNs as TransformNamespaceDefault).addDefinition(rs)
+    }
+
+    private fun finsOrCreateGrammarNamespace(qualifiedName: QualifiedName) =
+        typeModel.findNamespaceOrNull(qualifiedName) as GrammarTypeNamespaceSimple?
+            ?: let {
+                val ns = GrammarTypeNamespaceSimple(
+                    qualifiedName = qualifiedName,
+                    imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
+                )
+                typeModel.addAllNamespace(listOf(ns))
+                ns
+            }
+
+}
+
+internal class Grammar2TransformRuleSet(
+    val issues: IssueHolder,
+    val typeModel: TypeModel,
+    val grammarTypeNamespace: GrammarTypeNamespace,
+    val transformNamespace: TransformNamespace,
+    val grammar: Grammar,
+    val configuration: Grammar2TypeModelMapping?
 ) {
 
     companion object {
@@ -85,39 +183,24 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             1 == this.map { tr -> (tr.resolvedType.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size
     }
 
-    val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
-    val namespace = typeModel.findNamespaceOrNull(grammar.qualifiedName) as GrammarTypeNamespaceSimple? ?: let {
-        val ns = GrammarTypeNamespaceSimple(
-            qualifiedName = grammar.qualifiedName,
-            imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
-        )
-        typeModel.addAllNamespace(listOf(ns))
-        ns
-    }
-    val transformNamespace = TransformNamespaceDefault(grammar.qualifiedName)
-    val transformRuleSet = TransformRuleSetDefault(transformNamespace, grammar.name, emptyList())
-
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredType, PropertyName>, Int>()
     private val _grRuleNameToTrRule = mutableMapOf<GrammarRuleName, TransformationRule>()
     private val _grRuleItemToTrRule = mutableMapOf<RuleItem, TransformationRule>()
 
-    fun build(): TransformModel {
+    fun build(): TransformRuleSet {
         val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() }
         for (gr in nonSkipRules) {
             createOrFindTrRuleForGrammarRule(gr)
         }
+        val trRules = mutableListOf<TransformationRule>()
         // TODO: why iterate here?...just add to transformModel & namespace when first created !
         this._grRuleNameToTrRule.entries.forEach {
             val key = it.key
             val value = it.value
-            transformRuleSet.addRule(value)
-            namespace.allRuleNameToType[key] = value.resolvedType
+            trRules.add(value)
+            (grammarTypeNamespace as GrammarTypeNamespaceSimple).allRuleNameToType[key] = value.resolvedType
         }
-        return TransformModelDefault(
-            name = grammar.name,
-            typeModel = typeModel,
-            namespace = listOf(transformNamespace)
-        )
+        return TransformRuleSetDefault(transformNamespace, grammar.name, trRules)
     }
 
     private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, ifCreate: ConstructAndModify<TP, TR>): TransformationRule {
@@ -125,7 +208,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         val existing = _grRuleNameToTrRule[ruleName]
         return if (null == existing) {
             val tn = this.configuration?.typeNameFor(rule) ?: SimpleName(ruleName.value)
-            val tp = namespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
+            val tp = grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
             val tt = tp.type()
             val tr = ifCreate.construct(tp as TP)
             tr.grammarRuleName = rule.name
@@ -138,17 +221,18 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
         }
     }
 
-    private fun builderForEmbedded(ruleItem: Embedded): GrammarNamespaceAndAsmTransformBuilderFromGrammar {
+    private fun builderForEmbedded(ruleItem: Embedded): Grammar2Namespaces {
         val embGrammar = ruleItem.embeddedGrammarReference.resolved!!
-        val embBldr = GrammarNamespaceAndAsmTransformBuilderFromGrammar(typeModel, embGrammar, this.configuration)
-        if (null != typeModel.findNamespaceOrNull(embBldr.namespace.qualifiedName)) {
-            //already added
-        } else {
-            embBldr.build()
-            (typeModel as TypeModelSimple).addNamespace(embBldr.namespace)
-        }
-        namespace.addImport(Import(embBldr.namespace.qualifiedName.value))
-        return embBldr
+        val g2ns = Grammar2Namespaces(issues, typeModel, embGrammar, this.configuration)
+        g2ns.build()
+        //if (null != typeModel.findNamespaceOrNull(g2ns.grNs!!.qualifiedName)) {
+        //already added
+        //} else {
+        //     embBldr.build()
+        //     (typeModel as TypeModelSimple).addNamespace(grNs)
+        // }
+        grammarTypeNamespace.addImport(Import(g2ns.tpNs!!.qualifiedName.value))
+        return g2ns
     }
 
     private fun createOrFindTrRuleForGrammarRule(gr: GrammarRule): TransformationRule {
@@ -250,10 +334,10 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                     }
                 }
 
-                else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
+                else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
             }
 
-            else -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
+            else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
         }
     }
 
@@ -337,9 +421,8 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embBldr = builderForEmbedded(ruleItem)
-                    val embNs = embBldr.namespace
-                    embNs.findTypeForRule(ruleItem.embeddedGoalName)?.toNoActionTrRule() //TODO: needs own action
+                    val g2ns = builderForEmbedded(ruleItem)
+                    g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName)?.toNoActionTrRule() //TODO: needs own action
                         ?: error("Should never happen")
                 }
 
@@ -429,7 +512,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 EXPRESSION_CHILD(0)
             )
 
-            subtypeTransforms.allOfTypeIs(DataType::class) -> namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+            subtypeTransforms.allOfTypeIs(DataType::class) -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 .toSubtypeTrRule()
 
             subtypeTransforms.allOfType(SimpleTypeModelStdLib.List) -> { //=== PrimitiveType.LIST } -> {
@@ -447,7 +530,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             }
 
             else -> {
-                val subType = namespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+                val subType = grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 val options = subtypeTransforms.mapIndexed { idx, it ->
                     WhenOptionSimple(
                         condition = InfixExpressionSimple(
@@ -480,8 +563,8 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
     }
 
     private fun trRuleForTupleType(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
-        val tt = namespace.createTupleType()
-        val ti = namespace.createTupleTypeInstance(tt, emptyList(), false)
+        val tt = grammarTypeNamespace.createTupleType()
+        val ti = grammarTypeNamespace.createTupleTypeInstance(tt, emptyList(), false)
         //val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
         val assignments = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(tt, it, idx) }
         val tr = transformationRule(ti, CreateTupleExpressionSimple(assignments))
@@ -659,7 +742,8 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
 
     //TODO: combine with above by passing in TypeModel
     private fun createPropertyDeclarationForEmbedded(et: StructuredType, ruleItem: Embedded, childIndex: Int): AssignmentStatement? {
-        val embBldr = builderForEmbedded(ruleItem) //TODO: configuration
+        val g2ns = builderForEmbedded(ruleItem) //TODO: configuration
+        val g2rs = g2ns.g2rs!!
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
         return when (rhs) {
@@ -669,7 +753,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             }
 
             is Concatenation -> {
-                val t = embBldr.trRuleForRuleItem(ruleItem, true)
+                val t = g2rs.trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, t.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
@@ -691,20 +775,20 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
                 if (ignore) {
                     null
                 } else {
-                    val propType = embBldr.trRuleForRuleItem(rhs, true) //to get list type
+                    val propType = g2rs.trRuleForRuleItem(rhs, true) //to get list type
                     val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
                     createUniquePropertyDeclarationAndAssignment(et, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                 }
             }
 
             is Choice -> {
-                val choiceType = embBldr.trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
+                val choiceType = g2rs.trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             else -> {
-                val propType = embBldr.trRuleForRuleItem(ruleItem, true)
+                val propType = g2rs.trRuleForRuleItem(ruleItem, true)
                 val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
@@ -716,16 +800,16 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
                 is Terminal -> when (ruleItemType) {
-                    is PrimitiveType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
-                    is CollectionType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                    is TupleType -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
-                    else -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                    is PrimitiveType -> UNNAMED_PRIMITIVE_PROPERTY_NAME
+                    is CollectionType -> UNNAMED_LIST_PROPERTY_NAME
+                    is TupleType -> UNNAMED_TUPLE_PROPERTY_NAME
+                    else -> UNNAMED_PRIMITIVE_PROPERTY_NAME
                 }
 
                 is Embedded -> PropertyName(ruleItem.embeddedGoalName.value.lower())
                 //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName}"
                 is NonTerminal -> PropertyName(ruleItem.ruleReference.value)
-                is Group -> GrammarNamespaceAndAsmTransformBuilderFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
+                is Group -> UNNAMED_GROUP_PROPERTY_NAME
                 else -> error("Internal error, unhandled subtype of SimpleItem")
             }
 
@@ -756,7 +840,7 @@ class GrammarNamespaceAndAsmTransformBuilderFromGrammar(
             name
         } else {
             this._uniquePropertyNames[key] = nameCount + 1
-            PropertyName("$name$nameCount")
+            PropertyName("${name.value}$nameCount")
         }
         return uniqueName
     }

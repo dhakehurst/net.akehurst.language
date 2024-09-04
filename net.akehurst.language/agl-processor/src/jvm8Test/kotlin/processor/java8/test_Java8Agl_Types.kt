@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.test.utils.notWidth
 import org.junit.Test
@@ -42,7 +43,7 @@ class test_Java8Agl_Types(val data: Data) {
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration { targetGrammarName("Types"); defaultGoalRuleName("TypeReference") },
+                Agl.configuration { targetGrammarName(SimpleName("Types")); defaultGoalRuleName("TypeReference") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         context(ContextFromGrammarRegistry(Agl.registry))

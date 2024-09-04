@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.TransformString
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -93,7 +94,7 @@ class test_typemodel {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -133,7 +134,7 @@ class test_typemodel {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.namespace["types"]!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }

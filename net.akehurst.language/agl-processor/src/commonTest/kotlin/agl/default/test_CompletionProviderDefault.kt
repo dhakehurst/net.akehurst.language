@@ -22,6 +22,7 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.typemodel.api.TypeModel
@@ -198,7 +199,7 @@ class test_CompletionProviderDefault {
         }
 
         val context = ContextSimple()
-        context.rootScope.addToScope("int", "$externalNsName.TypeDef", AsmPathSimple.EXTERNAL)
+        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL)
 
 
         val expected = listOf(

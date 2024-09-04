@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -40,7 +41,10 @@ class test_Java8Agl_Annotations(val data: Data) {
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                configuration = Agl.configuration { targetGrammarName("Annotations"); defaultGoalRuleName("Annotation") },
+                configuration = Agl.configuration {
+                    targetGrammarName(SimpleName("Annotations"))
+                    defaultGoalRuleName("Annotation")
+                },
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         context(ContextFromGrammarRegistry(Agl.registry))

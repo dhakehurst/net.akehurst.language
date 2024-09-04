@@ -19,7 +19,6 @@ package net.akehurst.language.agl.language.grammar
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.automaton.ParseAction
-import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
@@ -29,7 +28,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, ContextFromGrammarRegistry> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromGrammarRegistry> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
@@ -60,10 +59,10 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
     }
 
     override fun analyse(
-        asm: DefinitionBlock<Grammar>,
+        asm: GrammarModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammarRegistry?,
-        options: SemanticAnalysisOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>
+        options: SemanticAnalysisOptions<GrammarModel, ContextFromGrammarRegistry>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
@@ -82,7 +81,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: DefinitionBlock<Grammar>, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: GrammarModel, automatonKind: AutomatonKind) {
         grammarList.namespace.forEach { ns ->
             ns.definition.forEach { grammar ->
                 this.resolveGrammarRefs(context, grammar)
@@ -238,7 +237,10 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<DefinitionBlock<Grammar>, 
 
             is NonTerminal -> {
                 rhs.targetGrammar?.let { checkGrammarExistsAndResolve(context, it) }
-                val rule = grammar.findAllResolvedGrammarRule(rhs.ruleReference)
+                val rule = when {
+                    null == rhs.targetGrammar -> grammar.findAllResolvedGrammarRule(rhs.ruleReference)
+                    else -> rhs.targetGrammar?.resolved?.findAllResolvedGrammarRule(rhs.ruleReference)
+                }
                 //    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {
                     null == rule -> {

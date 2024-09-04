@@ -24,7 +24,7 @@ import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.PropertyName
 
 interface Expression {
-    fun asString(indent: Indent, increment: String): String
+    fun asString(indent: Indent): String
 }
 
 interface RootExpression : Expression {
@@ -77,7 +77,7 @@ interface AssignmentStatement {
     val lhsPropertyName: PropertyName
     val rhs: Expression
 
-    fun asString(indent: Indent, increment: String): String
+    fun asString(indent: Indent): String
 }
 
 interface WithExpression : Expression {

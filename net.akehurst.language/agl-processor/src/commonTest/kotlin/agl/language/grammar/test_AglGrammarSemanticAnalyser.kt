@@ -18,16 +18,20 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.api.language.grammar.Choice
-import net.akehurst.language.api.language.grammar.ChoiceLongest
-import net.akehurst.language.api.language.grammar.NonTerminal
-import net.akehurst.language.api.language.grammar.NormalRule
+import net.akehurst.language.agl.language.base.AglBase
+import net.akehurst.language.agl.language.grammar.*
+import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.agl.scanner.ScannerOnDemand
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -36,8 +40,60 @@ import kotlin.test.assertTrue
 
 class test_AglGrammarSemanticAnalyser {
 
-    companion object {
-        val aglProc = Agl.registry.agl.grammar.processor!!
+    private companion object {
+
+        init {
+            // grammars are registered in a registry when semantically analysed,
+            // thus need to analyse Base grammar first
+            val context = ContextFromGrammarRegistry(Agl.registry)
+            val gm = GrammarModelDefault(SimpleName("Test"), listOf(AglBase.grammar.namespace as GrammarNamespace))
+            semanticAnalysis(
+                SyntaxAnalysisResultDefault(
+                    gm,
+                    IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),
+                    emptyMap()
+                ),
+                Agl.options { }
+            )
+        }
+
+        fun parse(sentence: String): SharedPackedParseTree {
+            val conv = ConverterToRuntimeRules(AglGrammar.grammar)
+            val rrs = conv.runtimeRuleSet
+            val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+            val parser = LeftCornerParser(scanner, rrs)
+            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.goalRuleName) })
+            assertTrue(res.issues.isEmpty(), res.issues.toString())
+            return res.sppt!!
+        }
+
+        fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarModel> {
+            val sut = AglGrammarSyntaxAnalyser()
+            val res = sut.transform(sppt) { _, _ -> TODO() }
+            return res
+        }
+
+        fun semanticAnalysis(
+            asmRes: SyntaxAnalysisResult<GrammarModel>,
+            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>
+        ): SemanticAnalysisResult {
+            val semanticAnalyser = AglGrammarSemanticAnalyser()
+            val context = ContextFromGrammarRegistry(Agl.registry)
+            return semanticAnalyser.analyse(asmRes.asm!!, asmRes.locationMap, context, options.semanticAnalysis)
+        }
+
+        fun test(
+            grammarStr: String,
+            expected: Set<LanguageIssue>,
+            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry> = Agl.options { }
+        ): ProcessResult<GrammarModel> {
+            val sppt = parse(grammarStr)
+            val asmRes = syntaxAnalysis(sppt)
+            val res = semanticAnalysis(asmRes, options)
+            assertEquals(expected, res.issues.all)
+            return ProcessResultDefault(asmRes.asm, res.issues)
+        }
+
     }
 
     @Test
@@ -48,11 +104,17 @@ class test_AglGrammarSemanticAnalyser {
                 a = b ;
             }
         """.trimIndent()
-        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+
         val expected = setOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "GrammarRule 'b' not found in grammar 'Test'")
         )
-        assertEquals(expected, result.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
@@ -66,26 +128,31 @@ class test_AglGrammarSemanticAnalyser {
               S = Base.A ;
             }
         """.trimIndent()
-        val res = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        val gBase = res.asm!![0]
-        val gTest = res.asm!![1]
-        assertTrue(gTest.findAllResolvedGrammarRule("S") != null)
-        val rS = gTest.findAllResolvedGrammarRule("S") as NormalRule
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+        val gBase = res.asm!!.allDefinitions[0]
+        val gTest = res.asm!!.allDefinitions[1]
+        assertTrue(gTest.findAllResolvedGrammarRule(GrammarRuleName("S")) != null)
+        val rS = gTest.findAllResolvedGrammarRule(GrammarRuleName("S")) as NormalRule
         assertTrue(rS.rhs is NonTerminal)
-        assertEquals("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
+        assertEquals(SimpleName("Base"), (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
     }
 
     @Test
     fun duplicateRule() {
         val grammarStr = """
-namespace test
-grammar Test {
-    a = b ;
-    b = 'a' ;
-    b = 'b' ;
-}
+            namespace test
+            grammar Test {
+                a = b ;
+                b = 'a' ;
+                b = 'b' ;
+            }
         """.trimIndent()
-        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
@@ -101,7 +168,12 @@ grammar Test {
 //            ),
         )
 
-        assertEquals(expected, result.issues.all)
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
@@ -113,11 +185,15 @@ grammar Test {
                 c = 'd' ;
             }
         """.trimIndent()
-        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expected = setOf(
             LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9), "Rule 'c' is not used in grammar Test.")
         )
-        assertEquals(expected, result.issues.all)
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
@@ -130,13 +206,6 @@ grammar Test {
                 b2 = 'b' ;
             }
         """.trimIndent()
-        //val proc = Agl.processor(grammarStr)
-        val result = aglProc.process(grammarStr, Agl.options {
-            semanticAnalysis {
-                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                context(ContextFromGrammarRegistry(Agl.registry))
-            }
-        })
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.WARNING,
@@ -151,15 +220,17 @@ grammar Test {
                 "Ambiguity: [HEIGHT/HEIGHT] conflict from 'b1' into 'b2/b1' on [<EOT>]"
             ),
         )
-        result.issues.forEach {
-            println(it)
-        }
-        assertEquals(expected, result.issues.all)
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_one_reuse_leaf_from_base() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -169,25 +240,31 @@ grammar Test {
               S = A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(2, asm.size)
-        val baseG = asm[0]
-        val testG = asm[1]
 
-        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(2, asm.allDefinitions.size)
+        val baseG = asm.allDefinitions[0]
+        val testG = asm.allDefinitions[1]
+
+        assertTrue(baseG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())
     }
 
     @Test
     fun extends_two_reuse_leaves_from_bases() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base1 {
                 leaf A = 'a' ;
@@ -199,28 +276,34 @@ grammar Test {
               S = A B ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(3, asm.size)
-        val base1G = asm[0]
-        val base2G = asm[1]
-        val testG = asm[2]
 
-        assertTrue(base1G.findAllResolvedGrammarRule("A") != null)
-        assertTrue(base2G.findAllResolvedGrammarRule("B") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(3, asm.allDefinitions.size)
+        val base1G = asm.allDefinitions[0]
+        val base2G = asm.allDefinitions[1]
+        val testG = asm.allDefinitions[2]
+
+        assertTrue(base1G.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(base2G.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("ab").issues.errors.isEmpty())
     }
 
     @Test
     fun extends_one_override_leaf_not_override() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -231,8 +314,8 @@ grammar Test {
               A = 'aa' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        val expIssues = setOf(
+
+        val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
@@ -246,12 +329,18 @@ grammar Test {
                 "More than one rule named 'A' found in grammar 'Test'"
             )
         )
-        assertEquals(expIssues, res.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_one_override_leaf_from_base() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -262,25 +351,31 @@ grammar Test {
               override A = 'aa' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(2, asm.size)
-        val baseG = asm[0]
-        val testG = asm[1]
 
-        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(2, asm.allDefinitions.size)
+        val baseG = asm.allDefinitions[0]
+        val testG = asm.allDefinitions[1]
+
+        assertTrue(baseG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("aa").issues.errors.isEmpty())
     }
 
     @Test
     fun extends_two_override_leaves_from_bases() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base1 {
                 leaf A = 'a' ;
@@ -294,28 +389,34 @@ grammar Test {
               override leaf B = 'bb' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(3, asm.size)
-        val base1G = asm[0]
-        val base2G = asm[1]
-        val testG = asm[2]
 
-        assertTrue(base1G.findAllResolvedGrammarRule("A") != null)
-        assertTrue(base2G.findAllResolvedGrammarRule("B") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(3, asm.allDefinitions.size)
+        val base1G = asm.allDefinitions[0]
+        val base2G = asm.allDefinitions[1]
+        val testG = asm.allDefinitions[2]
+
+        assertTrue(base1G.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(base2G.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
         assertEquals(3, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("aabb").issues.errors.isEmpty())
     }
 
     @Test
     fun extends_two_same_rule_name_and_rhs_in_bases_fails() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base1 {
                 leaf A = 'a' ;
@@ -327,8 +428,8 @@ grammar Test {
               S = A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        val expIssues = setOf(
+
+        val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
@@ -342,12 +443,18 @@ grammar Test {
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
-        assertEquals(expIssues, res.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -362,35 +469,41 @@ grammar Test {
               S = A B C;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(4, asm.size)
-        val baseG = asm[0]
-        val mid1G = asm[1]
-        val mid2G = asm[2]
-        val testG = asm[3]
 
-        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(mid1G.findAllResolvedGrammarRule("B") != null)
-        assertTrue(mid1G.findAllResolvedGrammarRule("A") != null)
-        assertTrue(mid2G.findAllResolvedGrammarRule("C") != null)
-        assertTrue(mid1G.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
-        assertTrue(testG.findAllResolvedGrammarRule("C") != null)
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(4, asm.allDefinitions.size)
+        val baseG = asm.allDefinitions[0]
+        val mid1G = asm.allDefinitions[1]
+        val mid2G = asm.allDefinitions[2]
+        val testG = asm.allDefinitions[3]
+
+        assertTrue(baseG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(mid2G.findAllResolvedGrammarRule(GrammarRuleName("C")) != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("B")) != null)
+        assertTrue(testG.findAllResolvedGrammarRule(GrammarRuleName("C")) != null)
         assertEquals(1, baseG.allResolvedGrammarRule.size)
         assertEquals(2, mid1G.allResolvedGrammarRule.size)
         assertEquals(2, mid2G.allResolvedGrammarRule.size)
         assertEquals(4, testG.allResolvedGrammarRule.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("abc").issues.errors.isEmpty())
     }
 
     @Test
     fun extends_one_override_appendChoice_to_base() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 C = 'a' | 'b' ;
@@ -401,23 +514,29 @@ grammar Test {
               override C +=| 'c' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-        val asm = res.asm!!
-        assertEquals(2, asm.size)
-        val baseG = asm[0]
-        val testG = asm[1]
 
-        assertNotNull(baseG.findAllResolvedGrammarRule("C"))
-        assertNotNull(testG.findAllResolvedGrammarRule("C"))
+        val res = test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
+
+        val asm = res.asm!!
+        assertEquals(2, asm.allDefinitions.size)
+        val baseG = asm.allDefinitions[0]
+        val testG = asm.allDefinitions[1]
+
+        assertNotNull(baseG.findAllResolvedGrammarRule(GrammarRuleName("C")))
+        assertNotNull(testG.findAllResolvedGrammarRule(GrammarRuleName("C")))
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
-        assertTrue(baseG.findAllGrammarRuleList("C")[0].rhs is Choice)
-        assertEquals(2, (baseG.findAllGrammarRuleList("C")[0].rhs as Choice).alternative.size)
-        assertTrue(testG.findAllGrammarRuleList("C")[0].rhs is ChoiceLongest)
-        assertEquals(3, (testG.findAllResolvedGrammarRule("C")!!.rhs as ChoiceLongest).alternative.size)
+        assertTrue(baseG.findAllGrammarRuleList(GrammarRuleName("C"))[0].rhs is Choice)
+        assertEquals(2, (baseG.findAllGrammarRuleList(GrammarRuleName("C"))[0].rhs as Choice).alternative.size)
+        assertTrue(testG.findAllGrammarRuleList(GrammarRuleName("C"))[0].rhs is ChoiceLongest)
+        assertEquals(3, (testG.findAllResolvedGrammarRule(GrammarRuleName("C"))!!.rhs as ChoiceLongest).alternative.size)
 
-        val proc = Agl.processorFromStringDefault(GrammarString(sentence)).processor!!
+        val proc = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())
         assertTrue(proc.parse("b").issues.errors.isEmpty())
         assertTrue(proc.parse("c").issues.errors.isEmpty())
@@ -425,7 +544,7 @@ grammar Test {
 
     @Test
     fun extends_diamond_repeat_no_override_fails() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -440,9 +559,8 @@ grammar Test {
               S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        val expIssues = setOf(
+        val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(135, 5, 9, 14),
@@ -464,12 +582,18 @@ grammar Test {
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
-        assertEquals(expIssues, res.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond_repeat_with_override() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -485,14 +609,19 @@ grammar Test {
               override B = 'd' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+
+        test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond_repeat_with_override2_fails1() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -507,9 +636,8 @@ grammar Test {
               S = B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        val expIssues = setOf(
+        val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(37, 5, 3, 14),
@@ -531,12 +659,18 @@ grammar Test {
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
-        assertEquals(expIssues, res.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond_repeat_with_override2_fails2() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -551,9 +685,8 @@ grammar Test {
               S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        val expIssues = setOf(
+        val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(37, 5, 3, 14),
@@ -565,12 +698,18 @@ grammar Test {
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
-        assertEquals(expIssues, res.issues.all)
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond_repeat_with_override2() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Base {
                 leaf A = 'a' ;
@@ -582,18 +721,22 @@ grammar Test {
                 override leaf A +=| 'c' ;
             }
             grammar Test extends Mid1, Mid2 {
-                override leaf A = Mid2.A ;
                 S = A B;
+                override leaf A = Mid2.A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_diamond_repeat_with_override3() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             grammar Annotations {
                 Annotation = 'annotation' ;
@@ -605,18 +748,22 @@ grammar Test {
                 override leaf A +=| 'c' ;
             }
             grammar Test extends Mid1, Mid2 {
-                override leaf A = Mid2.A ;
                 S = A B;
+                override leaf A = Mid2.A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        test(grammarStr, emptySet(), Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 
     @Test
     fun extends_xxx_fails() {
-        val sentence = """
+        val grammarStr = """
             namespace ns.test
             
             grammar Base {
@@ -663,8 +810,14 @@ grammar Test {
                 override FunctionBodyPart = Behaviors.FunctionBodyPart ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        val expected = emptySet<LanguageIssue>()
+
+        test(grammarStr, expected, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
+            }
+        })
     }
 }

@@ -23,6 +23,7 @@ import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.Expression
@@ -59,7 +60,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::rootOrNavigation)
         super.register(this::ofType)
         super.register(this::typeReferences)
-        super.register(this::typeReference)
+        super.register(this::possiblyQualifiedTypeReference)
+        super.register(this::qualifiedName)
+        super.register(this::simpleTypeName)
     }
 
     data class PropertyValue(
@@ -95,7 +98,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // import = 'import' qualifiedName ;
     private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
-        Import((children[1] as List<String>).joinToString(separator = "."))
+        Import((children[1] as PossiblyQualifiedName).value)
 
     // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
@@ -200,19 +203,19 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
-        val navigation = children[1] as NavigationExpression
+        val rootOrNavigation = children[1] as Expression
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
-        val ofType = children[2] as QualifiedName?
-        return CollectionReferenceExpressionDefault(navigation, ofType, referenceExpression)
+        val ofType = children[2] as PossiblyQualifiedName?
+        return CollectionReferenceExpressionDefault(rootOrNavigation, ofType, referenceExpression)
     }
-
-    //rootOrNavigation = root | navigation ;
-    private fun rootOrNavigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
-        children[0] as Expression
 
     // ofType = 'of-type' possiblyQualifiedTypeReference ;
     private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
         children[1] as PossiblyQualifiedName
+
+    //rootOrNavigation = root | navigation ;
+    private fun rootOrNavigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[0] as Expression
 
     // typeReferences = [possiblyQualifiedTypeReference / '|']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> { //List<Pair<String, InputLocation>> {
@@ -220,17 +223,15 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     }
 
     // possiblyQualifiedTypeReference = qualifiedName
-    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName {
-        val parts = children[0] as List<String>
-        return when (parts.size) {
-            0 -> error("")
-            1 -> SimpleName(parts[0])
-            else -> QualifiedName(parts.joinToString(separator = "."))
-        }
-    }
+    private fun possiblyQualifiedTypeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        children[0] as PossiblyQualifiedName
+
+    // qualifiedName : (IDENTIFIER / '.')+ ;
+    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
 
     // simpleTypeName = IDENTIFIER ;
-    private fun simpleTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName {
-        return SimpleName((children[0] as String))
-    }
+    private fun simpleTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
+        SimpleName((children[0] as String))
+
 }

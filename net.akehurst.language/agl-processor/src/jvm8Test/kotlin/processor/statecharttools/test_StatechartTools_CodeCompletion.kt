@@ -23,6 +23,7 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.test.Test
@@ -51,8 +52,8 @@ class test_StatechartTools_CodeCompletion {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
-            val grm = grammarList.asm?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
+        private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextSimple>> { grmName ->
+            val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
                             defaultGoalRuleName(null) //use default
@@ -81,12 +82,12 @@ class test_StatechartTools_CodeCompletion {
         }
 
         fun test_process_format(grammar: String, goal: String, sentence: String) {
-            val result = processors[grammar].process(sentence, Agl.options {
+            val result = processors[SimpleName(grammar)].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis { context(ContextSimple()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
-            val resultStr = processors[grammar].formatAsm(result.asm!!).sentence
+            val resultStr = processors[SimpleName(grammar)].formatAsm(result.asm!!).sentence
             assertEquals(sentence, resultStr)
         }
     }
@@ -96,7 +97,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processors[grammar].expectedTerminalsAt(sentence, 0, 1, Agl.options {
+        val actual = processors[SimpleName(grammar)].expectedTerminalsAt(sentence, 0, 1, Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -112,7 +113,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
-        val actual = processors[grammar].expectedTerminalsAt(sentence, 6, 1, Agl.options {
+        val actual = processors[SimpleName(grammar)].expectedTerminalsAt(sentence, 6, 1, Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -131,7 +132,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
-        val actual = processors[grammar].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+        val actual = processors[SimpleName(grammar)].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -156,7 +157,7 @@ class test_StatechartTools_CodeCompletion {
         val context = contextSimple {
             item("int", "external.BultInType", AsmPathSimple.EXTERNAL.value)
         }
-        val actual = processors[grammar].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+        val actual = processors[SimpleName(grammar)].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)

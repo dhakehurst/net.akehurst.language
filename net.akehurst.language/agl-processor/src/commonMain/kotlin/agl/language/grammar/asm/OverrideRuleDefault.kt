@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
+import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.grammar.*
 
 data class OverrideRuleDefault(
@@ -105,6 +106,14 @@ data class OverrideRuleDefault(
                 }
             }
         }
+
+    override fun asString(indent: Indent): String {
+        var f = ""
+        if (isSkip) f += "skip "
+        if (isLeaf) f += "leaf "
+        val rhsStr = rhs.toString() //TODO: rhs.asString(indent)
+        return "override $f$name = $rhsStr ;"
+    }
 
     override fun hashCode(): Int = listOf(name, grammar).hashCode()
     override fun equals(other: Any?): Boolean = when (other) {

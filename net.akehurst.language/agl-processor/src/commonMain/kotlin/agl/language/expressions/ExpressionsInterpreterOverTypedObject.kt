@@ -336,7 +336,8 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
-        val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName) ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
+        val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName)
+            ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
         val obj = AsmStructureSimple(AsmPathSimple(""), typeDecl.qualifiedName)
 
         val args = expression.arguments.map { evaluateExpression(evc, it) }

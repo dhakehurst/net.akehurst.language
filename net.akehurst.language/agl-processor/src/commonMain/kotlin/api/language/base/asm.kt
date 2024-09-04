@@ -17,6 +17,7 @@
 
 package net.akehurst.language.api.language.base
 
+import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.api.language.base.SimpleName.Companion.asSimpleName
 import kotlin.jvm.JvmInline
@@ -30,6 +31,7 @@ interface PossiblyQualifiedName {
             }
     }
 
+    val value: String
     val simpleName: SimpleName
 
     /** if this is a SimpleName, append it to the give qualifiedName, else return the QualifiedName **/
@@ -40,7 +42,7 @@ interface PossiblyQualifiedName {
  * A qualified name, separator assumed to be '.'
  */
 @JvmInline
-value class QualifiedName(val value: String) : PossiblyQualifiedName {
+value class QualifiedName(override val value: String) : PossiblyQualifiedName {
     companion object {
         val String.isQualifiedName: Boolean get() = this.contains(".")
         val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
@@ -53,16 +55,19 @@ value class QualifiedName(val value: String) : PossiblyQualifiedName {
     val parts: List<SimpleName> get() = value.split(".").map { it.asSimpleName }
     val last: SimpleName get() = parts.last()
     val front: QualifiedName get() = QualifiedName(parts.dropLast(1).joinToString(separator = "."))
+    val asPossiblyQualified: PossiblyQualifiedName get() = value.asPossiblyQualifiedName
 
     fun append(lastPart: SimpleName) = QualifiedName(this, lastPart)
 
     override val simpleName: SimpleName get() = last
     override fun asQualifiedName(namespace: QualifiedName) = this
     val asImport: Import get() = Import(this.value)
+
+    override fun toString(): String = value
 }
 
 @JvmInline
-value class SimpleName(val value: String) : PossiblyQualifiedName {
+value class SimpleName(override val value: String) : PossiblyQualifiedName {
     companion object {
         val String.isSimpleName: Boolean get() = this.contains(".").not()
         val String.asSimpleName: SimpleName get() = SimpleName(this)
@@ -70,6 +75,8 @@ value class SimpleName(val value: String) : PossiblyQualifiedName {
 
     override val simpleName: SimpleName get() = this
     override fun asQualifiedName(namespace: QualifiedName) = namespace.append(this)
+
+    override fun toString(): String = value
 }
 
 /**
@@ -82,23 +89,25 @@ value class Import(val value: String) {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
 }
 
-@JvmInline
-value class Indent(val value: String) {
-    fun inc(increment: String) = Indent(this.value + increment)
+class Indent(val value: String, val increment: String) {
+    val inc get() = Indent(this.value + increment, increment)
+    override fun toString() = value
 }
 
 interface Formatable {
-    fun asString(indent: Indent = Indent(""), increment: String = "  "): String
+    fun asString(indent: Indent = Indent("", "  ")): String
 }
 
 /**
- * A parsable block of text - typically a file
+ * A group of related namespaces in which the definitions may reference each other
  */
-interface DefinitionBlock<DT : Definition<DT>> : Formatable {
+interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
+    val name: SimpleName
+
     /**
      * Ordered Map
      */
-    val namespace: List<Namespace<DT>>
+    val namespace: List<NT>
 
     val allDefinitions: List<DT>
 
@@ -117,6 +126,10 @@ interface Namespace<DT : Definition<DT>> : Formatable {
     val import: List<Import>
 
     val definition: List<DT>
+
+    val definitionByName: Map<SimpleName, DT>
+
+    fun resolveImports(model: Model<Namespace<DT>, DT>)
 
     /** find owned or imported definition **/
     fun findDefinitionOrNull(simpleName: SimpleName): DT?

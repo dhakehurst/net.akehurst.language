@@ -17,8 +17,14 @@
 package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.language.grammar.NonTerminal
-import net.akehurst.language.api.language.grammar.NormalRule
+import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.agl.language.grammar.asm.builder.grammar
+import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.agl.scanner.ScannerOnDemand
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test
@@ -28,8 +34,30 @@ import kotlin.test.assertTrue
 @FixMethodOrder(MethodSorters.JVM)
 class test_AglGrammarSyntaxAnalyser {
 
-    companion object {
-        val aglProc = Agl.registry.agl.grammar.processor!!
+    private companion object {
+        val conv = ConverterToRuntimeRules(AglGrammar.grammar)
+        val rrs = conv.runtimeRuleSet
+        val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+        val parser = LeftCornerParser(scanner, rrs)
+
+        fun parse(sentence: String): SharedPackedParseTree {
+            val conv = ConverterToRuntimeRules(AglGrammar.grammar)
+            val rrs = conv.runtimeRuleSet
+            val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+            val parser = LeftCornerParser(scanner, rrs)
+            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.goalRuleName) })
+            assertTrue(res.issues.isEmpty(), res.issues.toString())
+            return res.sppt!!
+        }
+
+        fun test(grammarStr: String, expected: Grammar) {
+            val sppt = parse(grammarStr)
+            val sut = AglGrammarSyntaxAnalyser()
+            val res = sut.transform(sppt) { _, _ -> TODO() }
+            assertTrue(res.issues.isEmpty(), res.issues.toString())
+            val expectedMdl = GrammarModelDefault(SimpleName("Test"), listOf(expected.namespace as GrammarNamespace))
+            assertEquals(expectedMdl.asString(), res.asm!!.asString())
+        }
     }
 
     @Test
@@ -40,11 +68,11 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a';
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
-        //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser()
-        val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        val expected = grammar("test", "Test") {
+            concatenation("a") { lit("a") }
+        }
+
+        test(sentence, expected)
     }
 
     @Test
@@ -55,13 +83,12 @@ class test_AglGrammarSyntaxAnalyser {
               leaf a = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
-        //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser()
-        val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        val expected = grammar("ns.test", "Test") {
+            extends("ns.test.Test2")
+            concatenation("a", isLeaf = true) { lit("a") }
+        }
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        test(sentence, expected)
     }
 
     @Test
@@ -72,13 +99,13 @@ class test_AglGrammarSyntaxAnalyser {
               leaf a = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertEquals(2, res.asm!![0].extends.size)
+        assertEquals(2, res.asm!!.allDefinitions[0].extends.size)
     }
 
     @Test
@@ -89,11 +116,11 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' 'b' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
     }
 
     @Test
@@ -104,11 +131,11 @@ class test_AglGrammarSyntaxAnalyser {
               a =  ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
     }
 
     @Test
@@ -119,11 +146,11 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' | 'b' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
     }
 
     @Test
@@ -134,11 +161,11 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' < 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
     }
 
     @Test
@@ -149,11 +176,11 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' || 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
     }
 
     @Test
@@ -164,13 +191,13 @@ class test_AglGrammarSyntaxAnalyser {
               leaf a = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -182,13 +209,13 @@ class test_AglGrammarSyntaxAnalyser {
                A = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("S") != null)
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("A") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("S")) != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("A")) != null)
     }
 
     @Test
@@ -202,15 +229,15 @@ class test_AglGrammarSyntaxAnalyser {
               S = Base.A ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
-        val gBase = res.asm!![0]
-        val gTest = res.asm!![1]
-        assertTrue(gTest.findAllResolvedGrammarRule("S") != null)
-        val rS = gTest.findAllResolvedGrammarRule("S") as NormalRule
+        println(res.asm!!.allDefinitions[0].toString())
+        val gBase = res.asm!!.allDefinitions[0]
+        val gTest = res.asm!!.allDefinitions[1]
+        assertTrue(gTest.findAllResolvedGrammarRule(GrammarRuleName("S")) != null)
+        val rS = gTest.findAllResolvedGrammarRule(GrammarRuleName("S")) as NormalRule
         assertTrue(rS.rhs is NonTerminal)
         //("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
         assertEquals(null, (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name) //is null because GrammarReferences are not resolved until semantic analysis
@@ -225,13 +252,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
 
@@ -243,13 +270,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'* ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -260,13 +287,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'+ ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -277,13 +304,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'? ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -294,13 +321,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'4+ ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -311,13 +338,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'4 ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -328,13 +355,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'{4} ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -345,13 +372,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'4..7 ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -362,13 +389,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a'{4..7} ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -380,11 +407,11 @@ class test_AglGrammarSyntaxAnalyser {
               A = 'a' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
         //assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
     }
@@ -398,11 +425,11 @@ class test_AglGrammarSyntaxAnalyser {
               A = Inn::S ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
         //assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
     }
@@ -415,13 +442,13 @@ class test_AglGrammarSyntaxAnalyser {
               a = 'a' ( 'b' 'c' ) 'd' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
     @Test
@@ -434,12 +461,12 @@ class test_AglGrammarSyntaxAnalyser {
               C = 'c' ;
             }
         """.trimIndent()
-        val sppt = aglProc.parse(sentence).sppt!!
+        val sppt = parse(sentence)
         //println(sppt.toStringAll)
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
-        println(res.asm!![0].toString())
+        println(res.asm!!.allDefinitions[0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 }

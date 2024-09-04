@@ -20,7 +20,7 @@ package net.akehurst.language.agl.grammar.style
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import kotlin.test.Test
@@ -32,13 +32,13 @@ class test_CompletionProvider {
     private companion object {
         val aglProc = Agl.registry.agl.style.processor!!
 
-        fun grammarFor(grammarStr: String): Grammar {
-            return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm?.first()!!
+        fun grammarFor(grammarStr: String): GrammarModel {
+            return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm!!
         }
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<CompletionItem>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
+            val context = ContextFromGrammar.createContextFrom(testGrammar)
             val actual = aglProc.expectedItemsAt(sentence, position, 0, Agl.options {
                 completionProvider {
                     context(context)

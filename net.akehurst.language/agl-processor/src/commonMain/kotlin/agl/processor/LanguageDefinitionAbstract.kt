@@ -17,12 +17,11 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.language.base.DefinitionBlock
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.grammar.primary
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.processor.*
@@ -34,7 +33,7 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    grammarList: DefinitionBlock<Grammar>,
+    grammarList: GrammarModel,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
@@ -42,7 +41,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     abstract override val identity: QualifiedName
     abstract override var grammarStr: String?
 
-    override var grammarList: DefinitionBlock<Grammar> by Delegates.observable(grammarList) { _, oldValue, newValue ->
+    override var grammarList: GrammarModel by Delegates.observable(grammarList) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -139,7 +138,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val grammarObservers = mutableListOf<(oldValue: DefinitionBlock<Grammar>, newValue: DefinitionBlock<Grammar>) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: GrammarModel, newValue: GrammarModel) -> Unit>()
     override val crossReferenceModelStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
 
     //override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -33,13 +33,13 @@ class test_SemanticAnalyser {
     private companion object {
         val aglProc = Agl.registry.agl.style.processor!!
 
-        fun grammarFor(grammarStr: String): Grammar {
-            return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm?.first()!!
+        fun grammarFor(grammarStr: String): GrammarModel {
+            return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm!!
         }
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
+            val context = ContextFromGrammar.createContextFrom(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
@@ -52,7 +52,7 @@ class test_SemanticAnalyser {
 
         fun testFail(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
+            val context = ContextFromGrammar.createContextFrom(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
@@ -75,6 +75,7 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             S {}
         """.trimIndent()
         val expected = emptyList<LanguageIssue>()
@@ -90,10 +91,16 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             X {}
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 1), "Grammar Rule 'X' not found for style rule", null)
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(20, 1, 2, 1),
+                "Grammar Rule 'X' not found for style rule",
+                null
+            )
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }
@@ -107,6 +114,7 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             'a' {}
         """.trimIndent()
         val expected = emptyList<LanguageIssue>()
@@ -122,10 +130,11 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             'x' {}
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 3), "Terminal Literal 'x' not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(20, 1, 2, 3), "Terminal Literal 'x' not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }
@@ -139,6 +148,7 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             "a" {}
         """.trimIndent()
         val expected = emptyList<LanguageIssue>()
@@ -154,10 +164,11 @@ class test_SemanticAnalyser {
             }
         """
         val sentence = """
+            namespace test.Test
             "x" {}
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 3), "Terminal Pattern \"x\" not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(20, 1, 2, 3), "Terminal Pattern \"x\" not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }

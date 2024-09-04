@@ -30,6 +30,7 @@ sealed class RuleItemAbstract : RuleItem {
 
     abstract override val allNonTerminal: Set<NonTerminal>
 
+
 }
 
 class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstract(), Concatenation {
@@ -192,9 +193,9 @@ class TerminalDefault(
     override val isPattern: Boolean
 ) : TangibleItemAbstract(), Terminal {
 
-    override lateinit var grammar: Grammar
+    //override lateinit var grammar: Grammar
 
-    //override val name: String = if (isPattern) "\"$value\"" else "'${value}'"
+    override val id: String = if (isPattern) "\"$value\"" else "'${value}'"
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -225,7 +226,7 @@ class NonTerminalDefault(
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return referencedRuleOrNull(targetGrammar)
-            ?: error("Grammar Rule ($ruleReference) not found in grammar (${targetGrammar.name})")
+            ?: error("Grammar Rule '$ruleReference' not found in grammar '${targetGrammar.qualifiedName}'")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

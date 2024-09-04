@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.default.CompletionProviderDefault
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
@@ -104,7 +104,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -151,7 +151,7 @@ internal class LanguageProcessorConfigurationDefault(
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
-            SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.asmTransformModel),
+            SyntaxAnalyserDefault(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -166,13 +166,13 @@ internal class LanguageProcessorConfigurationDefault(
     },
     override var styleResolver: StyleResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
     override var completionProvider: CompletionProviderResolver<Asm, ContextSimple>? = { p ->
         ProcessResultDefault(
-            CompletionProviderDefault(p.grammar!!, GrammarNamespaceAndAsmTransformBuilderFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+            CompletionProviderDefault(p.grammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typeModel, p.crossReferenceModel),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     }

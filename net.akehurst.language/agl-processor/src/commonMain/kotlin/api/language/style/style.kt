@@ -18,10 +18,10 @@
 package net.akehurst.language.api.language.style
 
 import net.akehurst.language.api.language.base.Definition
-import net.akehurst.language.api.language.base.DefinitionBlock
+import net.akehurst.language.api.language.base.Model
 import net.akehurst.language.api.language.base.Namespace
 
-interface AglStyleModel : DefinitionBlock<AglStyleRule> {
+interface AglStyleModel : Model<StyleNamespace, AglStyleRule> {
 
 }
 

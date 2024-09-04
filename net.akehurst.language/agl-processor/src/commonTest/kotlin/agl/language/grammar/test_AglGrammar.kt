@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -1744,7 +1745,7 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Original"); defaultGoalRuleName("S1") })
+        val pr = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName(SimpleName("Original")); defaultGoalRuleName("S1") })
         assertTrue(pr.issues.errors.isEmpty(), pr.issues.toString())
         assertNotNull(pr.processor)
 
@@ -1758,7 +1759,7 @@ class test_AglGrammar {
         assertEquals(expected1, result1.sppt)
         assertTrue(result1.issues.isEmpty())
 
-        val pr2 = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Extended"); defaultGoalRuleName("S1") })
+        val pr2 = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName(SimpleName("Extended")); defaultGoalRuleName("S1") })
         assertTrue(pr2.issues.errors.isEmpty(), pr2.issues.toString())
         assertNotNull(pr2.processor)
         val result2 = pr2.processor!!.parse("adc", Agl.parseOptions { goalRuleName("S1") })

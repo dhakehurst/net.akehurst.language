@@ -17,15 +17,12 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -39,7 +36,6 @@ import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -57,27 +53,27 @@ class test_Vistraq_References {
                     it.asm!!
                 }
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
-            val grm = grammarList.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
+            val grm = grammarList.allDefinitions.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
-                typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                //typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.asmTransformModel),
+                        SyntaxAnalyserDefault(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
+                //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
-                completionProvider { p ->
-                    ProcessResultDefault(
-                        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
-                }
+                //completionProvider { p ->
+                //     ProcessResultDefault(
+                //        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+                //        IssueHolder(LanguageProcessorPhase.ALL)
+                //    )
+                //}
             }
             Agl.processorFromGrammar(grm, cfg)
         }
@@ -110,13 +106,13 @@ class test_Vistraq_References {
 
     @Test
     fun typeModel() {
-        val typeModel = TypeModelFromGrammar.createFromGrammarList(grammarList)
+        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = TypeModelFromGrammar.createFromGrammarList(grammarList)
+        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
         val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr,
             Agl.options {

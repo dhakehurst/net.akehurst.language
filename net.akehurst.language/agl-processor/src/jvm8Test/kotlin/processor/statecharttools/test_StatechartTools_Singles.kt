@@ -16,15 +16,11 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -33,7 +29,6 @@ import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -61,27 +56,27 @@ class test_StatechartTools_Singles {
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
-            val grm = grammarList.asm?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
+            val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
-                typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.asmTransformModel),
+                        SyntaxAnalyserDefault(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
+                //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
-                completionProvider { p ->
-                    ProcessResultDefault(
-                        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
-                }
+                // completionProvider { p ->
+                //     ProcessResultDefault(
+                //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+                //         IssueHolder(LanguageProcessorPhase.ALL)
+                //     )
+                // }
             }
             Agl.processorFromGrammar(grm, cfg)
         }

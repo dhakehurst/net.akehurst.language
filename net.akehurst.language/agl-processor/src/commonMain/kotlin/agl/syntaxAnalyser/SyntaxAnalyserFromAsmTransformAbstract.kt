@@ -18,8 +18,8 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toLeafAsStringTrRule
-import net.akehurst.language.agl.default.GrammarNamespaceAndAsmTransformBuilderFromGrammar.Companion.toSubtypeTrRule
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
+import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.language.asmTransform.*
 import net.akehurst.language.agl.language.expressions.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -60,9 +60,10 @@ data class DownData2(
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
-    val grammarNamespaceQualifiedName: QualifiedName,
+//    val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
-    val asmTransformModel: TransformModel
+    val asmTransformModel: TransformModel,
+    val relevantTrRuleSet: QualifiedName
     //val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserFromTreeDataAbstract<A>() {
 
@@ -79,8 +80,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     private var _asm: AsmSimple? = null
     override val asm: A get() = _asm as A
 
-    val relevantRuleSet = asmTransformModel.findNamespaceOrNull(grammarNamespaceQualifiedName.front)?.findDefinitionOrNull(grammarNamespaceQualifiedName.last)
-        ?: error("Relevant TransformRuleSet not Found for '$grammarNamespaceQualifiedName'")
+    val relevantRuleSet = asmTransformModel.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
+        ?: error("Relevant TransformRuleSet not Found for '$relevantTrRuleSet'")
     val _trf = AsmTransformInterpreter(typeModel)
 
     private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
@@ -162,7 +163,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleAbstract?
-                    ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser for '${grammarNamespaceQualifiedName}'")
+                    ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<A>)
                 val parentDownData = downStack.peek()!!
                 val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.trRule.forChildren.resolvedType.declaration, nodeInfo)

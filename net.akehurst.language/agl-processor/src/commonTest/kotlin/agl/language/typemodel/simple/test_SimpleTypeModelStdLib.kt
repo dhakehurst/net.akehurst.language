@@ -17,6 +17,7 @@
 
 package net.akehurst.language.typemodel.simple
 
+import net.akehurst.language.typemodel.api.PropertyName
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,51 +25,51 @@ class test_SimpleTypeModelStdLib {
 
     @Test
     fun primitive_AnyType() {
-        assertEquals("std.Any", SimpleTypeModelStdLib.AnyType.qualifiedTypeName)
+        assertEquals("std.Any", SimpleTypeModelStdLib.AnyType.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_NothingType() {
-        assertEquals("std.Nothing", SimpleTypeModelStdLib.NothingType.qualifiedTypeName)
+        assertEquals("std.Nothing", SimpleTypeModelStdLib.NothingType.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_String() {
-        assertEquals("std.String", SimpleTypeModelStdLib.String.qualifiedTypeName)
+        assertEquals("std.String", SimpleTypeModelStdLib.String.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Boolean() {
-        assertEquals("std.Boolean", SimpleTypeModelStdLib.Boolean.qualifiedTypeName)
+        assertEquals("std.Boolean", SimpleTypeModelStdLib.Boolean.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Integer() {
-        assertEquals("std.Integer", SimpleTypeModelStdLib.Integer.qualifiedTypeName)
+        assertEquals("std.Integer", SimpleTypeModelStdLib.Integer.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Real() {
-        assertEquals("std.Real", SimpleTypeModelStdLib.Real.qualifiedTypeName)
+        assertEquals("std.Real", SimpleTypeModelStdLib.Real.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Timestamp() {
-        assertEquals("std.Timestamp", SimpleTypeModelStdLib.Timestamp.qualifiedTypeName)
+        assertEquals("std.Timestamp", SimpleTypeModelStdLib.Timestamp.qualifiedTypeName.value)
 
     }
 
     @Test
     fun collection_List() {
-        assertEquals("std.List", SimpleTypeModelStdLib.List.qualifiedName)
-        assertEquals("size", SimpleTypeModelStdLib.List.findPropertyOrNull("size")?.name)
-        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findPropertyOrNull("size")?.typeInstance?.qualifiedTypeName)
+        assertEquals("std.List", SimpleTypeModelStdLib.List.qualifiedName.value)
+        assertEquals("size", SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!!.name.value)
+        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!!.typeInstance.qualifiedTypeName.value)
 
 
     }

@@ -17,17 +17,20 @@
 
 package net.akehurst.language.api.language.grammar
 
+import net.akehurst.language.api.language.base.Formatable
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class GrammarRuleName(val value: String)
+value class GrammarRuleName(val value: String) {
+    override fun toString(): String = value
+}
 
 interface PreferenceRule : GrammarItem {
     val forItem: SimpleItem
     val optionList: List<PreferenceOption>
 }
 
-interface PreferenceOption {
+interface PreferenceOption : Formatable {
 
     enum class Associativity { LEFT, RIGHT }
 

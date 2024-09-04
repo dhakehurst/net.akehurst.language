@@ -24,6 +24,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.scanner.ScannerOnDemand
 import net.akehurst.language.agl.sppt.SPPTParserDefault
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -98,7 +99,7 @@ internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false
         if (printAutomaton) println(rrs.usedAutomatonToString(options.parse.goalRuleName!!))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
+        val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets.mapKeys { QualifiedName(it.key) })
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected.toStringAllWithIndent("  ", true).trim(), result.sppt!!.toStringAllWithIndent("  ", true).trim())

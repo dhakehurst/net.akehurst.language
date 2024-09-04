@@ -18,8 +18,12 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.language.base.*
+import net.akehurst.language.api.language.base.Namespace
+import net.akehurst.language.api.language.base.PossiblyQualifiedName
+import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
@@ -42,7 +46,7 @@ interface LanguageRegistry : GrammarRegistry {
     fun <AsmType : Any, ContextType : Any> register(
         identity: QualifiedName,
         grammarStr: String?,
-        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
@@ -53,7 +57,7 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: QualifiedName,
-        aglOptions: ProcessOptions<DefinitionBlock<Grammar>, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType>
 }
@@ -64,7 +68,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val isModifiable: Boolean
 
     var grammarStr: String?
-    var grammarList: DefinitionBlock<Grammar>
+    var grammarList: GrammarModel
     val targetGrammar: Grammar?
     var targetGrammarName: SimpleName?
     var defaultGoalRule: GrammarRuleName?
@@ -94,7 +98,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(String?, String?) -> Unit>
-    val grammarObservers: MutableList<(DefinitionBlock<Grammar>, DefinitionBlock<Grammar>) -> Unit>
+    val grammarObservers: MutableList<(GrammarModel, GrammarModel) -> Unit>
     val crossReferenceModelStrObservers: MutableList<(String?, String?) -> Unit>
 
     //val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>

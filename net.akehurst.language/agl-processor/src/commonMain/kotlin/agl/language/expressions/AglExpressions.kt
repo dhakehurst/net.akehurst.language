@@ -39,9 +39,8 @@ internal object AglExpressions {
             ref("with")
             ref("when")
         }
-        choice("root") {
+        concatenation("root") {
             ref("propertyReference")
-            ref("SPECIAL")
         }
         choice("literal") {
             ref("BOOLEAN")
@@ -159,7 +158,7 @@ grammar Expression extends Base {
       | with
       | when
       ;
-    root = propertyReference | SPECIAL ;
+    root = propertyReference ;
     literal = BOOLEAN | INTEGER | REAL | STRING ;
     
     navigation = navigationRoot navigationPart+ ;

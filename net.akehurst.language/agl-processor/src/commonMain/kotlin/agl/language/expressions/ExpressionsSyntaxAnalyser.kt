@@ -70,17 +70,17 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
-    // root = propertyReference | SPECIAL ;
+    // root = propertyReference ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
-        val v = children[0] as String
+        val v = children[0] as PropertyName
         return when {
-            v.startsWith("\$") -> when (v) {
+            v.value.startsWith("\$") -> when (v.value) {
                 RootExpressionSimple.NOTHING.name -> RootExpressionSimple.NOTHING
                 RootExpressionSimple.SELF.name -> RootExpressionSimple.SELF
-                else -> RootExpressionSimple(v)
+                else -> RootExpressionSimple(v.value)
             }
 
-            else -> RootExpressionSimple(v)
+            else -> RootExpressionSimple(v.value)
         }
     }
 
@@ -149,7 +149,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // assignment = propertyName ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
-        val lhsPropertyName = PropertyName(children[0] as String)
+        val lhsPropertyName = children[0] as PropertyName
         val rhs = children[2] as Expression
         return AssignmentStatementSimple(lhsPropertyName, rhs)
     }
@@ -182,9 +182,9 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return WhenOptionSimple(condition, expression)
     }
 
-    // propertyCall = '.' IDENTIFIER ;
+    // propertyCall = '.' propertyReference ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
-        val id = PropertyName(children[1] as String)
+        val id = children[1] as PropertyName
         return PropertyCallSimple(id)
     }
 

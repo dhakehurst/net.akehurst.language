@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.language.grammar.asm.builder
 
-import net.akehurst.language.agl.language.base.NamespaceDefault
 import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.base.Namespace
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
@@ -29,19 +28,22 @@ import net.akehurst.language.api.language.grammar.*
 annotation class GrammarBuilderMarker
 
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
-    val b = GrammarBuilder(GrammarDefault(NamespaceDefault(QualifiedName(namespace)), SimpleName(name), emptyList()))
+    val ns = GrammarNamespaceDefault(QualifiedName(namespace))
+    val gr = GrammarDefault(ns, SimpleName(name), emptyList())
+    ns.addDefinition(gr)
+    val b = GrammarBuilder(gr)
     b.init()
     return b.build()
 }
 
-fun grammar(grammar: GrammarAbstract, init: GrammarBuilder.() -> Unit): Grammar {
-    val b = GrammarBuilder(grammar)
-    b.init()
-    return b.build()
-}
+//fun (grammar: GrammarAbstract, init: GrammarBuilder.() -> Unit): Grammar {
+//    val b = GrammarBuilder(grammar)
+//    b.init()
+//    return b.build()
+//}
 
 @GrammarBuilderMarker
-class GrammarBuilder(val grammar: GrammarAbstract) {
+class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract) {
 
     private val _terminals = mutableMapOf<String, Terminal>()
 
@@ -58,7 +60,7 @@ class GrammarBuilder(val grammar: GrammarAbstract) {
         return if (null == t) {
             val tt = TerminalDefault(value, isPattern)
             _terminals[value] = tt
-            tt.grammar = this.grammar
+            //tt.grammar = this.grammar
             tt
         } else {
             if (isPattern == t.isPattern) {
@@ -197,8 +199,8 @@ open class SimpleItemsBuilder(
     }
 
     /** a grouped choice **/
-    fun chc(init: GroupConcatBuilder.() -> Unit) {
-        val gb = GroupConcatBuilder()
+    fun chc(init: GroupChoiceBuilder.() -> Unit) {
+        val gb = GroupChoiceBuilder(localNamespace)
         gb.init()
         val groupedContent = gb.build()
         addItem(GroupDefault(groupedContent))
@@ -284,15 +286,24 @@ class GroupConcatBuilder() {
 
     val items = mutableListOf<RuleItem>()
 
+
     fun build(): Concatenation {
         return ConcatenationDefault(items)
     }
 }
 
 @GrammarBuilderMarker
-class GroupChoiceBuilder() {
+class GroupChoiceBuilder(val localNamespace: Namespace<Grammar>) {
 
     val alternatives = mutableListOf<RuleItem>()
+
+    fun alt(init: ConcatenationItemBuilder.() -> Unit) {
+        val b = ConcatenationItemBuilder(localNamespace)
+        b.init()
+        val items = b.build()
+        val alt = ConcatenationDefault(items)
+        alternatives.add(alt)
+    }
 
     fun build(): Choice {
         return ChoiceLongestDefault(alternatives)
