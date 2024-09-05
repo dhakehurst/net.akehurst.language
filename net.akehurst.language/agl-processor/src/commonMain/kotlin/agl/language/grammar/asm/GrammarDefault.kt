@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
+import net.akehurst.language.agl.language.base.ModelAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.api.language.base.*
@@ -27,7 +27,7 @@ import net.akehurst.language.collections.*
 internal class GrammarModelDefault(
     override val name: SimpleName,
     namespace: List<GrammarNamespace>
-) : GrammarModel, DefinitionBlockAbstract<GrammarNamespace, Grammar>(namespace) {
+) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>(namespace) {
 
 }
 

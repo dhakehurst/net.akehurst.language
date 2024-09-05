@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.language.style.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
+import net.akehurst.language.agl.language.base.ModelAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.api.language.base.Import
@@ -30,7 +30,7 @@ import net.akehurst.language.api.processor.ProcessResult
 class AglStyleModelDefault(
     override val name: SimpleName,
     namespace: List<StyleNamespace>
-) : AglStyleModel, DefinitionBlockAbstract<StyleNamespace, AglStyleRule>(namespace) {
+) : AglStyleModel, ModelAbstract<StyleNamespace, AglStyleRule>(namespace) {
 
     companion object {
         //not sure if this should be here or in grammar object

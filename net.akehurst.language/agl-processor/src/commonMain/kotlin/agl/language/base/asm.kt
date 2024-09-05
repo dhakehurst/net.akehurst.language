@@ -20,10 +20,10 @@ package net.akehurst.language.agl.language.base
 import net.akehurst.language.api.language.base.*
 
 
-class DefinitionBlockDefault<NT : Namespace<DT>, DT : Definition<DT>>(
+class ModelDefault<NT : Namespace<DT>, DT : Definition<DT>>(
     override val name: SimpleName,
     namespace: List<NT>
-) : DefinitionBlockAbstract<NT, DT>(namespace) {
+) : ModelAbstract<NT, DT>(namespace) {
 
 }
 
@@ -33,7 +33,7 @@ class NamespaceDefault<DT : Definition<DT>>(
 
 }
 
-abstract class DefinitionBlockAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
+abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     override val namespace: List<NT>
 ) : Model<NT, DT> {
 

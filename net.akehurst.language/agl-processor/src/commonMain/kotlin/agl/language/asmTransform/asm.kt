@@ -21,7 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarModel2TransformModel
-import net.akehurst.language.agl.language.base.DefinitionBlockAbstract
+import net.akehurst.language.agl.language.base.ModelAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
 import net.akehurst.language.agl.language.expressions.IndexOperationSimple
 import net.akehurst.language.agl.language.expressions.LiteralExpressionSimple
@@ -45,11 +45,11 @@ import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 
-internal class TransformModelDefault(
+class TransformModelDefault(
     override val name: SimpleName,
     override val typeModel: TypeModel?,
     namespace: List<TransformNamespace>
-) : TransformModel, DefinitionBlockAbstract<TransformNamespace, TransformRuleSet>(namespace) {
+) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>(namespace) {
 
     companion object {
         fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<TransformModel> {

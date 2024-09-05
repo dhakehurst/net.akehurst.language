@@ -369,12 +369,11 @@ abstract class TypeNamespaceAbstract(
     val ownedTupleTypes = mutableListOf<TupleType>()
 
     override val primitiveType: Set<PrimitiveType> get() = ownedTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
-
     override val enumType: Set<EnumType> get() = ownedTypesByName.values.filterIsInstance<EnumType>().toSet()
-
     override val collectionType: Set<CollectionType> get() = ownedTypesByName.values.filterIsInstance<CollectionType>().toSet()
-
-    override val elementType: Set<DataType> get() = ownedTypesByName.values.filterIsInstance<DataType>().toSet()
+    override val valueType: Set<ValueType> get() = ownedTypesByName.values.filterIsInstance<ValueType>().toSet()
+    override val interfaceType: Set<InterfaceType> get() = ownedTypesByName.values.filterIsInstance<InterfaceType>().toSet()
+    override val dataType: Set<DataType> get() = ownedTypesByName.values.filterIsInstance<DataType>().toSet()
 
     //override fun resolveImports(model: Model<Namespace<TypeDeclaration>, TypeDeclaration>) {
     override fun resolveImports(model: TypeModel) {
@@ -499,6 +498,28 @@ abstract class TypeNamespaceAbstract(
             t
         } else {
             existing as CollectionType
+        }
+    }
+
+    override fun findOwnedOrCreateValueTypeNamed(typeName: SimpleName): ValueType {
+        val existing = findOwnedTypeNamed(typeName)
+        return if (null == existing) {
+            val t =ValueTypeSimple(this, typeName)
+            addDefinition(t)
+            t
+        } else {
+            existing as ValueType
+        }
+    }
+
+    override fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType {
+        val existing = findOwnedTypeNamed(typeName)
+        return if (null == existing) {
+            val t = InterfaceTypeSimple(this, typeName)
+            addDefinition(t)
+            t
+        } else {
+            existing as InterfaceType
         }
     }
 
@@ -890,6 +911,114 @@ class TupleTypeSimple(
     }
 
     override fun toString(): String = "Tuple<${this.property.joinToString { it.name.value + ":" + it.typeInstance }}>"
+}
+
+class ValueTypeSimple(
+    override val namespace: TypeNamespace,
+    override val name: SimpleName
+) : StructuredTypeSimpleAbstract(), ValueType {
+
+    //override var typeParameters = mutableListOf<SimpleName>()
+
+    override val allProperty: Map<PropertyName, PropertyDeclaration>
+        get() = supertypes.flatMap {
+            (it.declaration as DataType).allProperty.values
+        }.associateBy { it.name } + this.property.associateBy { it.name }
+
+    override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
+        null == context -> qualifiedName.value
+        context == this.namespace -> name.value
+        context.isImported(this.namespace.qualifiedName) -> name.value
+        else -> qualifiedName.value
+    }
+
+    override fun asStringInContext(context: TypeNamespace): String {
+        val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        val props = this.property
+            .joinToString(separator = "\n    ") {
+                val psig = it.typeInstance.signature(context, 0)
+                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") {
+                    when (it) {
+                        PropertyCharacteristic.IDENTITY -> "val"
+                        PropertyCharacteristic.REFERENCE -> "ref"
+                        PropertyCharacteristic.COMPOSITE -> "cmp"
+                        PropertyCharacteristic.CONSTRUCTOR -> "cns"
+                        PropertyCharacteristic.MEMBER -> "var"
+                        PropertyCharacteristic.DERIVED -> "der"
+                        PropertyCharacteristic.PRIMITIVE -> "prm"
+                    }
+                }
+                "${it.name}:$psig $chrs"
+            }
+        return "value ${name}${sups} {\n    $props\n  }"
+    }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is ValueType -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName.value
+}
+
+class InterfaceTypeSimple(
+    override val namespace: TypeNamespace,
+    override val name: SimpleName
+) : StructuredTypeSimpleAbstract(), InterfaceType {
+
+    override var typeParameters = mutableListOf<SimpleName>()
+
+    // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
+    override val subtypes: MutableList<TypeInstance> = mutableListOf()
+
+    override val allProperty: Map<PropertyName, PropertyDeclaration>
+        get() = supertypes.flatMap {
+            (it.declaration as DataType).allProperty.values
+        }.associateBy { it.name } + this.property.associateBy { it.name }
+
+    override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
+        null == context -> qualifiedName.value
+        context == this.namespace -> name.value
+        context.isImported(this.namespace.qualifiedName) -> name.value
+        else -> qualifiedName.value
+    }
+
+    override fun addSubtype(qualifiedTypeName: PossiblyQualifiedName) {
+        val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
+        (this.subtypes as MutableList).add(ti) //TODO: can we somehow add the reverse!
+    }
+
+    override fun asStringInContext(context: TypeNamespace): String {
+        val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        val props = this.property
+            .joinToString(separator = "\n    ") {
+                val psig = it.typeInstance.signature(context, 0)
+                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") {
+                    when (it) {
+                        PropertyCharacteristic.IDENTITY -> "val"
+                        PropertyCharacteristic.REFERENCE -> "ref"
+                        PropertyCharacteristic.COMPOSITE -> "cmp"
+                        PropertyCharacteristic.CONSTRUCTOR -> "cns"
+                        PropertyCharacteristic.MEMBER -> "var"
+                        PropertyCharacteristic.DERIVED -> "der"
+                        PropertyCharacteristic.PRIMITIVE -> "prm"
+                    }
+                }
+                "${it.name}:$psig $chrs"
+            }
+        return "interface ${name}${sups} {\n    $props\n  }"
+    }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is InterfaceType -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName.value
 }
 
 class DataTypeSimple(

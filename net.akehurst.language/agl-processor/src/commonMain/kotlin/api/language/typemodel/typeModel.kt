@@ -55,11 +55,15 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
     val primitiveType: Set<PrimitiveType>
 
+    val valueType: Set<ValueType>
+
     val enumType: Set<EnumType>
 
     val collectionType: Set<CollectionType>
 
-    val elementType: Set<DataType>
+    val interfaceType: Set<InterfaceType>
+
+    val dataType: Set<DataType>
 
     fun addImport(import: Import)
 
@@ -80,6 +84,8 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
     fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: SimpleName): PrimitiveType
     fun findOwnedOrCreateEnumTypeNamed(typeName: SimpleName, literals: List<String>): EnumType
+    fun findOwnedOrCreateValueTypeNamed(typeName: SimpleName): ValueType
+    fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
 
@@ -212,6 +218,15 @@ interface TupleType : StructuredType {
      * The 'equals' method compares the namespace and id of the TupleType.
      */
     fun equalTo(other: TupleType): Boolean
+}
+
+interface ValueType : StructuredType {
+}
+
+interface InterfaceType : StructuredType {
+    val subtypes: MutableList<TypeInstance>
+
+    fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
 }
 
 interface DataType : StructuredType {

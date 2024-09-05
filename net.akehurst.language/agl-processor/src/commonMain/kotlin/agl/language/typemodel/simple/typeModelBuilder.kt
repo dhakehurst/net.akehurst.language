@@ -80,6 +80,17 @@ class TypeNamespaceBuilder(
     fun primitiveType(typeName: String): PrimitiveType =
         _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
 
+    fun valueType(typeName: String, init: DataTypeBuilder.() -> Unit = {})  {
+        //TODO: do we need and actual 'ValueType' interface,class,etc
+        dataType(typeName, init)
+    }
+
+
+    fun interfaceType(typeName: String, init: DataTypeBuilder.() -> Unit = {}) {
+        //TODO: do we need and actual 'InterfaceType' interface,class,etc
+        dataType(typeName,init)
+    }
+
     fun enumType(typeName: String, literals: List<String>): EnumType =
         _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
 
@@ -255,35 +266,91 @@ class TupleTypeBuilder(
 }
 
 @TypeModelDslMarker
-class DataTypeBuilder(
+class ValueTypeBuilder(
     _namespace: TypeNamespace,
     _typeReferences: MutableList<TypeUsageReferenceBuilder>,
-    _elementName: SimpleName
+    _name: SimpleName
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    private val _elementType = _namespace.findOwnedOrCreateDataTypeNamed(_elementName) as DataType
-    override val _structuredType: StructuredType get() = _elementType
+    private val _type = _namespace.findOwnedOrCreateValueTypeNamed(_name) as ValueType
+    override val _structuredType: StructuredType get() = _type
+
+    fun supertypes(vararg superTypes: String) {
+        superTypes.forEach {
+            _type.addSupertype(it.asPossiblyQualifiedName)
+        }
+    }
+
+    fun build(): ValueType {
+        return _type
+    }
+
+}
+
+@TypeModelDslMarker
+class InterfaceTypeBuilder(
+    _namespace: TypeNamespace,
+    _typeReferences: MutableList<TypeUsageReferenceBuilder>,
+    _name: SimpleName
+) : StructuredTypeBuilder(_namespace, _typeReferences) {
+
+    private val _type = _namespace.findOwnedOrCreateInterfaceTypeNamed(_name) as InterfaceType
+    override val _structuredType: StructuredType get() = _type
 
     fun typeParameters(vararg parameters: String) {
-        (_elementType.typeParameters as MutableList).addAll(parameters.map { SimpleName(it) })
+        (_type.typeParameters as MutableList).addAll(parameters.map { SimpleName(it) })
     }
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _elementType.addSupertype(it.asPossiblyQualifiedName)
+            _type.addSupertype(it.asPossiblyQualifiedName)
         }
     }
 
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
             val pqn = it.asPossiblyQualifiedName
-            _elementType.addSubtype(pqn)
-            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_elementType.qualifiedName)
+            _type.addSubtype(pqn)
+            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_type.qualifiedName)
+        }
+    }
+
+    fun build(): InterfaceType {
+        return _type
+    }
+
+}
+
+@TypeModelDslMarker
+class DataTypeBuilder(
+    _namespace: TypeNamespace,
+    _typeReferences: MutableList<TypeUsageReferenceBuilder>,
+    _name: SimpleName
+) : StructuredTypeBuilder(_namespace, _typeReferences) {
+
+    private val _type = _namespace.findOwnedOrCreateDataTypeNamed(_name) as DataType
+    override val _structuredType: StructuredType get() = _type
+
+    fun typeParameters(vararg parameters: String) {
+        (_type.typeParameters as MutableList).addAll(parameters.map { SimpleName(it) })
+    }
+
+    fun supertypes(vararg superTypes: String) {
+        superTypes.forEach {
+            _type.addSupertype(it.asPossiblyQualifiedName)
+        }
+    }
+
+    fun subtypes(vararg elementTypeName: String) {
+        elementTypeName.forEach {
+            val pqn = it.asPossiblyQualifiedName
+            _type.addSubtype(pqn)
+            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_type.qualifiedName)
         }
     }
 
     fun build(): DataType {
-        return _elementType
+        return _type
     }
 
 }
