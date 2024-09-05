@@ -104,7 +104,7 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
 interface TypeInstance {
     val namespace: TypeNamespace
-    val typeArguments: List<TypeInstance>
+    val typeArguments: List<TypeInstance> //TODO: I think we need an actual 'TypeArgument' type
     val isNullable: Boolean
 
     /**
@@ -171,6 +171,7 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
 
     fun asStringInContext(context: TypeNamespace): String
 
+    fun addTypeParameter(name: SimpleName)
     fun addSupertype(qualifiedTypeName: PossiblyQualifiedName)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String)
     fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String)

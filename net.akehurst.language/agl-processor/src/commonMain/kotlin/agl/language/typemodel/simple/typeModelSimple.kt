@@ -379,7 +379,8 @@ abstract class TypeNamespaceAbstract(
     override fun resolveImports(model: TypeModel) {
         // check explicit imports
         this.import.forEach {
-            val ns = model.findNamespaceOrNull(it.asQualifiedName) ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+            val ns = model.findNamespaceOrNull(it.asQualifiedName)
+                ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
             _requiredNamespaces[it.asQualifiedName] = ns
         }
         // check required namespaces
@@ -392,7 +393,11 @@ abstract class TypeNamespaceAbstract(
     override fun isImported(qualifiedNamespaceName: QualifiedName): Boolean = import.contains(Import(qualifiedNamespaceName.value))
 
     override fun addImport(import: Import) {
-        (this.import as MutableList).add(import)
+        if (this.import.contains(import)) {
+            // do not repeat imports
+        } else {
+            (this.import as MutableList).add(import)
+        }
     }
 
     fun addDeclaration(decl: TypeDeclaration) {
@@ -653,6 +658,9 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
         this.allMethod[name]
 
     // --- mutable ---
+    override fun addTypeParameter(name: SimpleName) {
+        (this.typeParameters as MutableList).add(name)
+    }
     override fun addSupertype(qualifiedTypeName: PossiblyQualifiedName) {
         val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
         //TODO: check if create loop of supertypes - pre namespace resolving!
@@ -968,7 +976,7 @@ class InterfaceTypeSimple(
     override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), InterfaceType {
 
-    override var typeParameters = mutableListOf<SimpleName>()
+    //override var typeParameters = mutableListOf<SimpleName>()
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: MutableList<TypeInstance> = mutableListOf()
@@ -1026,7 +1034,7 @@ class DataTypeSimple(
     override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), DataType {
 
-    override var typeParameters = mutableListOf<SimpleName>()
+    //override var typeParameters = mutableListOf<SimpleName>()
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: MutableList<TypeInstance> = mutableListOf()

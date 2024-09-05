@@ -24,7 +24,7 @@ import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.ParameterName
 import net.akehurst.language.typemodel.api.PropertyName
 
-object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), emptyList()) {
+object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), emptyList()) {
 
     //TODO: need some other kinds of type for these really
     val AnyType = super.findOrCreateSpecialTypeNamed(SimpleName("Any")).type()

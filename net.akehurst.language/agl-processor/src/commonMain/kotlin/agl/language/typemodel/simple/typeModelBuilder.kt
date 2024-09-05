@@ -154,23 +154,26 @@ abstract class StructuredTypeBuilder(
 
     val COMPOSITE = PropertyCharacteristic.COMPOSITE
     val REFERENCE = PropertyCharacteristic.REFERENCE
+
     val IDENTITY = PropertyCharacteristic.IDENTITY
     val MEMBER = PropertyCharacteristic.MEMBER
     val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
+
+    val DERIVED = PropertyCharacteristic.DERIVED
 
     fun propertyOf(
         characteristics: Set<PropertyCharacteristic>,
         propertyName: String,
         typeName: String,
-        typeArgs: List<String> = emptyList(),
+        //typeArgs: List<String> = emptyList(),
         isNullable: Boolean = false,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
         val btargs = tab.build()
-        val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it.asPossiblyQualifiedName, emptyList(), false) }
-        val targs = if (btargs.isEmpty()) atargs else btargs
+        //val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it.asPossiblyQualifiedName, emptyList(), false) }
+        val targs = btargs //if (btargs.isEmpty()) atargs else btargs
         val ti = _namespace.createTypeInstance(_structuredType, typeName.asPossiblyQualifiedName, targs, isNullable)
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics)
     }

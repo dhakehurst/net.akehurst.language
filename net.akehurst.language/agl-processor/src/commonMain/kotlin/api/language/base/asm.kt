@@ -89,7 +89,7 @@ value class Import(val value: String) {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
 }
 
-class Indent(val value: String, val increment: String) {
+class Indent(val value: String = "", val increment: String = "  ") {
     val inc get() = Indent(this.value + increment, increment)
     override fun toString() = value
 }
