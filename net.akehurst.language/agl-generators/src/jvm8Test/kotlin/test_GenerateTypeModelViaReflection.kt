@@ -145,6 +145,89 @@ class test_GenerateTypeModelViaReflection {
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
 
+    fun gen_style():Pair<TypeModel,List<QualifiedName>> {
+        val baseTm = gen_base()
+        val added = baseTm.namespace.map { it.qualifiedName }
+        val gen = GenerateTypeModelViaReflection(
+            SimpleName("Test"),
+            baseTm.namespace,
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+        )
+        gen.addPackage("net.akehurst.language.api.language.style")
+        gen.addPackage("net.akehurst.language.agl.language.style.asm")
+        val tm = gen.generate()
+        return Pair(tm, added)
+    }
+
+    @Test
+    fun test_format_style() {
+        val (tm,added) = gen_style()
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(
+            TypeModelFormatConfiguration(
+                exludedNamespaces = added,
+                properties = PropertiesTypeModelFormatConfiguration(
+                    includeDerived = false
+                )
+            )
+        )
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+    }
+
+    fun gen_expressions():Pair<TypeModel,List<QualifiedName>> {
+        val (typemodel, tmadditions) = gen_typemodel()
+        val added = typemodel.namespace.map { it.qualifiedName }
+        val gen = GenerateTypeModelViaReflection(
+            SimpleName("Test"),
+            typemodel.namespace,
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+        )
+        gen.addPackage("net.akehurst.language.api.language.expressions")
+        gen.addPackage("net.akehurst.language.agl.language.expressions.asm")
+        val tm = gen.generate()
+        return Pair(tm, added)
+    }
+
+    @Test
+    fun test_format_expressions() {
+        val (tm,added) = gen_expressions()
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(
+            TypeModelFormatConfiguration(
+                exludedNamespaces = added,
+                properties = PropertiesTypeModelFormatConfiguration(
+                    includeDerived = false
+                )
+            )
+        )
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+    }
+
+    fun gen_reference():Pair<TypeModel,List<QualifiedName>> {
+       val (expr, eadd) = gen_expressions()
+       val added = expr.namespace.map { it.qualifiedName }
+        val gen = GenerateTypeModelViaReflection(
+            SimpleName("Test"),
+            expr.namespace,
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+        )
+        gen.addPackage("net.akehurst.language.api.language.reference")
+        gen.addPackage("net.akehurst.language.agl.language.reference.asm")
+        val tm = gen.generate()
+        return Pair(tm, added)
+    }
+
+    @Test
+    fun test_format_reference() {
+        val (tm,added) = gen_reference()
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(
+            TypeModelFormatConfiguration(
+                exludedNamespaces = added,
+                properties = PropertiesTypeModelFormatConfiguration(
+                    includeDerived = false
+                )
+            )
+        )
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+    }
 
     fun gen_api():Pair<TypeModel,List<QualifiedName>> {
         val runtime = gen_runtime()

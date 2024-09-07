@@ -18,9 +18,7 @@
 package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.expressions.AssignmentStatementSimple
-import net.akehurst.language.agl.language.expressions.CreateObjectExpressionSimple
-import net.akehurst.language.agl.language.expressions.RootExpressionSimple
+import net.akehurst.language.agl.language.expressions.asm.*
 import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.asmTransform.TransformNamespace
 import net.akehurst.language.api.language.asmTransform.TransformRuleSet

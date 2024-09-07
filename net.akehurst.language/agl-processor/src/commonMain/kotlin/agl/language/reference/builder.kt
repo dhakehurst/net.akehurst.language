@@ -17,8 +17,7 @@
 package net.akehurst.language.agl.language.reference.asm.builder
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.expressions.NavigationSimple
-import net.akehurst.language.agl.language.expressions.RootExpressionSimple
+import net.akehurst.language.agl.language.expressions.asm.*
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName

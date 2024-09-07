@@ -160,7 +160,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                         else -> {
                             val params = c.parameters.joinToString(separator = "\n") { p ->
                                 val t = when {
-                                    p.typeInstance.declaration.namespace == context -> p.typeInstance.typeName.value
+                                    p.typeInstance.namespace == context -> p.typeInstance.typeName.value
                                     else -> p.typeInstance.qualifiedTypeName.value // TODO: add import if not name clash
                                 }
                                 val nullable = p.typeInstance.isNullable
@@ -178,7 +178,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         val characteristics = pd.characteristics.joinToString(separator = ", ") { it.name }
         val propertyName = pd.name
         val typeName = when {
-            pd.typeInstance.declaration.namespace == context -> pd.typeInstance.typeName
+            pd.typeInstance.namespace == context -> pd.typeInstance.typeName
             else -> pd.typeInstance.qualifiedTypeName // TODO: add import if not name clash
         }
         val isNullable = pd.typeInstance.isNullable

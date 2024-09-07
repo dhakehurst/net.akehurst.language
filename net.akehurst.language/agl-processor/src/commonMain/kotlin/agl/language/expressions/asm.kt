@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.expressions
+package net.akehurst.language.agl.language.expressions.asm
 
 import net.akehurst.language.api.language.base.Indent
 import net.akehurst.language.api.language.base.PossiblyQualifiedName

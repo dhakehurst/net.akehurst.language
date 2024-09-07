@@ -19,7 +19,7 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.language.asmTransform.*
-import net.akehurst.language.agl.language.expressions.*
+import net.akehurst.language.agl.language.expressions.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.asmTransform.TransformModel

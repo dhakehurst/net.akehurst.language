@@ -26,6 +26,7 @@ import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple

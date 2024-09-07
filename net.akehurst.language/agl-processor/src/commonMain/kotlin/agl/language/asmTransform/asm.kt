@@ -23,10 +23,7 @@ import net.akehurst.language.agl.default.Grammar2TypeModelMapping
 import net.akehurst.language.agl.default.GrammarModel2TransformModel
 import net.akehurst.language.agl.language.base.ModelAbstract
 import net.akehurst.language.agl.language.base.NamespaceAbstract
-import net.akehurst.language.agl.language.expressions.IndexOperationSimple
-import net.akehurst.language.agl.language.expressions.LiteralExpressionSimple
-import net.akehurst.language.agl.language.expressions.NavigationSimple
-import net.akehurst.language.agl.language.expressions.RootExpressionSimple
+import net.akehurst.language.agl.language.expressions.asm.*
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.processor.ProcessResultDefault

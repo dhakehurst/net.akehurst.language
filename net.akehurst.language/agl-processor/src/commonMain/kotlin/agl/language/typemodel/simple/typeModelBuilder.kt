@@ -15,13 +15,14 @@
  *
  */
 
-package net.akehurst.language.typemodel.api
+package net.akehurst.language.agl.language.typemodel
 
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.*
 
 @DslMarker
@@ -384,7 +385,7 @@ class ConstructorBuilder(
 
     fun parameter(name:String,  typeName: String,nullable:Boolean = false) {
         val ty = _namespace.createTypeInstance(_type, typeName.asPossiblyQualifiedName, emptyList(), nullable)
-        _paramList.add(ParameterDefinitionSimple(ParameterName(name), ty, null))
+        _paramList.add(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName(name), ty, null))
     }
 
     fun build(): List<ParameterDeclaration> = _paramList

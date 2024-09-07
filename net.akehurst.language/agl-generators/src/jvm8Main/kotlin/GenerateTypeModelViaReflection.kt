@@ -1,5 +1,6 @@
 package net.akehurst.language.agl.generators
 
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName

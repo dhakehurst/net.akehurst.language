@@ -17,8 +17,7 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
-import net.akehurst.language.agl.language.expressions.NavigationSimple
-import net.akehurst.language.agl.language.expressions.RootExpressionSimple
+import net.akehurst.language.agl.language.expressions.asm.*
 import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.base.Import

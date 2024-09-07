@@ -20,6 +20,7 @@ package net.akehurst.language.agl.language.asmTransform
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.asm.AsmValue
@@ -30,7 +31,6 @@ import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 class AsmTransformInterpreter(

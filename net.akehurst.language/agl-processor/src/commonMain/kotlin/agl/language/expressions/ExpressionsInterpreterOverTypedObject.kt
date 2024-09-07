@@ -19,6 +19,8 @@ package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.*
+import net.akehurst.language.agl.language.expressions.asm.LiteralExpressionSimple
+import net.akehurst.language.agl.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.base.Import
