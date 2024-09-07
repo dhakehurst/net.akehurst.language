@@ -30,9 +30,9 @@ interface PreferenceRule : GrammarItem {
     val optionList: List<PreferenceOption>
 }
 
-interface PreferenceOption : Formatable {
+enum class Associativity { LEFT, RIGHT }
 
-    enum class Associativity { LEFT, RIGHT }
+interface PreferenceOption : Formatable {
 
     val item: NonTerminal
     val choiceNumber: Int

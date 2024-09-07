@@ -20,7 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation

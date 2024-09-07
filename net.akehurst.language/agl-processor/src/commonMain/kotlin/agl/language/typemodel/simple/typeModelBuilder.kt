@@ -22,9 +22,7 @@ import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.a
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
-import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
+import net.akehurst.language.typemodel.simple.*
 
 @DslMarker
 annotation class TypeModelDslMarker
@@ -148,17 +146,20 @@ class TypeNamespaceBuilder(
 @TypeModelDslMarker
 abstract class StructuredTypeBuilder(
     protected val _namespace: TypeNamespace,
-    private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
+    protected val _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) {
     protected abstract val _structuredType: StructuredType
+
+    val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
+    val IDENTITY = PropertyCharacteristic.IDENTITY
 
     val COMPOSITE = PropertyCharacteristic.COMPOSITE
     val REFERENCE = PropertyCharacteristic.REFERENCE
 
-    val IDENTITY = PropertyCharacteristic.IDENTITY
-    val MEMBER = PropertyCharacteristic.MEMBER
-    val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
+    val READ_ONLY = PropertyCharacteristic.READ_ONLY
+    val READ_WRITE = PropertyCharacteristic.READ_WRITE
 
+    val STORED = PropertyCharacteristic.STORED
     val DERIVED = PropertyCharacteristic.DERIVED
 
     fun propertyOf(
@@ -284,6 +285,13 @@ class ValueTypeBuilder(
         }
     }
 
+    fun constructor_(init: ConstructorBuilder.() -> Unit) {
+        val b = ConstructorBuilder(_namespace, _type, _typeReferences)
+        b.init()
+        val params = b.build()
+        (_type as ValueTypeSimple).addConstructor(params)
+    }
+
     fun build(): ValueType {
         return _type
     }
@@ -352,10 +360,34 @@ class DataTypeBuilder(
         }
     }
 
+    fun constructor_(init: ConstructorBuilder.() -> Unit) {
+        val b = ConstructorBuilder(_namespace, _type, _typeReferences)
+        b.init()
+        val params = b.build()
+        (_type as DataTypeSimple).addConstructor(params)
+    }
+
     fun build(): DataType {
         return _type
     }
 
+}
+
+@TypeModelDslMarker
+class ConstructorBuilder(
+    val _namespace: TypeNamespace,
+    private val _type:TypeDeclaration,
+    private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
+) {
+
+    private val _paramList = mutableListOf<ParameterDeclaration>()
+
+    fun parameter(name:String,  typeName: String,nullable:Boolean = false) {
+        val ty = _namespace.createTypeInstance(_type, typeName.asPossiblyQualifiedName, emptyList(), nullable)
+        _paramList.add(ParameterDefinitionSimple(ParameterName(name), ty, null))
+    }
+
+    fun build(): List<ParameterDeclaration> = _paramList
 }
 
 @TypeModelDslMarker

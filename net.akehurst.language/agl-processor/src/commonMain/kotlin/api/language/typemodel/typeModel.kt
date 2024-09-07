@@ -37,7 +37,7 @@ interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
 
     fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDeclaration?
 
-    fun addAllNamespace(namespaces: Iterable<TypeNamespace>)
+    fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypeNamespace>)
 
     // --- DefinitionBlock ---
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace?
@@ -65,7 +65,7 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
     val dataType: Set<DataType>
 
-    fun addImport(import: Import)
+    fun addImport(value: Import)
 
     fun resolveImports(model: TypeModel)
 
@@ -222,6 +222,7 @@ interface TupleType : StructuredType {
 }
 
 interface ValueType : StructuredType {
+    val constructors: List<ConstructorDeclaration>
 }
 
 interface InterfaceType : StructuredType {
@@ -234,6 +235,8 @@ interface DataType : StructuredType {
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
+
+    val constructors: List<ConstructorDeclaration>
 
     fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
 }
@@ -280,12 +283,29 @@ interface PropertyDeclaration {
      */
     val metaInfo: Map<String, String>
 
+
     val isReference: Boolean
     val isComposite: Boolean
-    val isIdentity: Boolean
+
+    /*
+     * a primary constructor parameter
+     */
     val isConstructor: Boolean
-    val isMember: Boolean
+
+    /**
+     * value is considered to be part of the identity of the owning object,
+     * unless otherwise indicated, the parameter is assumed to be a constructor parameter
+     * must be read-only
+     */
+    val isIdentity: Boolean
+
+    val isReadOnly:Boolean
+    val isReadWrite: Boolean
+
+    val isStored: Boolean
     val isDerived: Boolean
+    val isPrimitive: Boolean
+
 
     fun resolved(typeArguments: Map<SimpleName, TypeInstance>): PropertyDeclaration
 }
@@ -307,17 +327,17 @@ enum class PropertyCharacteristic {
      * value is considered to be part of the identity of the owning object,
      * unless otherwise indicated, the parameter is assumed to be a constructor parameter
      */
-    IDENTITY,
+    READ_ONLY,
 
     /**
-     * property is a constructor parameter
+     * property can be written and read
      */
-    CONSTRUCTOR,
+    READ_WRITE,
 
     /**
-     * property is a member (not a constructor property)
+     * property is stores a value
      */
-    MEMBER,
+    STORED,
 
     /**
      * property is derived, calculated by given expression, not stored
@@ -327,7 +347,29 @@ enum class PropertyCharacteristic {
     /**
      * property is primitive, with built-in calculation, not stored
      */
-    PRIMITIVE
+    PRIMITIVE,
+
+    /**
+     * property is a constructor parameter
+     */
+    CONSTRUCTOR,
+    /**
+     * property is a constructor parameter
+     */
+    IDENTITY
+    ;
+
+    fun asString(indent: Indent = Indent()) = when (this) {
+        PropertyCharacteristic.READ_ONLY -> "val"
+        PropertyCharacteristic.READ_WRITE -> "var"
+        PropertyCharacteristic.REFERENCE -> "ref"
+        PropertyCharacteristic.COMPOSITE -> "cmp"
+        PropertyCharacteristic.STORED -> "str"
+        PropertyCharacteristic.DERIVED -> "drv"
+        PropertyCharacteristic.PRIMITIVE -> "prm"
+        PropertyCharacteristic.CONSTRUCTOR -> "cns"
+        PropertyCharacteristic.IDENTITY -> "idn"
+    }
 }
 
 @JvmInline
@@ -338,6 +380,11 @@ interface MethodDeclaration {
     val name: MethodName
     val parameters: List<ParameterDeclaration>
     val description: String
+}
+
+interface ConstructorDeclaration {
+    val owner: TypeDeclaration
+    val parameters: List<ParameterDeclaration>
 }
 
 @JvmInline

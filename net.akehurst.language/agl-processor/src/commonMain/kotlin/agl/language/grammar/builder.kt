@@ -323,7 +323,7 @@ class PreferenceRuleBuilder(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
                 choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
-                PreferenceOption.Associativity.LEFT
+                Associativity.LEFT
             )
         )
     }
@@ -334,7 +334,7 @@ class PreferenceRuleBuilder(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
                 choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
-                PreferenceOption.Associativity.RIGHT
+                Associativity.RIGHT
             )
         )
     }

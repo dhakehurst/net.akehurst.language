@@ -20,6 +20,7 @@ import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.TreeData
 
 internal data class PreferredNode(
     val rule: Rule,

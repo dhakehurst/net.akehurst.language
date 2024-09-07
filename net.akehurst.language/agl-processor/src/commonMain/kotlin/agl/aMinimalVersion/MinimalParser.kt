@@ -25,7 +25,7 @@ import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.TreeDataGrowing
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode

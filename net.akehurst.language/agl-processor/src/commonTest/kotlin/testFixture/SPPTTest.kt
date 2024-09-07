@@ -16,7 +16,7 @@
  */
 package net.akehurst.language.api.sppt.test
 
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.assertEquals
 

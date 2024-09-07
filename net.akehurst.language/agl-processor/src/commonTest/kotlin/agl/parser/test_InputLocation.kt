@@ -21,7 +21,7 @@ import net.akehurst.language.agl.parser.LeftCornerParser
 import net.akehurst.language.agl.regex.RegexEnginePlatform
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode

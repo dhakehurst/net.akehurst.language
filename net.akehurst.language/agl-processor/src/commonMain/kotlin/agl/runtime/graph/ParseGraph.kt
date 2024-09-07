@@ -20,7 +20,7 @@ import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.sppt.Sentence

@@ -81,7 +81,7 @@ class test_CompletionProviderDefault_datatypes {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespace(it.allNamespace)
+                proc.typeModel.addAllNamespaceAndResolveImports(it.allNamespace)
             }
             proc.typeModel
             proc.crossReferenceModel

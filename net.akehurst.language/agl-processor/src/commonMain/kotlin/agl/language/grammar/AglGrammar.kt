@@ -22,7 +22,7 @@ import net.akehurst.language.agl.language.base.AglBase
 import net.akehurst.language.agl.language.grammar.asm.builder.grammar
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
-internal object AglGrammar {
+object AglGrammar {
     //companion object {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
     const val goalRuleName = "unit"

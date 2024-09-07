@@ -103,7 +103,7 @@ abstract class TypeModelSimpleAbstract(
         return _namespace[nsn]?.findOwnedTypeNamed(tn)
     }
 
-    override fun addAllNamespace(namespaces: Iterable<TypeNamespace>) {
+    override fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypeNamespace>) {
         namespaces.forEach { this.addNamespace(it) }
         this.resolveImports()
     }
@@ -392,11 +392,11 @@ abstract class TypeNamespaceAbstract(
 
     override fun isImported(qualifiedNamespaceName: QualifiedName): Boolean = import.contains(Import(qualifiedNamespaceName.value))
 
-    override fun addImport(import: Import) {
-        if (this.import.contains(import)) {
+    override fun addImport(value: Import) {
+        if (this.import.contains(value)) {
             // do not repeat imports
         } else {
-            (this.import as MutableList).add(import)
+            (this.import as MutableList).add(value)
         }
     }
 
@@ -872,7 +872,7 @@ abstract class StructuredTypeSimpleAbstract : TypeDeclarationSimpleAbstract(), S
      */
     override fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int): PropertyDeclaration {
         val propIndex = if (index >= 0) index else property.size
-        val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics, propIndex)
+        val pd = PropertyDeclarationStored(this, name, typeInstance, characteristics+PropertyCharacteristic.STORED, propIndex)
         this.addProperty(pd)
         return pd
     }
@@ -926,12 +926,17 @@ class ValueTypeSimple(
     override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), ValueType {
 
-    //override var typeParameters = mutableListOf<SimpleName>()
+    override val constructors: List<ConstructorDeclaration> = mutableListOf()
 
     override val allProperty: Map<PropertyName, PropertyDeclaration>
         get() = supertypes.flatMap {
             (it.declaration as DataType).allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
+
+    fun addConstructor(parameters: List<ParameterDeclaration>) {
+        val cons = ConstructorDeclarationSimple(this, parameters)
+        (constructors as MutableList).add(cons)
+    }
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.value
@@ -945,17 +950,7 @@ class ValueTypeSimple(
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") {
-                    when (it) {
-                        PropertyCharacteristic.IDENTITY -> "val"
-                        PropertyCharacteristic.REFERENCE -> "ref"
-                        PropertyCharacteristic.COMPOSITE -> "cmp"
-                        PropertyCharacteristic.CONSTRUCTOR -> "cns"
-                        PropertyCharacteristic.MEMBER -> "var"
-                        PropertyCharacteristic.DERIVED -> "der"
-                        PropertyCharacteristic.PRIMITIVE -> "prm"
-                    }
-                }
+                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString()}
                 "${it.name}:$psig $chrs"
             }
         return "value ${name}${sups} {\n    $props\n  }"
@@ -1003,17 +998,7 @@ class InterfaceTypeSimple(
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") {
-                    when (it) {
-                        PropertyCharacteristic.IDENTITY -> "val"
-                        PropertyCharacteristic.REFERENCE -> "ref"
-                        PropertyCharacteristic.COMPOSITE -> "cmp"
-                        PropertyCharacteristic.CONSTRUCTOR -> "cns"
-                        PropertyCharacteristic.MEMBER -> "var"
-                        PropertyCharacteristic.DERIVED -> "der"
-                        PropertyCharacteristic.PRIMITIVE -> "prm"
-                    }
-                }
+                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
                 "${it.name}:$psig $chrs"
             }
         return "interface ${name}${sups} {\n    $props\n  }"
@@ -1034,6 +1019,7 @@ class DataTypeSimple(
     override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), DataType {
 
+    override val constructors: List<ConstructorDeclaration> = mutableListOf()
     //override var typeParameters = mutableListOf<SimpleName>()
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
@@ -1043,6 +1029,11 @@ class DataTypeSimple(
         get() = supertypes.flatMap {
             (it.declaration as DataType).allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
+
+    fun addConstructor(parameters: List<ParameterDeclaration>) {
+        val cons = ConstructorDeclarationSimple(this, parameters)
+        (constructors as MutableList).add(cons)
+    }
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.value
@@ -1061,17 +1052,7 @@ class DataTypeSimple(
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") {
-                    when (it) {
-                        PropertyCharacteristic.IDENTITY -> "val"
-                        PropertyCharacteristic.REFERENCE -> "ref"
-                        PropertyCharacteristic.COMPOSITE -> "cmp"
-                        PropertyCharacteristic.CONSTRUCTOR -> "cns"
-                        PropertyCharacteristic.MEMBER -> "var"
-                        PropertyCharacteristic.DERIVED -> "der"
-                        PropertyCharacteristic.PRIMITIVE -> "prm"
-                    }
-                }
+                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
                 "${it.name}:$psig $chrs"
             }
         return "datatype ${name}${sups} {\n    $props\n  }"
@@ -1103,6 +1084,13 @@ class CollectionTypeSimple(
     override fun asStringInContext(context: TypeNamespace): String = "collection ${signature(context)}"
 }
 
+class ConstructorDeclarationSimple(
+    override val owner: TypeDeclaration,
+    override val parameters: List<ParameterDeclaration>
+) : ConstructorDeclaration {
+
+}
+
 abstract class PropertyDeclarationAbstract(
 
 ) : PropertyDeclaration {
@@ -1112,12 +1100,18 @@ abstract class PropertyDeclarationAbstract(
      */
     override var metaInfo = mutableMapOf<String, String>()
 
-    override val isComposite: Boolean get() = characteristics.contains(PropertyCharacteristic.COMPOSITE)
-    override val isReference: Boolean get() = characteristics.contains(PropertyCharacteristic.REFERENCE)
     override val isConstructor: Boolean get() = characteristics.contains(PropertyCharacteristic.CONSTRUCTOR)
     override val isIdentity: Boolean get() = characteristics.contains(PropertyCharacteristic.IDENTITY)
-    override val isMember: Boolean get() = characteristics.contains(PropertyCharacteristic.MEMBER)
+
+    override val isComposite: Boolean get() = characteristics.contains(PropertyCharacteristic.COMPOSITE)
+    override val isReference: Boolean get() = characteristics.contains(PropertyCharacteristic.REFERENCE)
+
+    override val isReadOnly: Boolean get() = characteristics.contains(PropertyCharacteristic.READ_ONLY)
+    override val isReadWrite: Boolean get() = characteristics.contains(PropertyCharacteristic.READ_WRITE)
+
     override val isDerived: Boolean get() = characteristics.contains(PropertyCharacteristic.DERIVED)
+    override val isStored: Boolean get() = characteristics.contains(PropertyCharacteristic.STORED)
+    override val isPrimitive: Boolean get() = characteristics.contains(PropertyCharacteristic.PRIMITIVE)
 
     override fun resolved(typeArguments: Map<SimpleName, TypeInstance>): PropertyDeclaration = PropertyDeclarationResolved(
         this.owner,
@@ -1168,7 +1162,7 @@ class PropertyDeclarationPrimitive(
     override val index: Int // Not really needed except that its used as part of storing property decls in the type that owns them
 ) : PropertyDeclarationAbstract() {
 
-    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.MEMBER, PropertyCharacteristic.PRIMITIVE)
+    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.PRIMITIVE)
 
 }
 
@@ -1181,7 +1175,7 @@ class PropertyDeclarationDerived(
     override val index: Int // Not really needed except that its used as part of storing property decls in the type that owns them
 ) : PropertyDeclarationAbstract() {
 
-    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.MEMBER, PropertyCharacteristic.DERIVED)
+    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.DERIVED)
 
 }
 
@@ -1195,7 +1189,7 @@ class PropertyDeclarationResolved(
     override val index: Int get() = -1 // should never be included in owners list
 }
 
-class MethodDeclarationPrimitive(
+internal class MethodDeclarationPrimitive(
     override val owner: TypeDeclaration,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,

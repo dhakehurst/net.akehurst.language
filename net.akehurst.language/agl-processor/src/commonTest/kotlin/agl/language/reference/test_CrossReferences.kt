@@ -48,7 +48,7 @@ class test_CrossReferences {
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
             TransformModelDefault.fromGrammar(grammar, grmrTypeModel)
             val tm = grmrTypeModel
-            typemodel?.let { tm.addAllNamespace(it.namespace) }
+            typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
             val ctx = ContextFromTypeModel(tm)
             val result = aglProc.process(
                 sentence = sentence,

@@ -16,5 +16,5 @@
 
 package net.akehurst.language.api.processor
 
-class LanguageProcessorException(message: String, cause: Throwable?) : Exception(message, cause) {
+internal class LanguageProcessorException(message: String, cause: Throwable?) : Exception(message, cause) {
 }

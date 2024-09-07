@@ -330,7 +330,7 @@ class ExpressionsInterpreterOverTypedObject(
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
             tuple.setProperty(it.lhsPropertyName, value.asm, tuple.property.size)
-            tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
+            tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
         }
         return tuple.toTypedObject(tupleType.type())
     }

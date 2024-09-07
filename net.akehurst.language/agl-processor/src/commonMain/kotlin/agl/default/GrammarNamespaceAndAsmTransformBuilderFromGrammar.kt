@@ -128,7 +128,7 @@ internal class Grammar2Namespaces(
                     qualifiedName = qualifiedName,
                     imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
                 )
-                typeModel.addAllNamespace(listOf(ns))
+                typeModel.addAllNamespaceAndResolveImports(listOf(ns))
                 ns
             }
 

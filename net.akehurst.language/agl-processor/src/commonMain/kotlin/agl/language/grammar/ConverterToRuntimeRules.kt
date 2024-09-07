@@ -164,8 +164,8 @@ internal class ConverterToRuntimeRules(
                 }
             }.toSet()
             val assoc = when (it.associativity) {
-                PreferenceOption.Associativity.LEFT -> RuntimePreferenceRule.Assoc.LEFT
-                PreferenceOption.Associativity.RIGHT -> RuntimePreferenceRule.Assoc.RIGHT
+                Associativity.LEFT -> RuntimePreferenceRule.Assoc.LEFT
+                Associativity.RIGHT -> RuntimePreferenceRule.Assoc.RIGHT
             }
             RuntimePreferenceRule.RuntimePreferenceOption(prec, tgt, opt, terminals, assoc)
         }

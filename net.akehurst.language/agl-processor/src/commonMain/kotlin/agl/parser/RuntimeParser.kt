@@ -28,7 +28,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.scanner.ScannerOnDemand
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.automaton.ParseAction

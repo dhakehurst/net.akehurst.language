@@ -448,8 +448,8 @@ internal class AglGrammarSyntaxAnalyser(
         val terminalList = children[3] as List<SimpleItem>
         val assStr = children[4] as String
         val associativity = when (assStr) {
-            "left" -> PreferenceOption.Associativity.LEFT
-            "right" -> PreferenceOption.Associativity.RIGHT
+            "left" -> Associativity.LEFT
+            "right" -> Associativity.RIGHT
             else -> error("Internal Error: associativity value '$assStr' not supported")
         }
         return PreferenceOptionDefault(item, choiceNumber, terminalList, associativity)

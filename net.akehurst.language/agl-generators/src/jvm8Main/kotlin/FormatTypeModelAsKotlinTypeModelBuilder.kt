@@ -2,10 +2,21 @@ package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.generators.FormatTypeModelAsKotlinTypeModelBuilder.Companion.appendWithEol
 import net.akehurst.language.api.language.base.Indent
+import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.typemodel.api.*
 
-class FormatTypeModelAsKotlinTypeModelBuilder {
+data class TypeModelFormatConfiguration(
+    val exludedNamespaces:List<QualifiedName> = emptyList(),
+    val properties: PropertiesTypeModelFormatConfiguration
+)
+data class PropertiesTypeModelFormatConfiguration(
+    val includeDerived:Boolean = true
+)
+
+class FormatTypeModelAsKotlinTypeModelBuilder(
+    val configuration: TypeModelFormatConfiguration
+) {
 
     companion object {
         fun <T:Any> List<T>.joinAsCommerSeparatedStrings(func:(el:T)->CharSequence = {it.toString()}):String {
@@ -23,11 +34,12 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
         }
     }
 
-    fun formatTypeModel(indent: Indent, typeModel: TypeModel, resolveImports:Boolean, additionalNamespaces:List<TypeNamespace>): String {
+    fun formatTypeModel(indent: Indent, typeModel: TypeModel, resolveImports:Boolean, additionalNamespaces:List<String>): String {
         val sb = StringBuilder()
-        val ans = additionalNamespaces.joinToString(separator = ",") { "\"${it.qualifiedName}\"" }
+        val ans = additionalNamespaces.joinToString(separator = ",")
         sb.append("typeModel(\"${typeModel.name.value}\", $resolveImports, listOf($ans)) {\n")
-        sb.append(typeModel.namespace.joinToString { formatNamespace(indent.inc, it) })
+        val ns = typeModel.namespace.filterNot { configuration.exludedNamespaces.contains(it.qualifiedName) }
+        sb.append(ns.joinToString(separator = "\n") { formatNamespace(indent.inc, it) })
         sb.append("}")
         return sb.toString()
     }
@@ -49,7 +61,10 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
 
     fun formatTypeMembers(indent: Indent, context:TypeNamespace, type: TypeDeclaration): String {
         val sb = StringBuilder()
-        sb.appendWithEol(type.property) { formatProperty(indent, context, it) }
+        sb.appendWithEol(type.property.filter { it.isStored }) { formatProperty(indent, context, it) }
+        if(configuration.properties.includeDerived) {
+            sb.appendWithEol(type.property.filter { it.isDerived }) { formatProperty(indent, context, it) }
+        }
         sb.appendWithEol(type.method) {  "// fun ${it.name}" }
         return sb.toString()
     }
@@ -82,6 +97,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
         val tn = type.name
         sb.append("${indent}valueType(\"$tn\") {\n")
         sb.append(formatSupertypes(indent.inc, context,type.supertypes))
+        sb.append(formatConstructors(indent.inc, context,type.constructors))
         sb.append(formatTypeMembers(indent.inc,context, type))
         sb.append("${indent}}")
         return sb.toString()
@@ -103,6 +119,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
         val tn = type.name
         sb.append("${indent}dataType(\"$tn\") {\n")
         sb.append(formatSupertypes(indent.inc, context,type.supertypes))
+        sb.append(formatConstructors(indent.inc, context,type.constructors))
         sb.append(formatTypeMembers(indent.inc,context, type))
         sb.append("${indent}}")
         return sb.toString()
@@ -133,6 +150,30 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
         }
     }
 
+    fun formatConstructors(indent: Indent, context:TypeNamespace, constructors:List<ConstructorDeclaration>): String {
+        return when {
+            constructors.isEmpty() -> ""
+            else -> {
+                constructors.joinToString(separator = "\n") { c ->
+                    when {
+                        c.parameters.isEmpty() -> "${indent}constructor_ {}\n"
+                        else -> {
+                            val params = c.parameters.joinToString(separator = "\n") { p ->
+                                val t = when {
+                                    p.typeInstance.declaration.namespace == context -> p.typeInstance.typeName.value
+                                    else -> p.typeInstance.qualifiedTypeName.value // TODO: add import if not name clash
+                                }
+                                val nullable = p.typeInstance.isNullable
+                                "${indent.inc}parameter(\"${p.name.value}\", \"$t\", $nullable)"
+                            }
+                            "${indent}constructor_ {\n${params}\n${indent}}\n"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun formatProperty(indent: Indent, context:TypeNamespace, pd: PropertyDeclaration): String {
         val characteristics = pd.characteristics.joinToString(separator = ", ") { it.name }
         val propertyName = pd.name
@@ -147,7 +188,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder {
                 val sb = StringBuilder()
                 sb.append("{\n")
                 sb.appendWithEol( pd.typeInstance.typeArguments) {
-                    "typeArgument(\"${it.qualifiedTypeName.value}\")" //TODO: nested args
+                    "${indent.inc}typeArgument(\"${it.qualifiedTypeName.value}\")" //TODO: nested args
                 }
                 sb.append("${indent}}")
                sb.toString()

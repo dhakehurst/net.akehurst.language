@@ -19,9 +19,9 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 //class ParserException(message: String) : RuntimeException(message)
 
-class ParserTerminatedException(message: String) : RuntimeException(message)
+internal class ParserTerminatedException(message: String) : RuntimeException(message)
 
-class ParseFailedException(
+internal class ParseFailedException(
     message: String,
     val longestMatch: SharedPackedParseTree?,
     val location: InputLocation,

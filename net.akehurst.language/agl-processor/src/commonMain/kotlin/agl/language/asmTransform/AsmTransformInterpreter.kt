@@ -45,7 +45,7 @@ class AsmTransformInterpreter(
         val CHILDREN = PropertyName("children")
         val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType))
         val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType))
-        val COMPOSITE_MEMBER = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER)
+        val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)
 
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
@@ -53,16 +53,16 @@ class AsmTransformInterpreter(
         }
         val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
-            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.MEMBER))
-            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)
-            it.appendPropertyStored(CHILDREN, LIST_OF_ANY, COMPOSITE_MEMBER)
-            it.appendPropertyStored(CHILD, LIST_OF_ANY, COMPOSITE_MEMBER)
+            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
+            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
+            it.appendPropertyStored(CHILDREN, LIST_OF_ANY, CMP_STR_MEM)
+            it.appendPropertyStored(CHILD, LIST_OF_ANY, CMP_STR_MEM)
         }
         val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
-            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, COMPOSITE_MEMBER)
-            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, COMPOSITE_MEMBER)
-            it.appendPropertyStored(CHILDREN, SLIST_OF_ANY, COMPOSITE_MEMBER)
-            it.appendPropertyStored(CHILD, SLIST_OF_ANY, COMPOSITE_MEMBER)
+            it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
+            it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
+            it.appendPropertyStored(CHILDREN, SLIST_OF_ANY, CMP_STR_MEM)
+            it.appendPropertyStored(CHILD, SLIST_OF_ANY, CMP_STR_MEM)
         }
     }
 

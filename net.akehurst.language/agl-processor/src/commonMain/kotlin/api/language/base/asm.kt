@@ -87,6 +87,7 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName {
 @JvmInline
 value class Import(val value: String) {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
+    override fun toString() = value
 }
 
 class Indent(val value: String = "", val increment: String = "  ") {

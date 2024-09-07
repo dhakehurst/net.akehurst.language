@@ -24,7 +24,7 @@ import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.collections.*
 
 
-internal class GrammarModelDefault(
+class GrammarModelDefault(
     override val name: SimpleName,
     namespace: List<GrammarNamespace>
 ) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>(namespace) {
@@ -36,7 +36,7 @@ internal class GrammarModelDefault(
  */
 fun Grammar.asDefinitionBlock(): GrammarModel = GrammarModelDefault(this.name, listOf(this.namespace as GrammarNamespace))
 
-internal class GrammarNamespaceDefault(
+class GrammarNamespaceDefault(
     qualifiedName: QualifiedName
 ) : GrammarNamespace, NamespaceAbstract<Grammar>(qualifiedName) {
 
@@ -45,7 +45,7 @@ internal class GrammarNamespaceDefault(
 /**
  * ID -> qualifiedName
  */
-internal class GrammarDefault(
+class GrammarDefault(
     namespace: GrammarNamespace,
     name: SimpleName,
     override val options: List<GrammarOption>
@@ -63,12 +63,12 @@ internal class GrammarDefault(
             ?: error("Could not find default grammar rule or first non skip rule")
 }
 
-internal data class GrammarOptionDefault(
+data class GrammarOptionDefault(
     override val name: String,
     override val value: String
 ) : GrammarOption
 
-internal data class GrammarReferenceDefault(
+data class GrammarReferenceDefault(
     override val localNamespace: Namespace<Grammar>,
     override val nameOrQName: PossiblyQualifiedName
 ) : GrammarReference {
@@ -78,7 +78,7 @@ internal data class GrammarReferenceDefault(
     }
 }
 
-internal abstract class GrammarAbstract(
+abstract class GrammarAbstract(
     final override val namespace: GrammarNamespace,
     final override val name: SimpleName
 ) : Grammar {

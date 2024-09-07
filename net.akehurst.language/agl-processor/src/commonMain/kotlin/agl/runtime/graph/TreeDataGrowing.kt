@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.sppt.TreeData
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.agl.sppt.treeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode

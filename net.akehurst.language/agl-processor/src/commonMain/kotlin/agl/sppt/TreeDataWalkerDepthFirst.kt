@@ -60,30 +60,6 @@ internal data class AlternativesInfo(
     val alternatives = mutableListOf<Pair<StackInfo, List<SpptDataNode>>>()
 }
 
-interface TreeData {
-    val root: SpptDataNode?
-    val userRoot: SpptDataNode
-    val initialSkip: TreeData?
-    val isEmpty: Boolean
-    fun skipDataAfter(node: SpptDataNode): TreeData?
-    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>>
-    fun embeddedFor(node: SpptDataNode): TreeData?
-    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
-    fun preferred(node: SpptDataNode): SpptDataNode?
-    fun skipNodesAfter(node: SpptDataNode): List<SpptDataNode> //only used in one place - maybe not needed
-    fun matches(other: TreeData): Boolean
-
-    // Mutation
-    fun start(initialSkipData: TreeData?)
-    fun setRoot(root: SpptDataNode)
-    fun setUserGoalChildrenAfterInitialSkip(nug: SpptDataNode, userGoalChildren: List<SpptDataNode>)
-    fun setChildren(parent: SpptDataNode, completeChildren: List<SpptDataNode>, isAlternative: Boolean)
-    fun setSkipDataAfter(leafNodeIndex: SpptDataNode, skipData: TreeData)
-    fun setEmbeddedTreeFor(n: SpptDataNode, treeData: TreeData)
-
-    fun remove(node: SpptDataNode)
-}
-
 internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
     private val treeData: TreeData
 ) {

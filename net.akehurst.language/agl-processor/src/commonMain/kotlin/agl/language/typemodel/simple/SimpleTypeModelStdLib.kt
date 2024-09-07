@@ -37,10 +37,23 @@ object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empt
     val Integer = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Integer")).type()
     val Real = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Real")).type()
     val Timestamp = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Timestamp")).type()
+    val Exception = super.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("Exception")).type()
 
+    val Pair = super.findOwnedOrCreateDataTypeNamed(SimpleName("Pair")).also { td ->
+        (td.typeParameters as MutableList).add(SimpleName("F"))
+        (td.typeParameters as MutableList).add(SimpleName("S"))
+        td.appendPropertyPrimitive(PropertyName("first"), this.createTypeInstance(td, SimpleName("F")), "First member of the pair")
+        td.appendPropertyPrimitive(PropertyName("second"), this.createTypeInstance(td, SimpleName("S")), "Second member of the pair")
+    }
+
+    private val Collection_typeName =SimpleName("Collection")
+    val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).add(SimpleName("E"))
+    }
     private val List_typeName = SimpleName("List")
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(SimpleName("E"))
+        typeDecl.addSupertype(Collection_typeName)
         typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("first"), this.createTypeInstance(typeDecl, SimpleName("E")), "First element in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("last"), this.createTypeInstance(typeDecl, SimpleName("E")), "Last element in the list.")
@@ -86,14 +99,17 @@ object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empt
     private val Set_typeName = SimpleName("Set")
     val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName).also {
         (it.typeParameters as MutableList).add(SimpleName("E"))
+        it.addSupertype(Collection_typeName)
     }
     private val OrderedSet_typeName = SimpleName("OrderedSet")
     val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName).also {
         (it.typeParameters as MutableList).add(SimpleName("E"))
+        it.addSupertype(Collection_typeName)
     }
     private val Map_typeName = SimpleName("Map")
     val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName).also {
         (it.typeParameters as MutableList).addAll(listOf(SimpleName("K"), SimpleName("V")))
+        it.addSupertype(Collection_typeName)
     }
 
 }

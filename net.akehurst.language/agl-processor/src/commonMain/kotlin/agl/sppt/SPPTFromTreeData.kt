@@ -18,10 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToInputSentence
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
-import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.*
 
 internal class SPPTFromTreeData(
     override val treeData: TreeData,

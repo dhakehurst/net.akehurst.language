@@ -38,7 +38,7 @@ data class PreferenceOptionDefault(
     override val item: NonTerminal,
     override val choiceNumber: Int,
     override val onTerminals: List<SimpleItem>,
-    override val associativity: PreferenceOption.Associativity
+    override val associativity: Associativity
 ) : PreferenceOption {
 
     override fun asString(indent: Indent): String {
