@@ -21,7 +21,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.parser.InputLocation
@@ -36,11 +36,11 @@ class test_Java8_Singles_aglOptm {
 
     companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
-        val proc: LanguageProcessor<Asm, ContextSimple> = createJava8Processor(grammarFile, true)
+        val proc: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor(grammarFile, true)
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextSimple> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmDefault> {
             val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
-            val proc = Agl.processorFromString<Asm, ContextSimple>(
+            val proc = Agl.processorFromString<Asm, ContextAsmDefault>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

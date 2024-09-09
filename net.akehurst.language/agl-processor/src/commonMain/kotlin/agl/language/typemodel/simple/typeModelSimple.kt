@@ -627,7 +627,10 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.declaration as DataType).allSuperTypes }
 
-    override val allProperty: Map<PropertyName, PropertyDeclaration> get() = property.associateBy { it.name }
+    override val allProperty: Map<PropertyName, PropertyDeclaration>
+        get() = supertypes.flatMap {
+            it.declaration.allProperty.values
+        }.associateBy { it.name } + this.property.associateBy { it.name }
 
     val allMethod: Map<MethodName, MethodDeclaration> get() = method.associateBy { it.name }
 
@@ -928,11 +931,6 @@ class ValueTypeSimple(
 
     override val constructors: List<ConstructorDeclaration> = mutableListOf()
 
-    override val allProperty: Map<PropertyName, PropertyDeclaration>
-        get() = supertypes.flatMap {
-            (it.declaration as DataType).allProperty.values
-        }.associateBy { it.name } + this.property.associateBy { it.name }
-
     fun addConstructor(parameters: List<ParameterDeclaration>) {
         val cons = ConstructorDeclarationSimple(this, parameters)
         (constructors as MutableList).add(cons)
@@ -975,11 +973,6 @@ class InterfaceTypeSimple(
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: MutableList<TypeInstance> = mutableListOf()
-
-    override val allProperty: Map<PropertyName, PropertyDeclaration>
-        get() = supertypes.flatMap {
-            (it.declaration as DataType).allProperty.values
-        }.associateBy { it.name } + this.property.associateBy { it.name }
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.value
@@ -1024,11 +1017,6 @@ class DataTypeSimple(
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: MutableList<TypeInstance> = mutableListOf()
-
-    override val allProperty: Map<PropertyName, PropertyDeclaration>
-        get() = supertypes.flatMap {
-            (it.declaration as DataType).allProperty.values
-        }.associateBy { it.name } + this.property.associateBy { it.name }
 
     fun addConstructor(parameters: List<ParameterDeclaration>) {
         val cons = ConstructorDeclarationSimple(this, parameters)

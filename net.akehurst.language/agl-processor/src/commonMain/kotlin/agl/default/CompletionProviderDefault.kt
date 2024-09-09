@@ -21,7 +21,6 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.agl.language.grammar.asm.NonTerminalDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.language.reference.CrossReferenceModel
@@ -37,12 +36,12 @@ class CompletionProviderDefault(
     val grammar2TypeModel: Grammar2TypeModelMapping,
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
-) : CompletionProviderAbstract<Asm, ContextSimple>() {
+) : CompletionProviderAbstract<Asm, ContextAsmDefault>() {
 
     val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, context: ContextAsmDefault?, options: Map<String, Any>): List<CompletionItem> {
         return if (null == context || context.isEmpty || crossReferenceModel.isEmpty) {
             nextExpected.flatMap { sp -> provideTerminalsForSpine(sp) }.toSet().toList() //TODO: can we remove duplicates earlier!
         } else {
@@ -68,7 +67,7 @@ class CompletionProviderDefault(
         return targetNamespace.findTypeForRule(rule.name)
     }
 
-    private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextSimple): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextAsmDefault): List<CompletionItem> {
         val prop = type.declaration.getPropertyByIndexOrNull(nextChildNumber)
         val expectedPropName = expectedNextItems.map {
             val ri = when {
@@ -100,7 +99,7 @@ class CompletionProviderDefault(
         }
     }
 
-    private fun provideForRuleItem(item: RuleItem, desiredDepth: Int, context: ContextSimple?): List<CompletionItem> {
+    private fun provideForRuleItem(item: RuleItem, desiredDepth: Int, context: ContextAsmDefault?): List<CompletionItem> {
         val rule = item.owningRule
         return when {
             rule.isLeaf -> listOf(
@@ -115,7 +114,7 @@ class CompletionProviderDefault(
     }
 
     // uses null to indicate that there is an empty item
-    private fun getItems(item: RuleItem, desiredDepth: Int, context: ContextSimple?, done: Set<RuleItem>): List<CompletionItem?> {
+    private fun getItems(item: RuleItem, desiredDepth: Int, context: ContextAsmDefault?, done: Set<RuleItem>): List<CompletionItem?> {
         //TODO: use scope to add real items to this list - maybe in a subclass
         return when {
             done.contains(item) -> emptyList()

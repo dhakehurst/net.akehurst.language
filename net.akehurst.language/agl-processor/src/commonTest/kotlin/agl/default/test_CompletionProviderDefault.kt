@@ -21,12 +21,11 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -39,7 +38,7 @@ class test_CompletionProviderDefault {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextSimple? = ContextSimple(),
+            val context: ContextAsmDefault? = ContextAsmDefault(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -198,7 +197,7 @@ class test_CompletionProviderDefault {
             }
         }
 
-        val context = ContextSimple()
+        val context = ContextAsmDefault()
         context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL)
 
 

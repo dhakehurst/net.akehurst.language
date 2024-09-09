@@ -23,6 +23,7 @@ import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.asm.AsmSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.api.asm.AsmStructure
+import net.akehurst.language.api.asm.PropertyValueName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.api.PropertyName
@@ -44,7 +45,7 @@ class FormatModelBuilder(
     private val _ruleList = mutableListOf<AsmStructure>()
     private val rules = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("Unit")).also {
         _asm.addRoot(it)
-        it.setProperty(PropertyName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
+        it.setProperty(PropertyValueName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
     }
 
     fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
@@ -53,9 +54,9 @@ class FormatModelBuilder(
         val expr = b.build()
         val formatRuleElement = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("FormatRule"))
         val typeReference = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("TypeReference"))
-        typeReference.setProperty(PropertyName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
-        formatRuleElement.setProperty(PropertyName("typeReference"), typeReference, 0)//TODO childIndex
-        formatRuleElement.setProperty(PropertyName("formatExpression"), expr, 0)//TODO childIndex
+        typeReference.setProperty(PropertyValueName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
+        formatRuleElement.setProperty(PropertyValueName("typeReference"), typeReference, 0)//TODO childIndex
+        formatRuleElement.setProperty(PropertyValueName("formatExpression"), expr, 0)//TODO childIndex
         _ruleList.add(formatRuleElement)
     }
 
@@ -76,7 +77,7 @@ class FormatExpressionBuilder(
             asmPath = AsmPathSimple.ROOT,
             typeName = QualifiedName("LiteralString")
         )
-        el.setProperty(PropertyName("literal_string"), AsmPrimitiveSimple.stdString(value), 0)//TODO childIndex
+        el.setProperty(PropertyValueName("literal_string"), AsmPrimitiveSimple.stdString(value), 0)//TODO childIndex
         _exp = el
     }
 

@@ -19,23 +19,23 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
+import net.akehurst.language.agl.asm.asValueName
 import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.expressions.asmValue
 import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CollectionReferenceExpressionDefault
 import net.akehurst.language.agl.language.reference.asm.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.PropertyCall
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.ReferenceExpression
-import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
@@ -55,7 +55,7 @@ data class ReferenceExpressionContext(
 class ReferenceResolverDefault(
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel,
-    val rootScope: ScopeSimple<AsmPath>,
+    val rootScope: Scope<AsmPath>,
     val resolveFunction: ResolveFunction?,
     private val _locationMap: Map<Any, InputLocation>,
     private val _issues: IssueHolder
@@ -150,7 +150,7 @@ class ReferenceResolverDefault(
             }
         }
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.referringPropertyNavigation).asm
+        var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.referringPropertyNavigation).asmValue
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
@@ -273,10 +273,10 @@ class ReferenceResolverDefault(
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
-            when (coll.asm) {
+            when (coll.asmValue) {
                 is AsmNothing -> Unit //do nothing
                 is AsmList -> {
-                    for (el in (coll.asm as AsmList).elements) {
+                    for (el in (coll.asmValue as AsmList).elements) {
                         when {
                             el is AsmNothing -> Unit //do nothing
                             null == refExpr.ofType -> handleReferenceExpression(re, context, el)
@@ -313,14 +313,14 @@ class ReferenceResolverDefault(
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> {
                             val elType = typeModel.findByQualifiedNameOrNull(v.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-                            v.toTypedObject(elType).getPropertyValue(pd).asm
+                            v.toTypedObject(elType).getPropertyValue(pd).asmValue
                         }
                     }
                 }
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {
-                        v.property[lastProp] ?: error("Cannot navigate '$this' from null value")
+                        v.property[lastProp.asValueName] ?: error("Cannot navigate '$this' from null value")
                     }
 
                     else -> error("Cannot navigate '$this' from null value")

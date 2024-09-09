@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,11 @@
  *
  */
 
-package net.akehurst.language.agl.semanticAnalyser
+package net.akehurst.language.agl.scope
 
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.reference.Scope
-import net.akehurst.language.api.language.reference.ScopedItem
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
-
-class ContextSimple() : SentenceContext<AsmPath> {
-
-    /**
-     * The items in the scope contain a ScopePath to an element in an AsmSimple model
-     */
-    var rootScope = ScopeSimple<AsmPath>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
-
-    val isEmpty: Boolean get() = rootScope.isEmpty
-
-    fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
-
-    override fun hashCode(): Int = rootScope.hashCode()
-
-    override fun equals(other: Any?): Boolean = when {
-        other !is ContextSimple -> false
-        this.rootScope != other.rootScope -> false
-        else -> true
-    }
-
-    override fun toString(): String = "ContextSimple"
-}
+import net.akehurst.language.api.scope.Scope
+import net.akehurst.language.api.scope.ScopedItem
 
 class ScopeSimple<ItemType>(
     val parent: ScopeSimple<ItemType>?,
@@ -60,7 +35,7 @@ class ScopeSimple<ItemType>(
 
     //should only be used for rootScope
     //TODO: I don't want to store the 'Items' in the scope!
-    val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
+    override val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
 

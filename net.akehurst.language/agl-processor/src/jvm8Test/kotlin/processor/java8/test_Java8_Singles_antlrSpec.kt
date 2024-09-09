@@ -21,7 +21,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -38,13 +38,13 @@ class test_Java8_Singles_antlrSpec {
 
     private companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_antlrSpec.agl"
-        val antlrSpecProcessor: LanguageProcessor<Asm, ContextSimple> by lazy { createJava8Processor(grammarFile) }
+        val antlrSpecProcessor: LanguageProcessor<Asm, ContextAsmDefault> by lazy { createJava8Processor(grammarFile) }
 
         val proc = antlrSpecProcessor
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextSimple> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmDefault> {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString<Asm, ContextSimple>(
+            val proc = Agl.processorFromString<Asm, ContextAsmDefault>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

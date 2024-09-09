@@ -28,16 +28,18 @@ import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
+import net.akehurst.language.agl.scope.ScopeSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.api.scope.Scope
+import net.akehurst.language.typemodel.api.TupleType
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 @DslMarker
@@ -46,7 +48,7 @@ annotation class AsmSimpleBuilderMarker
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(),
-    context: ContextSimple? = null,
+    context: ContextAsmDefault? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
@@ -61,7 +63,7 @@ fun asmSimple(
 class AsmSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _crossReferenceModel: CrossReferenceModel,
-    private val _context: ContextSimple?,
+    private val _context: ContextAsmDefault?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
 ) {
@@ -184,7 +186,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: AsmValue) {
-        _element.setProperty(PropertyName(name), value, 0)//TODO childIndex
+        _element.setProperty(PropertyValueName(name), value, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this.propertyString(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, value)
@@ -200,7 +202,7 @@ class AsmElementSimpleBuilder(
         val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(PropertyName(name), el, 0)//TODO childIndex
+        this._element.setProperty(PropertyValueName(name), el, 0)//TODO childIndex
         return el
     }
 
@@ -214,13 +216,13 @@ class AsmElementSimpleBuilder(
         val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(PropertyName(name), list, 0)//TODO childIndex
+        this._element.setProperty(PropertyValueName(name), list, 0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
         val ref = AsmReferenceSimple(elementReference, null)
-        _element.setProperty(PropertyName(name), ref, 0)//TODO childIndex
+        _element.setProperty(PropertyValueName(name), ref, 0)//TODO childIndex
     }
 
     fun build(): AsmStructure {

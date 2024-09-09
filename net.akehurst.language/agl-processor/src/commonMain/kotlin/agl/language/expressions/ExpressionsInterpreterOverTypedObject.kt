@@ -89,7 +89,7 @@ class TypedObjectAsmValue(
             }
 
             is PropertyDeclarationStored -> when (self) {
-                is AsmStructure -> self.getProperty(propertyDeclaration.name)
+                is AsmStructure -> self.getProperty(propertyDeclaration.name.asValueName)
                 else -> error("Cannot evaluate property '${propertyDeclaration.name}' on object of type '${self::class.simpleName}'")
             }
 
@@ -104,7 +104,7 @@ class TypedObjectAsmValue(
 }
 
 fun AsmValue.toTypedObject(type: TypeInstance) = TypedObjectAsmValue(type, this)
-val TypedObject.asm
+val TypedObject.asmValue
     get() = when (this) {
         is TypedObjectAsmValue -> this.self
         else -> error("Not possible to convert ${this::class.simpleName} to AsmValue")
@@ -199,9 +199,9 @@ class ExpressionsInterpreterOverTypedObject(
         val pd = type.declaration.findPropertyOrNull(propertyName)
         return when (pd) {
             null -> when {
-                obj.asm is AsmStructure -> {
+                obj.asmValue is AsmStructure -> {
                     // try with no type
-                    val p = (obj.asm as AsmStructure).property[propertyName]
+                    val p = (obj.asmValue as AsmStructure).property[propertyName.asValueName]
                     when (p) {
                         null -> {
                             issues.error(null, "Property '$propertyName' not found on type '${obj.type.typeName}'")
@@ -236,8 +236,8 @@ class ExpressionsInterpreterOverTypedObject(
                         when {
                             idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
                                 val listElementType = obj.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
-                                val i = (idx.asm as AsmPrimitive).value as Int
-                                (obj.asm as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
+                                val i = (idx.asmValue as AsmPrimitive).value as Int
+                                (obj.asmValue as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
                                     issues.error(null, "Index '$i' out of range")
                                     AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                 }
@@ -279,8 +279,8 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
         "==" -> when {
             lhs.type == rhs.type -> {
-                val lhsv = lhs.asm
-                val rhsv = rhs.asm
+                val lhsv = lhs.asmValue
+                val rhsv = rhs.asmValue
                 if (lhsv == rhsv) {
                     AsmPrimitiveSimple.stdBoolean(true).toTypedObject(SimpleTypeModelStdLib.Boolean)
                 } else {
@@ -297,7 +297,7 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
         val newSelf = evaluateExpression(evc, expression.withContext)
         return when {
-            newSelf.asm is AsmNothing -> newSelf
+            newSelf.asmValue is AsmNothing -> newSelf
             else -> {
                 val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
                 val result = evaluateExpression(newEvc, expression.expression)
@@ -311,7 +311,7 @@ class ExpressionsInterpreterOverTypedObject(
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
                 SimpleTypeModelStdLib.Boolean -> {
-                    if ((condValue.asm as AsmPrimitive).value as Boolean) {
+                    if ((condValue.asmValue as AsmPrimitive).value as Boolean) {
                         val result = evaluateExpression(evc, opt.expression)
                         return result
                     } else {
@@ -331,7 +331,7 @@ class ExpressionsInterpreterOverTypedObject(
         val tupleType = ns.createTupleType()
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setProperty(it.lhsPropertyName, value.asm, tuple.property.size)
+            tuple.setProperty(it.lhsPropertyName.asValueName, value.asmValue, tuple.property.size)
             tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
         }
         return tuple.toTypedObject(tupleType.type())
@@ -347,12 +347,12 @@ class ExpressionsInterpreterOverTypedObject(
         if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
         consProps.forEachIndexed { idx, pd ->
             val value = args[idx]
-            obj.setProperty(pd.name, value.asm, obj.property.size)
+            obj.setProperty(pd.name.asValueName, value.asmValue, obj.property.size)
         }
 
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            obj.setProperty(it.lhsPropertyName, value.asm, obj.property.size)
+            obj.setProperty(it.lhsPropertyName.asValueName, value.asmValue, obj.property.size)
         }
         return obj.toTypedObject(typeDecl.type())
     }

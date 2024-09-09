@@ -30,7 +30,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.language.asmTransform.TransformModel
@@ -90,7 +90,7 @@ class test_AllDefault {
             }
         )
 
-        fun testSentence(proc: LanguageProcessor<Asm, ContextSimple>, sd: TestDataForSentenceParse) {
+        fun testSentence(proc: LanguageProcessor<Asm, ContextAsmDefault>, sd: TestDataForSentenceParse) {
             println("'${sd.sentence}'")
             val spptRes = proc.parse(sd.sentence)
             assertTrue(spptRes.issues.errors.isEmpty(), spptRes.issues.toString())

@@ -17,8 +17,10 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.contextSimple
 import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
@@ -26,9 +28,7 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -52,7 +52,7 @@ class test_Vistraq_References {
                     check(it.issues.errors.isEmpty()) { it.issues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
             val grm = grammarList.allDefinitions.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -82,9 +82,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: ContextSimple,
+            context: ContextAsmDefault,
             resolveReferences: Boolean,
-            expectedContext: ContextSimple,
+            expectedContext: ContextAsmDefault,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {
@@ -140,7 +140,7 @@ class test_Vistraq_References {
             item("AB", "vistraq.query.TIM.LinkType", "/0/linkList/0")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext)
+        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext)
     }
 
     @Test
@@ -174,7 +174,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -193,7 +193,7 @@ class test_Vistraq_References {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
+        test(grammar, goal, sentence, ContextAsmDefault(), true, expected)
     }
 
     @Test
@@ -222,7 +222,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -251,7 +251,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
     }
 
 

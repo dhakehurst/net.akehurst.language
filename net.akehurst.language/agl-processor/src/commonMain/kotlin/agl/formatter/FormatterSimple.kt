@@ -99,16 +99,16 @@ class FormatterSimple<AsmType>(
 
     private fun AglFormatExpressionFromAsm.execute(model: AglFormatterModel?, el: AsmStructure): String {
         return when (this.asm.typeName) {
-            SimpleName("LiteralString") -> (el.getProperty(PropertyName("literal_string")) as AsmPrimitive).value.toString()
+            SimpleName("LiteralString") -> (el.getProperty(PropertyValueName("literal_string")) as AsmPrimitive).value.toString()
             SimpleName("TemplateString") -> {
-                val templateContentList = (this.asm.getProperty(PropertyName("templateContentList")) as AsmList).elements
+                val templateContentList = (this.asm.getProperty(PropertyValueName("templateContentList")) as AsmList).elements
                 templateContentList.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it.typeName) {
-                        SimpleName("Text") -> ((it as AsmStructure).getProperty(PropertyName("raw_text")) as AsmPrimitive).value.toString()
+                        SimpleName("Text") -> ((it as AsmStructure).getProperty(PropertyValueName("raw_text")) as AsmPrimitive).value.toString()
                         SimpleName("TemplateExpressionSimple") -> {
-                            val id1 = (it as AsmStructure).getProperty(PropertyName("dollar_identifier"))
+                            val id1 = (it as AsmStructure).getProperty(PropertyValueName("dollar_identifier"))
                             val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
-                            val pv = el.getProperty(PropertyName(id))
+                            val pv = el.getProperty(PropertyValueName(id))
                             pv.format(model)
                         }
 

@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
@@ -36,7 +36,7 @@ class test_AnsiC(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
-        val processor: LanguageProcessor<Asm, ContextSimple> by lazy {
+        val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy {
             Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")

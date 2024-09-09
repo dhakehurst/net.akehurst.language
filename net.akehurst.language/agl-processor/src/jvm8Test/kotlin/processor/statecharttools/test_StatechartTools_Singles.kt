@@ -24,7 +24,7 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -55,7 +55,7 @@ class test_StatechartTools_Singles {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
             val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -84,7 +84,7 @@ class test_StatechartTools_Singles {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(ContextSimple()) }
+                semanticAnalysis { context(ContextAsmDefault()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[grammar].formatAsm(result.asm!!).sentence

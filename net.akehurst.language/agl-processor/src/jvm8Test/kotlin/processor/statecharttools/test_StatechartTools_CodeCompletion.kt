@@ -17,11 +17,11 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.AsmPathSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.default.contextSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -52,7 +52,7 @@ class test_StatechartTools_CodeCompletion {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
             val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
@@ -84,7 +84,7 @@ class test_StatechartTools_CodeCompletion {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[SimpleName(grammar)].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(ContextSimple()) }
+                semanticAnalysis { context(ContextAsmDefault()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[SimpleName(grammar)].formatAsm(result.asm!!).sentence
@@ -138,7 +138,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(ContextSimple())
+                context(ContextAsmDefault())
             }
         }).items.map { it.text }.toSet().sorted()
 

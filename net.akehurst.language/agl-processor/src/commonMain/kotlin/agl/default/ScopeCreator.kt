@@ -20,7 +20,7 @@ package net.akehurst.language.agl.agl.default
 import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.expressions.asmValue
 import net.akehurst.language.agl.language.expressions.toTypedObject
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
@@ -28,8 +28,8 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
-import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -215,13 +215,13 @@ class ScopeCreator(
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asm
+        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
 
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
-        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asm
+        return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
 
 

@@ -23,6 +23,8 @@ import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
+val PropertyName.asValueName get() = PropertyValueName(this.value)
+
 class AsmPathSimple(
     override val value: String
 ) : AsmPath {
@@ -230,9 +232,9 @@ class AsmStructureSimple(
     override val qualifiedTypeName: QualifiedName
 ) : AsmValueAbstract(), AsmStructure {
 
-    private var _properties = mutableMapOf<PropertyName, AsmStructurePropertySimple>()
+    private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
 
-    override val property: Map<PropertyName, AsmStructureProperty> = _properties
+    override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
         get() = property.values.sortedWith { a, b ->
             val aIdx = a.index
@@ -254,21 +256,21 @@ class AsmStructureSimple(
             .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
             .filterIsInstance<AsmStructureSimple>()
 
-    override fun hasProperty(name: PropertyName): Boolean = property.containsKey(name)
+    override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 
-    fun getPropertyAsStringOrNull(name: PropertyName): String? = property[name]?.value as String?
-    fun getPropertyAsAsmElementOrNull(name: PropertyName): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
-    fun getPropertyAsReferenceOrNull(name: PropertyName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
-    fun getPropertyAsListOrNull(name: PropertyName): List<Any>? = property[name]?.value as List<Any>?
+    fun getPropertyAsStringOrNull(name: PropertyValueName): String? = property[name]?.value as String?
+    fun getPropertyAsAsmElementOrNull(name: PropertyValueName): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
+    fun getPropertyAsReferenceOrNull(name: PropertyValueName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
+    fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getProperty(name: PropertyName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
-    fun getPropertyAsString(name: PropertyName): String = (getProperty(name) as AsmPrimitive).value as String
-    fun getPropertyAsAsmElement(name: PropertyName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
-    fun getPropertyAsReference(name: PropertyName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
-    fun getPropertyAsList(name: PropertyName): List<Any> = getProperty(name) as List<Any>
-    fun getPropertyAsListOfElement(name: PropertyName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
+    override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
+    fun getPropertyAsString(name: PropertyValueName): String = (getProperty(name) as AsmPrimitive).value as String
+    fun getPropertyAsAsmElement(name: PropertyValueName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
+    fun getPropertyAsReference(name: PropertyValueName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
+    fun getPropertyAsList(name: PropertyValueName): List<Any> = getProperty(name) as List<Any>
+    fun getPropertyAsListOfElement(name: PropertyValueName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
 
-    override fun setProperty(name: PropertyName, value: AsmValue, childIndex: Int) {
+    override fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int) {
         _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
     }
 
@@ -317,7 +319,7 @@ class AsmStructureSimple(
 }
 
 class AsmStructurePropertySimple(
-    override val name: PropertyName,
+    override val name: PropertyValueName,
     override val index: Int,
     value: AsmValue
 ) : AsmStructureProperty {

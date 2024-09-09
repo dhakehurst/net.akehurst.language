@@ -28,7 +28,7 @@ import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefau
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.base.SimpleName
@@ -67,7 +67,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
-    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextSimple> = LanguageProcessorConfigurationDefault()
+    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextAsmDefault> = LanguageProcessorConfigurationDefault()
 
     /**
      * build a configuration for a language processor
@@ -132,9 +132,9 @@ object Agl {
         crossReferenceModelStr: CrossReferenceString? = null,
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        base: LanguageProcessorConfiguration<Asm, ContextSimple> = configurationDefault(),
+        base: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
-    ): LanguageProcessorResult<Asm, ContextSimple> {
+    ): LanguageProcessorResult<Asm, ContextAsmDefault> {
         val config = Agl.configuration(base) {
             if (null != typeModelStr) {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }

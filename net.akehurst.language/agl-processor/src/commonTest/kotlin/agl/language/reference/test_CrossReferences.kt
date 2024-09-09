@@ -30,7 +30,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.test.Test

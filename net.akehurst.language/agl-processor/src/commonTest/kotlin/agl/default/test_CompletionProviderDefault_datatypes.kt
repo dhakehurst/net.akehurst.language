@@ -20,7 +20,6 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.typemodel.api.TypeModel
@@ -70,7 +69,7 @@ class test_CompletionProviderDefault_datatypes {
 
         data class TestData(
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextSimple? = ContextSimple(),
+            val context: ContextAsmDefault? = ContextAsmDefault(),
             val sentence: String,
             val expected: List<CompletionItem>
         )

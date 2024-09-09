@@ -758,7 +758,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     private fun setPropertyFromDeclaration(el: AsmStructure, declaration: PropertyDeclaration, value: AsmValue?) {
         // whether it is a reference or not is handled later in Semantic Analysis
         val v = value ?: AsmNothingSimple
-        el.setProperty(declaration.name, v, declaration.index)
+        el.setProperty(declaration.name.asValueName, v, declaration.index)
     }
 
 }

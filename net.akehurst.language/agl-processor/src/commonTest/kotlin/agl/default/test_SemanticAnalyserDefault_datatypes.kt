@@ -22,7 +22,6 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -96,7 +95,7 @@ class test_SemanticAnalyserDefault_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextSimple())
+                context(ContextAsmDefault())
             }
         })
         assertTrue(result.issues.isEmpty(), result.issues.toString())
@@ -125,7 +124,7 @@ class test_SemanticAnalyserDefault_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextSimple())
+                context(ContextAsmDefault())
             }
         })
         assertNotNull(result.asm)
@@ -161,7 +160,7 @@ class test_SemanticAnalyserDefault_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextSimple())
+                    context(ContextAsmDefault())
                 }
             }
         )
@@ -211,14 +210,14 @@ class test_SemanticAnalyserDefault_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextSimple())
+                    context(ContextAsmDefault())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmDefault()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

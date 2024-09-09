@@ -26,7 +26,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -44,7 +44,7 @@ class test_SyntaxAnalyserSimple {
     private companion object {
         fun processor(grammarStr: String) = Agl.processorFromStringDefault(GrammarString(grammarStr))
 
-        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextSimple> {
+        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextAsmDefault> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -58,7 +58,7 @@ class test_SyntaxAnalyserSimple {
 
         fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> Asm) = this.add(TestData(sentence, expected()))
 
-        fun test(proc: LanguageProcessor<Asm, ContextSimple>, data: TestData) {
+        fun test(proc: LanguageProcessor<Asm, ContextAsmDefault>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -68,19 +68,19 @@ class test_SyntaxAnalyserSimple {
             assertEquals(data.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "))
         }
 
-        fun testAll(proc: LanguageProcessor<Asm, ContextSimple>, tests: List<TestData>) {
+        fun testAll(proc: LanguageProcessor<Asm, ContextAsmDefault>, tests: List<TestData>) {
             for (data in tests) {
                 test(proc, data)
             }
         }
 
-        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextSimple>, expected: RuntimeRuleSet) {
+        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextAsmDefault>, expected: RuntimeRuleSet) {
             val actual = (proc as LanguageProcessorAbstract).ruleSet as RuntimeRuleSet
             assertEquals(expected.toString(), actual.toString())
             assertTrue(expected.matches(actual))
         }
 
-        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextSimple>, expected: TypeModel) {
+        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextAsmDefault>, expected: TypeModel) {
             GrammarTypeModelTest.tmAssertEquals(expected, proc.typeModel)
         }
     }

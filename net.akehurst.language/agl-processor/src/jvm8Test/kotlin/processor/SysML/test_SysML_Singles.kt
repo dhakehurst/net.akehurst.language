@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor.SysML
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
@@ -31,7 +31,7 @@ class test_SysML_Singles {
     private companion object {
         const val grammarPath = "/SysML/v2_2023-11/grammars/standard/grammar.agl"
         val grammarStr = this::class.java.getResource(grammarPath).readText()
-        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
 
     }
 

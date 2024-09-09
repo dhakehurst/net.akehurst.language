@@ -21,7 +21,7 @@ import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -34,7 +34,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
     }
 
     @Test
@@ -183,7 +183,7 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(ContextSimple()) }
+            semanticAnalysis { context(ContextAsmDefault()) }
         })
         val actual = result.asm?.root?.firstOrNull()
         assertTrue(result.issues.isEmpty(), result.issues.toString())
@@ -220,7 +220,7 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(ContextSimple()) }
+            semanticAnalysis { context(ContextAsmDefault()) }
         })
         val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)

@@ -523,10 +523,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             else -> AsmNothingSimple
         }
         val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
-        self.setProperty(AsmTransformInterpreter.ALTERNATIVE, alternative, 0)
-        self.setProperty(AsmTransformInterpreter.LEAF, leaf, 1)
-        self.setProperty(AsmTransformInterpreter.CHILDREN, childrenAsmList, 2)
-        self.setProperty(AsmTransformInterpreter.CHILD, childrenAsmList, 3)
+        self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 0)
+        self.setProperty(AsmTransformInterpreter.LEAF.asValueName, leaf, 1)
+        self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 2)
+        self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 3)
         val selfType = when {
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
@@ -873,7 +873,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     private fun setPropertyFromDeclaration(el: AsmStructure, declaration: PropertyDeclaration, value: AsmValue?) {
         // whether it is a reference or not is handled later in Semantic Analysis
         val v = value ?: AsmNothingSimple
-        el.setProperty(declaration.name, v, declaration.index)
+        el.setProperty(declaration.name.asValueName, v, declaration.index)
     }
 
 }

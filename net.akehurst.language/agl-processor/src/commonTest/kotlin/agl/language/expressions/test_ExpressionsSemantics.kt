@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals

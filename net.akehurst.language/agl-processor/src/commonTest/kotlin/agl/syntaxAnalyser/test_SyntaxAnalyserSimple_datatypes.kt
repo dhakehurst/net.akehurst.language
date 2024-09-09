@@ -24,7 +24,7 @@ import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageIssue
@@ -75,7 +75,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = CrossReferenceModelDefault()
         val syntaxAnalyser = SyntaxAnalyserDefault(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
-        val processor = Agl.processorFromString<Asm, ContextSimple>(
+        val processor = Agl.processorFromString<Asm, ContextAsmDefault>(
             grammarStr,
             Agl.configuration {
                 crossReferenceModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -192,7 +192,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextSimple())
+                    context(ContextAsmDefault())
                 }
             }
         )
@@ -236,14 +236,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextSimple())
+                    context(ContextAsmDefault())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextSimple()) {
+        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextAsmDefault()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

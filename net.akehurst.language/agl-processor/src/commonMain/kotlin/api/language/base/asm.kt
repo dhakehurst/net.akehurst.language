@@ -20,6 +20,7 @@ package net.akehurst.language.api.language.base
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.api.language.base.SimpleName.Companion.asSimpleName
+import net.akehurst.language.typemodel.api.Komposite
 import kotlin.jvm.JvmInline
 
 interface PossiblyQualifiedName {
@@ -108,6 +109,7 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     /**
      * Ordered Map
      */
+    @Komposite
     val namespace: List<NT>
 
     val allDefinitions: List<DT>
@@ -126,6 +128,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
      */
     val import: List<Import>
 
+    @Komposite
     val definition: List<DT>
 
     val definitionByName: Map<SimpleName, DT>

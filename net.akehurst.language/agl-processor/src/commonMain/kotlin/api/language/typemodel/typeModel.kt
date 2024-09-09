@@ -20,6 +20,10 @@ package net.akehurst.language.typemodel.api
 import net.akehurst.language.api.language.base.*
 import kotlin.jvm.JvmInline
 
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.PROPERTY)
+annotation class Komposite
+
 interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
 
     val AnyType: TypeDeclaration
@@ -104,7 +108,10 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
 interface TypeInstance {
     val namespace: TypeNamespace
+
+    @Komposite
     val typeArguments: List<TypeInstance> //TODO: I think we need an actual 'TypeArgument' type
+
     val isNullable: Boolean
 
     /**
@@ -212,6 +219,7 @@ interface TupleType : StructuredType {
         val NAME = QualifiedName("\$TupleType")
     }
 
+    @Komposite
     val entries: List<Pair<PropertyName, TypeInstance>>
 
     /**

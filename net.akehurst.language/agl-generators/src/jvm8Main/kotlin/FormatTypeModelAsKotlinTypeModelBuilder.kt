@@ -8,6 +8,7 @@ import net.akehurst.language.typemodel.api.*
 
 data class TypeModelFormatConfiguration(
     val exludedNamespaces:List<QualifiedName> = emptyList(),
+    val includeInterfaces: Boolean = true,
     val properties: PropertiesTypeModelFormatConfiguration
 )
 data class PropertiesTypeModelFormatConfiguration(

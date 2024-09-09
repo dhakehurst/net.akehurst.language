@@ -23,7 +23,7 @@ import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,7 +35,7 @@ class test_SimpleTypeModelStdLib_eval {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
-            assertEquals(expected, actual.asm)
+            assertEquals(expected, actual.asmValue)
         }
     }
 

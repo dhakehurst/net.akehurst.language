@@ -20,7 +20,7 @@ package net.akehurst.language.api.asm
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.typemodel.api.PropertyName
+import kotlin.jvm.JvmInline
 
 interface AsmPath {
     val value: String
@@ -65,10 +65,15 @@ interface AsmReference {
     val value: AsmStructure?
 }
 
+@JvmInline
+value class PropertyValueName(val value: String) {
+    override fun toString(): String = value
+}
+
 interface AsmStructure : AsmValue {
     val path: AsmPath
 
-    val property: Map<PropertyName, AsmStructureProperty>
+    val property: Map<PropertyValueName, AsmStructureProperty>
 
     val propertyOrdered: List<AsmStructureProperty>
 
@@ -80,18 +85,18 @@ interface AsmStructure : AsmValue {
     /**
      * true if the value has the named property
      */
-    fun hasProperty(name: PropertyName): Boolean
+    fun hasProperty(name: PropertyValueName): Boolean
 
     /**
      * the value of the named property, AsmNothing if no property with that name
      */
-    fun getProperty(name: PropertyName): AsmValue
+    fun getProperty(name: PropertyValueName): AsmValue
 
-    fun setProperty(name: PropertyName, value: AsmValue, childIndex: Int)
+    fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int)
 }
 
 interface AsmStructureProperty {
-    val name: PropertyName
+    val name: PropertyValueName
     val value: AsmValue
     val index: Int
 

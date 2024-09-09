@@ -17,9 +17,10 @@
 
 package net.akehurst.language.agl.language.asmTransform
 
+import net.akehurst.language.agl.asm.asValueName
 import net.akehurst.language.agl.language.expressions.EvaluationContext
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.asm
+import net.akehurst.language.agl.language.expressions.asmValue
 import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
@@ -90,17 +91,17 @@ class AsmTransformInterpreter(
     }
 
     private fun evaluateSelfStatement(evc: EvaluationContext, path: AsmPath, expression: Expression): AsmValue {
-        return exprInterpreter.evaluateExpression(evc, expression).asm
+        return exprInterpreter.evaluateExpression(evc, expression).asmValue
     }
 
     private fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        asm.setProperty(st.lhsPropertyName, propValue, asm.property.size)
+        asm.setProperty(st.lhsPropertyName.asValueName, propValue, asm.property.size)
     }
 
     private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): AsmValue {
         val res = exprInterpreter.evaluateExpression(evc, expr)
-        return res.asm
+        return res.asmValue
     }
 
 }

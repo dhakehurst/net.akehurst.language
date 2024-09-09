@@ -20,7 +20,7 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -39,14 +39,14 @@ class test_KerML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, ContextSimple> by lazy {
+        val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy {
             Agl.processorFromStringDefault(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
         }
 
-        fun test_process(sentence: String, context: ContextSimple, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: ContextAsmDefault, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
@@ -152,7 +152,7 @@ class test_KerML_agl_Singles {
         val sentence = """
         """.trimIndent()
 
-        test_process(sentence, ContextSimple(), emptySet())
+        test_process(sentence, ContextAsmDefault(), emptySet())
     }
 
     @Test
@@ -165,7 +165,7 @@ class test_KerML_agl_Singles {
             }
         """.trimIndent()
 
-        test_process(sentence, ContextSimple(), emptySet())
+        test_process(sentence, ContextAsmDefault(), emptySet())
     }
 
     @Test
@@ -187,7 +187,7 @@ class test_KerML_agl_Singles {
             )
         )
 
-        test_process(sentence, ContextSimple(), expIssues)
+        test_process(sentence, ContextAsmDefault(), expIssues)
     }
 
 }

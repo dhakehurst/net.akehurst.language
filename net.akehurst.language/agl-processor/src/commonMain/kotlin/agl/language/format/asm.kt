@@ -17,10 +17,7 @@
 package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.AsmList
-import net.akehurst.language.api.asm.AsmPrimitive
-import net.akehurst.language.api.asm.AsmStructure
+import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
@@ -50,7 +47,7 @@ class AglFormatterModelFromAsm(
     override val rules: Map<SimpleName, AglFormatterRule> by lazy {
         when (asm) {
             null -> emptyMap()
-            else -> ((asm.root[0] as AsmStructure).getProperty(PropertyName("ruleList")) as AsmList).elements.associate {
+            else -> ((asm.root[0] as AsmStructure).getProperty(PropertyValueName("ruleList")) as AsmList).elements.associate {
                 when (it) {
                     is AsmStructure -> {
                         val rule = AglFormatterRuleFromAsm(this, it)
@@ -71,14 +68,14 @@ class AglFormatterRuleFromAsm(
 ) : AglFormatterRule {
     override val forTypeName: SimpleName
         get() {
-            val typeRef = asm.getProperty(PropertyName("typeReference")) as AsmStructure
-            val id = (typeRef.getProperty(PropertyName("identifier")) as AsmPrimitive).value.toString()
+            val typeRef = asm.getProperty(PropertyValueName("typeReference")) as AsmStructure
+            val id = (typeRef.getProperty(PropertyValueName("identifier")) as AsmPrimitive).value.toString()
             return SimpleName(id)
         }
 
     override val formatExpression: FormatExpression
         get() {
-            val fmAsm = asm.getProperty(PropertyName("formatExpression")) as AsmStructure
+            val fmAsm = asm.getProperty(PropertyValueName("formatExpression")) as AsmStructure
             return AglFormatExpressionFromAsm(fmAsm)
         }
 }
