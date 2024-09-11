@@ -19,12 +19,9 @@ package net.akehurst.language.typemodel.simple
 
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.ParameterName
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.api.*
 
-object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), emptyList()) {
+object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), emptyList()) {
 
     //TODO: need some other kinds of type for these really
     val AnyType = super.findOrCreateSpecialTypeNamed(SimpleName("Any")).type()
@@ -42,11 +39,17 @@ object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empt
     val Pair = super.findOwnedOrCreateDataTypeNamed(SimpleName("Pair")).also { td ->
         (td.typeParameters as MutableList).add(SimpleName("F"))
         (td.typeParameters as MutableList).add(SimpleName("S"))
-        td.appendPropertyPrimitive(PropertyName("first"), this.createTypeInstance(td, SimpleName("F")), "First member of the pair")
-        td.appendPropertyPrimitive(PropertyName("second"), this.createTypeInstance(td, SimpleName("S")), "Second member of the pair")
+        (td as DataTypeSimple).addConstructor(
+            listOf(
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td, SimpleName("F")), null),
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td, SimpleName("S")), null),
+            )
+        )
+        td.appendPropertyStored(PropertyName("first"), this.createTypeInstance(td, SimpleName("F")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 0)
+        td.appendPropertyStored(PropertyName("second"), this.createTypeInstance(td, SimpleName("S")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 1)
     }
 
-    private val Collection_typeName =SimpleName("Collection")
+    private val Collection_typeName = SimpleName("Collection")
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(SimpleName("E"))
     }
@@ -70,7 +73,7 @@ object  SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empt
         typeDecl.appendPropertyPrimitive(PropertyName("join"), this.createTypeInstance(typeDecl, String.typeName), "The String value of all elements concatenated.")
         typeDecl.appendMethodPrimitive(
             MethodName("get"),
-            listOf(ParameterDefinitionSimple(ParameterName("index"), this.createTypeInstance(typeDecl, Integer.typeName), null)),
+            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(typeDecl, Integer.typeName), null)),
             this.createTypeInstance(typeDecl, SimpleName("E")), "The element at the given index."
         ) { it, arguments ->
             check(it is List<*>) { "Method 'get' is only applicably to List objects." }

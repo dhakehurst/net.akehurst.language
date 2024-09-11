@@ -22,9 +22,7 @@ import net.akehurst.language.agl.language.typemodel.SubtypeListBuilder
 import net.akehurst.language.agl.language.typemodel.TypeModelDslMarker
 import net.akehurst.language.agl.language.typemodel.TypeUsageReferenceBuilder
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.Import
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.api.language.base.*
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -53,7 +51,7 @@ class GrammarTypeModelBuilder(
     imports: MutableList<Import>
 ) {
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
-        it.resolveImports(typeModel)
+        it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
     }
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 

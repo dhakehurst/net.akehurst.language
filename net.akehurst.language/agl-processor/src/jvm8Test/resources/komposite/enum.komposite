@@ -1,0 +1,5 @@
+namespace net.akehurst.kotlin.composite.api {
+
+  enum Colour
+
+}

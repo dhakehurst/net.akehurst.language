@@ -21,6 +21,7 @@ import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.a
 import net.akehurst.language.api.language.base.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.api.language.base.SimpleName.Companion.asSimpleName
 import net.akehurst.language.typemodel.api.Komposite
+import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 
 interface PossiblyQualifiedName {
@@ -42,8 +43,9 @@ interface PossiblyQualifiedName {
 /**
  * A qualified name, separator assumed to be '.'
  */
-@JvmInline
-value class QualifiedName(override val value: String) : PossiblyQualifiedName {
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class QualifiedName(override val value: String) : PossiblyQualifiedName {
     companion object {
         val String.isQualifiedName: Boolean get() = this.contains(".")
         val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
@@ -67,8 +69,9 @@ value class QualifiedName(override val value: String) : PossiblyQualifiedName {
     override fun toString(): String = value
 }
 
-@JvmInline
-value class SimpleName(override val value: String) : PossiblyQualifiedName {
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class SimpleName(override val value: String) : PossiblyQualifiedName {
     companion object {
         val String.isSimpleName: Boolean get() = this.contains(".").not()
         val String.asSimpleName: SimpleName get() = SimpleName(this)
@@ -85,8 +88,9 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName {
  *
  * Separator assumed to be '.'
  */
-@JvmInline
-value class Import(val value: String) {
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class Import(val value: String) {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
     override fun toString() = value
 }

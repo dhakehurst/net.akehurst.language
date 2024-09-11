@@ -20,8 +20,9 @@ package net.akehurst.language.api.language.grammar
 import net.akehurst.language.api.language.base.Formatable
 import kotlin.jvm.JvmInline
 
-@JvmInline
-value class GrammarRuleName(val value: String) {
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class GrammarRuleName(val value: String) {
     override fun toString(): String = value
 }
 

@@ -4,6 +4,7 @@ project = "4.2.0.20"
 kotlin = "2.0.20"
 dokka = "1.9.20"
 exportPublic = "2.0.20"
+nak-kotlinx = "2.0.20"
 
 buildconfig = "5.4.0"
 credentials = "3.0"
@@ -13,6 +14,7 @@ korlibs = "6.0.0-alpha9"
 
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -20,3 +22,4 @@ dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 credentials = { id = "nu.studer.credentials", version.ref = "credentials" }
+reflex = { id ="net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref="nak-kotlinx" }

@@ -1,0 +1,7 @@
+namespace a {
+
+  datatype A {
+
+  }
+
+}

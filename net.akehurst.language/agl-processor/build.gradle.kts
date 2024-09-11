@@ -1,9 +1,10 @@
 plugins {
-
+    alias(libs.plugins.reflex)
 }
 
 dependencies {
     // commonMainApi(project(":type-model"))
+    commonMainImplementation(libs.nak.kotlinx.reflect)
 }
 
 kotlin {
@@ -25,8 +26,7 @@ kotlin {
         }
     }
 
-    macosArm64()
-
+   // macosArm64()
 
     sourceSets {
         commonTest.configure {
@@ -36,12 +36,31 @@ kotlin {
     }
 }
 
+kotlinxReflect {
+    forReflectionMain.set(
+        listOf(
+            "net.akehurst.language.api.language.base.*",
+            "net.akehurst.language.agl.language.base.*",
+            "net.akehurst.language.api.language.grammar.*",
+            "net.akehurst.language.agl.language.grammar.asm.*",
+            "net.akehurst.language.typemodel.api.*",
+            "net.akehurst.language.typemodel.simple.*",
+            "net.akehurst.language.api.grammarTypeModel.*",
+            "net.akehurst.language.agl.grammarTypeModel.*",
+            "net.akehurst.language.api.language.expressions.*",
+            "net.akehurst.language.agl.language.expressions.asm.*",
+            "net.akehurst.language.api.language.reference.*",
+            "net.akehurst.language.agl.language.reference.asm.*",
+        )
+    )
+}
+
 val signTasks = arrayOf(
     "signKotlinMultiplatformPublication",
     "signJvm8Publication",
     "signJsPublication",
     //"signWasmJsPublication",
-    "signMacosArm64Publication"
+   // "signMacosArm64Publication"
 )
 
 tasks.forEach {

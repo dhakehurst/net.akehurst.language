@@ -53,7 +53,7 @@ abstract class TypeModelSimpleAbstract(
     override val allNamespace: List<TypeNamespace> = mutableListOf<TypeNamespace>()
 
     override fun resolveImports() {
-        allNamespace.forEach { it.resolveImports(this) }
+        allNamespace.forEach { it.resolveImports(this as Model<Namespace<TypeDeclaration>, TypeDeclaration>) } //TODO
     }
 
     fun addNamespace(ns: TypeNamespace) {
@@ -163,8 +163,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                     else -> ""
                 }
                 val name = when {
-                    typeArguments.isEmpty() -> declaration.signature(context, currentDepth + 1)
-                    else -> declaration.name
+                    typeArguments.isEmpty() -> typeOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
+                    else -> declaration.name.value
                 }
                 return "${name}$args$n"
             }
@@ -356,7 +356,7 @@ abstract class TypeNamespaceAbstract(
     private var _nextTupleTypeTypeId = 0
 
     // qualified namespace name -> TypeNamespace
-    private val _requiredNamespaces = mutableMapOf<QualifiedName, TypeNamespace?>()
+    //private val _requiredNamespaces = mutableMapOf<QualifiedName, TypeNamespace?>()
 
     override val import: List<Import> = imports.toMutableList()
 
@@ -364,10 +364,13 @@ abstract class TypeNamespaceAbstract(
 
     override val ownedTypes: Collection<TypeDeclaration> get() = ownedTypesByName.values
 
+    @Komposite
     val ownedUnnamedSupertypeType = mutableListOf<UnnamedSupertypeType>()
 
+    @Komposite
     val ownedTupleTypes = mutableListOf<TupleType>()
 
+    override val singletonType: Set<SingletonType> get() = ownedTypesByName.values.filterIsInstance<SingletonType>().toSet()
     override val primitiveType: Set<PrimitiveType> get() = ownedTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
     override val enumType: Set<EnumType> get() = ownedTypesByName.values.filterIsInstance<EnumType>().toSet()
     override val collectionType: Set<CollectionType> get() = ownedTypesByName.values.filterIsInstance<CollectionType>().toSet()
@@ -376,19 +379,19 @@ abstract class TypeNamespaceAbstract(
     override val dataType: Set<DataType> get() = ownedTypesByName.values.filterIsInstance<DataType>().toSet()
 
     //override fun resolveImports(model: Model<Namespace<TypeDeclaration>, TypeDeclaration>) {
-    override fun resolveImports(model: TypeModel) {
+   // override fun resolveImports(model: TypeModel) {
         // check explicit imports
-        this.import.forEach {
-            val ns = model.findNamespaceOrNull(it.asQualifiedName)
-                ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
-            _requiredNamespaces[it.asQualifiedName] = ns
-        }
+   //     this.import.forEach {
+   //         val ns = model.findNamespaceOrNull(it.asQualifiedName)
+   //             ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+   //         _requiredNamespaces[it.asQualifiedName] = ns
+   //     }
         // check required namespaces
         // _requiredNamespaces.keys.forEach {
         //     val ns = model.findNamespaceOrNull(it) ?: error("namespace '$it' is required but cannot be resolved in the TypeModel '${model.name}'")
         //     _requiredNamespaces[it] = ns
         // }
-    }
+    //}
 
     override fun isImported(qualifiedNamespaceName: QualifiedName): Boolean = import.contains(Import(qualifiedNamespaceName.value))
 
@@ -430,9 +433,9 @@ abstract class TypeNamespaceAbstract(
                 when (ns) {
                     this.qualifiedName -> findOwnedTypeNamed(tn)
                     else -> {
-                        val tns = _requiredNamespaces[ns]
+                        val tns = _importedNamespaces[ns]
                             ?: error("namespace '$ns' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
-                        tns.findOwnedTypeNamed(tn)
+                        (tns as TypeNamespace).findOwnedTypeNamed(tn)
                     }
                 }
             }
@@ -441,9 +444,9 @@ abstract class TypeNamespaceAbstract(
                 val tn = qualifiedOrImportedTypeName
                 findOwnedTypeNamed(tn)
                     ?: import.firstNotNullOfOrNull {
-                        val tns = _requiredNamespaces[it.asQualifiedName]
+                        val tns = _importedNamespaces[it.asQualifiedName]
                         //    ?: error("namespace '$it' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
-                        tns?.findOwnedTypeNamed(tn)
+                        (tns as TypeNamespace?)?.findOwnedTypeNamed(tn)
                     }
             }
 
@@ -579,9 +582,6 @@ abstract class TypeNamespaceAbstract(
         return TupleTypeInstance(this, declaration, typeArguments, nullable)
     }
 
-    override val definition: List<TypeDeclaration>
-        get() = TODO("not implemented")
-
     // --- Formatable ---
     override fun asString(indent: Indent): String {
         val types = this.ownedTypesByName.entries.sortedBy { it.key.value }
@@ -619,7 +619,9 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     // store properties by map(index) rather than list(index), because when constructing from grammar, not every index is used
     // public, so it can be serialised
+    @Komposite
     val propertyByIndex = mutableMapOf<Int, PropertyDeclaration>()
+
     override val property get() = propertyByIndex.values.toList() //should be in order because mutableMap is LinkedHashMap by default
     //protected val properties = mutableListOf<PropertyDeclaration>()
 
@@ -1163,7 +1165,7 @@ class PropertyDeclarationDerived(
     override val index: Int // Not really needed except that its used as part of storing property decls in the type that owns them
 ) : PropertyDeclarationAbstract() {
 
-    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.DERIVED)
+    override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.DERIVED)
 
 }
 

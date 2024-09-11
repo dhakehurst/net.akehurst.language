@@ -50,13 +50,14 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         val qn = namespace.qualifiedName.value
         val imports = namespace.import.joinAsCommerSeparatedStrings{ it.value }
         sb.append("  namespace(\"$qn\", listOf($imports)) {\n")
+        sb.appendWithEol(namespace.singletonType) { formatSingletonType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.primitiveType) { formatPrimitiveType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.enumType) { formatEnumType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.collectionType) { formatCollectionType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.valueType) { formatValueType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.interfaceType) { formatInterfaceType(indent.inc, namespace, it) }
         sb.appendWithEol(namespace.dataType) { formatDataType(indent.inc, namespace, it) }
-        sb.append("  }\n")
+        sb.append("  }")
         return sb.toString()
     }
 
@@ -67,6 +68,13 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
             sb.appendWithEol(type.property.filter { it.isDerived }) { formatProperty(indent, context, it) }
         }
         sb.appendWithEol(type.method) {  "// fun ${it.name}" }
+        return sb.toString()
+    }
+
+    fun formatSingletonType(indent: Indent, context:TypeNamespace, type: SingletonType): String {
+        val sb = StringBuilder()
+        val tn = type.name.value
+        sb.append("${indent}singleton(\"$tn\")")
         return sb.toString()
     }
 

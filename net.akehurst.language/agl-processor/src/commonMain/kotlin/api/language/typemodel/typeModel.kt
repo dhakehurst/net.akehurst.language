@@ -57,6 +57,8 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
     val ownedTypes: Collection<TypeDeclaration>
 
+    val singletonType: Set<SingletonType>
+
     val primitiveType: Set<PrimitiveType>
 
     val valueType: Set<ValueType>
@@ -71,7 +73,7 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
     fun addImport(value: Import)
 
-    fun resolveImports(model: TypeModel)
+    //fun resolveImports(model: TypeModel)
 
     fun isImported(qualifiedNamespaceName: QualifiedName): Boolean
 
@@ -145,7 +147,9 @@ interface TypeInstance {
 interface TypeDeclaration : Definition<TypeDeclaration> {
     override val namespace: TypeNamespace
 
+    @Komposite
     val supertypes: List<TypeInstance>
+
     val typeParameters: List<SimpleName>
 
     val property: List<PropertyDeclaration>
@@ -230,6 +234,7 @@ interface TupleType : StructuredType {
 }
 
 interface ValueType : StructuredType {
+    @Komposite
     val constructors: List<ConstructorDeclaration>
 }
 
@@ -244,6 +249,7 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
+    @Komposite
     val constructors: List<ConstructorDeclaration>
 
     fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
@@ -258,6 +264,7 @@ interface UnnamedSupertypeType : TypeDeclaration {
     val id: Int
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
+    @Komposite
     val subtypes: List<TypeInstance>
 }
 
@@ -269,14 +276,17 @@ interface CollectionType : StructuredType {
 //    val isMap: Boolean
 }
 
-@JvmInline
-value class PropertyName(val value: String) {
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class PropertyName(val value: String) {
     override fun toString(): String = value
 }
 
 interface PropertyDeclaration {
     val owner: TypeDeclaration
     val name: PropertyName
+
+    @Komposite
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
     val description: String
@@ -380,26 +390,31 @@ enum class PropertyCharacteristic {
     }
 }
 
-@JvmInline
-value class MethodName(val value: String)
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class MethodName(val value: String)
 
 interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: MethodName
+    @Komposite
     val parameters: List<ParameterDeclaration>
     val description: String
 }
 
 interface ConstructorDeclaration {
     val owner: TypeDeclaration
+    @Komposite
     val parameters: List<ParameterDeclaration>
 }
 
-@JvmInline
-value class ParameterName(val value: String)
+//@JvmInline
+//TODO: Cannot 'export' value classes to JS
+data class ParameterName(val value: String)
 
 interface ParameterDeclaration {
     val name: ParameterName
+    @Komposite
     val typeInstance: TypeInstance
     val defaultValue: String?
 }

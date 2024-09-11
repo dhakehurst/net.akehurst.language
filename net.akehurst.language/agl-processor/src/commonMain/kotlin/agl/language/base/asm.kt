@@ -67,7 +67,8 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     override fun resolveImports(model: Model<Namespace<DT>, DT>) {
         // check explicit imports
         this.import.forEach {
-            val ns = model.findNamespaceOrNull(it.asQualifiedName) ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+            val ns = model.findNamespaceOrNull(it.asQualifiedName)
+                ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
             _importedNamespaces[it.asQualifiedName] = ns
         }
     }
@@ -110,8 +111,8 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
     override fun toString(): String = "namespace $qualifiedName"
 
     // --- Implementation ---
-    private val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
-    private val _definition = mutableMapOf<SimpleName, DT>()
+    protected val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
+    protected val _definition = mutableMapOf<SimpleName, DT>()
 
     fun addDefinition(value: DT) {
         _definition[value.name] = value

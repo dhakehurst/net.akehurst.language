@@ -1,15 +1,11 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.agl.generators.GenerateTypeModelViaReflection.Companion.isCollection
-import net.akehurst.language.agl.generators.GenerateTypeModelViaReflection.Companion.isEnum
-import net.akehurst.language.agl.generators.GenerateTypeModelViaReflection.Companion.isInterface
 import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.PossiblyQualifiedName
 import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.*
@@ -42,7 +38,7 @@ class GenerateTypeModelViaReflection(
             "kotlin.collections.Collection" to SimpleTypeModelStdLib.Collection.qualifiedName.value,
             "kotlin.collections.List" to SimpleTypeModelStdLib.List.qualifiedName.value,
             "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
-            "net.akehurst.language.collections.OrderedSet"  to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
+            "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
             "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
             "java.lang.Exception" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
             "java.lang.RuntimeException" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
@@ -61,6 +57,11 @@ class GenerateTypeModelViaReflection(
             }
         val KType.asPossiblyQualifiedName get() = this.classifier!!.asPossiblyQualifiedName
 
+        fun KType.substitutedName(substituteTypes: Map<String, String>): PossiblyQualifiedName {
+            val pqtn = this.asPossiblyQualifiedName
+            return substituteTypes[pqtn.value]?.let { QualifiedName(it) } ?: pqtn
+        }
+
         /**
          * returns the resolve TypeInstance, plus list of qualified names of other required types
          */
@@ -71,7 +72,7 @@ class GenerateTypeModelViaReflection(
                 is SimpleName -> pqtn
                 is QualifiedName -> {
                     val qn = substituteTypes[pqtn.value]?.let { QualifiedName(it) } ?: pqtn
-                    if(ns.qualifiedName!=qn.front) {
+                    if (ns.qualifiedName != qn.front) {
                         logInfo("'$context' requires import '$qn'")
                         requires.add(qn)
                         ns.addImport(qn.front.asImport)
@@ -84,16 +85,32 @@ class GenerateTypeModelViaReflection(
 
             val targsp = this.arguments.map { pj ->
                 when {
-                    null==pj.type -> Pair(SimpleTypeModelStdLib.AnyType, emptyList()) // '*' projection
+                    null == pj.type -> Pair(SimpleTypeModelStdLib.AnyType, emptyList()) // '*' projection
                     else -> pj.type!!.asTypeInstance(ns, context, substituteTypes)
                 }
             }
             targsp.forEach { requires.addAll(it.second) }
             val targs = targsp.map { it.first }
             val isNullable = this.isMarkedNullable
-            val ty =  ns.createTypeInstance(context, subName, targs, isNullable)
+            val ty = ns.createTypeInstance(context, subName, targs, isNullable)
             return Pair(ty, requires)
         }
+
+        fun KClass<*>.allPropertiesNamed(propertyName: String) =
+            this.declaredMemberProperties.filter { it.name == propertyName } +
+                    this.allSupertypes.flatMap {
+                        val cl = it.classifier
+                        when (cl) {
+                            is KTypeParameter -> emptyList()
+                            is KClass<*> -> cl.memberProperties.filter { it.name == propertyName }
+                            else -> error("Unsupported")
+                        }
+                    }
+
+        fun KClass<*>.isKompositeAnnotation(propertyName: String): Boolean =
+            this.allPropertiesNamed(propertyName)
+                .any { it.findAnnotations(Komposite::class).isNotEmpty() }
+
 
         fun logInfo(message: String) {
             //println(message)
@@ -106,11 +123,11 @@ class GenerateTypeModelViaReflection(
     private val _exclude = mutableListOf<QualifiedName>()
     private val _requires = lazyMutableMapNonNull<QualifiedName, MutableSet<QualifiedName>> { mutableSetOf() }
 
-    fun include(qualifiedName:String) {
+    fun include(qualifiedName: String) {
         _include.add(QualifiedName(qualifiedName))
     }
 
-    fun exclude(qualifiedName:String) {
+    fun exclude(qualifiedName: String) {
         _exclude.add(QualifiedName(qualifiedName))
     }
 
@@ -126,14 +143,15 @@ class GenerateTypeModelViaReflection(
         _typeModel.addNamespace(ns)
     }
 
-    fun addKClass(ns:TypeNamespaceSimple, kclass: KClass<*>) {
+    fun addKClass(ns: TypeNamespaceSimple, kclass: KClass<*>) {
         when {
             _exclude.contains(QualifiedName(kclass.qualifiedName!!)) -> Unit
             kclass.supertypes.any { it.classifier == Annotation::class } -> Unit // do not add annotations
-            // canot detect DslBuilder annotations at runtime!
+            // cannot detect DslBuilder annotations at runtime!
             //kclass.annotations.any { it.annotationClass.annotations.any { an -> an.annotationClass.isSubclassOf(DslMarker::class) } } -> Unit // do not add DSL builders
             KVisibility.PUBLIC == kclass.visibility -> {
                 when {
+                    null != kclass.objectInstance -> addSingleton(ns, kclass)
                     kclass.isValue -> addValueType(ns, kclass)
                     kclass.isEnum -> addEnumType(ns, kclass as KClass<out Enum<*>>)
                     kclass.isInterface -> addInterfaceType(ns, kclass)
@@ -158,6 +176,7 @@ class GenerateTypeModelViaReflection(
                 qualifiedName = "",
                 imports = listOf(""),
             ) {
+                singleton("ST")
                 primitiveType("PT")
                 enumType("ET", listOf())
                 collectionType("CT", listOf())
@@ -183,15 +202,15 @@ class GenerateTypeModelViaReflection(
         additionalNamespaces.forEach { _typeModel.addNamespace(it) }
 
         _requires.forEach { (t, reqs) ->
-           val notFound =  reqs.mapNotNull { qn ->
+            val notFound = reqs.mapNotNull { qn ->
                 val foundReq = _typeModel.findByQualifiedNameOrNull(qn)
-                if (null==foundReq) {
+                if (null == foundReq) {
                     qn
                 } else {
                     null
                 }
             }
-            if(notFound.isNotEmpty()) {
+            if (notFound.isNotEmpty()) {
                 println("Type '$t' requires the following:")
                 notFound.forEach {
                     println("  '$it'")
@@ -203,7 +222,8 @@ class GenerateTypeModelViaReflection(
         return _typeModel
     }
 
-    private fun findSuperTypesAndImports(targetNamespaceName: QualifiedName, kclass: KClass<*>): Pair<List<PossiblyQualifiedName>, List<Import>> {
+    private fun addSuperTypes(type: TypeDeclaration, kclass: KClass<*>) {
+        val targetNamespaceName = type.namespace.qualifiedName
         val imports = mutableListOf<Import>()
         val superTypes = kclass.supertypes.map {
             val qn = QualifiedName((it.classifier as KClass<*>).qualifiedName!!)
@@ -216,7 +236,11 @@ class GenerateTypeModelViaReflection(
                 sbQn.last
             }
         }
-        return Pair(superTypes, imports)
+        superTypes.forEach { type.addSupertype(it) }
+        imports.forEach {
+            logInfo("'$type' requires import '$it' due to supertype")
+            type.namespace.addImport(it)
+        }
     }
 
     private fun addPrimitiveType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
@@ -232,16 +256,20 @@ class GenerateTypeModelViaReflection(
         ns.addDefinition(CollectionTypeSimple(ns, SimpleName(kclass.simpleName!!)))
     }
 
+    private fun addSingleton(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+        val type = SingletonTypeSimple(ns, SimpleName(kclass.simpleName!!))
+        ns.addDefinition(type)
+        //       addTypeParameters(ns, type, kclass)
+//        addSuperTypes(type, kclass)
+//        addConstructors(ns, type, kclass)
+//        addPropertiesAndImports(ns, type, kclass)
+    }
+
     private fun addValueType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
         val type = ValueTypeSimple(ns, SimpleName(kclass.simpleName!!))
         ns.addDefinition(type)
         addTypeParameters(ns, type, kclass)
-        val (st, imp) = findSuperTypesAndImports(ns.qualifiedName, kclass)
-        st.forEach { type.addSupertype(it) }
-        imp.forEach {
-            logInfo("'$type' requires import '$it' due to supertype")
-            ns.addImport(it)
-        }
+        addSuperTypes(type, kclass)
         addConstructors(ns, type, kclass)
         addPropertiesAndImports(ns, type, kclass)
     }
@@ -250,14 +278,7 @@ class GenerateTypeModelViaReflection(
         val type = InterfaceTypeSimple(ns, SimpleName(kclass.simpleName!!))
         ns.addDefinition(type)
         addTypeParameters(ns, type, kclass)
-
-        val (st, imp) = findSuperTypesAndImports(ns.qualifiedName, kclass)
-        st.forEach { type.addSupertype(it) }
-        imp.forEach {
-            logInfo("'$type' requires import '$it' due to supertype")
-            ns.addImport(it)
-        }
-
+        addSuperTypes(type, kclass)
         addPropertiesAndImports(ns, type, kclass)
     }
 
@@ -265,12 +286,7 @@ class GenerateTypeModelViaReflection(
         val type = DataTypeSimple(ns, SimpleName(kclass.simpleName!!))
         ns.addDefinition(type)
         addTypeParameters(ns, type, kclass)
-        val (st, imp) = findSuperTypesAndImports(ns.qualifiedName, kclass)
-        st.forEach { type.addSupertype(it) }
-        imp.forEach {
-            logInfo("'$type' requires import '$it' due to supertype")
-            ns.addImport(it)
-        }
+        addSuperTypes(type, kclass)
         addConstructors(ns, type, kclass)
         addPropertiesAndImports(ns, type, kclass)
     }
@@ -307,14 +323,24 @@ class GenerateTypeModelViaReflection(
 
     private fun addPropertiesAndImports(ns: TypeNamespaceSimple, type: TypeDeclaration, kclass: KClass<*>) {
         //TODO: what about extension properties !
+        val props = when {
+            kclass.isInterface -> kclass.declaredMemberProperties
+            else -> kclass.memberProperties
+        }
+
         kclass.declaredMemberProperties.forEach { mp ->
-            if(mp.visibility == KVisibility.PUBLIC) {
+            if (mp.visibility == KVisibility.PUBLIC) {
+                val comp_ref = kompOrRefFor(kclass, mp)
+
                 when {
                     mp.javaField == null -> { //must be derived
                         val pn = PropertyName(mp.name)
                         val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
                         _requires[type.qualifiedName].addAll(req)
-                        type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
+                        when (comp_ref) {
+                            PropertyCharacteristic.COMPOSITE -> addStoredProperty(ns,type,mp, comp_ref) // komposite must be stored
+                            else -> type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
+                        }
                     }
 
                     Lazy::class.java.isAssignableFrom(mp.javaField!!.type) -> { // also derived
@@ -324,55 +350,83 @@ class GenerateTypeModelViaReflection(
                         type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
                     }
 
-                    else -> {
-                        // assume stored
-                        when (type) {
-                            is StructuredType -> {
-                                val pn = PropertyName(mp.name)
-                                val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                                _requires[type.qualifiedName].addAll(req)
-                                val vv = when (mp) {
-                                    is KMutableProperty1<*, *> -> PropertyCharacteristic.READ_WRITE
-                                    else -> PropertyCharacteristic.READ_ONLY // if stored and read only, must be identity
-                                }
-                                // Can't do this because typemodel not resolved yet!
-                                val comp_ref = when(typeModelKindFor(mp.returnType.asPossiblyQualifiedName)) {
-                                    is PrimitiveType -> PropertyCharacteristic.REFERENCE
-                                    is ValueType -> PropertyCharacteristic.COMPOSITE
-                                    is EnumType -> PropertyCharacteristic.REFERENCE
-                                    is TupleType -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
-                                    is UnnamedSupertypeType -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
-                                    else -> {
-                                        // no way to determine for Data/Interface/Collection ?
-                                        when {
-                                            mp.annotations.any { it.annotationClass == Komposite::class } -> PropertyCharacteristic.COMPOSITE
-                                            else -> PropertyCharacteristic.REFERENCE
-                                        }
-                                    }
-                                }
-                                //val comp_ref2 = PropertyCharacteristic.REFERENCE
-                                val chrs = setOf(vv,comp_ref )
-                                type.appendPropertyStored(pn, ty, chrs)
-                            }
-
-                            else -> error("Cannot add a STORED Property to non StructuredType '$type'")
-                        }
-                    }
+                    else -> addStoredProperty(ns,type,mp, comp_ref) // assume stored
                 }
             }
         }
     }
 
-    private fun typeModelKindFor(typeQualifiedName: PossiblyQualifiedName): KClass<*> {
-        val kclass = Class.forName(typeQualifiedName.value).kotlin
-        return when {
-            kclass.isValue -> ValueType::class
-            kclass.isEnum -> EnumType::class
-            kclass.isInterface -> InterfaceType::class
-            kclass.isCollection -> CollectionType::class
-            kclass.isData -> DataType::class
-            else -> DataType::class //currently DataType used for other class types
+    private fun addStoredProperty(ns: TypeNamespaceSimple, type: TypeDeclaration, mp: KProperty1<*, *>, comp_ref: PropertyCharacteristic) {
+        when (type) {
+            is StructuredType -> {
+                val pn = PropertyName(mp.name)
+                val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
+                _requires[type.qualifiedName].addAll(req)
+                val vv = when (mp) {
+                    is KMutableProperty1<*, *> -> PropertyCharacteristic.READ_WRITE
+                    else -> PropertyCharacteristic.READ_ONLY // if stored and read only, must be identity
+                }
+
+                val chrs = setOf(vv, comp_ref)
+                type.appendPropertyStored(pn, ty, chrs)
+            }
+
+            else -> error("Cannot add a STORED Property to non StructuredType '$type'")
         }
+    }
+
+    private fun kompOrRefFor(kclass: KClass<*>, mp: KProperty1<*, *>): PropertyCharacteristic {
+        return when {
+            kclass.isKompositeAnnotation(mp.name) -> PropertyCharacteristic.COMPOSITE
+            else -> autoDetectKompOrRefFor(mp.returnType)
+        }
+    }
+
+    private fun autoDetectKompOrRefFor(type: KType): PropertyCharacteristic {
+        val kind = typeModelKindFor(type)
+        return when {
+            null == kind -> PropertyCharacteristic.REFERENCE
+            PrimitiveType::class.isSuperclassOf(kind) -> PropertyCharacteristic.REFERENCE
+            ValueType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE
+            EnumType::class.isSuperclassOf(kind) -> PropertyCharacteristic.REFERENCE
+            TupleType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
+            UnnamedSupertypeType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
+            CollectionType::class.isSuperclassOf(kind) -> {
+                val arg = type.arguments.last()
+                arg.type?.let { autoDetectKompOrRefFor(it) }
+                    ?: return PropertyCharacteristic.REFERENCE
+            }
+
+            else -> PropertyCharacteristic.REFERENCE // no way to determine for Data/Interface/Collection ?
+        }
+    }
+
+    private fun typeModelKindFor(type: KType): KClass<*>? {
+        val subName = type.substitutedName(substituteTypes)
+        return when (subName) {
+            is SimpleName -> null
+            is QualifiedName -> {
+                val foundType = SimpleTypeModelStdLib.findOwnedTypeNamed(subName.last)
+                when (foundType) {
+                    null -> {
+                        val kclass = Class.forName(subName.value).kotlin
+                        when {
+                            kclass.isValue -> ValueType::class
+                            kclass.isEnum -> EnumType::class
+                            kclass.isInterface -> InterfaceType::class
+                            kclass.isCollection -> CollectionType::class
+                            kclass.isData -> DataType::class
+                            else -> DataType::class //currently DataType used for other class types
+                        }
+                    }
+
+                    else -> foundType::class
+                }
+            }
+
+            else -> error("Unsupported")
+        }
+
     }
 
     private fun findClasses(packageName: String): List<KClass<*>> {
