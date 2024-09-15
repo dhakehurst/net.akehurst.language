@@ -16,8 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.agl.parser.SentenceDefault
-import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.parser.leftcorner.SentenceDefault
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
@@ -26,7 +25,7 @@ import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.grammar.AglGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.language.asmTransform.TransformModel
@@ -35,7 +34,6 @@ import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -43,6 +41,10 @@ import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.parser.api.Parser
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(

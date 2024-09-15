@@ -18,9 +18,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.regex.RegexEngineAgl
-import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerClassic
-import net.akehurst.language.agl.scanner.ScannerOnDemand
+import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.processor.*

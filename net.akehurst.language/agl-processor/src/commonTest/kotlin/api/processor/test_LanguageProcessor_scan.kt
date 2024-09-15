@@ -18,7 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.agl.parser.SentenceDefault
+import net.akehurst.language.parser.leftcorner.SentenceDefault
 import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals

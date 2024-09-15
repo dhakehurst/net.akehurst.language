@@ -26,11 +26,11 @@ import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
 import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.agl.regex.RegexEngineAgl
-import net.akehurst.language.agl.regex.RegexEnginePlatform
+import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.agl.scanner.ScannerClassic
-import net.akehurst.language.agl.scanner.ScannerOnDemand
+import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm

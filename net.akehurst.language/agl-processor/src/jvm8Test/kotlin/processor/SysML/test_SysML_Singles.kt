@@ -55,7 +55,7 @@ class test_SysML_Singles {
         val sentence = """
           // a comment
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
@@ -67,7 +67,7 @@ class test_SysML_Singles {
         val sentence = """
           /* a comment */
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -78,7 +78,7 @@ class test_SysML_Singles {
         val sentence = """
           package ;
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

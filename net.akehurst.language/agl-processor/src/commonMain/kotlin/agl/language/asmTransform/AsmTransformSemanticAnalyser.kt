@@ -21,11 +21,11 @@ import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.parser.api.InputLocation
 
 class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextFromGrammar> {
 

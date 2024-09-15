@@ -25,9 +25,9 @@ import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser

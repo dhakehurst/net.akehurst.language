@@ -32,7 +32,7 @@ import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.expressions.AssignmentStatement
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.grammar.*
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import kotlin.reflect.KClass

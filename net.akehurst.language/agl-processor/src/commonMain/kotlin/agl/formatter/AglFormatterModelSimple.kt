@@ -22,7 +22,7 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.*
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.typemodel.api.TypeModel

@@ -17,13 +17,11 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
-import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
@@ -31,12 +29,10 @@ import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SpptDataNode
-import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 

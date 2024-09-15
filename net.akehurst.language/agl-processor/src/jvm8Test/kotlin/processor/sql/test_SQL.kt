@@ -79,7 +79,7 @@ class test_SQLValid(val data: Data) {
     fun test() {
         val queryStr = this.data.queryStr
         val goal = "terminated-statement"
-        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asSentence

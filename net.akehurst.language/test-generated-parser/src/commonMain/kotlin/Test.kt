@@ -18,21 +18,23 @@
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.language.typemodel.typeModel
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.api.TypeModel
 
 // sample
-object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, ContextSimple>() {
+object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, ContextAsmDefault>() {
 
     override val grammarString = """
         namespace test
@@ -44,7 +46,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
     override val scopeModelString = """
     """
 
-    override val ruleSet: RuleSet = RuleSet.build("Test") {
+    override val ruleSet: RuleSet = ruleSet("Test") {
         concatenation("S") { literal("a") }
     }
 
@@ -63,7 +65,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
 
     override val defaultGoalRuleName: String = "S"
     override val mapToGrammar: (Int, Int) -> RuleItem get() = { _, _ -> TODO() }
-    val typeModel = typeModel("test", true) {
+    val typeModel:TypeModel = typeModel("test", true) {
         TODO("build type model")
     }
     val asmTransformModel: TransformModel get() = TODO()
@@ -75,15 +77,15 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
     override val syntaxAnalyser: SyntaxAnalyser<Asm> get() = TODO()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
-    override val semanticAnalyser: SemanticAnalyser<Asm, ContextSimple> = SemanticAnalyserDefault(typeModel, crossReferenceModel)
+    override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmDefault> = SemanticAnalyserDefault(typeModel, crossReferenceModel)
     override val formatter: Formatter<Asm> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )
 
-    val processor: LanguageProcessor<Asm, ContextSimple> by lazy { Agl.processorFromGeneratedCode(this) }
+    val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy { Agl.processorFromGeneratedCode(this) }
 
     fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence, options)
 
-    fun process(sentence: String, options: ProcessOptions<Asm, ContextSimple>? = null) = processor.process(sentence, options)
+    fun process(sentence: String, options: ProcessOptions<Asm, ContextAsmDefault>? = null) = processor.process(sentence, options)
 }

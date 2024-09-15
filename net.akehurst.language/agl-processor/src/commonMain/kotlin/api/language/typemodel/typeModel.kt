@@ -269,16 +269,13 @@ interface UnnamedSupertypeType : TypeDeclaration {
 }
 
 interface CollectionType : StructuredType {
-
-//    val isArray: Boolean
-//    val isList: Boolean
-//    val isSet: Boolean
-//    val isMap: Boolean
+    val isStdList: Boolean
+    val isStdSet: Boolean
+    val isStdMap: Boolean
 }
 
-//@JvmInline
-//TODO: Cannot 'export' value classes to JS
-data class PropertyName(val value: String) {
+@JvmInline
+value class PropertyName(val value: String) {
     override fun toString(): String = value
 }
 
@@ -390,9 +387,8 @@ enum class PropertyCharacteristic {
     }
 }
 
-//@JvmInline
-//TODO: Cannot 'export' value classes to JS
-data class MethodName(val value: String)
+@JvmInline
+value class MethodName(val value: String)
 
 interface MethodDeclaration {
     val owner: TypeDeclaration
@@ -408,9 +404,8 @@ interface ConstructorDeclaration {
     val parameters: List<ParameterDeclaration>
 }
 
-//@JvmInline
-//TODO: Cannot 'export' value classes to JS
-data class ParameterName(val value: String)
+@JvmInline
+value class ParameterName(val value: String)
 
 interface ParameterDeclaration {
     val name: ParameterName

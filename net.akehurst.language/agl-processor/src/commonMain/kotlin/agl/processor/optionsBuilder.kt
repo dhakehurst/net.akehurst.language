@@ -17,8 +17,9 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.parser.api.ParseOptions
 
 @DslMarker
 annotation class ProcessOptionsDslMarker

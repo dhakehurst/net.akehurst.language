@@ -16,126 +16,217 @@
 
 package net.akehurst.language.komposite.common
 
+import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @JsExport
-data class A (
-    val prop1:String = "hello"
+data class A(
+    val prop1: String = "hello"
 )
 
 @JvmInline
-value class AValueClass(val value:String)
+value class AValueClass(val value: String)
 
 class test_KompositeWalker {
 
     @Test
-    fun walk_null() {
+    fun walk_null_with_no_type() {
         val reg = DatatypeRegistry()
+        var result = ""
         val sut = kompositeWalker<String?, String>(reg) {
-            nullValue() { path,info->
-                WalkInfo(path.lastOrNull(), "null")
+            nullValue() { path, info, type ->
+                result += "null:${type.typeName}"
+                info
             }
         }
 
         val data = null
-        val actual = sut.walk(WalkInfo(null, ""), data)
+        sut.walk(WalkInfo(null, ""), data)
 
-        val expected = WalkInfo<String?, String>(null, "null")
+        val expected = "null:Nothing"
 
-        assertEquals( expected, actual)
+        assertEquals(expected, result)
     }
 
     @Test
-    fun walk_primitive_String() {
+    fun walk_null_with_non_nullable_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString("""
+        reg.registerFromConfigString(
+            """
             namespace kotlin {
                 primitive String
             }
-        """, emptyMap())
+        """, emptyMap()
+        )
+        var result = ""
+        val sut = kompositeWalker<String?, String>(reg) {
+            nullValue() { path, info, type ->
+                result += "null:${type.typeName}"
+                info
+            }
+        }
+
+        val data = null
+        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(nullable = false)
+        sut.walk(WalkInfo(null, ""), data, type)
+
+        val expected = "null:Nothing"
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun walk_null_with_nullable_type() {
+        val reg = DatatypeRegistry()
+        reg.registerFromConfigString(
+            """
+            namespace kotlin {
+                primitive String
+            }
+        """, emptyMap()
+        )
+        var result = ""
+        val sut = kompositeWalker<String?, String>(reg) {
+            nullValue() { path, info, type ->
+                result += "null:${type.typeName}"
+                info
+            }
+        }
+
+        val data = null
+        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(nullable = true)
+        sut.walk(WalkInfo(null, ""), data, type)
+
+        val expected = "null:String"
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun walk_primitive_String_no_type() {
+        val reg = DatatypeRegistry()
+        reg.registerFromConfigString(
+            """
+            namespace kotlin {
+                primitive String
+            }
+        """, emptyMap()
+        )
 
         var result = ""
         val sut = kompositeWalker<String?, String>(reg) {
-            primitive { path, info, obj, mapper ->
-                result += obj
+            primitive { path, info, obj, type, mapper ->
+                result += "'$obj':${type.name}"
                 info
             }
         }
 
         val data = "Hello"
-        val actual = sut.walk(WalkInfo(null, ""), data)
+        sut.walk(WalkInfo(null, ""), data, null)
 
-        val expected = WalkInfo<String?, String>(null, "null")
+        assertEquals("'Hello':String", result)
+    }
 
-        assertEquals( data, result)
+    @Test
+    fun walk_primitive_String_with_type() {
+        val reg = DatatypeRegistry()
+        reg.registerFromConfigString(
+            """
+            namespace kotlin {
+                primitive String
+            }
+        """, emptyMap()
+        )
+
+        var result = ""
+        val sut = kompositeWalker<String?, String>(reg) {
+            primitive { path, info, obj, type, mapper ->
+                result += "'$obj':${type.name}"
+                info
+            }
+        }
+
+        val data = "Hello"
+        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type()
+        sut.walk(WalkInfo(null, ""), data, type)
+
+        assertEquals("'Hello':String", result)
     }
 
     @Test
     fun walk_primitive_AValueClass_no_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString("""
+        reg.registerFromConfigString(
+            """
             namespace kotlin {
                 primitive String
             }
             namespace net.akehurst.language.komposite.common {
                 primitive AValueClass
             }
-        """, emptyMap())
+        """, emptyMap()
+        )
 
         var result = ""
         val sut = kompositeWalker<String?, String>(reg) {
-            primitive { path, info, obj, mapper ->
-                result += obj
+            primitive { path, info, obj, type, mapper ->
+                result += "'$obj':${type.name}"
                 info
             }
         }
 
         val data = "Hello"
-        val type = reg.findByQualifiedNameOrNull(QualifiedName("kotlin.String"))!!
-        val actual = sut.walk(WalkInfo(null, ""), data, type)
+        sut.walk(WalkInfo(null, ""), data, null)
 
-        val expected = WalkInfo<String?, String>(null, "null")
-
-        assertEquals( data, result)
+        assertEquals("'Hello':String", result)
     }
 
     @Test
     fun walk_primitive_AValueClass_with_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString("""
+        reg.registerFromConfigString(
+            """
             namespace kotlin {
                 primitive String
             }
             namespace net.akehurst.language.komposite.common {
                 primitive AValueClass
             }
-        """, emptyMap())
+        """, emptyMap()
+        )
 
         var result = ""
         val sut = kompositeWalker<String?, String>(reg) {
-            primitive { path, info, obj, mapper ->
-                result += obj
+            primitive { path, info, data, type, mapper ->
+                result += "'$data':${type.name}"
+                info
+            }
+            valueType { path, info, data, type ->
+                result += "'$data':${type.name}"
                 info
             }
         }
 
         val data = "Hello"
-        val actual = sut.walk(WalkInfo(null, ""), data)
+        val type = reg.findFirstByNameOrNull(SimpleName("AValueClass"))!!.type()
+        sut.walk(WalkInfo(null, ""), data, type)
 
-        val expected = WalkInfo<String?, String>(null, "null")
-
-        assertEquals( data, result)
+        assertEquals("'Hello':AValueClass", result)
     }
 
     @Test
-    fun walk_Map() {
+    fun walk_Map_no_type() {
         var result = ""
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString("""
+        reg.registerFromConfigString(
+            """
             namespace kotlin {
                 primitive Int
                 primitive String
@@ -143,37 +234,38 @@ class test_KompositeWalker {
             namespace kotlin.collections {
                collection Map<K,V>
             }
-        """, emptyMap())
+        """, emptyMap()
+        )
         val sut = kompositeWalker<String, String>(reg) {
-            primitive { path,info, value, m ->
-                when(value) {
-                    is Int -> result += "${value}"
-                    is String -> result += "'${value}'"
+            primitive { path, info, value, type, m ->
+                when (value) {
+                    is Int -> result += "${value}:${type.name}"
+                    is String -> result += "'${value}':${type.name}"
                 }
                 info
             }
-            mapBegin { path, info, map ->
-                result += "Map { "
+            mapBegin { path, info, map, type, et, vt ->
+                result += "Map<${et.typeName},${vt.typeName}> { "
                 info
             }
-            mapEntryKeyBegin { path, info, entry ->
+            mapEntryKeyBegin { path, info, entry, et, vt ->
                 result += "["
                 info
             }
-            mapEntryKeyEnd { path, info, entry ->
+            mapEntryKeyEnd { path, info, entry, et, vt ->
                 result += "]"
                 info
             }
-            mapEntryValueBegin { path, info, entry ->
+            mapEntryValueBegin { path, info, entry, et, vt ->
                 result += " = "
                 info
             }
-            mapEntryValueEnd { path, info, entry ->  info}
-            mapSeparate { path, info, map, previousEntry ->
+            mapEntryValueEnd { path, info, entry, et, vt -> info }
+            mapSeparate { path, info, map, type, previousEntry, et, vt ->
                 result += ", "
                 info
             }
-            mapEnd { path, info, map ->
+            mapEnd { path, info, map, type, et, vt ->
                 result += " }"
                 info
             }
@@ -184,42 +276,91 @@ class test_KompositeWalker {
             "b" to 2,
             "c" to 3
         )
-        val actual = sut.walk(WalkInfo("", ""), data)
-        val expected = "Map { ['a'] = 1, ['b'] = 2, ['c'] = 3 }"
+        sut.walk(WalkInfo("", ""), data, null)
+        val expected = "Map<Any,Any> { ['a':String] = 1:Int, ['b':String] = 2:Int, ['c':String] = 3:Int }"
         assertEquals(expected, result)
     }
 
     @Test
-    fun walk_object() {
-        val reg = DatatypeRegistry()
-        reg.registerFromConfigString("""
-            namespace kotlin {
-                primitive Int
-                primitive String
-            }
-            namespace net.akehurst.language.komposite.common {
-               datatype A {
-                 composite-val prop1:String
-               }
-            }
-        """, emptyMap())
-
+    fun walk_Map_with_type() {
         var result = ""
+        val reg = DatatypeRegistry()
+        val tm = typeModel("Test",true) {}
+        reg.registerFromTypeModel(tm, emptyMap())
         val sut = kompositeWalker<String, String>(reg) {
-            objectBegin { path,info, obj, datatype ->
-                result += "${datatype.name} { "
+            primitive { path, info, value, type, m ->
+                when (value) {
+                    is Int -> result += "${value}:${type.name}"
+                    is String -> result += "'${value}':${type.name}"
+                }
                 info
             }
-            objectEnd { path,info, obj, datatype ->
+            mapBegin { path, info, map, type, et, vt ->
+                result += "Map<${et.typeName},${vt.typeName}> { "
+                info
+            }
+            mapEntryKeyBegin { path, info, entry, et, vt ->
+                result += "["
+                info
+            }
+            mapEntryKeyEnd { path, info, entry, et, vt ->
+                result += "]"
+                info
+            }
+            mapEntryValueBegin { path, info, entry, et, vt ->
+                result += " = "
+                info
+            }
+            mapEntryValueEnd { path, info, entry, et, vt -> info }
+            mapSeparate { path, info, map, type, previousEntry, et, vt ->
+                result += ", "
+                info
+            }
+            mapEnd { path, info, map, type, et, vt ->
                 result += " }"
                 info
             }
-            propertyBegin { path,info, property ->
+        }
+
+        val data = mapOf<String, Int>(
+            "a" to 1,
+            "b" to 2,
+            "c" to 3
+        )
+        val type = SimpleTypeModelStdLib.Map.type(arguments = listOf(SimpleTypeModelStdLib.String, SimpleTypeModelStdLib.Integer))
+        sut.walk(WalkInfo("", ""), data, type)
+        val expected = "Map<String,Integer> { ['a':String] = 1:Integer, ['b':String] = 2:Integer, ['c':String] = 3:Integer }"
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun walk_object_primitive_property_no_type() {
+        val reg = DatatypeRegistry()
+        val tm = typeModel("Test",true) {
+            namespace("net.akehurst.language.komposite.common", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value)) {
+                dataType("A") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        reg.registerFromTypeModel(tm, emptyMap())
+
+        var result = ""
+        val sut = kompositeWalker<String, String>(reg) {
+            objectBegin { path, info, obj, datatype ->
+                result += "${datatype.name} { "
+                info
+            }
+            objectEnd { path, info, obj, datatype ->
+                result += " }"
+                info
+            }
+            propertyBegin { path, info, property ->
                 result += "${property.name} = "
                 info
             }
-            primitive { path,info, value, m ->
-                when(value) {
+            primitive { path, info, value, type, m ->
+                when (value) {
                     is String -> result += "'${value}'"
                 }
                 info
@@ -227,7 +368,49 @@ class test_KompositeWalker {
         }
 
         val data = A()
-        val actual = sut.walk(WalkInfo("", ""), data)
+        sut.walk(WalkInfo("", ""), data, null)
+
+        val expected = "A { prop1 = 'hello' }"
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun walk_object_primitive_property_with_type() {
+        val reg = DatatypeRegistry()
+        val tm = typeModel("Test",true) {
+            namespace("net.akehurst.language.komposite.common", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value)) {
+                dataType("A") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        reg.registerFromTypeModel(tm, emptyMap())
+
+        var result = ""
+        val sut = kompositeWalker<String, String>(reg) {
+            objectBegin { path, info, obj, datatype ->
+                result += "${datatype.name} { "
+                info
+            }
+            objectEnd { path, info, obj, datatype ->
+                result += " }"
+                info
+            }
+            propertyBegin { path, info, property ->
+                result += "${property.name} = "
+                info
+            }
+            primitive { path, info, value, type, m ->
+                when (value) {
+                    is String -> result += "'${value}'"
+                }
+                info
+            }
+        }
+
+        val data = A()
+        sut.walk(WalkInfo("", ""), data, null)
+
         val expected = "A { prop1 = 'hello' }"
         assertEquals(expected, result)
     }

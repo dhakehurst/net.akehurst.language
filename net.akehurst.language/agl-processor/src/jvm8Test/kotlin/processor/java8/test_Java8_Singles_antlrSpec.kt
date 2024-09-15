@@ -23,11 +23,11 @@ import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import test.assertEqualsWarning
 import kotlin.test.*
 import kotlin.time.ExperimentalTime
@@ -65,7 +65,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0"
         val goal = "literal"
 
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -78,7 +78,7 @@ class test_Java8_Singles_antlrSpec {
         val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
-        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = p.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -91,7 +91,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "import x; @An() interface An {  }"
         val goal = "compilationUnit"
 
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -100,7 +100,7 @@ class test_Java8_Singles_antlrSpec {
     fun arrayIndex() {
         val sentence = "a[0]"
         val goal = "expression"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -109,7 +109,7 @@ class test_Java8_Singles_antlrSpec {
     fun t() {
         val sentence = "a[0].b"
         val goal = "expression"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -119,7 +119,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0b011"
         val goal = "variableInitializer"
 
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -130,7 +130,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0b012"
         val goal = "variableInitializer"
 
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNull(result.sppt)
         assertEquals(
             listOf(
@@ -192,7 +192,7 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "compilationUnit"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNull(result.sppt)
         assertEquals(
             listOf(
@@ -210,7 +210,7 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -219,7 +219,7 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -228,7 +228,7 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "block"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -237,7 +237,7 @@ public class BadBinaryLiterals {
     fun Enum() {
         val sentence = "enum E { A, B, C }"
         val goal = "classDeclaration"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asSentence
@@ -248,7 +248,7 @@ public class BadBinaryLiterals {
     fun xx() {
         val sentence = "interface An { An[] value(); }"
         val goal = "compilationUnit"
-        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = proc.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -305,7 +305,7 @@ public class BadBinaryLiterals {
         val goal = "block"
 
         val t = TimeSource.Monotonic.measureTimedValue {
-            proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            proc.parse(sentence, ParseOptionsDefault(goal))
         }
         println(t.duration)
         val result = t.value

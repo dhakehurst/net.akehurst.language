@@ -28,9 +28,9 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 

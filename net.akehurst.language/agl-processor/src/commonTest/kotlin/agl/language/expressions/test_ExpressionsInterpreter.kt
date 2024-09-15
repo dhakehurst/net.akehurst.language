@@ -21,9 +21,9 @@ import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.agl.language.typemodel.typeModel
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib

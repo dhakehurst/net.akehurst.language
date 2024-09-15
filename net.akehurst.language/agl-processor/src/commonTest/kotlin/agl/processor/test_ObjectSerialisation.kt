@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.parser.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

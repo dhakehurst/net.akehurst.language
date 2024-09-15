@@ -20,11 +20,11 @@ import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.language.asmTransform.TransformModel
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class AglFormatSyntaxAnalyser(

@@ -22,11 +22,11 @@ import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.GrammarRuleName
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
-import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.typemodel.api.TypeModel
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
@@ -69,13 +69,6 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     val completionProvider: CompletionProviderResolver<AsmType, ContextType>?
 }
 
-enum class ScannerKind {
-    OnDemand, Classic
-}
-
-enum class RegexEngineKind {
-    PLATFORM, AGL
-}
 
 enum class ParserKind {
     GLC

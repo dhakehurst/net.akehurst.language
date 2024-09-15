@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.asm.*
 import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
@@ -27,7 +26,6 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
-import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.asmTransform.TransformModel
@@ -39,6 +37,7 @@ import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.emptyListSeparated
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 

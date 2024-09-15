@@ -1,0 +1,17 @@
+@startuml
+!pragma layout smetana
+
+artifact "agl-collections" as collections
+artifact "agl-regex" as regex
+
+artifact "agl-parser" as parser
+
+'dashed - api dependency
+'dotted - impl dependency
+
+regex -[dashed]-> collections
+parser -[dashed]-> regex
+
+
+
+@enduml

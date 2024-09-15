@@ -35,7 +35,7 @@ import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.NavigationExpression
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.typemodel.api.TupleType
 import net.akehurst.language.typemodel.api.TypeModel

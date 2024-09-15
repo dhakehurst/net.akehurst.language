@@ -1,5 +1,8 @@
+plugins {
+
+}
 dependencies {
-    "jsTestImplementation"(project(":agl-processor"))
+    jsTestImplementation(project(":agl-processor"))
 }
 
 configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {

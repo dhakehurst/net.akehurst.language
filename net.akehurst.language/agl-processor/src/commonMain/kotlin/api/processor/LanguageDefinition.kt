@@ -29,6 +29,8 @@ import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.typemodel.api.TypeModel
 
 interface GrammarRegistry {

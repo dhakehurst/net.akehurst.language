@@ -20,18 +20,17 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptDataNode
+import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.parser.api.InputLocation
 
-val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 

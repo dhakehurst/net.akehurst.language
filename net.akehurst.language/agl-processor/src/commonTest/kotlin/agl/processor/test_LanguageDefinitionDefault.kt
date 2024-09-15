@@ -27,7 +27,7 @@ import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.style.AglStyleModel
-import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.formatter.api.AglFormatterModel
 import kotlin.test.*

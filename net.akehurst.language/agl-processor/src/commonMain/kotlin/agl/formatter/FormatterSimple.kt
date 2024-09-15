@@ -23,7 +23,7 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.typemodel.api.PropertyName
 

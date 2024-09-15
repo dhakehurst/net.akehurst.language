@@ -35,6 +35,7 @@ import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.jvm.JvmInline
 

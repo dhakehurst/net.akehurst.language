@@ -17,8 +17,9 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.parser.api.ParseOptions
 
 class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),
@@ -31,12 +32,7 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 class ScanOptionsDefault(
 ) : ScanOptions
 
-class ParseOptionsDefault(
-    override var goalRuleName: String? = null,
-    override var reportErrors: Boolean = true,
-    override var reportGrammarAmbiguities: Boolean = false,
-    override var cacheSkip: Boolean = true
-) : ParseOptions
+
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true

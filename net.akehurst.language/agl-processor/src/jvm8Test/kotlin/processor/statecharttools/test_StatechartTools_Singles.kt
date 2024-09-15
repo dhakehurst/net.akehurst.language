@@ -27,7 +27,7 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,7 +97,7 @@ class test_StatechartTools_Singles {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "true || false"
-        val result = processors[grammar].parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processors[grammar].parse(sentence, ParseOptionsDefault(goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)

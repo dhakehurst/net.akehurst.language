@@ -40,7 +40,7 @@ class test_NaturalLanguage_Singles {
         val goal = "subject"
         val sentence = "my name"
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asSentence

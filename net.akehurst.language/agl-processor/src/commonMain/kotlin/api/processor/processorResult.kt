@@ -16,26 +16,10 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.parser.api.InputLocation
 
-interface IssueCollection<T : Any> : Collection<T> {
-    val all: Set<T>
-    val errors: List<T>
-    val warnings: List<T>
-    val informations: List<T>
-}
-
-interface ScanResult {
-    val tokens: List<LeafData>
-    val issues: IssueCollection<LanguageIssue>
-}
-
-interface ParseResult {
-    val sppt: SharedPackedParseTree?
-    val issues: IssueCollection<LanguageIssue>
-}
 
 interface SyntaxAnalysisResult<out AsmType : Any> {
     val asm: AsmType?

@@ -35,7 +35,7 @@ import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.test.Test
 import kotlin.test.assertEquals

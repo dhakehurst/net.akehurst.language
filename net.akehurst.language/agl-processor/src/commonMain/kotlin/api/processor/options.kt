@@ -16,21 +16,13 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.parser.api.ParseOptions
 
 interface ScanOptions {
 }
 
-/**
- * Options to configure the parsing of a sentence
- * there is no separate scanner, so scanner options are passed to the parser
- */
-interface ParseOptions {
-    var goalRuleName: String?
-    var reportErrors: Boolean
-    var reportGrammarAmbiguities: Boolean
-    var cacheSkip: Boolean
-}
+
 
 /**
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)

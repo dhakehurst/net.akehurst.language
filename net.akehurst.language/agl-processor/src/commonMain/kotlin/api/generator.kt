@@ -18,18 +18,17 @@
 package net.akehurst.language.agl.api.generator
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.automaton.Automaton
-import net.akehurst.language.api.automaton.ParseAction
+import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
-
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.parser.api.RuleSet
 
 abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : Any> {
 

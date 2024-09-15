@@ -3,7 +3,10 @@ plugins {
 }
 
 dependencies {
+    commonMainApi(project(":agl-parser"))
+
     // commonMainApi(project(":type-model"))
+    commonMainImplementation(project(":collections"))
     commonMainImplementation(libs.nak.kotlinx.reflect)
 }
 

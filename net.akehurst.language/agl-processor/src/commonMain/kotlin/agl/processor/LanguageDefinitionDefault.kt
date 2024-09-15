@@ -25,7 +25,7 @@ import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.base.SimpleName
 import net.akehurst.language.api.language.grammar.GrammarModel
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessOptions
 import kotlin.properties.Delegates
 

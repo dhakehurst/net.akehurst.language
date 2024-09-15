@@ -24,12 +24,12 @@ import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
 class SemanticAnalyserDefault(

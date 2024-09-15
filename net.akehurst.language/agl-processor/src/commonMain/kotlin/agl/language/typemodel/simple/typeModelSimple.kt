@@ -1064,6 +1064,10 @@ class CollectionTypeSimple(
     override var typeParameters: List<SimpleName> = mutableListOf()
 ) : StructuredTypeSimpleAbstract(), CollectionType {
 
+    override val isStdList: Boolean get() = this == SimpleTypeModelStdLib.List
+    override val isStdSet: Boolean get() = this == SimpleTypeModelStdLib.Set
+    override val isStdMap: Boolean get() = this == SimpleTypeModelStdLib.Map
+
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName.value
         context == this.namespace -> name.value

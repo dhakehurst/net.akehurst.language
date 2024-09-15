@@ -17,11 +17,7 @@
 package net.akehurst.language.api.processor
 
 
-enum class AutomatonKind {
-    LOOKAHEAD_NONE,     // LC(O) like LR(0)
-    LOOKAHEAD_SIMPLE,   // SLC like SLR
-    LOOKAHEAD_1         // LC(1) like LR(1)
-}
+
 
 //FIXME: added because currently Kotlin will not 'export' enums to JS
 //object AutomatonKind_api {

@@ -26,7 +26,7 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.base.Import
 import net.akehurst.language.api.language.base.QualifiedName
 import net.akehurst.language.api.language.expressions.*
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.PropertyDeclarationDerived
 import net.akehurst.language.typemodel.simple.PropertyDeclarationPrimitive

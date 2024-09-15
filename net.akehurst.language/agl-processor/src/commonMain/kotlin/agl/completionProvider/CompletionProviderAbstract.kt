@@ -20,11 +20,11 @@ package net.akehurst.language.agl.completionProvider
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeSpineDefault
 import net.akehurst.language.api.language.grammar.*
-import net.akehurst.language.api.parser.RuntimeSpine
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.parser.api.RuntimeSpine
 
 internal class SpineDefault(
     private val runtimeSpine: RuntimeSpine,
