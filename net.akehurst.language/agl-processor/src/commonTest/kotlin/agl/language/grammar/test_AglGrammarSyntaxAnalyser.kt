@@ -17,14 +17,14 @@
 package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.agl.language.grammar.asm.builder.grammar
+import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.asm.builder.grammar
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.*
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.*
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test

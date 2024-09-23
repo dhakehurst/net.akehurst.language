@@ -18,10 +18,16 @@
 package test;
 
 import kotlin.Unit;
-import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple;
+import net.akehurst.language.agl.Agl;
+import net.akehurst.language.agl.default_.ContextAsmDefault;
 import net.akehurst.language.api.asm.Asm;
 import net.akehurst.language.api.processor.*;
+import net.akehurst.language.api.scanner.ScanResult;
+import net.akehurst.language.parser.api.ParseOptions;
+import net.akehurst.language.parser.api.ParseResult;
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault;
+import net.akehurst.language.parser.leftcorner.SentenceDefault;
+import net.akehurst.language.sppt.api.Sentence;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,22 +43,26 @@ public class test_LanguageProcessor {
             + "  W = 'world' '!' ;" + EOL
             + "}";
 
-    private static final LanguageProcessor<Asm, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(
+    private static final LanguageProcessor<Asm, ContextAsmDefault> proc = Agl.INSTANCE.processorFromStringDefault(
             grammarStr,
             null,
             null,
             null,
+            null,
+            null,
+            Agl.INSTANCE.configurationDefault(),
             null
     ).getProcessor();
 
     @Test
     public void scan() {
 
-        ScanResult result = proc.scan("hello world !");
+        Sentence sentence = new SentenceDefault("hello world !");
+        ScanResult result = proc.scan(sentence.getText());
 
         Assert.assertNotNull(result);
         Assert.assertEquals(5, result.getTokens().size());
-        Assert.assertEquals("hello", result.getTokens().get(0).getMatchedText());
+        Assert.assertEquals("hello", result.getTokens().get(0).matchedText(sentence));
     }
 
     @Test
@@ -77,7 +87,7 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions(b -> {
+        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions(new ParseOptionsDefault(), b -> {
             b.goalRuleName("W");
             return Unit.INSTANCE;
         }));
@@ -116,7 +126,7 @@ public class test_LanguageProcessor {
 
     @Test
     public void process_defaultOptions() {
-        ProcessOptions<Asm, ContextSimple> options = proc.optionsDefault();
+        ProcessOptions<Asm, ContextAsmDefault> options = proc.optionsDefault();
         options.getParse().setGoalRuleName("W");
         ProcessResult<Asm> result = proc.process("world !", options);
         Assert.assertNotNull(result.getAsm());

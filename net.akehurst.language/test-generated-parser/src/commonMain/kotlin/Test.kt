@@ -17,20 +17,25 @@
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.api.runtime.RuleSet
-import net.akehurst.language.agl.default.ContextAsmDefault
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.default_.SemanticAnalyserDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
-import net.akehurst.language.agl.language.typemodel.typeModel
+import net.akehurst.language.typemodel.asm.typeModel
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.automaton.api.Automaton
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.automaton.leftcorner.aut
+import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 // sample
@@ -50,7 +55,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
         concatenation("S") { literal("a") }
     }
 
-    private val automaton_S = Automaton.build(ruleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
+    private val automaton_S = aut(ruleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
         // 0: G = . S
         state(GOAL_RULE, 0, SR)
         // 1: G = S .

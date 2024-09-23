@@ -16,8 +16,8 @@
 
 package net.akehurst.language.formatter.api
 
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.Expression
 
 interface AglFormatterModel {
 

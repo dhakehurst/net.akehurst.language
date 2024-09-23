@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.grammar.api.RuleItem
 
 enum class CompletionItemKind {
     LITERAL,

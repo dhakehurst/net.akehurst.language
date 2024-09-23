@@ -18,13 +18,13 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.Import
-import net.akehurst.language.api.language.base.Indent
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.simple.TypeNamespaceAbstract
+import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
     qualifiedName: QualifiedName,

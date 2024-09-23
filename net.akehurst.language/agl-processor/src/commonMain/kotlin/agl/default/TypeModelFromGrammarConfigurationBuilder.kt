@@ -15,10 +15,10 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.typemodel.api.*
 
 interface Grammar2TypeModelMapping {

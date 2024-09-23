@@ -16,14 +16,14 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.automaton.leftcorner.Transition
 
 internal data class StateInfoUncompressed(
-    val rulePosition: RulePosition,
+    val rulePosition: RulePositionRuntime,
     val follow: Set<RuntimeRule>
 )
 

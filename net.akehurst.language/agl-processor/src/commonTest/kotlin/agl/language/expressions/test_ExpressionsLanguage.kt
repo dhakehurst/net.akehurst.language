@@ -19,7 +19,7 @@ package net.akehurst.language.agl.language.expressions
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
+import net.akehurst.language.typemodel.asm.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

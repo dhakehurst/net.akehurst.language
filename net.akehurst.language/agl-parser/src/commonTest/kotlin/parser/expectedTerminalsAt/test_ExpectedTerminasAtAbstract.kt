@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.leftcorner.expectedTerminalsAt
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -31,7 +32,7 @@ internal abstract class test_ExpectedTerminasAtAbstract {
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         val result = parser.expectedTerminalsAt(data.sentence, data.position, ParseOptionsDefault(goal))
 
-        val actual = result.filter { it.isEmptyTerminal.not() && it.isEmptyListTerminal.not() && it.isSkip.not() }.map { it.rhs.toString() }.toSet()
+        val actual = result.filter { it.isEmptyTerminal.not() && it.isEmptyListTerminal.not() && it.isSkip.not() }.map { (it as RuntimeRule).rhs.toString() }.toSet()
         val expected = data.expected
         assertEquals(expected, actual, data.toString())
     }

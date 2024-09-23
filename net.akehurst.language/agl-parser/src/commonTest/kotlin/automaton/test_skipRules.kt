@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -54,7 +54,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
 
-        val sk1 = skipSS.createState(listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE)))
+        val sk1 = skipSS.createState(listOf(RulePositionRuntime(skWS, 0, RulePositionRuntime.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
         val lhs_skWCU = SM.createLookaheadSet(true, false, false, setOf(skWS, skCM))

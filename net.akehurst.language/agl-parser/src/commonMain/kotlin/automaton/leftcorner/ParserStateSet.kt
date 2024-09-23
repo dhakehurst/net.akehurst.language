@@ -22,7 +22,7 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 
-internal class ParserStateSet(
+class ParserStateSet(
     val number: Int,
     val runtimeRuleSet: RuntimeRuleSet,
     val userGoalRule: RuntimeRule,
@@ -63,19 +63,19 @@ internal class ParserStateSet(
      * similar to LR(0) states
      * Lookahead on the transitions allows for equivalence to LR(1)
      */
-    private val _statesByRulePosition = mutableMapOf<List<RulePosition>, ParserState>()
+    private val _statesByRulePosition = mutableMapOf<List<RulePositionRuntime>, ParserState>()
     private val _states = mutableListOf<ParserState>()
 
     val allBuiltStates: List<ParserState> get() = this._states.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.START_OF_RULE) }
-    val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
+    val startRulePosition by lazy { RulePositionRuntime(goalRule, 0, RulePositionRuntime.START_OF_RULE) }
+    val finishRulePosition by lazy { RulePositionRuntime(goalRule, 0, RulePositionRuntime.END_OF_RULE) }
     val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
-    val firstOf = FirstOf()
+    internal val firstOf = FirstOf()
 
     /*
     internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
@@ -122,7 +122,7 @@ internal class ParserStateSet(
     //internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
-    internal fun createState(rulePositions: List<RulePosition>): ParserState {
+    internal fun createState(rulePositions: List<RulePositionRuntime>): ParserState {
         if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
         val existing = this._statesByRulePosition[rulePositions]
         return if (null != existing) {
@@ -135,7 +135,7 @@ internal class ParserStateSet(
         }
     }
 
-    internal fun createMergedState(rulePositions: List<RulePosition>): ParserState {
+    internal fun createMergedState(rulePositions: List<RulePositionRuntime>): ParserState {
         if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
         val existing = this._statesByRulePosition[rulePositions]
         return if (null != existing) {
@@ -147,20 +147,20 @@ internal class ParserStateSet(
         }
     }
 
-    internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
+    internal fun fetchState(rulePositions: List<RulePositionRuntime>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
-    internal fun fetchOrCreateMergedState(rulePositions: List<RulePosition>): ParserState =
+    internal fun fetchOrCreateMergedState(rulePositions: List<RulePositionRuntime>): ParserState =
         fetchState(rulePositions) ?: this.createMergedState(rulePositions)
 
-    internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
+    internal fun fetchCompatibleState(rulePositions: List<RulePositionRuntime>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
         }
         return existing
     }
 
-    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
+    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePositionRuntime>): ParserState =
         fetchCompatibleState(rulePositions) ?: this.createMergedState(rulePositions)
 
     internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {

@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.parser.api.Parser
-import net.akehurst.language.parser.api.ParseResult
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

@@ -20,7 +20,8 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.parser.api.InputLocation

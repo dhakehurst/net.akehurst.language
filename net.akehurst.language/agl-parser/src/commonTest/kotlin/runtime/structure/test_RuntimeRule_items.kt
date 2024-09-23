@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 
 internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
-    fun check(rp:RulePosition, expected:Set<RuntimeRule>) {
+    fun check(rp:RulePositionRuntime, expected:Set<RuntimeRule>) {
         val actual = rp.items
         assertEquals(expected, actual)
     }

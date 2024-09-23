@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -27,7 +27,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
     val sut = FirstFollowCache3()
 
-    private fun check_calcFirstTermClosure(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart, expectedShortStr: Set<String>) {
+    private fun check_calcFirstTermClosure(context: RulePositionRuntime, rulePosition: RulePositionRuntime, nextContextFollow: LookaheadSetPart, expectedShortStr: Set<String>) {
         val graph = ClosureGraph(context, rulePosition, nextContextFollow)
         sut.calcFirstTermClosure(graph)
 
@@ -61,7 +61,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         assertEquals(expSorted, actSorted)
     }
 
-    private fun check_firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart, expected: Set<FirstTerminalInfo>) {
+    private fun check_firstTerminalInContext(context: RulePositionRuntime, rulePosition: RulePositionRuntime, nextContextFollow: LookaheadSetPart, expected: Set<FirstTerminalInfo>) {
         sut.clear()
         val actual = sut.firstTerminalInContext(context, rulePosition, nextContextFollow)
         assertEquals(expected, actual)
@@ -69,8 +69,8 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
     private fun check_firstTerminalInContext_all(
         G: RuntimeRule,
-        context: RulePosition,
-        rulePosition: RulePosition,
+        context: RulePositionRuntime,
+        rulePosition: RulePositionRuntime,
         nextContextFollow: LookaheadSetPart,
         expected: Set<FirstTerminalInfo>
     ) {
@@ -82,8 +82,8 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
     }
 
     private fun check_parentInContext(
-        contextContext: RulePosition,
-        context: RulePosition,
+        contextContext: RulePositionRuntime,
+        context: RulePositionRuntime,
         contextNextContextFirstOf: LookaheadSetPart,
         rule: RuntimeRule,
         expected: Set<ParentNext>
@@ -93,7 +93,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         assertEquals(expected, actual)
     }
 
-    private fun check_parentInContext_all(G: RuntimeRule, contextContext: RulePosition, context: RulePosition, rule: RuntimeRule, expected: Set<ParentNext>) {
+    private fun check_parentInContext_all(G: RuntimeRule, contextContext: RulePositionRuntime, context: RulePositionRuntime, rule: RuntimeRule, expected: Set<ParentNext>) {
         val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 

@@ -17,14 +17,14 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue

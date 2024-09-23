@@ -21,7 +21,8 @@ import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

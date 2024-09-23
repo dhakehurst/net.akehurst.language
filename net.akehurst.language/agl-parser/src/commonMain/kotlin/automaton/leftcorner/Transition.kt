@@ -21,12 +21,12 @@ import net.akehurst.language.automaton.api.ParseAction
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 
-internal interface RuntimeGuard {
+interface RuntimeGuard {
     fun execute(numNonSkipChildren: Int): Boolean
     fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule>
 }
 
-internal class Transition(
+class Transition(
     val from: ParserState,
     val to: ParserState,
     val action: ParseAction,
@@ -127,14 +127,14 @@ internal class Transition(
                 ParseAction.GRAFT -> when (tgtRhs) {
                     is RuntimeRuleRhsListSimple -> when {
                         targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
-                        targetRp.position == RulePosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
+                        targetRp.position == RulePositionRuntime.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
                         else -> TODO()
                     }
 
                     is RuntimeRuleRhsListSeparated -> when {
                         targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
-                        targetRp.position == RulePosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
-                        targetRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePositionRuntime.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePositionRuntime.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
                         else -> TODO()
                     }
 

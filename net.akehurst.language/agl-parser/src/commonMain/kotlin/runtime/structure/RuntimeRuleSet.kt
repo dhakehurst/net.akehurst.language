@@ -20,13 +20,14 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.PrefRule
 import net.akehurst.language.parser.api.RuleSet
 
-internal class RuntimeRuleSet(
+class RuntimeRuleSet(
     val number: Int,
     val qualifiedName: String, //QualifiedName,
     val runtimeRules: List<RuntimeRule>,
-    val precedenceRules: List<RuntimePreferenceRule>
+    val precedenceRules: List<PrefRule>
 ) : RuleSet {
 
     companion object {
@@ -185,12 +186,12 @@ internal class RuntimeRuleSet(
         }
     }
 
-    internal fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
+    override fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): Automaton {
         this.buildFor(goalRuleName, automatonKind)
         return this.states_cache[goalRuleName]!! //findRuntimeRule would throw exception if not exist
     }
 
-    internal fun usedAutomatonFor(goalRuleName: String): ParserStateSet {
+    override fun usedAutomatonFor(goalRuleName: String): Automaton {
         return this.states_cache[goalRuleName]!!
     }
 
@@ -293,19 +294,19 @@ internal class RuntimeRuleSet(
         }
     }
 */
-    internal fun buildFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
+     fun buildFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         val ss = this.fetchStateSetFor(userGoalRuleName, automatonKind)
         return ss.build()
     }
 
-    internal fun addGeneratedBuildFor(userGoalRuleName: String, automaton: Automaton) {
+    override fun addPreBuiltFor(userGoalRuleName: String, automaton: Automaton) {
         this.states_cache[userGoalRuleName] = automaton as ParserStateSet
     }
 
-    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
+     fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
         fetchStateSetFor(userGoalRule.tag, automatonKind)
 
-    fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
+    internal fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRuleName]
         if (null == stateSet) {
@@ -331,10 +332,10 @@ internal class RuntimeRuleSet(
         return this.runtimeRules[number]
     }
 
-    fun precedenceRulesFor(precedenceContext: RuntimeRule): RuntimePreferenceRule? =
+    internal fun precedenceRulesFor(precedenceContext: RuntimeRule): RuntimePreferenceRule? =
         this.precedenceRules.firstOrNull {
-            it.contextRule == precedenceContext
-        }
+            (it as RuntimePreferenceRule).contextRule == precedenceContext
+        } as RuntimePreferenceRule?
 
     /*
     // used when calculating lookahead ?
@@ -439,7 +440,7 @@ internal class RuntimeRuleSet(
     }
 
     // only used in test
-    internal fun clone(): RuntimeRuleSet {
+     fun clone(): RuntimeRuleSet {
         val cloneNumber = nextRuntimeRuleSetNumber++
         val clonedRules = this.runtimeRules.associate { rr ->
             val cr = RuntimeRule(cloneNumber, rr.ruleNumber, rr.name, rr.isSkip, rr.isPseudo)
@@ -452,7 +453,7 @@ internal class RuntimeRuleSet(
         val rules = clonedRules.values.toList()
         val clonedPrecedenceRules = this.precedenceRules.map {
             val clonedCtx = clonedRules[it.contextRule.tag]!!
-            val clonedPrecRules = it.options.map { pr ->
+            val clonedPrecRules = (it as RuntimePreferenceRule).options.map { pr ->
                 val cTgt = clonedRules[pr.target.tag]!!
                 val cOp = pr.operators.map { clonedRules[it.tag]!! }.toSet()
                 RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)

@@ -25,8 +25,8 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

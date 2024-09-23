@@ -15,26 +15,26 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.agl.language.asmTransform.*
-import net.akehurst.language.agl.language.expressions.asm.*
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.transform.asm.*
+import net.akehurst.language.expressions.asm.*
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.asmTransform.TransformNamespace
-import net.akehurst.language.api.language.asmTransform.TransformRuleSet
-import net.akehurst.language.api.language.asmTransform.TransformationRule
-import net.akehurst.language.api.language.base.Import
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.expressions.AssignmentStatement
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformNamespace
+import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import kotlin.reflect.KClass
 
 

@@ -18,8 +18,7 @@
 package net.akehurst.language.agl.completionProvider
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeSpineDefault
-import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
@@ -45,7 +44,7 @@ internal class SpineDefault(
         }
     }
 
-    override val nextChildNumber get() = (runtimeSpine as RuntimeSpineDefault).nextChildNumber
+    override val nextChildNumber get() = runtimeSpine.nextChildNumber
 
     override fun toString(): String = "Spine [$nextChildNumber]->${elements.joinToString(separator = "->") { it.toString() }}"
 }

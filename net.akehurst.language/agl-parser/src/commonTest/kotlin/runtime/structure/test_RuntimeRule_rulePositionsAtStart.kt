@@ -35,7 +35,7 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>()
+        val expected = setOf<RulePositionRuntime>()
         assertEquals(expected, actual)
     }
 
@@ -53,7 +53,7 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>()
+        val expected = setOf<RulePositionRuntime>()
         assertEquals(expected, actual)
     }
 
@@ -71,8 +71,8 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, 0, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -91,8 +91,8 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, 0, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -116,10 +116,10 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, 0, RulePosition.START_OF_RULE),
-            RulePosition(r, 1, RulePosition.START_OF_RULE),
-            RulePosition(r, 2, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE),
+            RulePositionRuntime(r, 1, RulePositionRuntime.START_OF_RULE),
+            RulePositionRuntime(r, 2, RulePositionRuntime.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -139,9 +139,9 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE),
-            RulePosition(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.START_OF_RULE),
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -162,8 +162,8 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -185,8 +185,8 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -207,9 +207,9 @@ class test_RuntimeRule_rulePositionsAtStart {
         val actual = r.rulePositionsAtStart
 
         //then
-        val expected = setOf<RulePosition>(
-            RulePosition(r, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
-            RulePosition(r, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE)
+        val expected = setOf<RulePositionRuntime>(
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.START_OF_RULE),
+            RulePositionRuntime(r, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.START_OF_RULE)
 
         )
         assertEquals(expected, actual)

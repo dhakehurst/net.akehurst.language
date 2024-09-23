@@ -20,6 +20,8 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.default_.contextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.parser.api.InputLocation
@@ -114,7 +116,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
 
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
@@ -173,7 +175,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
 
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
@@ -230,7 +232,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
 
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
@@ -261,7 +263,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple { }
+        val expected = contextAsmDefault { }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
 
@@ -290,7 +292,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("test.Test.S", "test.Test.S", "/0")
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
@@ -320,7 +322,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("a", "test.Test.S", "/0")
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
@@ -470,7 +472,7 @@ class test_SemanticAnalyserDefault {
             }
         }
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             scopedItem("a", "test.Test.S", "/0") {
                 scopedItem("a", "test.Test.S", "/0") {
                     scopedItem("a", "test.Test.S", "/0") {

@@ -25,20 +25,20 @@ internal class test_RulePosition_next {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
 
-        val EOR = RulePosition.END_OF_RULE
-        val SOR = RulePosition.START_OF_RULE
+        val EOR = RulePositionRuntime.END_OF_RULE
+        val SOR = RulePositionRuntime.START_OF_RULE
 
-        val OMI = RulePosition.OPTION_MULTI_ITEM
-        val OME = RulePosition.OPTION_MULTI_EMPTY
-        val OLE = RulePosition.OPTION_SLIST_EMPTY
-        val OLI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-        val OLS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        val OMI = RulePositionRuntime.OPTION_MULTI_ITEM
+        val OME = RulePositionRuntime.OPTION_MULTI_EMPTY
+        val OLE = RulePositionRuntime.OPTION_SLIST_EMPTY
+        val OLI = RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR
+        val OLS = RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR
 
-        val PMI = RulePosition.POSITION_MULIT_ITEM
-        val PLI = RulePosition.POSITION_SLIST_ITEM
-        val PLS = RulePosition.POSITION_SLIST_SEPARATOR
+        val PMI = RulePositionRuntime.POSITION_MULIT_ITEM
+        val PLI = RulePositionRuntime.POSITION_SLIST_ITEM
+        val PLS = RulePositionRuntime.POSITION_SLIST_SEPARATOR
 
-        fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
+        fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePositionRuntime = RulePositionRuntime(rr, opt, pos)
     }
 
     //empty
@@ -55,8 +55,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 0, EOR))
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, 0, EOR))
 
         assertEquals(expected, actual)
     }
@@ -70,8 +70,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(r_S, 0, 1)
         )
 
@@ -85,8 +85,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, 1).next()
-        val expected: Set<RulePosition> = setOf(
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, 1).next()
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(r_S, 0, 2)
         )
 
@@ -100,8 +100,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, 2).next()
-        val expected: Set<RulePosition> = setOf(
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, 2).next()
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(r_S, 0, EOR)
         )
 
@@ -115,8 +115,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 
         assertEquals(expected, actual)
     }
@@ -134,8 +134,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(
+        val actual: Set<RulePositionRuntime> = RP(r_S, 0, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(r_S, 0, EOR)
         )
 
@@ -155,8 +155,8 @@ internal class test_RulePosition_next {
 
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 1, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 1, 1))
+        val actual: Set<RulePositionRuntime> = RP(r_S, 1, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, 1, 1))
 
         assertEquals(expected, actual)
     }
@@ -174,8 +174,8 @@ internal class test_RulePosition_next {
 
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 2, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 2, 1))
+        val actual: Set<RulePositionRuntime> = RP(r_S, 2, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, 2, 1))
 
         assertEquals(expected, actual)
     }
@@ -191,8 +191,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OME, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, OME, EOR))
+        val actual: Set<RulePositionRuntime> = RP(r_S, OME, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, OME, EOR))
 
         assertEquals(expected, actual)
     }
@@ -205,8 +205,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OME, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, OME, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 
         assertEquals(expected, actual)
     }
@@ -219,8 +219,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OMI, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, OMI, EOR))
+        val actual: Set<RulePositionRuntime> = RP(r_S, OMI, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, OMI, EOR))
 
         assertEquals(expected, actual)
     }
@@ -233,10 +233,10 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OMI, PMI).next()
-        val expected: Set<RulePosition> = setOf(
-            RP(r_S, RulePosition.OPTION_MULTI_ITEM, PMI),
-            RP(r_S, RulePosition.OPTION_MULTI_ITEM, EOR)
+        val actual: Set<RulePositionRuntime> = RP(r_S, OMI, PMI).next()
+        val expected: Set<RulePositionRuntime> = setOf(
+            RP(r_S, RulePositionRuntime.OPTION_MULTI_ITEM, PMI),
+            RP(r_S, RulePositionRuntime.OPTION_MULTI_ITEM, EOR)
         )
 
         assertEquals(expected, actual)
@@ -250,8 +250,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OMI, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, OMI, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 
         assertEquals(expected, actual)
     }
@@ -268,8 +268,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLE, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, OLE, EOR))
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLE, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, OLE, EOR))
 
         assertEquals(expected, actual)
     }
@@ -283,8 +283,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLE, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLE, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 
         assertEquals(expected, actual)
     }
@@ -298,8 +298,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLI, SOR).next()
-        val expected: Set<RulePosition> = setOf(
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLI, SOR).next()
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(r_S, 0, EOR),
             RP(r_S, 0, PLS)
         )
@@ -316,8 +316,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLS, PLS).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, OLS, PLI))
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLS, PLS).next()
+        val expected: Set<RulePositionRuntime> = setOf(RP(r_S, OLS, PLI))
 
         assertEquals(expected, actual)
     }
@@ -331,8 +331,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLI, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLI, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 
         assertEquals(expected, actual)
     }
@@ -346,8 +346,8 @@ internal class test_RulePosition_next {
         }
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, OLS, EOR).next()
-        val expected: Set<RulePosition> = setOf()
+        val actual: Set<RulePositionRuntime> = RP(r_S, OLS, EOR).next()
+        val expected: Set<RulePositionRuntime> = setOf()
 //TODO: shoud this throw IllegalState ?
         assertEquals(expected, actual)
     }
@@ -367,7 +367,7 @@ internal class test_RulePosition_next {
         //val G = SM.startState
 
         val actual = RP(S, OLE, SOR).next()
-        val expected: Set<RulePosition> = emptySet() // S should never be empty
+        val expected: Set<RulePositionRuntime> = emptySet() // S should never be empty
 
         assertEquals(expected, actual)
     }
@@ -384,7 +384,7 @@ internal class test_RulePosition_next {
         //val G = SM.startState
 
         val actual = RP(S, OLE, EOR).next()
-        val expected: Set<RulePosition> = emptySet() // S should never be empty
+        val expected: Set<RulePositionRuntime> = emptySet() // S should never be empty
 
         assertEquals(expected, actual)
     }
@@ -402,7 +402,7 @@ internal class test_RulePosition_next {
 
         val rp = RP(S, 0, SOR)
         val actual = rp.next()
-        val expected: Set<RulePosition> = setOf(
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(S, OLI, PLS),
             RP(S, OLI, EOR)
         )
@@ -422,7 +422,7 @@ internal class test_RulePosition_next {
 
         val rp = RP(S, OLS, PLS)
         val actual = rp.next()
-        val expected: Set<RulePosition> = setOf(
+        val expected: Set<RulePositionRuntime> = setOf(
             RP(S, OLS, PLI)
         )
 

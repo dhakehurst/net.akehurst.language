@@ -17,7 +17,7 @@
 package net.akehurst.language.processor.test.utils
 
 import net.akehurst.language.automaton.api.ParseAction
-import net.akehurst.language.api.processor.IssueCollection
+import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 
 val IssueCollection<LanguageIssue>.notWidth get() = this.all.filterNot { it.data is Set<*> && (it.data as Set<*>).contains(ParseAction.WIDTH) }

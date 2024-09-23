@@ -23,8 +23,8 @@ import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.api.asm.AsmValue
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

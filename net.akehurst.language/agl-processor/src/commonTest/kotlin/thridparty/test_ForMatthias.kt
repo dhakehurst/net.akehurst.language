@@ -19,6 +19,7 @@ package net.akehurst.language.agl.thridparty
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 
 internal class test_ForMatthias {

@@ -21,6 +21,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.parser.api.InputLocation
+import kotlin.js.JsExport
 
 operator fun IssueCollection<LanguageIssue>.plus(other: IssueCollection<LanguageIssue>): IssueHolder {
     val issues = IssueHolder(LanguageProcessorPhase.ALL)

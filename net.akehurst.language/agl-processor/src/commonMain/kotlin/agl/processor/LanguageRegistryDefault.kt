@@ -17,50 +17,52 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.agl.language.asmTransform.AsmTransformSemanticAnalyser
-import net.akehurst.language.agl.agl.language.asmTransform.AsmTransformSyntaxAnalyser
-import net.akehurst.language.agl.agl.language.expressions.ExpressionsCompletionProvider
-import net.akehurst.language.agl.language.asmTransform.AsmTransform
-import net.akehurst.language.agl.language.asmTransform.AsmTransformCompletionProvider
-import net.akehurst.language.agl.language.base.AglBase
-import net.akehurst.language.agl.language.expressions.AglExpressions
-import net.akehurst.language.agl.language.expressions.ExpressionsSemanticAnalyser
-import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
-import net.akehurst.language.agl.language.format.AglFormat
-import net.akehurst.language.agl.language.format.AglFormatCompletionProvider
-import net.akehurst.language.agl.language.format.AglFormatSemanticAnalyser
-import net.akehurst.language.agl.language.format.AglFormatSyntaxAnalyser
-import net.akehurst.language.agl.language.grammar.*
-import net.akehurst.language.agl.language.reference.AglCrossReferences
-import net.akehurst.language.agl.language.reference.ReferencesCompletionProvider
-import net.akehurst.language.agl.language.reference.ReferencesSemanticAnalyser
-import net.akehurst.language.agl.language.reference.ReferencesSyntaxAnalyser
-import net.akehurst.language.agl.language.style.AglStyle
-import net.akehurst.language.agl.language.style.AglStyleCompletionProvider
-import net.akehurst.language.agl.language.style.AglStyleSemanticAnalyser
-import net.akehurst.language.agl.language.style.AglStyleSyntaxAnalyser
+import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
+import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
+import net.akehurst.language.expressions.processor.ExpressionsCompletionProvider
+import net.akehurst.language.transform.processor.AsmTransform
+import net.akehurst.language.transform.processor.AsmTransformCompletionProvider
+import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.expressions.processor.ExpressionsSemanticAnalyser
+import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
+import net.akehurst.language.format.processor.AglFormat
+import net.akehurst.language.format.processor.AglFormatCompletionProvider
+import net.akehurst.language.format.processor.AglFormatSemanticAnalyser
+import net.akehurst.language.format.processor.AglFormatSyntaxAnalyser
+import net.akehurst.language.grammar.processor.*
+import net.akehurst.language.reference.processor.AglCrossReferences
+import net.akehurst.language.reference.processor.ReferencesCompletionProvider
+import net.akehurst.language.reference.processor.ReferencesSemanticAnalyser
+import net.akehurst.language.reference.processor.ReferencesSyntaxAnalyser
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.base.Namespace
-import net.akehurst.language.api.language.base.PossiblyQualifiedName
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarModel
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.language.style.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.style.processor.AglStyle
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.processor.AglStyleCompletionProvider
+import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
+import net.akehurst.language.style.processor.AglStyleSyntaxAnalyser
 
 interface AglLanguages {
-    val expressionsLanguageIdentity: QualifiedName
-    val grammarLanguageIdentity: QualifiedName
-    val asmTransformLanguageIdentity: QualifiedName
-    val crossReferenceLanguageIdentity: QualifiedName
-    val styleLanguageIdentity: QualifiedName
-    val formatLanguageIdentity: QualifiedName
+    val expressionsLanguageIdentity: LanguageIdentity
+    val grammarLanguageIdentity: LanguageIdentity
+    val asmTransformLanguageIdentity: LanguageIdentity
+    val crossReferenceLanguageIdentity: LanguageIdentity
+    val styleLanguageIdentity: LanguageIdentity
+    val formatLanguageIdentity: LanguageIdentity
 
     val base: LanguageDefinition<Any, SentenceContext<String>>
     val expressions: LanguageDefinition<Expression, SentenceContext<String>>
@@ -74,16 +76,16 @@ interface AglLanguages {
 class LanguageRegistryDefault : LanguageRegistry {
 
     private val _grammars = mutableMapOf<QualifiedName, Grammar>()
-    private val _registry = mutableMapOf<QualifiedName, LanguageDefinition<*, *>>()
+    private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
     override val agl: AglLanguages = object : AglLanguages {
-        val baseLanguageIdentity: QualifiedName = AglBase.grammar.qualifiedName
-        override val expressionsLanguageIdentity: QualifiedName = AglExpressions.grammar.qualifiedName
-        override val grammarLanguageIdentity: QualifiedName = AglGrammar.grammar.qualifiedName
-        override val asmTransformLanguageIdentity: QualifiedName = AsmTransform.grammar.qualifiedName
-        override val styleLanguageIdentity: QualifiedName = AglStyle.grammar.qualifiedName
-        override val formatLanguageIdentity: QualifiedName = AglFormat.grammar.qualifiedName
-        override val crossReferenceLanguageIdentity: QualifiedName = AglCrossReferences.grammar.qualifiedName
+        val baseLanguageIdentity: LanguageIdentity =LanguageIdentity( AglBase.grammar.qualifiedName.value)
+        override val expressionsLanguageIdentity: LanguageIdentity = LanguageIdentity( AglExpressions.grammar.qualifiedName.value)
+        override val grammarLanguageIdentity: LanguageIdentity = LanguageIdentity( AglGrammar.grammar.qualifiedName.value)
+        override val asmTransformLanguageIdentity: LanguageIdentity = LanguageIdentity( AsmTransform.grammar.qualifiedName.value)
+        override val styleLanguageIdentity: LanguageIdentity = LanguageIdentity( AglStyle.grammar.qualifiedName.value)
+        override val formatLanguageIdentity: LanguageIdentity = LanguageIdentity( AglFormat.grammar.qualifiedName.value)
+        override val crossReferenceLanguageIdentity: LanguageIdentity =LanguageIdentity(  AglCrossReferences.grammar.qualifiedName.value)
 
         override val base: LanguageDefinition<Any, SentenceContext<String>> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
@@ -92,7 +94,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglBase.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglBase.grammar.name)
+                        targetGrammarName(AglBase.grammar.name.value)
                         defaultGoalRuleName(AglBase.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -122,7 +124,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglExpressions.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglExpressions.grammar.name)
+                        targetGrammarName(AglExpressions.grammar.name.value)
                         defaultGoalRuleName(AglExpressions.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -151,7 +153,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglGrammar.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglGrammar.grammar.name)
+                        targetGrammarName(AglGrammar.grammar.name.value)
                         defaultGoalRuleName(AglGrammar.goalRuleName)
                         // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -180,7 +182,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AsmTransform.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AsmTransform.grammar.name)
+                        targetGrammarName(AsmTransform.grammar.name.value)
                         defaultGoalRuleName(AsmTransform.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -209,7 +211,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglCrossReferences.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglCrossReferences.grammar.name)
+                        targetGrammarName(AglCrossReferences.grammar.name.value)
                         defaultGoalRuleName(AglCrossReferences.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -238,7 +240,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglFormat.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglFormat.grammar.name)
+                        targetGrammarName(AglFormat.grammar.name.value)
                         defaultGoalRuleName(AglFormat.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -272,7 +274,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     AglStyle.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglStyle.grammar.name)
+                        targetGrammarName(AglStyle.grammar.name.value)
                         defaultGoalRuleName(AglStyle.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -305,7 +307,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     }
 
     override fun <AsmType : Any, ContextType : Any> register(
-        identity: QualifiedName,
+        identity: LanguageIdentity,
         grammarStr: String?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
@@ -320,11 +322,11 @@ class LanguageRegistryDefault : LanguageRegistry {
         )
     )
 
-    override fun unregister(identity: QualifiedName) {
+    override fun unregister(identity: LanguageIdentity) {
         this._registry.remove(identity)
     }
 
-    override fun <AsmType : Any, ContextType : Any> findOrNull(identity: QualifiedName): LanguageDefinition<AsmType, ContextType>? {
+    override fun <AsmType : Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>? {
         return this._registry[identity] as LanguageDefinition<AsmType, ContextType>?
     }
 
@@ -332,11 +334,11 @@ class LanguageRegistryDefault : LanguageRegistry {
      * try to find localNamespace.nameOrQName or if not found try to find nameOrQName
      */
     fun <AsmType : Any, ContextType : Any> findWithNamespaceOrNull(localNamespace: String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
-        return findOrNull(QualifiedName("$localNamespace.$nameOrQName")) ?: findOrNull(QualifiedName(nameOrQName))
+        return findOrNull(LanguageIdentity("$localNamespace.$nameOrQName")) ?: findOrNull(LanguageIdentity(nameOrQName))
     }
 
     override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
-        identity: QualifiedName,
+        identity: LanguageIdentity,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {

@@ -16,26 +16,31 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.language.base.Namespace
-import net.akehurst.language.api.language.base.PossiblyQualifiedName
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarModel
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.language.style.AglStyleModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.typemodel.api.TypeModel
+import kotlin.jvm.JvmInline
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)
     fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
+}
+
+@JvmInline
+value class LanguageIdentity(val value:String) {
+    val last:String get() = value.split(".").last()
 }
 
 interface LanguageRegistry : GrammarRegistry {
@@ -46,19 +51,19 @@ interface LanguageRegistry : GrammarRegistry {
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(
-        identity: QualifiedName,
+        identity: LanguageIdentity,
         grammarStr: String?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
 
-    fun unregister(identity: QualifiedName)
+    fun unregister(identity: LanguageIdentity)
 
-    fun <AsmType : Any, ContextType : Any> findOrNull(identity: QualifiedName): LanguageDefinition<AsmType, ContextType>?
+    fun <AsmType : Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>?
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
-        identity: QualifiedName,
+        identity: LanguageIdentity,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType>
@@ -66,7 +71,7 @@ interface LanguageRegistry : GrammarRegistry {
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
-    val identity: QualifiedName
+    val identity: LanguageIdentity
     val isModifiable: Boolean
 
     var grammarStr: String?

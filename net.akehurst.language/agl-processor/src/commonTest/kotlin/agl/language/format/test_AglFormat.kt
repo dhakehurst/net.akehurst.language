@@ -18,7 +18,7 @@ package net.akehurst.language.agl.grammar.format
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.format.test.FormatModelTest
-import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
+import net.akehurst.language.typemodel.asm.test.TypeModelTest
 import net.akehurst.language.formatter.api.AglFormatterModel
 import kotlin.test.Test
 import kotlin.test.assertNotNull

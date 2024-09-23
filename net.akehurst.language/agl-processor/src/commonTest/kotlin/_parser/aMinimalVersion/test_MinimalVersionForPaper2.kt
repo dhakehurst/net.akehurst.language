@@ -18,12 +18,10 @@
 package net.akehurst.language.parser.aMinimalVersion
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.SentenceDefault
 import net.akehurst.language.sppt.treedata.SpptWalkerToString
 import kotlin.math.min

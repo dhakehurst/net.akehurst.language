@@ -17,9 +17,16 @@
 
 package net.akehurst.language.parser.api
 
+import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.automaton.api.AutomatonKind
+
 interface RuleSet {
     val nonSkipTerminals: List<Rule>
     val terminals: List<Rule>
+
+    fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): Automaton
+    fun usedAutomatonFor(goalRuleName: String):Automaton
+    fun addPreBuiltFor(userGoalRuleName: String, automaton: Automaton)
 }
 
 interface Rule {
@@ -36,6 +43,7 @@ interface Rule {
      * Empty, Literal, Pattern, Embedded
      */
     val isTerminal: Boolean
+    val isEndOfText:Boolean
     val isEmptyTerminal: Boolean
     val isEmptyListTerminal: Boolean
     val isLiteral: Boolean
@@ -58,6 +66,35 @@ interface Rule {
     val unescapedTerminalValue: String
 }
 
+interface PrefRule {
+    val contextRule: Rule
+}
+
+interface RulePosition {
+    val rule: Rule
+    val option: Int
+    val position: Int
+
+    companion object {
+        const val START_OF_RULE = 0
+        const val END_OF_RULE = -1
+
+        const val OPTION_OPTIONAL_ITEM = 0
+        const val OPTION_OPTIONAL_EMPTY = 1
+
+        const val OPTION_MULTI_ITEM = 0
+        const val OPTION_MULTI_EMPTY = 1
+
+        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
+        const val OPTION_SLIST_EMPTY = 1
+
+        //for use in multi and separated list
+        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
+        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
+        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
+    }
+}
+
 @DslMarker
 annotation class RuntimeRuleSetDslMarker
 
@@ -70,6 +107,11 @@ interface RuleSetBuilder {
     fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
     fun sList(ruleName: String, min: Int, max: Int, itemRef: String, sepRef: String, isSkip: Boolean = false, isPseudo: Boolean = false)
     fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRuleName: String, isSkip: Boolean = false, isPseudo: Boolean = false)
+
+    fun literal(literalUnescaped: String, isSkip: Boolean = false)
+    fun literal(name: String?, literalUnescaped: String, isSkip: Boolean = false)
+    fun pattern(value: String, isSkip: Boolean = false)
+    fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean = false)
 }
 
 @RuntimeRuleSetDslMarker

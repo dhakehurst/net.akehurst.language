@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -27,7 +27,7 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
 
     val sut = FirstOf()
 
-    private fun check_expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart, expected: Set<RuntimeRule>) {
+    private fun check_expectedAt(rulePosition: RulePositionRuntime, ifReachedEnd: LookaheadSetPart, expected: Set<RuntimeRule>) {
         val actual = sut.expectedAt(rulePosition, ifReachedEnd)
         assertEquals(LookaheadSetPart.createFromRuntimeRules(expected), actual)
     }

@@ -20,10 +20,12 @@ package net.akehurst.language.parser.api
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import kotlin.js.JsExport
 
 interface RuntimeSpine {
     val expectedNextTerminals: Set<Rule>
     val elements: List<Rule>
+    val nextChildNumber: Int
 }
 
 /**
@@ -46,6 +48,8 @@ interface ParseResult {
 class ParserTerminatedException : RuntimeException()
 
 interface Parser {
+
+    val ruleSet: RuleSet
 
     fun reset()
 

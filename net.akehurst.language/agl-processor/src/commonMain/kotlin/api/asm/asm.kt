@@ -17,8 +17,8 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import kotlin.jvm.JvmInline
 

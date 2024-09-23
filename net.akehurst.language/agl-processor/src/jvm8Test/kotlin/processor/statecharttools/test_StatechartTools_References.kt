@@ -17,23 +17,23 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.default.ContextAsmDefault
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.contextSimple
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.default_.SemanticAnalyserDefault
+import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default_.contextAsmDefault
+import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.language.base.Import
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -134,7 +134,7 @@ class test_StatechartTools_References {
 //            scope("'Root'", "Region", "/0/regions/0") {
 //            }
 //        }
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             // only states are recorded, there are none
         }
 
@@ -154,7 +154,7 @@ class test_StatechartTools_References {
             }
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
             item("'B'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
         }
@@ -177,7 +177,7 @@ class test_StatechartTools_References {
             }
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
         }
 
@@ -205,7 +205,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
             item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/0/states/0")
             item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
@@ -236,7 +236,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
             item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
             item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
@@ -261,7 +261,7 @@ class test_StatechartTools_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("'S1'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
             item("'S2'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
         }
@@ -314,7 +314,7 @@ class test_StatechartTools_References {
             interface I :
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
             }
         }
@@ -331,7 +331,7 @@ class test_StatechartTools_References {
                 var v
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
                 item("v", "com.itemis.create.Global.VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
             }
@@ -351,7 +351,7 @@ class test_StatechartTools_References {
                 "z"
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("\"x\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
             item("\"y\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
             item("\"z\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
@@ -369,7 +369,7 @@ class test_StatechartTools_References {
                 operation O()
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             scopedItem("O", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
         }
 
@@ -434,7 +434,7 @@ StatechartSpecification {
 }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             scopedItem("func", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
         }
 
@@ -504,7 +504,7 @@ StatechartSpecification {
         val ns = processors[grammar]!!.typeModel.findOrCreateNamespace(QualifiedName("external"), emptyList())
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("BuiltInType"))
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("integer", "external.BuiltInType", AsmPathSimple.EXTERNAL.value)
         }
 
@@ -539,7 +539,7 @@ StatechartSpecification {
             }
         }
 
-        val context = contextSimple {
+        val context = contextAsmDefault {
             item("integer", bit.qualifiedName.value, AsmPathSimple.EXTERNAL.value)
         }
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)

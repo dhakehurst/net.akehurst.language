@@ -24,7 +24,7 @@ internal class RuntimeSpineDefault(
     val head: GrowingNodeIndex,
     val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
     override val expectedNextTerminals: Set<RuntimeRule>,
-    val nextChildNumber: Int
+    override val nextChildNumber: Int
 ) : RuntimeSpine {
     override val elements: List<RuntimeRule> by lazy {
         val list = mutableListOf(head.state.firstRule)

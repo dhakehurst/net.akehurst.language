@@ -18,9 +18,9 @@ package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.sppt.api.*
 
-internal class SPPTFromTreeData(
+class SPPTFromTreeData(
     override val treeData: TreeData,
-    internal val sentence: Sentence,
+    val sentence: Sentence,
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {

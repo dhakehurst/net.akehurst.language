@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.agl.syntaxAnalyser
 
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarRule
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarRule
 
 class SyntaxAnalyserGeneratorKotlin {
 
@@ -46,8 +46,8 @@ class SyntaxAnalyserGeneratorKotlin {
         return """
 package ${grammar.namespace.qualifiedName}
 
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SpptDataNodeInfo
+import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 
 class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AsmType>() {

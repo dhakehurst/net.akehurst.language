@@ -17,7 +17,7 @@
 
 package net.akehurst.language.typemodel.api
 
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertFalse

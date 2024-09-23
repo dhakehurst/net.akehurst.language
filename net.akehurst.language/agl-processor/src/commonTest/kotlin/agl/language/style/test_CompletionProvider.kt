@@ -18,9 +18,9 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.api.language.grammar.GrammarModel
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import kotlin.test.Test

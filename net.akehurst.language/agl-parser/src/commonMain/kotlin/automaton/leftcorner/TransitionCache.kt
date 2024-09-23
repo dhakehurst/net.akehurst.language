@@ -19,7 +19,7 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.ParseAction
 
-internal interface TransitionCache {
+interface TransitionCache {
     val allBuiltTransitions: Set<Transition>
     val allPrevious: Set<TransitionPrevInfoKey>
 
@@ -54,20 +54,20 @@ internal interface TransitionCache {
 
 interface TransitionPrevInfoKey
 
-internal data class CompleteKey(
+data class CompleteKey(
     val previous: ParserState,
     val prevPrev: ParserState
 ) : TransitionPrevInfoKey {
     override fun toString(): String = "${prevPrev.number.value}-${previous.number.value}"
 }
 
-internal data class IncompleteKey(
+data class IncompleteKey(
     val previous: ParserState
 ) : TransitionPrevInfoKey {
     override fun toString(): String = "${previous.number.value}"
 }
 
-internal class TransitionCacheLC1 : TransitionCache {
+class TransitionCacheLC1 : TransitionCache {
 
     companion object {
         private fun merge(automaton: ParserStateSet, set: Set<Transition>): Transition {

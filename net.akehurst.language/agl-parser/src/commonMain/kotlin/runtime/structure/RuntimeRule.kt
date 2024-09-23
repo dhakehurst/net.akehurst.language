@@ -30,11 +30,11 @@ class RuntimeRule(
 ) : Rule {
 
     private lateinit var _rhs: RuntimeRuleRhs
-    internal fun setRhs(value: RuntimeRuleRhs) {
+    fun setRhs(value: RuntimeRuleRhs) {
         this._rhs = value
     }
 
-    internal val rhs get() = this._rhs
+    val rhs get() = this._rhs
 
     //TODO: needs properties- maybe:
     // isUnnamedLiteral - so we can eliminate from AsmSimple
@@ -45,6 +45,7 @@ class RuntimeRule(
     override val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
+    override val isEndOfText: Boolean get() = this == RuntimeRuleSet.END_OF_TEXT
     override val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
     override val isEmptyListTerminal get() = this.rhs is RuntimeRuleRhsEmptyList
     override val isEmbedded get() = this.rhs is RuntimeRuleRhsEmbedded
@@ -98,12 +99,12 @@ class RuntimeRule(
 
     //val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
 
-    internal val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
+    internal val asTerminalRulePosition by lazy { RulePositionRuntime(this, 0, RulePositionRuntime.END_OF_RULE) }
 
     //used in automaton build
-    internal val rulePositions: Set<RulePosition> get() = rulePositionsAtStart + rulePositionsNotAtStart
+    internal val rulePositions: Set<RulePositionRuntime> get() = rulePositionsAtStart + rulePositionsNotAtStart
 
-    internal val rulePositionsNotAtStart: Set<RulePosition> get() = rhs.rulePositionsNotAtStart
+    internal val rulePositionsNotAtStart: Set<RulePositionRuntime> get() = rhs.rulePositionsNotAtStart
 
     internal val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 

@@ -16,8 +16,9 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.language.grammar.AglGrammar
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
@@ -30,7 +31,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
     private val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals.toList())
     private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
-    private val rrs = parser.runtimeRuleSet
+    private val rrs = parser.ruleSet as RuntimeRuleSet
 
     private val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
     private val R_namespace = rrs.findRuntimeRule("namespace")
@@ -55,9 +56,9 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     fun parse_xxx() {
         val parser = LeftCornerParser(scanner, rrs)
         parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }")
-        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
+        val actual = (parser.ruleSet as RuntimeRuleSet).fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(goal))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, goal, false) {
+        val expected = aut(rrs, AutomatonKind.LOOKAHEAD_1, goal, false) {
 
 
         }

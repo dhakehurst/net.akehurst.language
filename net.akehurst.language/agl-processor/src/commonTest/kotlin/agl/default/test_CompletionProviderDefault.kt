@@ -21,8 +21,9 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.typemodel.api.TypeModel

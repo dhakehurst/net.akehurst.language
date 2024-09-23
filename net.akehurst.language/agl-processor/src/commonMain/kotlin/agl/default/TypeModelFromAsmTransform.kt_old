@@ -15,20 +15,20 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.base.DefinitionBlock
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.base.api.DefinitionBlock
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 object TypeModelFromAsmTransform {
 

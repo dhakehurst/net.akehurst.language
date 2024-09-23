@@ -17,13 +17,14 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

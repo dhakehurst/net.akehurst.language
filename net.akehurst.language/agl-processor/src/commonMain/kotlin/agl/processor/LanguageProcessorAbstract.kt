@@ -16,35 +16,39 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.parser.leftcorner.SentenceDefault
-import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.completionProvider.SpineDefault
-import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
-import net.akehurst.language.agl.language.grammar.AglGrammar
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.parser.leftcorner.LeftCornerParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.asmTransform.TransformRuleSet
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.scanner.ScanResult
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.sppt.SPPTParser
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.format.processor.FormatterSimple
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.issues.ram.plus
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.sppt.api.SPPTParser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.treedata.SPPTParserDefault
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
@@ -76,9 +80,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
             val cvt = ConverterToRuntimeRules(it)
             val rrs = cvt.runtimeRuleSet
-            Pair(it.qualifiedName, rrs)
+            Pair(it.qualifiedName.value, rrs)
         }.associate { it }
-        SPPTParserDefault((parser as LeftCornerParser).runtimeRuleSet, embeddedRuntimeRuleSets)
+        SPPTParserDefault((parser as LeftCornerParser).ruleSet, embeddedRuntimeRuleSets)
     }
 
     protected val defaultGoalRuleName: GrammarRuleName? by lazy {
@@ -145,7 +149,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override fun usedAutomatonFor(goalRuleName: String): ParserStateSet = (this.parser as LeftCornerParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
+    override fun usedAutomatonFor(goalRuleName: String): Automaton = this.parser!!.ruleSet.usedAutomatonFor(goalRuleName)
 
     override fun interrupt(message: String) {
         this.parser?.interrupt(message)
@@ -251,9 +255,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: error("The processor for grammar '${this.grammar.qualifiedName}' was not configured with a Parser")
         val terminalItems = parserExpected.mapNotNull {
             when {
-                it == RuntimeRuleSet.END_OF_TEXT -> null
-                it == RuntimeRuleSet.EMPTY -> null
-                it == RuntimeRuleSet.EMPTY_LIST -> null
+                it.isEndOfText  -> null
+                it.isEmptyTerminal -> null
+                it.isEmptyListTerminal -> null
                 else -> {
                     when {
                         it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)

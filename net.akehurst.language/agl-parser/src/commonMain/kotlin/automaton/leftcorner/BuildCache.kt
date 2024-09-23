@@ -16,14 +16,14 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 
 internal interface BuildCache {
     fun switchCacheOn()
     fun clearAndOff()
 
     fun stateInfo(): Set<StateInfo>
-    fun mergedStateInfoFor(rulePositions: List<RulePosition>): StateInfo
+    fun mergedStateInfoFor(rulePositions: List<RulePositionRuntime>): StateInfo
     fun widthInto(prevState:ParserState, fromState: ParserState): Set<WidthInfo>
     fun heightOrGraftInto(prevPrev: ParserState, prevState: ParserState, fromState: ParserState) : Set<TransInfo>
 

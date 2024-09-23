@@ -17,14 +17,14 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.automaton.api.Automaton
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.scanner.ScanResult
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.sppt.SPPTParser
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SPPTParser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.issues.api.IssueCollection

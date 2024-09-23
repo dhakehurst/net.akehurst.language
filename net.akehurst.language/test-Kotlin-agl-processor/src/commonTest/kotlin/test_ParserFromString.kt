@@ -1,17 +1,17 @@
 package test
 
-
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.sppt.SpptDataNode
-import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import net.akehurst.language.sppt.api.SpptWalker
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class test_ParserFromString {
 
     @Test
-    fun processorFromStringDefault_parse_walkSPPT() {
+    fun parse() {
         val grammarStr = """
 namespace CalculatorModelLanguage
 
@@ -59,8 +59,9 @@ leaf booleanLiteral      = 'false' | 'true';
 }
         """.trimIndent()
 
-        val res = Agl.processorFromStringDefault(grammarStr)
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        val res = Agl.processorFromStringDefault(GrammarString(grammarStr))
+        println(res.issues.toString())
+        assertTrue(res.issues.errors.isEmpty())
 
         val proc = res.processor ?: error("processor not found")
 
@@ -70,6 +71,7 @@ leaf booleanLiteral      = 'false' | 'true';
               output o
             """.trimIndent()
         val pres = proc.parse(sentence)
+        println(pres.issues.toString())
         assertTrue(pres.issues.isEmpty(), res.issues.toString())
 
         val sppt = pres.sppt ?: error("sppt not found")

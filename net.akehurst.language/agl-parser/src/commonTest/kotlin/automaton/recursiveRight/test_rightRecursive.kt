@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
@@ -46,12 +46,12 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val a = rrs.findRuntimeRule("'a'")
 
         val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
-        val s2 = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
-        val s3 = SM.createState(listOf(RulePosition(S1, 0, 1)))
-        val s4 = SM.createState(listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)))
-        val s5 = SM.createState(listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)))
-        val s6 = SM.createState(listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)))
+        val s1 = SM.createState(listOf(RulePositionRuntime(a, 0, RulePositionRuntime.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RulePositionRuntime(S, 0, RulePositionRuntime.END_OF_RULE)))
+        val s3 = SM.createState(listOf(RulePositionRuntime(S1, 0, 1)))
+        val s4 = SM.createState(listOf(RulePositionRuntime(S1, 0, RulePositionRuntime.END_OF_RULE)))
+        val s5 = SM.createState(listOf(RulePositionRuntime(G, 0, RulePositionRuntime.END_OF_RULE)))
+        val s6 = SM.createState(listOf(RulePositionRuntime(S, 1, RulePositionRuntime.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
         val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
@@ -101,7 +101,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
-        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")as ParserStateSet
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")

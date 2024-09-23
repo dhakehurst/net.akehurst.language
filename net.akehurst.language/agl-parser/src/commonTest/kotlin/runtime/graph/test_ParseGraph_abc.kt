@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RulePositionWithLookahead
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
@@ -74,7 +74,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-        val startState = RulePositionWithLookahead(RulePosition(gr, 0, 0), emptySet())
+        val startState = RulePositionWithLookahead(RulePositionRuntime(gr, 0, 0), emptySet())
         //sut.start(startState, rrs)
         TODO()
         val actual = sut.canGrow

@@ -17,13 +17,19 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.regex.RegexEngineAgl
-import net.akehurst.language.regex.agl.RegexEnginePlatform
-import net.akehurst.language.agl.scanner.ScannerClassic
-import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.scanner.ScannerKind
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.regex.agl.RegexEngineAgl
+import net.akehurst.language.regex.agl.RegexEnginePlatform
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.common.ScannerClassic
+import net.akehurst.language.scanner.common.ScannerOnDemand
 
 @DslMarker
 annotation class LanguageProcessorConfigurationDslMarker
@@ -48,8 +54,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _styleResolver: StyleResolver<AsmType, ContextType>? = base.styleResolver
     private var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = base.completionProvider
 
-    fun targetGrammarName(value: SimpleName?) {
-        _targetGrammarName = value
+    fun targetGrammarName(value: String?) {
+        _targetGrammarName = value?.let { SimpleName(it) }
     }
 
     fun defaultGoalRuleName(value: String?) {
@@ -94,8 +100,16 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _syntaxAnalyserResolver = func
     }
 
+    fun syntaxAnalyserResolverResult(func: () -> SyntaxAnalyser<AsmType>) { //TODO: others need this
+        _syntaxAnalyserResolver = { ProcessResultDefault(func.invoke(), IssueHolder(LanguageProcessorPhase.ALL)) }
+    }
+
     fun semanticAnalyserResolver(value: SemanticAnalyserResolver<AsmType, ContextType>?) {
         _semanticAnalyserResolver = value
+    }
+
+    fun semanticAnalyserResolverResult(func: () -> SemanticAnalyser<AsmType, ContextType>) { //TODO: others need this
+        _semanticAnalyserResolver = { ProcessResultDefault(func.invoke(), IssueHolder(LanguageProcessorPhase.ALL)) }
     }
 
     fun formatterResolver(func: FormatterResolver<AsmType, ContextType>?) {

@@ -22,9 +22,9 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.InputStreamReader
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,7 +47,7 @@ class test_Java8Agl_Classes(val data: Data) {
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration { targetGrammarName(SimpleName("Classes")); defaultGoalRuleName("ClassDeclaration") },
+                Agl.configuration { targetGrammarName(("Classes")); defaultGoalRuleName("ClassDeclaration") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         context(ContextFromGrammarRegistry(Agl.registry))

@@ -22,7 +22,7 @@ import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.SpptWalker
 
-internal class SpptWalkerToString(
+ class SpptWalkerToString(
     val sentence: Sentence,
     val indentDelta: String
 ) : SpptWalker {

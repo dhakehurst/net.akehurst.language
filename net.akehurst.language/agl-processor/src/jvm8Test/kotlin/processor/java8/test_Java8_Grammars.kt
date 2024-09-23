@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import org.junit.Test
 import kotlin.test.assertNotNull
 

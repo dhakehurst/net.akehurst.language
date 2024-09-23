@@ -18,7 +18,7 @@ package net.akehurst.language.util
 
 internal fun <E> MutableSet<E>.addIfNotNull(e: E?) = e?.let { this.add(it) }
 
-internal fun <V> cached(initializer: () -> V) = CachedValue(initializer)
+fun <V> cached(initializer: () -> V) = CachedValue(initializer)
 
 class CachedValue<V>(initializer: () -> V) {
     companion object {

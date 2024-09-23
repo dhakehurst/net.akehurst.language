@@ -16,9 +16,9 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.language.grammar.AglGrammar
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -33,7 +33,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
     private val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals.toList())
     private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
-    private val rrs = parser.runtimeRuleSet
+    private val rrs = parser.ruleSet as RuntimeRuleSet
 
     private val userGoalRuleName = "rule"
 
@@ -68,9 +68,9 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
-        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+        val actual = (parser.ruleSet as RuntimeRuleSet).fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
+        val expected = aut(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
             state(RP(G, 0, SR))     /* G = . S   */
 
         }
@@ -86,9 +86,9 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
-        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+        val actual = (parser.ruleSet as RuntimeRuleSet).fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
+        val expected = aut(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
             val s0 = state(RP(G, 0, SR))     /* G = . S   */
 
         }
@@ -104,9 +104,9 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
-        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+        val actual = (parser.ruleSet as RuntimeRuleSet).fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
+        val expected = aut(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
 
         }

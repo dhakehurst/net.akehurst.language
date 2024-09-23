@@ -45,13 +45,14 @@ data class ParseResultDefault(
     override val issues: IssueCollection<LanguageIssue>
 ) : ParseResult
 
-internal class LeftCornerParser(
+class LeftCornerParser(
     val scanner: Scanner,
     ruleSet: RuleSet
 ) : Parser {
 
     val automatonKind = AutomatonKind.LOOKAHEAD_1 //TODO: make configuration arg
-    val runtimeRuleSet = ruleSet as RuntimeRuleSet
+    override val ruleSet: RuleSet get() = runtimeRuleSet
+    internal val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
     // cached only so it can be interrupted
     private var runtimeParser: RuntimeParser? = null
@@ -242,7 +243,7 @@ internal class LeftCornerParser(
 
     }
 
-    override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpineDefault> {
+    override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpine> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, position)
@@ -290,7 +291,7 @@ internal class LeftCornerParser(
         }
     }
 
-    override fun expectedTerminalsAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeRule> {
+    override fun expectedTerminalsAt(sentenceText: String, position: Int, options: ParseOptions): Set<Rule> {
         val expectedSpines = this.expectedAt(sentenceText, position, options)
         return expectedSpines.flatMap { it.expectedNextTerminals }.flatMap {
             when {

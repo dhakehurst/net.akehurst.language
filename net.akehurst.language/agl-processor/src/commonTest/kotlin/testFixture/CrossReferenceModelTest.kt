@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.language.reference.test
 
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 
 object CrossReferenceModelTest {
 

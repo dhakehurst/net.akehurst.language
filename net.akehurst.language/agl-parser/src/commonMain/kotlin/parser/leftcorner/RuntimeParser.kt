@@ -22,7 +22,7 @@ import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -32,7 +32,6 @@ import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.automaton.api.ParseAction
-import net.akehurst.language.automaton.leftcorner.*
 import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.InputLocation
@@ -467,8 +466,8 @@ internal class RuntimeParser(
                         val p2 = t2.to.rulePositions.first().position
                         when {
                             p1 == p2 -> 0
-                            RulePosition.END_OF_RULE == p1 -> 1
-                            RulePosition.END_OF_RULE == p2 -> -1
+                            RulePositionRuntime.END_OF_RULE == p1 -> 1
+                            RulePositionRuntime.END_OF_RULE == p2 -> -1
                             p1 > p2 -> 1
                             p1 < p2 -> -1
                             else -> 0// should never happen !
@@ -543,8 +542,8 @@ internal class RuntimeParser(
             val p2 = t2.first.to.rulePositions.first().position
             when {
                 p1 == p2 -> 0
-                RulePosition.END_OF_RULE == p1 -> 1
-                RulePosition.END_OF_RULE == p2 -> -1
+                RulePositionRuntime.END_OF_RULE == p1 -> 1
+                RulePositionRuntime.END_OF_RULE == p2 -> -1
                 p1 > p2 -> 1
                 p1 < p2 -> -1
                 else -> 0// should never happen !
@@ -564,8 +563,8 @@ internal class RuntimeParser(
                 val p2 = t2.first.to.rulePositions.first().position
                 when {
                     p1 == p2 -> 0
-                    RulePosition.END_OF_RULE == p1 -> 1
-                    RulePosition.END_OF_RULE == p2 -> -1
+                    RulePositionRuntime.END_OF_RULE == p1 -> 1
+                    RulePositionRuntime.END_OF_RULE == p2 -> -1
                     p1 > p2 -> 1
                     p1 < p2 -> -1
                     else -> 0// should never happen !

@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.scope
 
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.api.scope.ScopedItem
 

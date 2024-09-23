@@ -79,8 +79,8 @@ internal class RuntimeRuleSetBuilder2(
         this._ruleBuilders[name] = rb
     }
 
-    fun literal(literalUnescaped: String, isSkip: Boolean = false) = literal(null, literalUnescaped, isSkip)
-    fun literal(name: String?, literalUnescaped: String, isSkip: Boolean = false) {
+    override fun literal(literalUnescaped: String, isSkip: Boolean) = literal(null, literalUnescaped, isSkip)
+    override fun literal(name: String?, literalUnescaped: String, isSkip: Boolean) {
         val tag = name ?: "'$literalUnescaped'"
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
@@ -92,8 +92,8 @@ internal class RuntimeRuleSetBuilder2(
         }
     }
 
-    fun pattern(value: String, isSkip: Boolean = false) = pattern(null, value, isSkip)
-    fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean = false) {
+    override fun pattern(value: String, isSkip: Boolean) = pattern(null, value, isSkip)
+    override fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean) {
         val tag = name ?: "\"$patternUnescaped\""
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing

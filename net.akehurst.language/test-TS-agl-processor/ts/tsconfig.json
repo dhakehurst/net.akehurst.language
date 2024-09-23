@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "NodeNext",
+    "declaration": true,
+    "declarationMap": true,
+    "moduleResolution": "NodeNext",
+    "noImplicitOverride": true,
+    "sourceMap": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6",
+      "es2017", /* needed to use '.include()' for string[] array */
+      "es2019"
+    ]
+  },
+
+  "include": ["**/*.mts"],
+  "exclude": ["out/**","**/*.spec.ts"]
+}

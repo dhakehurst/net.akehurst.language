@@ -16,11 +16,10 @@
 
 package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.language.grammar.asm.builder.grammar
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.grammar.asm.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -33,7 +32,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
 
         }
         assertTrue(expected.matches(actual))
@@ -47,7 +46,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             concatenation("S") { empty() }
         }
 
@@ -63,7 +62,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             literal("A", "a")
         }
 
@@ -79,7 +78,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             concatenation("S") { ref("'a'"); ref("'a'") }
             literal("a")
         }
@@ -96,7 +95,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             pattern("ABC", "[a-c]")
         }
 
@@ -112,7 +111,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             concatenation("S") { literal("a"); literal("b"); literal("c") }
         }
 
@@ -134,7 +133,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             concatenation("S") { ref("A"); ref("B"); ref("C") }
             concatenation("A") { literal("a") }
             concatenation("B") { literal("b") }
@@ -157,7 +156,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             choiceLongest("S") {
                 literal("a")
                 literal("b")
@@ -187,7 +186,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             choiceLongest("S") {
                 ref("a")
                 ref("b")
@@ -213,7 +212,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             choiceLongest("S") {
                 concatenation { literal("a"); literal("b") }
                 literal("c")
@@ -292,7 +291,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             optional("S", "'a'")
             literal("a")
         }
@@ -311,7 +310,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             optional("S", "a")
             concatenation("a") { literal("a") }
         }
@@ -328,7 +327,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet("test.Test") {
+        val expected = ruleSet("test.Test") {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
@@ -347,7 +346,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             multi("S", 0, -1, "a")
             concatenation("a") { literal("a") }
         }
@@ -364,7 +363,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             multi("S", 1, -1, "'a'")
             literal("a")
         }
@@ -383,7 +382,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             multi("S", 1, -1, "a")
             concatenation("a") { literal("a") }
         }
@@ -400,7 +399,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             sList("S", 0, -1, "'a'", "','")
             literal("a")
             literal(",")
@@ -422,7 +421,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             sList("S", 0, -1, "a", "c")
             concatenation("a") { literal("a") }
             concatenation("c") { literal(",") }
@@ -440,7 +439,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet {
+        val expected = ruleSet("Test") {
             sList("S", 1, -1, "'a'", "','")
             literal("a")
             literal(",")
@@ -462,7 +461,7 @@ class test_Converter {
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet("test.Test") {
+        val expected = ruleSet("test.Test") {
             sList("S", 1, -1, "a", "c")
             concatenation("a") { literal("a") }
             concatenation("c") { literal(",") }
@@ -497,9 +496,9 @@ class test_Converter {
         }
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet("test.Test") {
+        val expected = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
-            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY, isPseudo = true) {
+            choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("b"); ref("c") }
                 concatenation { ref("d") }
             }
@@ -540,7 +539,7 @@ class test_Converter {
         }
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val expected = runtimeRuleSet("test.Test") {
+        val expected = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("BC") }

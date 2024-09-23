@@ -17,16 +17,20 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarModel
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.language.style.AglStyleModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
@@ -38,7 +42,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
 
-    abstract override val identity: QualifiedName
+    abstract override val identity: LanguageIdentity
     abstract override var grammarStr: String?
 
     override var grammarList: GrammarModel by Delegates.observable(grammarList) { _, oldValue, newValue ->

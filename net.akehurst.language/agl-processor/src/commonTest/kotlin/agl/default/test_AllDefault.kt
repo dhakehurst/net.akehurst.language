@@ -19,23 +19,23 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.AsmTransformRuleSetBuilder
-import net.akehurst.language.agl.language.asmTransform.asmTransform
-import net.akehurst.language.agl.language.asmTransform.test.AsmTransformModelTest
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
+import net.akehurst.language.transform.asm.AsmTransformRuleSetBuilder
+import net.akehurst.language.transform.asm.asmTransform
+import net.akehurst.language.transform.asm.test.AsmTransformModelTest
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.typemodel.api.TypeModel
@@ -63,7 +63,7 @@ class test_AllDefault {
 
         class TestDataForGeneratedParser(
             val grammarStr: String,
-            val expectedRrs: RuntimeRuleSet,
+            val expectedRrs: RuleSet,
             val expectedTm: TypeModel,
             val expectedTr: TransformModel
         ) {
@@ -132,7 +132,7 @@ class test_AllDefault {
 
         fun test(
             grammarStr: String,
-            expectedRrs: RuntimeRuleSet,
+            expectedRrs: RuleSet,
             expectedTm: TypeModel,
             expectedTr: TransformModel,
             sentenceIndex: Int? = null,
@@ -158,7 +158,7 @@ class test_AllDefault {
                     S =  ;
                 }
             """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { empty() }
         }
         /*
@@ -203,7 +203,7 @@ class test_AllDefault {
                 S = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -237,7 +237,7 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a") }
             literal("a", "a")
 
@@ -279,7 +279,7 @@ class test_AllDefault {
                 S = "[a-z]" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { pattern("[a-z]") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -313,7 +313,7 @@ class test_AllDefault {
                 leaf v = "[a-z]" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("v") }
             pattern("v", "[a-z]")
         }
@@ -357,7 +357,7 @@ class test_AllDefault {
                 C = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("A"); ref("B"); ref("C"); }
             concatenation("A") { literal("a") }
             concatenation("B") { literal("b") }
@@ -412,7 +412,7 @@ class test_AllDefault {
                 C = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("A"); literal(","); ref("B"); literal(","); ref("C"); }
             concatenation("A") { literal("a") }
             concatenation("B") { literal("b") }
@@ -465,8 +465,8 @@ class test_AllDefault {
                 S = 'a' | 'b' | 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
                 literal("a")
                 literal("b")
                 literal("c")
@@ -507,8 +507,8 @@ class test_AllDefault {
                 leaf x = 'x';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
                 ref("A")
                 ref("B")
                 ref("C")
@@ -607,17 +607,17 @@ class test_AllDefault {
                 M = 'x' | 'y' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
                 ref("L")
                 ref("M")
             }
-            choice("L", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("L") {
                 literal("a")
                 literal("b")
                 literal("c")
             }
-            choice("M", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("M") {
                 literal("x")
                 literal("y")
             }
@@ -681,17 +681,17 @@ class test_AllDefault {
                 leaf y = 'y' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
                 ref("L")
                 ref("M")
             }
-            choice("L", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("L") {
                 ref("a")
                 ref("b")
                 ref("c")
             }
-            choice("M", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("M") {
                 ref("x")
                 ref("y")
             }
@@ -771,14 +771,14 @@ class test_AllDefault {
                 leaf x = 'x' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
                 ref("A")
                 ref("B")
                 ref("C")
             }
             concatenation("A") { ref("a"); ref("x") }
-            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("B") {
                 ref("C")
                 ref("D")
             }
@@ -886,10 +886,10 @@ class test_AllDefault {
                 leaf x = 'x';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A"); ref("B"); ref("C") }
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") { ref("A"); ref("B"); ref("C") }
             concatenation("A") { ref("a"); ref("x") }
-            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("c"); ref("D") }
+            choiceLongest("B") { ref("c"); ref("D") }
             concatenation("C") { ref("c") }
             concatenation("D") { ref("d") }
             literal("a", "a")
@@ -973,7 +973,7 @@ class test_AllDefault {
                 S = 'a'? ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             optional("S", "'a'")
             literal("a")
         }
@@ -1012,7 +1012,7 @@ class test_AllDefault {
                 leaf a = 'a';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             optional("S", "a")
             literal("a", "a")
         }
@@ -1061,7 +1061,7 @@ class test_AllDefault {
                 leaf c = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt1"); ref("c") }
             optional("§S§opt1", "'b'", isPseudo = true)
             literal("a", "a")
@@ -1120,7 +1120,7 @@ class test_AllDefault {
                 leaf c = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt1"); ref("c") }
             optional("§S§opt1", "b", isPseudo = true)
             literal("a", "a")
@@ -1184,7 +1184,7 @@ class test_AllDefault {
                 leaf a = 'a';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             optional("S", "A")
             concatenation("A") { ref("a") }
             literal("a", "a")
@@ -1243,7 +1243,7 @@ class test_AllDefault {
                 leaf b = 'b';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("b"); ref("§S§opt1") }
             optional("§S§opt1", "A", isPseudo = true)
             concatenation("A") { ref("a") }
@@ -1310,7 +1310,7 @@ class test_AllDefault {
                 leaf a = 'a';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("oA") }
             optional("oA", "A")
             concatenation("A") { ref("a") }
@@ -1378,7 +1378,7 @@ class test_AllDefault {
                 S = 'a'* ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
@@ -1428,7 +1428,7 @@ class test_AllDefault {
                 leaf c = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§multi1"); ref("c") }
             multi("§S§multi1", 0, -1, "'b'", isPseudo = true)
             literal("a", "a")
@@ -1503,7 +1503,7 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             multi("S", 0, -1, "a")
             literal("a", "a")
         }
@@ -1567,7 +1567,7 @@ class test_AllDefault {
                 leaf c = 'c';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§multi1"); ref("c") }
             multi("§S§multi1", 0, -1, "b", isPseudo = true)
             literal("a", "a")
@@ -1649,7 +1649,7 @@ class test_AllDefault {
                 leaf a = 'a';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             multi("S", 0, -1, "A")
             concatenation("A") { ref("a") }
             literal("a", "a")
@@ -1725,7 +1725,7 @@ class test_AllDefault {
                 leaf c = 'c';
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("b"); ref("§S§multi1"); ref("c") }
             multi("§S§multi1", 0, -1, "A", isPseudo = true)
             concatenation("A") { ref("a") }
@@ -1815,7 +1815,7 @@ class test_AllDefault {
                 as = 'a'* ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("as") }
             multi("as", 0, -1, "'a'")
             literal("a")
@@ -1875,7 +1875,7 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("as") }
             multi("as", 0, -1, "a")
             literal("a", "a")
@@ -1947,7 +1947,7 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("as") }
             multi("as", 0, -1, "ao")
             optional("ao", "a")
@@ -2032,10 +2032,10 @@ class test_AllDefault {
                 leaf b = 'b' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("abs") }
             multi("abs", 0, -1, "AB")
-            choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("AB") {
                 ref("A")
                 ref("B")
             }
@@ -2201,10 +2201,10 @@ class test_AllDefault {
                 leaf N = "[a-zA-Z]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             pattern("WS", "\\s+", true)
             concatenation("S") { ref("E") }
-            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("E") {
                 ref("V")
                 ref("A")
             }
@@ -2306,7 +2306,7 @@ class test_AllDefault {
                 as = ['a' / ',']* ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("as") }
             sList("as", 0, -1, "'a'", "','")
             literal("a")
@@ -2372,7 +2372,7 @@ class test_AllDefault {
                 leaf c = 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("bs"); ref("c") }
             sList("bs", 0, -1, "'b'", "','")
             literal("a", "a")
@@ -2459,7 +2459,7 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("as") }
             sList("as", 0, -1, "a", "','")
             literal(",")
@@ -2541,10 +2541,10 @@ class test_AllDefault {
                 leaf b = 'b' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("abs") }
             sList("abs", 0, -1, "AB", "','")
-            choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("AB") {
                 ref("A")
                 ref("B")
             }
@@ -2708,7 +2708,7 @@ class test_AllDefault {
                 B = 'b' ;
             }
         """
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("A"); ref("§S§opt1") }
             optional("§S§opt1", "B", isPseudo = true)
             sList("A", 1, -1, "'a'", "'.'")
@@ -2797,7 +2797,7 @@ class test_AllDefault {
                 leaf B = 'b' ;
             }
         """
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("As"); ref("§S§opt1") }
             optional("§S§opt1", "B", isPseudo = true)
             sList("As", 1, -1, "A", "'.'")
@@ -2895,7 +2895,7 @@ class test_AllDefault {
                 a = 'a' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("ass") }
             sList("ass", 0, -1, "as", "','")
             multi("as", 0, -1, "a")
@@ -3066,7 +3066,7 @@ class test_AllDefault {
                 S = ('b' 'c' 'd') ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("§S§group1") }
             concatenation("§S§group1", isPseudo = true) { literal("b"); literal("c"); literal("d") }
         }
@@ -3104,7 +3104,7 @@ class test_AllDefault {
                 leaf d = 'd' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("§S§group1") }
             concatenation("§S§group1", isPseudo = true) { ref("b"); ref("c"); ref("d") }
             literal("b", "b")
@@ -3161,7 +3161,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§group1"); ref("e") }
             concatenation("§S§group1", isPseudo = true) { literal("b"); literal("c"); literal("d") }
             literal("a", "a")
@@ -3213,7 +3213,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§group1"); ref("e") }
             concatenation("§S§group1", isPseudo = true) { ref("b"); ref("c"); ref("d") }
             literal("a", "a")
@@ -3285,7 +3285,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§group1"); ref("§S§group2"); ref("e") }
             concatenation("§S§group1", isPseudo = true) { ref("b"); ref("c"); ref("d") }
             concatenation("§S§group2", isPseudo = true) { ref("b"); ref("a"); ref("c") }
@@ -3367,7 +3367,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§group1"); ref("e") }
             concatenation("§S§group1", isPseudo = true) { ref("b") }
             literal("a", "a")
@@ -3429,7 +3429,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§group2"); ref("e") }
             concatenation("§S§group2", isPseudo = true) { ref("b"); ref("§S§group1"); ref("d") }
             concatenation("§S§group1", isPseudo = true) { ref("c") }
@@ -3516,7 +3516,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choiceLongest("§S§choice1", isPseudo = true) {
                 ref("b")
@@ -3602,7 +3602,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("b"); ref("c") }
@@ -3688,7 +3688,7 @@ class test_AllDefault {
                 leaf f = 'f' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("f") }
             choiceLongest("§S§choice1", isPseudo = true) {
                 concatenation { ref("b"); ref("c") }
@@ -3783,7 +3783,7 @@ class test_AllDefault {
                 leaf f = 'f' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§choice2"); ref("f") }
             choiceLongest("§S§choice2", isPseudo = true) {
                 concatenation { ref("§S§choice1"); ref("b"); ref("c") }
@@ -3889,7 +3889,7 @@ class test_AllDefault {
                 leaf f = 'f' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { ref("a"); ref("§S§opt1"); ref("f") }
             optional("§S§opt1", "§S§choice1", isPseudo = true)
             choiceLongest("§S§choice1", isPseudo = true) {
@@ -3993,7 +3993,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4032,7 +4032,7 @@ class test_AllDefault {
                 leaf f = 'f' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4069,7 +4069,7 @@ class test_AllDefault {
                 leaf d = 'd' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4108,7 +4108,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4147,7 +4147,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4185,7 +4185,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4223,7 +4223,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4261,7 +4261,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4299,7 +4299,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4339,7 +4339,7 @@ class test_AllDefault {
                 leaf y = 'y' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4378,7 +4378,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4417,7 +4417,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4458,7 +4458,7 @@ class test_AllDefault {
                 leaf y = 'y' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4499,7 +4499,7 @@ class test_AllDefault {
                 leaf y = 'y' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4551,7 +4551,7 @@ class test_AllDefault {
                 leaf e = 'e' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4596,7 +4596,7 @@ class test_AllDefault {
                 leaf d = 'd' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4639,7 +4639,7 @@ class test_AllDefault {
                C = 'c' I::S 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4679,7 +4679,7 @@ class test_AllDefault {
                B = 'b' I::S 'b' | 'c' I::S 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4721,7 +4721,7 @@ class test_AllDefault {
                C = 'c' I::S 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4760,7 +4760,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4796,7 +4796,7 @@ class test_AllDefault {
                 leaf ID = "[a-z]" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4833,7 +4833,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4874,7 +4874,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4911,7 +4911,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4948,7 +4948,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -4985,7 +4985,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5022,7 +5022,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5059,7 +5059,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5098,7 +5098,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5139,7 +5139,7 @@ class test_AllDefault {
                 leaf ID = "[a-zA-Z_][a-zA-Z_0-9]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5182,7 +5182,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
@@ -5225,7 +5225,7 @@ class test_AllDefault {
                 leaf NAME = "[a-zA-Z]+" ;
             }
         """.trimIndent()
-        val expectedRrs = runtimeRuleSet("test.Test") {
+        val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {

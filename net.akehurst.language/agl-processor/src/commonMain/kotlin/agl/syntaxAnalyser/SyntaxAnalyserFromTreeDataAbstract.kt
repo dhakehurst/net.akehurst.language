@@ -17,19 +17,18 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.RuleItem
-import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptDataNode
-import net.akehurst.language.api.sppt.TreeData
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {

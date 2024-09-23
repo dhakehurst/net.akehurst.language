@@ -17,9 +17,9 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.base.api.SimpleName
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -41,7 +41,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         val processor by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration(Agl.configurationDefault()) { targetGrammarName(SimpleName("BlocksAndStatements")); defaultGoalRuleName("Block") },
+                Agl.configuration(Agl.configurationDefault()) { targetGrammarName(("BlocksAndStatements")); defaultGoalRuleName("Block") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         context(ContextFromGrammarRegistry(Agl.registry))

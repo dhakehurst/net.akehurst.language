@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.util
 
 import net.akehurst.language.agl.agl.syntaxAnalyser.SyntaxAnalyserGeneratorKotlin
-import net.akehurst.language.agl.language.expressions.AglExpressions
+import net.akehurst.language.expressions.processor.AglExpressions
 
 fun main() {
 

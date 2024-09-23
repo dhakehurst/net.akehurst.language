@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.leftcorner.SentenceDefault
 import net.akehurst.language.regex.agl.regexMatcher
 import net.akehurst.language.regex.api.RegexMatcher
@@ -114,13 +115,13 @@ internal class SimpleScanner(
     }
 }
 
-internal class SPPTParserDefault(
-    val rootRuntimeRuleSet: RuntimeRuleSet,
+class SPPTParserDefault(
+    val rootRuleSet: RuleSet,
     val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
     private var _oldTreeData: TreeData? = null
-
+    private val rootRuntimeRuleSet get() = rootRuleSet as RuntimeRuleSet
     // --- SPPTParser ---
     override lateinit var tree: SharedPackedParseTree
 

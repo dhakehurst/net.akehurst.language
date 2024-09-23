@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val grammar: Grammar,
@@ -31,7 +31,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }
 
     private var _originalRuleMap: Map<Pair<Int, Int>, RuleItem>
-    private var _runtimeRuleSet: RuntimeRuleSet
+    private var _runtimeRuleSet: RuleSet
 
     init {
         val converterToRuntimeRules = ConverterToRuntimeRules(grammar)

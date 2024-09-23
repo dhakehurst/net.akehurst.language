@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.issues.api.LanguageProcessorPhase

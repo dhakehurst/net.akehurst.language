@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
@@ -46,10 +46,10 @@ internal class test_multi_1_n_choice : test_AutomatonAbstract() {
         val b = rrs.findRuntimeRule("'b'")
 
         val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
-        val s2 = SM.createState(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
-        val s3 = SM.createState(listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)))
-        val s4 = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
+        val s1 = SM.createState(listOf(RulePositionRuntime(a, 0, RulePositionRuntime.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RulePositionRuntime(b, 0, RulePositionRuntime.END_OF_RULE)))
+        val s3 = SM.createState(listOf(RulePositionRuntime(AB, 0, RulePositionRuntime.END_OF_RULE)))
+        val s4 = SM.createState(listOf(RulePositionRuntime(S, 0, RulePositionRuntime.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
         val lhs_ab = SM.createLookaheadSet(false, false, false, setOf(a, b))

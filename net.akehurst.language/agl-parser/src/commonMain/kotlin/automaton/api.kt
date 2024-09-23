@@ -16,6 +16,8 @@
 
 package net.akehurst.language.automaton.api
 
+import net.akehurst.language.parser.api.RulePosition
+
 enum class AutomatonKind {
     LOOKAHEAD_NONE,     // LC(O) like LR(0)
     LOOKAHEAD_SIMPLE,   // SLC like SLR
@@ -39,6 +41,7 @@ internal annotation class AglAutomatonDslMarker
 
 @AglAutomatonDslMarker
 interface AutomatonBuilder {
+    fun state(rp:RulePosition)
     fun state(ruleNumber:Int, option:Int, position:Int)
     fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }

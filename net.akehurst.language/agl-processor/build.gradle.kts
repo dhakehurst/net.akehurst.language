@@ -1,13 +1,13 @@
 plugins {
-    alias(libs.plugins.reflex)
+//    alias(libs.plugins.reflex)
 }
 
 dependencies {
     commonMainApi(project(":agl-parser"))
+    commonMainApi(project(":agl-regex"))
+    commonMainApi(project(":collections")) //TODO merge with kotlinx collections
 
     // commonMainApi(project(":type-model"))
-    commonMainImplementation(project(":collections"))
-    commonMainImplementation(libs.nak.kotlinx.reflect)
 }
 
 kotlin {
@@ -39,6 +39,7 @@ kotlin {
     }
 }
 
+/*
 kotlinxReflect {
     forReflectionMain.set(
         listOf(
@@ -57,29 +58,16 @@ kotlinxReflect {
         )
     )
 }
-
-val signTasks = arrayOf(
-    "signKotlinMultiplatformPublication",
-    "signJvm8Publication",
-    "signJsPublication",
-    //"signWasmJsPublication",
-   // "signMacosArm64Publication"
-)
-
-tasks.forEach {
-
-    when {
-        it.name.matches(Regex("publish(.)+PublicationToMavenLocal")) -> {
-            println("${it.name}.mustRunAfter(${signTasks.toList()})")
-            it.mustRunAfter(*signTasks)
-        }
-    }
-}
+*/
 
 exportPublic {
     exportPatterns.set(
         listOf(
+            "net.akehurst.language.agl.Agl",
             "net.akehurst.language.api.**",
+            "net.akehurst.language.base.api.**",
+            "net.akehurst.language.style.api.**",
+
             "net.akehurst.language.typemodel.api.**",
             "net.akehurst.language.agl.regex.**",
             "net.akehurst.language.agl.scanner.**",
@@ -96,13 +84,7 @@ exportPublic {
     )
 }
 
-tasks.forEach {
-    if (it.name.startsWith("publish")) {
-        it.doFirst {
-            check(file("src/commonMain/kotlin/util/debug.kt").readText().contains("const val CHECK = false")) { "To publish, must set Debug.CHECK = false" }
-        }
-    }
-}
+
 
 /*
 jacoco {

@@ -19,6 +19,7 @@ package net.akehurst.language.automaton.leftcorner.concatenation
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.AutomatonTest
+import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonAbstract
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -125,7 +126,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             //val result = parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
-        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S") as ParserStateSet
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")

@@ -16,10 +16,10 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.parser.api.InputLocation
 
 /**

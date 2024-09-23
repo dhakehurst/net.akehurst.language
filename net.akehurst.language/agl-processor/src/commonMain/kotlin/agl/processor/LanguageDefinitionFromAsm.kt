@@ -16,20 +16,20 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.language.grammar.asm.asDefinitionBlock
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.grammar.asm.asGrammarModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.api.processor.LanguageIdentity
 
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
-    override val identity: QualifiedName,
+    override val identity: LanguageIdentity,
     grammar: Grammar,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    grammar.asDefinitionBlock(),
+    grammar.asGrammarModel(),
     buildForDefaultGoal,
     initialConfiguration
 ) {

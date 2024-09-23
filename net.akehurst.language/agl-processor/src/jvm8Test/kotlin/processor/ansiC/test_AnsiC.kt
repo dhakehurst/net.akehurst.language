@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith

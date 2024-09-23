@@ -33,14 +33,14 @@ import net.akehurst.language.sppt.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 
-internal class Automaton(
+class AutomatonForMinimal(
     val runtimeRuleSet: RuntimeRuleSet,
     val userGoalRule: RuntimeRule
 ) {
     companion object {
         var nextNumber: Int = 0
 
-        fun merge(trans: Set<Transition>): Set<Transition> {
+        fun merge(trans: Set<TransitionForMinimal>): Set<TransitionForMinimal> {
             val g = trans.groupBy { Triple(it.source, it.target, it.action) }
             val m = g.map { me ->
                 val from = me.key.first
@@ -48,18 +48,18 @@ internal class Automaton(
                 val to = me.key.second
                 val lh = me.value.map { it.lh }.reduce { acc, it -> acc.union(it) }
                 val up = me.value.map { it.up }.reduce { acc, it -> acc.union(it) } //FIXME: should really only merge if one is subset of the other
-                Transition(from, to, action, lh, up)
+                TransitionForMinimal(from, to, action, lh, up)
             }.toSet()
             return m
         }
     }
 
     val number = nextNumber++
-    private val _states = mutableMapOf<RulePosition, State>()
+    private val _states = mutableMapOf<RulePositionRuntime, StateForMinimal>()
     val states get() = _states.values
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startState = createState(RulePosition(goalRule, 0, 0))
+    val startState = createState(RulePositionRuntime(goalRule, 0, 0))
 
     val usedRules: Set<RuntimeRule> by lazy {
         this.runtimeRuleSet.calcUsedRules(this.startState.rp.rule)
@@ -68,10 +68,10 @@ internal class Automaton(
         this.usedRules.filter { it.isTerminal }.toSet()
     }
 
-    fun createState(rp: RulePosition): State {
+    fun createState(rp: RulePositionRuntime): StateForMinimal {
         var s = _states[rp]
         return if (null == s) {
-            s = State(this, this._states.size, rp)
+            s = StateForMinimal(this, this._states.size, rp)
             _states[rp] = s
             s
         } else {
@@ -117,7 +117,7 @@ internal class Automaton(
 
     override fun hashCode(): Int = this.number
     override fun equals(other: Any?): Boolean = when {
-        other !is Automaton -> false
+        other !is AutomatonForMinimal -> false
         this.number != other.number -> false
         else -> true
     }
@@ -125,31 +125,31 @@ internal class Automaton(
     override fun toString(): String = "$number"
 }
 
-internal class State(
-    val automaton: Automaton,
+class StateForMinimal(
+    val automaton: AutomatonForMinimal,
     val number: Int,
-    val rp: RulePosition
+    val rp: RulePositionRuntime
 ) {
-    val outCompleteTransitionsByCtx = mutableMapOf<Pair<State, State>, Set<Transition>>()
-    val outIncompleteTransitionsByCtx = mutableMapOf<State, Set<Transition>>()
+    val outCompleteTransitionsByCtx = mutableMapOf<Pair<StateForMinimal, StateForMinimal>, Set<TransitionForMinimal>>()
+    val outIncompleteTransitionsByCtx = mutableMapOf<StateForMinimal, Set<TransitionForMinimal>>()
     val allOutTransition get() = (outCompleteTransitionsByCtx + outIncompleteTransitionsByCtx).values.flatten().toSet()
 
-    fun outCompleteTransForCtx(key: Pair<State, State>): Set<Transition>? = outCompleteTransitionsByCtx[key]
-    fun outIncompleteTransForCtx(ctx: State): Set<Transition>? = outIncompleteTransitionsByCtx[ctx]
+    fun outCompleteTransForCtx(key: Pair<StateForMinimal, StateForMinimal>): Set<TransitionForMinimal>? = outCompleteTransitionsByCtx[key]
+    fun outIncompleteTransForCtx(ctx: StateForMinimal): Set<TransitionForMinimal>? = outIncompleteTransitionsByCtx[ctx]
 
-    fun addOutCompleteTrans(key: Pair<State, State>, trans: Set<Transition>) = trans.forEach { mergeCompleteTransFor(key, it) }
-    fun addOutIncompleteTrans(key: State, trans: Set<Transition>) = trans.forEach { mergeIncompleteTransFor(key, it) }
+    fun addOutCompleteTrans(key: Pair<StateForMinimal, StateForMinimal>, trans: Set<TransitionForMinimal>) = trans.forEach { mergeCompleteTransFor(key, it) }
+    fun addOutIncompleteTrans(key: StateForMinimal, trans: Set<TransitionForMinimal>) = trans.forEach { mergeIncompleteTransFor(key, it) }
 
-    private fun mergeCompleteTransFor(key: Pair<State, State>, tran: Transition) {
+    private fun mergeCompleteTransFor(key: Pair<StateForMinimal, StateForMinimal>, tran: TransitionForMinimal) {
         val existing = outCompleteTransForCtx(key) ?: emptySet()
-        val merged = Automaton.merge(existing + tran)
+        val merged = AutomatonForMinimal.merge(existing + tran)
         outCompleteTransitionsByCtx[key] = merged
 
     }
 
-    private fun mergeIncompleteTransFor(key: State, tran: Transition) {
+    private fun mergeIncompleteTransFor(key: StateForMinimal, tran: TransitionForMinimal) {
         val existing = outIncompleteTransForCtx(key) ?: emptySet()
-        val merged = Automaton.merge(existing + tran)
+        val merged = AutomatonForMinimal.merge(existing + tran)
         outIncompleteTransitionsByCtx[key] = merged
 
     }
@@ -157,7 +157,7 @@ internal class State(
     private val _hashCode_cache = arrayOf(automaton.number, this.number).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
-        other !is State -> false
+        other !is StateForMinimal -> false
         this.automaton.number != other.automaton.number -> false
         this.number != other.number -> false
         else -> true
@@ -166,9 +166,9 @@ internal class State(
     override fun toString(): String = "$number/${automaton.number} $rp"
 }
 
-internal data class Transition(
-    val source: State,
-    val target: State,
+data class TransitionForMinimal(
+    val source: StateForMinimal,
+    val target: StateForMinimal,
     val action: ParseAction,
     val lh: LookaheadSetPart,
     val up: LookaheadSetPart
@@ -183,7 +183,7 @@ internal data class Transition(
     private val _hashCode_cache = arrayOf(source, target, action, lh, up).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
-        other !is Transition -> false
+        other !is TransitionForMinimal -> false
         this.source.number != other.source.number -> false
         this.target != other.target -> false
         this.action != other.action -> false
@@ -195,8 +195,8 @@ internal data class Transition(
     override fun toString(): String = "${source.rp} --> ${target.rp} $action[${lh}]($up) {${context.joinToString { it.rp.toString() }}}"
 }
 
-internal data class GSSNode(
-    val state: State,
+data class GSSNodeForMinimal(
+    val state: StateForMinimal,
     val rlh: LookaheadSetPart,
     /** Start Position */
     val sp: Int,
@@ -211,7 +211,7 @@ internal data class GSSNode(
     val isEmptyMatch get() = this.sp == this.nip
 }
 
-internal class CompleteNode(
+class CompleteNodeForMinimal(
     override val rule: RuntimeRule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
@@ -222,7 +222,7 @@ internal class CompleteNode(
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
-        other !is CompleteNode -> false
+        other !is CompleteNodeForMinimal -> false
         this.startPosition != other.startPosition -> false
         this.nextInputPosition != other.nextInputPosition -> false
         this.rule != other.rule -> false
@@ -232,10 +232,10 @@ internal class CompleteNode(
     override fun toString(): String = "CN(${rule.tag}|${option},$startPosition-$nextInputPosition)"
 }
 
-internal class MinimalParser private constructor(
-    val automaton: Automaton,
+class MinimalParser private constructor(
+    val automaton: AutomatonForMinimal,
     val isSkip: Boolean,
-    val skipAutomaton: Automaton?
+    val skipAutomaton: AutomatonForMinimal?
 ) {
 
     companion object {
@@ -243,13 +243,13 @@ internal class MinimalParser private constructor(
 
         fun parser(goalRuleName: String, runtimeRuleSet: RuntimeRuleSet): MinimalParser {
             val userGoalRule = runtimeRuleSet.findRuntimeRule(goalRuleName)
-            val automaton = Automaton(runtimeRuleSet, userGoalRule)
+            val automaton = AutomatonForMinimal(runtimeRuleSet, userGoalRule)
             val skipAutomaton = skipAutomaton(runtimeRuleSet)
             val goalRule = runtimeRuleSet.findRuntimeRule(goalRuleName)
             return MinimalParser(automaton, false, skipAutomaton)
         }
 
-        private fun skipAutomaton(runtimeRuleSet: RuntimeRuleSet): Automaton? {
+        private fun skipAutomaton(runtimeRuleSet: RuntimeRuleSet): AutomatonForMinimal? {
             val skipRules = runtimeRuleSet.runtimeRules.filter { it.isSkip }
             return if (skipRules.isEmpty()) {
                 null
@@ -263,42 +263,42 @@ internal class MinimalParser private constructor(
                 }
                 val skipMultiRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_RULE_NUMBER, RuntimeRuleSet.SKIP_RULE_TAG, false, false)
                     .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
-                Automaton(runtimeRuleSet, skipMultiRule)
+                AutomatonForMinimal(runtimeRuleSet, skipMultiRule)
             }
         }
 
-        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option)
+        private val GSSNodeForMinimal.complete get() = CompleteNodeForMinimal(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option)
 
-        private fun GraphStructuredStack<GSSNode>.setRoot(
-            state: State,
+        private fun GraphStructuredStack<GSSNodeForMinimal>.setRoot(
+            state: StateForMinimal,
             rlh: LookaheadSetPart,
             sp: Int,
             nibs: Int,
             nip: Int
-        ): GSSNode {
-            val nn = GSSNode(state = state, rlh = rlh, sp = sp, nip = nip)
+        ): GSSNodeForMinimal {
+            val nn = GSSNodeForMinimal(state = state, rlh = rlh, sp = sp, nip = nip)
             nn.nibs = nibs
             this.root(nn)
             return nn
         }
 
-        private fun GraphStructuredStack<GSSNode>.pushNode(
-            prev: GSSNode,
-            state: State,
+        private fun GraphStructuredStack<GSSNodeForMinimal>.pushNode(
+            prev: GSSNodeForMinimal,
+            state: StateForMinimal,
             rlh: LookaheadSetPart,
             sp: Int,
             nibs: Int,
             nip: Int
-        ): GSSNode {
-            val nn = GSSNode(state = state, rlh = rlh, sp = sp, nip = nip)
+        ): GSSNodeForMinimal {
+            val nn = GSSNodeForMinimal(state = state, rlh = rlh, sp = sp, nip = nip)
             nn.nibs = nibs
             this.push(prev, nn)
             return nn
         }
 
-        val CompleteNode.length get() = this.nextInputPosition - this.startPosition
+        val CompleteNodeForMinimal.length get() = this.nextInputPosition - this.startPosition
 
-        fun TreeDataGrowing<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode) {
+        fun TreeDataGrowing<GSSNodeForMinimal, CompleteNodeForMinimal>.setFirstChildForParent(parent: GSSNodeForMinimal, child: CompleteNodeForMinimal) {
             if (parent.isComplete) {
                 this.setFirstChildForComplete(parent.complete, child, parent.state.rp.rule.isChoiceAmbiguous)
             } else {
@@ -306,7 +306,7 @@ internal class MinimalParser private constructor(
             }
         }
 
-        private fun TreeDataGrowing<GSSNode, CompleteNode>.setNextChildInParent(oldParent: GSSNode, newParent: GSSNode, nextChild: CompleteNode) {
+        private fun TreeDataGrowing<GSSNodeForMinimal, CompleteNodeForMinimal>.setNextChildInParent(oldParent: GSSNodeForMinimal, newParent: GSSNodeForMinimal, nextChild: CompleteNodeForMinimal) {
             if (newParent.isComplete) {
                 this.setNextChildForCompleteParent(oldParent, newParent.complete, nextChild, newParent.state.rp.rule.isChoiceAmbiguous)
             } else {
@@ -316,7 +316,7 @@ internal class MinimalParser private constructor(
 
     }
 
-    private fun tracePeekHead(curPos: Int, hd: GSSNode) {
+    private fun tracePeekHead(curPos: Int, hd: GSSNodeForMinimal) {
         if (isSkip) {
             //parsing skip, don't log
         } else {
@@ -325,7 +325,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun traceTrans(hd: GSSNode, pv: State, tr: Transition, b: Boolean) {
+    private fun traceTrans(hd: GSSNodeForMinimal, pv: StateForMinimal, tr: TransitionForMinimal, b: Boolean) {
         if (isSkip) {
             //parsing skip, don't log
         } else {
@@ -335,7 +335,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun traceTrans(hd: GSSNode, pv: GSSNode, pp: GSSNode?, tr: Transition, b: Boolean) {
+    private fun traceTrans(hd: GSSNodeForMinimal, pv: GSSNodeForMinimal, pp: GSSNodeForMinimal?, tr: TransitionForMinimal, b: Boolean) {
         if (isSkip) {
             //parsing skip, don't log
         } else {
@@ -345,7 +345,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun traceDrop(hd: GSSNode) {
+    private fun traceDrop(hd: GSSNodeForMinimal) {
         if (isSkip) {
             //parsing skip, don't log
         } else {
@@ -354,8 +354,8 @@ internal class MinimalParser private constructor(
     }
 
     val ss = automaton.startState
-    var sppf = TreeDataGrowing<GSSNode, CompleteNode>(automaton.number)
-    val gss = GraphStructuredStack<GSSNode>(binaryHeap { parent, child ->
+    var sppf = TreeDataGrowing<GSSNodeForMinimal, CompleteNodeForMinimal>(automaton.number)
+    val gss = GraphStructuredStack<GSSNodeForMinimal>(binaryHeap { parent, child ->
         // Ordering rules:
         // 1) nextInputPosition lower number first
         // 2) shift before reduce (reduce happens if state.isAtEnd)
@@ -420,7 +420,7 @@ internal class MinimalParser private constructor(
         sppf.initialise(stNd, initialSkipData)
 
         var currentNextInputPosition = nip
-        val doneEmpties = mutableSetOf<Pair<State, Set<GSSNode>>>()
+        val doneEmpties = mutableSetOf<Pair<StateForMinimal, Set<GSSNodeForMinimal>>>()
         while (gss.hasNextHead) {
             val hd = gss.peekFirstHead!!
             if (TRACE) tracePeekHead(currentNextInputPosition, hd)
@@ -451,18 +451,18 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun recordGoal(sppf: TreeDataGrowing<GSSNode, CompleteNode>, hd: GSSNode) {
+    private fun recordGoal(sppf: TreeDataGrowing<GSSNodeForMinimal, CompleteNodeForMinimal>, hd: GSSNodeForMinimal) {
         sppf.complete.setRoot(hd.complete)
         gss.dropStack(hd) {}
     }
 
-    private fun growIncomplete(hd: GSSNode, peot: LookaheadSetPart) {
+    private fun growIncomplete(hd: GSSNodeForMinimal, peot: LookaheadSetPart) {
         for (pv in gss.peekPrevious(hd)) {
             growIncomplete2(hd, pv.state, peot)
         }
     }
 
-    private fun growIncomplete2(hd: GSSNode, pv: State, peot: LookaheadSetPart) {
+    private fun growIncomplete2(hd: GSSNodeForMinimal, pv: StateForMinimal, peot: LookaheadSetPart) {
         var grown = false
         val trans = transitionsIncomplete(hd.state, pv)
         for (tr in trans) {
@@ -477,10 +477,10 @@ internal class MinimalParser private constructor(
         if (grown.not()) gss.dropStack(hd) {}
     }
 
-    private fun growComplete(hd: GSSNode, peot: LookaheadSetPart) {
+    private fun growComplete(hd: GSSNodeForMinimal, peot: LookaheadSetPart) {
         var headGrownHeight = false
         var headGrownGraft = false
-        val dropPrevs = mutableMapOf<GSSNode, Boolean>()
+        val dropPrevs = mutableMapOf<GSSNodeForMinimal, Boolean>()
         for (pv in gss.peekPrevious(hd)) {
             var prevGrownHeight = false
             var prevGrownGraft = false
@@ -503,7 +503,7 @@ internal class MinimalParser private constructor(
         cleanUpGss(hd, headGrownHeight, headGrownGraft, dropPrevs)
     }
 
-    private fun cleanUpGss(hd: GSSNode, headGrownHeight: Boolean, headGrownGraft: Boolean, dropPrevs: Map<GSSNode, Boolean>) {
+    private fun cleanUpGss(hd: GSSNodeForMinimal, headGrownHeight: Boolean, headGrownGraft: Boolean, dropPrevs: Map<GSSNodeForMinimal, Boolean>) {
         when {
             headGrownHeight.not() && headGrownGraft.not() -> gss.dropStack(hd) {}
             headGrownHeight && headGrownGraft.not() -> gss.dropStack(hd) {}
@@ -519,11 +519,11 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun dropStackAndData(hd: GSSNode) {
+    private fun dropStackAndData(hd: GSSNodeForMinimal) {
         gss.dropStack(hd) { TODO() }
     }
 
-    private fun growComplete2(hd: GSSNode, pv: GSSNode, pp: GSSNode?, peot: LookaheadSetPart): Pair<Boolean, Boolean> {
+    private fun growComplete2(hd: GSSNodeForMinimal, pv: GSSNodeForMinimal, pp: GSSNodeForMinimal?, peot: LookaheadSetPart): Pair<Boolean, Boolean> {
         var grownHeight = false
         var grownGraft = false
         val pps = pp?.state ?: ss
@@ -554,7 +554,7 @@ internal class MinimalParser private constructor(
         return Pair(grownHeight, grownGraft)
     }
 
-    private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doGoal(hd: GSSNodeForMinimal, pv: GSSNodeForMinimal, tr: TransitionForMinimal, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (scanner.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
             val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nibs, hd.nip)//, nc)
@@ -565,7 +565,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun doWidth(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doWidth(hd: GSSNodeForMinimal, tr: TransitionForMinimal, peot: LookaheadSetPart): Boolean {
         val lf = scanner.findOrTryCreateLeaf(sentence!!, hd.nip, tr.target.rp.rule)
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
@@ -584,7 +584,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun doHeight(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doHeight(hd: GSSNodeForMinimal, pv: GSSNodeForMinimal, tr: TransitionForMinimal, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         val nip = hd.nip
         return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, nip)) {
@@ -616,7 +616,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun doGraft(hd: GSSNode, pv: GSSNode, pp: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doGraft(hd: GSSNodeForMinimal, pv: GSSNodeForMinimal, pp: GSSNodeForMinimal, tr: TransitionForMinimal, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (scanner!!.isLookingAtAnyOf(sentence!!, lh, hd.nip)) {
             val rlh = pv.rlh
@@ -647,7 +647,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun doEmbed(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doEmbed(hd: GSSNodeForMinimal, tr: TransitionForMinimal, peot: LookaheadSetPart): Boolean {
         val embeddedRhs = tr.target.rp.rule.rhs as RuntimeRuleRhsEmbedded
         val embeddedRRS = embeddedRhs.embeddedRuntimeRuleSet
         val embeddedGoal = embeddedRhs.embeddedStartRule
@@ -691,7 +691,7 @@ internal class MinimalParser private constructor(
     }
 
     // Automaton
-    private fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
+    private fun transitionsIncomplete(hd: StateForMinimal, pv: StateForMinimal): Set<TransitionForMinimal> {
         val key = pv
         val trans = hd.outIncompleteTransForCtx(key)
         return if (null == trans) {
@@ -706,9 +706,9 @@ internal class MinimalParser private constructor(
                     else -> ParseAction.WIDTH
                 }
                 val tgt = automaton.createState(it.terminalRule.asTerminalRulePosition)
-                Transition(hd, tgt, action, it.parentExpectedAt, LookaheadSetPart.EMPTY)
+                TransitionForMinimal(hd, tgt, action, it.parentExpectedAt, LookaheadSetPart.EMPTY)
             }.toSet()
-            val trs = Automaton.merge(ts)
+            val trs = AutomatonForMinimal.merge(ts)
             hd.addOutIncompleteTrans(key, trs)
             hd.outIncompleteTransForCtx(key)!!
         } else {
@@ -716,7 +716,7 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
+    private fun transitionsComplete(hd: StateForMinimal, pv: StateForMinimal, pp: StateForMinimal): Set<TransitionForMinimal> {
         val key = Pair(pv, pp)
         val trans = hd.outCompleteTransForCtx(key)
         return if (null == trans) {
@@ -732,9 +732,9 @@ internal class MinimalParser private constructor(
                     ParseAction.HEIGHT -> pn.parentExpectedAt
                     else -> LookaheadSetPart.EMPTY
                 }
-                Transition(hd, automaton.createState(tgt), action, lh, up)
+                TransitionForMinimal(hd, automaton.createState(tgt), action, lh, up)
             }.toSet()
-            val trs = Automaton.merge(ts)
+            val trs = AutomatonForMinimal.merge(ts)
             hd.addOutCompleteTrans(key, trs)
             hd.outCompleteTransForCtx(key)!!
         } else {
@@ -747,7 +747,7 @@ internal class MinimalParser private constructor(
      * the next terminal in the given context
      * and the lookahead set of terminals expected after it.
      */
-    private fun firstTerminals(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+    private fun firstTerminals(pv: RulePositionRuntime, rp: RulePositionRuntime, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         return if (rp.isGoal && rp.isAtEnd) {
             emptySet()
         } else {
@@ -763,7 +763,7 @@ internal class MinimalParser private constructor(
      * the lookahead (set of terminals expected after the next rule position in parent
      * the set of terminals expected at the end of the parent rule
      */
-    private fun parentsInContext(pp: RulePosition, pv: RulePosition, cr: RuntimeRule): Set<ParentNext> {
+    private fun parentsInContext(pp: RulePositionRuntime, pv: RulePositionRuntime, cr: RuntimeRule): Set<ParentNext> {
         processClosure(ClosureGraph(pp, pv, LookaheadSetPart.RT))
         val ctx = pv
         return this._parentInContext[ctx][cr]
@@ -819,9 +819,9 @@ internal class MinimalParser private constructor(
     }
 
     // ----- cache -----
-    private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
-    private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
-    private val _possibleContexts = lazyMutableMapNonNull<RulePosition, MutableSet<RulePosition>> { hashSetOf() }
+    private val _firstTerminal = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RulePositionRuntime, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _parentInContext = lazyMutableMapNonNull<RulePositionRuntime, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _possibleContexts = lazyMutableMapNonNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { hashSetOf() }
 
     fun clearCache() {
         _firstTerminal.clear()
@@ -829,15 +829,15 @@ internal class MinimalParser private constructor(
         _possibleContexts.clear()
     }
 
-    fun cachePossibleContext(rp: RulePosition, ctx: RulePosition) {
+    fun cachePossibleContext(rp: RulePositionRuntime, ctx: RulePositionRuntime) {
         this._possibleContexts[rp].add(ctx)
     }
 
-    fun cacheFirstTerminalInContext(ctx: RulePosition, rp: RulePosition, fti: FirstTerminalInfo) {
+    fun cacheFirstTerminalInContext(ctx: RulePositionRuntime, rp: RulePositionRuntime, fti: FirstTerminalInfo) {
         this._firstTerminal[ctx][rp].add(fti)
     }
 
-    fun cacheParentInContext(ctx: RulePosition, cr: RuntimeRule, pn: Set<ParentNext>) {
+    fun cacheParentInContext(ctx: RulePositionRuntime, cr: RuntimeRule, pn: Set<ParentNext>) {
         this._parentInContext[ctx][cr].addAll(pn)
     }
 }

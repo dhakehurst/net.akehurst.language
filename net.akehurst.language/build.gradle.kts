@@ -197,10 +197,28 @@ subprojects {
     }
 
     configure<SigningExtension> {
+        setRequired( {  gradle.taskGraph.hasTask("uploadArchives") })
         useGpgCmd()
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }
+    val signTasks = arrayOf(
+        "signKotlinMultiplatformPublication",
+        "signJvm8Publication",
+        "signJsPublication",
+        //"signWasmJsPublication",
+        // "signMacosArm64Publication"
+    )
+
+    tasks.forEach {
+        when {
+            it.name.matches(Regex("publish(.)+PublicationToMavenLocal")) -> {
+                println("${it.name}.mustRunAfter(${signTasks.toList()})")
+                it.mustRunAfter(*signTasks)
+            }
+        }
+    }
+
 
 
 //    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter(*signTasks)

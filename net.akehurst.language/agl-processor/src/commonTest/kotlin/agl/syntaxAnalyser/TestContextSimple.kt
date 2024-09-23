@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.agl.scope.ScopeSimple
 import net.akehurst.language.api.asm.AsmPath
 import kotlin.test.assertEquals

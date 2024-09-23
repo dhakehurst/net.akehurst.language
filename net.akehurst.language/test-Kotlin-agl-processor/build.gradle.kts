@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-//    commonTestImplementation(project(":agl-processor"))
-    commonTestImplementation("net.akehurst.language:agl-processor:4.0.1")
+    commonTestImplementation(project(":agl-processor"))
+//    commonTestImplementation("net.akehurst.language:agl-processor:4.0.1")
 
     commonTestImplementation("junit:junit:4.13.2")
 }

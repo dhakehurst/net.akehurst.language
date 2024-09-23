@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.language.expressions.test
 
-import net.akehurst.language.api.language.expressions.*
+import net.akehurst.language.expressions.api.*
 import kotlin.test.assertEquals
 import kotlin.test.fail
 

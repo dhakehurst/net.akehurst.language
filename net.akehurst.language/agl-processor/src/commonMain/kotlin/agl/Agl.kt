@@ -18,25 +18,28 @@
 package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
-import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.agl.language.grammar.asm.asDefinitionBlock
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.format.asm.AglFormatterModelFromAsm
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.asm.asGrammarModel
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.language.grammar.GrammarModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
-import net.akehurst.language.typemodel.simple.TypeModelSimple
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.style.asm.AglStyleModelDefault
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.jvm.JvmInline
 
 @JvmInline
@@ -56,6 +59,7 @@ value class StyleString(val value: String)
 
 @JvmInline
 value class FormatString(val value: String)
+
 
 object Agl {
 
@@ -141,13 +145,13 @@ object Agl {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asDefinitionBlock()), transformStr.value) }
+                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), transformStr.value) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr.value) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asDefinitionBlock()), styleModelStr.value) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), styleModelStr.value) }
             }
             if (null != formatterModelStr) {
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr.value) }

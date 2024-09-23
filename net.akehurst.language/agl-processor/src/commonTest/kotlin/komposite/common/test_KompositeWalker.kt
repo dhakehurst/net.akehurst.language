@@ -16,11 +16,11 @@
 
 package net.akehurst.language.komposite.common
 
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
+import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 import kotlin.test.Test

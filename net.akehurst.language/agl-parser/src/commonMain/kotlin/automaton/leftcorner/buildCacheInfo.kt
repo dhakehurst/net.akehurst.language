@@ -19,7 +19,7 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.ParseAction
 
-internal data class LookaheadSetPart(
+data class LookaheadSetPart(
     val includesRT: Boolean,
     val includesEOT: Boolean,
     val matchANY: Boolean,
@@ -200,29 +200,29 @@ internal data class LookaheadInfoPart(
 }
 
 internal data class TransInfo(
-    val prevPrev: Set<Set<RulePosition>>,
-    val prev: Set<Set<RulePosition>>,
+    val prevPrev: Set<Set<RulePositionRuntime>>,
+    val prev: Set<Set<RulePositionRuntime>>,
     val action: ParseAction,
-    val to: Set<RulePosition>,
+    val to: Set<RulePositionRuntime>,
     val lookahead: Set<LookaheadInfoPart>
 )
 
 internal data class StateInfo(
-    val rulePositions: Set<RulePosition>
+    val rulePositions: Set<RulePositionRuntime>
 ) {
     var possibleTrans: Set<TransInfo> = emptySet()
-    val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
+    val possiblePrev: Set<Set<RulePositionRuntime>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 
 internal data class WidthInfo(
     val action: ParseAction,
-    val to: RulePosition,
+    val to: RulePositionRuntime,
     val lookaheadSet: LookaheadSetPart
 )
 
 internal data class HeightGraftInfo(
     val action: ParseAction,
-    val parentNext: List<RulePosition>, // to state
+    val parentNext: List<RulePositionRuntime>, // to state
     val lhs: Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {

@@ -17,15 +17,15 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default.ContextAsmDefault
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.contextSimple
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.default_.SemanticAnalyserDefault
+import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default_.contextAsmDefault
+import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
@@ -134,7 +134,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
             item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
             item("AB", "vistraq.query.TIM.LinkType", "/0/linkList/0")
@@ -155,7 +155,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
             item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
             item("CD", "vistraq.query.TIM.LinkType", "/0/linkList/0")
@@ -189,7 +189,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expected = contextAsmDefault {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
@@ -208,7 +208,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
@@ -237,7 +237,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextSimple {
+        val expectedContext = contextAsmDefault {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 

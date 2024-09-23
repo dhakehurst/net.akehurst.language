@@ -19,9 +19,9 @@ package net.akehurst.language.agl.language.asmTransform
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.test.AsmTransformModelTest
-import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
-import net.akehurst.language.api.language.asmTransform.TransformModel
+import net.akehurst.language.transform.asm.test.AsmTransformModelTest
+import net.akehurst.language.typemodel.asm.test.TypeModelTest
+import net.akehurst.language.transform.api.TransformModel
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

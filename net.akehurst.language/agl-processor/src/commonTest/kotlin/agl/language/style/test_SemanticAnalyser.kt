@@ -18,8 +18,8 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.api.language.grammar.GrammarModel
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind

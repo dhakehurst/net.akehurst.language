@@ -15,19 +15,19 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.DefinitionBlock
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.base.api.DefinitionBlock
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TypeModelSimple
-import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
 
 object TypeModelFromGrammar {
 

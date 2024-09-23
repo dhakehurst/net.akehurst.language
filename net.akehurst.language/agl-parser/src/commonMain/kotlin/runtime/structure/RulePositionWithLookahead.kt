@@ -19,11 +19,11 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.jvm.JvmInline
 
 @JvmInline
-internal value class StateNumber(val value:Int)
+value class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
 internal data class RulePositionWithLookahead(
-    val rulePosition: RulePosition,
+    val rulePosition: RulePositionRuntime,
     val lookahead: Set<RuntimeRule>
 ) {
 

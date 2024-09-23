@@ -18,10 +18,10 @@
 package net.akehurst.language.agl.asm
 
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
 

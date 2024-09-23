@@ -20,6 +20,7 @@ import net.akehurst.language.collections.CollectionsTest.matches
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+//FIXME: REPEAT - because no MPP test-fixtures
 internal object RuntimeRuleSetTest {
 
     fun assertRrsEquals(expected: RuntimeRuleSet, actual: RuntimeRuleSet) {
@@ -32,7 +33,7 @@ internal object RuntimeRuleSetTest {
         else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t, o -> t.matches(o) }
     }
 
-    fun RulePosition.matches(other: RulePosition): Boolean = when {
+    fun RulePositionRuntime.matches(other: RulePositionRuntime): Boolean = when {
         this.option != other.option -> false
         this.position != other.position -> false
         else -> this.rule.matches(other.rule)

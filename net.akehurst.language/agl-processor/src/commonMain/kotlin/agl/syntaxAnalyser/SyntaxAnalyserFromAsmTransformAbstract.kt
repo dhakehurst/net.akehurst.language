@@ -17,29 +17,30 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
-import net.akehurst.language.agl.default.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
-import net.akehurst.language.agl.language.asmTransform.*
-import net.akehurst.language.agl.language.expressions.*
-import net.akehurst.language.agl.language.expressions.asm.*
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.default_.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
+import net.akehurst.language.agl.default_.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.asmTransform.TransformModel
-import net.akehurst.language.api.language.asmTransform.TransformationRule
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.emptyListSeparated
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.expressions.asm.*
+import net.akehurst.language.expressions.processor.*
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.sppt.api.*
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.transform.asm.*
+import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 data class NodeTrRules(
     val forNode: TransformationRule,
@@ -162,7 +163,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val embeddedRhs = (nodeInfo.node.rule as RuntimeRule).rhs as RuntimeRuleRhsEmbedded
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
-                val embSyntaxAnalyser = embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleAbstract?
+                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserSimpleAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<A>)
                 val parentDownData = downStack.peek()!!

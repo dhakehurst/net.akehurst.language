@@ -16,7 +16,7 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.ParseAction
@@ -30,13 +30,13 @@ internal class BuildCacheLC1(
     private companion object {
         class ClosureItemLC1(
             val parentItem: ClosureItemLC1?, //needed for height/graft
-            val rulePosition: RulePosition,
-            val next: RulePosition?,
+            val rulePosition: RulePositionRuntime,
+            val next: RulePositionRuntime?,
             val lookaheadSet: LookaheadSetPart
         ) {
             val allPrev: Set<ClosureItemLC1> by lazy { if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem }
 
-            val allRulePositionsButTop: List<RulePosition> by lazy {
+            val allRulePositionsButTop: List<RulePositionRuntime> by lazy {
                 if (null == parentItem) {
                     mutableListOf()
                 } else {
@@ -79,31 +79,31 @@ internal class BuildCacheLC1(
         }
 
         data class PossibleTransInfo(
-            val prev: RulePosition,
+            val prev: RulePositionRuntime,
             val parent: PossibleState?,
             val parentFirstOfNext: LookaheadSetPart,
             val action: ParseAction,
             val firstOf: LookaheadSetPart,
             val firstOfNext: LookaheadSetPart
         ) {
-            val to: List<RulePosition>
+            val to: List<RulePositionRuntime>
                 get() = when (this.action) {
-                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePosition(it, 0, RulePosition.END_OF_RULE) }
+                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePositionRuntime(it, 0, RulePositionRuntime.END_OF_RULE) }
                     ParseAction.HEIGHT, ParseAction.GRAFT -> this.parent?.rulePosition?.next()?.toList() ?: emptyList()
                     ParseAction.GOAL -> listOf(prev.atEnd())
                 }
         }
 
         class PossibleState(
-            val firstOfCache: Map<RulePosition, MutableMap<RulePosition?, LookaheadSetPart>>,
-            val rulePosition: RulePosition
+            val firstOfCache: Map<RulePositionRuntime, MutableMap<RulePositionRuntime?, LookaheadSetPart>>,
+            val rulePosition: RulePositionRuntime
         ) {
             val isAtStart: Boolean get() = this.rulePosition.isAtStart
             val isAtEnd: Boolean get() = this.rulePosition.isAtEnd
             val isGoalStart: Boolean get() = this.rulePosition.isGoal && this.isAtStart
             val isGoalEnd: Boolean get() = this.rulePosition.isGoal && this.isAtEnd
 
-            val outTransInfo = mutableMapOf<RulePosition?, MutableSet<PossibleTransInfo>>()
+            val outTransInfo = mutableMapOf<RulePositionRuntime?, MutableSet<PossibleTransInfo>>()
 
             /*
                         val mergedTransInfo: Set<TransInfo> by lazy {
@@ -158,7 +158,7 @@ internal class BuildCacheLC1(
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
-            fun setTransInfo(prev: RulePosition, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
+            fun setTransInfo(prev: RulePositionRuntime, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
                 val action = when {
                     rulePosition.isGoal -> when {
                         rulePosition.isAtEnd -> ParseAction.GOAL    // RP(G,0,EOR)
@@ -184,7 +184,7 @@ internal class BuildCacheLC1(
                 set.add(PossibleTransInfo(prev, parent, parentFirstOfNext, action, firstOf, firstOfNext))
             }
 
-            fun firstOfNext(prev: RulePosition?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
+            fun firstOfNext(prev: RulePositionRuntime?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
 
             override fun hashCode(): Int = this.rulePosition.hashCode()
             override fun equals(other: Any?): Boolean = when (other) {
@@ -212,22 +212,22 @@ internal class BuildCacheLC1(
                         return mergedTis
                     }*/
 
-        val RulePosition.canMergeState: Boolean get() = this.isAtEnd.not()// && this.next().all { it.isAtEnd.not() }
-        val RulePosition.cannotMergeState: Boolean get() = this.isAtEnd //|| this.next().any { it.isAtEnd }
+        val RulePositionRuntime.canMergeState: Boolean get() = this.isAtEnd.not()// && this.next().all { it.isAtEnd.not() }
+        val RulePositionRuntime.cannotMergeState: Boolean get() = this.isAtEnd //|| this.next().any { it.isAtEnd }
 
     }
 
-    private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
+    private val _calcClosureLR0 = mutableMapOf<RulePositionRuntime, Set<RulePositionRuntime>>()
     private val _closureItems = mutableMapOf<Pair<ParserState, ParserState>, List<ClosureItemLC1>>()
 
 
-    private val _mergedStates = mutableMapOf<RulePosition, StateInfo>()
+    private val _mergedStates = mutableMapOf<RulePositionRuntime, StateInfo>()
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
-    private val _heightOrGraftInto = mutableMapOf<Triple<List<RulePosition>, List<RulePosition>, List<RuntimeRule>>, MutableMap<Set<RulePosition>, TransInfo>>()
+    private val _heightOrGraftInto = mutableMapOf<Triple<List<RulePositionRuntime>, List<RulePositionRuntime>, List<RuntimeRule>>, MutableMap<Set<RulePositionRuntime>, TransInfo>>()
 
-    private val _allRulePositionsForStates: List<RulePosition>
+    private val _allRulePositionsForStates: List<RulePositionRuntime>
         get() = this.stateSet.usedNonTerminalRules
             .flatMap { it.rulePositionsNotAtStart } +
                 this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
@@ -243,7 +243,7 @@ internal class BuildCacheLC1(
         _cacheOff = true
     }
 
-    override fun mergedStateInfoFor(rulePositions: List<RulePosition>): StateInfo {
+    override fun mergedStateInfoFor(rulePositions: List<RulePositionRuntime>): StateInfo {
         val sis = rulePositions.mapNotNull { _mergedStates[it] }.toSet()
         if (Debug.CHECK) check(1 == sis.size)
         return sis.first()
@@ -812,15 +812,15 @@ internal class BuildCacheLC1(
     }
 
     //private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> = mergeStates1(rulePositions)
-    private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> = noMergeStates(rulePositions)
+    private fun mergeStates(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> = noMergeStates(rulePositions)
 
-    private fun noMergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+    private fun noMergeStates(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> {
         return rulePositions.map { StateInfo(setOf(it)) }.toSet()
     }
 
-    private fun mergeStates1(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+    private fun mergeStates1(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> {
         val stateRpBefore = rulePositions.flatMap { s -> s.next().map { n -> Pair(n, s) } }.toSet()
-        val before = lazyMutableMapNonNull<RulePosition, MutableSet<RulePosition>> { mutableSetOf<RulePosition>() }
+        val before = lazyMutableMapNonNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { mutableSetOf<RulePositionRuntime>() }
         stateRpBefore.forEach { before[it.first].add(it.second) }
 
         val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
@@ -838,15 +838,15 @@ internal class BuildCacheLC1(
         return mergedSateInfoNotAtEnd.toSet() + stateInfoAtEnd.toSet()
     }
 
-    private fun mergeStates2(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+    private fun mergeStates2(rulePositions: Iterable<RulePositionRuntime>): Set<StateInfo> {
         val stateRpBefore = rulePositions.flatMap { rp -> rp.next().map { n -> Pair(rp, n) } }.toSet()
-        val before = lazyMutableMapNonNull<RulePosition, MutableSet<RulePosition>> { mutableSetOf<RulePosition>() }
+        val before = lazyMutableMapNonNull<RulePositionRuntime, MutableSet<RulePositionRuntime>> { mutableSetOf<RulePositionRuntime>() }
         stateRpBefore.forEach { before[it.second].add(it.first) }
 
         val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
         val stateRpsNotToMerge = rulePositions.filter { it.cannotMergeState }
-        val expectedAt = mutableMapOf<RulePosition, LookaheadSetPart>()
-        val expectedAtInv = lazyMutableMapNonNull<LookaheadSetPart, MutableSet<RulePosition>>() { mutableSetOf() }
+        val expectedAt = mutableMapOf<RulePositionRuntime, LookaheadSetPart>()
+        val expectedAtInv = lazyMutableMapNonNull<LookaheadSetPart, MutableSet<RulePositionRuntime>>() { mutableSetOf() }
         for (rp in stateRpsCanMerge) {
             val ea = FirstOf().expectedAt(rp, LookaheadSetPart.RT)
             expectedAt[rp] = ea
@@ -891,7 +891,7 @@ internal class BuildCacheLC1(
         return merged
     }
 
-    private fun calcTransInfoForComplete(srcRp: RulePosition): Set<TransInfo> {
+    private fun calcTransInfoForComplete(srcRp: RulePositionRuntime): Set<TransInfo> {
         if (Debug.CHECK) check(srcRp.isAtEnd)
         val transInfo = mutableSetOf<TransInfo>()
         val contexts = firstFollowCache.possibleContextsFor(srcRp)
@@ -927,7 +927,7 @@ internal class BuildCacheLC1(
         return mergedTransInfo
     }
 
-    private fun calcTransInfoForIncomplete(srcRp: RulePosition): Set<TransInfo> {
+    private fun calcTransInfoForIncomplete(srcRp: RulePositionRuntime): Set<TransInfo> {
         if (Debug.CHECK) check(srcRp.isAtEnd.not())
         val transInfo = mutableSetOf<TransInfo>()
         val contexts = firstFollowCache.possibleContextsFor(srcRp)
@@ -959,7 +959,7 @@ internal class BuildCacheLC1(
     }
 
     private fun mergeStatesByTransition(states: Set<StateInfo>): Set<StateInfo> {
-        val statesByRp = mutableMapOf<RulePosition, StateInfo>()
+        val statesByRp = mutableMapOf<RulePositionRuntime, StateInfo>()
         for (si in states) {
             for (rp in si.rulePositions) {
                 statesByRp[rp] = si
@@ -1182,7 +1182,7 @@ internal class BuildCacheLC1(
     private fun cacheHeightOrGraftInto(prevPrev: ParserState, prev: ParserState, from: ParserState, hgis: Set<TransInfo>) {
         val key = Triple(prevPrev.rulePositions, prev.rulePositions, from.runtimeRules)
         val map = this._heightOrGraftInto[key] ?: run {
-            val x = mutableMapOf<Set<RulePosition>, TransInfo>()
+            val x = mutableMapOf<Set<RulePositionRuntime>, TransInfo>()
             this._heightOrGraftInto[key] = x
             x
         }
@@ -1295,7 +1295,7 @@ internal class BuildCacheLC1(
         return r
     }
 
-    private fun pFirstTerm(rp: RulePosition, done: MutableSet<RulePosition> = mutableSetOf()): Set<RuntimeRule> {
+    private fun pFirstTerm(rp: RulePositionRuntime, done: MutableSet<RulePositionRuntime> = mutableSetOf()): Set<RuntimeRule> {
         return if (done.contains(rp)) {
             emptySet()
         } else {

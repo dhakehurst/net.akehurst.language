@@ -18,7 +18,7 @@ package net.akehurst.language.komposite.common
 
 import net.akehurst.kotlinx.reflect.EnumValuesFunction
 import net.akehurst.kotlinx.reflect.KotlinxReflect
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.EnumType
 import kotlin.test.Test
 import kotlin.test.assertEquals

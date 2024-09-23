@@ -21,7 +21,7 @@ import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.treeData
 
-internal class TreeDataGrowing<GN, CN : SpptDataNode>(
+class TreeDataGrowing<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 

@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor.MScript
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default.Grammar2TransformRuleSet
+import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.api.asm.asmSimple

@@ -18,9 +18,10 @@
 package test;
 
 import kotlin.Unit;
-import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple;
+import net.akehurst.language.agl.Agl;
+import net.akehurst.language.agl.default_.ContextAsmDefault;
 import net.akehurst.language.api.asm.Asm;
+import net.akehurst.language.base.api.SimpleName;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
 import org.junit.Assert;
@@ -55,9 +56,9 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigDefault() {
-        LanguageProcessorConfiguration<Asm, ContextSimple> config = Agl.INSTANCE.configurationDefault();
+        LanguageProcessorConfiguration<Asm, ContextAsmDefault> config = Agl.INSTANCE.configurationDefault();
 
-        LanguageProcessor<Asm, ContextSimple> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
+        LanguageProcessor<Asm, ContextAsmDefault> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }

@@ -17,10 +17,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.InputLocation
-import net.akehurst.language.parser.api.ParseResult
 
 class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,

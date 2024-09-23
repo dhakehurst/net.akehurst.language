@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    "jvm8TestImplementation"(project(":agl-processor"))
-    "jvm8TestImplementation"("junit:junit:4.13.2")
+    jvm8TestImplementation(project(":agl-processor"))
+    jvm8TestImplementation("junit:junit:4.13.2")
 }
 
 java {

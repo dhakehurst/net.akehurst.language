@@ -18,7 +18,6 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
@@ -26,15 +25,16 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.sppt.api.*
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 data class ChildDataAny(
     val nodeInfo: SpptDataNodeInfo,
@@ -172,7 +172,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser =
-                    embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleStreamPushAbstract?
+                    embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserSimpleStreamPushAbstract?
                         ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser for '${grammarNamespaceQualifiedName}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserSimpleStreamPushAbstract<AsmType>)
                 val parentDownData = downStack.peek()!!

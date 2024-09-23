@@ -17,26 +17,26 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.default.CompletionProviderDefault
-import net.akehurst.language.agl.default.Grammar2TransformRuleSet
-import net.akehurst.language.agl.default.SemanticAnalyserDefault
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default_.*
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.asmTransform.TransformModelDefault
-import net.akehurst.language.agl.language.format.AglFormatterModelFromAsm
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.parser.leftcorner.LeftCornerParser
-import net.akehurst.language.agl.regex.RegexEngineAgl
-import net.akehurst.language.regex.agl.RegexEnginePlatform
-import net.akehurst.language.agl.scanner.ScannerClassic
-import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.format.asm.AglFormatterModelFromAsm
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.default.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.language.base.SimpleName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.scanner.ScannerKind
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
+import net.akehurst.language.regex.agl.RegexEngineAgl
+import net.akehurst.language.regex.agl.RegexEnginePlatform
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.common.ScannerClassic
+import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : Any>(

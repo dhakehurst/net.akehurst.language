@@ -1,6 +1,6 @@
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.scope.ScopeSimple
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.semanticAnalyser.SentenceContext

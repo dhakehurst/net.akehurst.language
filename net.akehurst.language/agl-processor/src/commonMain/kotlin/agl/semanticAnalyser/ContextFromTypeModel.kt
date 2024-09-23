@@ -17,14 +17,15 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.TypeModel
 
 // used by other languages that reference rules  in a grammar
 
 class ContextFromTypeModelReference(
-    val languageDefinitionId: QualifiedName
+    val languageDefinitionId: LanguageIdentity
 ) : SentenceContext<String> {
     //val rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     /*

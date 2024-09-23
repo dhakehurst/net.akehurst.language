@@ -16,9 +16,11 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.parser.api.RulePosition
+
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
-internal data class RuleOption(
+data class RuleOption(
     val runtimeRule: RuntimeRule,
     val option: Int
 ) {
@@ -27,11 +29,11 @@ internal data class RuleOption(
     override fun toString(): String = "RuleOption{${runtimeRule.tag},$option}"
 }
 
-internal class RulePosition(
-    val rule: RuntimeRule,
-    val option: Int,
-    val position: Int
-) {
+class RulePositionRuntime(
+    override val rule: RuntimeRule,
+    override val option: Int,
+    override val position: Int
+) : RulePosition {
     companion object {
         const val START_OF_RULE = 0
         const val END_OF_RULE = -1
@@ -66,8 +68,8 @@ internal class RulePosition(
             this.rule.rhs.rhsItemsAt(option, position)
         }
 
-    fun atEnd() = RulePosition(this.rule, this.option, END_OF_RULE)
-    fun next(): Set<RulePosition> = when {
+    fun atEnd() = RulePositionRuntime(this.rule, this.option, END_OF_RULE)
+    fun next(): Set<RulePositionRuntime> = when {
         isAtEnd -> emptySet()
         else -> rule.rhs.nextRulePositions(this)
     }
@@ -76,7 +78,7 @@ internal class RulePosition(
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when {
-        other !is RulePosition -> false
+        other !is RulePositionRuntime -> false
         this.position != other.position -> false
         this.option != other.option -> false
         this.rule != other.rule -> false

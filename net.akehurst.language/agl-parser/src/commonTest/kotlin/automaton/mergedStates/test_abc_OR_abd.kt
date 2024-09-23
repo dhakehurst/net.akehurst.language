@@ -192,7 +192,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
             val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
-        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")as ParserStateSet
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")

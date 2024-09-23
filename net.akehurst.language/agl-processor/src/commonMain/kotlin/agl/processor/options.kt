@@ -20,6 +20,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 
 class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),

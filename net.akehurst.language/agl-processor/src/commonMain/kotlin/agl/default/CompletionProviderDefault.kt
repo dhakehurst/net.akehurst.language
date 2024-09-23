@@ -15,21 +15,21 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.default_
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.agl.language.grammar.asm.GrammarReferenceDefault
-import net.akehurst.language.agl.language.grammar.asm.NonTerminalDefault
+import net.akehurst.language.grammar.asm.GrammarReferenceDefault
+import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.language.grammar.*
-import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.grammar.api.*
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class CompletionProviderDefault(
     val targetGrammar: Grammar,

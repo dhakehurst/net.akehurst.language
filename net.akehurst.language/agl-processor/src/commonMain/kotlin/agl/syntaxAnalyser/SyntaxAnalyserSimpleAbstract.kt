@@ -17,20 +17,20 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.grammar.GrammarRuleName
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.collections.*
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
+import net.akehurst.language.sppt.api.*
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 data class NodeTypes(
     val forNode: TypeInstance,
@@ -152,7 +152,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                 val embeddedRhs = (nodeInfo.node.rule as RuntimeRule).rhs as RuntimeRuleRhsEmbedded
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
-                val embSyntaxAnalyser = embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleAbstract?
+                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserSimpleAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser for '${grammarNamespaceQualifiedName}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserSimpleAbstract<A>)
                 val parentDownData = downStack.peek()!!

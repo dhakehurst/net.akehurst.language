@@ -18,7 +18,7 @@
 package net.akehurst.language.api.scope
 
 import net.akehurst.language.agl.scope.ScopeSimple
-import net.akehurst.language.api.language.base.QualifiedName
+import net.akehurst.language.base.api.QualifiedName
 
 data class ScopedItem<ItemType>(
     val referableName: String,

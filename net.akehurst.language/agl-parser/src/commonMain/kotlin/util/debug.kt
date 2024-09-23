@@ -17,9 +17,9 @@
 
 package net.akehurst.language.agl.util
 
-internal fun debug(indentDelta: Debug.IndentDelta, lazyMessage: () -> String) = Debug.debug(indentDelta, lazyMessage)
+fun debug(indentDelta: Debug.IndentDelta, lazyMessage: () -> String) = Debug.debug(indentDelta, lazyMessage)
 
-internal object Debug {
+object Debug {
     enum class IndentDelta { NONE, INC_BEFORE, INC_AFTER, DEC_BEFORE, DEC_AFTER }
 
     const val CHECK = false

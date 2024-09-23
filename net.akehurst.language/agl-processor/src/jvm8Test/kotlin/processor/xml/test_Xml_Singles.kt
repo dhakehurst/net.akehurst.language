@@ -22,6 +22,7 @@ package net.akehurst.language.agl.processor.xml
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import org.junit.Test
 import kotlin.test.assertNull
 import kotlin.test.assertTrue

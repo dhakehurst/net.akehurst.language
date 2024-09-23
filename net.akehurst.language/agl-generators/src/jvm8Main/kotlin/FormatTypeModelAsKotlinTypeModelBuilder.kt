@@ -1,9 +1,9 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.generators.FormatTypeModelAsKotlinTypeModelBuilder.Companion.appendWithEol
-import net.akehurst.language.api.language.base.Indent
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.*
 
 data class TypeModelFormatConfiguration(

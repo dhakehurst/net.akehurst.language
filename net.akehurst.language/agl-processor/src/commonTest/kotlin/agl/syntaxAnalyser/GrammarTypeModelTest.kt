@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 
-import net.akehurst.language.agl.language.typemodel.test.TypeModelTest
+import net.akehurst.language.typemodel.asm.test.TypeModelTest
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace

@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
-internal class Lookahead(
+class Lookahead(
     val guard: LookaheadSet,
     val up: LookaheadSet
 ) {
@@ -87,7 +87,7 @@ internal class Lookahead(
     override fun toString(): String = "LH($guard, $up)"
 }
 
-internal class LookaheadSet(
+class LookaheadSet(
     val number: Int,
     val includesRT: Boolean,
     val includesEOT: Boolean,

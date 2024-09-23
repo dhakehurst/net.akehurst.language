@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
@@ -56,9 +56,9 @@ internal class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.createState(listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE)))
-        val state_S = SM.createState(listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE)))
-        val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
+        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_S = SM.createState(listOf(RulePositionRuntime(rule_S, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, 0, RulePositionRuntime.END_OF_RULE)))
         val sut = graph.treeData
 
         val sentence = "a"
@@ -98,13 +98,13 @@ internal class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.createState(listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE)))
-        val state_S1 = SM.createState(listOf(RulePosition(rule_S, 0, 1)))
-        val state_S2 = SM.createState(listOf(RulePosition(rule_S, 0, 2)))
-        val state_S3 = SM.createState(listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE)))
-        val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
-        val state_b = SM.createState(listOf(RulePosition(rule_b, 0, RulePosition.END_OF_RULE)))
-        val state_c = SM.createState(listOf(RulePosition(rule_c, 0, RulePosition.END_OF_RULE)))
+        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_S1 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, 1)))
+        val state_S2 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, 2)))
+        val state_S3 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_b = SM.createState(listOf(RulePositionRuntime(rule_b, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_c = SM.createState(listOf(RulePositionRuntime(rule_c, 0, RulePositionRuntime.END_OF_RULE)))
         val sut = TreeDataGrowing<GrowingNodeIndex, CompleteNodeIndex>(0)
 
         val sentence = "abc"

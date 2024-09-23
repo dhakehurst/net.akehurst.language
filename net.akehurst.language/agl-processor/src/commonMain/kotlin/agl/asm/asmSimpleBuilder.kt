@@ -17,30 +17,30 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.agl.agl.default.ScopeCreator
+import net.akehurst.language.agl.default_.ScopeCreator
 import net.akehurst.language.agl.asm.*
-import net.akehurst.language.agl.default.Grammar2TransformRuleSet
-import net.akehurst.language.agl.default.ReferenceResolverDefault
-import net.akehurst.language.agl.default.ResolveFunction
-import net.akehurst.language.agl.language.expressions.EvaluationContext
-import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.toTypedObject
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
+import net.akehurst.language.agl.default_.ReferenceResolverDefault
+import net.akehurst.language.agl.default_.ResolveFunction
+import net.akehurst.language.expressions.processor.EvaluationContext
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.toTypedObject
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.typemodel.asm.typeModel
 import net.akehurst.language.agl.scope.ScopeSimple
-import net.akehurst.language.agl.default.ContextAsmDefault
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.NavigationExpression
-import net.akehurst.language.api.language.expressions.RootExpression
-import net.akehurst.language.api.language.reference.CrossReferenceModel
-import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.expressions.api.RootExpression
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.scope.Scope
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TupleType
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker

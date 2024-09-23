@@ -17,9 +17,9 @@ package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.default.ContextAsmDefault
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test

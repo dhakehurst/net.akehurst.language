@@ -20,9 +20,9 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.AutomatonKind
 
-internal class ParserState(
+class ParserState(
     val number: StateNumber,
-    val rulePositions: List<RulePosition>, //must be a list (not a set) so that we can index against Growing children
+    val rulePositions: List<RulePositionRuntime>, //must be a list (not a set) so that we can index against Growing children
     val stateSet: ParserStateSet
 ) {
 

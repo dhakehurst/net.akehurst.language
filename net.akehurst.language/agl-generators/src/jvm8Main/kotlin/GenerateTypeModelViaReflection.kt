@@ -1,14 +1,10 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.agl.language.typemodel.typeModel
-import net.akehurst.language.api.language.base.Import
-import net.akehurst.language.api.language.base.PossiblyQualifiedName
-import net.akehurst.language.api.language.base.PossiblyQualifiedName.Companion.asPossiblyQualifiedName
-import net.akehurst.language.api.language.base.QualifiedName
-import net.akehurst.language.api.language.base.SimpleName
+import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.*
+import net.akehurst.language.typemodel.asm.*
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.nio.file.Files

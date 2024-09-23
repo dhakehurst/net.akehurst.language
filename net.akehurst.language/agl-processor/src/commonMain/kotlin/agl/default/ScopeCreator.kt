@@ -15,24 +15,24 @@
  *
  */
 
-package net.akehurst.language.agl.agl.default
+package net.akehurst.language.agl.default_
 
 import net.akehurst.language.agl.asm.isStdString
-import net.akehurst.language.agl.language.expressions.EvaluationContext
-import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.agl.language.expressions.asmValue
-import net.akehurst.language.agl.language.expressions.toTypedObject
-import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.expressions.processor.EvaluationContext
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.asmValue
+import net.akehurst.language.expressions.processor.toTypedObject
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.NavigationExpression
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.scope.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.parser.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class ScopeCreator(
     val typeModel: TypeModel,
