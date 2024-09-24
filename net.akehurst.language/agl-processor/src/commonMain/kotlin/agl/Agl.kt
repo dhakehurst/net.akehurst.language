@@ -130,17 +130,17 @@ object Agl {
      * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
      * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
      */
-    fun processorFromStringDefault(
+    fun processorFromStringSimple(
         grammarDefinitionStr: GrammarString,
         typeModelStr: TypeModelString? = null,
         transformStr: TransformString? = null,
         crossReferenceModelStr: CrossReferenceString? = null,
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        base: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm, ContextAsmDefault> {
-        val config = Agl.configuration(base) {
+        val config = Agl.configuration(configurationBase) {
             if (null != typeModelStr) {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
             }
@@ -160,6 +160,29 @@ object Agl {
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
         return proc
     }
+
+    /**
+     * Java can't (yet) handle Kotlin value classes, use this instead
+     */
+    fun processorFromStringSimpleJava(
+        grammarDefinitionStr: String,
+        typeModelStr: String? = null,
+        transformStr: String? = null,
+        crossReferenceModelStr: String? = null,
+        styleModelStr: String? = null,
+        formatterModelStr: String? = null,
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+    ) = processorFromStringSimple(
+        GrammarString(grammarDefinitionStr),
+        typeModelStr?.let { TypeModelString(it) },
+        transformStr?.let { TransformString(it) },
+        crossReferenceModelStr?.let { CrossReferenceString(it) },
+        styleModelStr?.let { StyleString(it) },
+        formatterModelStr?.let { FormatString(it) },
+        configurationBase,
+        grammarAglOptions
+    )
 
     /**
      * Create a LanguageProcessor from a grammar definition string

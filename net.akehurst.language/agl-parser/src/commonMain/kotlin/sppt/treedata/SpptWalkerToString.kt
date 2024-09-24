@@ -18,6 +18,7 @@
 package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.NodeListCallback
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.SpptWalker
@@ -100,8 +101,8 @@ import net.akehurst.language.sppt.api.SpptWalker
 
     }
 
-    override fun error(msg: String, path: () -> List<SpptDataNode>) {
-        val p = path()
+    override fun error(msg: String, path: NodeListCallback) {
+        val p = path.invoke()
         sb.append("${currentIndent}Error at ${p.last().startPosition}: '$msg'")
         println("${currentIndent}Error at ${p.last().startPosition}: '$msg'")
     }

@@ -32,7 +32,7 @@ class test_NaturalLanguage_Singles {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        fun processor() = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 

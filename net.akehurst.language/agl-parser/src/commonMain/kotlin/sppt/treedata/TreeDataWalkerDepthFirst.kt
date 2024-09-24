@@ -190,7 +190,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             // end of alternatives
             path.pop()
         } else {
-            val altChildrenInfo = info.alternatives.removeLast()
+            val altChildrenInfo = info.alternatives.removeAt(info.alternatives.lastIndex)//info.alternatives.removeLast()  //  list.removeLast() //this fails see KT-71375 [https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35]
             val nodeInfo = altChildrenInfo.first
             val children = altChildrenInfo.second
             stack.push(info)

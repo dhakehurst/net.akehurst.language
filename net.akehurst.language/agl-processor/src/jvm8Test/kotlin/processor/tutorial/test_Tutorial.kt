@@ -62,7 +62,7 @@ class test_Tutorial {
             )
         )
 
-        val proc = Agl.processorFromStringDefault(
+        val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr)
         )
         assertTrue(proc.issues.isEmpty(), proc.issues.toString())
@@ -80,7 +80,7 @@ class test_Tutorial {
         val transformStr = """
         """.trimIndent()
 
-        val proc = Agl.processorFromStringDefault(
+        val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr),
             typeModelStr = TypeModelString(typeModelStr),
             transformStr = TransformString(transformStr)

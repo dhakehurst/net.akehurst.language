@@ -48,7 +48,7 @@ internal class test_ObjectSerialisation {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
         fun testParse(sentence: String) {
             val res = processor.parse(sentence)

@@ -17,7 +17,6 @@
 package net.akehurst.language.sppt.api
 
 import net.akehurst.language.parser.api.Rule
-import net.akehurst.language.sentence.api.InputLocation
 
 interface SpptDataNode {
     val rule: Rule
@@ -52,6 +51,11 @@ interface SpptDataNodeInfo {
 }
 val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
 
+// can't override 'path: () -> List<SpptDataNode>' in java
+// so use this fun interface instead
+fun interface NodeListCallback {
+    fun invoke() :List<SpptDataNode>
+}
 
 interface SpptWalker {
     fun beginTree()
@@ -74,7 +78,8 @@ interface SpptWalker {
     fun beginEmbedded(nodeInfo: SpptDataNodeInfo)
     fun endEmbedded(nodeInfo: SpptDataNodeInfo)
 
-    fun error(msg: String, path: () -> List<SpptDataNode>)
+    //fun error(msg: String, path: () -> List<SpptDataNode>)
+    fun error(msg: String, path: NodeListCallback)
 }
 
 data class LeafData(

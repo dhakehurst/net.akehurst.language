@@ -25,11 +25,6 @@ import net.akehurst.language.sentence.api.InputLocation
 interface SPPTNode {
 
     /**
-     * the identity of this node
-     */
-    val identity: SPPTNodeIdentity
-
-    /**
      *
      * the name of the runtime rule that caused this node to be constructed
      */

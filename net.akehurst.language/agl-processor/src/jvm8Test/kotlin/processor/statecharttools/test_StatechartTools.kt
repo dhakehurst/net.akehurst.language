@@ -38,8 +38,8 @@ class test_StatechartTools(val data: Data) {
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr1)).processor!!
-        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr2)).processor!!
+        val exprProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr1)).processor!!
+        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr2)).processor!!
         var sourceFiles = arrayOf("/statechart-tools/samplesValid.txt")
 
         @JvmStatic

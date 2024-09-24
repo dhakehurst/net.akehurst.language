@@ -19,8 +19,6 @@ package net.akehurst.language.sentence.common
 
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
-import net.akehurst.language.sppt.api.SpptDataNode
-
 
 class SentenceDefault(
     override val text: String
@@ -50,8 +48,6 @@ abstract class SentenceAbstract() : Sentence {
     override fun textAt(position: Int, length: Int) =
         this.text.substring(position, position + length)
 
-    override fun matchedTextNoSkip(node: SpptDataNode): String =
-        text.substring(node.startPosition, node.nextInputNoSkip)
 
     override fun positionOfLine(line: Int): Int = when {
         0 > line -> error("Line number must be >= 1")
@@ -84,9 +80,6 @@ abstract class SentenceAbstract() : Sentence {
             }
         }
     }
-
-    override fun locationForNode(node: SpptDataNode): InputLocation =
-        locationFor(node.startPosition, node.nextInputNoSkip - node.startPosition)
 
     override fun contextInText(position: Int): String {
         val startIndex = maxOf(0, position - contextSize)

@@ -40,7 +40,7 @@ class test_SysML_agl_Singles {
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
         val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy {
-            val res = Agl.processorFromStringDefault(
+            val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             )

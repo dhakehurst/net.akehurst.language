@@ -46,7 +46,7 @@ class test_CompletionProviderDefault {
         )
 
         fun test(data: TestData) {
-            val res = Agl.processorFromStringDefault(grammarDefinitionStr = GrammarString(data.grammarStr), crossReferenceModelStr = CrossReferenceString(data.crossReferencesStr))
+            val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(data.grammarStr), crossReferenceModelStr = CrossReferenceString(data.crossReferencesStr))
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {

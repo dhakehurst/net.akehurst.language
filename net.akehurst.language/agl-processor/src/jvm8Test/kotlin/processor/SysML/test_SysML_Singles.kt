@@ -32,7 +32,7 @@ class test_SysML_Singles {
     private companion object {
         const val grammarPath = "/SysML/v2_2023-11/grammars/standard/grammar.agl"
         val grammarStr = this::class.java.getResource(grammarPath).readText()
-        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 

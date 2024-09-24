@@ -72,7 +72,7 @@ namespace net.akehurst.language.example.BasicTutorial {
 }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(
+        val processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr),
             crossReferenceModelStr = CrossReferenceString(referencesStr)
         ).let {

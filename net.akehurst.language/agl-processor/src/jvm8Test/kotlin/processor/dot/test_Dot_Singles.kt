@@ -35,7 +35,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 

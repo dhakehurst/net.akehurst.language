@@ -36,7 +36,7 @@ class test_SQLValid(val data: Data) {
 
         private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
         val processor by lazy {
-            Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+            Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }
 
         var sourceFiles = arrayOf("/sql/valid.txt")

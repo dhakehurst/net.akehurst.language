@@ -80,7 +80,7 @@ class test_AllDefault {
             val expected: Asm
         )
 
-        fun processor(grammarStr: String) = Agl.processorFromStringDefault(
+        fun processor(grammarStr: String) = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr),
             grammarAglOptions = Agl.options {
                 semanticAnalysis {

@@ -30,6 +30,8 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
+import net.akehurst.language.sppt.treedata.locationForNode
+import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
@@ -178,8 +180,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: () -> List<SpptDataNode>) {
-                issues.error(null, "Error 'msg' at '${path().joinToString(separator = "/")}'")
+            override fun error(msg: String, path: NodeListCallback) {
+                issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 
         }

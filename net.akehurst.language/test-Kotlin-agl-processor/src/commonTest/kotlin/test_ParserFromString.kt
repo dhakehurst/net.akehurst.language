@@ -59,7 +59,7 @@ leaf booleanLiteral      = 'false' | 'true';
 }
         """.trimIndent()
 
-        val res = Agl.processorFromStringDefault(GrammarString(grammarStr))
+        val res = Agl.processorFromStringSimple(GrammarString(grammarStr))
         println(res.issues.toString())
         assertTrue(res.issues.errors.isEmpty())
 

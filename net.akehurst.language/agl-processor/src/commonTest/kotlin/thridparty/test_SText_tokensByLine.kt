@@ -254,8 +254,8 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr1)).processor!!
-        var processor = Agl.processorFromStringDefault(GrammarString(grammarStr2)).processor!!
+        val exprProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr1)).processor!!
+        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr2)).processor!!
     }
 
     @Test

@@ -32,7 +32,7 @@ class test_SysML_UseCase_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 

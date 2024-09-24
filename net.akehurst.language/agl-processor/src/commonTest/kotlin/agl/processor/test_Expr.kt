@@ -42,7 +42,7 @@ grammar Test {
 }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test

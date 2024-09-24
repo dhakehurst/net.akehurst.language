@@ -40,7 +40,7 @@ class test_KerML_agl_Singles {
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
         val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy {
-            Agl.processorFromStringDefault(
+            Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!

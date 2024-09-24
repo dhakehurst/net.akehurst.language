@@ -80,7 +80,7 @@ class test_LanguageProcessor_scan {
 
     @Test
     fun a_a() {
-        val pr = Agl.processorFromStringDefault(GrammarString("namespace test grammar Test { a = 'a';}"))
+        val pr = Agl.processorFromStringSimple(GrammarString("namespace test grammar Test { a = 'a';}"))
         val sentence = SentenceDefault("a")
         val tokens = pr.processor!!.scan(sentence.text).tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")

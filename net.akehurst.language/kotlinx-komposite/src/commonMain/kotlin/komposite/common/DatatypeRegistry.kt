@@ -17,13 +17,13 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.kotlinx.komposite.api.KompositeException
+import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.kotlinx.reflect.KotlinxReflect
-import net.akehurst.language.typemodel.asm.typeModel
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.komposite.processor.Komposite
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.TypeModelSimpleAbstract
+import net.akehurst.language.typemodel.asm.typeModel
 import kotlin.reflect.KClass
 
 class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {

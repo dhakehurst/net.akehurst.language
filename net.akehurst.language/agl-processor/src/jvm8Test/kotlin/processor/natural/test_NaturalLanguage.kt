@@ -39,7 +39,7 @@ class test_NaturalLanguage(val data: Data) {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        fun processor() = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")

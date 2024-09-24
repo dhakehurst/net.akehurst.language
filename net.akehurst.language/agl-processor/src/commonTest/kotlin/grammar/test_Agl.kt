@@ -32,7 +32,7 @@ class test_Agl {
               a = 'a';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val p = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
@@ -45,7 +45,7 @@ class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val p = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
@@ -58,7 +58,7 @@ class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val p = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         p.parse("b", Agl.parseOptions { goalRuleName("b") })
     }
 
@@ -72,7 +72,7 @@ class test_Agl {
             }
         """.trimIndent()
         val sentence = "a"
-        val myProcessor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val myProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         val result = myProcessor.process(sentence)
         //TODO
     }

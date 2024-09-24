@@ -71,11 +71,11 @@ class MutableStack<T>() {
     fun peekOrNull(): T? = list.lastOrNull()
     fun peek(n: Int): List<T> = list.subList(list.size - n, list.size)
 
-    fun pop(): T = list.removeLast()
+    fun pop(): T = list.removeAt(list.lastIndex) //  list.removeLast() //this fails see KT-71375 [https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35]
     fun pop(n: Int): List<T> {
         val removed = mutableListOf<T>()
         for (i in 0 until n) {
-            removed.add(list.removeLast())
+            removed.add(list.removeAt(list.lastIndex))
         }
         return removed
     }

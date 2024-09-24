@@ -37,7 +37,7 @@ class test_AnsiC(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
         val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy {
-            Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+            Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")
 

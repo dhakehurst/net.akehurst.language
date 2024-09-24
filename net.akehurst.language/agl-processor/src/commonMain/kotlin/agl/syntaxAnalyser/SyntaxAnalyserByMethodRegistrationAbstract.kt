@@ -23,10 +23,9 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.sentence.api.Sentence
-import net.akehurst.language.sppt.api.SpptDataNode
-import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.sppt.api.SpptWalker
-import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.api.*
+import net.akehurst.language.sppt.treedata.locationForNode
+import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import kotlin.reflect.KFunction3
 
 typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, T?>
@@ -156,7 +155,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 stack.push(obj)
             }
 
-            override fun error(msg: String, path: () -> List<SpptDataNode>) {
+            override fun error(msg: String, path: NodeListCallback) {
                 kotlin.error(msg)
             }
 

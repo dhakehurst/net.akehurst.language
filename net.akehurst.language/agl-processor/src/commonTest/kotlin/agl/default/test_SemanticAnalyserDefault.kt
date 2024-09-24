@@ -39,7 +39,7 @@ class test_SemanticAnalyserDefault {
     private companion object {
 
         fun test(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmDefault>, expected: ContextAsmDefault) {
-            val processor = Agl.processorFromStringDefault(
+            val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).let {
@@ -55,7 +55,7 @@ class test_SemanticAnalyserDefault {
         }
 
         fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmDefault>, expected: List<LanguageIssue>) {
-            val processor = Agl.processorFromStringDefault(
+            val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!

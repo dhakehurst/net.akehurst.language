@@ -235,7 +235,7 @@ class test_AllLanguages : FunSpec({
     }
     context("parse") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringDefault(testData.grammar.grammarStr())
+            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
             val parseResult = when {
@@ -253,7 +253,7 @@ class test_AllLanguages : FunSpec({
     }
     context("process") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringDefault(testData.grammar.grammarStr())
+            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
 

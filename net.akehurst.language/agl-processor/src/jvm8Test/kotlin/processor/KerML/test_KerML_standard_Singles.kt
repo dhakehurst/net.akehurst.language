@@ -32,7 +32,7 @@ class test_KerML_standard_Singles {
     private companion object {
         private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringDefault(
+        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr)
         ).processor!!
 

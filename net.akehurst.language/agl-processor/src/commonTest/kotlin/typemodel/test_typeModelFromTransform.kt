@@ -33,7 +33,7 @@ class test_typemodel {
 
     companion object {
         fun test(grammarStr: String, transformStr: String, expected: TypeModel) {
-            val res = Agl.processorFromStringDefault(
+            val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 transformStr = TransformString(transformStr),
                 crossReferenceModelStr = null

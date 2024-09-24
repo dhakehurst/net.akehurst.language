@@ -76,7 +76,7 @@ class test_CompletionProviderDefault_datatypes {
         )
 
         fun test(data: TestData) {
-            val res = Agl.processorFromStringDefault(grammarDefinitionStr = GrammarString(grammarStr), crossReferenceModelStr = CrossReferenceString(crossReferencesStr))
+            val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(grammarStr), crossReferenceModelStr = CrossReferenceString(crossReferencesStr))
 
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!

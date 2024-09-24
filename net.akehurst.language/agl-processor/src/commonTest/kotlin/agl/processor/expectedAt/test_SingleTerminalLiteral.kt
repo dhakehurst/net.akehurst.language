@@ -50,7 +50,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val pr = Agl.processorFromStringDefault(GrammarString(grammarStr))
+        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
         val sentence = "a"
         val position = 0

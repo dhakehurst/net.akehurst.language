@@ -21,8 +21,11 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.treedata.locationForNode
+import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

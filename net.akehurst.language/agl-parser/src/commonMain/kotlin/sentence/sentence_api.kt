@@ -17,14 +17,10 @@
 
 package net.akehurst.language.sentence.api
 
-import net.akehurst.language.sppt.api.SpptDataNode
-
 interface Sentence {
     val text: String
 
     fun textAt(position: Int, length: Int): String
-
-    fun matchedTextNoSkip(node: SpptDataNode): String
 
     /**
      * position in text of the beginning of the requested line, first line is 0
@@ -44,8 +40,6 @@ interface Sentence {
      * location (position, line, column, length) of the given position and length
      */
     fun locationFor(position: Int, length: Int): InputLocation
-
-    fun locationForNode(node: SpptDataNode): InputLocation
 
     fun contextInText(position: Int): String
 

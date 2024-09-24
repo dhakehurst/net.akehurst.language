@@ -22,7 +22,6 @@ import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
@@ -43,7 +42,7 @@ import kotlin.test.assertTrue
 class test_SyntaxAnalyserSimple {
 
     private companion object {
-        fun processor(grammarStr: String) = Agl.processorFromStringDefault(GrammarString(grammarStr))
+        fun processor(grammarStr: String) = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
         fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextAsmDefault> {
             val result = processor(grammarStr)

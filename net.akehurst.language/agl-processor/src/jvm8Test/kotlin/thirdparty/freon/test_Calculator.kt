@@ -67,7 +67,7 @@ class test_Calculator {
 
     @Test
     fun createProcessor() {
-        val res = Agl.processorFromStringDefault(GrammarString(CalculatorLanguage.grammarStr))
+        val res = Agl.processorFromStringSimple(GrammarString(CalculatorLanguage.grammarStr))
     }
 
 }

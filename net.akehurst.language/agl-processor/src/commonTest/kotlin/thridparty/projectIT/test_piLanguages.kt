@@ -305,7 +305,7 @@ class test_piLanguages {
             leaf booleanLiteral      = 'false' | 'true';       
             }
         """.trimIndent()
-        val processor = Agl.processorFromStringDefault(GrammarString(grammarStr)).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test
