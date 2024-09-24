@@ -22,8 +22,8 @@ import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.TransformString
 import net.akehurst.language.agl.TypeModelString
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.FixMethodOrder
 import org.junit.runners.MethodSorters

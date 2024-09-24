@@ -17,12 +17,12 @@
 package net.akehurst.language.parser.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.scanner.ScannerKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.RuleSet

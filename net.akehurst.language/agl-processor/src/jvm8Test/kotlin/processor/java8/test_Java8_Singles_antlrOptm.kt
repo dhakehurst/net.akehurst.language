@@ -22,8 +22,8 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -266,7 +266,7 @@ FQN = ID ('.' ID)*;
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("after", actual[0].matchedText(SentenceDefault(text)))
+        assertEquals("after", SentenceDefault(text).textAt(actual[0].position,actual[0].length))
     }
 
 }

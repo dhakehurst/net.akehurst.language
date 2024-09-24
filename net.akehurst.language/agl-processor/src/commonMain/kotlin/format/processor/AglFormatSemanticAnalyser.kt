@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatterModel
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 
 class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<String>> {
     override fun clear() {

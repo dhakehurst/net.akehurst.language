@@ -22,10 +22,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions

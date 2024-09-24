@@ -20,7 +20,7 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.asm.AsmPathSimple
+import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.typemodel.asm.typeModel
 import net.akehurst.language.base.api.QualifiedName

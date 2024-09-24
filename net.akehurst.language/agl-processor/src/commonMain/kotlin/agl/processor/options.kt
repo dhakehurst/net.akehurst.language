@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 

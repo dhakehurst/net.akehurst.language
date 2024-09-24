@@ -19,7 +19,7 @@ package net.akehurst.language.parser.leftcorner.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import net.akehurst.language.regex.agl.RegexEnginePlatform

@@ -29,7 +29,7 @@ import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.syntaxAnalyser.*
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.*

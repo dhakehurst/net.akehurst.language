@@ -21,11 +21,11 @@ import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.asm.api.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
 class test_mscript {

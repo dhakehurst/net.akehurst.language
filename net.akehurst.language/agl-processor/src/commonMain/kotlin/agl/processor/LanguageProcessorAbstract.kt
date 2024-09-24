@@ -19,8 +19,8 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.scanner.ScanResult
-import net.akehurst.language.api.scanner.Scanner
+import net.akehurst.language.scanner.api.ScanResult
+import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
@@ -40,7 +40,7 @@ import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.sppt.api.SPPTParser

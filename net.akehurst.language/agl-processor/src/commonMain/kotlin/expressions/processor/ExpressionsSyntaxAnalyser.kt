@@ -24,7 +24,7 @@ import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.PropertyName

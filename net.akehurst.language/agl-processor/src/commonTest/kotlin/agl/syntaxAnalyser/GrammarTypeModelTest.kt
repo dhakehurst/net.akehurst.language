@@ -18,10 +18,10 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 
-import net.akehurst.language.typemodel.asm.test.TypeModelTest
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.fail
 
 object GrammarTypeModelTest {

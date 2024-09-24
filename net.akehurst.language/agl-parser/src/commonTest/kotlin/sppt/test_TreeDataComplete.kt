@@ -22,10 +22,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.CompleteTreeDataNode

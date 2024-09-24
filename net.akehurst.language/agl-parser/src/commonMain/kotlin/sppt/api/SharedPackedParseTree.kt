@@ -17,7 +17,7 @@
 package net.akehurst.language.sppt.api
 
 import net.akehurst.language.parser.api.Rule
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 
 interface SpptDataNode {
     val rule: Rule
@@ -25,39 +25,6 @@ interface SpptDataNode {
     val nextInputPosition: Int
     val nextInputNoSkip: Int
     val option: Int
-}
-
-interface Sentence {
-    val text: String
-
-    fun textAt(position: Int, length: Int): String
-
-    fun matchedTextNoSkip(node: SpptDataNode): String
-
-    /**
-     * position in text of the beginning of the requested line, first line is 0
-     *
-     * in result InputLocation, first line is 1
-     */
-    fun positionOfLine(line: Int): Int
-
-    /**
-     * location (position, line, column, length) in given line of the given position and length, first line is 0
-     *
-     * in result InputLocation, first line is 1
-     */
-    fun locationInLine(line: Int, position: Int, length: Int): InputLocation
-
-    /**
-     * location (position, line, column, length) of the given position and length
-     */
-    fun locationFor(position: Int, length: Int): InputLocation
-
-    fun locationForNode(node: SpptDataNode): InputLocation
-
-    fun contextInText(position: Int): String
-
-    //fun setEolPositions(eols: List<Int>)
 }
 
 data class ChildInfo(
@@ -130,9 +97,9 @@ data class LeafData(
     }
 
     //    fun matchedText(sentence: Sentence): String = sentence.text.substring(location.position, location.position + location.length)
-    fun matchedText(sentence: Sentence): String = sentence.text.substring(position, position + length)
+    //fun matchedText(sentence: Sentence): String = sentence.text.substring(position, position + length)
 
-    fun location(sentence: Sentence): InputLocation = sentence.locationFor(position, length)
+    //fun location(sentence: Sentence): InputLocation = sentence.locationFor(position, length)
 }
 
 interface TreeData {

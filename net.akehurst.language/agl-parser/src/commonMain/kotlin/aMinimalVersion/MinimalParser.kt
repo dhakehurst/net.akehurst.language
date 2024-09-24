@@ -26,10 +26,10 @@ import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.binaryHeap
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
-import net.akehurst.language.parser.leftcorner.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 

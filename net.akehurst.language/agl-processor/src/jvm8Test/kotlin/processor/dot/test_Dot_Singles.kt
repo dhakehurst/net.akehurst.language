@@ -22,7 +22,7 @@ import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test

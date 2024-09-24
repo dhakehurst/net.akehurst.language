@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.komposite.processor
+package net.akehurst.kotlinx.komposite.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.base.api.*
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*

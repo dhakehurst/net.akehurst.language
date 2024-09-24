@@ -194,11 +194,11 @@ class test_GenerateTypeModelViaReflection {
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL
         )
         //gen.include("net.akehurst.language.collections.ListSeparated")
-        gen.exclude("net.akehurst.language.api.asm.AsmSimpleBuilder")
+        gen.exclude("net.akehurst.language.asm.api.AsmSimpleBuilder")
         gen.addPackage("net.akehurst.language.api.scope")
-        gen.addPackage("net.akehurst.language.agl.scope")
-        gen.addPackage("net.akehurst.language.api.asm")
-        gen.addPackage("net.akehurst.language.agl.asm")
+        gen.addPackage("net.akehurst.language.scope.simple")
+        gen.addPackage("net.akehurst.language.asm.api")
+        gen.addPackage("net.akehurst.language.asm.simple")
         val tm = gen.generate()
         return Pair(tm, added1+added2)
     }

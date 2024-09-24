@@ -19,7 +19,7 @@ package net.akehurst.language.agl.default_
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
-import net.akehurst.language.api.asm.*
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.processor.*

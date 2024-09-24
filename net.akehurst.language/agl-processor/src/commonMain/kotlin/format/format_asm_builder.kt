@@ -17,12 +17,12 @@
 
 package net.akehurst.language.agl.format.asm
 
-import net.akehurst.language.agl.asm.AsmListSimple
-import net.akehurst.language.agl.asm.AsmPathSimple
-import net.akehurst.language.agl.asm.AsmPrimitiveSimple
-import net.akehurst.language.agl.asm.AsmSimple
-import net.akehurst.language.api.asm.AsmStructure
-import net.akehurst.language.api.asm.PropertyValueName
+import net.akehurst.language.asm.simple.AsmListSimple
+import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.asm.simple.AsmSimple
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.formatter.api.AglFormatterModel

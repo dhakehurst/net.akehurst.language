@@ -20,14 +20,15 @@ package test;
 import kotlin.Unit;
 import net.akehurst.language.agl.Agl;
 import net.akehurst.language.agl.default_.ContextAsmDefault;
-import net.akehurst.language.api.asm.Asm;
+import net.akehurst.language.asm.api.Asm;
 import net.akehurst.language.api.processor.*;
-import net.akehurst.language.api.scanner.ScanResult;
+import net.akehurst.language.scanner.api.ScanResult;
 import net.akehurst.language.parser.api.ParseOptions;
 import net.akehurst.language.parser.api.ParseResult;
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault;
-import net.akehurst.language.parser.leftcorner.SentenceDefault;
-import net.akehurst.language.sppt.api.Sentence;
+import net.akehurst.language.sentence.common.SentenceDefault;
+import net.akehurst.language.sppt.api.LeafData;
+import net.akehurst.language.sentence.api.Sentence;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,7 +63,8 @@ public class test_LanguageProcessor {
 
         Assert.assertNotNull(result);
         Assert.assertEquals(5, result.getTokens().size());
-        Assert.assertEquals("hello", result.getTokens().get(0).matchedText(sentence));
+        LeafData tok0 = result.getTokens().get(0);
+        Assert.assertEquals("hello", sentence.textAt(tok0.getPosition(),tok0.getLength());
     }
 
     @Test

@@ -22,8 +22,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.sppt.api.*
-import kotlin.js.JsExport
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import net.akehurst.language.sppt.api.SpptWalker
+import net.akehurst.language.sppt.api.TreeData
 import kotlin.reflect.KFunction3
 
 typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, T?>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.typemodel.test
+package net.akehurst.language.typemodel.test
 
 import net.akehurst.language.typemodel.api.*
 import kotlin.test.assertEquals

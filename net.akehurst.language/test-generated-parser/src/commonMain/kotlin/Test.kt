@@ -22,7 +22,7 @@ import net.akehurst.language.agl.default_.SemanticAnalyserDefault
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.typemodel.asm.typeModel
 import net.akehurst.language.agl.runtime.structure.ruleSet
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.reference.api.CrossReferenceModel

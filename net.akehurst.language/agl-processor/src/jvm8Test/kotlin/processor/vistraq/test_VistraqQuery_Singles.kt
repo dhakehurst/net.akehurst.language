@@ -18,12 +18,12 @@ package net.akehurst.language.agl.processor.vistraq
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.*
 import kotlin.time.ExperimentalTime

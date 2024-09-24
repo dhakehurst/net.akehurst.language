@@ -20,11 +20,11 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sppt.api.LeafData
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

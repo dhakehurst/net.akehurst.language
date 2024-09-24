@@ -21,7 +21,7 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem

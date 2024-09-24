@@ -20,10 +20,10 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.typemodel.asm.test.TypeModelTest
+import net.akehurst.language.typemodel.test.TypeModelTest
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals

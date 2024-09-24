@@ -18,7 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 
 
 interface SyntaxAnalysisResult<out AsmType : Any> {

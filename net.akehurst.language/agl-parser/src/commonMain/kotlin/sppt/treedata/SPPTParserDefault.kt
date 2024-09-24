@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.regexMatcher
 import net.akehurst.language.regex.api.RegexMatcher
 import net.akehurst.language.sppt.api.SPPTParser

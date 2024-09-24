@@ -22,11 +22,11 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sppt.api.LeafData
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -74,7 +74,7 @@ class test_SharedPackedParseTree {
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("a", actual[0].matchedText(SentenceDefault(text)))
+        assertEquals("a", SentenceDefault(text).textAt(actual[0].position,actual[0].length))
     }
 
     @Test
@@ -172,10 +172,10 @@ class test_SharedPackedParseTree {
             result.sppt!!.tokensByLine(1)
         )
 
-        assertEquals("a + b\n", actual[0].map { it.matchedText(sentence) }.joinToString(""))
+        assertEquals("a + b\n", actual[0].map { sentence.textAt(it.position,it.length) }.joinToString(""))
 //        assertEquals(1, actual[0][0].location.line)
 //        assertEquals(2, actual[1][0].location.line)
-        assertEquals("  ", actual[1][0].matchedText(sentence))
+        assertEquals("  ", sentence.textAt(actual[1][0].position, actual[1][0].length))
     }
 
     @Test
@@ -216,13 +216,14 @@ class XXX {
             result.sppt!!.tokensByLine(2)
         )
 
-        assertEquals("class XXX {\n", actual[0].map { it.matchedText(sentence) }.joinToString(""))
+        assertEquals("class XXX {\n", actual[0].map { sentence.textAt(it.position,it.length) }.joinToString(""))
 //        assertEquals(1, actual[0][0].location.line)
 //        assertEquals(2, actual[1][0].location.line)
 //        assertEquals("    \n", actual[1][0].matchedText(sentence))
 //        assertEquals(3, actual[2][0].location.line)
-        assertEquals("    ", actual[2][0].matchedText(sentence))
-        assertEquals("prop1", actual[2][1].matchedText(sentence))
+        assertEquals("    ", sentence.textAt(actual[2][0].position, actual[2][0].length))
+        assertEquals("prop1", sentence.textAt(actual[2][1].position, actual[2][1].length))
+
     }
 
 

@@ -17,10 +17,10 @@
 
 package net.akehurst.language.agl.default_
 
-import net.akehurst.language.agl.asm.AsmNothingSimple
-import net.akehurst.language.agl.asm.AsmPrimitiveSimple
-import net.akehurst.language.agl.asm.asValueName
-import net.akehurst.language.agl.asm.isStdString
+import net.akehurst.language.asm.simple.AsmNothingSimple
+import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.asm.simple.asValueName
+import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.asmValue
@@ -28,15 +28,15 @@ import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.reference.asm.CollectionReferenceExpressionDefault
 import net.akehurst.language.reference.asm.PropertyReferenceExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.api.asm.*
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.PropertyCall
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.ReferenceExpression
-import net.akehurst.language.api.scope.Scope
+import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib

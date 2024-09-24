@@ -15,15 +15,15 @@
  *
  */
 
-package net.akehurst.language.api.scanner
+package net.akehurst.language.scanner.api
 
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.regex.api.Regex
 import net.akehurst.language.regex.api.RegexEngine
-import net.akehurst.language.scanner.common.Matchable
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.LeafData
-import net.akehurst.language.sppt.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNode
 
 interface ScanResult {
@@ -36,8 +36,6 @@ enum class ScannerKind {
 }
 
 interface Scanner {
-    //val sentence: Sentence
-
     val kind: ScannerKind
     val regexEngine: RegexEngine
     val matchables: List<Matchable>
@@ -49,3 +47,56 @@ interface Scanner {
 
     fun scan(sentence: Sentence, startAtPosition: Int = 0, offsetPosition: Int = 0): ScanResult
 }
+
+enum class MatchableKind { EOT, LITERAL, REGEX }
+
+data class Matchable(
+    val tag: String,
+    /**
+     * must NOT be empty/blank
+     * when(kind) {
+     *   EOT -> ""
+     *   LITERAL -> literal text to match
+     *   REGEX -> Regular Expression
+     * }
+     */
+    val expression: String,
+    val kind: MatchableKind
+) {
+    // create this so Regex is cached
+    private var _regEx: Regex? = null
+
+    fun using(regexEngine: RegexEngine): Matchable {
+        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression) else null
+        return this
+    }
+
+    /**
+     * true if the expression matches the text at the given position
+     */
+    fun isLookingAt(text: String, atPosition: Int): Boolean = when (kind) {
+        MatchableKind.EOT -> atPosition >= text.length
+        MatchableKind.LITERAL -> text.regionMatches(atPosition, expression, 0, expression.length)
+        MatchableKind.REGEX -> _regEx!!.matchesAt(text, atPosition)
+    }
+
+    /**
+     * length of text matched at the given position, -1 if no match
+     */
+    fun matchedLength(sentence: Sentence, atPosition: Int): Int = when (kind) {
+        MatchableKind.EOT -> if (atPosition >= sentence.text.length) 0 else -1
+        MatchableKind.LITERAL -> when {
+            sentence.text.regionMatches(atPosition, expression, 0, expression.length) -> expression.length
+            else -> -1
+        }
+
+        MatchableKind.REGEX -> {
+            val m = _regEx!!.matchAt(sentence.text, atPosition)
+            m?.let {
+                //sentence.setEolPositions(m.eolPositions)
+                it.matchedText.length
+            } ?: -1
+        }
+    }
+}
+

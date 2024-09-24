@@ -15,14 +15,14 @@
  *
  */
 
-package net.akehurst.language.transform.asm.test
+package net.akehurst.language.transform.test
 
-import net.akehurst.language.expressions.processor.test.ExpressionsTest
-import net.akehurst.language.typemodel.asm.test.TypeModelTest
+import net.akehurst.language.expressions.test.ExpressionsTest
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.assertEquals
 import kotlin.test.fail
 

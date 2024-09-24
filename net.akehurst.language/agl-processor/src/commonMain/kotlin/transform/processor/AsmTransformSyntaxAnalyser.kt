@@ -33,7 +33,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformNamespace

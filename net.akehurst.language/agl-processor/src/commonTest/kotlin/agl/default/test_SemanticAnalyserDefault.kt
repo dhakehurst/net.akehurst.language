@@ -22,9 +22,9 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.agl.default_.contextAsmDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.asmSimple
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase

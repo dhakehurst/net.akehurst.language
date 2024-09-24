@@ -20,7 +20,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.scanner.ScannerKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.issues.api.LanguageProcessorPhase

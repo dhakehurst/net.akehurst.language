@@ -24,8 +24,8 @@ import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.parser.api.InputLocation
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData

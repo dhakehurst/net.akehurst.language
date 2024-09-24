@@ -74,7 +74,7 @@ exportPublic {
             "net.akehurst.language.agl.processor.**",
             "net.akehurst.language.agl.language.**",
             "net.akehurst.language.typemodel.simple.**",
-            "net.akehurst.language.agl.asm.**",
+            "net.akehurst.language.asm.simple.**",
             "net.akehurst.language.agl.syntaxAnalyser.**",
             "net.akehurst.language.agl.semanticAnalyser.**",
             "net.akehurst.language.agl.sppt.**",

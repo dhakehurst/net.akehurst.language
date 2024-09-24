@@ -18,7 +18,6 @@ package net.akehurst.language.parser.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
@@ -28,7 +27,10 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import kotlin.math.max

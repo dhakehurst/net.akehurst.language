@@ -16,13 +16,13 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.asm.AsmPathSimple
+import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.agl.default_.contextAsmDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.collections.lazyMutableMapNonNull

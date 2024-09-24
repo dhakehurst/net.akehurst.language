@@ -19,7 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 
 class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,

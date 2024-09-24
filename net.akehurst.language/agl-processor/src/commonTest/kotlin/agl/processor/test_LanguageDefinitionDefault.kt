@@ -18,23 +18,23 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.api.language.style.AglStyleModel
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.asmSimple
 import net.akehurst.language.api.processor.LanguageDefinition
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
 import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
@@ -66,9 +66,9 @@ class test_LanguageDefinitionDefault {
 
     @BeforeTest
     fun before() {
-        Agl.registry.unregister(QualifiedName("ns.test"))
+        Agl.registry.unregister(LanguageIdentity("ns.test"))
         this.sut = Agl.registry.register<Asm, ContextAsmDefault>(
-            identity = QualifiedName("ns.test"),
+            identity = LanguageIdentity("ns.test"),
             grammarStr = null,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
@@ -111,7 +111,7 @@ class test_LanguageDefinitionDefault {
     fun createFromStr() {
         val g = "namespace ns grammar Test1 { S = 'b'; }"
         val def = Agl.registry.register<Asm, ContextAsmDefault>(
-            identity = QualifiedName("ns.Test1"),
+            identity = LanguageIdentity("ns.Test1"),
             grammarStr = g,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,

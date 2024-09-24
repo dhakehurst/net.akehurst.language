@@ -30,15 +30,15 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.api.scanner.Scanner
+import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parsermessages.Message
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.TreeData
 import kotlin.math.max
 

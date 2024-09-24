@@ -23,10 +23,10 @@ import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.scanner.ScannerKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder

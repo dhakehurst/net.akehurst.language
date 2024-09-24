@@ -16,7 +16,7 @@
 
 package net.akehurst.language.sppt.api
 
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 
 
 /**

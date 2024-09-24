@@ -17,7 +17,7 @@
 package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.api.asm.*
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.semanticAnalyser.SentenceContext

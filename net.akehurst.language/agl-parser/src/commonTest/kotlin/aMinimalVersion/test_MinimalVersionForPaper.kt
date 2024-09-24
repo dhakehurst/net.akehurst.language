@@ -20,7 +20,7 @@ package net.akehurst.language.parser.aMinimalVersion
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.treedata.SpptWalkerToString
 import kotlin.math.min
 import kotlin.test.Test

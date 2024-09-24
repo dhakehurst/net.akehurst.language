@@ -20,7 +20,7 @@ package test;
 import kotlin.Unit;
 import net.akehurst.language.agl.Agl;
 import net.akehurst.language.agl.default_.ContextAsmDefault;
-import net.akehurst.language.api.asm.Asm;
+import net.akehurst.language.asm.api.Asm;
 import net.akehurst.language.base.api.SimpleName;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration;

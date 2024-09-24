@@ -18,11 +18,11 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.asm.*
+import net.akehurst.language.asm.simple.*
 import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.api.asm.*
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*

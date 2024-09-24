@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.asm
+package net.akehurst.language.asm.api
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

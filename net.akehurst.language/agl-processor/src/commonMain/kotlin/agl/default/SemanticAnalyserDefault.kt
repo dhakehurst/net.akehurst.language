@@ -19,16 +19,16 @@ package net.akehurst.language.agl.default_
 
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.AsmPath
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.scope.Scope
+import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.parser.api.InputLocation
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
 class SemanticAnalyserDefault(

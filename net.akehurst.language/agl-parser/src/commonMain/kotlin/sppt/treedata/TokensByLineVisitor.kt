@@ -17,7 +17,9 @@
 package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.*
 
 internal class TokensByLineVisitor(
@@ -68,7 +70,7 @@ internal class TokensByLineVisitor(
         val tags = tagList + name
         val location = sentence.locationForNode(nodeInfo.node)
         val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
-        val eolPositions = ScannerOnDemand.eolPositions(matchedText)
+        val eolPositions = SentenceDefault.eolPositions(matchedText)
         when {
             nodeInfo.node.isEmptyMatch -> Unit
             eolPositions.isEmpty() -> {

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.komposite.processor
+package net.akehurst.kotlinx.komposite.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 object Komposite {

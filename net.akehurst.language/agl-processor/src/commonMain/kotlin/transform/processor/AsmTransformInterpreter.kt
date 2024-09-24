@@ -17,13 +17,13 @@
 
 package net.akehurst.language.transform.processor
 
-import net.akehurst.language.agl.asm.asValueName
+import net.akehurst.language.asm.simple.asValueName
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.asmValue
-import net.akehurst.language.api.asm.AsmPath
-import net.akehurst.language.api.asm.AsmStructure
-import net.akehurst.language.api.asm.AsmValue
+import net.akehurst.language.asm.api.AsmPath
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.base.api.QualifiedName

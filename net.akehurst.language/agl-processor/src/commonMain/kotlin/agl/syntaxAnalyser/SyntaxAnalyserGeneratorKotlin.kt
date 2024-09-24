@@ -46,7 +46,7 @@ class SyntaxAnalyserGeneratorKotlin {
         return """
 package ${grammar.namespace.qualifiedName}
 
-import net.akehurst.language.sppt.api.Sentence
+import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 

@@ -18,14 +18,14 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.parser.leftcorner.SentenceDefault
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-internal class test_LanguageProcessor_scan {
+class test_LanguageProcessor_scan {
 
     private companion object {
 
@@ -71,10 +71,10 @@ internal class test_LanguageProcessor_scan {
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertEquals("ab", tokens[0].matchedText(sentence))
+        assertEquals("ab", sentence.textAt(tokens[0].position, tokens[0].length))
         //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
         assertEquals(0, tokens[0].position)
-        assertEquals(2, tokens[0].matchedText(sentence).length)
+        assertEquals(2, sentence.textAt(tokens[0].position, tokens[0].length).length)
 
     }
 
@@ -88,10 +88,10 @@ internal class test_LanguageProcessor_scan {
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertEquals("a", tokens[0].matchedText(sentence))
+        assertEquals("a", sentence.textAt(tokens[0].position, tokens[0].length))
         //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
         assertEquals(0, tokens[0].position)
-        assertEquals(1, tokens[0].matchedText(sentence).length)
+        assertEquals(1,sentence.textAt(tokens[0].position, tokens[0].length).length)
 
     }
 
@@ -127,9 +127,9 @@ internal class test_LanguageProcessor_scan {
 
         assertNotNull(tokens)
         assertEquals(3, tokens.size)
-        assertEquals("a", tokens[0].matchedText(sentence))
-        assertEquals("b", tokens[1].matchedText(sentence))
-        assertEquals("a", tokens[2].matchedText(sentence))
+        assertEquals("a", sentence.textAt(tokens[0].position, tokens[0].length))
+        assertEquals("b", sentence.textAt(tokens[1].position, tokens[1].length))
+        assertEquals("a", sentence.textAt(tokens[2].position, tokens[2].length))
 
     }
 

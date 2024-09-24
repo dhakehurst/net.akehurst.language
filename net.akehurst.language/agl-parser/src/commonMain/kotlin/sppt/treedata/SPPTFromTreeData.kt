@@ -16,7 +16,11 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.sppt.api.*
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.LeafData
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptWalker
+import net.akehurst.language.sppt.api.TreeData
 
 class SPPTFromTreeData(
     override val treeData: TreeData,
