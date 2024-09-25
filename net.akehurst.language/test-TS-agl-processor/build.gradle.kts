@@ -9,7 +9,7 @@ dependencies {
     //jsMainImplementation(project(":agl-processor"))
     //jsMainImplementation(npm())
 }
-
+/*
 val dep_agl_proc:String = rootProject.subprojects.first { it.name=="agl-processor" }.layout.buildDirectory.dir("dist/js/developmentLibrary").get().toString()
 val prod_agl_proc:String = rootProject.subprojects.first { it.name=="agl-processor" }.layout.buildDirectory.dir("dist/js/productionLibrary").get().toString()
 kotlin.js("js").compilations["main"].packageJson {
@@ -19,6 +19,7 @@ kotlin.js("js").compilations["main"].packageJson {
         dependencies["net.akehurst.language-agl-processor"] = prod_agl_proc
     }
 }
+*/
 
 configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
     js("js", IR) {

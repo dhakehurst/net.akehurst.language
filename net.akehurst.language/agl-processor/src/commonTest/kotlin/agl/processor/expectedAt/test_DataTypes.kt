@@ -46,7 +46,7 @@ class test_DataTypes {
         val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
 
         val testData = listOf(
-            /*
+
             Data("",0, listOf("'class'","<EOT>")),
             Data(" ",0, listOf("'class'","<EOT>")),
             Data(" ",1, listOf("'class'","<EOT>")),
@@ -69,7 +69,7 @@ class test_DataTypes {
             Data("class A { p: X<Y",16, listOf("'<'", "','","'>'")),
             Data("class A { p: X<Y>",17, listOf("ID", "}")),
             Data("class A { p: X<Y> }",19, listOf("'class'","<EOT>")),
-*/
+
             Data("class A { p: X<Y", 16, listOf("'<'", "','", "'>'")),
         )
     }

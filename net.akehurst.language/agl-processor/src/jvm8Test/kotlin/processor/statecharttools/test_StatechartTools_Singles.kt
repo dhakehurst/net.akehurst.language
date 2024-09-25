@@ -16,9 +16,9 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.agl.default_.SemanticAnalyserDefault
-import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.asm.api.Asm
@@ -56,7 +56,7 @@ class test_StatechartTools_Singles {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
             val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -65,11 +65,11 @@ class test_StatechartTools_Singles {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
+                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
                 // completionProvider { p ->
@@ -85,7 +85,7 @@ class test_StatechartTools_Singles {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(ContextAsmDefault()) }
+                semanticAnalysis { context(ContextAsmSimple()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[grammar].formatAsm(result.asm!!).sentence

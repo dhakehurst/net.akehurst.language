@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
@@ -31,10 +31,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
-class SemanticAnalyserDefault(
+class SemanticAnalyserSimple(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
-) : SemanticAnalyser<Asm, ContextAsmDefault> {
+) : SemanticAnalyser<Asm, ContextAsmSimple> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private lateinit var _locationMap: Map<Any, InputLocation>
@@ -46,8 +46,8 @@ class SemanticAnalyserDefault(
     override fun analyse(
         asm: Asm,
         locationMap: Map<Any, InputLocation>?,
-        context: ContextAsmDefault?,
-        options: SemanticAnalysisOptions<Asm, ContextAsmDefault>
+        context: ContextAsmSimple?,
+        options: SemanticAnalysisOptions<Asm, ContextAsmSimple>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
@@ -75,7 +75,7 @@ class SemanticAnalyserDefault(
         } else {
             null
         }
-        asm.traverseDepthFirst(ReferenceResolverDefault(typeModel, crossReferenceModel, rootScope, resolveFunction, locationMap, _issues))
+        asm.traverseDepthFirst(ReferenceResolverSimple(typeModel, crossReferenceModel, rootScope, resolveFunction, locationMap, _issues))
     }
 
     private fun buildScope(asm: Asm, rootScope: Scope<AsmPath>) {

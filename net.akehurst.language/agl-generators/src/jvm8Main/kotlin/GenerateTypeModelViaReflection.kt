@@ -105,7 +105,7 @@ class GenerateTypeModelViaReflection(
 
         fun KClass<*>.isKompositeAnnotation(propertyName: String): Boolean =
             this.allPropertiesNamed(propertyName)
-                .any { it.findAnnotations(Komposite::class).isNotEmpty() }
+                .any { it.findAnnotations(KompositeProperty::class).isNotEmpty() }
 
 
         fun logInfo(message: String) {

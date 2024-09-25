@@ -19,7 +19,7 @@ package net.akehurst.language.base.api
 
 
 import net.akehurst.language.base.api.QualifiedName.Companion.isQualifiedName
-import net.akehurst.language.typemodel.api.Komposite
+import net.akehurst.language.typemodel.api.KompositeProperty
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
@@ -115,7 +115,7 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     /**
      * Ordered Map
      */
-    @Komposite
+    @KompositeProperty
     val namespace: List<NT>
 
     val allDefinitions: List<DT>
@@ -134,7 +134,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
      */
     val import: List<Import>
 
-    @Komposite
+    @KompositeProperty
     val definition: List<DT>
 
     val definitionByName: Map<SimpleName, DT>

@@ -76,15 +76,16 @@ grammar Mdl {
     @Test
     fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Mdl") {
+        val expected = grammarTypeModel("test.Mdl", "Mdl") {
             //file = section+ ;
             dataType("file", "File") {
                 propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
             dataType("section", "Section") {
+                supertypes("Content")
                 propertyPrimitiveType("identifier", "String", false, 0)
-                propertyListTypeOf("content", "Content", false, 1)
+                propertyListTypeOf("content", "Content", false, 2)
             }
             //content = section | parameter ;
             dataType("content", "Content") {
@@ -92,24 +93,54 @@ grammar Mdl {
             }
             //parameter = IDENTIFIER value ;
             dataType("parameter", "Parameter") {
+                supertypes("Content")
                 propertyPrimitiveType("identifier", "String", false, 0)
-                propertyDataTypeOf("value", "Value", false, 1)
+                propertyUnnamedSuperType("value", false, 1) {
+                    elementRef("Identifier")
+                    elementRef("Matrix")
+                    primitiveRef("String")
+                    elementRef("StringList")
+                }
             }
             //value = stringList | matrix | identifier | literal ;
-            dataType("value", "Value") {
-                subtypes("StringList", "Matrix", "Identifier", "Literal")
+            unnamedSuperTypeType("value") {
+                elementRef("Identifier")
+                elementRef("Matrix")
+                primitiveRef("String")
+                elementRef("StringList")
             }
             //identifier = IDENTIFIER ;
             dataType("identifier", "Identifier") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+            dataType("matrix", "Matrix") {
+                propertyListType("row", false, 1) {
+                    unnamedSuperTypeOf() {
+                        listType(false) { primitiveRef("String") }
+                        listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
+                    }
+                }
+            }
             //row = [literal / ',']+ | literal+ ;
+            unnamedSuperTypeType("row") {
+                listType(false) { primitiveRef("String") }
+                listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
+            }
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
             dataType("stringList", "StringList") {
-                propertyListType("double_quoted_string", false, 0) { primitiveRef("String") }
+                propertyListType("double_quote_string", false, 0) { primitiveRef("String") }
             }
+
+            // literal = BOOLEAN < INTEGER < REAL < DOUBLE_QUOTE_STRING  ;
+            stringTypeFor("literal")
+
+            stringTypeFor("IDENTIFIER")
+            stringTypeFor("BOOLEAN")
+            stringTypeFor("INTEGER")
+            stringTypeFor("REAL")
+            stringTypeFor("DOUBLE_QUOTE_STRING")
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)

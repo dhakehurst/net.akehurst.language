@@ -186,7 +186,7 @@ abstract class StructuredTypeBuilder(
 
     fun propertyListType(propertyName: String, nullable: Boolean, childIndex: Int, init: TypeUsageReferenceBuilder.() -> Unit): PropertyDeclaration {
         val collType = SimpleTypeModelStdLib.List
-        val tb = TypeUsageReferenceBuilder(this._structuredType, this._namespace, collType, nullable)
+        val tb = TypeUsageReferenceBuilder(this._structuredType, this._namespace, collType, nullable, _typeReferences)
         tb.init()
         _typeReferences.add(tb)
         val tu = tb.build()
@@ -392,7 +392,8 @@ class TypeUsageReferenceBuilder(
     val context: TypeDeclaration?,
     val _namespace: TypeNamespace,
     val type: TypeDeclaration,
-    val nullable: Boolean
+    val nullable: Boolean,
+    protected val _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) {
     private val _args = mutableListOf<TypeInstance>()
 
@@ -409,6 +410,15 @@ class TypeUsageReferenceBuilder(
         val t = _namespace.createUnnamedSupertypeType(subtypes)
         _args.add(t.type(emptyList(), nullable))
     }
+
+    fun unnamedSuperTypeOf(init: SubtypeListBuilder.() -> Unit) {
+        val b = SubtypeListBuilder(_namespace, _typeReferences)
+        b.init()
+        val stu = b.build()
+        val t = _namespace.createUnnamedSupertypeType(stu)
+        _args.add(t.type(emptyList(), nullable))
+    }
+
 
     fun build(): TypeInstance {
         return type.type(_args, false)
@@ -457,7 +467,16 @@ class SubtypeListBuilder(
 
     fun listType(nullable: Boolean, init: TypeUsageReferenceBuilder.() -> Unit) {
         val collType = SimpleTypeModelStdLib.List
-        val tb = TypeUsageReferenceBuilder(null, this._namespace, collType, nullable)
+        val tb = TypeUsageReferenceBuilder(null, this._namespace, collType, nullable,_typeReferences)
+        tb.init()
+        _typeReferences.add(tb)
+        val tu = tb.build()
+        _subtypeList.add(tu)
+    }
+
+    fun listSeparatedType(nullable: Boolean, init: TypeUsageReferenceBuilder.() -> Unit) {
+        val collType = SimpleTypeModelStdLib.ListSeparated
+        val tb = TypeUsageReferenceBuilder(null, this._namespace, collType, nullable,_typeReferences)
         tb.init()
         _typeReferences.add(tb)
         val tu = tb.build()

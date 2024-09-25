@@ -159,6 +159,32 @@ object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override fun toString(): String = "Nothing"
 }
 
+class AsmAnySimple(
+    override val value: Any
+): AsmValueAbstract(), AsmAny {
+    companion object {
+        fun stdAny(value: Any) = AsmAnySimple(value)
+    }
+
+    override val qualifiedTypeName: QualifiedName get() = SimpleTypeModelStdLib.AnyType.qualifiedTypeName
+
+    override fun asString(currentIndent: String, indentIncrement: String): String = "AsmAny($value)"
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmAny -> false
+        other.value != this.value -> false
+        else -> true
+    }
+
+    override fun hashCode(): Int = listOf(qualifiedTypeName, value).hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is AsmAny -> false
+        this.value != other.value -> false
+        else -> true
+    }
+
+    override fun toString(): String = "$qualifiedTypeName($value)"
+}
+
 class AsmPrimitiveSimple(
     override val qualifiedTypeName: QualifiedName,
     override val value: Any

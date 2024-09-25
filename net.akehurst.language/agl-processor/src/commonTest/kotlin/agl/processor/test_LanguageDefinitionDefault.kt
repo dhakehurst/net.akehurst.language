@@ -17,9 +17,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.api.asmSimple
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -39,7 +39,7 @@ import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
 
-    lateinit var sut: LanguageDefinition<Asm, ContextAsmDefault>
+    lateinit var sut: LanguageDefinition<Asm, ContextAsmSimple>
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
@@ -67,7 +67,7 @@ class test_LanguageDefinitionDefault {
     @BeforeTest
     fun before() {
         Agl.registry.unregister(LanguageIdentity("ns.test"))
-        this.sut = Agl.registry.register<Asm, ContextAsmDefault>(
+        this.sut = Agl.registry.register<Asm, ContextAsmSimple>(
             identity = LanguageIdentity("ns.test"),
             grammarStr = null,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
@@ -110,7 +110,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun createFromStr() {
         val g = "namespace ns grammar Test1 { S = 'b'; }"
-        val def = Agl.registry.register<Asm, ContextAsmDefault>(
+        val def = Agl.registry.register<Asm, ContextAsmSimple>(
             identity = LanguageIdentity("ns.Test1"),
             grammarStr = g,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
@@ -489,9 +489,9 @@ class test_LanguageDefinitionDefault {
         val crossReferenceModel = sut.crossReferenceModel
         assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
 
-        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel!!, crossReferenceModel = crossReferenceModel!!, context = ContextAsmDefault()) {
+        val expected = asmSimple(typeModel = typeModel!!, crossReferenceModel = crossReferenceModel!!, context = ContextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

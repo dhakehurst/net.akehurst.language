@@ -27,6 +27,7 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.PropertyDeclarationDerived
 import net.akehurst.language.typemodel.asm.PropertyDeclarationPrimitive
@@ -340,7 +341,8 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
         val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName)
             ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
-        val obj = AsmStructureSimple(AsmPathSimple(""), typeDecl.qualifiedName)
+        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
+        val obj = AsmStructureSimple((asmPath.asmValue as AsmAny).value as AsmPath, typeDecl.qualifiedName)
 
         val args = expression.arguments.map { evaluateExpression(evc, it) }
         val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }

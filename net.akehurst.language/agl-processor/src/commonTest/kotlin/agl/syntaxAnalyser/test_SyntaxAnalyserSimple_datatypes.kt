@@ -17,16 +17,16 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.api.asmSimple
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -60,22 +60,21 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
         val grammar = grammarProc.process(grammarStr).asm!!
-        val typeModel by lazy {
+        val asmTransformModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             val tr = TransformModelDefault.fromGrammarModel(result.asm!!)
             assertNotNull(tr.asm)
             assertTrue(tr.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            tr.asm!!.typeModel!!
+            tr.asm!!
         }
-        val asmTransformModel by lazy {
-            val result = grammarProc.process(grammarStr)
-            TransformModelDefault.fromGrammarModel(result.asm!!).asm!!
+        val typeModel by lazy {
+            asmTransformModel.typeModel!!
         }
         val scopeModel = CrossReferenceModelDefault()
-        val syntaxAnalyser = SyntaxAnalyserDefault(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
-        val processor = Agl.processorFromString<Asm, ContextAsmDefault>(
+        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
+        val processor = Agl.processorFromString<Asm, ContextAsmSimple>(
             grammarStr,
             Agl.configuration {
                 crossReferenceModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -192,7 +191,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmDefault())
+                    context(ContextAsmSimple())
                 }
             }
         )
@@ -236,14 +235,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmDefault())
+                    context(ContextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextAsmDefault()) {
+        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

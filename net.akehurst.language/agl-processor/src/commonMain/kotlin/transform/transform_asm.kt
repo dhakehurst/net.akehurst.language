@@ -18,9 +18,9 @@
 package net.akehurst.language.transform.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
-import net.akehurst.language.agl.default_.Grammar2TypeModelMapping
-import net.akehurst.language.agl.default_.GrammarModel2TransformModel
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
+import net.akehurst.language.agl.simple.Grammar2TypeModelMapping
+import net.akehurst.language.agl.simple.GrammarModel2TransformModel
 import net.akehurst.language.expressions.asm.IndexOperationSimple
 import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.NavigationSimple

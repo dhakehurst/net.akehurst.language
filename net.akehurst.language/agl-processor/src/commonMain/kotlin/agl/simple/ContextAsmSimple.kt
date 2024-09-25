@@ -1,11 +1,11 @@
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.scope.simple.ScopeSimple
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class ContextAsmDefault() : SentenceContext<AsmPath> {
+class ContextAsmSimple() : SentenceContext<AsmPath> {
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
@@ -19,11 +19,11 @@ class ContextAsmDefault() : SentenceContext<AsmPath> {
     override fun hashCode(): Int = rootScope.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
-        other !is ContextAsmDefault -> false
+        other !is ContextAsmSimple -> false
         this.rootScope != other.rootScope -> false
         else -> true
     }
 
-    override fun toString(): String = "ContextAsmDefault"
+    override fun toString(): String = "ContextAsmSimple"
 }
 

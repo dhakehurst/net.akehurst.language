@@ -15,18 +15,17 @@
  *
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.simple
 
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple

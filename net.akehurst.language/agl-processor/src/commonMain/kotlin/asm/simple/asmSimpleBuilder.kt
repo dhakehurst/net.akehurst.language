@@ -15,16 +15,17 @@
  *
  */
 
-package net.akehurst.language.asm.api
+package net.akehurst.language.asm.simple
 
-import net.akehurst.language.asm.simple.*
-import net.akehurst.language.agl.default_.*
+import net.akehurst.language.agl.simple.*
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -44,7 +45,7 @@ annotation class AsmSimpleBuilderMarker
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(),
-    context: ContextAsmDefault? = null,
+    context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
@@ -59,7 +60,7 @@ fun asmSimple(
 class AsmSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _crossReferenceModel: CrossReferenceModel,
-    private val _context: ContextAsmDefault?,
+    private val _context: ContextAsmSimple?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
 ) {
@@ -107,7 +108,7 @@ class AsmSimpleBuilder(
             val resolveFunction: ResolveFunction = { ref ->
                 _asm.elementIndex[ref]
             }
-            _asm.traverseDepthFirst(ReferenceResolverDefault(_typeModel, _crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))
+            _asm.traverseDepthFirst(ReferenceResolverSimple(_typeModel, _crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))
         }
         if (failIfIssues && issues.errors.isNotEmpty()) {
             error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
@@ -230,10 +231,13 @@ class AsmElementSimpleBuilder(
             val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName)
             val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
             val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(EvaluationContext.ofSelf(_element.toTypedObject(elType)), it) }
+
             val referableName = when (res) {
                 null -> null
-                is AsmPrimitive -> res.value as String
-                else -> error("Evaluation of navigation '$nav' on '$_element' should result in a String, but it does not!")
+                else -> when (res.asmValue) {
+                    is AsmPrimitive -> (res.asmValue as AsmPrimitive).value as String
+                    else -> error("Evaluation of navigation '$nav' on '$_element' should result in a String, but it is a '${res::class.simpleName}'")
+                }
             }
             if (null != referableName) {
 //                es.addToScope(referableName, _element.typeName, _element.path)

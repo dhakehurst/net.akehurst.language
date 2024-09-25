@@ -15,25 +15,24 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.asm.api.asmSimple
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_SemanticAnalyserDefault_datatypes {
+class test_SemanticAnalyserSimple_datatypes {
 
     private companion object {
         val grammarStr = """
@@ -96,7 +95,7 @@ class test_SemanticAnalyserDefault_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextAsmDefault())
+                context(ContextAsmSimple())
             }
         })
         assertTrue(result.issues.isEmpty(), result.issues.toString())
@@ -125,7 +124,7 @@ class test_SemanticAnalyserDefault_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextAsmDefault())
+                context(ContextAsmSimple())
             }
         })
         assertNotNull(result.asm)
@@ -161,7 +160,7 @@ class test_SemanticAnalyserDefault_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmDefault())
+                    context(ContextAsmSimple())
                 }
             }
         )
@@ -193,9 +192,9 @@ class test_SemanticAnalyserDefault_datatypes {
                 "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference[/0/declaration/0/property/0/typeReference]'"
             )
         )
-
+println(result.asm!!.asString())
+        assertEquals(expected.asString(), result.asm!!.asString())
         assertEquals(expItems, result.issues.errors)
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -211,14 +210,14 @@ class test_SemanticAnalyserDefault_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmDefault())
+                    context(ContextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmDefault()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

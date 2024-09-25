@@ -55,6 +55,9 @@ interface AsmValue {
 }
 
 interface AsmNothing : AsmValue
+interface AsmAny : AsmValue {
+    val value: Any
+}
 
 interface AsmPrimitive : AsmValue {
     val value: Any

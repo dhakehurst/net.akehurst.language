@@ -2,7 +2,7 @@ package test
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.PathFunction
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.SpptWalker
 import kotlin.test.Test
@@ -109,7 +109,7 @@ leaf booleanLiteral      = 'false' | 'true';
                 println("end embedded")
             }
 
-            override fun error(msg: String, path: () -> List<SpptDataNode>) {
+            override fun error(msg: String, path: PathFunction) {
                 println("error $msg")
             }
 

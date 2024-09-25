@@ -20,7 +20,7 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -92,7 +92,7 @@ namespace net.akehurst.language.example.BasicTutorial {
             Hello George !
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
@@ -109,7 +109,7 @@ namespace net.akehurst.language.example.BasicTutorial {
             Hello George !
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
         val expIssues = setOf(
             LanguageIssue(

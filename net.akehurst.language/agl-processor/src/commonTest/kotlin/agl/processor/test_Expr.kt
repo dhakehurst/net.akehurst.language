@@ -50,7 +50,7 @@ grammar Test {
         val text = "a"
 
         val expected = """
-             expr|1 { var { NAME : 'a' } }
+             expr { var { NAME : 'a' } }
         """.trimIndent()
 
         super.test(processor, "expr", text, expected)

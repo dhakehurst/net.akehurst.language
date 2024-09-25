@@ -1,11 +1,8 @@
 package test
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.expressions.asm.LiteralExpressionSimple
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.expressions.api.LiteralExpression
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult

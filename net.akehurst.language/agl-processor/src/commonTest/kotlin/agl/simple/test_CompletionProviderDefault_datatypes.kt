@@ -15,12 +15,11 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default_.ContextAsmDefault
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.typemodel.api.TypeModel
@@ -70,7 +69,7 @@ class test_CompletionProviderDefault_datatypes {
 
         data class TestData(
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmDefault? = ContextAsmDefault(),
+            val context: ContextAsmSimple? = ContextAsmSimple(),
             val sentence: String,
             val expected: List<CompletionItem>
         )

@@ -244,7 +244,12 @@ class TypeInstanceSimple(
                 ?: QualifiedName(qualifiedOrImportedTypeName.value) //TODO: not sure if this is always correct result!
         }
             ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
-            ?: if (qualifiedOrImportedTypeName is QualifiedName) qualifiedOrImportedTypeName else error("Not a QualifiedName")
+            ?: when(qualifiedOrImportedTypeName) {
+                is QualifiedName -> qualifiedOrImportedTypeName
+                is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
+                else -> error("Unsupported")
+            }
+                ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
     override val typeOrNull: TypeDeclaration? by lazy {
         context?.typeParameters?.indexOfOrNull(qualifiedOrImportedTypeName)?.let {
@@ -274,10 +279,13 @@ class TypeInstanceSimple(
     override fun hashCode(): Int = listOf(qualifiedOrImportedTypeName, typeArguments, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is TypeInstanceSimple -> false
-        this.qualifiedOrImportedTypeName != other.qualifiedOrImportedTypeName -> false
         this.isNullable != other.isNullable -> false
         this.typeArguments != other.typeArguments -> false
-        else -> true
+        else -> when {
+            null==this.contextQualifiedTypeName || null==other.contextQualifiedTypeName -> this.qualifiedOrImportedTypeName == other.qualifiedOrImportedTypeName
+            this.contextQualifiedTypeName==other.contextQualifiedTypeName &&  this.qualifiedOrImportedTypeName == other.qualifiedOrImportedTypeName -> true
+            else -> this.qualifiedTypeName == other.qualifiedTypeName
+        }
     }
 }
 
@@ -366,10 +374,10 @@ abstract class TypeNamespaceAbstract(
 
     override val ownedTypes: Collection<TypeDeclaration> get() = ownedTypesByName.values
 
-    @Komposite
+    @KompositeProperty
     val ownedUnnamedSupertypeType = mutableListOf<UnnamedSupertypeType>()
 
-    @Komposite
+    @KompositeProperty
     val ownedTupleTypes = mutableListOf<TupleType>()
 
     override val singletonType: Set<SingletonType> get() = ownedTypesByName.values.filterIsInstance<SingletonType>().toSet()
@@ -621,7 +629,7 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     // store properties by map(index) rather than list(index), because when constructing from grammar, not every index is used
     // public, so it can be serialised
-    @Komposite
+    @KompositeProperty
     val propertyByIndex = mutableMapOf<Int, PropertyDeclaration>()
 
     override val property get() = propertyByIndex.values.toList() //should be in order because mutableMap is LinkedHashMap by default
@@ -670,9 +678,13 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
     }
     override fun addSupertype(qualifiedTypeName: PossiblyQualifiedName) {
         val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
-        //TODO: check if create loop of supertypes - pre namespace resolving!
-        (this.supertypes as MutableList).add(ti)
-        //(type.subtypes as MutableList).add(this) //TODO: can we somehow add the reverse!
+        if (this.supertypes.contains(ti)) {
+            //do not add it again
+        } else {
+            //TODO: check if create loop of supertypes - pre namespace resolving!
+            (this.supertypes as MutableList).add(ti)
+            //(type.subtypes as MutableList).add(this) //TODO: can we somehow add the reverse!
+        }
     }
 
     /**
@@ -1036,7 +1048,11 @@ class DataTypeSimple(
 
     override fun addSubtype(qualifiedTypeName: PossiblyQualifiedName) {
         val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
-        (this.subtypes as MutableList).add(ti) //TODO: can we somehow add the reverse!
+        if (this.subtypes.contains(ti)) {
+            //do not ad it twice
+        } else {
+            (this.subtypes as MutableList).add(ti) //TODO: can we somehow add the reverse!
+        }
     }
 
     override fun asStringInContext(context: TypeNamespace): String {

@@ -17,8 +17,8 @@
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.agl.default_.SemanticAnalyserDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -39,7 +39,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.typeModel
 
 // sample
-object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, ContextAsmDefault>() {
+object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, ContextAsmSimple>() {
 
     override val grammarString = """
         namespace test
@@ -82,15 +82,15 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
     override val syntaxAnalyser: SyntaxAnalyser<Asm> get() = TODO()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
-    override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmDefault> = SemanticAnalyserDefault(typeModel, crossReferenceModel)
+    override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmSimple> = SemanticAnalyserSimple(typeModel, crossReferenceModel)
     override val formatter: Formatter<Asm> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )
 
-    val processor: LanguageProcessor<Asm, ContextAsmDefault> by lazy { Agl.processorFromGeneratedCode(this) }
+    val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy { Agl.processorFromGeneratedCode(this) }
 
     fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence, options)
 
-    fun process(sentence: String, options: ProcessOptions<Asm, ContextAsmDefault>? = null) = processor.process(sentence, options)
+    fun process(sentence: String, options: ProcessOptions<Asm, ContextAsmSimple>? = null) = processor.process(sentence, options)
 }

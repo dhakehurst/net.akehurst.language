@@ -180,7 +180,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: NodeListCallback) {
+            override fun error(msg: String, path: PathFunction) {
                 issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 

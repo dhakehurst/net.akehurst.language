@@ -17,10 +17,10 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.agl.default_.SemanticAnalyserDefault
-import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default_.contextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.SemanticAnalyserSimple
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
@@ -52,7 +52,7 @@ class test_Vistraq_References {
                     check(it.issues.errors.isEmpty()) { it.issues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
             val grm = grammarList.allDefinitions.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
@@ -61,11 +61,11 @@ class test_Vistraq_References {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
+                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.grammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
                 //completionProvider { p ->
@@ -82,9 +82,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: ContextAsmDefault,
+            context: ContextAsmSimple,
             resolveReferences: Boolean,
-            expectedContext: ContextAsmDefault,
+            expectedContext: ContextAsmSimple,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {
@@ -134,13 +134,13 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextAsmDefault {
+        val expectedContext = contextAsmSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
             item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
             item("AB", "vistraq.query.TIM.LinkType", "/0/linkList/0")
         }
 
-        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext)
+        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext)
     }
 
     @Test
@@ -155,7 +155,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextAsmDefault {
+        val expectedContext = contextAsmSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
             item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
             item("CD", "vistraq.query.TIM.LinkType", "/0/linkList/0")
@@ -174,7 +174,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -189,11 +189,11 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expected = contextAsmDefault {
+        val expected = contextAsmSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
-        test(grammar, goal, sentence, ContextAsmDefault(), true, expected)
+        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
     }
 
     @Test
@@ -208,7 +208,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextAsmDefault {
+        val expectedContext = contextAsmSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
@@ -222,7 +222,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -237,7 +237,7 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expectedContext = contextAsmDefault {
+        val expectedContext = contextAsmSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
@@ -251,7 +251,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmDefault(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
 

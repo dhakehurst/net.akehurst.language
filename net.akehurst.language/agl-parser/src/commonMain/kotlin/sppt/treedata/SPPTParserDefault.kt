@@ -356,16 +356,25 @@ internal class TreeParser(
         }
     }
 
-    private fun beginEmbedded(embLeafName: String, embGramQualifiedName: String, embGoalName: String) {
+    private fun beginEmbedded(embLeafName: String, embGramPossiblyQualifiedName: String, embGoalName: String) {
         // outer leaf
         nodeNamesStack.push(NodeStart(RuleReference(null, embLeafName), 0, sentenceStartPosition, sentenceNextInputPosition))
 
         // embedded branch start
-        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramQualifiedName), embGoalName), 0, sentenceStartPosition, sentenceNextInputPosition))
+        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramPossiblyQualifiedName), embGoalName), 0, sentenceStartPosition, sentenceNextInputPosition))
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
 
+        // handle PossiblyQualifiedName resolution
+        val currentQn = this.runtimeRuleSetInUse.peek().qualifiedName
+        val currentNs = currentQn.substringBeforeLast(".")
+        val embQn = when {
+            embGramPossiblyQualifiedName.contains(".") -> embGramPossiblyQualifiedName
+            else -> "$currentNs.$embGramPossiblyQualifiedName"
+        }
+
         // embedded tree
-        val embrrs = this.embeddedRuntimeRuleSets[embGramQualifiedName] ?: error("No embedded RuntimeRuleSet with name '${embGramQualifiedName}' passed to SPPTParser")
+        val embrrs = this.embeddedRuntimeRuleSets[embQn]
+            ?: error("No embedded RuntimeRuleSet with name '${embGramPossiblyQualifiedName}' passed to SPPTParser")
         this.runtimeRuleSetInUse.push(embrrs)
         val embTreeData = treeData(embrrs.number)
         this.treeDataStack.push(embTreeData)

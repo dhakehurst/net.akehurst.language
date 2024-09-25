@@ -17,8 +17,8 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.asm.simple.AsmPathSimple
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.agl.default_.contextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -52,7 +52,7 @@ class test_StatechartTools_CodeCompletion {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextAsmDefault>> { grmName ->
+        private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
             val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
@@ -84,7 +84,7 @@ class test_StatechartTools_CodeCompletion {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[SimpleName(grammar)].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(ContextAsmDefault()) }
+                semanticAnalysis { context(ContextAsmSimple()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[SimpleName(grammar)].formatAsm(result.asm!!).sentence
@@ -138,7 +138,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(ContextAsmDefault())
+                context(ContextAsmSimple())
             }
         }).items.map { it.text }.toSet().sorted()
 
@@ -154,7 +154,7 @@ class test_StatechartTools_CodeCompletion {
             internal:
               var x:
         """.trimIndent()
-        val context = contextAsmDefault {
+        val context = contextAsmSimple {
             item("int", "external.BultInType", AsmPathSimple.EXTERNAL.value)
         }
         val actual = processors[SimpleName(grammar)].expectedItemsAt(sentence, sentence.length, 1, Agl.options {

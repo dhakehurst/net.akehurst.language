@@ -40,6 +40,7 @@ class AsmTransformInterpreter(
 
     companion object {
         const val SELF = "\$self"
+        val PATH = PropertyName("\$path")
         val ALTERNATIVE = PropertyName("\$alternative")
         val LEAF = PropertyName("leaf")
         val CHILD = PropertyName("child")
@@ -54,12 +55,14 @@ class AsmTransformInterpreter(
         }
         val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
         val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
+            it.appendPropertyStored(PATH, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(CHILDREN, LIST_OF_ANY, CMP_STR_MEM)
             it.appendPropertyStored(CHILD, LIST_OF_ANY, CMP_STR_MEM)
         }
         val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
+            it.appendPropertyStored(PATH, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(CHILDREN, SLIST_OF_ANY, CMP_STR_MEM)
@@ -71,7 +74,7 @@ class AsmTransformInterpreter(
     val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
     fun evaluate(evc: EvaluationContext, path: AsmPath, trRule: TransformationRule): AsmValue {
-        val tObj = evaluateSelfStatement(evc, path, trRule.expression)
+        val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
 //        when {
 //            trRule.modifyStatements.isEmpty() -> Unit
@@ -90,7 +93,7 @@ class AsmTransformInterpreter(
         return asm
     }
 
-    private fun evaluateSelfStatement(evc: EvaluationContext, path: AsmPath, expression: Expression): AsmValue {
+    private fun evaluateSelfStatement(evc: EvaluationContext, expression: Expression): AsmValue {
         return exprInterpreter.evaluateExpression(evc, expression).asmValue
     }
 

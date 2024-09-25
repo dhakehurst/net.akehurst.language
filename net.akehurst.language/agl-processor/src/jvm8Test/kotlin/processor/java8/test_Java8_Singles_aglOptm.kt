@@ -21,9 +21,8 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -37,11 +36,11 @@ class test_Java8_Singles_aglOptm {
 
     companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
-        val proc: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor(grammarFile, true)
+        val proc: LanguageProcessor<Asm, ContextAsmSimple> = createJava8Processor(grammarFile, true)
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmDefault> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmSimple> {
             val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
-            val proc = Agl.processorFromString<Asm, ContextAsmDefault>(
+            val proc = Agl.processorFromString<Asm, ContextAsmSimple>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

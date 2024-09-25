@@ -21,7 +21,7 @@ import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -35,7 +35,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextAsmDefault> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 

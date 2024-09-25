@@ -17,6 +17,10 @@
 package net.akehurst.language.typemodel.test
 
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.SpecialTypeSimple
+import net.akehurst.language.typemodel.asm.TupleTypeInstance
+import net.akehurst.language.typemodel.asm.TypeInstanceSimple
+import net.akehurst.language.typemodel.asm.UnnamedSupertypeTypeInstance
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -60,36 +64,78 @@ object TypeModelTest {
 
     fun tmAssertEquals(expected: TypeInstance?, actual: TypeInstance?, source: String) {
         when {
-            null == expected && null == actual -> true
-            null == expected || null == actual -> fail("${source}.TypeUsage do not match")
-            else -> {
-                assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
-                assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName, "Different type for ${source}.${expected}")
-                assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
-                for (i in expected.typeArguments.indices) {
-                    val exp = expected.typeArguments[i]
-                    val act = actual.typeArguments[i]
-                    tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
-                }
-            }
+            expected == null && actual == null -> fail("should never be null")
+            expected is TypeInstanceSimple && actual is TypeInstanceSimple -> tmAssertEquals(expected, actual, source)
+            expected is TupleTypeInstance && actual is TupleTypeInstance -> tmAssertEquals(expected, actual, source)
+            expected is UnnamedSupertypeTypeInstance && actual is UnnamedSupertypeTypeInstance -> tmAssertEquals(expected, actual, source)
+            else -> fail("Unsupported subtypes of TypeInstance")
+        }
+    }
+
+    fun tmAssertEquals(expected: TypeInstanceSimple, actual: TypeInstanceSimple, source: String) {
+        assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
+        assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName, "Different type for ${source}.${expected}")
+        assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
+        for (i in expected.typeArguments.indices) {
+            val exp = expected.typeArguments[i]
+            val act = actual.typeArguments[i]
+            tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
+        }
+    }
+
+    fun tmAssertEquals(expected: TupleTypeInstance, actual: TupleTypeInstance, source: String) {
+        assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
+        assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
+        for (i in expected.typeArguments.indices) {
+            val exp = expected.typeArguments[i]
+            val act = actual.typeArguments[i]
+            tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
+        }
+        tmAssertEquals(expected.declaration, actual.declaration, source)
+    }
+
+    fun tmAssertEquals(expected: UnnamedSupertypeTypeInstance, actual: UnnamedSupertypeTypeInstance, source: String) {
+        assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
+        assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
+        for (i in expected.typeArguments.indices) {
+            val exp = expected.typeArguments[i]
+            val act = actual.typeArguments[i]
+            tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
+        }
+        assertEquals(expected.declaration.subtypes.size, actual.declaration.subtypes.size, "Different number of subtypes for ${source}.${expected}")
+        for (i in expected.declaration.subtypes.indices) {
+            val exp = expected.declaration.subtypes[i]
+            val act = actual.declaration.subtypes[i]
+            tmAssertEquals(exp, act, "Different subtype[$i] for ${source}.${expected}")
         }
     }
 
     fun tmAssertEquals(expected: TypeDeclaration?, actual: TypeDeclaration?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
+            expected is SpecialTypeSimple && actual is SpecialTypeSimple -> tmAssertEquals(expected, actual)
             expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)
+            expected is EnumType && actual is EnumType -> tmAssertEquals(expected, actual)
             expected is UnnamedSupertypeType && actual is UnnamedSupertypeType -> tmAssertEquals(expected, actual)
             expected is DataType && actual is DataType -> tmAssertEquals(expected, actual)
             expected is CollectionType && actual is CollectionType -> tmAssertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
-            else -> assertSame(expected, actual)
+            else -> fail("Unsupported subtypes of TypeDeclaration '${expected::class.simpleName}' && '${actual::class.simpleName}'")
             //else -> fail("Types do not match expected '$expected' actual '$actual' for $source")
         }
     }
 
+    private fun tmAssertEquals(expected: SpecialTypeSimple, actual: SpecialTypeSimple) {
+        assertEquals(expected.qualifiedName, actual.qualifiedName)
+    }
+
     private fun tmAssertEquals(expected: PrimitiveType, actual: PrimitiveType) {
         assertEquals(expected.name, actual.name)
+    }
+
+    private fun tmAssertEquals(expected: EnumType, actual: EnumType) {
+        assertEquals(expected.name, actual.name)
+        TODO("literals")
     }
 
     private fun tmAssertEquals(expected: UnnamedSupertypeType, actual: UnnamedSupertypeType) {

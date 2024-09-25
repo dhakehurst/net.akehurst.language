@@ -53,7 +53,7 @@ val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPositi
 
 // can't override 'path: () -> List<SpptDataNode>' in java
 // so use this fun interface instead
-fun interface NodeListCallback {
+fun interface PathFunction {
     fun invoke() :List<SpptDataNode>
 }
 
@@ -79,7 +79,7 @@ interface SpptWalker {
     fun endEmbedded(nodeInfo: SpptDataNodeInfo)
 
     //fun error(msg: String, path: () -> List<SpptDataNode>)
-    fun error(msg: String, path: NodeListCallback)
+    fun error(msg: String, path: PathFunction)
 }
 
 data class LeafData(

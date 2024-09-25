@@ -15,23 +15,22 @@
  *
  */
 
-package net.akehurst.language.agl.default
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.asm.simple.AsmPathSimple
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.typemodel.asm.typeModel
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
+import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.asm.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_CompletionProviderDefault {
+class test_CompletionProviderSimple {
 
     private companion object {
 
@@ -39,7 +38,7 @@ class test_CompletionProviderDefault {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmDefault? = ContextAsmDefault(),
+            val context: ContextAsmSimple? = ContextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -198,7 +197,7 @@ class test_CompletionProviderDefault {
             }
         }
 
-        val context = ContextAsmDefault()
+        val context = ContextAsmSimple()
         context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL)
 
 

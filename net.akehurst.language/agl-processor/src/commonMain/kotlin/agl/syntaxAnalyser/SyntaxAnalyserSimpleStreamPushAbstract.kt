@@ -200,7 +200,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: NodeListCallback) {
+            override fun error(msg: String, path: PathFunction) {
                 TODO("not implemented")
             }
 

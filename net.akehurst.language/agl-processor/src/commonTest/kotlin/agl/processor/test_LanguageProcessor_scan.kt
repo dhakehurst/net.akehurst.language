@@ -155,7 +155,13 @@ class test_LanguageProcessor_scan {
         println("tokens = ${tokenStr}")
         assertEquals(3, tokens.size)
 
-        TODO("test eol")
+        tokens = pr.processor!!.scan("""
+             a
+             b
+        """).tokens
+        tokenStr = tokens.map { it.toString() }.joinToString(", ")
+        println("tokens = ${tokenStr}")
+        assertEquals(5, tokens.size)
     }
 
     @Test

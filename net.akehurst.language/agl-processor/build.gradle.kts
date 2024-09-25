@@ -59,14 +59,18 @@ kotlinxReflect {
     )
 }
 */
-
+/*
 exportPublic {
     exportPatterns.set(
         listOf(
             "net.akehurst.language.agl.Agl",
             "net.akehurst.language.api.**",
             "net.akehurst.language.base.api.**",
+            "net.akehurst.language.base.asm.**",
+            "net.akehurst.language.grammar.api.**",
+            "net.akehurst.language.grammar.asm.**",
             "net.akehurst.language.style.api.**",
+            "net.akehurst.language.style.asm.**",
 
             "net.akehurst.language.typemodel.api.**",
             "net.akehurst.language.agl.regex.**",
@@ -83,7 +87,7 @@ exportPublic {
         )
     )
 }
-
+*/
 
 
 /*

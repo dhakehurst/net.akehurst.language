@@ -19,7 +19,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
@@ -54,16 +54,16 @@ class test_Java8_Compare(val data: Data) {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor("/Java/version_8/grammars/grammar_aglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor("/Java/version_8/grammars/grammar_aglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<Asm, ContextAsmSimple> = createJava8Processor("/Java/version_8/grammars/grammar_aglSpec.agl", true)
+        var aglOptmProcessor: LanguageProcessor<Asm, ContextAsmSimple> = createJava8Processor("/Java/version_8/grammars/grammar_aglOptm.agl", true)
 
-        var antlrSpecProcessor: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor("/Java/version_8/grammars/grammar_antlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor<Asm, ContextAsmDefault> = createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<Asm, ContextAsmSimple> = createJava8Processor("/Java/version_8/grammars/grammar_antlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor<Asm, ContextAsmSimple> = createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl")
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmDefault> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmSimple> {
             println("Building $path")
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString<Asm, ContextAsmDefault>(
+            val proc = Agl.processorFromString<Asm, ContextAsmSimple>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
@@ -142,7 +142,7 @@ class test_Java8_Compare(val data: Data) {
         return res
     }
 
-    private fun testParse(proc: LanguageProcessor<Asm, ContextAsmDefault>, toUpper: Boolean = false) {
+    private fun testParse(proc: LanguageProcessor<Asm, ContextAsmSimple>, toUpper: Boolean = false) {
         val queryStr = this.data.sentence
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })

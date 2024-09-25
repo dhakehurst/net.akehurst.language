@@ -15,23 +15,23 @@
  *
  */
 
-package net.akehurst.language.agl.semanticAnalyser
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.asm.api.asmSimple
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_SemanticAnalyserDefault_sql {
+class test_SemanticAnalyserSimple_sql {
 
     private companion object {
         val grammarStr = """
@@ -152,7 +152,7 @@ grammar SQL {
 
         val result = processor.process(sentence)
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmDefault()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -201,9 +201,9 @@ grammar SQL {
             SELECT col1 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmDefault()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -266,11 +266,11 @@ grammar SQL {
             SELECT col7 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
         val expected = asmSimple(
             typeModel = typeModel,
-            crossReferenceModel = crossReferenceModel, context = ContextAsmDefault(),
+            crossReferenceModel = crossReferenceModel, context = ContextAsmSimple(),
             failIfIssues = false //there are failing references expected
         ) {
             element("StatementList") {
@@ -342,7 +342,7 @@ grammar SQL {
             SELECT * FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
@@ -359,9 +359,9 @@ grammar SQL {
             SELECT col1,col2,col3 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmDefault()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmDefault()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {

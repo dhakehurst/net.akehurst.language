@@ -18,6 +18,8 @@
 package net.akehurst.language.transform.asm
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.expressions.asm.AssignmentStatementSimple
 import net.akehurst.language.expressions.asm.CreateObjectExpressionSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
@@ -36,6 +38,7 @@ import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SubtypeListBuilder
 
 @DslMarker
 annotation class AsmTransformModelDslMarker
@@ -99,20 +102,28 @@ class AsmTransformRuleSetBuilder internal constructor(
     private val _rules = mutableListOf<TransformationRule>()
     private val defaultTypeNamespaceQualifiedName = namespace.qualifiedName.append(name)
 
-    private fun resolveType(typeName: String): TypeDeclaration {
+    private fun resolveType(grName:GrammarRuleName , typeName: String): TypeDeclaration {
         val pqt = typeName.asPossiblyQualifiedName
         return if (createTypes) {
             when (pqt) {
                 is SimpleName -> {
                     val tns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
-                    tns.findOwnedOrCreateDataTypeNamed(pqt)
+                    val td = tns.findOwnedOrCreateDataTypeNamed(pqt)
+                    if(tns is GrammarTypeNamespaceSimple) {
+                        tns.addTypeFor(grName, td.type())
+                    }
+                    td
                 }
 
                 is QualifiedName -> {
                     val nsqn = pqt.front
                     val tn = pqt.last
                     val tns = typeModel.findOrCreateNamespace(nsqn, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
-                    tns.findOwnedOrCreateDataTypeNamed(tn)
+                    val td = tns.findOwnedOrCreateDataTypeNamed(tn)
+                    if(tns is GrammarTypeNamespaceSimple) {
+                        tns.addTypeFor(grName, td.type())
+                    }
+                    td
                 }
 
                 else -> error("Unsupported")
@@ -131,12 +142,14 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     private fun trRule(grammarRuleName: String, typeName: String, expression: Expression) {
-        val qt = resolveType(typeName)
+        val qt = resolveType(GrammarRuleName(grammarRuleName), typeName)
         val tr = TransformationRuleDefault(qt.qualifiedName, expression)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         _rules.add(tr)
+        tr.resolveTypeAs(qt.type())
+        /*
         if (createTypes) {
-            val tns = typeModel.findOrCreateNamespace(namespace.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
+            val tns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
             val t = tns.findTypeNamed(tr.possiblyQualifiedTypeName) ?: tns.findOwnedOrCreateDataTypeNamed(tr.possiblyQualifiedTypeName.simpleName)
             tr.resolveTypeAs(t.type())
         } else {
@@ -144,6 +157,7 @@ class AsmTransformRuleSetBuilder internal constructor(
             val t = tns.findTypeNamed(tr.possiblyQualifiedTypeName) ?: error("Type '${tr.possiblyQualifiedTypeName}' not found")
             tr.resolveTypeAs(t.type())
         }
+         */
     }
 
     //fun nothingRule(grammarRuleName: String) {
@@ -176,20 +190,25 @@ class AsmTransformRuleSetBuilder internal constructor(
         trRule(grammarRuleName, typeName, expression("child[0]"))
     }
 
-    fun unnamedSubtypeRule(grammarRuleName: String, subtypeNames: List<String>) {
+    fun unnamedSubtypeRule(grammarRuleName: String, init: SubtypeListBuilder.() -> Unit)  {
+        val ns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
+        val b = SubtypeListBuilder(ns, mutableListOf())
+        b.init()
+        val subtypes = b.build()
+
         val tr = TransformationRuleDefault(UnnamedSupertypeType.NAME, expression("child[0]"))
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
-        val ns = typeModel.findOrCreateNamespace(namespace.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
-        val stList = subtypeNames.map { it.asPossiblyQualifiedName }.map { n ->
-            _rules.first { it.resolvedType.typeName == n }.resolvedType
-        }
-        val t = ns.createUnnamedSupertypeType(stList)
+        //val stList = subtypeNames.map { it.asPossiblyQualifiedName }.map { n ->
+            //_rules.first { it.resolvedType.typeName == n }.resolvedType
+        //    ns.findTypeNamed(n)?.type() ?: error("TypeDeclaration '$n' not found")
+        //}
+        val t = ns.createUnnamedSupertypeType(subtypes)
         tr.resolveTypeAs(t.type())
         _rules.add(tr)
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
-        val qtn = resolveType(typeName).qualifiedName
+        val qtn = resolveType(GrammarRuleName(grammarRuleName),typeName).qualifiedName
         val expr = CreateObjectExpressionSimple(qtn, emptyList())
         val ab = AssignmentBuilder()
         ab.modifyStatements()

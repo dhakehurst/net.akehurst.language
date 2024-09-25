@@ -22,7 +22,7 @@ import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-internal class test_ObjectSerialisation {
+ class test_ObjectSerialisation {
 
     private companion object {
         const val goal = "conceptDefinition"

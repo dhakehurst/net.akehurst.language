@@ -22,7 +22,8 @@ import kotlin.jvm.JvmInline
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.PROPERTY)
-annotation class Komposite
+/** FIXME: do not really want this annotation approach !**/
+annotation class KompositeProperty
 
 interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
 
@@ -111,7 +112,7 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 interface TypeInstance {
     val namespace: TypeNamespace
 
-    @Komposite
+    @KompositeProperty
     val typeArguments: List<TypeInstance> //TODO: I think we need an actual 'TypeArgument' type
 
     val isNullable: Boolean
@@ -147,7 +148,7 @@ interface TypeInstance {
 interface TypeDeclaration : Definition<TypeDeclaration> {
     override val namespace: TypeNamespace
 
-    @Komposite
+    @KompositeProperty
     val supertypes: List<TypeInstance>
 
     val typeParameters: List<SimpleName>
@@ -223,7 +224,7 @@ interface TupleType : StructuredType {
         val NAME = QualifiedName("\$TupleType")
     }
 
-    @Komposite
+    @KompositeProperty
     val entries: List<Pair<PropertyName, TypeInstance>>
 
     /**
@@ -234,7 +235,7 @@ interface TupleType : StructuredType {
 }
 
 interface ValueType : StructuredType {
-    @Komposite
+    @KompositeProperty
     val constructors: List<ConstructorDeclaration>
 }
 
@@ -249,7 +250,7 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
-    @Komposite
+    @KompositeProperty
     val constructors: List<ConstructorDeclaration>
 
     fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
@@ -264,7 +265,7 @@ interface UnnamedSupertypeType : TypeDeclaration {
     val id: Int
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    @Komposite
+    @KompositeProperty
     val subtypes: List<TypeInstance>
 }
 
@@ -283,7 +284,7 @@ interface PropertyDeclaration {
     val owner: TypeDeclaration
     val name: PropertyName
 
-    @Komposite
+    @KompositeProperty
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
     val description: String
@@ -393,14 +394,14 @@ value class MethodName(val value: String)
 interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: MethodName
-    @Komposite
+    @KompositeProperty
     val parameters: List<ParameterDeclaration>
     val description: String
 }
 
 interface ConstructorDeclaration {
     val owner: TypeDeclaration
-    @Komposite
+    @KompositeProperty
     val parameters: List<ParameterDeclaration>
 }
 
@@ -409,7 +410,7 @@ value class ParameterName(val value: String)
 
 interface ParameterDeclaration {
     val name: ParameterName
-    @Komposite
+    @KompositeProperty
     val typeInstance: TypeInstance
     val defaultValue: String?
 }

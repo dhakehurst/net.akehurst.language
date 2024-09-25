@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
@@ -36,6 +36,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
@@ -52,7 +53,7 @@ data class ReferenceExpressionContext(
  * will check and resolve (if resolveFunction is not null) references.
  * Properties in the asm that are references
  */
-class ReferenceResolverDefault(
+class ReferenceResolverSimple(
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel,
     val rootScope: Scope<AsmPath>,
@@ -304,8 +305,23 @@ class ReferenceResolverDefault(
     private fun NavigationExpression.propertyFor(root: AsmValue): AsmStructureProperty {
         return when {
             root is AsmNothing -> error("Cannot navigate '$this' from '$root' value")
+            this.parts.isEmpty() -> {
+                when (root) {
+                    is AsmStructure -> {
+                        val exp = this.start
+                        val pn = when(exp) {
+                            is RootExpression -> PropertyValueName(exp.name)
+                            is PropertyCall -> exp.propertyName.asValueName
+                            else -> error("Unsupoorted")
+                        }
+                        root.property[pn] ?: error("Cannot navigate '$this' from null value")
+                    }
+
+                    else -> error("Cannot navigate '$this' from null value")
+                }
+            }
             else -> {
-                val front = this.parts.dropLast(1)
+                val front = listOf(this.start) + this.parts.dropLast(1)
                 var v = root
                 for (pn in front) {
                     val pd = typeModel.typeOf(v).findPropertyOrNull((pn as PropertyCall).propertyName)

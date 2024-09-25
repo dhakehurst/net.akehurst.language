@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.asm.simple.*
-import net.akehurst.language.agl.default_.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
-import net.akehurst.language.agl.default_.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
@@ -191,7 +191,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: NodeListCallback) {
+            override fun error(msg: String, path: PathFunction) {
                 issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 
@@ -520,16 +520,18 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             else -> AsmListSimple(asmChildren)
         }
 
+        val asmPath = AsmAnySimple.stdAny(downData.path)
         val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option)
         val leaf = when {
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
         }
         val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
-        self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 0)
-        self.setProperty(AsmTransformInterpreter.LEAF.asValueName, leaf, 1)
-        self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 2)
-        self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 3)
+        self.setProperty(AsmTransformInterpreter.PATH.asValueName, asmPath, 0)
+        self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 1)
+        self.setProperty(AsmTransformInterpreter.LEAF.asValueName, leaf, 2)
+        self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 3)
+        self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 4)
         val selfType = when {
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()

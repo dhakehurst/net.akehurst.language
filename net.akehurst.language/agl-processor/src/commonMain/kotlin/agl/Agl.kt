@@ -18,7 +18,7 @@
 package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.default_.ContextAsmDefault
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.grammar.processor.ContextFromGrammar
@@ -72,7 +72,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
-    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextAsmDefault> = LanguageProcessorConfigurationDefault()
+    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextAsmSimple> = LanguageProcessorConfigurationDefault()
 
     /**
      * build a configuration for a language processor
@@ -137,9 +137,9 @@ object Agl {
         crossReferenceModelStr: CrossReferenceString? = null,
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationDefault(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
-    ): LanguageProcessorResult<Asm, ContextAsmDefault> {
+    ): LanguageProcessorResult<Asm, ContextAsmSimple> {
         val config = Agl.configuration(configurationBase) {
             if (null != typeModelStr) {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
@@ -171,7 +171,7 @@ object Agl {
         crossReferenceModelStr: String? = null,
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmDefault> = configurationDefault(),
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationDefault(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),

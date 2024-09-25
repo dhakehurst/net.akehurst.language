@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*

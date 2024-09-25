@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.asm.api
+package net.akehurst.language.asm.simple
 
+import net.akehurst.language.asm.api.AsmPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -37,5 +38,7 @@ class test_asmSimple {
         assertEquals(1, asm.root.size)
         assertEquals("Hello", (asm.root[0] as AsmPrimitive).value as String)
     }
+
+    //TODO: more tests
 
 }

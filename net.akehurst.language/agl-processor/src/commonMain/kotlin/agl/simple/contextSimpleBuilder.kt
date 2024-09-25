@@ -15,15 +15,15 @@
  *
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.scope.simple.ScopeSimple
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.base.api.QualifiedName
 
-fun contextAsmDefault(init: ScopeBuilder.() -> Unit): ContextAsmDefault {
-    val context = ContextAsmDefault()
+fun contextAsmSimple(init: ScopeBuilder.() -> Unit): ContextAsmSimple {
+    val context = ContextAsmSimple()
     val b = ScopeBuilder(context.rootScope)
     b.init()
     return context

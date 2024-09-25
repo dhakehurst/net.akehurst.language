@@ -155,7 +155,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 stack.push(obj)
             }
 
-            override fun error(msg: String, path: NodeListCallback) {
+            override fun error(msg: String, path: PathFunction) {
                 kotlin.error(msg)
             }
 

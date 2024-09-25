@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
@@ -25,10 +25,9 @@ import net.akehurst.language.agl.processor.LanguageProcessorAbstract
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
-import net.akehurst.language.agl.default_.ContextAsmDefault
-import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.api.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
@@ -44,7 +43,7 @@ class test_SyntaxAnalyserSimple {
     private companion object {
         fun processor(grammarStr: String) = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
-        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextAsmDefault> {
+        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextAsmSimple> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -58,7 +57,7 @@ class test_SyntaxAnalyserSimple {
 
         fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> Asm) = this.add(TestData(sentence, expected()))
 
-        fun test(proc: LanguageProcessor<Asm, ContextAsmDefault>, data: TestData) {
+        fun test(proc: LanguageProcessor<Asm, ContextAsmSimple>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -68,19 +67,19 @@ class test_SyntaxAnalyserSimple {
             assertEquals(data.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "))
         }
 
-        fun testAll(proc: LanguageProcessor<Asm, ContextAsmDefault>, tests: List<TestData>) {
+        fun testAll(proc: LanguageProcessor<Asm, ContextAsmSimple>, tests: List<TestData>) {
             for (data in tests) {
                 test(proc, data)
             }
         }
 
-        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextAsmDefault>, expected: RuleSet) {
+        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: RuleSet) {
             val actual = (proc as LanguageProcessorAbstract).ruleSet as RuntimeRuleSet
             assertEquals(expected.toString(), actual.toString())
             assertTrue(expected.matches(actual))
         }
 
-        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextAsmDefault>, expected: TypeModel) {
+        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: TypeModel) {
             GrammarTypeModelTest.tmAssertEquals(expected, proc.typeModel)
         }
     }

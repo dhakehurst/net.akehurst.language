@@ -19,8 +19,7 @@ package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.sentence.api.Sentence
-import net.akehurst.language.sppt.api.NodeListCallback
-import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.PathFunction
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.SpptWalker
 
@@ -73,7 +72,7 @@ internal class SpptWalkerToInputSentence(
         this.endBranch(nodeInfo)
     }
 
-    override fun error(msg: String, path: NodeListCallback) {
+    override fun error(msg: String, path: PathFunction) {
         val p = path.invoke()
         val txt = "Error at ${p.last().startPosition}: '$msg'"
         textStack.push(Pair(-1, txt))

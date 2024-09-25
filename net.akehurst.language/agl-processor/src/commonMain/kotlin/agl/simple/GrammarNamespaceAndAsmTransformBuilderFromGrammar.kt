@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.transform.asm.*
@@ -128,7 +128,7 @@ internal class Grammar2Namespaces(
                     qualifiedName = qualifiedName,
                     imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
                 )
-                typeModel.addAllNamespaceAndResolveImports(listOf(ns))
+                typeModel.addAllNamespaceAndResolveImports(listOf(SimpleTypeModelStdLib, ns))
                 ns
             }
 

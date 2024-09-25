@@ -16,7 +16,7 @@
 
 package net.akehurst.language.format.processor
 
-import net.akehurst.language.agl.default_.SyntaxAnalyserDefault
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -36,7 +36,7 @@ internal class AglFormatSyntaxAnalyser(
     relevantTrRuleSet: QualifiedName
 ) : SyntaxAnalyser<AglFormatterModel> {
 
-    private val _sa = SyntaxAnalyserDefault(typeModel, asmTransformModel, relevantTrRuleSet)
+    private val _sa = SyntaxAnalyserSimple(typeModel, asmTransformModel, relevantTrRuleSet)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 

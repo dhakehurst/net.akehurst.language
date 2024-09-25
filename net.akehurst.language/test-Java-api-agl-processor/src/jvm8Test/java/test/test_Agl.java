@@ -19,11 +19,10 @@ package test;
 
 import kotlin.Unit;
 import net.akehurst.language.agl.Agl;
-import net.akehurst.language.agl.default_.ContextAsmDefault;
-import net.akehurst.language.asm.api.Asm;
-import net.akehurst.language.base.api.SimpleName;
+import net.akehurst.language.agl.simple.ContextAsmSimple;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
+import net.akehurst.language.asm.api.Asm;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,7 +41,7 @@ public class test_Agl {
     public void getBuildStamp() {
         String actual = Agl.INSTANCE.getBuildStamp().substring(0, 4);
 
-        String expected = "2023";
+        String expected = "2024";
         Assert.assertEquals(expected, actual);
 
     }
@@ -56,16 +55,16 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigDefault() {
-        LanguageProcessorConfiguration<Asm, ContextAsmDefault> config = Agl.INSTANCE.configurationDefault();
+        LanguageProcessorConfiguration<Asm, ContextAsmSimple> config = Agl.INSTANCE.configurationDefault();
 
-        LanguageProcessor<Asm, ContextAsmDefault> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
+        LanguageProcessor<Asm, ContextAsmSimple> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }
 
     @Test
     public void processorFromString_withConfigSet() {
-        LanguageProcessorConfiguration<Object, Object> config = Agl.INSTANCE.configuration(null, b -> {
+        LanguageProcessorConfiguration<Object, Object> config = Agl.INSTANCE.configuration(Agl.INSTANCE.configurationBase(), b -> {
             b.targetGrammarName("Test");
             return Unit.INSTANCE;
         });

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.default_
+package net.akehurst.language.agl.simple
 
 
 import net.akehurst.language.agl.runtime.structure.*
@@ -33,7 +33,7 @@ import net.akehurst.language.typemodel.api.*
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-class SyntaxAnalyserDefault(
+class SyntaxAnalyserSimple(
     //grammarNamespaceQualifiedName: QualifiedName,
     typeModel: TypeModel,
     asmTransformModel: TransformModel,
@@ -49,7 +49,7 @@ class SyntaxAnalyserDefault(
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramQName ->
         val ruleSetQname = embGramQName
-        SyntaxAnalyserDefault(typeModel, asmTransformModel, ruleSetQname)//, this.scopeModel) //TODO: needs embedded asmTransform
+        SyntaxAnalyserSimple(typeModel, asmTransformModel, ruleSetQname)//, this.scopeModel) //TODO: needs embedded asmTransform
     }
 
 }

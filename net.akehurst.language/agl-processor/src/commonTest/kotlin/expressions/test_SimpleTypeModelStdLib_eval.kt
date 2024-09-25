@@ -21,7 +21,7 @@ import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.api.asmSimple
+import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.typeModel
