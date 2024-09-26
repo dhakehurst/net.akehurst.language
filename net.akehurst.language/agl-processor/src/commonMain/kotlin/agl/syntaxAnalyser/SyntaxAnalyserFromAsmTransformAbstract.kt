@@ -287,12 +287,31 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             }
 
             else -> when {
-                nodeRule.isPseudo -> { //must be group or choice
-                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
-                    when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
-                        else -> transformationRule(propType, RootExpressionSimple.SELF)
+                nodeRule.isPseudo -> { //TODO: check if isPseudo maybe just need to return self..higher TR-rule handles pars-tree-nodes?
+                    //must be group or choice
+                    when (parentTypeDecl) {
+                        is StructuredType -> {
+                            val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                            when (propType) {
+                                null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
+                                else -> transformationRule(propType, RootExpressionSimple.SELF)
+                            }
+                        }
+
+                        is UnnamedSupertypeType -> {
+                            val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option]
+                            //transformationRule(
+                            //    subtype, NavigationSimple(
+                            //        start = RootExpressionSimple("child"),
+                            //        parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, 0))))
+                            //    )
+                            //)
+                            transformationRule(subtype, RootExpressionSimple.SELF)
+                        }
+
+                        else -> error("Unsupported type '${parentTypeDecl::class.simpleName}'")
                     }
+
                 }
 
                 else -> this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
@@ -522,7 +541,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
         val asmPath = AsmAnySimple.stdAny(downData.path)
         val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option)
-        val leaf = when {
+        val leaf = when { //FIXME: only sometimes need this!
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
         }

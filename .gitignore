@@ -13,6 +13,8 @@ node_modules/
 .externalToolBuilders/
 .kotlin/
 
+_private/
+
 out/
 db/
 nogit/
