@@ -314,7 +314,8 @@ class AsmStructureSimple(
                 "${it.name} = ${it.value.asString(indentIncrement, newIndent)}"
             }
         }
-        return ":$typeName $propsStr"
+        //return ":$typeName $propsStr"
+        return ":$qualifiedTypeName $propsStr"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {

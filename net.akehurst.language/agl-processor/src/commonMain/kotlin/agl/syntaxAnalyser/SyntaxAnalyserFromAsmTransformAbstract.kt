@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.emptyListSeparated
 import net.akehurst.language.collections.mutableStackOf
@@ -44,6 +45,7 @@ import net.akehurst.language.transform.asm.*
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 data class NodeTrRules(
     val forNode: TransformationRule,
@@ -65,7 +67,7 @@ data class DownData2(
  */
 abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 //    val grammarNamespaceQualifiedName: QualifiedName,
-    val typeModel: TypeModel,
+    _typeModel: TypeModel,
     val asmTransformModel: TransformModel,
     val relevantTrRuleSet: QualifiedName
     //val scopeModel: CrossReferenceModel
@@ -79,6 +81,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
         val Rule.hasOnyOneRhsItem get() = this.rhsItems.size == 1 && this.rhsItems[0].size == 1
 
+    }
+
+    val typeModel: TypeModel = TypeModelSimple(SimpleName(_typeModel.name.value+"+ParseNodeNamespace")).also {
+        it.addAllNamespaceAndResolveImports(_typeModel.allNamespace + AsmTransformInterpreter.parseNodeNamespace)
     }
 
     private var _asm: AsmSimple? = null
@@ -545,16 +551,16 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
         }
-        val self = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
+        val selfType = when {
+            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
+            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
+        }
+        val self = AsmStructureSimple(AsmPathSimple(""), selfType.qualifiedTypeName)
         self.setProperty(AsmTransformInterpreter.PATH.asValueName, asmPath, 0)
         self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 1)
         self.setProperty(AsmTransformInterpreter.LEAF.asValueName, leaf, 2)
         self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 3)
         self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 4)
-        val selfType = when {
-            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED.type()
-            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE.type()
-        }
 
         val evc = EvaluationContext.of(
             mapOf(

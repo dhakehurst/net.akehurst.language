@@ -80,7 +80,6 @@ class TypeNamespaceBuilder(
         dataType(typeName, init)
     }
 
-
     fun interfaceType(typeName: String, init: DataTypeBuilder.() -> Unit = {}) {
         //TODO: do we need and actual 'InterfaceType' interface,class,etc
         dataType(typeName,init)

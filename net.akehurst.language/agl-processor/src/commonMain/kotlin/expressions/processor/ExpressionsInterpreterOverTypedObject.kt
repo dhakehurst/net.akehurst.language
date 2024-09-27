@@ -238,9 +238,31 @@ class ExpressionsInterpreterOverTypedObject(
                             idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
                                 val listElementType = obj.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asmValue as AsmPrimitive).value as Int
-                                (obj.asmValue as AsmList).elements.getOrNull(i)?.toTypedObject(listElementType) ?: run {
-                                    issues.error(null, "Index '$i' out of range")
-                                    AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+                                val elem = (obj.asmValue as AsmList).elements.getOrNull(i)
+                                when (elem) {
+                                    null -> {
+                                        issues.error(null, "Index '$i' out of range")
+                                        AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+                                    }
+
+                                    else -> {
+                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.qualifiedTypeName)?.type()
+                                        when {
+                                            null == elemType -> {
+                                                issues.error(null, "Cannot find type '${elem.qualifiedTypeName}' of List element '$elem'")
+                                                elem.toTypedObject(listElementType)
+                                            }
+
+                                            elemType.conformsTo(listElementType) -> elem.toTypedObject(elemType)
+                                            else -> {
+                                                issues.error(
+                                                    null,
+                                                    "List element '$elem' of type '${elem.qualifiedTypeName}' does not conform to the expected List element type of '${listElementType}'"
+                                                )
+                                                elem.toTypedObject(elemType)
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -328,8 +350,8 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
         val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(Import(SimpleTypeModelStdLib.qualifiedName.value)))
-        val tuple = AsmStructureSimple(AsmPathSimple(""), TupleType.NAME)
         val tupleType = ns.createTupleType()
+        val tuple = AsmStructureSimple(AsmPathSimple(""), tupleType.qualifiedName)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
             tuple.setProperty(it.lhsPropertyName.asValueName, value.asmValue, tuple.property.size)

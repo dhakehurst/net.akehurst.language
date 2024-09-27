@@ -187,7 +187,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("test.Test.S") {
                     }
                 }
@@ -226,7 +226,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -271,7 +271,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                     }
@@ -310,7 +310,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { \"[a-z]\":'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -354,7 +354,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { v:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("v", "a")
                     }
@@ -412,7 +412,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abc", sppt = "S { A {'a'} B{'b'} C{'c'} }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {}
                         propertyElementExplicitType("b", "B") {}
@@ -471,7 +471,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a,b,c", sppt = "S { A { 'a' } ',' B { 'b' } ',' C { 'c' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {}
                         propertyElementExplicitType("b", "B") {}
@@ -515,7 +515,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
@@ -605,7 +605,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S{A{a:'a' x:'x'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -613,7 +613,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "bx", sppt = "S{B{b:'b' x:'x'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("B") {
                         propertyString("b", "b")
                         propertyString("x", "x")
@@ -621,7 +621,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cx", sppt = "S{C{c:'c' x:'x'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                         propertyString("x", "x")
@@ -677,27 +677,27 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S{L{'a'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
             define(sentence = "b", sppt = "S{L{'b'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("b")
                 }
             }
             define(sentence = "c", sppt = "S{L{'c'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("c")
                 }
             }
             define(sentence = "x", sppt = "S{M{'x'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("x")
                 }
             }
             define(sentence = "y", sppt = "S{M{'y'}}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("y")
                 }
             }
@@ -770,27 +770,27 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { L{ a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("a")
                 }
             }
             define(sentence = "b", sppt = "S { L{ b:'b' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("b")
                 }
             }
             define(sentence = "c", sppt = "S { L{ c:'c' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("c")
                 }
             }
             define(sentence = "x", sppt = "S { M{ x:'x' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("x")
                 }
             }
             define(sentence = "y", sppt = "S { M{ y:'y' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     string("y")
                 }
             }
@@ -890,7 +890,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S { A { a:'a' x:'x' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -898,7 +898,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cx", sppt = "S { C { c:'c' x:'x' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                         propertyString("x", "x")
@@ -906,7 +906,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "dx", sppt = "S { B { D { d:'d' x:'x' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("D") {
                         propertyString("d", "d")
                         propertyString("x", "x")
@@ -1001,7 +1001,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ax", sppt = "S { A { a:'a' x:'x' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("A") {
                         propertyString("a", "a")
                         propertyString("x", "x")
@@ -1009,14 +1009,14 @@ class test_AllDefault {
                 }
             }
             define("c", sppt = "S { C { c:'c' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("C") {
                         propertyString("c", "c")
                     }
                 }
             }
             define("d", sppt = "S { B { D { d:'d' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("D") {
                         propertyString("d", "d")
                     }
@@ -1056,12 +1056,12 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") { }
                 }
             }
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") { }
                 }
             }
@@ -1104,14 +1104,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("a")
                     }
                 }
             }
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                     }
@@ -1164,7 +1164,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§opt1 {<EMPTY>} c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1172,7 +1172,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§opt1 {'b'} c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1231,7 +1231,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§opt1 {<EMPTY>} c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("b", null)
@@ -1240,7 +1240,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§opt1 {b:'b'} c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("b", "b")
@@ -1295,14 +1295,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("a")
                     }
                 }
             }
             define(sentence = "a", sppt = "S { A { a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("a", "A") {
                             propertyString("a", "a")
@@ -1364,7 +1364,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "b", sppt = "S { b:'b' §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyNothing("a")
@@ -1372,7 +1372,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ba", sppt = "S { b:'b' §S§opt1 { A { a:'a' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyElementExplicitType("a", "A") {
@@ -1436,7 +1436,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { oA { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("oA", "OA") {
                             propertyNothing("a")
@@ -1445,7 +1445,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { oA { A { a:'a' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("oA", "OA") {
                             propertyElementExplicitType("a", "A") {
@@ -1489,22 +1489,22 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "aa", sppt = "S { 'a' 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
             define(sentence = "aaa", sppt = "S { 'a' 'a' 'a'}") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {}
                 }
             }
@@ -1557,7 +1557,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1565,7 +1565,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§multi1 { 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1573,7 +1573,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbc", sppt = "S { a:'a' §S§multi1 { 'b' 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1581,7 +1581,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbbc", sppt = "S { a:'a' §S§multi1 { 'b' 'b' 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -1627,28 +1627,28 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { a:'a' a:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { a:'a' a:'a' a:'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("a", listOf("a", "a", "a"))
                     }
@@ -1706,7 +1706,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", emptyList())
@@ -1715,7 +1715,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' §S§multi1 { b:'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b"))
@@ -1724,7 +1724,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbc", sppt = "S { a:'a' §S§multi1 { b:'b' b:'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b", "b"))
@@ -1733,7 +1733,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abbbc", sppt = "S { a:'a' §S§multi1 { b:'b' b:'b' b:'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("b", listOf("b", "b", "b"))
@@ -1788,14 +1788,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { <EMPTY_LIST> }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {}
                     }
                 }
             }
             define(sentence = "a", sppt = "S { A{ a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {
                             element("A") {
@@ -1806,7 +1806,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { A{ a:'a' } A{ a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("a") {
                             element("A") {
@@ -1879,7 +1879,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define("bc", sppt = "S { b:'b' §S§multi1 { <EMPTY_LIST> } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {}
@@ -1888,7 +1888,7 @@ class test_AllDefault {
                 }
             }
             define("bac", sppt = "S { b:'b' §S§multi1 { A { a:'a' } } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {
@@ -1901,7 +1901,7 @@ class test_AllDefault {
                 }
             }
             define("baac", sppt = "S { b:'b' §S§multi1 { A { a:'a' } A { a:'a' } } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("b", "b")
                         propertyListOfElement("a") {
@@ -1956,25 +1956,25 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { as { 'a' 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { as { 'a' 'a' 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -2027,28 +2027,28 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { as { a:'a' a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { as { a:'a' a:'a' a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
@@ -2109,7 +2109,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { ao { <EMPTY> } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("as") {
                             element("Ao") {
@@ -2120,21 +2120,21 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { as { ao { a:'a' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
@@ -2216,7 +2216,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { abs { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
 
@@ -2225,7 +2225,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S { abs { AB{ A { a:'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2236,7 +2236,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b", sppt = "S { abs { AB{ B { b:'b' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2247,7 +2247,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { abs { AB{ A { a:'a' } } AB{ A { a:'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2261,7 +2261,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "bb", sppt = "S { abs { AB{ B { b:'b' } } AB{ B { b:'b' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2275,7 +2275,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab", sppt = "S { abs { AB{ A { a:'a' } } AB{ B { b:'b' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2289,7 +2289,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ababab", sppt = "S{ abs{ AB{ A{ a:'a' } } AB{ B{ b:'b' } } AB{ A{ a:'a' } } AB{ B{ b:'b' } } AB{ A{ a:'a' } } AB{ B{ b:'b' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2377,7 +2377,7 @@ class test_AllDefault {
         }
         test(grammarStr = grammarStr, expectedRrs = expectedRrs, expectedTm = expectedTm, expectedTr = expectedTr) {
             define(sentence = "v", sppt = "S{ E{ V{ N:'v' } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "V") {
                             propertyString("n", "v")
@@ -2386,7 +2386,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "v w", sppt = "S{ E{ A{ E{V{N:'v' WS:' '}} E{V{N:'w'}} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "A") {
                             propertyListOfElement("e") {
@@ -2402,7 +2402,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "v w x y z", sppt = "S{ E{ A{ E{V{N:'v' WS:' '}} E{V{N:'w' WS:' '}} E{V{N:'x' WS:' '}} E{V{N:'y' WS:' '}} E{V{N:'z'}} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("e", "A") {
                             propertyListOfElement("e") {
@@ -2466,31 +2466,31 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a", sppt = "S { as { 'a' ',' 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
             }
             define(sentence = "a,a,a,a", sppt = "S { as { 'a' ',' 'a' ',' 'a' ',' 'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -2548,7 +2548,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ac", sppt = "S { a:'a' bs { <EMPTY_LIST> } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2556,7 +2556,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abc", sppt = "S { a:'a' bs { 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2564,7 +2564,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2572,7 +2572,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,b,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' ',' 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2580,7 +2580,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab,b,b,bc", sppt = "S { a:'a' bs { 'b' ',' 'b' ',' 'b' ',' 'b' } c:'c' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("c", "c")
@@ -2635,35 +2635,35 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf())
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                     }
                 }
             }
             define(sentence = "a,a", sppt = "S { as { a:'a' ',' a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                     }
                 }
             }
             define(sentence = "a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                     }
                 }
             }
             define(sentence = "a,a,a,a", sppt = "S { as { a:'a' ',' a:'a' ',' a:'a' ',' a:'a' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a", "a"))
                     }
@@ -2746,7 +2746,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S{ abs{ <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
 
@@ -2755,7 +2755,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a", sppt = "S{ abs{ AB{ A{a:'a'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2766,7 +2766,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b", sppt = "S{ abs{ AB{ B{b:'b'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2777,7 +2777,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ A{a:'a'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2791,7 +2791,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "b,b", sppt = "S{ abs{ AB{ B{b:'b'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("B") {
@@ -2805,7 +2805,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2819,7 +2819,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,b,a,b,a,b", sppt = "S{ abs{ AB{ A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } ',' AB { A{a:'a'} } ',' AB{ B{b:'b'} } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("abs") {
                             element("A") {
@@ -2895,42 +2895,42 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { A { 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "a.a", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "a.a.a", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyNothing("b")
                     }
                 }
             }
             define(sentence = "ab", sppt = "S { A { 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
                 }
             }
             define(sentence = "a.ab", sppt = "S { A { 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
                 }
             }
             define(sentence = "a.a.ab", sppt = "S { A { 'a' '.' 'a' '.' 'a' } §S§opt1 { B{'b'} } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyElementExplicitType("b", "B") {}
                     }
@@ -2991,7 +2991,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { As { A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                         propertyNothing("b")
@@ -2999,7 +2999,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a", sppt = "S { As { A:'a' '.' A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                         propertyNothing("b")
@@ -3007,7 +3007,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a.a", sppt = "S { As { A:'a' '.' A:'a' '.' A:'a' } §S§opt1 { <EMPTY> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                         propertyNothing("b")
@@ -3015,7 +3015,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ab", sppt = "S { As { A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a"))
                         propertyString("b", "b")
@@ -3023,7 +3023,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.ab", sppt = "S { As { A:'a' '.' A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a"))
                         propertyString("b", "b")
@@ -3031,7 +3031,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a.a.ab", sppt = "S { As { A:'a' '.' A:'a' '.' A:'a' } §S§opt1 { B:'b' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfString("as", listOf("a", "a", "a"))
                         propertyString("b", "b")
@@ -3095,14 +3095,14 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "", sppt = "S { ass { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {}
                     }
                 }
             }
             define(sentence = "a", sppt = "S { ass { as { a { 'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3115,7 +3115,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa", sppt = "S { ass { as { a { 'a' } a { 'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3129,7 +3129,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a", sppt = "S{ ass{ as{ a{ 'a' } } ',' as{ a{ 'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3147,7 +3147,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aa,aa", sppt = "S{ ass{ as{ a{ 'a' } a{ 'a' } } ',' as{ a{ 'a' } a{ 'a' } } }  }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3167,7 +3167,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "a,a,a", sppt = "S{ ass{ as{ a{ 'a' } } ',' as{ a{ 'a' } } ',' as{ a{ 'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3190,7 +3190,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaa,a,aa", sppt = "S{ ass{ as{ a{ 'a' } a{ 'a' } a{ 'a' } } ',' as{ a{ 'a' } } ',' as{ a{ 'a' } a{ 'a' } } } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyListOfElement("ass") {
                             element("As") {
@@ -3250,7 +3250,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bcd", sppt = "S{ §S§group1 { 'b' 'c' 'd' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -3307,9 +3307,9 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bcd", sppt = "S{ §S§group1 { b:'b' c:'c' d:'d' } }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
-                        propertyTuple("\$group") {
+                        propertyTuple("\$group", 0) {
                             propertyString("b", "b")
                             propertyString("c", "c")
                             propertyString("d", "d")
@@ -3363,7 +3363,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S{ a:'a' §S§group1 { 'b' 'c' 'd' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("e", "e")
@@ -3434,7 +3434,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -3517,7 +3517,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcdbace", sppt = "S { a:'a' §S§group1 {b:'b' c:'c' d:'d'} §S§group2 {b:'b' a:'a' c:'c'} e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -3588,7 +3588,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abe", sppt = "S { a:'a' §S§group1 { b:'b' }  e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -3675,7 +3675,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcde", sppt = "S { a:'a' §S§group2{ b:'b' §S§group1{c:'c'} d:'d' }  e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -3753,7 +3753,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abe", sppt = "S { a:'a' §S§choice1 { b:'b' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "b")
@@ -3762,7 +3762,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ace", sppt = "S { a:'a' §S§choice1 { c:'c' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "c")
@@ -3771,7 +3771,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "d")
@@ -3848,7 +3848,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -3860,7 +3860,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { d:'d' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("\$choice", "d")
@@ -3944,7 +3944,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abcf", sppt = "S { a:'a' §S§choice1 { b:'b' c:'c' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -3956,7 +3956,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§choice1 { d:'d' e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4054,7 +4054,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "axbcf", sppt = "S { a:'a' §S§choice2 { §S§choice1 { 'x' } b:'b' c:'c' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4066,7 +4066,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§choice2 { d:'d' e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4154,7 +4154,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "af", sppt = "S { a:'a' §S§opt1 { <EMPTY> } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("\$choice")
@@ -4163,7 +4163,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abcf", sppt = "S { a:'a' §S§opt1 { §S§choice1 { b:'b' c:'c' } } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4175,7 +4175,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adef", sppt = "S { a:'a' §S§opt1 { §S§choice1 { d:'d' e:'e' } } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$choice") {
@@ -4250,7 +4250,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§group1 { §S§opt1 { b:'b' } c:'c' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4262,7 +4262,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ace", sppt = "S { a:'a' §S§group1 { §S§opt1 { <EMPTY> } c:'c' } e:'e' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4356,7 +4356,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abef",sppt = "S { a:'a' §S§group2 { §S§choice1 { b:'b' } §S§group1 { <EMPTY> } e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4369,7 +4369,7 @@ class test_AllDefault {
                 }
             }
             define(sentence ="acef",sppt = "S { a:'a' §S§group2 { §S§choice1 { c:'c' } §S§group1 { <EMPTY> } e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4382,7 +4382,7 @@ class test_AllDefault {
                 }
             }
             define(sentence ="abdef",sppt = "S { a:'a' §S§group2 { §S§choice1 { b:'b' } §S§group1 { d:'d' } e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4397,7 +4397,7 @@ class test_AllDefault {
                 }
             }
             define(sentence ="acdef",sppt = "S { a:'a' §S§group2 { §S§choice1 { c:'c' } §S§group1 { d:'d' } e:'e' } f:'f' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
@@ -4447,7 +4447,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4490,7 +4490,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4533,7 +4533,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4575,7 +4575,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4617,7 +4617,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4659,7 +4659,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4701,7 +4701,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4745,7 +4745,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4788,7 +4788,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4831,7 +4831,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4876,7 +4876,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4921,7 +4921,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -4977,7 +4977,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5026,7 +5026,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5073,7 +5073,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5117,7 +5117,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5163,7 +5163,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5206,7 +5206,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5246,7 +5246,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5287,7 +5287,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5332,7 +5332,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5373,7 +5373,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5414,7 +5414,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5455,7 +5455,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5496,7 +5496,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5537,7 +5537,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5580,7 +5580,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5625,7 +5625,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5672,7 +5672,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }
@@ -5719,7 +5719,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                     }
                 }

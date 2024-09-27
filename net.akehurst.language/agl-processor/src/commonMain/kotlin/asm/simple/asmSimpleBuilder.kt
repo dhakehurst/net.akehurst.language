@@ -20,6 +20,8 @@ package net.akehurst.language.asm.simple
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
@@ -35,6 +37,7 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.simple.ScopeSimple
 import net.akehurst.language.typemodel.api.TupleType
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.typeModel
@@ -44,6 +47,7 @@ annotation class AsmSimpleBuilderMarker
 
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
+    defaultNamespace: QualifiedName = SimpleTypeModelStdLib.qualifiedName,
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(),
     context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
@@ -51,7 +55,8 @@ fun asmSimple(
     failIfIssues: Boolean = true,
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
-    val b = AsmSimpleBuilder(typeModel, crossReferenceModel, context, resolveReferences, failIfIssues)
+    val defNs = typeModel.findNamespaceOrNull(defaultNamespace) ?: SimpleTypeModelStdLib
+    val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, context, resolveReferences, failIfIssues)
     b.init()
     return b.build()
 }
@@ -59,6 +64,7 @@ fun asmSimple(
 @AsmSimpleBuilderMarker
 class AsmSimpleBuilder(
     private val _typeModel: TypeModel,
+    private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
     private val _context: ContextAsmSimple?,
     private val resolveReferences: Boolean,
@@ -74,7 +80,7 @@ class AsmSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
@@ -92,7 +98,7 @@ class AsmSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, path, _context?.rootScope)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _scopeMap, this._asm, path, _context?.rootScope)
         b.init()
         val list = b.build()
         _asm.addRoot(list)
@@ -122,6 +128,7 @@ class AsmSimpleBuilder(
 @AsmSimpleBuilderMarker
 class AsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
+    private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmPath>>,
     private val _asm: AsmSimple,
@@ -131,11 +138,22 @@ class AsmElementSimpleBuilder(
     _parentScope: ScopeSimple<AsmPath>?
 ) {
     private val _elementQualifiedTypeName: QualifiedName = _typeName.let {
-        val qtn = QualifiedName(it)
+        val qtn = it.asPossiblyQualifiedName
         when (qtn) {
-            TupleType.NAME -> TupleType.NAME
-            UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
-            else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName ?: QualifiedName(_typeName)
+            is QualifiedName -> {
+                _typeModel.findByQualifiedNameOrNull(qtn)?.qualifiedName ?: error("Type not found '${qtn.value}'")
+            }
+
+            is SimpleName -> {
+                when (qtn) {
+                    //TupleType.NAME -> TupleType.NAME
+                    UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
+                    else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName
+                        ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))
+                }
+            }
+
+            else -> error("Unsupported")
         }
     }
     private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
@@ -192,11 +210,20 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 
-    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, TupleType.NAME.value, init)
+    fun propertyTuple(name: String, tupleTypeId:Int? = null, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
+        val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front) ?: error("No namespace '${_elementQualifiedTypeName.front.value}'")
+        val tt =  tupleTypeId?.let {
+            ns.findTupleTypeWithIdOrNull(tupleTypeId)
+        } ?: ns.createTupleType()
+        return propertyElementExplicitType(name, tt.qualifiedName.value, init)
+    }
+
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _element.path + name
-        val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
+        val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
+            ?: _defaultNamespace
+        val b = AsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
         this._element.setProperty(PropertyValueName(name), el, 0)//TODO childIndex
@@ -210,7 +237,9 @@ class AsmElementSimpleBuilder(
 
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val newPath = _element.path + name
-        val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
+        val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
+            ?: _defaultNamespace
+        val b = ListAsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
         this._element.setProperty(PropertyValueName(name), list, 0)//TODO childIndex
@@ -250,6 +279,7 @@ class AsmElementSimpleBuilder(
 @AsmSimpleBuilderMarker
 class ListAsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
+    private val _defaultNamespace: TypeNamespace,
     private val _scopeModel: CrossReferenceModel,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmPath>>,
     private val _asm: AsmSimple,
@@ -265,7 +295,7 @@ class ListAsmElementSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit) {
         val newPath = _asmPath + (_list.size).toString()
-        val b = ListAsmElementSimpleBuilder(_typeModel, _scopeModel, _scopeMap, _asm, newPath, _parentScope)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _scopeModel, _scopeMap, _asm, newPath, _parentScope)
         b.init()
         val list = b.build()
         _list.add(list)
@@ -273,14 +303,17 @@ class ListAsmElementSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _asmPath + (_list.size).toString()
-        val b = AsmElementSimpleBuilder(_typeModel, _scopeModel, _scopeMap, this._asm, newPath, typeName, false, _parentScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _scopeModel, _scopeMap, this._asm, newPath, typeName, false, _parentScope)
         b.init()
         val el = b.build()
         _list.add(el)
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = element(TupleType.NAME.value, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
+        val tt = _defaultNamespace.createTupleType()
+        return element(tt.qualifiedName.value, init)
+    }
 
     fun build(): AsmList {
         return AsmListSimple(this._list)

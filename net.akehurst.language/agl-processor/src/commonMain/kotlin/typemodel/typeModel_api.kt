@@ -88,6 +88,8 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDeclaration?
 
+    fun findTupleTypeWithIdOrNull(id:Int): TupleType?
+
     fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: SimpleName): PrimitiveType
     fun findOwnedOrCreateEnumTypeNamed(typeName: SimpleName, literals: List<String>): EnumType
@@ -221,7 +223,7 @@ interface StructuredType : TypeDeclaration {
 
 interface TupleType : StructuredType {
     companion object {
-        val NAME = QualifiedName("\$TupleType")
+        val NAME = SimpleName("\$TupleType")
     }
 
     @KompositeProperty

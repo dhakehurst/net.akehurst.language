@@ -45,7 +45,7 @@ class AsmTransformInterpreter(
         val LEAF = PropertyName("leaf")
         val CHILD = PropertyName("child")
         val CHILDREN = PropertyName("children")
-        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType))
+        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.nullable()))
         val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType))
         val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)
 
