@@ -141,12 +141,13 @@ class AsmElementSimpleBuilder(
         val qtn = it.asPossiblyQualifiedName
         when (qtn) {
             is QualifiedName -> {
-                _typeModel.findByQualifiedNameOrNull(qtn)?.qualifiedName ?: error("Type not found '${qtn.value}'")
+                _typeModel.findByQualifiedNameOrNull(qtn)?.qualifiedName
+                    ?: error("Type not found '${qtn.value}'")
             }
 
             is SimpleName -> {
                 when (qtn) {
-                    //TupleType.NAME -> TupleType.NAME
+                    TupleType.NAME -> TupleType.NAME
                     UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
                     else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName
                         ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))
@@ -311,7 +312,7 @@ class ListAsmElementSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
-        val tt = _defaultNamespace.createTupleType()
+        val tt = SimpleTypeModelStdLib.TupleType
         return element(tt.qualifiedName.value, init)
     }
 

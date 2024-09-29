@@ -420,13 +420,13 @@ class test_SyntaxAnalyserSimple {
             stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -498,16 +498,16 @@ class test_SyntaxAnalyserSimple {
             stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
-                    propertyTupleType("\$group", false, 0) {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                    tuple("\$group", false) {
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                 }
                 tupleType {
-                    propertyTupleType("\$group", false, 0) {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                    tuple("\$group", false) {
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
             }
@@ -582,13 +582,13 @@ class test_SyntaxAnalyserSimple {
             stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -651,13 +651,13 @@ class test_SyntaxAnalyserSimple {
             stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -729,13 +729,13 @@ class test_SyntaxAnalyserSimple {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("y", "String", false, 2)
@@ -822,25 +822,25 @@ class test_SyntaxAnalyserSimple {
             dataType("S", "S") {
                 propertyUnnamedSuperType("ch", false, 0) {
                     tupleType {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
             }
             unnamedSuperTypeType("CH") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -910,25 +910,25 @@ class test_SyntaxAnalyserSimple {
             dataType("S", "S") {
                 propertyUnnamedSuperType("ch", false, 0) {
                     tupleType {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
             }
             unnamedSuperTypeType("CH") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -1005,26 +1005,26 @@ class test_SyntaxAnalyserSimple {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("ch", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("y", "String", false, 2)
             }
             unnamedSuperTypeType("CH") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })
@@ -1105,26 +1105,26 @@ class test_SyntaxAnalyserSimple {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("ch", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("a", "String", false, 0)
-                        propertyPrimitiveType("b", "String", false, 1)
+                        primitive("a", "String", false)
+                        primitive("b", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("c", "String", false, 0)
-                        propertyPrimitiveType("d", "String", false, 1)
-                        propertyPrimitiveType("e", "String", false, 2)
+                        primitive("c", "String", false)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("y", "String", false, 2)
             }
             unnamedSuperTypeType("CH") {
                 tupleType {
-                    propertyPrimitiveType("a", "String", false, 0)
-                    propertyPrimitiveType("b", "String", false, 1)
+                    primitive("a", "String", false)
+                    primitive("b", "String", false)
                 }
                 tupleType {
-                    propertyPrimitiveType("c", "String", false, 0)
-                    propertyPrimitiveType("d", "String", false, 1)
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
+                    primitive("e", "String", false)
                 }
             }
         })

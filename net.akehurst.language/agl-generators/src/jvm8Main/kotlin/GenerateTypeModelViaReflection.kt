@@ -292,7 +292,7 @@ class GenerateTypeModelViaReflection(
             kclass.typeParameters.isEmpty() -> Unit
             else -> {
                 kclass.typeParameters.forEach {
-                    type.addTypeParameter(SimpleName(it.name))
+                    type.addTypeParameter(TypeParameterSimple(SimpleName(it.name)))
                 }
             }
         }

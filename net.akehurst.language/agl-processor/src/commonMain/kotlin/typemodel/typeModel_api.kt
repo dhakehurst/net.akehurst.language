@@ -99,11 +99,11 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
     fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
 
     fun createTypeInstance(
-        context: TypeDeclaration?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false
+        context: TypeDeclaration?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
-    fun createTupleTypeInstance(declaration: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
-    fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createTupleTypeInstance(typeArguments: List<TypeArgumentNamed>, nullable: Boolean): TupleTypeInstance
+    fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeArgument>, nullable: Boolean): TypeInstance
 
     fun createUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
 
@@ -111,11 +111,25 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
 }
 
+interface TypeParameter {
+    /**
+     * name for the type TypeParameter
+     */
+    val name: SimpleName
+}
+
+interface TypeArgument {
+    val type:TypeInstance
+    fun conformsTo(other: TypeArgument): Boolean
+    fun signature(context: TypeNamespace?, currentDepth: Int): String
+    fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
+}
+
 interface TypeInstance {
     val namespace: TypeNamespace
 
     @KompositeProperty
-    val typeArguments: List<TypeInstance> //TODO: I think we need an actual 'TypeArgument' type
+    val typeArguments: List<TypeArgument>
 
     val isNullable: Boolean
 
@@ -137,7 +151,9 @@ interface TypeInstance {
      */
     val resolvedProperty: Map<PropertyName, PropertyDeclaration>
 
-    fun resolved(resolvingTypeArguments: Map<SimpleName, TypeInstance>): TypeInstance
+    val asTypeArgument: TypeArgument
+
+    fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
 
     fun notNullable(): TypeInstance
     fun nullable(): TypeInstance
@@ -147,13 +163,21 @@ interface TypeInstance {
     fun conformsTo(other: TypeInstance): Boolean
 }
 
+interface TypeArgumentNamed : TypeArgument {
+    val name: PropertyName
+}
+
+interface TupleTypeInstance : TypeInstance {
+    override val typeArguments: List<TypeArgumentNamed>
+}
+
 interface TypeDeclaration : Definition<TypeDeclaration> {
     override val namespace: TypeNamespace
 
     @KompositeProperty
     val supertypes: List<TypeInstance>
 
-    val typeParameters: List<SimpleName>
+    val typeParameters: List<TypeParameter>
 
     val property: List<PropertyDeclaration>
     val method: List<MethodDeclaration>
@@ -175,7 +199,7 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
 
     fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
 
-    fun type(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
+    fun type(typeArguments: List<TypeArgument> = emptyList(), nullable: Boolean = false): TypeInstance
 
     fun conformsTo(other: TypeDeclaration): Boolean
 
@@ -185,7 +209,7 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
 
     fun asStringInContext(context: TypeNamespace): String
 
-    fun addTypeParameter(name: SimpleName)
+    fun addTypeParameter(name: TypeParameter)
     fun addSupertype(qualifiedTypeName: PossiblyQualifiedName)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String)
     fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String)
@@ -221,13 +245,23 @@ interface StructuredType : TypeDeclaration {
 
 }
 
-interface TupleType : StructuredType {
+interface NamedTypeParameter : TypeParameter {
+
+}
+
+interface TupleType : TypeDeclaration {
     companion object {
-        val NAME = SimpleName("\$TupleType")
+        val NAME = QualifiedName("std.\$TupleType")
     }
 
-    @KompositeProperty
-    val entries: List<Pair<PropertyName, TypeInstance>>
+    override val typeParameters: List<NamedTypeParameter>
+
+    override fun type(typeArguments: List<TypeArgument>, nullable: Boolean): TupleTypeInstance
+
+    fun typeTuple(typeArguments: List<TypeArgumentNamed>, nullable: Boolean = false): TupleTypeInstance
+
+   // @KompositeProperty
+   // val entries: List<Pair<PropertyName, TypeInstance>>
 
     /**
      * The compares two Tuple types by checking for the same name:Type of all entries.
@@ -325,7 +359,7 @@ interface PropertyDeclaration {
     val isPrimitive: Boolean
 
 
-    fun resolved(typeArguments: Map<SimpleName, TypeInstance>): PropertyDeclaration
+    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclaration
 }
 
 enum class PropertyCharacteristic {

@@ -140,8 +140,8 @@ class test_mscript {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true, 0)
-                    propertyDataTypeOf("expression", "Expression", false, 1)
+                    primitive(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true)
+                    dataType("expression", "Expression", false)
                 }
             }
             dataType("", "LiteralExpression") {

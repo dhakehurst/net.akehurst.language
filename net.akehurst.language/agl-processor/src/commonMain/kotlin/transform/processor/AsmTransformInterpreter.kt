@@ -32,6 +32,7 @@ import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import net.akehurst.language.typemodel.asm.typeModel
 
 class AsmTransformInterpreter(
@@ -45,8 +46,8 @@ class AsmTransformInterpreter(
         val LEAF = PropertyName("leaf")
         val CHILD = PropertyName("child")
         val CHILDREN = PropertyName("children")
-        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.nullable()))
-        val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType))
+        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.nullable().asTypeArgument))
+        val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument))
         val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)
 
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
@@ -54,20 +55,42 @@ class AsmTransformInterpreter(
             }
         }
         val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
-        val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().also {
+
+        val PARSE_NODE_TYPE_LIST_SIMPLE = parseNodeNamespace.createTupleType().let {
+            val args = mutableListOf(
+                TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
+                TypeArgumentNamedSimple(ALTERNATIVE, SimpleTypeModelStdLib.Integer),
+                TypeArgumentNamedSimple(LEAF, SimpleTypeModelStdLib.String),
+                TypeArgumentNamedSimple(CHILDREN, LIST_OF_ANY),
+                TypeArgumentNamedSimple(CHILD, LIST_OF_ANY),
+            )
+            it.typeTuple(args)
+        }
+        /*.also {
             it.appendPropertyStored(PATH, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(CHILDREN, LIST_OF_ANY, CMP_STR_MEM)
             it.appendPropertyStored(CHILD, LIST_OF_ANY, CMP_STR_MEM)
+        }*/
+
+        val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().let {
+            val args = mutableListOf(
+                TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
+                TypeArgumentNamedSimple(ALTERNATIVE, SimpleTypeModelStdLib.Integer),
+                TypeArgumentNamedSimple(LEAF, SimpleTypeModelStdLib.String),
+                TypeArgumentNamedSimple(CHILDREN, SLIST_OF_ANY),
+                TypeArgumentNamedSimple(CHILD, SLIST_OF_ANY),
+            )
+            it.typeTuple(args)
         }
-        val PARSE_NODE_TYPE_LIST_SEPARATED = parseNodeNamespace.createTupleType().also {
+        /*.also {
             it.appendPropertyStored(PATH, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
             it.appendPropertyStored(LEAF, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(CHILDREN, SLIST_OF_ANY, CMP_STR_MEM)
             it.appendPropertyStored(CHILD, SLIST_OF_ANY, CMP_STR_MEM)
-        }
+        }*/
     }
 
     val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)

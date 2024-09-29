@@ -93,11 +93,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("\$choice", "String", false, 0)
-                    propertyTupleType("\$group", false, 1) {
-                        propertyPrimitiveType("d", "String", true, 0)
+                    primitive("\$choice", "String", false)
+                    tuple("\$group", false) {
+                        primitive("d", "String", true)
                     }
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("e", "String", false)
                 }
                 propertyPrimitiveType("f", "String", false, 2)
             }
@@ -364,8 +364,8 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             unnamedSuperTypeType("S") {
                 elementRef("B")
                 tupleType {
-                    propertyDataTypeOf("s", "S", false, 0)
-                    propertyDataTypeOf("bc", "BC", false, 1)
+                    dataType("s", "S", false)
+                    dataType("bc", "BC", false)
                 }
             }
             dataType("BC", "BC") {
@@ -414,7 +414,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             dataType("exprList", "ExprList") {
                 propertyDataTypeOf("expr", "Expr", false, 0)
                 propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    propertyDataTypeOf("expr", "Expr", false, 1)
+                    dataType("expr", "Expr", false)
                 }
             }
             dataType("expr", "Expr") {
@@ -473,7 +473,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             dataType("exprList", "ExprList") {
                 propertyDataTypeOf("expr", "Expr", false, 0)
                 propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    propertyDataTypeOf("expr", "Expr", false, 1)
+                    dataType("expr", "Expr", false)
                 }
             }
             dataType("expr", "Expr") {

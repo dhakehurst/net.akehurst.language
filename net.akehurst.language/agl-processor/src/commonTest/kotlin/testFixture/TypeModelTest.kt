@@ -17,10 +17,7 @@
 package net.akehurst.language.typemodel.test
 
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SpecialTypeSimple
-import net.akehurst.language.typemodel.asm.TupleTypeInstance
-import net.akehurst.language.typemodel.asm.TypeInstanceSimple
-import net.akehurst.language.typemodel.asm.UnnamedSupertypeTypeInstance
+import net.akehurst.language.typemodel.asm.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -66,6 +63,7 @@ object TypeModelTest {
         when {
             expected == null && actual == null -> fail("should never be null")
             expected is TypeInstanceSimple && actual is TypeInstanceSimple -> tmAssertEquals(expected, actual, source)
+            expected is TypeParameterReference && actual is TypeParameterReference -> tmAssertEquals(expected, actual, source)
             expected is TupleTypeInstance && actual is TupleTypeInstance -> tmAssertEquals(expected, actual, source)
             expected is UnnamedSupertypeTypeInstance && actual is UnnamedSupertypeTypeInstance -> tmAssertEquals(expected, actual, source)
             else -> fail("Unsupported subtypes of TypeInstance")
@@ -81,6 +79,15 @@ object TypeModelTest {
             val act = actual.typeArguments[i]
             tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
         }
+    }
+
+    fun tmAssertEquals(expected: TypeParameterReference, actual: TypeParameterReference, source: String) {
+        assertEquals( expected.context.qualifiedName,actual.context.qualifiedName, source)
+        assertEquals( expected.typeParameterName, actual.typeParameterName, source)
+    }
+
+        fun tmAssertEquals(expected: TypeArgument, actual: TypeArgument, source: String) {
+        tmAssertEquals(expected.type, actual.type, source)
     }
 
     fun tmAssertEquals(expected: TupleTypeInstance, actual: TupleTypeInstance, source: String) {
@@ -153,7 +160,7 @@ object TypeModelTest {
         assertEquals(expected.supertypes.map { it.declaration.qualifiedName }.toSet(), actual.supertypes.map { it.declaration.qualifiedName }.toSet())
 
         assertEquals(expected.subtypes.size, actual.subtypes.size, "Wrong number of subtypes for '${expected.name}'")
-        assertEquals(expected.subtypes.map { it.declaration.qualifiedName }.toSet(), actual.subtypes.map { it.declaration.qualifiedName }.toSet())
+        assertEquals(expected.subtypes.map { it.qualifiedTypeName }.toSet(), actual.subtypes.map { it.qualifiedTypeName }.toSet())
 
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (i in expected.property.indices) {

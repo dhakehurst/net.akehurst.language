@@ -29,10 +29,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.PropertyDeclarationDerived
-import net.akehurst.language.typemodel.asm.PropertyDeclarationPrimitive
-import net.akehurst.language.typemodel.asm.PropertyDeclarationStored
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.*
 
 data class EvaluationContext(
     val parent: EvaluationContext?,
@@ -236,7 +233,8 @@ class ExpressionsInterpreterOverTypedObject(
                         val idx = evaluateExpression(evc, indices[0])
                         when {
                             idx.type.conformsTo(SimpleTypeModelStdLib.Integer) -> {
-                                val listElementType = obj.type.typeArguments.getOrNull(0) ?: SimpleTypeModelStdLib.AnyType
+                                val listElementType = obj.type.typeArguments.getOrNull(0)?.type
+                                    ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asmValue as AsmPrimitive).value as Int
                                 val elem = (obj.asmValue as AsmList).elements.getOrNull(i)
                                 when (elem) {
@@ -349,15 +347,19 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
-        val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(Import(SimpleTypeModelStdLib.qualifiedName.value)))
-        val tupleType = ns.createTupleType()
+        //val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(Import(SimpleTypeModelStdLib.qualifiedName.value)))
+        val tupleType = SimpleTypeModelStdLib.TupleType //ns.createTupleType()
         val tuple = AsmStructureSimple(AsmPathSimple(""), tupleType.qualifiedName)
+        val typeArgs = mutableListOf<TypeArgumentNamed>()
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
             tuple.setProperty(it.lhsPropertyName.asValueName, value.asmValue, tuple.property.size)
-            tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
+            //tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
+            val selfType = evc.self?.type ?: error("No self Type")
+            val exprType = it.rhs.typeOfExpressionFor(selfType) ?: error("Cannot get type for expression '${it.rhs}' over type '$selfType'")
+            typeArgs.add(TypeArgumentNamedSimple(it.lhsPropertyName, exprType))
         }
-        return tuple.toTypedObject(tupleType.type())
+        return tuple.toTypedObject(tupleType.type(typeArgs))
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {

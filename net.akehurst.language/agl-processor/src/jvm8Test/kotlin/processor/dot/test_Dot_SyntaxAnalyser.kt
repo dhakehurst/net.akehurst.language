@@ -142,8 +142,8 @@ class test_Dot_SyntaxAnalyser {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true, 0)
-                    propertyDataTypeOf("expression", "expression", false, 1)
+                    primitive(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true)
+                    dataType("expression", "expression", false)
                 }
             }
             dataType("", "literalExpression") {

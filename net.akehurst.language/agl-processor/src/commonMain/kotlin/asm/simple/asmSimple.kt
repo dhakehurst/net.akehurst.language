@@ -315,7 +315,7 @@ class AsmStructureSimple(
             }
         }
         //return ":$typeName $propsStr"
-        return ":$qualifiedTypeName $propsStr"
+        return ":$typeName $propsStr"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {

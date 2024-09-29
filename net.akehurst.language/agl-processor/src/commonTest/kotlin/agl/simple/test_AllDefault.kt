@@ -3279,9 +3279,9 @@ class test_AllDefault {
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyTupleType("\$group", false, 0) {
-                    propertyPrimitiveType("b", "String", false, 0)
-                    propertyPrimitiveType("c", "String", false, 1)
-                    propertyPrimitiveType("d", "String", false, 2)
+                    primitive("b", "String", false)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
                 }
             }
             stringTypeFor("b")
@@ -3399,9 +3399,9 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("b", "String", false, 0)
-                    propertyPrimitiveType("c", "String", false, 1)
-                    propertyPrimitiveType("d", "String", false, 2)
+                    primitive("b", "String", false)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -3476,14 +3476,14 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("b", "String", false, 0)
-                    propertyPrimitiveType("c", "String", false, 1)
-                    propertyPrimitiveType("d", "String", false, 2)
+                    primitive("b", "String", false)
+                    primitive("c", "String", false)
+                    primitive("d", "String", false)
                 }
                 propertyTupleType("\$group2", false, 2) {
-                    propertyPrimitiveType("b", "String", false, 0)
-                    propertyPrimitiveType("a", "String", false, 1)
-                    propertyPrimitiveType("c", "String", false, 2)
+                    primitive("b", "String", false)
+                    primitive("a", "String", false)
+                    primitive("c", "String", false)
                 }
                 propertyPrimitiveType("e", "String", false, 3)
             }
@@ -3559,7 +3559,7 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("b", "String", false, 0)
+                    primitive("b", "String", false)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -3628,11 +3628,11 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("b", "String", false, 0)
-                    propertyTupleType("\$group", false, 1) {
-                        propertyPrimitiveType("c", "String", false, 0)
+                    primitive("b", "String", false)
+                    tuple("\$group", false) {
+                        primitive("c", "String", false)
                     }
-                    propertyPrimitiveType("d", "String", false, 2)
+                    primitive("d", "String", false)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -3812,8 +3812,8 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("b", "String", false, 0)
-                        propertyPrimitiveType("c", "String", false, 1)
+                        primitive("b", "String", false)
+                        primitive("c", "String", false)
                     }
                     primitiveRef("String")
                 }
@@ -3903,12 +3903,12 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("b", "String", false, 0)
-                        propertyPrimitiveType("c", "String", false, 1)
+                        primitive("b", "String", false)
+                        primitive("c", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("d", "String", false, 0)
-                        propertyPrimitiveType("e", "String", false, 1)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("f", "String", false, 2)
@@ -4006,12 +4006,12 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
-                        propertyPrimitiveType("b", "String", false, 1)
-                        propertyPrimitiveType("c", "String", false, 2)
+                        primitive("b", "String", false)
+                        primitive("c", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("d", "String", false, 0)
-                        propertyPrimitiveType("e", "String", false, 1)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("f", "String", false, 2)
@@ -4113,12 +4113,12 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", true, 1) {
                     tupleType {
-                        propertyPrimitiveType("b", "String", false, 0)
-                        propertyPrimitiveType("c", "String", false, 1)
+                        primitive("b", "String", false)
+                        primitive("c", "String", false)
                     }
                     tupleType {
-                        propertyPrimitiveType("d", "String", false, 0)
-                        propertyPrimitiveType("e", "String", false, 1)
+                        primitive("d", "String", false)
+                        primitive("e", "String", false)
                     }
                 }
                 propertyPrimitiveType("f", "String", false, 2)
@@ -4214,8 +4214,8 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("b", "String", true, 0)
-                    propertyPrimitiveType("c", "String", false, 1)
+                    primitive("b", "String", true)
+                    primitive("c", "String", false)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -4309,11 +4309,11 @@ class test_AllDefault {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyPrimitiveType("\$choice", "String", false, 0)
-                    propertyTupleType("\$group", false, 1) {
-                        propertyPrimitiveType("d", "String", true, 0)
+                    primitive("\$choice", "String", false)
+                    tuple("\$group", false) {
+                        primitive("d", "String", true)
                     }
-                    propertyPrimitiveType("e", "String", false, 2)
+                    primitive("e", "String", false)
                 }
                 propertyPrimitiveType("f", "String", false, 2)
             }

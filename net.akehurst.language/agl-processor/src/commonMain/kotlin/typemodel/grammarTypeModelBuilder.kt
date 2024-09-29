@@ -20,7 +20,7 @@ package net.akehurst.language.agl.grammarTypeModel
 import net.akehurst.language.typemodel.asm.DataTypeBuilder
 import net.akehurst.language.typemodel.asm.SubtypeListBuilder
 import net.akehurst.language.typemodel.asm.TypeModelDslMarker
-import net.akehurst.language.typemodel.asm.TypeUsageReferenceBuilder
+import net.akehurst.language.typemodel.asm.TypeInstanceArgBuilder
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.base.api.*
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -53,7 +53,7 @@ class GrammarTypeModelBuilder(
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
         it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
     }
-    private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
+    private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.declaration as PrimitiveType
 
@@ -62,7 +62,7 @@ class GrammarTypeModelBuilder(
     }
 
     fun listTypeFor(grammarRuleName: String, elementType: TypeDeclaration): TypeInstance {
-        val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type()))
+        val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type().asTypeArgument))
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
         return t
     }
@@ -73,7 +73,7 @@ class GrammarTypeModelBuilder(
     }
 
     fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeInstance, separatorType: TypeInstance) {
-        val t = SimpleTypeModelStdLib.ListSeparated.type(listOf(itemType, separatorType))
+        val t = SimpleTypeModelStdLib.ListSeparated.type(listOf(itemType.asTypeArgument, separatorType.asTypeArgument))
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
     }
 

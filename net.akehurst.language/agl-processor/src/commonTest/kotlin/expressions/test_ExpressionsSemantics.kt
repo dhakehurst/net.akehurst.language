@@ -43,7 +43,7 @@ class test_ExpressionsSemantics {
 
         val actual = dt.typeOfExpressionStr(expression)
 
-        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String)), actual)
+        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
     }
 
     @Test
@@ -64,7 +64,7 @@ class test_ExpressionsSemantics {
 
         val actual = dt.typeOfExpressionStr(expression)
 
-        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String)), actual)
+        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
     }
 
     @Test

@@ -18,6 +18,7 @@
 package net.akehurst.language.typemodel.asm
 
 import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.api.TypeArgumentNamed
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -63,6 +64,25 @@ class test_SimpleTypeModelStdLib {
     fun primitive_Timestamp() {
         assertEquals("std.Timestamp", SimpleTypeModelStdLib.Timestamp.qualifiedTypeName.value)
 
+    }
+
+    @Test
+    fun tupleType() {
+        val actual = SimpleTypeModelStdLib.TupleType
+        assertEquals("std.TupleType",actual.qualifiedName.value)
+    }
+
+    @Test
+    fun tupleType_instance() {
+        val args = listOf(
+            TypeArgumentNamedSimple(PropertyName("prop1"),SimpleTypeModelStdLib.Integer),
+            TypeArgumentNamedSimple(PropertyName("prop2"),SimpleTypeModelStdLib.String),
+            TypeArgumentNamedSimple(PropertyName("prop3"),SimpleTypeModelStdLib.Boolean),
+        )
+        val actual = SimpleTypeModelStdLib.TupleType.typeTuple(args)
+        assertEquals(SimpleTypeModelStdLib.TupleType,actual.declaration)
+        assertEquals("std.TupleType",actual.declaration.qualifiedName.value)
+        assertEquals("std.TupleType",actual.qualifiedTypeName.value)
     }
 
     @Test

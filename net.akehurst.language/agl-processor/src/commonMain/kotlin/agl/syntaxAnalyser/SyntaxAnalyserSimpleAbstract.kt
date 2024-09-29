@@ -286,7 +286,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         // if user-rule only had one list item, then runtime-rule is 'compressed, i.e. no pseudo rule for the list
         if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.List)
         val itemTypeUse = parentTypeUsage.typeArguments[0]
-        return itemTypeUse
+        return itemTypeUse as TypeInstance
     }
 
     private fun typeForParentListSeparated(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
@@ -295,7 +295,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.ListSeparated)
         val index = nodeInfo.child.index % 2
         val childTypeUse = parentTypeUsage.typeArguments[index]
-        return childTypeUse
+        return childTypeUse as TypeInstance
     }
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {

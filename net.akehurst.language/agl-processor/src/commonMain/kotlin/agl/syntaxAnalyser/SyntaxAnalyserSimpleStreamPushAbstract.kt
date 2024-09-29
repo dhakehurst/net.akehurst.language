@@ -290,7 +290,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         // if user-rule only had one list item, then runtime-rule is 'compressed, i.e. no pseudo rule for the list
         if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.List)
         val itemTypeUse = parentTypeUsage.typeArguments[0]
-        return itemTypeUse
+        return itemTypeUse as TypeInstance
     }
 
     private fun typeForParentListSeparated(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
@@ -299,7 +299,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.ListSeparated)
         val index = nodeInfo.child.index % 2
         val childTypeUse = parentTypeUsage.typeArguments[index]
-        return childTypeUse
+        return childTypeUse as TypeInstance
     }
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
@@ -624,7 +624,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 
     private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, children: List<ChildDataAny>) {
         for (propDecl in type.property) {
-            setPropertyOrReferenceFromDeclaration(type, propDecl)
+            TODO()
+        //    setPropertyOrReferenceFromDeclaration(type, propDecl)
         }
         finishTuple(path)
     }

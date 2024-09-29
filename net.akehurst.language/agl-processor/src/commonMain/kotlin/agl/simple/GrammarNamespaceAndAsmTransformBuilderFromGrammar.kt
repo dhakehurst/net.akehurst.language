@@ -34,7 +34,9 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.DataTypeSimple
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import kotlin.reflect.KClass
 
 
@@ -321,7 +323,7 @@ internal class Grammar2TransformRuleSet(
 
             subtypeTransforms.all { it.resolvedType.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
-                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType))
+                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType.asTypeArgument))
                 choiceType.toSubtypeTrRule()
             }
 
@@ -448,7 +450,7 @@ internal class Grammar2TransformRuleSet(
 
                 is SimpleList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
-                    val typeArgs = mutableListOf<TypeInstance>()
+                    val typeArgs = mutableListOf<TypeArgument>()
                     val t = SimpleTypeModelStdLib.List.type(typeArgs).toListTrRule()
                     _grRuleItemToTrRule[ruleItem] = t
                     val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
@@ -459,7 +461,7 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         else -> {
-                            typeArgs.add(trRuleForItem.resolvedType)
+                            typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
                             t
                         }
                     }
@@ -467,7 +469,7 @@ internal class Grammar2TransformRuleSet(
 
                 is SeparatedList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
-                    val typeArgs = mutableListOf<TypeInstance>()
+                    val typeArgs = mutableListOf<TypeArgument>()
                     val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs).toListTrRule() //TODO: needs action for sep-lists!
                     _grRuleItemToTrRule[ruleItem] = t
                     val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
@@ -479,14 +481,14 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         trRuleForSep.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
-                            val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType)).toSListItemsTrRule()
+                            val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType.asTypeArgument)).toSListItemsTrRule()
                             _grRuleItemToTrRule[ruleItem] = lt
                             lt
                         }
 
                         else -> {
-                            typeArgs.add(trRuleForItem.resolvedType)
-                            typeArgs.add(trRuleForSep.resolvedType)
+                            typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
+                            typeArgs.add(trRuleForSep.resolvedType.asTypeArgument)
                             t
                         }
                     }
@@ -517,7 +519,7 @@ internal class Grammar2TransformRuleSet(
 
             subtypeTransforms.allOfType(SimpleTypeModelStdLib.List) -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
-                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType))
+                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType.asTypeArgument))
                 choiceType.toSubtypeTrRule() //TODO: ??
             }
 
@@ -563,17 +565,18 @@ internal class Grammar2TransformRuleSet(
     }
 
     private fun trRuleForTupleType(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
-        val tt = grammarTypeNamespace.createTupleType()
-        val ti = grammarTypeNamespace.createTupleTypeInstance(tt, emptyList(), false)
         //val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
-        val assignments = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(tt, it, idx) }
+        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute"))
+        val assignments = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
+        val typeArgs = ttSub.property.map { TypeArgumentNamedSimple(it.name, it.typeInstance) }
+        val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
         val tr = transformationRule(ti, CreateTupleExpressionSimple(assignments))
         this._grRuleItemToTrRule[ruleItem] = tr
         return when {
-            tt.allProperty.isEmpty() -> {
-                val tr = SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+            ttSub.allProperty.isEmpty() -> {
+                val trn = SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
                 this._grRuleItemToTrRule[ruleItem] = tr
-                tr
+                trn
             }
 
             else -> tr
