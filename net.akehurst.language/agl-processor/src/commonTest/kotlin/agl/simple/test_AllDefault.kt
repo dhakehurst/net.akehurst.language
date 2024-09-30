@@ -1217,7 +1217,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("b", "child[1]")
+                assignment("b", "with(child[1]) child[0]")
                 assignment("c", "child[2]")
             }
             leafStringRule("a")
@@ -1349,7 +1349,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("b", "child[0]")
-                assignment("a", "child[1]")
+                assignment("a", "with(child[1]) child[0]")
             }
             createObject("A", "A") {
                 assignment("a", "child[0]")
@@ -2883,7 +2883,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("b", "child[1]")
+                assignment("b", "with(child[1]) child[0]")
             }
             createObject("A", "A") {}
             createObject("B", "B") {}
@@ -2976,7 +2976,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("as", "child[0].a")
-                assignment("b", "child[1]")
+                assignment("b", "with(child[1]) child[0]")
             }
             createObject("As", "As") {
                 assignment("a", "children.items")
@@ -3832,7 +3832,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> leaf }")
+                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> child[0] }")
                 assignment("e", "child[2]")
             }
             leafStringRule("a")
@@ -4361,7 +4361,9 @@ class test_AllDefault {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
                             propertyString("\$choice", "b")
-                            propertyNothing("\$group")
+                            propertyTuple("\$group") {
+                                propertyNothing("d")
+                            }
                             propertyString("e", "e")
                         }
                         propertyString("f", "f")
@@ -4374,7 +4376,9 @@ class test_AllDefault {
                         propertyString("a", "a")
                         propertyTuple("\$group") {
                             propertyString("\$choice", "c")
-                            propertyNothing("\$group")
+                            propertyTuple("\$group") {
+                                propertyNothing("d")
+                            }
                             propertyString("e", "e")
                         }
                         propertyString("f", "f")

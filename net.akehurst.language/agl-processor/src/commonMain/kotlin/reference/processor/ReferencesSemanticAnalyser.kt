@@ -17,26 +17,24 @@
 
 package net.akehurst.language.reference.processor
 
-import net.akehurst.language.expressions.processor.lastPropertyDeclarationFor
-import net.akehurst.language.expressions.processor.typeOfExpressionFor
-import net.akehurst.language.expressions.processor.typeOfNavigationExpressionFor
+import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.*
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.*
 
 class ReferencesSemanticAnalyser(
@@ -47,9 +45,12 @@ class ReferencesSemanticAnalyser(
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
 
+    private var _context:ContextFromTypeModel? = null
+
     override fun clear() {
         _grammarNamespace = null
         _locationMap = emptyMap()
+        _context = null
         issues.clear()
     }
 
@@ -60,6 +61,7 @@ class ReferencesSemanticAnalyser(
         options: SemanticAnalysisOptions<CrossReferenceModel, ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
+        _context = context
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
@@ -135,7 +137,9 @@ class ReferencesSemanticAnalyser(
                 identifiedBy is NavigationExpression -> {
                     // only check this if the typeName is valid - else it is always invalid
                     //TODO: check this in context of typeName GrammarRule
-                    val identifyingProperty = identifiedBy.typeOfNavigationExpressionFor(identifiedType.type())
+                    val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
+                    val identifyingProperty = typeResolver.typeFor(identifiedBy, identifiedType.type())
+                    //val identifyingProperty = identifiedBy.typeOfNavigationExpressionFor(identifiedType.type())
                     if (null == identifyingProperty) {
                         //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
                         raiseError(
@@ -203,9 +207,9 @@ class ReferencesSemanticAnalyser(
                 null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
             }
         }
-
-        val collTypeInstance = refExpr.expression.typeOfExpressionFor(contextType.type())
-        when (collTypeInstance?.declaration) {
+        val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
+        val collTypeInstance = typeResolver.typeFor( refExpr.expression,contextType.type())
+        when (collTypeInstance.declaration) {
             null -> TODO()
             is CollectionType -> {
                 val loopVarType = (collTypeInstance.typeArguments[0] as TypeInstance).declaration
@@ -241,7 +245,9 @@ class ReferencesSemanticAnalyser(
     ) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
-        val prop = refExpr.referringPropertyNavigation.lastPropertyDeclarationFor(contextType.type())
+        val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
+        val prop = typeResolver.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
+        //val prop = refExpr.referringPropertyNavigation.lastPropertyDeclarationFor(contextType.type())
         if (null == prop) {
             raiseError(
                 ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),

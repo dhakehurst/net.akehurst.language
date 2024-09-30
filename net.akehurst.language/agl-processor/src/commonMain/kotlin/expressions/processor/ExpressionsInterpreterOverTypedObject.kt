@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
@@ -113,6 +114,7 @@ class ExpressionsInterpreterOverTypedObject(
 ) {
 
     val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val typeResolver = ExpressionTypeResolver(typeModel)
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'
@@ -237,14 +239,26 @@ class ExpressionsInterpreterOverTypedObject(
                                     ?: SimpleTypeModelStdLib.AnyType
                                 val i = (idx.asmValue as AsmPrimitive).value as Int
                                 val elem = (obj.asmValue as AsmList).elements.getOrNull(i)
-                                when (elem) {
-                                    null -> {
+                                when {
+                                    null==elem -> {
                                         issues.error(null, "Index '$i' out of range")
                                         AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                     }
-
+                                    elem.isNothing -> elem.toTypedObject(SimpleTypeModelStdLib.NothingType)
                                     else -> {
-                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.qualifiedTypeName)?.type()
+                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.qualifiedTypeName)?.let {
+                                         when(it) {
+                                             is TupleType -> {
+                                                 val targs = (elem as AsmStructure).property.map {
+                                                     val n = PropertyName(it.key.value)
+                                                     val t = SimpleTypeModelStdLib.AnyType //TODO: can do better!
+                                                     TypeArgumentNamedSimple(n,t)
+                                                 }
+                                                 it.typeTuple(targs)
+                                             }
+                                             else -> it.type()
+                                         }
+                                        }
                                         when {
                                             null == elemType -> {
                                                 issues.error(null, "Cannot find type '${elem.qualifiedTypeName}' of List element '$elem'")
@@ -355,9 +369,9 @@ class ExpressionsInterpreterOverTypedObject(
             val value = evaluateExpression(evc, it.rhs)
             tuple.setProperty(it.lhsPropertyName.asValueName, value.asmValue, tuple.property.size)
             //tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
-            val selfType = evc.self?.type ?: error("No self Type")
-            val exprType = it.rhs.typeOfExpressionFor(selfType) ?: error("Cannot get type for expression '${it.rhs}' over type '$selfType'")
-            typeArgs.add(TypeArgumentNamedSimple(it.lhsPropertyName, exprType))
+            //val selfType = evc.self?.type ?: error("No self Type")
+            //val exprType =  typeResolver.typeFor( it.rhs,selfType) ?: error("Cannot get type for expression '${it.rhs}' over type '$selfType'")
+            typeArgs.add(TypeArgumentNamedSimple(it.lhsPropertyName, value.type))
         }
         return tuple.toTypedObject(tupleType.type(typeArgs))
     }

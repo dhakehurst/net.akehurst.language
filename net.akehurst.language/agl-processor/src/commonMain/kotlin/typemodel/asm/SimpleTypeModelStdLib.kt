@@ -49,7 +49,10 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empty
         td.appendPropertyStored(PropertyName("second"), TypeParameterReference(td, SimpleName("S")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 1)
     }
 
-    val TupleType = TupleTypeSimple(this, 0)
+    private val TupleType_typeName = SimpleName("TupleType")
+    val TupleType = TupleTypeSimple(this, TupleType_typeName).also { typeDecl ->
+        this.addDeclaration(typeDecl)
+    }
 
     private val Collection_typeName = SimpleName("Collection")
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->

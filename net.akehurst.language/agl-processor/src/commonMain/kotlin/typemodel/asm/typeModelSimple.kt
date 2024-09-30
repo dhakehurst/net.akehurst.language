@@ -209,13 +209,13 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         return "${typeName}$args$n"
     }
 
-    protected fun createTypeArgMap(): Map<TypeParameter, TypeInstance> {
+    protected open fun createTypeArgMap(): Map<TypeParameter, TypeInstance> {
         val typeArgMap = mutableMapOf<TypeParameter, TypeInstance>()
         typeOrNull?.typeParameters?.forEachIndexed { index, it ->
             val tp = it
             val ta = this.typeArguments[index]
             typeArgMap[tp] = when (ta) {
-                is TypeInstance -> ta
+                is TypeArgument -> ta.type
                 else -> TODO()
             }
         }
@@ -275,6 +275,8 @@ data class TypeArgumentSimple(
     override fun signature(context: TypeNamespace?, currentDepth: Int): String {
         return type.signature(context, currentDepth)
     }
+
+    override fun toString(): String  = signature(null, 0)
 }
 
 class TypeInstanceSimple(
@@ -360,6 +362,8 @@ class TupleTypeInstanceSimple(
         return TupleTypeInstanceSimple(this.namespace, this.declaration, resolvedTypeArgs, this.isNullable)
     }
 
+    override fun createTypeArgMap(): Map<TypeParameter, TypeInstance>  = emptyMap()
+
     override fun hashCode(): Int = listOf(declaration, typeArguments, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is TypeInstanceSimple -> false
@@ -369,6 +373,10 @@ class TupleTypeInstanceSimple(
         else -> true
     }
 
+    override fun toString(): String {
+        val args = typeArguments.joinToString(separator = ", ") { "${it.name}: ${it.type.signature(null,0)}" }
+        return "${typeName}<$args>"
+    }
 }
 
 class UnnamedSupertypeTypeInstance(
@@ -472,11 +480,11 @@ abstract class TypeNamespaceAbstract(
             error("namespace '$qualifiedName' already contains a declaration named '${decl.name}', cannot add another")
         } else {
             when (decl) {
+                is TupleType -> addDefinition(decl)
                 is PrimitiveType -> addDefinition(decl)
                 is EnumType -> addDefinition(decl)
                 is UnnamedSupertypeType -> Unit
                 is StructuredType -> when (decl) {
-                    is TupleType -> Unit
                     is DataType -> addDefinition(decl)
                     is CollectionType -> addDefinition(decl)
                 }
@@ -488,18 +496,19 @@ abstract class TypeNamespaceAbstract(
 
     override fun findOwnedTypeNamed(typeName: SimpleName): TypeDeclaration? =
         ownedTypesByName[typeName]
-            ?: when {
-                typeName.value.startsWith(TupleType.NAME.value + "-") -> {
-                    typeName.let {
-                        val idStr = typeName.value.substringAfter(TupleType.NAME.value + "-")
-                        val id = idStr.toInt()
-                        ownedTupleTypes[id]
-                        //?: error("Cannot find TupleType '$typeName' in namespace '$qualifiedName'")
-                    }
-                }
-
-                else -> null
+    /*?: when {
+        typeName.value.startsWith(TupleType.NAME.value + "-") -> {
+            typeName.let {
+                val idStr = typeName.value.substringAfter(TupleType.NAME.value + "-")
+                val id = idStr.toInt()
+                ownedTupleTypes[id]
+                //?: error("Cannot find TupleType '$typeName' in namespace '$qualifiedName'")
             }
+        }
+
+        else -> null
+    }
+*/
 
     override fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDeclaration? {
         return when (qualifiedOrImportedTypeName) {
@@ -689,6 +698,10 @@ $types
 class TypeParameterSimple(
     override val name: SimpleName
 ) : TypeParameter
+
+object TypeParameterMultiple : TypeParameter {
+    override val name = SimpleName("...")
+}
 
 abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
     companion object {
@@ -974,7 +987,7 @@ abstract class StructuredTypeSimpleAbstract : TypeDeclarationSimpleAbstract(), S
 }
 
 class TypeArgumentNamedSimple(
-    override val name:PropertyName,
+    override val name: PropertyName,
     override val type: TypeInstance,
 ) : TypeArgumentNamed {
     override fun conformsTo(other: TypeArgument): Boolean = when {
@@ -989,16 +1002,17 @@ class TypeArgumentNamedSimple(
     override fun signature(context: TypeNamespace?, currentDepth: Int): String {
         return "${name.value}:${type.signature(context, currentDepth)}"
     }
+
+    override fun toString(): String = "$name: ${type.signature(null,0)}"
 }
 
 class TupleTypeSimple(
     override val namespace: TypeNamespace,
-    val id: Int // must be public for serialisation
+    override val name: SimpleName
+    //val id: Int // must be public for serialisation
 ) : TypeDeclarationSimpleAbstract(), TupleType {
 
-    override val name = SimpleName(TupleType.NAME.value)
-
-    override val typeParameters: List<NamedTypeParameter> = mutableListOf()
+    override val typeParameters = listOf(TypeParameterMultiple)
 
     //override val entries get() = property.map { Pair(it.name, it.typeInstance) }
 
@@ -1028,15 +1042,15 @@ class TupleTypeSimple(
 
     override fun asStringInContext(context: TypeNamespace): String = "tuple ${signature(context)}"
 
-    override fun hashCode(): Int = this.id
-    override fun equals(other: Any?): Boolean = when {
-        other !is TupleTypeSimple -> false
-        this.id != other.id -> false
-        this.namespace != other.namespace -> false
-        else -> true
-    }
+    //override fun hashCode(): Int = this.id
+    //override fun equals(other: Any?): Boolean = when {
+    //    other !is TupleTypeSimple -> false
+    //    this.id != other.id -> false
+    //    this.namespace != other.namespace -> false
+    //    else -> true
+    //}
 
-    override fun toString(): String = "${TupleType.NAME.value}-$id<${this.property.joinToString { it.name.value + ":" + it.typeInstance }}>"
+    //override fun toString(): String = "${TupleType.NAME.value}-$id<${this.property.joinToString { it.name.value + ":" + it.typeInstance }}>"
 }
 
 class ValueTypeSimple(

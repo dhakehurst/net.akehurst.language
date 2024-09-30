@@ -198,18 +198,26 @@ abstract class StructuredTypeBuilder(
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _namespace.findTypeNamed(itemTypeName.asPossiblyQualifiedName) ?: _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
         val separatorType = _namespace.findTypeNamed(itemTypeName.asPossiblyQualifiedName) ?: _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(separatorTypeName))
-        return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
-    }
-
-    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
-        return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
-    }
-
-    fun propertyListSeparatedType(propertyName: String, itemType: TypeDeclaration, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val collType = SimpleTypeModelStdLib.ListSeparated
         val propType = collType.type(listOf(itemType.type().asTypeArgument, separatorType.type().asTypeArgument), isNullable)
         return property(propertyName, propType, childIndex)
+    }
+
+   // fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+   //     val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
+   //     return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
+   // }
+
+    fun propertyListSeparatedType(propertyName: String, isNullable: Boolean, childIndex: Int,init: TypeInstanceArgBuilder.() -> Unit): PropertyDeclaration {
+        val collType = SimpleTypeModelStdLib.ListSeparated
+        val tb = TypeInstanceArgBuilder(this._structuredType, this._namespace, collType, isNullable, _typeReferences)
+        tb.init()
+        _typeReferences.add(tb)
+        val tu = tb.build()
+        return property(propertyName, tu, childIndex)
+
+       // val propType = collType.type(listOf(itemType.type().asTypeArgument, separatorType.type().asTypeArgument), isNullable)
+       // return property(propertyName, propType, childIndex)
     }
 
     // Tuple

@@ -217,6 +217,7 @@ class AsmPrimitiveSimple(
 
 val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.String.qualifiedTypeName
 val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.Integer.qualifiedTypeName
+val AsmValue.isNothing get() = this is AsmNothing
 
 class AsmReferenceSimple(
     override val reference: String,

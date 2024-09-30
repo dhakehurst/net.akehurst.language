@@ -86,7 +86,7 @@ class AsmSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
-        element(TupleType.NAME.value, init)
+        element(SimpleTypeModelStdLib.TupleType.qualifiedName.value, init)
 
     fun listOfString(vararg items: String): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
@@ -147,7 +147,7 @@ class AsmElementSimpleBuilder(
 
             is SimpleName -> {
                 when (qtn) {
-                    TupleType.NAME -> TupleType.NAME
+                    SimpleTypeModelStdLib.TupleType.name -> SimpleTypeModelStdLib.TupleType.qualifiedName
                     UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
                     else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName
                         ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))

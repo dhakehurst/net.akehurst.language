@@ -83,7 +83,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
     }
 
-    val typeModel: TypeModel = TypeModelSimple(SimpleName(_typeModel.name.value+"+ParseNodeNamespace")).also {
+    val typeModel: TypeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
         it.addAllNamespaceAndResolveImports(_typeModel.allNamespace + AsmTransformInterpreter.parseNodeNamespace)
     }
 
@@ -242,13 +242,14 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
             else -> when (parentType) {
                 typeModel.NothingType -> parentPath.plus("<error>")
-                typeModel.AnyType -> TODO()
+                typeModel.AnyType -> parentPath.plus("<any>") // FIXME:
                 else -> error("Should not happen")
             }
         }
     }
 
     private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
+        val parentType = parentTrRule?.resolvedType
         val parentTypeDecl = parentTrRule?.resolvedType?.declaration
         val nodeRule = nodeInfo.node.rule
         return when {
@@ -262,7 +263,12 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 else -> {
                     // pseudo node for optional item
                     // return child[0] or Nothing if child[0] is the empty node
-                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                    /*
+                    val propType = when (parentTypeDecl) {
+                        is StructuredType -> parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                        is TupleType -> (parentType as TupleTypeInstance).typeArguments.getOrNull(nodeInfo.child.propertyIndex)?.type
+                        else -> TODO()
+                    }
                     when (propType) {
                         null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
                         else -> transformationRule(
@@ -272,6 +278,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                             )
                         )
                     }
+                     */
+                    transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
                 }
             }
 
@@ -301,6 +309,15 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                             when (propType) {
                                 null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
                                 else -> transformationRule(propType, RootExpressionSimple.SELF)
+                            }
+                        }
+
+                        is TupleType -> {
+                            val pt = (parentType as TupleTypeInstance).typeArguments.getOrNull(nodeInfo.child.propertyIndex)
+                            //val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                            when (pt) {
+                                null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
+                                else -> transformationRule(pt.type, RootExpressionSimple.SELF)
                             }
                         }
 
@@ -552,13 +569,13 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             else -> AsmNothingSimple
         }
         val selfType = when {
-            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SEPARATED
-            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_LIST_SIMPLE
-        }
+            // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
+            target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
+            else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
+        }.type()
         val self = AsmStructureSimple(AsmPathSimple(""), selfType.qualifiedTypeName)
         self.setProperty(AsmTransformInterpreter.PATH.asValueName, asmPath, 0)
         self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 1)
-        self.setProperty(AsmTransformInterpreter.LEAF.asValueName, leaf, 2)
         self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 3)
         self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 4)
 

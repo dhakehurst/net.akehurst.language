@@ -245,16 +245,11 @@ interface StructuredType : TypeDeclaration {
 
 }
 
-interface NamedTypeParameter : TypeParameter {
-
-}
+//interface TypeParameterVarArg : TypeParameter
 
 interface TupleType : TypeDeclaration {
-    companion object {
-        val NAME = QualifiedName("std.\$TupleType")
-    }
 
-    override val typeParameters: List<NamedTypeParameter>
+    //override val typeParameters: List<NamedTypeParameter>
 
     override fun type(typeArguments: List<TypeArgument>, nullable: Boolean): TupleTypeInstance
 
