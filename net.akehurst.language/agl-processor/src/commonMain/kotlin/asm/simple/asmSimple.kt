@@ -342,7 +342,7 @@ class AsmStructureSimple(
         else -> false
     }
 
-    override fun toString(): String = ":$typeName[${path.value}]"
+    override fun toString(): String = ":$typeName[${path.value}] { ${this.property.values.joinToString()}} }"
 
 }
 
@@ -404,7 +404,14 @@ class AsmStructurePropertySimple(
         val v = this.value
         return when (v) {
             is AsmStructureSimple -> "$name = :${v.typeName}"
-            is AsmList -> "$name = [...]"
+            is AsmList -> {
+                val elems = v.elements.joinToString()
+                val elemsStr = when{
+                    elems.length > 20 -> elems.substring(0,20) + "..."
+                    else -> elems
+                }
+                "$name = [$elemsStr]"
+            }
             is AsmPrimitive -> if (isReference) "$name = &${v}" else "$name = ${v}"
             else -> "$name = ${v}"
         }

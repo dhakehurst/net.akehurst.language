@@ -205,18 +205,18 @@ internal class Grammar2TransformRuleSet(
         return TransformRuleSetDefault(transformNamespace, grammar.name, trRules)
     }
 
-    private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, ifCreate: ConstructAndModify<TP, TR>): TransformationRule {
+    private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): TransformationRule {
         val ruleName = rule.name
         val existing = _grRuleNameToTrRule[ruleName]
         return if (null == existing) {
             val tn = this.configuration?.typeNameFor(rule) ?: SimpleName(ruleName.value)
             val tp = grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
             val tt = tp.type()
-            val tr = ifCreate.construct(tp as TP)
+            val tr = cnm.construct(tp as TP)
             tr.grammarRuleName = rule.name
             tr.resolveTypeAs(tt)
             _grRuleNameToTrRule[ruleName] = tr
-            ifCreate.modify(tr)
+            cnm.modify(tr)
             tr
         } else {
             existing
@@ -251,19 +251,7 @@ internal class Grammar2TransformRuleSet(
 
             else -> {
                 val rhs = gr.rhs
-                val trRule = when (rhs) {
-                    is EmptyRule -> trRuleForRuleItemList(gr, emptyList())
-                    is Terminal -> trRuleForRuleItemList(gr, listOf(rhs))
-                    is NonTerminal -> trRuleForRuleItemList(gr, listOf(rhs))
-                    is Embedded -> trRuleForRuleItemList(gr, listOf(rhs))
-                    is Concatenation -> trRuleForRuleItemList(gr, rhs.items)
-                    is Choice -> trRuleForChoiceRule(rhs, gr)
-                    is OptionalItem -> trRuleForOptionalRule(gr, rhs)
-                    is SimpleList -> trRuleForSimpleList(gr, rhs)
-                    is SeparatedList -> trRuleForSepList(gr, rhs)
-                    is Group -> trRuleForGroupGrRule(gr, rhs)
-                    else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
-                }
+                val trRule =  findOrCreateTrRule(gr, trRuleForRhs(gr,rhs))
                 (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
@@ -271,7 +259,21 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemList(rule: GrammarRule, items: List<RuleItem>): TransformationRule {
+    private fun trRuleForRhs(gr: GrammarRule, rhs:RuleItem):ConstructAndModify<> = when (rhs) {
+        is EmptyRule -> trRuleForRhsItemList(gr, emptyList())
+        is Terminal -> trRuleForRhsItemList(gr, listOf(rhs))
+        is NonTerminal -> trRuleForRhsItemList(gr, listOf(rhs))
+        is Embedded -> trRuleForRhsItemList(gr, listOf(rhs))
+        is Concatenation -> trRuleForRhsItemList(gr, rhs.items)
+        is Choice -> trRuleForRhsChoice(rhs, gr)
+        is OptionalItem -> trRuleForRhsOptional(gr, rhs)
+        is SimpleList -> trRuleForRhsListSimple(gr, rhs)
+        is SeparatedList -> trRuleForRhsListSeparated(gr, rhs)
+        is Group -> trRuleForRhsGroup(gr, rhs)
+        else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
+    }
+
+    private fun trRuleForRhsItemList(rule: GrammarRule, items: List<RuleItem>): TransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
@@ -290,65 +292,65 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    // for when a grammar rule contains a rhs Choice
-    private fun trRuleForChoiceRule(choice: Choice, choiceRule: GrammarRule): TransformationRule {
-        val subtypeTransforms = choice.alternative.map { trRuleForRuleItem(it, false) }
-        return when {
-            subtypeTransforms.all { it.resolvedType == SimpleTypeModelStdLib.NothingType } -> {
-                val t = SimpleTypeModelStdLib.NothingType.declaration.type(emptyList(), subtypeTransforms.any { it.resolvedType.isNullable })
-                t.toNoActionTrRule()
-            }
-
-            subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> transformationRule(
-                type = SimpleTypeModelStdLib.String,
-                expression = EXPRESSION_CHILD(0)
-            )
-
-            subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(
-                choiceRule,
-                ConstructAndModify(
-                    construct = {
-                        transformationRule(
-                            type = it.type(),
-                            expression = EXPRESSION_CHILD(0)
-                        )
-                    },
-                    modify = { tr ->
-                        val tp = tr.resolvedType.declaration as DataType
-                        subtypeTransforms.forEach {
-                            (it.resolvedType.declaration as DataType).addSupertype(tp.qualifiedName)
-                            tp.addSubtype(it.resolvedType.declaration.qualifiedName)
-                        }
-                    })
-            )
-
-            subtypeTransforms.all { it.resolvedType.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
-                val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
-                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType.asTypeArgument))
-                choiceType.toSubtypeTrRule()
-            }
-
-            subtypeTransforms.all { it.resolvedType.declaration is TupleType } -> when {
-                1 == subtypeTransforms.map { (it.resolvedType.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
-                    val t = subtypeTransforms.first()
-                    when {
-                        t.resolvedType.declaration is TupleType && (t.resolvedType.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        else -> t
+    private fun trRuleForRhsChoice(choice: Choice, choiceRule: GrammarRule): TransformationRule {
+        return when (choice.alternative.size) {
+            1 -> error("Internal Error: choice should have more than one alternative")
+            else -> {
+                val subtypeTransforms = choice.alternative.map { trRuleForRuleItem(it, false) }
+                when {
+                    subtypeTransforms.all { it.resolvedType == SimpleTypeModelStdLib.NothingType } -> {
+                        val t = SimpleTypeModelStdLib.NothingType.declaration.type(emptyList(), subtypeTransforms.any { it.resolvedType.isNullable })
+                        t.toNoActionTrRule()
                     }
+
+                    subtypeTransforms.all { it.resolvedType.declaration is PrimitiveType } -> transformationRule(
+                        type = SimpleTypeModelStdLib.String,
+                        expression = EXPRESSION_CHILD(0)
+                    )
+
+                    subtypeTransforms.all { it.resolvedType.declaration is DataType } -> findOrCreateTrRule(
+                        choiceRule,
+                        ConstructAndModify(
+                            construct = {
+                                transformationRule(
+                                    type = it.type(),
+                                    expression = EXPRESSION_CHILD(0)
+                                )
+                            },
+                            modify = { tr ->
+                                val tp = tr.resolvedType.declaration as DataType
+                                subtypeTransforms.forEach {
+                                    (it.resolvedType.declaration as DataType).addSupertype(tp.qualifiedName)
+                                    tp.addSubtype(it.resolvedType.declaration.qualifiedName)
+                                }
+                            })
+                    )
+
+                    subtypeTransforms.all { it.resolvedType.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
+                        val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
+                        val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType.asTypeArgument))
+                        choiceType.toSubtypeTrRule()
+                    }
+
+                    subtypeTransforms.all { it.resolvedType.declaration is TupleType } -> when {
+                        1 == subtypeTransforms.map { (it.resolvedType.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+                            val t = subtypeTransforms.first()
+                            when {
+                                t.resolvedType.declaration is TupleType && (t.resolvedType.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+                                else -> t
+                            }
+                        }
+
+                        else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
+                    }
+
+                    else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
                 }
-
-                else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
             }
-
-            else -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type().toUnnamedSubtypeTrRule()
         }
     }
 
-    private fun trRuleForGroupGrRule(rule: GrammarRule, group: Group): TransformationRule =
-        trRuleForGroupGrRuleItem(group, false)
-
-    // for when a grammar rule contains a single rhs Optional
-    private fun trRuleForOptionalRule(rule: GrammarRule, optItem: OptionalItem): TransformationRule {
+    private fun trRuleForRhsOptional(rule: GrammarRule, optItem: OptionalItem): TransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
@@ -376,8 +378,7 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    // for when a grammar rule contains a single rhs SimpleList
-    private fun trRuleForSimpleList(rule: GrammarRule, listItem: SimpleList): TransformationRule {
+    private fun trRuleForRhsListSimple(rule: GrammarRule, listItem: SimpleList): TransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
@@ -405,8 +406,7 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    // for when a grammar rule contains a single rhs SeparatedList
-    private fun trRuleForSepList(rule: GrammarRule, listItem: SeparatedList): TransformationRule {
+    private fun trRuleForRhsListSeparated(rule: GrammarRule, listItem: SeparatedList): TransformationRule {
         val trRule = findOrCreateTrRule(rule, ConstructAndModify(
             construct = {
                 transformationRule(
@@ -433,6 +433,9 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
+    private fun trRuleForRhsGroup(rule: GrammarRule, group: Group): TransformationRule =
+        trRuleForRuleItemGroup(group, false)
+
     // Type for a GrammarRule is in some cases different to type for a rule item when part of something else in a rule
     private fun trRuleForRuleItem(ruleItem: RuleItem, forProperty: Boolean): TransformationRule {
         val existing = _grRuleItemToTrRule[ruleItem]
@@ -440,96 +443,16 @@ internal class Grammar2TransformRuleSet(
             existing
         } else {
             val trRule: TransformationRule = when (ruleItem) {
-                is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.toNoActionTrRule() else SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
-                is NonTerminal -> {
-                    val refRule = ruleItem.referencedRuleOrNull(this.grammar)
-                    when {
-                        null == refRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        refRule.isLeaf -> transformationRule(SimpleTypeModelStdLib.String, EXPRESSION_CHILD(0))//SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
-                        refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        else -> {
-                            val trForRefRule = createOrFindTrRuleForGrammarRule(refRule)
-                            transformationRule(trForRefRule.resolvedType, EXPRESSION_CHILD(0))
-                        }
-                    }
-                }
-
-                is Embedded -> {
-                    val g2ns = builderForEmbedded(ruleItem)
-                    g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName)?.toNoActionTrRule() //TODO: needs own action
-                        ?: error("Should never happen")
-                }
-
-                is Choice -> trRuleForChoiceRuleItem(ruleItem, forProperty)
-                is Concatenation -> trRuleForTupleType(ruleItem, ruleItem.items)
-                is Group -> trRuleForGroupGrRuleItem(ruleItem, forProperty)
-                is OptionalItem -> {
-                    val trRule = trRuleForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
-                    when (trRule.resolvedType.declaration) {
-                        SimpleTypeModelStdLib.NothingType.declaration -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-
-                        else -> {
-                            val optType = trRule.resolvedType.declaration.type(emptyList(), true)
-                            val expr = when(trRule.resolvedType.declaration) {
-                                else -> trRule.expression //EXPRESSION_CHILD(0)
-                            }
-                            val optTr = transformationRule(
-                                optType,
-                                expr
-                            )
-                            _grRuleItemToTrRule[ruleItem] = optTr
-                            optTr
-                        }
-                    }
-                }
-
-                is SimpleList -> {
-                    // assign type to rule item before getting arg types to avoid recursion overflow
-                    val typeArgs = mutableListOf<TypeArgument>()
-                    val t = SimpleTypeModelStdLib.List.type(typeArgs).toListTrRule()
-                    _grRuleItemToTrRule[ruleItem] = t
-                    val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
-                    when (trRuleForItem.resolvedType.declaration) {
-                        SimpleTypeModelStdLib.NothingType.declaration -> {
-                            _grRuleItemToTrRule.remove(ruleItem)
-                            SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        }
-
-                        else -> {
-                            typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
-                            t
-                        }
-                    }
-                }
-
-                is SeparatedList -> {
-                    // assign type to rule item before getting arg types to avoid recursion overflow
-                    val typeArgs = mutableListOf<TypeArgument>()
-                    val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs).toListTrRule() //TODO: needs action for sep-lists!
-                    _grRuleItemToTrRule[ruleItem] = t
-                    val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
-                    val trRuleForSep = trRuleForRuleItem(ruleItem.separator, forProperty)
-                    when {
-                        trRuleForItem.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
-                            _grRuleItemToTrRule.remove(ruleItem)
-                            SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
-                        }
-
-                        trRuleForSep.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
-                            val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType.asTypeArgument)).toSListItemsTrRule()
-                            _grRuleItemToTrRule[ruleItem] = lt
-                            lt
-                        }
-
-                        else -> {
-                            typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
-                            typeArgs.add(trRuleForSep.resolvedType.asTypeArgument)
-                            t
-                        }
-                    }
-                }
-
+                is EmptyRule -> trRuleForRuleItemEmpty(ruleItem, forProperty)
+                is Terminal -> trRuleForRuleItemTerminal(ruleItem, forProperty)
+                is NonTerminal -> trRuleForRuleItemNonTerminal(ruleItem, forProperty)
+                is Embedded -> trRuleForRuleItemEmbedded(ruleItem, forProperty)
+                is Concatenation -> trRuleForRuleItemConcatenation(ruleItem, ruleItem.items)
+                is Choice -> trRuleForRuleItemChoice(ruleItem, forProperty)
+                is OptionalItem -> trRuleForRuleItemOptional(ruleItem, forProperty)
+                is SimpleList -> trRuleForRuleItemListSimple(ruleItem, forProperty)
+                is SeparatedList -> trRuleForRuleItemListSeparated(ruleItem, forProperty)
+                is Group -> trRuleForRuleItemGroup(ruleItem, forProperty)
                 else -> error("Internal error, unhandled subtype of RuleItem")
             }
             _grRuleItemToTrRule[ruleItem] = trRule
@@ -537,7 +460,38 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForChoiceRuleItem(choice: Choice, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemEmpty(ruleItem: EmptyRule, forProperty: Boolean): TransformationRule {
+        return SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+    }
+
+    private fun trRuleForRuleItemTerminal(ruleItem: Terminal, forProperty: Boolean): TransformationRule {
+        return if (forProperty) {
+            SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+        } else {
+            SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
+        }
+    }
+
+    private fun trRuleForRuleItemNonTerminal(ruleItem: NonTerminal, forProperty: Boolean): TransformationRule {
+        val refRule = ruleItem.referencedRuleOrNull(this.grammar)
+        return when {
+            null == refRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+            refRule.isLeaf -> transformationRule(SimpleTypeModelStdLib.String, EXPRESSION_CHILD(0))//SimpleTypeModelStdLib.String.toLeafAsStringTrRule()
+            refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+            else -> {
+                val trForRefRule = createOrFindTrRuleForGrammarRule(refRule)
+                transformationRule(trForRefRule.resolvedType, EXPRESSION_CHILD(0))
+            }
+        }
+    }
+
+    private fun trRuleForRuleItemEmbedded(ruleItem: Embedded, forProperty: Boolean): TransformationRule {
+        val g2ns = builderForEmbedded(ruleItem)
+        return g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName)?.toNoActionTrRule() //TODO: needs own action
+            ?: error("Should never happen")
+    }
+
+    private fun trRuleForRuleItemChoice(choice: Choice, forProperty: Boolean): TransformationRule {
         val subtypeTransforms = choice.alternative.map { trRuleForRuleItem(it, forProperty) }
         return when {
             subtypeTransforms.allOfType(SimpleTypeModelStdLib.NothingType.declaration) -> {
@@ -587,22 +541,8 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForGroupGrRuleItem(group: Group, forProperty: Boolean): TransformationRule {
-        val content = group.groupedContent
-        return when (content) {
-            is Choice -> trRuleForChoiceRuleItem(content, forProperty)
-            else -> {
-                val items = when (content) {
-                    is Concatenation -> content.items
-                    else -> listOf(content)
-                }
-                trRuleForTupleType(group, items)
-            }
-        }
-    }
-
     private var tupleCount = 0
-    private fun trRuleForTupleType(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
+    private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
         //val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
         val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
         val assignments = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
@@ -618,6 +558,89 @@ internal class Grammar2TransformRuleSet(
             }
 
             else -> tr
+        }
+    }
+
+    private fun trRuleForRuleItemOptional(ruleItem: OptionalItem, forProperty: Boolean): TransformationRule {
+        val trRule = trRuleForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
+        return when (trRule.resolvedType.declaration) {
+            SimpleTypeModelStdLib.NothingType.declaration -> SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+
+            else -> {
+                val optType = trRule.resolvedType.declaration.type(emptyList(), true)
+                val expr = when (ruleItem.item) {
+                    is Choice -> WithExpressionSimple(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
+                    is OptionalItem -> WithExpressionSimple(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
+                    is SimpleList -> WithExpressionSimple(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
+                    is SeparatedList -> WithExpressionSimple(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
+                    is Group -> WithExpressionSimple(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
+                    else -> trRule.expression //EXPRESSION_CHILD(0)
+                }
+                val optTr = transformationRule(optType, expr)
+                _grRuleItemToTrRule[ruleItem] = optTr
+                optTr
+            }
+        }
+    }
+
+    private fun trRuleForRuleItemListSimple(ruleItem: SimpleList, forProperty: Boolean): TransformationRule {
+        // assign type to rule item before getting arg types to avoid recursion overflow
+        val typeArgs = mutableListOf<TypeArgument>()
+        val t = SimpleTypeModelStdLib.List.type(typeArgs).toListTrRule()
+        _grRuleItemToTrRule[ruleItem] = t
+        val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
+        return when (trRuleForItem.resolvedType.declaration) {
+            SimpleTypeModelStdLib.NothingType.declaration -> {
+                _grRuleItemToTrRule.remove(ruleItem)
+                SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+            }
+
+            else -> {
+                typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
+                t
+            }
+        }
+    }
+
+    private fun trRuleForRuleItemListSeparated(ruleItem: SeparatedList, forProperty: Boolean): TransformationRule {
+        // assign type to rule item before getting arg types to avoid recursion overflow
+        val typeArgs = mutableListOf<TypeArgument>()
+        val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs).toListTrRule() //TODO: needs action for sep-lists!
+        _grRuleItemToTrRule[ruleItem] = t
+        val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
+        val trRuleForSep = trRuleForRuleItem(ruleItem.separator, forProperty)
+        return when {
+            trRuleForItem.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
+                _grRuleItemToTrRule.remove(ruleItem)
+                SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
+            }
+
+            trRuleForSep.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
+                val lt = SimpleTypeModelStdLib.List.type(listOf(trRuleForItem.resolvedType.asTypeArgument)).toSListItemsTrRule()
+                _grRuleItemToTrRule[ruleItem] = lt
+                lt
+            }
+
+            else -> {
+                typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
+                typeArgs.add(trRuleForSep.resolvedType.asTypeArgument)
+                t
+            }
+        }
+    }
+
+    private fun trRuleForRuleItemGroup(group: Group, forProperty: Boolean): TransformationRule {
+        val content = group.groupedContent
+        return when (content) {
+            is Choice -> trRuleForRuleItemChoice(content, forProperty)
+            else -> {
+                trRuleForRhs()
+                val items = when (content) {
+                    is Concatenation -> content.items
+                    else -> listOf(content)
+                }
+                trRuleForRuleItemConcatenation(group, items)
+            }
         }
     }
 
@@ -653,23 +676,13 @@ internal class Grammar2TransformRuleSet(
                 val t = trRuleForRuleItem(ruleItem, true)
                 when {
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
-                    ruleItem.item is Choice -> {
-                        val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
-                        val withExp = WithExpressionSimple(
-                            withContext = EXPRESSION_CHILD(childIndex),
-                            expression = t.expression
-                        )
-                        createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, withExp)
-                    }
-
                     else -> {
                         val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
-                        val expr = when (t.resolvedType.declaration) {
-                            //is PrimitiveType -> RootExpressionSimple("\$leaf")
+                        val exp = when (ruleItem.item) {
+                            // is EmptyRule, is Terminal, is NonTerminal -> t.expression
                             else -> WithExpressionSimple(withContext = EXPRESSION_CHILD(childIndex), expression = t.expression)
-                            //else -> EXPRESSION_CHILD(childIndex)//t.expression
                         }
-                        createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, expr)
+                        createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, exp)
                     }
                 }
             }
@@ -701,7 +714,7 @@ internal class Grammar2TransformRuleSet(
             }
 
             is Group -> {
-                val gt = trRuleForGroupGrRuleItem(ruleItem, true)
+                val gt = trRuleForRuleItemGroup(ruleItem, true)
                 when (gt.resolvedType.declaration) {
                     SimpleTypeModelStdLib.NothingType.declaration -> null
                     else -> {
@@ -773,7 +786,7 @@ internal class Grammar2TransformRuleSet(
             }
 
             is Choice -> {
-                val choiceType = trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
+                val choiceType = trRuleForRhsChoice(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
@@ -828,7 +841,7 @@ internal class Grammar2TransformRuleSet(
             }
 
             is Choice -> {
-                val choiceType = g2rs.trRuleForChoiceRule(rhs, refRule) //pName, rhs.alternative)
+                val choiceType = g2rs.trRuleForRhsChoice(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }

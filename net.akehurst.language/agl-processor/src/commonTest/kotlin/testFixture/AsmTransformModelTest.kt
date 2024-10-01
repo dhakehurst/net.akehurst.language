@@ -29,6 +29,7 @@ import kotlin.test.fail
 object AsmTransformModelTest {
 
     fun trAssertEquals(expected: TransformModel?, actual: TransformModel?) {
+        assertEquals(expected?.asString(), actual?.asString())
         assertEquals(expected?.name, actual?.name)
         assertEquals(expected?.namespace?.size, actual?.namespace?.size, "Different number of namespaces")
         if (expected?.namespace != null && actual?.namespace != null) {

@@ -116,12 +116,16 @@ internal class TransformRuleSetDefault(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        sb.append("grammar-transform {\n")
-        val rulesStr = rules.map {
-            "${it.key}: ${it.value}"
-        }.joinToString(separator = "\n")
-        sb.append("rulesStr")
-        sb.append("}")
+        sb.append("grammar-transform $name {\n")
+        val newIndent = indent.inc
+        val rulesStr = rules
+            .entries.sortedBy {
+                it.key.value
+            }.map {
+                it.value.asString(newIndent)
+            }.joinToString(separator = "\n")
+        sb.append(rulesStr)
+        sb.append("\n${indent}}")
         return sb.toString()
     }
 }

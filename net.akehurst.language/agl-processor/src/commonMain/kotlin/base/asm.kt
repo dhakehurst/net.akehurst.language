@@ -88,7 +88,6 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
-        sb.append("\n")
         if (import.isNotEmpty()) {
             val importStr = import.joinToString(separator = "\n") { "$newIndent${it.value}" }
             sb.append(importStr)

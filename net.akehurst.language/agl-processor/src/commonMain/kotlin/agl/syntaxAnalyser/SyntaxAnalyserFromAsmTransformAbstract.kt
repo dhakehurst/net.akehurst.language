@@ -45,6 +45,7 @@ import net.akehurst.language.transform.asm.*
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.SpecialTypeSimple
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 data class NodeTrRules(
@@ -314,24 +315,19 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
                         is TupleType -> {
                             val pt = (parentType as TupleTypeInstance).typeArguments.getOrNull(nodeInfo.child.propertyIndex)
-                            //val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                             when (pt) {
-                                null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
+                                null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no arg when non-term is a literal
                                 else -> transformationRule(pt.type, RootExpressionSimple.SELF)
                             }
                         }
 
                         is UnnamedSupertypeType -> {
                             val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option]
-                            //transformationRule(
-                            //    subtype, NavigationSimple(
-                            //        start = RootExpressionSimple("child"),
-                            //        parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, 0))))
-                            //    )
-                            //)
                             transformationRule(subtype, RootExpressionSimple.SELF)
                         }
-
+                        is SpecialTypeSimple -> {
+                            transformationRule(SimpleTypeModelStdLib.AnyType, RootExpressionSimple.SELF)
+                        }
                         else -> error("Unsupported type '${parentTypeDecl::class.simpleName}'")
                     }
 
