@@ -251,7 +251,7 @@ internal class Grammar2TransformRuleSet(
 
             else -> {
                 val rhs = gr.rhs
-                val trRule =  findOrCreateTrRule(gr, trRuleForRhs(gr,rhs))
+                val trRule =  trRuleForRhs(gr,rhs)
                 (trRule as TransformationRuleAbstract).grammarRuleName = gr.name
                 _grRuleNameToTrRule[gr.name] = trRule
                 trRule
@@ -259,7 +259,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRhs(gr: GrammarRule, rhs:RuleItem):ConstructAndModify<> = when (rhs) {
+    private fun trRuleForRhs(gr: GrammarRule, rhs:RuleItem) = when (rhs) {
         is EmptyRule -> trRuleForRhsItemList(gr, emptyList())
         is Terminal -> trRuleForRhsItemList(gr, listOf(rhs))
         is NonTerminal -> trRuleForRhsItemList(gr, listOf(rhs))
@@ -633,8 +633,9 @@ internal class Grammar2TransformRuleSet(
         val content = group.groupedContent
         return when (content) {
             is Choice -> trRuleForRuleItemChoice(content, forProperty)
+            is OptionalItem -> trRuleForGroupContentOptional(content)
             else -> {
-                trRuleForRhs()
+               // val contentTr = trRuleForGroupContent(group, content)
                 val items = when (content) {
                     is Concatenation -> content.items
                     else -> listOf(content)
@@ -642,6 +643,34 @@ internal class Grammar2TransformRuleSet(
                 trRuleForRuleItemConcatenation(group, items)
             }
         }
+    }
+/*
+    private fun trRuleForGroupContent(group:Group, content:RuleItem) = when (content) {
+        is EmptyRule -> trRuleForRuleItemConcatenation(group, emptyList())
+        is Terminal -> trRuleForRuleItemConcatenation(group, listOf(content))
+        is NonTerminal -> trRuleForRuleItemConcatenation(group,listOf(content))
+        is Embedded -> trRuleForRuleItemConcatenation(group,listOf(content))
+        is Concatenation -> trRuleForRuleItemConcatenation(group,content.items)
+        //is Choice -> trRuleForRhsChoice(rhs, gr)
+        is OptionalItem -> trRuleForRuleItemConcatenation(group,listOf(content.item))
+        is SimpleList -> trRuleForRuleItemConcatenation(group,listOf(content))
+        is SeparatedList -> trRuleForRhsListSeparated(gr, rhs)
+        is Group -> trRuleForRhsGroup(gr, rhs)
+        else -> error("Internal error, unhandled subtype of rule '${gr.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
+    }
+    */
+
+    private fun trRuleForGroupContentOptional(optItem: OptionalItem): TransformationRule {
+        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
+        val assignment = createPropertyDeclarationAndAssignment(ttSub, optItem.item, 0)
+            ?: error("No property assignment!")
+        val typeArgs = ttSub.property.map {
+            //Optional items are nullable, this is why need this special function
+            TypeArgumentNamedSimple(it.name, it.typeInstance.nullable())
+        }
+        val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
+        val tr = transformationRule(ti, CreateTupleExpressionSimple(listOf(assignment)))
+        return tr
     }
 
     private fun createPropertyDeclarationAndAssignment(et: StructuredType, ruleItem: RuleItem, childIndex: Int): AssignmentStatement? {

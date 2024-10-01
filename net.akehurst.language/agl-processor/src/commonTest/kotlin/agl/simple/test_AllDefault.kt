@@ -4427,12 +4427,12 @@ class test_AllDefault {
         }
     }
 
-    @Test // S = (BC | d+) ;
+    @Test // S = BC | d+ ;
     fun _728_rhs_group_choice_concat_nonTerm_list() {
         val grammarStr = """
             namespace test
             grammar Test {
-                S = (BC | d+) ;
+                S = BC | d+ ;
                 BC = b c ;
                 leaf b = 'b' ;
                 leaf c = 'c' ;
@@ -4451,15 +4451,38 @@ class test_AllDefault {
             literal("d", "d")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+            dataType("BC", "BC") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 1)
             }
+            unnamedSuperTypeType("S") {
+                elementRef("BC")
+                listType(false) {
+                    primitiveRef("String")
+                }
+            }
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
         }
         val expectedTr = asmGrammarTransform(
             "test.Test",
             typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
             true
         ) {
-            createObject("S", "S")
+            unnamedSubtypeRule("S") {
+                elementRef("BC")
+                listType(false) {
+                    primitiveRef("String")
+                }
+            }
+            createObject("BC", "BC") {
+                assignment("b", "child[0]")
+                assignment("c", "child[1]")
+            }
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
         }
         test(
             grammarStr = grammarStr,
@@ -4467,10 +4490,27 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
-                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
-                    element("S") {
+            define(sentence = "bc", sppt = "S { BC { b:'b' c:'c' } }") {
+                asmSimple {
+                    element("BC") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
                     }
+                }
+            }
+            define(sentence = "d", sppt = "S { §S§multi1 { d : 'd' } }") {
+                asmSimple {
+                    listOfString("d")
+                }
+            }
+            define(sentence = "dd", sppt = "S { §S§multi1 { d:'d' d:'d' } }") {
+                asmSimple {
+                    listOfString("d")
+                }
+            }
+            define(sentence = "ddd", sppt = "S { §S§multi1 { d:'d' d:'d' d:'d' } }") {
+                asmSimple {
+                    listOfString("d")
                 }
             }
         }

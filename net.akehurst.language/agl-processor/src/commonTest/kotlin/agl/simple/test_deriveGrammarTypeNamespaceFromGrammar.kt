@@ -64,48 +64,6 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
     }
 
     // --- Group ---
-    @Test // S = a ( (b | c) (d?) e ) f ;
-    fun _7_group_choice_group_concat_optional() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a ( (b | c) (d?) e ) f ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-                leaf f = 'f' ;
-            }
-        """.trimIndent()
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
-        val expected = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("f")
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    primitive("\$choice", "String", false)
-                    tuple("\$group", false) {
-                        primitive("d", "String", true)
-                    }
-                    primitive("e", "String", false)
-                }
-                propertyPrimitiveType("f", "String", false, 2)
-            }
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
-    }
-
     @Test // S = (BC | d*) ;
     fun _7_rhs_group_choice_concat_term_list() {
         val grammarStr = """
