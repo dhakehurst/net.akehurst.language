@@ -55,10 +55,15 @@ object AglStyle {
         concatenation("META_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
 
         concatenation("style") {
-            ref("STYLE_ID"); lit(":"); ref("STYLE_VALUE"); lit(";")
+            ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
+        }
+        choice("styleValue") {
+            ref("STYLE_ID")
+            ref("STRING")
         }
         concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
         concatenation("STYLE_VALUE", isLeaf = true) { pat("[^;: \\t\\n\\x0B\\f\\r]+") }
+        concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
     }
 
 
@@ -107,13 +112,15 @@ grammar Style extends Base {
     selectorAndComposition = [selectorSingle /',']2+ ;
     selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
     styleList = style* ;
-    style = STYLE_ID ':' STYLE_VALUE ';' ;
+    style = STYLE_ID ':' styleValue ';' ;
+    styleValue = STYLE_VALUE | STRING ;
     
     leaf LITERAL = "'([^'\\]|\\.)+'" ;
     leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
     leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
     leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
+    leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;
 }
     """.trimIndent()
 }

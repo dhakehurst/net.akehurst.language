@@ -20,9 +20,6 @@ package net.akehurst.language.transform.asm
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.expressions.asm.AssignmentStatementSimple
-import net.akehurst.language.expressions.asm.CreateObjectExpressionSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
@@ -32,6 +29,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDeclaration
@@ -102,14 +100,14 @@ class AsmTransformRuleSetBuilder internal constructor(
     private val _rules = mutableListOf<TransformationRule>()
     private val defaultTypeNamespaceQualifiedName = namespace.qualifiedName.append(name)
 
-    private fun resolveType(grName:GrammarRuleName , typeName: String): TypeDeclaration {
+    private fun resolveType(grName: GrammarRuleName, typeName: String): TypeDeclaration {
         val pqt = typeName.asPossiblyQualifiedName
         return if (createTypes) {
             when (pqt) {
                 is SimpleName -> {
                     val tns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
                     val td = tns.findOwnedOrCreateDataTypeNamed(pqt)
-                    if(tns is GrammarTypeNamespaceSimple) {
+                    if (tns is GrammarTypeNamespaceSimple) {
                         tns.addTypeFor(grName, td.type())
                     }
                     td
@@ -120,7 +118,7 @@ class AsmTransformRuleSetBuilder internal constructor(
                     val tn = pqt.last
                     val tns = typeModel.findOrCreateNamespace(nsqn, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
                     val td = tns.findOwnedOrCreateDataTypeNamed(tn)
-                    if(tns is GrammarTypeNamespaceSimple) {
+                    if (tns is GrammarTypeNamespaceSimple) {
                         tns.addTypeFor(grName, td.type())
                     }
                     td
@@ -190,16 +188,16 @@ class AsmTransformRuleSetBuilder internal constructor(
         trRule(grammarRuleName, typeName, expression("child[0]"))
     }
 
-    fun unnamedSubtypeRule(grammarRuleName: String, init: SubtypeListBuilder.() -> Unit)  {
+    fun unnamedSubtypeRule(grammarRuleName: String, expressionStr: String, init: SubtypeListBuilder.() -> Unit) {
         val ns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
         val b = SubtypeListBuilder(ns, mutableListOf())
         b.init()
         val subtypes = b.build()
-
-        val tr = TransformationRuleDefault(UnnamedSupertypeType.NAME, expression("child[0]"))
+        val expr = expression(expressionStr)
+        val tr = TransformationRuleDefault(UnnamedSupertypeType.NAME, expr)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         //val stList = subtypeNames.map { it.asPossiblyQualifiedName }.map { n ->
-            //_rules.first { it.resolvedType.typeName == n }.resolvedType
+        //_rules.first { it.resolvedType.typeName == n }.resolvedType
         //    ns.findTypeNamed(n)?.type() ?: error("TypeDeclaration '$n' not found")
         //}
         val t = ns.createUnnamedSupertypeType(subtypes)
@@ -208,7 +206,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
-        val qtn = resolveType(GrammarRuleName(grammarRuleName),typeName).qualifiedName
+        val qtn = resolveType(GrammarRuleName(grammarRuleName), typeName).qualifiedName
         val expr = CreateObjectExpressionSimple(qtn, emptyList())
         val ab = AssignmentBuilder()
         ab.modifyStatements()

@@ -654,10 +654,10 @@ class test_AglGrammar_item {
         val gstr = """
             s=(b);
         """.trimIndent()
-        val result = parse("§grammar§multi3", gstr)
+        val result = parse("§grammar§multi2", gstr)
         val expected = this.sppt(
             """
-            §grammar§multi3 { rule { grammarRule {
+            §grammar§multi2 { rule { grammarRule {
                 ruleTypeLabels {
                     §ruleTypeLabels§opt1 { §empty }
                     §ruleTypeLabels§opt2 { §empty }
@@ -993,10 +993,10 @@ rule { grammarRule {
         val gstr = """
             s=(b c);
         """.trimIndent()
-        val result = parse("§grammar§multi3", gstr)
+        val result = parse("§grammar§multi2", gstr)
         val expected = this.sppt(
             """
-            §grammar§multi3 { rule { grammarRule {
+            §grammar§multi2 { rule { grammarRule {
               ruleTypeLabels {
                 §ruleTypeLabels§opt1 { §empty }
                 §ruleTypeLabels§opt2 { §empty }
@@ -1028,10 +1028,10 @@ rule { grammarRule {
         val gstr = """
             s=a(b c?);
         """.trimIndent()
-        val result = parse("§grammar§multi3", gstr)
+        val result = parse("§grammar§multi2", gstr)
         val expected = this.sppt(
             """
-            §grammar§multi3 { rule { grammarRule {
+            §grammar§multi2 { rule { grammarRule {
               ruleTypeLabels {
                 §ruleTypeLabels§opt1 { §empty }
                 §ruleTypeLabels§opt2 { §empty }
@@ -1069,10 +1069,10 @@ rule { grammarRule {
         val gstr = """
             s = (a b | c?) ;
         """.trimIndent()
-        val result = parse("§grammar§multi3", gstr)
+        val result = parse("§grammar§multi2", gstr)
         val expected = this.sppt(
             """
-§grammar§multi3 { rule { grammarRule {
+§grammar§multi2 { rule { grammarRule {
   ruleTypeLabels {
     §ruleTypeLabels§opt1 { §empty }
     §ruleTypeLabels§opt2 { §empty }
@@ -1129,8 +1129,8 @@ grammar {
   §grammar§opt1 { §empty }
   '{'
   WHITESPACE : ' '
-  §grammar§multi2 { <EMPTY_LIST> }
-  §grammar§multi3 { rule { grammarRule {
+  §grammar§multi1 { <EMPTY_LIST> }
+  §grammar§multi2 { rule { grammarRule {
     ruleTypeLabels {
       §ruleTypeLabels§opt1 { §empty }
       §ruleTypeLabels§opt2 { §empty }
@@ -1171,8 +1171,8 @@ grammar {
   §grammar§opt1 { §empty }
   '{'
   WHITESPACE : ' '
-  §grammar§multi2 { <EMPTY_LIST> }
-  §grammar§multi3 { rule { grammarRule {
+  §grammar§multi1 { <EMPTY_LIST> }
+  §grammar§multi2 { rule { grammarRule {
     ruleTypeLabels {
       §ruleTypeLabels§opt1 { 'skip'  WHITESPACE : ' ' }
       §ruleTypeLabels§opt2 { §empty }

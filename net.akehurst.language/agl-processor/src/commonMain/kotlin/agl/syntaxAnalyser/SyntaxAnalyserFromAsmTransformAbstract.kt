@@ -86,7 +86,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     }
 
     val typeModel: TypeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
-        it.addAllNamespaceAndResolveImports(_typeModel.allNamespace + AsmTransformInterpreter.parseNodeNamespace)
+        it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
     }
 
     private var _asm: AsmSimple? = null

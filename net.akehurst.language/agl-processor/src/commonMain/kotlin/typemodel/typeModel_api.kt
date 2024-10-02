@@ -30,8 +30,6 @@ interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
     val AnyType: TypeDeclaration
     val NothingType: TypeDeclaration
 
-    val allNamespace: List<TypeNamespace>
-
     fun resolveImports()
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypeNamespace

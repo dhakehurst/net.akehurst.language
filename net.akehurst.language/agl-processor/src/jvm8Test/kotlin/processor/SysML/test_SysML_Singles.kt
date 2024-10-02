@@ -52,7 +52,7 @@ class test_SysML_Singles {
 
     @Test
     fun SINGLE_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           // a comment
         """.trimIndent()
@@ -64,7 +64,7 @@ class test_SysML_Singles {
 
     @Test
     fun MULTI_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           /* a comment */
         """.trimIndent()

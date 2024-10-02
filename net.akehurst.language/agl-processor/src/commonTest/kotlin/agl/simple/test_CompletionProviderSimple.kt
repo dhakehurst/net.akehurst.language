@@ -49,7 +49,7 @@ class test_CompletionProviderSimple {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespaceAndResolveImports(it.allNamespace)
+                proc.typeModel.addAllNamespaceAndResolveImports(it.namespace)
             }
             proc.typeModel
             proc.crossReferenceModel

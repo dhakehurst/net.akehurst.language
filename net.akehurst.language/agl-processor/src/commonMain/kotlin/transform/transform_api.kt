@@ -17,8 +17,8 @@
 
 package net.akehurst.language.transform.api
 
-import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.base.api.*
+import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -30,6 +30,8 @@ interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
     val typeModel: TypeModel?
 
     override val namespace: List<TransformNamespace>
+
+    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace
 }
 
 interface TransformNamespace : Namespace<TransformRuleSet> {

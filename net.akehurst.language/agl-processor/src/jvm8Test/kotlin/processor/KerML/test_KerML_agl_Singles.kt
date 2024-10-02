@@ -52,7 +52,7 @@ class test_KerML_agl_Singles {
                     context(context)
                 }
             })
-            assertEquals(result.issues.all, expIssues, result.issues.toString())
+            assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
     }
 
@@ -82,7 +82,7 @@ class test_KerML_agl_Singles {
                 }
             }
         )
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test

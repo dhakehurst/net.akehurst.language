@@ -17,14 +17,16 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.asm.asGrammarModel
+import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -969,5 +971,70 @@ digraph G {
         val result = processor.parse(sentence, ParseOptionsDefault(goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
+    }
+
+    @Test
+    fun dot__style() {
+
+        val sentence = """
+namespace DOT
+C_PREPROCESSOR {
+  foreground: gray;
+  font-style: italic;
+}
+SINGLE_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+MULTI_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+STRICT {
+  foreground: purple;
+  font-style: bold;
+}
+GRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+DIGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+SUBGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+NODE {
+  foreground: purple;
+  font-style: bold;
+}
+EDGE {
+  foreground: purple;
+  font-style: bold;
+}
+ALPHABETIC_ID {
+  foreground: red;
+  font-style: italic;
+}
+HTML {
+  background: LemonChiffon;
+}
+NAME {
+    foreground: green;
+}
+        """.trimIndent()
+
+        val styleProc = Agl.registry.agl.style.processor!!
+        val result = styleProc.process(
+            sentence,
+            Agl.options {
+                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammar!!.asGrammarModel())) }
+            })
+
+        assertNotNull(result.asm)
+        assertEquals(13, result.asm!!.allDefinitions.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 }

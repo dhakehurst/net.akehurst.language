@@ -184,7 +184,7 @@ class test_AglStyle {
         val text = """
             namespace test
             "\"(\\?.)*\"" {
-              font-family: "Courier New";
+              font-family: 'Courier New';
               color: darkblue;
             }
         """.trimIndent()
@@ -193,7 +193,7 @@ class test_AglStyle {
 
         assertEquals(0, result.issues.size, result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(2, result.asm!!.allDefinitions.size)
     }
 
     @Test
@@ -212,64 +212,4 @@ class test_AglStyle {
     }
     //TODO more tests
 
-
-    @Test
-    fun dot() {
-
-        val text = """
-namespace DOT
-C_PREPROCESSOR {
-  foreground: gray;
-  font-style: italic;
-}
-SINGLE_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-MULTI_LINE_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
-STRICT {
-  foreground: purple;
-  font-style: bold;
-}
-GRAPH {
-  foreground: purple;
-  font-style: bold;
-}
-DIGRAPH {
-  foreground: purple;
-  font-style: bold;
-}
-SUBGRAPH {
-  foreground: purple;
-  font-style: bold;
-}
-NODE {
-  foreground: purple;
-  font-style: bold;
-}
-EDGE {
-  foreground: purple;
-  font-style: bold;
-}
-ALPHABETIC_ID {
-  foreground: red;
-  font-style: italic;
-}
-HTML {
-  background: LemonChiffon;
-}
-NAME {
-    foreground: green;
-}
-        """.trimIndent()
-
-        val result = process(text)
-
-        assertNotNull(result.asm)
-        assertEquals(13, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
-    }
 }

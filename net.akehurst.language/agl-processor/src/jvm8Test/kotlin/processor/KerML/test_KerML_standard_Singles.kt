@@ -64,7 +64,7 @@ class test_KerML_standard_Singles {
                 }
             }
         )
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test

@@ -30,10 +30,7 @@ import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.base.api.Indent
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.grammar.api.Grammar
@@ -43,7 +40,9 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.transform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
 
 class TransformModelDefault(
     override val name: SimpleName,
@@ -83,9 +82,30 @@ class TransformModelDefault(
 
     }
 
-    override val namespace: List<TransformNamespace>
-        get() = super.namespace
+    private val _namespace: Map<QualifiedName, TransformNamespace> = linkedMapOf()
+    override val namespace: List<TransformNamespace> get() = _namespace.values.toList()
 
+    override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace {
+        return if (_namespace.containsKey(qualifiedName)) {
+            _namespace[qualifiedName]!!
+        } else {
+            val ns = TransformNamespaceDefault(qualifiedName)//, imports)
+            addNamespace(ns)
+            ns
+        }
+    }
+
+    fun addNamespace(ns: TransformNamespace) {
+        if (_namespace.containsKey(ns.qualifiedName)) {
+            if (_namespace[ns.qualifiedName] === ns) {
+                //same object, no need to add it
+            } else {
+                error("TypeModel '${this.name}' already contains a namespace '${ns.qualifiedName}'")
+            }
+        } else {
+            (_namespace as MutableMap)[ns.qualifiedName] = ns
+        }
+    }
 }
 
 internal class TransformNamespaceDefault(

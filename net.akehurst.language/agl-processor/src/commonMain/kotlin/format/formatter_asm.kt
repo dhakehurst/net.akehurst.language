@@ -51,7 +51,7 @@ internal class AglFormatterModelSimple : AglFormatterModel {
         fun fromGrammar(grammarList: GrammarModel, typeModel: TypeModel): ProcessResult<AglFormatterModel> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
             val formatModel = AglFormatterModelSimple()
-            for (ns in typeModel.allNamespace) {
+            for (ns in typeModel.namespace) {
                 when {
                     ns is GrammarTypeNamespace -> {
                         val grammar = grammarList.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }

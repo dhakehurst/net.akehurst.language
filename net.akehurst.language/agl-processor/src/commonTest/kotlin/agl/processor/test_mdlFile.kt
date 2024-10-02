@@ -96,18 +96,18 @@ grammar Mdl {
                 supertypes("Content")
                 propertyPrimitiveType("identifier", "String", false, 0)
                 propertyUnnamedSuperType("value", false, 1) {
-                    elementRef("Identifier")
-                    elementRef("Matrix")
-                    primitiveRef("String")
-                    elementRef("StringList")
+                    typeRef("StringList")
+                    typeRef("Matrix")
+                    typeRef("Identifier")
+                    typeRef("String")
                 }
             }
             //value = stringList | matrix | identifier | literal ;
             unnamedSuperTypeType("value") {
-                elementRef("Identifier")
-                elementRef("Matrix")
-                primitiveRef("String")
-                elementRef("StringList")
+                typeRef("StringList")
+                typeRef("Matrix")
+                typeRef("Identifier")
+                typeRef("String")
             }
             //identifier = IDENTIFIER ;
             dataType("identifier", "Identifier") {
@@ -117,15 +117,15 @@ grammar Mdl {
             dataType("matrix", "Matrix") {
                 propertyListType("row", false, 1) {
                     unnamedSuperTypeOf() {
-                        listType(false) { primitiveRef("String") }
                         listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
+                        listType(false) { primitiveRef("String") }
                     }
                 }
             }
             //row = [literal / ',']+ | literal+ ;
             unnamedSuperTypeType("row") {
-                listType(false) { primitiveRef("String") }
                 listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
+                listType(false) { primitiveRef("String") }
             }
 
             //stringList = DOUBLE_QUOTE_STRING+ ;

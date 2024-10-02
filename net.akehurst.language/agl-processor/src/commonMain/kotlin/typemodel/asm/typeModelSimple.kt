@@ -46,13 +46,12 @@ abstract class TypeModelSimpleAbstract(
     override val NothingType: TypeDeclaration get() = SimpleTypeModelStdLib.NothingType.declaration //TODO: stdLib not necessarily part of model !
 
     private val _namespace: Map<QualifiedName, TypeNamespace> = linkedMapOf()
-    override val namespace: List<TypeNamespace> get() = _namespace.values.toList()
 
     //store this separately to keep order of namespaces - important for lookup of types
-    override val allNamespace: List<TypeNamespace> = mutableListOf<TypeNamespace>()
+    override val namespace: List<TypeNamespace>  = mutableListOf<TypeNamespace>()
 
     override fun resolveImports() {
-        allNamespace.forEach { it.resolveImports(this as Model<Namespace<TypeDeclaration>, TypeDeclaration>) } //TODO
+        namespace.forEach { it.resolveImports(this as Model<Namespace<TypeDeclaration>, TypeDeclaration>) } //TODO
     }
 
     fun addNamespace(ns: TypeNamespace) {
@@ -64,7 +63,7 @@ abstract class TypeModelSimpleAbstract(
             }
         } else {
             (_namespace as MutableMap)[ns.qualifiedName] = ns
-            (allNamespace as MutableList).add(ns)
+            (namespace as MutableList).add(ns)
         }
     }
 
@@ -87,7 +86,7 @@ abstract class TypeModelSimpleAbstract(
     }
 
     override fun findFirstByNameOrNull(typeName: SimpleName): TypeDeclaration? {
-        for (ns in allNamespace) {
+        for (ns in namespace) {
             val t = ns.findOwnedTypeNamed(typeName)
             if (null != t) {
                 return t
@@ -116,7 +115,7 @@ abstract class TypeModelSimpleAbstract(
 
     // -- Formatable ---
     override fun asString(indent: Indent): String {
-        val ns = this.allNamespace
+        val ns = this.namespace
             .sortedBy { it.qualifiedName.value }
             .joinToString(separator = "\n") { it.asString() }
         return "typemodel '$name'\n$ns"

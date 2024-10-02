@@ -41,6 +41,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::selectorSingle)
         super.register(this::styleList)
         super.register(this::style)
+        super.register(this::styleValue)
         super.register(this::qualifiedName)
     }
 
@@ -117,12 +118,16 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleDeclaration> =
         children as List<AglStyleDeclaration>
 
-    // style = STYLE_ID ':' STYLE_VALUE ';' ;
+    // style = STYLE_ID ':' styleValue ';' ;
     fun style(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleDeclaration {
         val name = children[0] as String
         val value = children[2] as String
         return AglStyleDeclaration(name, value)
     }
+
+    // styleValue = STYLE_VALUE | STRING ;
+    fun styleValue(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
 
     // qualifiedName : (IDENTIFIER / '.')+ ;
     private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =

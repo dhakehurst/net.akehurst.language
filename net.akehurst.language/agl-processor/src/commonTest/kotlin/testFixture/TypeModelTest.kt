@@ -32,10 +32,10 @@ object TypeModelTest {
             expected == null -> fail()
             actual == null -> fail()
             else -> {
-                assertEquals(expected.allNamespace.size, actual.allNamespace.size, "number of namespaces in model is different")
-                for (k in expected.allNamespace.indices) {
-                    val expEl = expected.allNamespace[k]
-                    val actEl = actual.allNamespace[k]
+                assertEquals(expected.namespace.size, actual.namespace.size, "number of namespaces in model is different")
+                for (k in expected.namespace.indices) {
+                    val expEl = expected.namespace[k]
+                    val actEl = actual.namespace[k]
                     tmAssertEquals(expEl, actEl, "TypeNamespace")
                 }
             }

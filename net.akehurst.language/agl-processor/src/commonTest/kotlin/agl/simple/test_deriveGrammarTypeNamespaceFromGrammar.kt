@@ -150,7 +150,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         val expected = grammarTypeModel(
             "test.O", "O", listOf(
                 SimpleTypeModelStdLib,
-                tmI.allNamespace[1]
+                tmI.namespace[1]
             )
         ) {
             dataType("S", "S") {
@@ -203,10 +203,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = grammarTypeModel("test.O", "O") {
             unnamedSuperTypeType("S") {
-                elementRef("B")
+                typeRef("B")
                 tupleType {
-                    dataType("s", "S", false)
-                    dataType("bc", "BC", false)
+                    typeRef("s", "S", false)
+                    typeRef("bc", "BC", false)
                 }
             }
             dataType("BC", "BC") {
@@ -255,7 +255,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             dataType("exprList", "ExprList") {
                 propertyDataTypeOf("expr", "Expr", false, 0)
                 propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    dataType("expr", "Expr", false)
+                    typeRef("expr", "Expr", false)
                 }
             }
             dataType("expr", "Expr") {
@@ -314,7 +314,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             dataType("exprList", "ExprList") {
                 propertyDataTypeOf("expr", "Expr", false, 0)
                 propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    dataType("expr", "Expr", false)
+                    typeRef("expr", "Expr", false)
                 }
             }
             dataType("expr", "Expr") {

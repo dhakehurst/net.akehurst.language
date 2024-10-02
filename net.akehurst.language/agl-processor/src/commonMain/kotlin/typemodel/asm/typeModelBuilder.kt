@@ -448,13 +448,7 @@ class TypeInstanceArgNamedBuilder(
 ) {
     private val _args = mutableListOf<TypeArgumentNamed>()
 
-    fun primitive(name:String, typeName: String, isNullable: Boolean) {
-        val t = _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
-        val ta = TypeArgumentNamedSimple(PropertyName(name), t)
-        _args.add(ta)
-    }
-
-    fun dataType(name:String, typeName: String, isNullable: Boolean) {
+    fun typeRef(name:String, typeName: String, isNullable: Boolean) {
         val t = _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
         val ta = TypeArgumentNamedSimple(PropertyName(name), t)
         _args.add(ta)
@@ -469,7 +463,7 @@ class TypeInstanceArgNamedBuilder(
         _args.add(ta)
     }
 
-    fun tuple(name:String, isNullable: Boolean, init: TypeInstanceArgNamedBuilder.() -> Unit) {
+    fun tupleType(name:String, isNullable: Boolean, init: TypeInstanceArgNamedBuilder.() -> Unit) {
         val tt = SimpleTypeModelStdLib.TupleType
         val b = TypeInstanceArgNamedBuilder(context, this._namespace, tt, isNullable, _typeReferences)
         b.init()
@@ -510,14 +504,8 @@ class SubtypeListBuilder(
 
     val _subtypeList = mutableListOf<TypeInstance>()
 
-    fun primitiveRef(typeName: String,isNullable: Boolean = false) {
+    fun typeRef(typeName: String, isNullable: Boolean = false) {
         val pqn = typeName.asPossiblyQualifiedName
-        val ti = _namespace.createTypeInstance(null, pqn, emptyList(), isNullable)
-        _subtypeList.add(ti)
-    }
-
-    fun elementRef(elementTypeName: String,isNullable: Boolean = false) {
-        val pqn = elementTypeName.asPossiblyQualifiedName
         val ti = _namespace.createTypeInstance(null, pqn, emptyList(), isNullable)
         _subtypeList.add(ti)
     }
