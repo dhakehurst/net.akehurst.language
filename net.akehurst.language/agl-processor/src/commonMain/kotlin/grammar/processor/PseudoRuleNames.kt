@@ -32,6 +32,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
     private val _nextEmbeddedNumber = mutableMapOf<String, Int>()
     private val _nextGroupNumber = mutableMapOf<String, Int>()
     private val _nextChoiceNumber = mutableMapOf<String, Int>()
+    private val _nextOptionalNumber = mutableMapOf<String, Int>()
     private val _nextSimpleListNumber = mutableMapOf<String, Int>()
     private val _nextSeparatedListNumber = mutableMapOf<String, Int>()
 
@@ -110,9 +111,9 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
 
     private fun createOptionalItemRuleName(parentRuleName: String): String {
-        var n = _nextSimpleListNumber[parentRuleName] ?: 0
+        var n = _nextOptionalNumber[parentRuleName] ?: 0
         n++
-        _nextSimpleListNumber[parentRuleName] = n
+        _nextOptionalNumber[parentRuleName] = n
         return "§${parentRuleName.removePrefix("§")}§opt$n" //TODO: include original rule name fo easier debug
     }
 

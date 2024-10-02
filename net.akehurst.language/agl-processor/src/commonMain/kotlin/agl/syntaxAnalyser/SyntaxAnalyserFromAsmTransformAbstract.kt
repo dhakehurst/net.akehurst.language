@@ -22,6 +22,7 @@ import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSub
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.EXPRESSION_CHILDREN
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
@@ -256,48 +257,34 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         return when {
             null == parentTypeDecl -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING)
             nodeRule.isOptional -> when {
-                nodeRule.isPseudo.not() -> {
+                nodeRule.isPseudo -> transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
+                else -> {
                     // special case compressed rule
                     this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
-
-                else -> {
-                    // pseudo node for optional item
-                    // return child[0] or Nothing if child[0] is the empty node
-                    /*
-                    val propType = when (parentTypeDecl) {
-                        is StructuredType -> parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
-                        is TupleType -> (parentType as TupleTypeInstance).typeArguments.getOrNull(nodeInfo.child.propertyIndex)?.type
-                        else -> TODO()
-                    }
-                    when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
-                        else -> transformationRule(
-                            propType, NavigationSimple(
-                                start = RootExpressionSimple("child"),
-                                parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, 0))))
-                            )
-                        )
-                    }
-                     */
-                    transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
-                }
             }
 
-            nodeRule.isList -> when {
-                nodeRule.isPseudo.not() -> {  // 1 (one property) or 0 (subtype)
+            nodeRule.isListSimple -> when {
+                nodeRule.isPseudo -> transformationRule(
+                    SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument)),
+                    EXPRESSION_CHILDREN
+                )
+
+                else -> {
                     // special case compressed rule - no pseudo node for list
                     this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
+            }
+
+            nodeRule.isListSeparated -> when {
+                nodeRule.isPseudo -> transformationRule(
+                    SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument)),
+                    EXPRESSION_CHILDREN
+                )
 
                 else -> {
-                    // pseudo node for list item
-                    // return child[0] or Nothing if child[0] is the empty node
-                    val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
-                    when (propType) {
-                        null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING)// no property when non-term is a literal
-                        else -> transformationRule(propType, RootExpressionSimple("children"))
-                    }
+                    // special case compressed rule - no pseudo node for list
+                    this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
             }
 
@@ -325,9 +312,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                             val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option]
                             transformationRule(subtype, RootExpressionSimple.SELF)
                         }
+
                         is SpecialTypeSimple -> {
                             transformationRule(SimpleTypeModelStdLib.AnyType, RootExpressionSimple.SELF)
                         }
+
                         else -> error("Unsupported type '${parentTypeDecl::class.simpleName}'")
                     }
 
