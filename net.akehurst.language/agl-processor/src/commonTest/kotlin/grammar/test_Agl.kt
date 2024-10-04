@@ -80,19 +80,8 @@ class test_Agl {
     @Test
     fun grammar_styleStr() {
         val actual = Agl.registry.agl.grammar.styleStr
-        // there is a default '$nostyle' added
-        val expected = """
-namespace test
-${'$'}nostyle {
-  foreground: black;
-  background: white;
-  font-style: normal;
-}
-${AglGrammar.styleStr}
-        """.trimIndent()
-
+        val expected = AglGrammar.styleStr
         assertEquals(expected, actual)
-
     }
 
 }

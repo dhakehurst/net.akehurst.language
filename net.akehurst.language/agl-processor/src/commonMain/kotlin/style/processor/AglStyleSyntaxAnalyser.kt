@@ -19,22 +19,23 @@ package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarReference
+import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.style.api.*
-import net.akehurst.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.style.asm.AglStyleRuleDefault
-import net.akehurst.language.style.asm.StyleNamespaceDefault
+import net.akehurst.language.style.asm.*
 
 internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
 
     override fun registerHandlers() {
         super.register(this::unit)
         super.register(this::namespace)
+        super.register(this::styleSet)
         super.register(this::rule)
         super.register(this::selectorExpression)
         super.register(this::selectorAndComposition)
@@ -47,12 +48,15 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
+    private val _localStore = mutableMapOf<String, Any>()
+
     // unit = namespace rule* ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleModelDefault {
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        return AglStyleModelDefault(SimpleName("ParsedUnit"), listOf(AglStyleModelDefault.STD_NS, ns))
+        val su = AglStyleModelDefault(SimpleName("ParsedUnit"), listOf(ns))
+        return su
     }
 
     // namespace = namespace qualifiedName ;
@@ -62,16 +66,38 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         return StyleNamespaceDefault(qualifiedName, imports)
     }
 
+    // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+    fun styleSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
+        val name = SimpleName(children[1] as String)
+        val extends = (children[2] as List<StyleSetReference>?) ?: emptyList()
+        val rules: List<AglStyleRule> = children[4] as List<AglStyleRule>
+        return { ns ->
+            val ss = AglStyleSetDefault(ns, name, extends)
+            ns.addDefinition(ss)
+            (ss.rules as MutableList).addAll(rules)
+        }
+    }
+
+    // extends = ':' [qualifiedName / ',']+ ;
+    fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<StyleSetReference>  {
+        val localNamespace = _localStore["namespace"] as StyleNamespace
+        val extendNameList = children[1] as List<PossiblyQualifiedName>
+        val sl = extendNameList.toSeparatedList<Any, PossiblyQualifiedName, String>()
+        val extended = sl.items.map {
+            // need to manually add the Reference as it is not seen by the super class
+            StyleSetReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationForNode(nodeInfo.node) }
+        }
+        return extended
+    }
+
     // rule = selectorExpression '{' styleList '}' ;
-    fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
+    fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule {
         val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
 
-        val styles: List<AglStyleDeclaration> = (children[2] as List<AglStyleDeclaration?>).filterNotNull()
-        return { ns ->
-            val rule = AglStyleRuleDefault(ns, selector)
-            ns.addDefinition(rule)
-            styles.forEach { rule.declaration[it.name] = it }
-        }
+        val styles: List<AglStyleDeclaration> = children[2] as List<AglStyleDeclaration>
+        val rule = AglStyleRuleDefault(selector)
+        styles.forEach { rule.declaration[it.name] = it }
+        return rule
     }
 
     // selectorExpression

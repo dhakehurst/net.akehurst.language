@@ -212,7 +212,7 @@ class ReferencesSemanticAnalyser(
         when (collTypeInstance.declaration) {
             null -> TODO()
             is CollectionType -> {
-                val loopVarType = (collTypeInstance.typeArguments[0] as TypeInstance).declaration
+                val loopVarType = collTypeInstance.typeArguments[0].type.declaration
                 val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
                     val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
                     when {

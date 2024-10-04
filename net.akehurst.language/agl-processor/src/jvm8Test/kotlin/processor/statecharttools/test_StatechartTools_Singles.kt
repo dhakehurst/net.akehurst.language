@@ -56,6 +56,9 @@ class test_StatechartTools_Singles {
         """.replace("§", "\$")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+            .also {
+                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+            }
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
             val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {

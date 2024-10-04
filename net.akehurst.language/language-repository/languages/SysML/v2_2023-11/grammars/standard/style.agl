@@ -1,23 +1,27 @@
-$keyword, DEFINED_BY, SPECIALIZES, SUBSETS, REFERENCES, REDEFINES {
-    foreground: blue;
-    font-style: bold;
-}
+namespace net.akehurst.language.sysML
 
-SINGLE_LINE_NOTE, MULTILINE_NOTE {
-  foreground: gray;
-  font-style: italic;
-}
+styles SysML {
+    $keyword, DEFINED_BY, SPECIALIZES, SUBSETS, REFERENCES, REDEFINES {
+        foreground: blue;
+        font-style: bold;
+    }
 
-REGULAR_COMMENT {
-  foreground: DarkSlateGrey;
-  font-style: italic;
-}
+    SINGLE_LINE_NOTE, MULTILINE_NOTE {
+      foreground: gray;
+      font-style: italic;
+    }
 
-NAME {
-    foreground: DarkRed;
-}
+    REGULAR_COMMENT {
+      foreground: DarkSlateGrey;
+      font-style: italic;
+    }
 
-PrefixMetadataMember {
-  foreground: green;
-  font-style: italic;
+    NAME {
+        foreground: DarkRed;
+    }
+
+    PrefixMetadataMember {
+      foreground: green;
+      font-style: italic;
+    }
 }

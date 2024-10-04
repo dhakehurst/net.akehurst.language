@@ -20,11 +20,6 @@ package net.akehurst.language.typemodel.api
 import net.akehurst.language.base.api.*
 import kotlin.jvm.JvmInline
 
-@Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.PROPERTY)
-/** FIXME: do not really want this annotation approach !**/
-annotation class KompositeProperty
-
 interface TypeModel : Model<TypeNamespace, TypeDeclaration> {
 
     val AnyType: TypeDeclaration
@@ -126,7 +121,6 @@ interface TypeArgument {
 interface TypeInstance {
     val namespace: TypeNamespace
 
-    @KompositeProperty
     val typeArguments: List<TypeArgument>
 
     val isNullable: Boolean
@@ -172,7 +166,6 @@ interface TupleTypeInstance : TypeInstance {
 interface TypeDeclaration : Definition<TypeDeclaration> {
     override val namespace: TypeNamespace
 
-    @KompositeProperty
     val supertypes: List<TypeInstance>
 
     val typeParameters: List<TypeParameter>
@@ -264,7 +257,6 @@ interface TupleType : TypeDeclaration {
 }
 
 interface ValueType : StructuredType {
-    @KompositeProperty
     val constructors: List<ConstructorDeclaration>
 }
 
@@ -279,7 +271,6 @@ interface DataType : StructuredType {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
-    @KompositeProperty
     val constructors: List<ConstructorDeclaration>
 
     fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
@@ -294,7 +285,6 @@ interface UnnamedSupertypeType : TypeDeclaration {
     val id: Int
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    @KompositeProperty
     val subtypes: List<TypeInstance>
 }
 
@@ -313,7 +303,6 @@ interface PropertyDeclaration {
     val owner: TypeDeclaration
     val name: PropertyName
 
-    @KompositeProperty
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
     val description: String
@@ -423,14 +412,12 @@ value class MethodName(val value: String)
 interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: MethodName
-    @KompositeProperty
     val parameters: List<ParameterDeclaration>
     val description: String
 }
 
 interface ConstructorDeclaration {
     val owner: TypeDeclaration
-    @KompositeProperty
     val parameters: List<ParameterDeclaration>
 }
 
@@ -439,7 +426,6 @@ value class ParameterName(val value: String)
 
 interface ParameterDeclaration {
     val name: ParameterName
-    @KompositeProperty
     val typeInstance: TypeInstance
     val defaultValue: String?
 }

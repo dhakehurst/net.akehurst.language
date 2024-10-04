@@ -76,7 +76,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
             "namespace test grammar Test { r = 'a' ; }",
             "namespace test.ns1 grammar Test { r = 'a' ; }",
             "namespace test.ns1.ns2 grammar Test { r = 'a' ; }",
-            "namespace test grammar Test1 extends Test2 { r = 'a' ; }",
+            "namespace test grammar Test1 : Test2 { r = 'a' ; }",
             "namespace test grammar Test { r = 'a' 'b' ; }",
             "namespace test grammar Test { r = 'a' 'b' 'c' ; }",
             "namespace test grammar Test { r = 'a' | 'b' ; }",

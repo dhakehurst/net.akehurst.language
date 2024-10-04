@@ -27,7 +27,7 @@ internal object AglCrossReferences {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
+        namespace = "net.akehurst.language",
         name = "CrossReferences"
     ) {
         extendsGrammar(AglExpressions.grammar.selfReference)
@@ -77,9 +77,9 @@ internal object AglCrossReferences {
         concatenation("simpleTypeName") { ref("IDENTIFIER") }
     }
 
-    const val grammarStr = """namespace net.akehurst.language.agl.language
+    const val grammarStr = """namespace net.akehurst.language
 
-grammar References extends Expressions {
+grammar CrossReferences extends Expressions {
 
     unit = namespace* ;
     namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
@@ -108,9 +108,8 @@ grammar References extends Expressions {
 }
 """
 
-    const val styleStr = """${"$"}keyword {
-  foreground: darkgreen;
-  font-style: bold;
+    const val styleStr = """namespace net.akehurst.language
+styles CrossReferences : Base {
 }"""
 
     const val formatterStr = """

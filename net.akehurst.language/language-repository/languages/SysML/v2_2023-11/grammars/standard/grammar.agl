@@ -189,7 +189,7 @@ grammar KerML {
     LiteralInfinity = '*' ;
 }
 
-grammar SysMLv2_0 extends KerML {
+grammar SysMLv2_0 : KerML {
 
     @defaultGoalRule: RootNamespace
 

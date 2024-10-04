@@ -1,53 +1,34 @@
-/**
- * Copyright (C) 2019 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package net.akehurst.kotlinx.komposite.processor
+package net.akehurst.language.agl.typemodel.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.*
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
 
-
 data class TypeRefInfo(
-    val name:PossiblyQualifiedName,
+    val name: PossiblyQualifiedName,
     val args:List<TypeRefInfo>,
     val isNullable:Boolean
 ) {
     fun toTypeInstance(contextType:TypeDeclaration):TypeInstance {
-        val targs = args.map { it.toTypeInstance(contextType) }
+        val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
         return contextType.namespace.createTypeInstance(contextType, name, targs, isNullable)
     }
 }
 
-class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
-
-    class SyntaxAnalyserException : RuntimeException {
-        constructor(message: String) : super(message)
-    }
+class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
 
     override fun registerHandlers() {
-        super.register(this::model)
         super.register(this::namespace)
-        super.register(this::qualifiedName)
         super.register(this::import)
+        super.register(this::qualifiedName)
+
+        super.register(this::unit)
         super.register(this::declaration)
         super.register(this::primitive)
         super.register(this::enum)
@@ -60,47 +41,30 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
         super.register(this::typeArgumentList)
     }
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<TypeModel>> = emptyMap()
+    // --- Base ---
 
-    override fun clear() {
-        super.clear()
-    }
+    // namespace = 'namespace' qualifiedName ;
+    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        children[1] as List<String>
 
-    // model = namespace* ;
-    private fun model(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
+    // import = 'import' qualifiedName ;
+    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        children[1] as List<String>
+
+    // qualifiedName = [IDENTIFIER / '.']+ ;
+    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        (children as List<String>).toSeparatedList().items
+
+    // --- Typemodel ---
+
+    // unit = namespace declaration+ ;
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
         val result = TypeModelSimple(SimpleName("aTypeModel"))
         val namespaces = (children as List<TypeNamespace?>).filterNotNull()
         namespaces.forEach { ns ->
             result.addNamespace(ns)
         }
         return result
-    }
-
-    // namespace = 'namespace' qualifiedName '{' import* declaration* '}' ;
-    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeNamespace {
-        val qualifiedName = children[1] as List<String?>
-        val imports = ((children[3] as List<String?>).filterNotNull()).map { Import(it) }
-        val declaration = (children[4] as List<((namespace: TypeNamespace) -> TypeDeclaration)?>).filterNotNull()
-        val qn = QualifiedName(qualifiedName.joinToString(separator = "."))
-
-        val ns = TypeNamespaceSimple(qn, imports.toMutableList())
-        declaration.forEach {
-            val dec = it.invoke(ns)
-            ns.addDeclaration(dec)
-        }
-
-        return ns
-    }
-
-    // qualifiedName = [ NAME / '.']+ ;
-    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
-        return children.toSeparatedList<Any?, String, String>().items
-    }
-
-    // import = 'import' qualifiedName ;
-    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        val qualifiedName = children[1] as List<String>
-        return qualifiedName.joinToString(separator = ".")
     }
 
     // declaration = primitive | enum | collection | datatype ;
@@ -129,7 +93,7 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
     // collection = 'collection' NAME '<' typeParameterList '>' ;
     private fun collection(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> CollectionType {
         val name = SimpleName(children[1] as String)
-        val params = (children[3] as List<String>).map { SimpleName(it) }
+        val params = (children[3] as List<String>).map { TypeParameterSimple(SimpleName((it))) }
         val result = { namespace: TypeNamespace ->
             CollectionTypeSimple(namespace, name, params)//.also { locationMap[it] = nodeInfo.node.locationIn(sentence) }
         }

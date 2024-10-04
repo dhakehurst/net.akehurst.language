@@ -268,7 +268,7 @@ grammar Literals {
     leaf NULL_LITERAL      = 'null' ;
 }
 
-grammar Annotations extends Base, Literals {
+grammar Annotations : Base, Literals {
     Annotation = '@' QualifiedName AnnotationArgs? ;
     AnnotationArgs = '(' (ElementValue | ElementValuePairList) ')' ;
     ElementValuePairList = [ ElementValuePair / ',' ]* ;
@@ -279,7 +279,7 @@ grammar Annotations extends Base, Literals {
     ElementValueList = [ ElementValue / ',' ]* ;
 }
 
-grammar Types extends Annotations {
+grammar Types : Annotations {
 
     TypeReference = TypeReferenceNonArray Dims? ;
     Dims = (Annotation* '[' ']')+ ;
@@ -302,7 +302,7 @@ grammar Types extends Annotations {
     leaf FloatingPointType = 'float' | 'double' ;
 }
 
-grammar Expressions extends Types {
+grammar Expressions : Types {
 
     // from Annotations
     override ElementValue = Expression | ElementValueArrayInitializer | Annotation ;
@@ -455,7 +455,7 @@ grammar Expressions extends Types {
     ConstantExpression = Expression ;
 }
 
-grammar BlocksAndStatements extends Expressions {
+grammar BlocksAndStatements : Expressions {
 
     // from Expressions
     override LambdaBody = Expression | Block ;
@@ -551,7 +551,7 @@ grammar BlocksAndStatements extends Expressions {
     Resource = VariableModifier* TypeReference VariableDeclaratorId '=' Expression ;
 }
 
-grammar Classes extends BlocksAndStatements {
+grammar Classes : BlocksAndStatements {
 
     // from BlocksAndStatements
     override BlockStatement = LocalVariableDeclarationStatement | ClassDeclaration | Statement ;
@@ -627,7 +627,7 @@ grammar Classes extends BlocksAndStatements {
     EnumBodyDeclarations = ';' ClassBodyDeclaration* ;
 }
 
-grammar Interfaces extends Classes {
+grammar Interfaces : Classes {
     // from Classes
     override ClassMemberDeclaration
                 = FieldDeclaration
@@ -670,7 +670,7 @@ grammar Interfaces extends Classes {
     DefaultValue = 'default' ElementValue ;
 }
 
-grammar Packages extends Interfaces {
+grammar Packages : Interfaces {
     CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;
     PackageDeclaration = PackageModifier* 'package' [IDENTIFIER / '.']+ ';' ;
     PackageModifier = Annotation ;

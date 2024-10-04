@@ -1739,7 +1739,7 @@ class test_AglGrammar {
                 ABC = 'a' B 'c' ;
                 B = 'b' ;
             }
-            grammar Extended extends Original {
+            grammar Extended : Original {
                 override B = 'd' ;
             }
         """.trimIndent()

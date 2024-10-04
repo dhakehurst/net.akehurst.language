@@ -48,7 +48,7 @@ class TransformModelDefault(
     override val name: SimpleName,
     override val typeModel: TypeModel?,
     namespace: List<TransformNamespace>
-) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>(namespace) {
+) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>() {
 
     companion object {
         fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<TransformModel> {
@@ -82,7 +82,9 @@ class TransformModelDefault(
 
     }
 
-    private val _namespace: Map<QualifiedName, TransformNamespace> = linkedMapOf()
+    private val _namespace: Map<QualifiedName, TransformNamespace> = linkedMapOf<QualifiedName, TransformNamespace>().also { map ->
+        namespace.forEach { map[it.qualifiedName] = it }
+    }
     override val namespace: List<TransformNamespace> get() = _namespace.values.toList()
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace {

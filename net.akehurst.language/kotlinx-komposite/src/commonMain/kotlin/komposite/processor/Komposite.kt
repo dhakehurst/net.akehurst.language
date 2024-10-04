@@ -23,6 +23,24 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
+/**
+ * Kotlin (JVM & JS) do not provide a mechnism/syntax for indicating which members of an object
+ * should be considered 'composite' parts.
+ * Primitive values are always reference
+ * EnumType values are always reference
+ * ValueType values are always composite
+ * TupleType values are always composite
+ * UnnamedSupertypeType values are always composite
+ *
+ * but Datatypes values could be either composite or reference
+ * thus we need a way to augment the member definitions to indicate which.
+ * A common approach to this kind of thing is to use Annotations,
+ * but this makes a dependency on whatever provides the annotation.
+ * Not possible for third party libs, and not 'nice' in other situations.
+ *
+ * thus we create an 'augmentation' DSL for defining just those members that are composite
+ *
+ */
 object Komposite {
 
     private var _processor: LanguageProcessor<TypeModel,Any>? = null
@@ -33,7 +51,7 @@ object Komposite {
             val res = Agl.processorFromString<TypeModel,Any>(
                 grammarDefinitionStr = grammarStr,
                 configuration = Agl.configuration {
-                    defaultGoalRuleName("model")
+                    defaultGoalRuleName("unit")
                     syntaxAnalyserResolver { ProcessResultDefault(KompositeSyntaxAnalyser2(),IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(KompositeSemanticAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
                 //formatter(Formatter())
@@ -49,31 +67,21 @@ object Komposite {
         return """
             namespace net.akehurst.kotlin.komposite
             
-            grammar Composite {
+            grammar Komposite {
                 skip WHITE_SPACE = "\s+" ;
                 skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
                      MULTI_LINE_COMMENT = "[/][*](?:.|\n)*?[*][/]" ;
                      SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
             
-                model = namespace* ;
-                namespace = 'namespace' qualifiedName '{' import* declaration* '}' ;
+                unit = namespace+ ;
+                namespace = 'namespace' qualifiedName declaration+;
                 qualifiedName = [ NAME / '.']+ ;
-                import = 'import' qualifiedName ;
-                declaration = primitive | enum | collection | datatype ;
-                primitive = 'primitive' NAME ;
-                enum = 'enum' NAME ;
-                collection = 'collection' NAME '<' typeParameterList '>' ;
-                typeParameterList = [ NAME / ',']+ ;
-                datatype = 'datatype' NAME supertypes? '{' property* '}' ;
-                supertypes = ':' [ typeReference / ',']+ ;
-                property = characteristic NAME ':' typeReference ;
-                typeReference = qualifiedName typeArgumentList? '?'?;
-                typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+                declaration = declKind NAME '{' property* '}' ;
+                declKind = 'interface' | 'class' ;
+                property = characteristic NAME ;
                 characteristic
-                   = 'reference-val'    // reference, constructor argument
-                   | 'reference-var'    // reference mutable property
-                   | 'composite-val'    // composite, constructor argument
-                   | 'composite-var'    // composite mutable property
+                   = 'ref'    // reference
+                   | 'cmp'    // composite
                    | 'dis'    // disregard / ignore
                    ;
             

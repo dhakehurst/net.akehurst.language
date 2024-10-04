@@ -242,7 +242,7 @@ class test_AglGrammarSemanticAnalyser {
                 leaf A = 'a' ;
             }
             
-            grammar Test extends Base {
+            grammar Test : Base {
               S = A ;
             }
         """.trimIndent()
@@ -278,7 +278,7 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base2 {
                 leaf B = 'b' ;
             }
-            grammar Test extends Base1, Base2 {
+            grammar Test : Base1, Base2 {
               S = A B ;
             }
         """.trimIndent()
@@ -315,7 +315,7 @@ class test_AglGrammarSemanticAnalyser {
                 leaf A = 'a' ;
             }
             
-            grammar Test extends Base {
+            grammar Test : Base {
               S = A ;
               A = 'aa' ;
             }
@@ -331,7 +331,7 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(95, 3, 8, 10),
+                InputLocation(89, 3, 8, 10),
                 "More than one rule named 'A' found in grammar 'Test'"
             )
         )
@@ -352,7 +352,7 @@ class test_AglGrammarSemanticAnalyser {
                 leaf A = 'a' ;
             }
             
-            grammar Test extends Base {
+            grammar Test : Base {
               S = A ;
               override A = 'aa' ;
             }
@@ -389,7 +389,7 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base2 {
                 leaf B = 'b' ;
             }
-            grammar Test extends Base1, Base2 {
+            grammar Test : Base1, Base2 {
               S = A B ;
               override leaf A = 'aa' ;
               override leaf B = 'bb' ;
@@ -430,7 +430,7 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base2 {
                 leaf A = 'a' ;
             }
-            grammar Test extends Base1, Base2 {
+            grammar Test : Base1, Base2 {
               S = A ;
             }
         """.trimIndent()
@@ -465,13 +465,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 leaf C = 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
               S = A B C;
             }
         """.trimIndent()
@@ -515,7 +515,7 @@ class test_AglGrammarSemanticAnalyser {
                 C = 'a' | 'b' ;
             }
             
-            grammar Test extends Base {
+            grammar Test : Base {
               S = C ;
               override C +=| 'c' ;
             }
@@ -555,13 +555,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 leaf A = 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
               S = A B;
             }
         """.trimIndent()
@@ -569,7 +569,7 @@ class test_AglGrammarSemanticAnalyser {
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 14),
+                InputLocation(123, 5, 9, 14),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
@@ -579,7 +579,7 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 14),
+                InputLocation(123, 5, 9, 14),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
@@ -604,13 +604,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 leaf B = 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
               S = A B;
               override B = 'd' ;
             }
@@ -632,13 +632,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 leaf A = 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
               S = B;
             }
         """.trimIndent()
@@ -651,7 +651,7 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 14),
+                InputLocation(123, 5, 9, 14),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
@@ -661,7 +661,7 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 14),
+                InputLocation(123, 5, 9, 14),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
@@ -681,13 +681,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 override leaf A +=| 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
               S = A B;
             }
         """.trimIndent()
@@ -700,7 +700,7 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 25),
+                InputLocation(123, 5, 9, 25),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
@@ -720,13 +720,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf A = 'a' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 override leaf A +=| 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
                 S = A B;
                 override leaf A = Mid2.A ;
             }
@@ -747,13 +747,13 @@ class test_AglGrammarSemanticAnalyser {
             grammar Annotations {
                 Annotation = 'annotation' ;
             }
-            grammar Mid1 extends Base {
+            grammar Mid1 : Base {
                 leaf B = 'b' ;
             }
-            grammar Mid2 extends Base {
+            grammar Mid2 : Base {
                 override leaf A +=| 'c' ;
             }
-            grammar Test extends Mid1, Mid2 {
+            grammar Test : Mid1, Mid2 {
                 S = A B;
                 override leaf A = Mid2.A ;
             }
@@ -775,43 +775,43 @@ class test_AglGrammarSemanticAnalyser {
             grammar Base {
                 leaf ID = "[a-z]+" ;
             }
-            grammar Annotations extends Base {
+            grammar Annotations : Base {
                 Annotation = 'annotation' ;
             }
-            grammar Relationships extends Annotations {
+            grammar Relationships : Annotations {
                 Relationship = 'relationship' ;
             }
-            grammar Containers extends Relationships {
+            grammar Containers : Relationships {
                 Container = 'container' ;
             }
             
-            grammar LiteralExpressions extends Base {
+            grammar LiteralExpressions : Base {
                 LiteralExpression = 'literal-expression' ;
             }
-            grammar Expressions extends LiteralExpressions {
+            grammar Expressions : LiteralExpressions {
                 Expression = '{' FunctionBodyPart '}' ;
                 FunctionBodyPart = 'expr' ;
             }
-            grammar Types extends LiteralExpressions, Annotations {
+            grammar Types : LiteralExpressions, Annotations {
                 Type = 'type' ;
             }   
-            grammar Classifiers extends Types {
+            grammar Classifiers : Types {
                 Classifier = 'classifier' ;
             }
-            grammar Features extends Types, Expressions {
+            grammar Features : Types, Expressions {
                 Feature = 'feature' ;
             }
             
-            grammar Connectors extends Features {
+            grammar Connectors : Features {
                 Connector = 'connector' ;
             }
-            grammar Behaviors extends Features, Classifiers {
+            grammar Behaviors : Features, Classifiers {
                 override FunctionBodyPart = 'function-body' ;
             }
-            grammar Meta extends Features, Classifiers, Containers {
+            grammar Meta : Features, Classifiers, Containers {
                 Meta = 'meta' ;
             }            
-            grammar KerML extends Connectors, Behaviors, Meta {
+            grammar KerML : Connectors, Behaviors, Meta {
                 KerML = 'KerML' ;
                 override FunctionBodyPart = Behaviors.FunctionBodyPart ;
             }

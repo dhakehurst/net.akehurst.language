@@ -56,34 +56,36 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
         val locMap = locationMap ?: mapOf()
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (null != context) {
-            asm.allDefinitions.forEach { rule ->
-                rule.selector.forEach { sel ->
-                    val loc = locMap[sel]
-                    // TODO: user types
-                    when (sel.kind) {
-                        AglStyleSelectorKind.LITERAL -> {
-                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
-                                issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
-                            }
-                        }
-
-                        AglStyleSelectorKind.PATTERN -> {
-                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
-                                issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
-                            }
-                        }
-
-                        AglStyleSelectorKind.RULE_NAME -> {
-                            if (AglStyleModelDefault.KEYWORD_STYLE_ID == sel.value) { //TODO: redundant check I think!
-                                // its OK
-                            } else {
-                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
-                                    issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
+            asm.allDefinitions.forEach { ss ->
+                ss.rules.forEach { rule ->
+                    rule.selector.forEach { sel ->
+                        val loc = locMap[sel]
+                        // TODO: user types
+                        when (sel.kind) {
+                            AglStyleSelectorKind.LITERAL -> {
+                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
+                                    issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                                 }
                             }
-                        }
 
-                        AglStyleSelectorKind.META -> Unit // nothing to check
+                            AglStyleSelectorKind.PATTERN -> {
+                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
+                                    issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
+                                }
+                            }
+
+                            AglStyleSelectorKind.RULE_NAME -> {
+                                if (AglStyleModelDefault.KEYWORD_STYLE_ID == sel.value) { //TODO: redundant check I think!
+                                    // its OK
+                                } else {
+                                    if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
+                                        issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
+                                    }
+                                }
+                            }
+
+                            AglStyleSelectorKind.META -> Unit // nothing to check
+                        }
                     }
                 }
             }

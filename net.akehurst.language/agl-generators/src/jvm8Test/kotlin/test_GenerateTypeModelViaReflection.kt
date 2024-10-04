@@ -3,6 +3,7 @@ package net.akehurst.language.agl.generators
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -24,10 +25,11 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             listOf(SimpleTypeModelStdLib),
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            listOf(AglBase.komposite)
         )
-        gen.addPackage("net.akehurst.language.api.language.base")
-        gen.addPackage("net.akehurst.language.agl.language.base")
+        gen.addPackage("net.akehurst.language.base.api")
+        gen.addPackage("net.akehurst.language.base.asm")
         return gen.generate()
     }
 
@@ -42,7 +44,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             listOf(SimpleTypeModelStdLib),
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.agl.api.runtime")
         return gen.generate()
@@ -61,7 +64,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             baseTm.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.api.language.grammar")
         gen.addPackage("net.akehurst.language.agl.language.grammar.asm")
@@ -82,7 +86,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             runtime.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.api.parser")
         gen.addPackage("net.akehurst.language.api.sppt")
@@ -104,7 +109,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             grammar.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.typemodel.api")
         gen.addPackage("net.akehurst.language.typemodel.simple")
@@ -127,7 +133,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             baseTm.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.api.language.style")
         gen.addPackage("net.akehurst.language.agl.language.style.asm")
@@ -148,7 +155,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             typemodel.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.api.language.expressions")
         gen.addPackage("net.akehurst.language.agl.language.expressions.asm")
@@ -169,7 +177,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             expr.namespace,
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         gen.addPackage("net.akehurst.language.api.language.reference")
         gen.addPackage("net.akehurst.language.agl.language.reference.asm")
@@ -191,7 +200,8 @@ class test_GenerateTypeModelViaReflection {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
             (typemodel.namespace + reference.namespace).toSet().toList(),
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            emptyList()
         )
         //gen.include("net.akehurst.language.collections.ListSeparated")
         gen.exclude("net.akehurst.language.asm.api.AsmSimpleBuilder")

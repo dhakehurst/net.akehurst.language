@@ -26,8 +26,8 @@ import net.akehurst.language.collections.*
 
 class GrammarModelDefault(
     override val name: SimpleName,
-    namespace: List<GrammarNamespace>
-) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>(namespace) {
+    override val namespace: List<GrammarNamespace>
+) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>() {
 
 }
 

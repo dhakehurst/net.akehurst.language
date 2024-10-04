@@ -1,7 +1,8 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.api.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
@@ -18,7 +19,8 @@ import kotlin.reflect.jvm.javaField
 class GenerateTypeModelViaReflection(
     val typeModelName: SimpleName,
     val additionalNamespaces: List<TypeNamespace> = emptyList(),
-    val substituteTypes: Map<String, String>
+    val substituteTypes: Map<String, String>,
+    val kompositeStr: List<String>
 ) {
     companion object {
         const val STD_LIB = "net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib"
@@ -86,7 +88,7 @@ class GenerateTypeModelViaReflection(
                 }
             }
             targsp.forEach { requires.addAll(it.second) }
-            val targs = targsp.map { it.first }
+            val targs = targsp.map { it.first.asTypeArgument }
             val isNullable = this.isMarkedNullable
             val ty = ns.createTypeInstance(context, subName, targs, isNullable)
             return Pair(ty, requires)
@@ -103,9 +105,11 @@ class GenerateTypeModelViaReflection(
                         }
                     }
 
-        fun KClass<*>.isKompositeAnnotation(propertyName: String): Boolean =
-            this.allPropertiesNamed(propertyName)
-                .any { it.findAnnotations(KompositeProperty::class).isNotEmpty() }
+        fun KClass<*>.isKomposite(propertyName: String, komposite:TypeModel): Boolean =
+            komposite.findByQualifiedNameOrNull(this.qualifiedName!!.asQualifiedName)
+                ?.findPropertyOrNull(PropertyName(propertyName))
+                ?.isComposite
+                ?: false
 
 
         fun logInfo(message: String) {
@@ -114,6 +118,15 @@ class GenerateTypeModelViaReflection(
     }
 
     private val _typeModel = TypeModelSimple(typeModelName)
+    private val _komposite = kompositeStr.map {
+        Komposite.process(it).let {
+            assert(it.issues.errors.isEmpty()) { it.issues.errors.toString() }
+            it.asm!!
+        }
+    }.reduce { acc, km ->
+        acc.addAllNamespaceAndResolveImports(km.namespace)
+        acc
+    }
 
     private val _include = mutableListOf<QualifiedName>()
     private val _exclude = mutableListOf<QualifiedName>()
@@ -163,33 +176,6 @@ class GenerateTypeModelViaReflection(
     }
 
     fun generate(): TypeModel {
-        typeModel(
-            name = "",
-            resolveImports = true,
-            namespaces = additionalNamespaces,
-        ) {
-            namespace(
-                qualifiedName = "",
-                imports = listOf(""),
-            ) {
-                singleton("ST")
-                primitiveType("PT")
-                enumType("ET", listOf())
-                collectionType("CT", listOf())
-                valueType("VT") {}
-                interfaceType("IT") {}
-                dataType("DT") {
-                    typeParameters()
-                    constructor_ {
-                        parameter("n", "t")
-                    }
-                    propertyOf(typeName = "t", characteristics = setOf(), propertyName = "n", isNullable = true) {
-                        typeArgument(qualifiedTypeName = "")
-                    }
-                }
-            }
-        }
-
         _include.forEach {
             val ns = _typeModel.findOrCreateNamespace(it.front, emptyList()) as TypeNamespaceSimple
             val kclass = Class.forName(it.value).kotlin
@@ -334,7 +320,7 @@ class GenerateTypeModelViaReflection(
                         val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
                         _requires[type.qualifiedName].addAll(req)
                         when (comp_ref) {
-                            PropertyCharacteristic.COMPOSITE -> addStoredProperty(ns,type,mp, comp_ref) // komposite must be stored
+                            PropertyCharacteristic.COMPOSITE -> addStoredProperty(ns, type, mp, comp_ref) // komposite must be stored
                             else -> type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
                         }
                     }
@@ -346,7 +332,7 @@ class GenerateTypeModelViaReflection(
                         type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
                     }
 
-                    else -> addStoredProperty(ns,type,mp, comp_ref) // assume stored
+                    else -> addStoredProperty(ns, type, mp, comp_ref) // assume stored
                 }
             }
         }
@@ -373,7 +359,7 @@ class GenerateTypeModelViaReflection(
 
     private fun kompOrRefFor(kclass: KClass<*>, mp: KProperty1<*, *>): PropertyCharacteristic {
         return when {
-            kclass.isKompositeAnnotation(mp.name) -> PropertyCharacteristic.COMPOSITE
+            kclass.isKomposite(mp.name, _komposite) -> PropertyCharacteristic.COMPOSITE
             else -> autoDetectKompOrRefFor(mp.returnType)
         }
     }

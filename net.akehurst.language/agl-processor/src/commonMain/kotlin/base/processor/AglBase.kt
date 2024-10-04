@@ -19,15 +19,14 @@ package net.akehurst.language.base.processor
 
 import net.akehurst.language.grammar.asm.grammar
 
-internal object AglBase {
-    //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "Base") {
+object AglBase {
     const val goalRuleName = "qualifiedName"
 
     //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
+        namespace = "net.akehurst.language",
         name = "Base"
     ) {
         concatenation("WHITESPACE", isSkip = true, isLeaf = true) { pat("\\s+") }
@@ -40,9 +39,8 @@ internal object AglBase {
         concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
     }
 
-    const val grammarStr = """namespace net.akehurst.language.agl.language
-
-grammar Base {
+    const val grammarStr = """namespace net.akehurst.language
+  grammar Base {
     skip leaf WHITESPACE = "\s+" ;
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
@@ -51,17 +49,33 @@ grammar Base {
     import = 'import' qualifiedName ;
     qualifiedName = [IDENTIFIER / '.']+ ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
-}
-"""
+  }"""
 
-    const val styleStr = """${"$"}keyword {
-  foreground: darkgreen;
-  font-style: bold;
-}"""
+    const val styleStr = """namespace net.akehurst.language
+  styles Base {
+    ${'$'}nostyle {
+      foreground: black;
+      background: white;
+      font-style: normal;
+    }    
+    ${"$"}keyword {
+      foreground: darkgreen;
+      font-style: bold;
+    }
+  }"""
 
     const val formatterStr = """
     """
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()
+
+    const val komposite = """namespace net.akehurst.language.base.api
+interface Model {
+    cmp namespace
+}
+interface Namespace {
+    cmp definition
+}
+""";
 }

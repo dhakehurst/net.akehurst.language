@@ -185,7 +185,7 @@ class test_LanguageDefinitionDefault {
 
     @Test
     fun grammarStr_change_null_to_value_invalid_syn() {
-        val g = "namespace ns grammar Test extends XX { S = 'b'; }"
+        val g = "namespace ns grammar Test : XX { S = 'b'; }"
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
         assertNull(sut.targetGrammar) // should be a grammar...though it is invalid

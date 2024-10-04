@@ -48,7 +48,7 @@ grammar Base {
     FeatureChainList = [FeatureChain / ',']+ ;
 }
 
-grammar Annotations extends Base {
+grammar Annotations : Base {
 
     Comment = ( 'comment' Identification ( 'about' QualifiedNameList )? )? REGULAR_COMMENT ;
     Documentation = 'doc' Identification REGULAR_COMMENT ;
@@ -65,7 +65,7 @@ grammar Annotations extends Base {
     VisibilityIndicator = 'public' | 'private' | 'protected' ;
 }
 
-grammar LiteralExpressions extends Base {
+grammar LiteralExpressions : Base {
 
     leaf BOOLEAN_VALUE = 'true' | 'false' ;
     leaf DECIMAL_VALUE = "[0-9]+" ;
@@ -85,7 +85,7 @@ grammar LiteralExpressions extends Base {
     LiteralInfinity = '*' ;
 }
 
-grammar Expressions extends LiteralExpressions {
+grammar Expressions : LiteralExpressions {
 
     Expression
         = ConditionalExpression
@@ -164,7 +164,7 @@ grammar Expressions extends LiteralExpressions {
 
 }
 
-grammar Types extends LiteralExpressions, Annotations {
+grammar Types : LiteralExpressions, Annotations {
     Type = TypePrefix 'type' TypeDeclaration TypeBody ;
     TypePrefix = 'abstract'? ; //separate rule so it can be overridden to add PrefixMetadataMember*
     TypeDeclaration = 'all'? Identification MultiplicityBounds? ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart* ;
@@ -192,7 +192,7 @@ grammar Types extends LiteralExpressions, Annotations {
     MultiplicityExpressionMember =  LiteralExpression | FeatureReference ;
 }
 
-grammar Classifiers extends Types {
+grammar Classifiers : Types {
 
     SimpleClassifier = TypePrefix 'classifier' ClassifierDeclaration TypeBody ;
     ClassifierDeclaration =
@@ -217,7 +217,7 @@ grammar Classifiers extends Types {
     ;
 }
 
-grammar Relationships extends Annotations {
+grammar Relationships : Annotations {
 
     RelationshipBody = ';' | '{' RelationshipElement* '}' ;
     RelationshipElement = Annotation ;
@@ -253,7 +253,7 @@ grammar Relationships extends Annotations {
     ;
 }
 
-grammar Features extends Types, Expressions {
+grammar Features : Types, Expressions {
 
     Feature = FeaturePrefix 'feature'? FeatureDeclaration? FeatureValue? TypeBody ;
     FeaturePrefix = FeatureDirection? 'abstract'? ( 'composite' | 'portion' )? 'readonly'? 'derived'?  'end'? ;
@@ -296,7 +296,7 @@ grammar Features extends Types, Expressions {
     TypeFeaturingPart = 'featured' 'by' QualifiedNameList ;
 }
 
-grammar Connectors extends Features {
+grammar Connectors : Features {
 
     Connector = FeaturePrefix 'connector' ConnectorDeclaration TypeBody ;
     ConnectorDeclaration = BinaryConnectorDeclaration | NaryConnectorDeclaration ;
@@ -318,7 +318,7 @@ grammar Connectors extends Features {
     ;
 }
 
-grammar Behaviors extends Features, Classifiers {
+grammar Behaviors : Features, Classifiers {
 
     SimpleBehavior = TypePrefix 'behavior' ClassifierDeclaration TypeBody ;
     Step = FeaturePrefix 'step' FeatureDeclaration FeatureValue? TypeBody ;
@@ -374,7 +374,7 @@ grammar Behaviors extends Features, Classifiers {
         ;
 }
 
-grammar Containers extends Relationships, Expressions {
+grammar Containers : Relationships, Expressions {
 
     Container = Namespace | Package | LibraryPackage ;
 
@@ -416,7 +416,7 @@ grammar Containers extends Relationships, Expressions {
 
 }
 
-grammar Meta extends Containers, Classifiers, Features {
+grammar Meta : Containers, Classifiers, Features {
 
     MetadataAccessExpression = QualifiedName '.' 'metadata' ;
     MetaclassificationExpression =
@@ -449,7 +449,7 @@ grammar Meta extends Containers, Classifiers, Features {
 
 }
 
-grammar KerML extends Meta, Behaviors, Connectors {
+grammar KerML : Meta, Behaviors, Connectors {
 
     @defaultGoalRule: RootNamespace
 

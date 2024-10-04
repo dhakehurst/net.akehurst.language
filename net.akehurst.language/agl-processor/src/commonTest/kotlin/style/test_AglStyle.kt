@@ -71,6 +71,7 @@ class test_AglStyle {
         val text = """
             namespace test
             // single line comment
+            styles Test {}
         """.trimIndent()
 
         val result = process(text)
@@ -90,6 +91,7 @@ class test_AglStyle {
                comment
             */
             namespace test
+            styles Test {}
         """.trimIndent()
 
         val result = process(text)
@@ -100,41 +102,21 @@ class test_AglStyle {
     }
 
     @Test
-    fun selector_notFound() {
-
-        val text = """
-            namespace test
-            xxx { }
-        """.trimIndent()
-
-        val result = process(text)
-
-        assertNotNull(result.asm)
-        assertEquals(2, result.asm?.allDefinitions?.size)
-        assertEquals(
-            setOf(
-                LanguageIssue(
-                    LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(15, 1, 2, 3),
-                    "Grammar Rule 'xxx' not found for style rule",
-                    null
-                )
-            ), result.issues.all
-        )
-    }
-
-    @Test
     fun emptyRule() {
         val text = """
             namespace test
-            declaration { }
+            styles Test {
+              declaration { }
+            }
         """.trimIndent()
 
         val result = process(text)
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(2, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        assertEquals(0, result.asm!!.allDefinitions[0].rules[0].declaration.size)
     }
 
     @Test
@@ -142,58 +124,66 @@ class test_AglStyle {
 
         val text = """
             namespace test
-            ID {
-                -fx-fill: green;
-                -fx-font-weight: bold;
+            styles Test {
+                ID {
+                    -fx-fill: green;
+                    -fx-font-weight: bold;
+                }
             }
         """.trimIndent()
 
         val result = process(text)
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(2, result.asm!!.allDefinitions.size)
-        assertEquals("ID", result.asm!!.allDefinitions[1].selector.first().value)
-        assertEquals(2, result.asm!!.allDefinitions[1].declaration.entries.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        assertEquals("ID", result.asm!!.allDefinitions[0].rules[0].selector.first().value)
+        assertEquals(2, result.asm!!.allDefinitions[0].rules[0].declaration.entries.size)
     }
 
     @Test
     fun multiLeafRules() {
-
         val text = """
             namespace test
-            ID {
-                -fx-fill: green;
-                -fx-font-weight: bold;
-            }
-            "[0-9]+" {
-                -fx-fill: green;
-                -fx-font-weight: bold;
+            styles Test {
+                ID {
+                    -fx-fill: green;
+                    -fx-font-weight: bold;
+                }
+                "[0-9]+" {
+                    -fx-fill: green;
+                    -fx-font-weight: bold;
+                }
             }
         """.trimIndent()
 
         val result = process(text)
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(3, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(2, result.asm!!.allDefinitions[0].rules.size)
     }
 
     @Test
     fun regexWithQuotes() {
         val text = """
             namespace test
-            "\"(\\?.)*\"" {
-              font-family: 'Courier New';
-              color: darkblue;
+            styles Test {
+                "\"(\\?.)*\"" {
+                  font-family: 'Courier New';
+                  color: darkblue;
+                }
             }
         """.trimIndent()
 
         val result = process(text)
 
-        assertEquals(0, result.issues.size, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
-        assertEquals(2, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
     }
 
     @Test
@@ -201,15 +191,46 @@ class test_AglStyle {
 
         val text = """
             namespace test
-            property,typeReference,typeArguments { }
+            styles Test {
+              property,typeReference,typeArguments { }
+            }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        assertEquals(3, result.asm!!.allDefinitions[0].rules[0].selector.size)
+    }
+    //TODO more tests
+
+    @Test
+    fun selector_notFound() {
+
+        val text = """
+            namespace test
+            styles Test {
+              xxx { }
+            }
         """.trimIndent()
 
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(2, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        assertEquals(
+            setOf(
+                LanguageIssue(
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                    InputLocation(31, 3, 3, 3),
+                    "Grammar Rule 'xxx' not found for style rule",
+                    null
+                )
+            ), result.issues.all
+        )
     }
-    //TODO more tests
 
 }

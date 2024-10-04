@@ -116,7 +116,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         val sb = StringBuilder()
         val tn = type.name
         sb.append("${indent}interfaceType(\"$tn\") {\n")
-        sb.append(formatTypeParameters(indent.inc, context,type.typeParameters))
+        sb.append(formatTypeParameters(indent.inc, context,type.typeParameters.map { it.name }))
         sb.append(formatSupertypes(indent.inc, context,type.supertypes))
         sb.append(formatTypeMembers(indent.inc,context, type))
         sb.append("${indent}}")
@@ -197,7 +197,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                 val sb = StringBuilder()
                 sb.append("{\n")
                 sb.appendWithEol( pd.typeInstance.typeArguments) {
-                    "${indent.inc}typeArgument(\"${it.qualifiedTypeName.value}\")" //TODO: nested args
+                    "${indent.inc}typeArgument(\"${it.type.qualifiedTypeName.value}\")" //TODO: nested args
                 }
                 sb.append("${indent}}")
                sb.toString()

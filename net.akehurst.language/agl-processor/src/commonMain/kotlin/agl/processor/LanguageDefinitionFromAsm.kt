@@ -54,7 +54,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         }
 
     override var styleStr: String?
-        get() = this.style.toString() //TODO:
+        get() = this.style?.asString()
         set(value) {
             error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
         }

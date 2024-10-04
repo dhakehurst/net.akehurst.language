@@ -174,7 +174,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val embeddedRhs = (nodeInfo.node.rule as RuntimeRule).rhs as RuntimeRuleRhsEmbedded
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
-                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserSimpleAbstract?
+                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserFromAsmTransformAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<A>)
                 val parentDownData = downStack.peek()!!

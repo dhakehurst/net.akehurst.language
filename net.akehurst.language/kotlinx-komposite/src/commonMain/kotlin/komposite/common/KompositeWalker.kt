@@ -186,28 +186,28 @@ class KompositeWalker<P : Any?, A : Any?>(
                 data is Array<*> -> {
                     val et = SimpleTypeModelStdLib.AnyType
                     val dt = SimpleTypeModelStdLib.List
-                    val ti = dt.type(arguments = listOf(et))
+                    val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is List<*> -> {
                     val et = SimpleTypeModelStdLib.AnyType
                     val dt = SimpleTypeModelStdLib.List
-                    val ti = dt.type(arguments = listOf(et))
+                    val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is Set<*> -> {
                     val et = SimpleTypeModelStdLib.AnyType
                     val dt = SimpleTypeModelStdLib.Set
-                    val ti = dt.type(arguments = listOf(et))
+                    val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is Map<*, *> -> {
                     val et = SimpleTypeModelStdLib.AnyType
                     val dt = SimpleTypeModelStdLib.Map
-                    val ti = dt.type(arguments = listOf(et, et))
+                    val ti = dt.type(typeArguments = listOf(et.asTypeArgument, et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
@@ -321,17 +321,17 @@ class KompositeWalker<P : Any?, A : Any?>(
     protected fun walkColl(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, coll: Collection<*>, targetType: TypeInstance): WalkInfo<P, A> {
         val dt = targetType.declaration as CollectionType
         val elementType = targetType.typeArguments[0]
-        val infolb = this.collBegin(path, info, coll, dt, elementType)
+        val infolb = this.collBegin(path, info, coll, dt, elementType.type)
         var acc = infolb.acc
         val path_elements = path + this.configuration.ELEMENTS
         coll.forEachIndexed { index, element ->
             val ppath = path_elements + index.toString()
             val infobEl = WalkInfo(infolb.up, acc)
-            val infoElb = this.collElementBegin(ppath, infobEl, element, elementType)
-            val infoElv = this.walkCollElement(owningProperty, ppath, infoElb, element, elementType)
-            val infoEle = this.collElementEnd(ppath, infoElv, element, elementType)
+            val infoElb = this.collElementBegin(ppath, infobEl, element, elementType.type)
+            val infoElv = this.walkCollElement(owningProperty, ppath, infoElb, element, elementType.type)
+            val infoEle = this.collElementEnd(ppath, infoElv, element, elementType.type)
             val infoEls = if (index < coll.size - 1) {
-                val infoas = this.collSeparate(ppath, infoEle, coll, dt, element, elementType)
+                val infoas = this.collSeparate(ppath, infoEle, coll, dt, element, elementType.type)
                 WalkInfo(infolb.up, infoas.acc)
             } else {
                 //last one
@@ -340,7 +340,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             acc = infoEls.acc
         }
         val infole = WalkInfo(infolb.up, acc)
-        return this.collEnd(path, infole, coll, dt, elementType)
+        return this.collEnd(path, infole, coll, dt, elementType.type)
     }
 
     protected fun walkCollElement(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, value: Any?, elementType: TypeInstance): WalkInfo<P, A> {
@@ -357,7 +357,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         val dt = typeInstance.declaration as CollectionType
         val entryKeyType = typeInstance.typeArguments[0]
         val entryValType = typeInstance.typeArguments[1]
-        val infolb = this.mapBegin(path, info, data, dt, entryKeyType, entryValType)
+        val infolb = this.mapBegin(path, info, data, dt, entryKeyType.type, entryValType.type)
         var acc = infolb.acc
         val path_entries = path + this.configuration.ENTRIES
         data.entries.forEachIndexed { index, entry ->
@@ -365,14 +365,14 @@ class KompositeWalker<P : Any?, A : Any?>(
             val ppath = path_entries + index.toString()
             val ppathKey = ppath + this.configuration.KEY
             val ppathValue = ppath + this.configuration.VALUE
-            val infomekb = this.mapEntryKeyBegin(ppathKey, infobEl, entry, entryKeyType, entryValType)
-            val infomekv = this.walkMapEntryKey(owningProperty, ppathKey, infomekb, entry.key, entryKeyType)
-            val infomeke = this.mapEntryKeyEnd(ppathKey, infomekv, entry, entryKeyType, entryValType)
-            val infomevb = this.mapEntryValueBegin(ppathValue, infobEl, entry, entryKeyType, entryValType)
-            val infomev = this.walkMapEntryValue(owningProperty, ppathValue, infomevb, entry.value, entryValType)
-            val infomeve = this.mapEntryValueEnd(ppathValue, infomev, entry, entryKeyType, entryValType)
+            val infomekb = this.mapEntryKeyBegin(ppathKey, infobEl, entry, entryKeyType.type, entryValType.type)
+            val infomekv = this.walkMapEntryKey(owningProperty, ppathKey, infomekb, entry.key, entryKeyType.type)
+            val infomeke = this.mapEntryKeyEnd(ppathKey, infomekv, entry, entryKeyType.type, entryValType.type)
+            val infomevb = this.mapEntryValueBegin(ppathValue, infobEl, entry, entryKeyType.type, entryValType.type)
+            val infomev = this.walkMapEntryValue(owningProperty, ppathValue, infomevb, entry.value, entryValType.type)
+            val infomeve = this.mapEntryValueEnd(ppathValue, infomev, entry, entryKeyType.type, entryValType.type)
             val infomes = if (index < data.size - 1) {
-                val infoas = this.mapSeparate(ppath, infomeve, data, dt, entry, entryKeyType, entryValType)
+                val infoas = this.mapSeparate(ppath, infomeve, data, dt, entry, entryKeyType.type, entryValType.type)
                 WalkInfo(infolb.up, infoas.acc)
             } else {
                 //last one
@@ -381,7 +381,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             acc = infomes.acc
         }
         val infole = WalkInfo(infolb.up, acc)
-        return this.mapEnd(path, infole, data, dt, entryKeyType, entryValType)
+        return this.mapEnd(path, infole, data, dt, entryKeyType.type, entryValType.type)
     }
 
     protected fun walkMapEntryKey(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, value: Any?, entryKeyType: TypeInstance): WalkInfo<P, A> {

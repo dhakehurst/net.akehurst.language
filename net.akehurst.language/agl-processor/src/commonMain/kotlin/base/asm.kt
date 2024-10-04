@@ -22,8 +22,8 @@ import net.akehurst.language.base.api.*
 
 class ModelDefault<NT : Namespace<DT>, DT : Definition<DT>>(
     override val name: SimpleName,
-    namespace: List<NT>
-) : ModelAbstract<NT, DT>(namespace) {
+    override val namespace: List<NT>
+) : ModelAbstract<NT, DT>() {
 
 }
 
@@ -34,7 +34,7 @@ class NamespaceDefault<DT : Definition<DT>>(
 }
 
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
-    override val namespace: List<NT>
+    //override val namespace: List<NT>
 ) : Model<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }

@@ -117,7 +117,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {
 
     fun registerFromTypeModel(typeModel: TypeModel, primitiveMappers: Map<KClass<*>, PrimitiveMapper<*, *>>) {
         this._primitiveMappers.putAll(primitiveMappers)
-        typeModel.allNamespace.forEach {
+        typeModel.namespace.forEach {
                 this.addNamespace(it)
         }
     }
@@ -182,7 +182,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {
 
     fun checkPublicAndReflectable() : List<String> {
         val issues = mutableListOf<String>()
-        for (ns in super.allNamespace) {
+        for (ns in super.namespace) {
             when(ns.qualifiedName.value) {
                 "kotlin" -> Unit //don't check kotlin namespace
                 else -> {

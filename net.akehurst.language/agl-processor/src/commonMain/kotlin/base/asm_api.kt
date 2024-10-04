@@ -17,9 +17,7 @@
 
 package net.akehurst.language.base.api
 
-
 import net.akehurst.language.base.api.QualifiedName.Companion.isQualifiedName
-import net.akehurst.language.typemodel.api.KompositeProperty
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
@@ -29,6 +27,7 @@ val String.asPossiblyQualifiedName
         this.isQualifiedName -> QualifiedName(this)
         else -> SimpleName(this)
     }
+
 interface PossiblyQualifiedName {
     companion object {
         //FIXME: from here - see above
@@ -112,10 +111,6 @@ interface Formatable {
 interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
 
-    /**
-     * Ordered Map
-     */
-    @KompositeProperty
     val namespace: List<NT>
 
     val allDefinitions: List<DT>
@@ -134,7 +129,6 @@ interface Namespace<DT : Definition<DT>> : Formatable {
      */
     val import: List<Import>
 
-    @KompositeProperty
     val definition: List<DT>
 
     val definitionByName: Map<SimpleName, DT>

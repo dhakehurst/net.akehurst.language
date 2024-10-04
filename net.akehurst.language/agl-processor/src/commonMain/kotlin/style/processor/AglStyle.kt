@@ -26,13 +26,21 @@ object AglStyle {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
     val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
+        namespace = "net.akehurst.language",
         name = "Style"
     ) {
         extendsGrammar(AglBase.grammar.selfReference)
 
         concatenation("unit") {
-            ref("namespace"); lst(0, -1) { ref("rule") }
+            ref("namespace"); lst(1, -1) { ref("styleSet") }
+        }
+        concatenation("styleSet") {
+            lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+              lst(0,-1) { ref("rule") }
+            lit("}")
+        }
+        concatenation("extends") {
+            lit(":"); spLst(1, -1) { ref("qualifiedName"); lit(",") }
         }
         concatenation("rule") {
             ref("selectorExpression"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
@@ -67,25 +75,28 @@ object AglStyle {
     }
 
 
-    const val styleStr = """META_IDENTIFIER {
-  foreground: orange;
-  font-style: bold;
-}
-IDENTIFIER {
-  foreground: blue;
-  font-style: bold;
-}
-LITERAL {
-  foreground: blue;
-  font-style: bold;
-}
-PATTERN {
-  foreground: darkblue;
-  font-style: bold;
-}
-STYLE_ID {
-  foreground: darkred;
-  font-style: italic;
+    const val styleStr = """namespace net.akehurst.language
+styles Style {
+    META_IDENTIFIER {
+      foreground: orange;
+      font-style: bold;
+    }
+    IDENTIFIER {
+      foreground: blue;
+      font-style: bold;
+    }
+    LITERAL {
+      foreground: blue;
+      font-style: bold;
+    }
+    PATTERN {
+      foreground: darkblue;
+      font-style: bold;
+    }
+    STYLE_ID {
+      foreground: darkred;
+      font-style: italic;
+    }
 }"""
 
     const val scopeModelStr = """
@@ -101,9 +112,11 @@ references {
     override fun toString(): String = """
 namespace net.akehurst.language.agl.language
 
-grammar Style extends Base {
+grammar Style : Base {
 
-    unit = namespace rule* ;
+    unit = namespace styleSet+ ;
+    styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+    extends = ':' [qualifiedName / ',']+ ;
     rule = selectorExpression '{' styleList '}' ;
     selectorExpression
      = selectorAndComposition

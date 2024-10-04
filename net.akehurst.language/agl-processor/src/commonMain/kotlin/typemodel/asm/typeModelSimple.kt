@@ -296,8 +296,7 @@ class TypeInstanceSimple(
             ?: qualifiedOrImportedTypeName.simpleName
 
     override val qualifiedTypeName: QualifiedName
-        get() = typeOrNull?.qualifiedName
-            ?: when (qualifiedOrImportedTypeName) {
+        get() = when (qualifiedOrImportedTypeName) {
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
                 else -> error("Unsupported")
@@ -435,10 +434,8 @@ abstract class TypeNamespaceAbstract(
 
     override val ownedTypes: Collection<TypeDeclaration> get() = ownedTypesByName.values
 
-    @KompositeProperty
     val ownedUnnamedSupertypeType = mutableListOf<UnnamedSupertypeType>()
 
-    @KompositeProperty
     val ownedTupleTypes = mutableListOf<TupleType>()
 
     override val singletonType: Set<SingletonType> get() = ownedTypesByName.values.filterIsInstance<SingletonType>().toSet()
@@ -715,7 +712,6 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     // store properties by map(index) rather than list(index), because when constructing from grammar, not every index is used
     // public, so it can be serialised
-    @KompositeProperty
     val propertyByIndex = mutableMapOf<Int, PropertyDeclaration>()
 
     override val property get() = propertyByIndex.values.toList() //should be in order because mutableMap is LinkedHashMap by default

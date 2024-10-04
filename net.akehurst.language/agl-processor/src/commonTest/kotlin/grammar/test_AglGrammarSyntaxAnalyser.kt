@@ -82,7 +82,7 @@ class test_AglGrammarSyntaxAnalyser {
     fun extends_one() {
         val sentence = """
             namespace ns.test
-            grammar Test extends ns.test.Test2 {
+            grammar Test : ns.test.Test2 {
               leaf a = 'a' ;
             }
         """.trimIndent()
@@ -98,7 +98,7 @@ class test_AglGrammarSyntaxAnalyser {
     fun extends_two() {
         val sentence = """
             namespace ns.test
-            grammar Test extends ns.test.Test2, AA {
+            grammar Test : ns.test.Test2, AA {
               leaf a = 'a' ;
             }
         """.trimIndent()

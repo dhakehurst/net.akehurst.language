@@ -8,9 +8,13 @@ exportPublic {
     exportPatterns.set(
         listOf(
             "net.akehurst.language.issues.api.**",
+            "net.akehurst.language.sentence.api.**",
+            "net.akehurst.language.sentence.common.**",
+            "net.akehurst.language.scanner.api.**",
             "net.akehurst.language.sppt.api.**",
+            "net.akehurst.language.sppt.treedata.**",
             "net.akehurst.language.parser.api.**",
-            "net.akehurst.language.parser.runtime.**",
+            //"net.akehurst.language.parser.runtime.**",
 
             "net.akehurst.language.issues.ram.**"
         )

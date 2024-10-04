@@ -44,6 +44,7 @@ class test_SysML_agl_Singles {
                 grammarDefinitionStr = GrammarString(grammarStr),
                 crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
             )
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             res.processor!!
         }
 
@@ -112,8 +113,8 @@ class test_SysML_agl_Singles {
             */
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
@@ -126,8 +127,8 @@ class test_SysML_agl_Singles {
            */
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -137,8 +138,8 @@ class test_SysML_agl_Singles {
           package ;
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -149,8 +150,8 @@ class test_SysML_agl_Singles {
           }
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
     }
 
     @Test

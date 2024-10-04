@@ -679,14 +679,17 @@ internal class Grammar2TransformRuleSet(
     private fun trRuleForGroupContentOptional(optItem: OptionalItem): TransformationRule {
         val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
         val assignment = createPropertyDeclarationAndAssignment(ttSub, optItem.item, 0)
-            ?: error("No property assignment!")
-        val typeArgs = ttSub.property.map {
-            //Optional items are nullable, this is why need this special function
-            TypeArgumentNamedSimple(it.name, it.typeInstance.nullable())
+        return if (null==assignment) {
+            grammarTypeNamespace.createTupleTypeInstance(emptyList(), false).toNoActionTrRule()
+        } else {
+            val typeArgs = ttSub.property.map {
+                //Optional items are nullable, this is why need this special function
+                TypeArgumentNamedSimple(it.name, it.typeInstance.nullable())
+            }
+            val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
+            val tr = transformationRule(ti, CreateTupleExpressionSimple(listOf(assignment)))
+            tr
         }
-        val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
-        val tr = transformationRule(ti, CreateTupleExpressionSimple(listOf(assignment)))
-        return tr
     }
 
     private fun createPropertyDeclarationAndAssignment(et: StructuredType, ruleItem: RuleItem, childIndex: Int): AssignmentStatement? {

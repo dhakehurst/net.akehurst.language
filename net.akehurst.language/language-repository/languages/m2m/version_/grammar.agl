@@ -20,7 +20,7 @@ grammar Common {
 }
 
 
-grammar MetaModel extends Common {
+grammar MetaModel : Common {
 
     unit = declaration* ;
     declaration = class | primitive ;
@@ -35,7 +35,7 @@ grammar MetaModel extends Common {
 
 }
 
-grammar Expressions extends Common {
+grammar Expressions : Common {
 
     expression
       = primary
@@ -68,7 +68,7 @@ grammar Expressions extends Common {
     argumentList = [expression / ',']* ;
 }
 
-grammar Statements extends Expressions {
+grammar Statements : Expressions {
 
     statement
       = relationCall
@@ -78,7 +78,7 @@ grammar Statements extends Expressions {
 
 }
 
-grammar Transformation  extends Common {
+grammar Transformation  : Common {
 
     transformation = 'transformation' NAME parameters relation+ ;
 

@@ -23,7 +23,7 @@ import net.akehurst.language.grammar.asm.grammar
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 object AglGrammar {
-    //companion object {
+
     const val OPTION_defaultGoalRule = "defaultGoalRule"
     const val goalRuleName = "unit"
 
@@ -31,7 +31,7 @@ object AglGrammar {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("grammarDefinition")!!
 
     val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
+        namespace = "net.akehurst.language",
         name = "Grammar"
     ) {
         extendsGrammar(AglBase.grammar.selfReference)
@@ -45,7 +45,7 @@ object AglGrammar {
             lit("}")
         }
         concatenation("extends") {
-            lit("extends"); spLst(1, -1) { ref("qualifiedName"); lit(",") }
+            lit(":"); spLst(1, -1) { ref("qualifiedName"); lit(",") }
         }
         concatenation("option") {
             lit("@"); ref("IDENTIFIER"); lit(":"); ref("value")
@@ -196,7 +196,7 @@ object AglGrammar {
             createTypes = false
         ) {
             namespace(qualifiedName = grammar.qualifiedName.value) {
-                transform("Grammar") {
+                transform(grammar.name.value) {
                     createObject("unit", "DefinitionBlock") {
                         assignment("definitions", "child[1]")
                     }
@@ -235,30 +235,33 @@ object AglGrammar {
         }
     }
 
-    const val styleStr: String = """'namespace' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'grammar', 'extends', 'override', 'skip', 'leaf' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-LITERAL {
-  foreground: blue;
-}
-PATTERN {
-  foreground: darkblue;
-}
-IDENTIFIER {
-  foreground: darkred;
-  font-style: italic;
-}
-SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
-  foreground: LightSlateGrey;
-}"""
+    const val styleStr: String = """namespace net.akehurst.language
+  styles Grammar {
+    'namespace' {
+      foreground: darkgreen;
+      font-style: bold;
+    }
+    'grammar', 'extends', 'override', 'skip', 'leaf' {
+      foreground: darkgreen;
+      font-style: bold;
+    }
+    LITERAL {
+      foreground: blue;
+    }
+    PATTERN {
+      foreground: darkblue;
+    }
+    IDENTIFIER {
+      foreground: darkred;
+      font-style: italic;
+    }
+    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
+      foreground: LightSlateGrey;
+    }
+  }"""
 
     val formatStr = """
-namespace net.akehurst.language.agl.AglGrammar {
+namespace net.akehurst.language.Grammar {
     Namespace -> 'namespace §qualifiedName'
     Grammar -> 'grammar §name §{extendsOpt()}{
                  §{options.join(§eol)}
@@ -304,13 +307,13 @@ namespace net.akehurst.language.agl.AglGrammar {
 
     //TODO: gen this from the ASM
     override fun toString(): String = """
-namespace net.akehurst.language.agl
+net.akehurst.language.grammar
 
 grammar AglGrammar extends Base {
 
     unit = namespace grammar+ ;
     grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
-    extends = 'extends' [qualifiedName / ',']+ ;
+    extends = ':' [qualifiedName / ',']+ ;
     option = '@' IDENTIFIER ':' value ;
     value = IDENTIFIER | LITERAL ;
     rule = grammarRule | overrideRule | preferenceRule ;

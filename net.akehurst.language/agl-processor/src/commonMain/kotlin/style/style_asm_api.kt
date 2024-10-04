@@ -17,19 +17,31 @@
 
 package net.akehurst.language.style.api
 
-import net.akehurst.language.base.api.Definition
-import net.akehurst.language.base.api.Model
-import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.base.api.*
+import net.akehurst.language.grammar.api.Grammar
 
-interface AglStyleModel : Model<StyleNamespace, AglStyleRule> {
+interface AglStyleModel : Model<StyleNamespace, StyleSet> {
 
 }
 
-interface StyleNamespace : Namespace<AglStyleRule> {
-    val rules: List<AglStyleRule>
+interface StyleNamespace : Namespace<StyleSet> {
+    val rules: List<StyleSet>
 }
 
-interface AglStyleRule : Definition<AglStyleRule> {
+interface StyleSetReference {
+    val localNamespace: StyleNamespace
+    val nameOrQName: PossiblyQualifiedName
+    val resolved: StyleSet?
+
+    fun resolveAs(resolved: StyleSet)
+}
+
+interface StyleSet : Definition<StyleSet> {
+    val extends: List<StyleSetReference>
+    val rules : List<AglStyleRule>
+}
+
+interface AglStyleRule : Formatable {
     val selector: List<AglStyleSelector>
 
     val declaration: Map<String, AglStyleDeclaration>

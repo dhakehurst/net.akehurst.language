@@ -25,7 +25,7 @@ internal object AglExpressions {
     const val goalRuleName = "expression"
 
     val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
+        namespace = "net.akehurst.language",
         name = "Expressions"
     ) {
         extendsGrammar(AglBase.grammar.selfReference)
@@ -144,7 +144,7 @@ internal object AglExpressions {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     const val grammarStr = """
-namespace net.akehurst.language.agl
+namespace net.akehurst.language
 
 grammar Expression extends Base {
 
@@ -209,23 +209,16 @@ grammar Expression extends Base {
 }
 """
 
-    const val styleStr = """${"$"}keyword {
-  foreground: darkgreen;
-  font-style: bold;
+    const val styleStr = """namespace net.akehurst.language
+styles Expressions {
+    ${"$"}keyword {
+      foreground: darkgreen;
+      font-style: bold;
+    }
 }"""
 
     const val formatterStr = """
     """
-
-//    init {
-//        super.extends.add(
-//            GrammarReferenceDefault(namespace, qualifiedName).also {
-//                it.resolveAs(BaseGrammar)
-//            }
-//        )
-//        super.grammarRule.addAll(createGrammarRules())
-//        super.preferenceRule.addAll(createPreferenceRules())
-//    }
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()

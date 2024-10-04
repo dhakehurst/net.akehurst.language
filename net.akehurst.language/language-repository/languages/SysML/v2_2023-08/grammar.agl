@@ -24,7 +24,7 @@ grammar Base {
 }
 
 // 8.2.2.4
-grammar Annotations extends Base {
+grammar Annotations : Base {
     Annotation = QualifiedName ;
     OwnedAnnotation = AnnotatingElement ;
     AnnotatingMember = AnnotatingElement ;
@@ -42,7 +42,7 @@ grammar Annotations extends Base {
 }
 
 // 8.2.2.2
-grammar ElementsAndRelationships extends Annotations {
+grammar ElementsAndRelationships : Annotations {
 
     RelationshipBody = ';' | '{' OwnedAnnotation* '}' ;
 
@@ -53,7 +53,7 @@ grammar ElementsAndRelationships extends Annotations {
 }
 
 // 8.2.2.3
-grammar Dependencies extends ElementsAndRelationships {
+grammar Dependencies : ElementsAndRelationships {
     Dependency =
         PrefixMetadataAnnotation*
         'dependency' DependencyDeclaration RelationshipBody
@@ -70,7 +70,7 @@ grammar Expressions {
 
 
 // 8.2.2.5
-grammar NamespacesAndPackages extends Dependencies, Expressions {
+grammar NamespacesAndPackages : Dependencies, Expressions {
 
     RootNamespace = PackageBodyElement* ;
     Package =  PrefixMetadataMember* PackageDeclaration PackageBody ;
@@ -361,13 +361,13 @@ grammar Cases {
 }
 
 // 8.2.2.22 Analysis Cases
-grammar AnalysisCases extends Cases {
+grammar AnalysisCases : Cases {
     AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody ;
     AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis' CalculationUsageDeclaration CaseBody ;
 }
 
 // 8.2.2.23 Verification Cases
-grammar VerificationCases extends Cases {
+grammar VerificationCases : Cases {
     VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def' DefinitionDeclaration CaseBody ;
     VerificationCaseUsage = OccurrenceUsagePrefix 'verification' CalculationUsageDeclaration CaseBody ;
     RequirementVerificationMember = MemberPrefix 'verify' RequirementVerificationUsage ;
@@ -397,7 +397,7 @@ grammar ViewsAndViewpoints {
 
 /*
 // 8.2.2.26
-grammar Metadata extends Annotations {
+grammar Metadata : Annotations {
 
     MetadataDefinition = 'abstract'? 'def' Definition ;
     PrefixMetadataAnnotation = PrefixMetadataUsage ;

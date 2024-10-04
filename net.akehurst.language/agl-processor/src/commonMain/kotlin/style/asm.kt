@@ -21,27 +21,26 @@ import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarReference
 import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(
     override val name: SimpleName,
-    namespace: List<StyleNamespace>
-) : AglStyleModel, ModelAbstract<StyleNamespace, AglStyleRule>(namespace) {
+    override val namespace: List<StyleNamespace>
+) : AglStyleModel, ModelAbstract<StyleNamespace, StyleSet>() {
 
     companion object {
         //not sure if this should be here or in grammar object
         const val KEYWORD_STYLE_ID = "\$keyword"
         const val NO_STYLE_ID = "\$nostyle"
 
-        val STD_NS = StyleNamespaceDefault(QualifiedName("std"), emptyList())
         val DEFAULT_NO_STYLE = AglStyleRuleDefault(
-            namespace = STD_NS,
             listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))
         ).also {
             it.declaration["foreground"] = AglStyleDeclaration("foreground", "black")
             it.declaration["background"] = AglStyleDeclaration("background", "white")
             it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
-            STD_NS.addDefinition(it)
         }
 
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
@@ -59,34 +58,62 @@ class AglStyleModelDefault(
 class StyleNamespaceDefault(
     qualifiedName: QualifiedName,
     override val import: List<Import>
-) : StyleNamespace, NamespaceAbstract<AglStyleRule>(qualifiedName) {
+) : StyleNamespace, NamespaceAbstract<StyleSet>(qualifiedName) {
 
-    //override val rules: List<AglStyleRule> = if (_rules.any { it.selector.any { it.value == NO_STYLE_ID } }) {
-    //    // NO_STYLE defined
-    //    _rules
-    //} else {
-    //    listOf(DEFAULT_NO_STYLE) + _rules
-    //}
-
-    override val rules: List<AglStyleRule> get() = super.definition
+    override val rules: List<StyleSet>  get() = super.definition
 
 }
 
-data class AglStyleRuleDefault(
+class AglStyleSetDefault(
     override val namespace: StyleNamespace,
+    override val name: SimpleName,
+    override val extends: List<StyleSetReference>
+) : StyleSet {
+
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+
+    override val rules: List<AglStyleRule> = mutableListOf()
+
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        sb.append("styles ${name.value} {\n")
+        val newIndent = indent.inc
+        val rules = rules // do not sort, order matters
+            .joinToString(separator = "\n") { "$newIndent${it.asString(newIndent)}" }
+        sb.append(rules)
+        sb.append("\n$indent}")
+        return sb.toString()
+    }
+
+}
+
+data class StyleSetReferenceDefault(
+    override val localNamespace: StyleNamespace,
+    override val nameOrQName: PossiblyQualifiedName
+) : StyleSetReference {
+    override var resolved: StyleSet? = null
+    override fun resolveAs(resolved: StyleSet) {
+        this.resolved = resolved
+    }
+}
+
+data class AglStyleRuleDefault(
     override val selector: List<AglStyleSelector>
 ) : AglStyleRule {
 
-    override val name: SimpleName
-        get() = selector.joinToString(separator = ".") { it.value }.asSimpleName
-
-    override val qualifiedName: QualifiedName
-        get() = TODO("not implemented")
-
-    override var declaration = mutableMapOf<String, AglStyleDeclaration>()
+    // order matters
+    override var declaration = linkedMapOf<String, AglStyleDeclaration>()
 
     override fun asString(indent: Indent): String {
-        TODO("not implemented")
+        val sb = StringBuilder()
+        val sel = this.selector.joinToString { it.value }
+        sb.append("$sel {\n")
+        val newIndent = indent.inc
+        val decls = declaration.values // do not sort, order matters
+            .joinToString(separator = "\n") { "$newIndent${it.name}: ${it.value};" }
+        sb.append(decls)
+        sb.append("\n$indent}")
+        return sb.toString()
     }
 
     override fun toCss(): String {

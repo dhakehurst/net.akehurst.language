@@ -158,7 +158,7 @@ grammar Expressions {
  */
 namespace org.yakindu.stext
 
-grammar SText extends Expressions {
+grammar SText : Expressions {
 
 // ---- root rules ----
 //These root rules are not relevant for the grammar integration in the statechart. They just integrate the different start rules consistently
