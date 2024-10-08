@@ -105,6 +105,8 @@ class MySyntaxAnalyser extends SyntaxAnalyserByMethodRegistrationAbstract<Value>
 
     // object = '{' property* '}' ;
     private object_(nodeInfo: SpptDataNodeInfo, children: KtList<object>, sentence: Sentence): ObjectValue {
+        const loc = super.locationForNode(sentence, nodeInfo.node);
+        console.log(loc)
         const props = children.asJsReadonlyArrayView()[1] as KtList<[string, any]>;
         const props2 = props.asJsReadonlyArrayView().values();
         const properties = new Map<string, any>(props2);

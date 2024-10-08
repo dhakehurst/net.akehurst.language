@@ -196,7 +196,7 @@ internal class AglGrammarSyntaxAnalyser(
 
         return { grammar ->
             val result = OverrideRuleDefault(grammar, identifier, isSkip, isLeaf, overrideKind)
-            result.overridenRhs = rhs
+            result.overriddenRhs = rhs
             result
                 .also { this.locationMap[it] = sentence.locationForNode(target.node) }
         }

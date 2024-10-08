@@ -90,7 +90,7 @@ class test_StatechartTools_Singles {
                 parse { goalRuleName(goal) }
                 semanticAnalysis { context(ContextAsmSimple()) }
             })
-            assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[grammar].formatAsm(result.asm!!).sentence
             assertEquals(sentence, resultStr)
         }

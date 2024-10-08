@@ -1,6 +1,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.kotlinx.komposite.processor.Komposite
+import net.akehurst.language.agl.generators.GenerateTypeModelViaReflection.Companion.asPossiblyQualifiedName
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.api.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -60,9 +61,17 @@ class GenerateTypeModelViaReflection(
             return substituteTypes[pqtn.value]?.let { QualifiedName(it) } ?: pqtn
         }
 
+        val KType.isMutableCollection:Boolean get() {
+            val clz = this.classifier
+            return when(clz) {
+                is KClass<*> -> clz.isSubclassOf(MutableCollection::class) || clz.isSubclassOf(MutableMap::class)
+                is KTypeParameter -> TODO()
+                else -> error("Unsupported")
+            }
+        }
+
         /**
          * returns the resolve TypeInstance, plus list of qualified names of other required types
-         */
         fun KType.asTypeInstance(ns: TypeNamespace, context: TypeDeclaration, substituteTypes: Map<String, String>): Pair<TypeInstance, List<QualifiedName>> {
             val requires = mutableListOf<QualifiedName>()
             val pqtn = this.asPossiblyQualifiedName
@@ -93,7 +102,7 @@ class GenerateTypeModelViaReflection(
             val ty = ns.createTypeInstance(context, subName, targs, isNullable)
             return Pair(ty, requires)
         }
-
+*/
         fun KClass<*>.allPropertiesNamed(propertyName: String) =
             this.declaredMemberProperties.filter { it.name == propertyName } +
                     this.allSupertypes.flatMap {
@@ -105,7 +114,7 @@ class GenerateTypeModelViaReflection(
                         }
                     }
 
-        fun KClass<*>.isKomposite(propertyName: String, komposite:TypeModel): Boolean =
+        fun KClass<*>.isKomposite(propertyName: String, komposite: TypeModel): Boolean =
             komposite.findByQualifiedNameOrNull(this.qualifiedName!!.asQualifiedName)
                 ?.findPropertyOrNull(PropertyName(propertyName))
                 ?.isComposite
@@ -205,17 +214,11 @@ class GenerateTypeModelViaReflection(
     }
 
     private fun addSuperTypes(type: TypeDeclaration, kclass: KClass<*>) {
-        val targetNamespaceName = type.namespace.qualifiedName
         val imports = mutableListOf<Import>()
         val superTypes = kclass.supertypes.map {
-            val qn = QualifiedName((it.classifier as KClass<*>).qualifiedName!!)
-            if (qn.front == targetNamespaceName) {
-                //same package, not import
-                qn.last
-            } else {
-                val sbQn = substituteTypes[qn.value]?.let { QualifiedName(it) } ?: qn
-                imports.add(sbQn.front.asImport)
-                sbQn.last
+            toTypeInstance(type, it).let {
+                imports.addAll(it.second)
+                it.first
             }
         }
         superTypes.forEach { type.addSupertype(it) }
@@ -223,6 +226,44 @@ class GenerateTypeModelViaReflection(
             logInfo("'$type' requires import '$it' due to supertype")
             type.namespace.addImport(it)
         }
+    }
+
+    fun toTypeInstance(context:TypeDeclaration,kType: KType): Pair<TypeInstance,List<Import>> {
+        val targetNamespace = context.namespace
+        val targetNamespaceName = targetNamespace.qualifiedName
+        val imports = mutableListOf<Import>()
+        val targs = kType.arguments.map {
+            val tp = it.type
+            when(tp) {
+                null -> error("Unsupported")
+                else -> toTypeInstance(context,tp).let {
+                    imports.addAll(it.second)
+                    it.first.asTypeArgument
+                }
+            }
+        }
+        val clz = kType.classifier
+        val subName = kType.substitutedName(substituteTypes)
+        val ti = when(clz) {
+            is KClass<*> -> {
+                when(subName) {
+                    is QualifiedName -> {
+                        if (subName.front == targetNamespaceName) {
+                            //same package, not import
+                            subName.last
+                        } else {
+                            val sbQn = substituteTypes[subName.value]?.let { QualifiedName(it) } ?: subName
+                            imports.add(sbQn.front.asImport)
+                            sbQn.last
+                        }
+                    }
+                }
+                targetNamespace.createTypeInstance(context, subName, targs, false)
+            }
+            is KTypeParameter -> TypeParameterReference(context, subName.simpleName)
+            else -> error("Unsupported")
+        }
+        return Pair(ti, imports)
     }
 
     private fun addPrimitiveType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
@@ -290,9 +331,11 @@ class GenerateTypeModelViaReflection(
             c.name
             val prms = c.valueParameters.map { cp ->
                 val pn = net.akehurst.language.typemodel.api.ParameterName(cp.name!!)
-                val (ty, req) = cp.type.asTypeInstance(ns, type, substituteTypes)
-                _requires[type.qualifiedName].addAll(req)
-                ParameterDefinitionSimple(pn, ty, null)
+                //val (ty, req) = cp.type.asTypeInstance(ns, type, substituteTypes)
+                val(ti, imps) = toTypeInstance(type, cp.type)
+                _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
+                imps.forEach { ns.addImport(it) }
+                ParameterDefinitionSimple(pn, ti, null)
             }
             when (type) {
                 is ValueTypeSimple -> type.addConstructor(prms)
@@ -311,28 +354,33 @@ class GenerateTypeModelViaReflection(
         }
 
         kclass.declaredMemberProperties.forEach { mp ->
-            if (mp.visibility == KVisibility.PUBLIC) {
-                val comp_ref = kompOrRefFor(kclass, mp)
-
+            val comp_ref = kompOrRefFor(kclass, mp)
+            if (mp.visibility == KVisibility.PUBLIC || comp_ref.first == PropertyCharacteristic.COMPOSITE) {
                 when {
                     mp.javaField == null -> { //must be derived
                         val pn = PropertyName(mp.name)
-                        val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                        _requires[type.qualifiedName].addAll(req)
-                        when (comp_ref) {
-                            PropertyCharacteristic.COMPOSITE -> addStoredProperty(ns, type, mp, comp_ref) // komposite must be stored
-                            else -> type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
+                        //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
+                        val(ti, imps) = toTypeInstance(type, mp.returnType)
+                        _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
+                        imps.forEach { ns.addImport(it) }
+                        when {
+                            //comp_ref.second -> addStoredProperty(ns, type, mp, comp_ref.first) // explicit komposite must be stored
+                            else -> type.appendPropertyDerived(pn, ti, "from JVM reflection", "")
                         }
                     }
 
                     Lazy::class.java.isAssignableFrom(mp.javaField!!.type) -> { // also derived
                         val pn = PropertyName(mp.name)
-                        val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                        _requires[type.qualifiedName].addAll(req)
-                        type.appendPropertyDerived(pn, ty, "from JVM reflection", "")
+                        //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
+                        val(ti, imps) = toTypeInstance(type, mp.returnType)
+                        _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
+                        imps.forEach { ns.addImport(it) }
+                        type.appendPropertyDerived(pn, ti, "from JVM reflection", "")
                     }
 
-                    else -> addStoredProperty(ns, type, mp, comp_ref) // assume stored
+                    else -> {
+                        addStoredProperty(ns, type, mp, comp_ref.first) // assume stored
+                    }
                 }
             }
         }
@@ -342,25 +390,40 @@ class GenerateTypeModelViaReflection(
         when (type) {
             is StructuredType -> {
                 val pn = PropertyName(mp.name)
-                val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                _requires[type.qualifiedName].addAll(req)
-                val vv = when (mp) {
-                    is KMutableProperty1<*, *> -> PropertyCharacteristic.READ_WRITE
+                //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
+                val(ti, imps) = toTypeInstance(type, mp.returnType)
+                _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
+                imps.forEach { ns.addImport(it) }
+                val vv = when {
+                    mp is KMutableProperty1<*, *> -> PropertyCharacteristic.READ_WRITE
+                    mp.returnType.isMutableCollection -> PropertyCharacteristic.READ_WRITE
                     else -> PropertyCharacteristic.READ_ONLY // if stored and read only, must be identity
                 }
 
                 val chrs = setOf(vv, comp_ref)
-                type.appendPropertyStored(pn, ty, chrs)
+                type.appendPropertyStored(pn, ti, chrs)
             }
 
             else -> error("Cannot add a STORED Property to non StructuredType '$type'")
         }
     }
 
-    private fun kompOrRefFor(kclass: KClass<*>, mp: KProperty1<*, *>): PropertyCharacteristic {
+    /**
+     * returns COMPOSITE or REFERENCE and whether the property is explicitly marked as composite
+     */
+    private fun kompOrRefFor(kclass: KClass<*>, mp: KProperty1<*, *>): Pair<PropertyCharacteristic, Boolean> {
+        val overrideKomposite = kclass.allSupertypes.any {
+            val clz = it.classifier
+            when (clz) {
+                null -> false
+                is KClass<*> -> clz.isKomposite(mp.name, _komposite)
+                else -> false
+            }
+        }
         return when {
-            kclass.isKomposite(mp.name, _komposite) -> PropertyCharacteristic.COMPOSITE
-            else -> autoDetectKompOrRefFor(mp.returnType)
+            overrideKomposite -> Pair(PropertyCharacteristic.COMPOSITE, true)
+            kclass.isKomposite(mp.name, _komposite) -> Pair(PropertyCharacteristic.COMPOSITE, true)
+            else -> Pair(autoDetectKompOrRefFor(mp.returnType),false)
         }
     }
 
@@ -383,8 +446,8 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private fun typeModelKindFor(type: KType): KClass<*>? {
-        val subName = type.substitutedName(substituteTypes)
+    private fun typeModelKindFor(ktype: KType): KClass<*>? {
+        val subName = ktype.substitutedName(substituteTypes)
         return when (subName) {
             is SimpleName -> null
             is QualifiedName -> {

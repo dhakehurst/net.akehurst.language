@@ -92,7 +92,7 @@ abstract class GrammarAbstract(
                         null -> {
                             // overridden rule not found, so add it as a NormalRule to enable best-effort, though this is an error
                             val nr = NormalRuleDefault(rule.grammar, rule.name, rule.isSkip, rule.isLeaf)
-                            nr.rhs = (rule as OverrideRule).overridenRhs
+                            nr.rhs = (rule as OverrideRule).overriddenRhs
                             nr.rhs.setOwningRule(nr, emptyList())
                             nr
                         }
@@ -127,8 +127,8 @@ abstract class GrammarAbstract(
         val refs: List<GrammarReference> = allGrammarRule.flatMap {
             when {
                 it is OverrideRule -> {
-                    if (it.overridenRhs is NonTerminal) {
-                        (it.overridenRhs as NonTerminal).targetGrammar?.let { listOf(it) } ?: emptyList<GrammarReference>()
+                    if (it.overriddenRhs is NonTerminal) {
+                        (it.overriddenRhs as NonTerminal).targetGrammar?.let { listOf(it) } ?: emptyList<GrammarReference>()
                     } else {
                         emptyList<GrammarReference>()
                     }

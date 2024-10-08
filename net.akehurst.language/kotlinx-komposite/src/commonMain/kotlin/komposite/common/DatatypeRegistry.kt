@@ -66,8 +66,8 @@ class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {
             namespace("kotlin.collections", emptyList()) {
                 collectionType("Array", listOf("E"))
                 collectionType("Collection", listOf("E"))
-                collectionType("List", listOf("E")).also { it.addSupertype("Collection".asPossiblyQualifiedName) }
-                collectionType("Set", listOf("E")).also { it.addSupertype("Collection".asPossiblyQualifiedName) }
+                collectionType("List", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
+                collectionType("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
                 collectionType("Map", listOf("K", "V"))
             }
         }

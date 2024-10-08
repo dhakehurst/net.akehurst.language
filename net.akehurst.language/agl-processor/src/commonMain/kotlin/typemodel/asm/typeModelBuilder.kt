@@ -182,11 +182,11 @@ abstract class StructuredTypeBuilder(
 
     fun propertyListTypeOf(propertyName: String, dataTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(propertyName, nullable, childIndex) {
-            elementRef(dataTypeName)
+            ref(dataTypeName)
         }
 
     fun propertyListType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TypeInstanceArgBuilder.() -> Unit): PropertyDeclaration {
-        val collType = SimpleTypeModelStdLib.List
+        val collType = SimpleTypeModelStdLib.List.qualifiedName
         val tb = TypeInstanceArgBuilder(this._structuredType, this._namespace, collType, isNullable, _typeReferences)
         tb.init()
         _typeReferences.add(tb)
@@ -209,7 +209,7 @@ abstract class StructuredTypeBuilder(
    // }
 
     fun propertyListSeparatedType(propertyName: String, isNullable: Boolean, childIndex: Int,init: TypeInstanceArgBuilder.() -> Unit): PropertyDeclaration {
-        val collType = SimpleTypeModelStdLib.ListSeparated
+        val collType = SimpleTypeModelStdLib.ListSeparated.qualifiedName
         val tb = TypeInstanceArgBuilder(this._structuredType, this._namespace, collType, isNullable, _typeReferences)
         tb.init()
         _typeReferences.add(tb)
@@ -292,7 +292,9 @@ class ValueTypeBuilder(
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _type.addSupertype(it.asPossiblyQualifiedName)
+            val pqn = it.asPossiblyQualifiedName
+            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            _type.addSupertype(ti)
         }
     }
 
@@ -325,15 +327,18 @@ class InterfaceTypeBuilder(
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _type.addSupertype(it.asPossiblyQualifiedName)
+            val pqn = it.asPossiblyQualifiedName
+            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            _type.addSupertype(ti)
         }
     }
 
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
             val pqn = it.asPossiblyQualifiedName
-            _type.addSubtype(pqn)
-            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_type.qualifiedName)
+            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            _type.addSubtype(ti)
+            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype_dep(_type.qualifiedName)
         }
     }
 
@@ -359,15 +364,25 @@ class DataTypeBuilder(
 
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
-            _type.addSupertype(it.asPossiblyQualifiedName)
+            val pqn = it.asPossiblyQualifiedName
+            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            _type.addSupertype(ti)
         }
+    }
+
+    fun supertype(typeDeclarationName:String, init: TypeInstanceArgBuilder.() -> Unit = {}) {
+        val pqn = typeDeclarationName.asPossiblyQualifiedName
+        val tb = TypeInstanceArgBuilder(this._structuredType, this._namespace, pqn, false, _typeReferences)
+        tb.init()
+        val ti = tb.build()
+        _type.addSupertype(ti)
     }
 
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
             val pqn = it.asPossiblyQualifiedName
-            _type.addSubtype(pqn)
-            (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype(_type.qualifiedName)
+            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            _type.addSubtype(ti)
         }
     }
 
@@ -405,18 +420,26 @@ class ConstructorBuilder(
 class TypeInstanceArgBuilder(
     val context: TypeDeclaration?,
     val _namespace: TypeNamespace,
-    val type: TypeDeclaration,
+    val possiblyQualifiedName: PossiblyQualifiedName,
     val nullable: Boolean,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
     private val _args = mutableListOf<TypeArgument>()
 
-    fun primitiveRef(typeName: String) {
-        _args.add(_namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), nullable).asTypeArgument)
-    }
-
-    fun elementRef(typeName: String) {
-        _args.add(_namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), nullable).asTypeArgument)
+    fun ref(possiblyQualifiedTypeDeclarationName: String) {
+        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
+        val ti = when(pqn) {
+            is QualifiedName -> _namespace.createTypeInstance(context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
+            is SimpleName -> {
+                val tp = context?.typeParameters?.firstOrNull{ it.name==pqn }
+                when {
+                    null==tp || null==context -> _namespace.createTypeInstance(context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
+                    else -> TypeParameterReference(context,tp.name)
+                }
+            }
+            else -> error("Unsupported")
+        }
+        _args.add(ti.asTypeArgument)
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
@@ -434,7 +457,8 @@ class TypeInstanceArgBuilder(
     }
 
     fun build(): TypeInstance {
-        return type.type(_args, false)
+        return _namespace.createTypeInstance(context, this.possiblyQualifiedName, _args, nullable)
+//        return type.type(_args, false)
     }
 }
 
@@ -483,12 +507,25 @@ class TypeArgumentBuilder(
     private val _namespace: TypeNamespace
 ) {
     private val list = mutableListOf<TypeArgument>()
-    fun typeArgument(qualifiedTypeName: String, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
+    fun typeArgument(possiblyQualifiedTypeDeclarationName: String, nullable:Boolean=false, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
         val tab = TypeArgumentBuilder(_context, _namespace)
         tab.typeArguments()
         val typeArgs = tab.build()
-        val tref = _namespace.createTypeInstance(_context, qualifiedTypeName.asPossiblyQualifiedName, typeArgs, false)
-        list.add(tref.asTypeArgument)
+        //val tref = _namespace.createTypeInstance(_context, qualifiedTypeName.asPossiblyQualifiedName, typeArgs, false)
+
+        val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
+        val ti = when(pqn) {
+            is QualifiedName -> _namespace.createTypeInstance(_context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+            is SimpleName -> {
+                val tp = _context?.typeParameters?.firstOrNull{ it.name==pqn }
+                when {
+                    null==tp || null==_context -> _namespace.createTypeInstance(_context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+                    else -> TypeParameterReference(_context,tp.name)
+                }
+            }
+            else -> error("Unsupported")
+        }
+        list.add(ti.asTypeArgument)
     }
 
     fun build(): List<TypeArgument> {
@@ -511,7 +548,7 @@ class SubtypeListBuilder(
     }
 
     fun listType(isNullable: Boolean = false, init: TypeInstanceArgBuilder.() -> Unit) {
-        val collType = SimpleTypeModelStdLib.List
+        val collType = SimpleTypeModelStdLib.List.qualifiedName
         val tb = TypeInstanceArgBuilder(null, this._namespace, collType, isNullable,_typeReferences)
         tb.init()
         _typeReferences.add(tb)
@@ -520,7 +557,7 @@ class SubtypeListBuilder(
     }
 
     fun listSeparatedType(isNullable: Boolean = false, init: TypeInstanceArgBuilder.() -> Unit) {
-        val collType = SimpleTypeModelStdLib.ListSeparated
+        val collType = SimpleTypeModelStdLib.ListSeparated.qualifiedName
         val tb = TypeInstanceArgBuilder(null, this._namespace, collType, isNullable,_typeReferences)
         tb.init()
         _typeReferences.add(tb)

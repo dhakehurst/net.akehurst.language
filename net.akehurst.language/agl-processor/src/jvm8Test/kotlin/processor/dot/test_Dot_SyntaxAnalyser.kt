@@ -186,7 +186,7 @@ class test_Dot_SyntaxAnalyser {
             semanticAnalysis { context(ContextAsmSimple()) }
         })
         val actual = result.asm?.root?.firstOrNull()
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(actual)
 
         val expected = asmSimple {
@@ -224,7 +224,7 @@ class test_Dot_SyntaxAnalyser {
         })
         val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test

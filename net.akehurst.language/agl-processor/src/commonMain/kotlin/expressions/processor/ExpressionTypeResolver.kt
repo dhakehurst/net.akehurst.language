@@ -5,7 +5,6 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
-import net.akehurst.language.typemodel.asm.TypeArgumentSimple
 
 class ExpressionTypeResolver(
     val typeModel: TypeModel
@@ -43,7 +42,7 @@ class ExpressionTypeResolver(
         else -> {
             when (self.declaration) {
                 is StructuredType -> {
-                    self.resolvedProperty[PropertyName(this.name)]?.typeInstance ?: error("type of RootExpression '$self' not handled")
+                    self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: error("type of RootExpression '$self' not handled")
                 }
 
                 else -> error("type of RootExpression '$self' not handled")
@@ -59,7 +58,7 @@ class ExpressionTypeResolver(
                 st.isNothing -> SimpleTypeModelStdLib.NothingType
                 st.isSelf -> self
                 else -> {
-                    self.resolvedProperty[PropertyName(st.name)]?.typeInstance
+                    self.allResolvedProperty[PropertyName(st.name)]?.typeInstance
                 }
             }
 
@@ -87,7 +86,7 @@ class ExpressionTypeResolver(
                 st.isNothing -> null
                 st.isSelf -> null
                 else -> {
-                    self.resolvedProperty[PropertyName(st.name)]
+                    self.allResolvedProperty[PropertyName(st.name)]
                 }
             }
 
@@ -96,7 +95,7 @@ class ExpressionTypeResolver(
         var acc = pd?.typeInstance
         val r = expr.parts.forEach {
             pd = when (it) {
-                is PropertyCall -> acc?.resolvedProperty?.get(it.propertyName)
+                is PropertyCall -> acc?.allResolvedProperty?.get(it.propertyName)
                 else -> null //everything must be property calls
             }
             acc = pd?.typeInstance
@@ -105,7 +104,7 @@ class ExpressionTypeResolver(
     }
 
     fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =
-        self?.resolvedProperty?.get(this.propertyName)?.typeInstance ?: SimpleTypeModelStdLib.NothingType
+        self?.allResolvedProperty?.get(this.propertyName)?.typeInstance ?: SimpleTypeModelStdLib.NothingType
 
     fun WithExpression.typeOfWithExpressionFor(self: TypeInstance): TypeInstance {
         val ctxType = this.withContext.typeOfExpressionFor(self)

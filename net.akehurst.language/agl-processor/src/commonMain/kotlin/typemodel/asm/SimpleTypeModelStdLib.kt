@@ -61,7 +61,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empty
     private val List_typeName = SimpleName("List")
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
-        typeDecl.addSupertype(Collection_typeName)
+        typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
         typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("first"), TypeParameterReference(typeDecl, SimpleName("E")), "First element in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("last"), TypeParameterReference(typeDecl, SimpleName("E")), "Last element in the list.")
@@ -91,7 +91,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empty
         }
     }
     val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed(SimpleName("ListSeparated")).also { typeDecl ->
-        typeDecl.addSupertype(List.qualifiedName)
+        typeDecl.addSupertype(List.type(listOf(AnyType.asTypeArgument)))
         (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("E")), TypeParameterSimple(SimpleName("I"))))
         //typeDecl.appendPropertyPrimitive("size", this.createTypeInstance(typeDecl, "Integer"), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(
@@ -106,19 +106,30 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(QualifiedName("std"), empty
         typeDecl.appendPropertyPrimitive(PropertyName("separators"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
     }
     private val Set_typeName = SimpleName("Set")
-    val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName).also {
-        (it.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
-        it.addSupertype(Collection_typeName)
+    val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName).also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+        typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
     private val OrderedSet_typeName = SimpleName("OrderedSet")
-    val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName).also {
-        (it.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
-        it.addSupertype(Collection_typeName)
+    val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName).also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+        typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
     private val Map_typeName = SimpleName("Map")
-    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName).also {
-        (it.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V"))))
-        it.addSupertype(Collection_typeName)
+    val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName).also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V"))))
+        typeDecl.addSupertype(
+            Collection.type(
+                listOf(
+                    Pair.type(
+                        listOf(
+                            TypeParameterReference(typeDecl, SimpleName("K")).asTypeArgument,
+                            TypeParameterReference(typeDecl, SimpleName("V")).asTypeArgument
+                        )
+                    ).asTypeArgument
+                )
+            )
+        )
     }
 
 }

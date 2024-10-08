@@ -33,7 +33,7 @@ class test_ExpressionsSemantics {
             namespace("test") {
                 dataType("Test") {
                     propertyListType("list", false, 0) {
-                        this.primitiveRef("String")
+                        this.ref("String")
                     }
                 }
             }
@@ -54,7 +54,7 @@ class test_ExpressionsSemantics {
             namespace("test") {
                 dataType("Test") {
                     propertyListType("list", false, 0) {
-                        this.primitiveRef("String")
+                        this.ref("String")
                     }
                 }
             }
@@ -76,7 +76,7 @@ class test_ExpressionsSemantics {
             namespace("test") {
                 dataType("Test") {
                     propertyListType("list", false, 0) {
-                        this.primitiveRef("String")
+                        this.ref("String")
                     }
                 }
             }

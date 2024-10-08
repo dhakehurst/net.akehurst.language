@@ -109,7 +109,7 @@ class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeM
         val result = { ns: TypeNamespace ->
             val dt = DataTypeSimple(ns, name)
             supertypes.forEach {
-                dt.addSupertype(it.name)
+                dt.addSupertype_dep(it.name)
                 //(it.type as DataType).addSubtype(dt.name)
             }
             property.forEach {

@@ -27,8 +27,10 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData
+import net.akehurst.language.sppt.treedata.locationForNode
 
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
@@ -60,4 +62,11 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
      * implement this to walk the tree and set the 'asm' property
      */
     abstract fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean)
+
+    /**
+     * convenience function for use from typescript
+     */
+    fun locationForNode(sentence:Sentence, node: SpptDataNode): InputLocation {
+        return sentence.locationForNode(node)
+    }
 }

@@ -3,7 +3,7 @@ dependencies {
     commonMainImplementation(project(":agl-regex"))
     commonMainImplementation(project(":collections"))
 }
-
+/*
 exportPublic {
     exportPatterns.set(
         listOf(
@@ -20,6 +20,7 @@ exportPublic {
         )
     )
 }
+*/
 
 kotlin {
     js("js") {

@@ -81,7 +81,7 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDeclaration?
 
-    fun findTupleTypeWithIdOrNull(id:Int): TupleType?
+    fun findTupleTypeWithIdOrNull(id: Int): TupleType?
 
     fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: SimpleName): PrimitiveType
@@ -112,7 +112,7 @@ interface TypeParameter {
 }
 
 interface TypeArgument {
-    val type:TypeInstance
+    val type: TypeInstance
     fun conformsTo(other: TypeArgument): Boolean
     fun signature(context: TypeNamespace?, currentDepth: Int): String
     fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
@@ -139,9 +139,9 @@ interface TypeInstance {
     val declaration: TypeDeclaration
 
     /**
-     * properties from the type, with type parameters resolved
+     * properties from this type, and all supertypes, with type parameters resolved
      */
-    val resolvedProperty: Map<PropertyName, PropertyDeclaration>
+    val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
 
     val asTypeArgument: TypeArgument
 
@@ -153,6 +153,7 @@ interface TypeInstance {
     fun signature(context: TypeNamespace?, currentDepth: Int): String
 
     fun conformsTo(other: TypeInstance): Boolean
+    fun possiblyQualifiedNameInContext(context: TypeNamespace): Any
 }
 
 interface TypeArgumentNamed : TypeArgument {
@@ -201,7 +202,11 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
     fun asStringInContext(context: TypeNamespace): String
 
     fun addTypeParameter(name: TypeParameter)
-    fun addSupertype(qualifiedTypeName: PossiblyQualifiedName)
+
+    @Deprecated("Create a TypeInstance and use addSupertype(TypeInstance). This (deprecated) method does not add TypeArgs to the supertype.")
+    fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName)
+
+    fun addSupertype(typeInstance: TypeInstance)
     fun appendPropertyPrimitive(name: PropertyName, typeInstance: TypeInstance, description: String)
     fun appendPropertyDerived(name: PropertyName, typeInstance: TypeInstance, description: String, expression: String)
     fun appendMethodPrimitive(
@@ -246,8 +251,8 @@ interface TupleType : TypeDeclaration {
 
     fun typeTuple(typeArguments: List<TypeArgumentNamed>, nullable: Boolean = false): TupleTypeInstance
 
-   // @KompositeProperty
-   // val entries: List<Pair<PropertyName, TypeInstance>>
+    // @KompositeProperty
+    // val entries: List<Pair<PropertyName, TypeInstance>>
 
     /**
      * The compares two Tuple types by checking for the same name:Type of all entries.
@@ -263,7 +268,7 @@ interface ValueType : StructuredType {
 interface InterfaceType : StructuredType {
     val subtypes: MutableList<TypeInstance>
 
-    fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
+    fun addSubtype(typeInstance: TypeInstance)
 }
 
 interface DataType : StructuredType {
@@ -273,7 +278,10 @@ interface DataType : StructuredType {
 
     val constructors: List<ConstructorDeclaration>
 
-    fun addSubtype(qualifiedTypeName: PossiblyQualifiedName)
+    @Deprecated("Create a TypeInstance and use addSubtype(TypeInstance)")
+    fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName)
+
+    fun addSubtype(typeInstance: TypeInstance)
 }
 
 interface UnnamedSupertypeType : TypeDeclaration {
@@ -333,7 +341,7 @@ interface PropertyDeclaration {
      */
     val isIdentity: Boolean
 
-    val isReadOnly:Boolean
+    val isReadOnly: Boolean
     val isReadWrite: Boolean
 
     val isStored: Boolean
@@ -341,8 +349,11 @@ interface PropertyDeclaration {
     val isPrimitive: Boolean
 
 
-    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclaration
+    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 }
+
+interface PropertyDeclarationResolved : PropertyDeclaration
+
 
 enum class PropertyCharacteristic {
     /**
@@ -387,6 +398,7 @@ enum class PropertyCharacteristic {
      * property is a constructor parameter
      */
     CONSTRUCTOR,
+
     /**
      * property is a constructor parameter
      */

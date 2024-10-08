@@ -117,20 +117,20 @@ grammar Mdl {
             dataType("matrix", "Matrix") {
                 propertyListType("row", false, 1) {
                     unnamedSuperTypeOf() {
-                        listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
-                        listType(false) { primitiveRef("String") }
+                        listSeparatedType(false) { ref("String");ref("String") }
+                        listType(false) { ref("String") }
                     }
                 }
             }
             //row = [literal / ',']+ | literal+ ;
             unnamedSuperTypeType("row") {
-                listSeparatedType(false) { primitiveRef("String");primitiveRef("String") }
-                listType(false) { primitiveRef("String") }
+                listSeparatedType(false) { ref("String");ref("String") }
+                listType(false) { ref("String") }
             }
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
             dataType("stringList", "StringList") {
-                propertyListType("double_quote_string", false, 0) { primitiveRef("String") }
+                propertyListType("double_quote_string", false, 0) { ref("String") }
             }
 
             // literal = BOOLEAN < INTEGER < REAL < DOUBLE_QUOTE_STRING  ;

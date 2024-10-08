@@ -317,6 +317,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                             transformationRule(SimpleTypeModelStdLib.AnyType, RootExpressionSimple.SELF)
                         }
 
+                        is PrimitiveType -> {
+                            transformationRule(SimpleTypeModelStdLib.AnyType, RootExpressionSimple.SELF)
+                        }
+
                         else -> error("Unsupported type '${parentTypeDecl::class.simpleName}'")
                     }
 

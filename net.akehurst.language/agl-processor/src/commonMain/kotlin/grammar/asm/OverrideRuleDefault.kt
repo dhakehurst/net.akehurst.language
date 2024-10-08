@@ -30,7 +30,7 @@ data class OverrideRuleDefault(
     override val isOverride: Boolean = true
 
     private var _overridenRhs: RuleItem? = null
-    override var overridenRhs: RuleItem
+    override var overriddenRhs: RuleItem
         get() {
             return this._overridenRhs ?: throw GrammarException("overridenRhs of rule must be set", null)
         }
@@ -41,17 +41,17 @@ data class OverrideRuleDefault(
 
     override val rhs: RuleItem
         get() = when (overrideKind) {
-            OverrideKind.REPLACE -> overridenRhs
+            OverrideKind.REPLACE -> overriddenRhs
             OverrideKind.SUBSTITUTION -> {
-                when (overridenRhs) {
+                when (overriddenRhs) {
                     is NonTerminal -> {
-                        val tg = (overridenRhs as NonTerminal).targetGrammar?.resolved
+                        val tg = (overriddenRhs as NonTerminal).targetGrammar?.resolved
                         when {
                             tg == null -> error("Override rule using substitution must contain a \"qualified\" non-terminal, there is no reference to an extended grammar.")
                             this.grammar.allExtendsResolved.any { eg -> tg == eg } -> {
                                 val or = tg.findAllResolvedGrammarRule(this.name)
                                 when {
-                                    null == or -> error("Cannot find rule '${(overridenRhs as NonTerminal).ruleReference}' in grammar '${tg.name}' for override substitution.")
+                                    null == or -> error("Cannot find rule '${(overriddenRhs as NonTerminal).ruleReference}' in grammar '${tg.name}' for override substitution.")
                                     else -> {
                                         or.rhs
                                     }
@@ -77,7 +77,7 @@ data class OverrideRuleDefault(
 
                     else -> when (or.rhs) {
                         is ChoiceLongest -> {
-                            val appendedAlternatives = (or.rhs as ChoiceLongest).alternative + overridenRhs
+                            val appendedAlternatives = (or.rhs as ChoiceLongest).alternative + overriddenRhs
                             val ac = ChoiceLongestDefault(appendedAlternatives)
                             val indices = (or.rhs as ChoiceLongestDefault).index!!
                             val ni = indices.dropLast(1) + indices.last() + 1
@@ -86,7 +86,7 @@ data class OverrideRuleDefault(
                         }
 
                         is NonTerminal -> {
-                            val appendedAlternatives = listOf(or.rhs, overridenRhs)
+                            val appendedAlternatives = listOf(or.rhs, overriddenRhs)
                             val ac = ChoiceLongestDefault(appendedAlternatives)
                             val ni = listOf(0, 1)
                             ac.setOwningRule(this, ni)
@@ -94,7 +94,7 @@ data class OverrideRuleDefault(
                         }
 
                         is Terminal -> {
-                            val appendedAlternatives = listOf(or.rhs, overridenRhs)
+                            val appendedAlternatives = listOf(or.rhs, overriddenRhs)
                             val ac = ChoiceLongestDefault(appendedAlternatives)
                             val ni = listOf(0, 1)
                             ac.setOwningRule(this, ni)

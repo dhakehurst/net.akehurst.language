@@ -33,7 +33,6 @@ import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import net.akehurst.language.typemodel.asm.typeModel
 
 class AsmTransformInterpreter(
@@ -70,12 +69,12 @@ class AsmTransformInterpreter(
                 dataType("BranchSeparated") {
                     subtypes("Node")
                     propertyListSeparatedType("children", false, 0) {
-                        primitiveRef("std.Any")
-                        primitiveRef("std.Any")
+                        ref("std.Any")
+                        ref("std.Any")
                     }
                     propertyListSeparatedType("child", false, 1) {
-                        primitiveRef("std.Any")
-                        primitiveRef("std.Any")
+                        ref("std.Any")
+                        ref("std.Any")
                     }
                 }
             }

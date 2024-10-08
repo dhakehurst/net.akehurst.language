@@ -22,7 +22,7 @@ grammar CommonTerminals {
 }
 
 
-grammar FrancaIDL extends CommonTerminals {
+grammar FrancaIDL : CommonTerminals {
 
 // **************************************************************
 // model root

@@ -108,7 +108,7 @@ class test_Dot_Singles {
                   §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
                   §startTag§opt2 { WS { "\s+" : ' ' } }
-                  §startTag§multi3 { §empty }
+                  §startTag§opt2 { §empty }
                   '>'
                 }
                 content { §content§choice1 { CHARDATA { "[^<]+" : 'xxxx' } } }

@@ -33,24 +33,24 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
     private val rrs = parser.ruleSet as RuntimeRuleSet
 
-    private val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
-    private val R_namespace = rrs.findRuntimeRule("namespace")
+    private val R_grammarDefinition = rrs.findRuntimeRule("unit")
+////    private val R_namespace = rrs.findRuntimeRule("namespace")
     private val R_rule = rrs.findRuntimeRule("rule")
 
-    private val R_isSkip = rrs.findRuntimeRule("isSkip")
-    private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
+   // private val R_isSkip = rrs.findRuntimeRule("isSkip")
+    //private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
 
     private val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
-    private val T_namespace = rrs.findRuntimeRule("'namespace'")
-    private val T_grammar = rrs.findRuntimeRule("'grammar'")
+//    private val T_namespace = rrs.findRuntimeRule("'namespace'")
+//    private val T_grammar = rrs.findRuntimeRule("'grammar'")
 
     private val SM = rrs.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
     private val s0 = SM.startState
-    private val G = s0.runtimeRules.first()
+//    private val G = s0.runtimeRules.first()
 
-    private val lhs_IDENTIFIER = LookaheadSetPart(false, false, false, setOf(T_IDENTIFIER))
+//    private val lhs_IDENTIFIER = LookaheadSetPart(false, false, false, setOf(T_IDENTIFIER))
 
-    private val goal = "grammarDefinition"
+    private val goal = "unit"
 
     @Test
     fun parse_xxx() {

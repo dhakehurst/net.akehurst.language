@@ -321,8 +321,8 @@ internal class Grammar2TransformRuleSet(
                             modify = { tr ->
                                 val tp = tr.resolvedType.declaration as DataType
                                 subtypeTransforms.forEach {
-                                    (it.resolvedType.declaration as DataType).addSupertype(tp.qualifiedName)
-                                    tp.addSubtype(it.resolvedType.declaration.qualifiedName)
+                                    (it.resolvedType.declaration as DataType).addSupertype_dep(tp.qualifiedName)
+                                    tp.addSubtype_dep(it.resolvedType.declaration.qualifiedName)
                                 }
                             })
                     )

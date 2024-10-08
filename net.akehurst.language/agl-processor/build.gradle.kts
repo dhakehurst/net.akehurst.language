@@ -1,5 +1,5 @@
 plugins {
-//    alias(libs.plugins.reflex)
+    alias(libs.plugins.reflex)
 }
 
 dependencies {
@@ -7,7 +7,7 @@ dependencies {
     commonMainApi(project(":agl-regex"))
     commonMainApi(project(":collections")) //TODO merge with kotlinx collections
 
-    // commonMainApi(project(":type-model"))
+    commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
 }
 
 kotlin {
@@ -39,26 +39,22 @@ kotlin {
     }
 }
 
-/*
+//  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done
+// thus we get each module to generate KotlinxReflect for itself - to fix in future FIXME
 kotlinxReflect {
     forReflectionMain.set(
         listOf(
-            "net.akehurst.language.api.language.base.*",
-            "net.akehurst.language.agl.language.base.*",
-            "net.akehurst.language.api.language.grammar.*",
-            "net.akehurst.language.agl.language.grammar.asm.*",
-            "net.akehurst.language.typemodel.api.*",
-            "net.akehurst.language.typemodel.simple.*",
+            "net.akehurst.language.base.**",
+            "net.akehurst.language.grammar.**",
+            "net.akehurst.language.typemodel.**",
             "net.akehurst.language.api.grammarTypeModel.*",
             "net.akehurst.language.agl.grammarTypeModel.*",
-            "net.akehurst.language.api.language.expressions.*",
-            "net.akehurst.language.agl.language.expressions.asm.*",
-            "net.akehurst.language.api.language.reference.*",
-            "net.akehurst.language.agl.language.reference.asm.*",
+            "net.akehurst.language.expressions.**",
+            "net.akehurst.language.reference.**"
         )
     )
 }
-*/
+
 /*
 exportPublic {
     exportPatterns.set(

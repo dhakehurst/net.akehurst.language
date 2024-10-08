@@ -86,9 +86,8 @@ class test_AtomBasic(val data: Data) {
             val resultStr = result.sppt!!.asSentence
             assertEquals(this.data.text, resultStr)
         } else {
-            assertFailsWith<LanguageProcessorException>("$data") {
-                processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
-            }
+            val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
+            assertTrue(result.issues.isNotEmpty())
         }
     }
 

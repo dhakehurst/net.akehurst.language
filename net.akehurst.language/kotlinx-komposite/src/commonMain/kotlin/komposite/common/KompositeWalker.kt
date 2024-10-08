@@ -172,7 +172,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return walkValue(null, path, info, data, targetType)
     }
 
-    protected fun walkValue(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, data: Any?, targetType: TypeInstance?): WalkInfo<P, A> {
+    protected fun walkValue(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any?, targetType: TypeInstance?): WalkInfo<P, A> {
         return when {
             null == data -> when {
                 null == targetType -> walkNull(path, info, SimpleTypeModelStdLib.NothingType)
@@ -215,7 +215,7 @@ class KompositeWalker<P : Any?, A : Any?>(
                     //TODO: would like to use qualifiedNAme but not suported on JS
                     val dt = registry.findFirstByNameOrNull(SimpleName(data::class.simpleName!!))
                         ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
-                    val ti = dt.type()
+                    val ti = dt.type() //TODO: targs?
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
             }
@@ -224,7 +224,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkValueWithType(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkValueWithType(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
         val dt = targetType.declaration
         return when {
             targetType == SimpleTypeModelStdLib.AnyType -> walkValue(owningProperty, path, info, data, null) // figure out type from data
@@ -258,7 +258,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return this.singleton(path, info, data, targetType)
     }
 
-    protected fun walkPropertyValue(owningProperty: PropertyDeclaration, path: List<String>, info: WalkInfo<P, A>, propValue: Any?): WalkInfo<P, A> {
+    protected fun walkPropertyValue(owningProperty: PropertyDeclarationResolved, path: List<String>, info: WalkInfo<P, A>, propValue: Any?): WalkInfo<P, A> {
         // PrimitiveType, ValueType and EnumType are always walked as if they were composite - the value is the 'reference'
         val propDt = owningProperty.typeInstance.declaration
         val propValType = owningProperty.typeInstance
@@ -273,8 +273,14 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkObject(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
-        val dt = targetType.declaration as DataType
+    protected fun walkObject(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
+        //val dt = targetType.declaration as DataType
+        //TODO: would like to use qualifiedNAme but not suported on JS
+        val rdt = registry.findFirstByNameOrNull(SimpleName(data::class.simpleName!!))
+            ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
+        val dt = rdt as DataType
+        val dtRes = dt.type(targetType.typeArguments)
+
         val infoob = this.objectBegin(path, info, data, dt)
         var acc = infoob.acc
 
@@ -284,15 +290,15 @@ class KompositeWalker<P : Any?, A : Any?>(
 
         //must do composites before refs, so refs refer to composites,
         //TODO...do we need to walk the tree twice to really do this correctly?
-        val compProps = dt.allProperty.values.filter { it.isComposite }
-        val refProps = dt.allProperty.values.filter { it.isReference }
+        val compProps = dtRes.allResolvedProperty.values.filter { it.isComposite }
+        val refProps = dtRes.allResolvedProperty.values.filter { it.isReference }
 
         compProps.forEach { prop -> acc = walkProperty(prop, path, infoob, acc, data) }
         refProps.forEach { prop -> acc = walkProperty(prop, path, infoob, acc, data) }
         return this.objectEnd(path, WalkInfo(info.up, acc), data, dt)
     }
 
-    private fun walkProperty(prop: PropertyDeclaration, path: List<String>, infoob: WalkInfo<P, A>, acc: A, obj: Any): A {
+    private fun walkProperty(prop: PropertyDeclarationResolved, path: List<String>, infoob: WalkInfo<P, A>, acc: A, obj: Any): A {
         return if (prop.characteristics.isEmpty()) {
             // ignore it
             //TODO: log!
@@ -307,7 +313,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkCollection(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkCollection(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
         val dt = targetType.declaration as CollectionType
         return when (data) {
             is Array<*> -> walkColl(owningProperty, path, info, data.toList(), targetType)
@@ -318,7 +324,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkColl(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, coll: Collection<*>, targetType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkColl(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, coll: Collection<*>, targetType: TypeInstance): WalkInfo<P, A> {
         val dt = targetType.declaration as CollectionType
         val elementType = targetType.typeArguments[0]
         val infolb = this.collBegin(path, info, coll, dt, elementType.type)
@@ -343,7 +349,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return this.collEnd(path, infole, coll, dt, elementType.type)
     }
 
-    protected fun walkCollElement(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, value: Any?, elementType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkCollElement(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, value: Any?, elementType: TypeInstance): WalkInfo<P, A> {
         return when {
             null == value -> walkNull(path, info, elementType)
             //registry.isPrimitive(value) -> walkPrimitive(path, info, value)
@@ -353,7 +359,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkMap(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, data: Map<*, *>, typeInstance: TypeInstance): WalkInfo<P, A> {
+    protected fun walkMap(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Map<*, *>, typeInstance: TypeInstance): WalkInfo<P, A> {
         val dt = typeInstance.declaration as CollectionType
         val entryKeyType = typeInstance.typeArguments[0]
         val entryValType = typeInstance.typeArguments[1]
@@ -384,7 +390,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return this.mapEnd(path, infole, data, dt, entryKeyType.type, entryValType.type)
     }
 
-    protected fun walkMapEntryKey(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, value: Any?, entryKeyType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkMapEntryKey(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, value: Any?, entryKeyType: TypeInstance): WalkInfo<P, A> {
         //key should always be a primitive or a reference, unless owning property is null! (i.e. map is the root)...I think !
         return when {
             null == value -> walkNull(path, info, entryKeyType)
@@ -393,7 +399,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkMapEntryValue(owningProperty: PropertyDeclaration?, path: List<String>, info: WalkInfo<P, A>, value: Any?, entryValType: TypeInstance): WalkInfo<P, A> {
+    protected fun walkMapEntryValue(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, value: Any?, entryValType: TypeInstance): WalkInfo<P, A> {
         return when {
             null == value -> walkNull(path, info, entryValType)
             //registry.isPrimitive(value) -> walkPrimitive(path, info, value)
@@ -403,7 +409,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         }
     }
 
-    protected fun walkReference(owningProperty: PropertyDeclaration, path: List<String>, info: WalkInfo<P, A>, propValue: Any?): WalkInfo<P, A> {
+    protected fun walkReference(owningProperty: PropertyDeclarationResolved, path: List<String>, info: WalkInfo<P, A>, propValue: Any?): WalkInfo<P, A> {
         val propValType = owningProperty.typeInstance
         return when {
             null == propValue -> walkNull(path, info, propValType)

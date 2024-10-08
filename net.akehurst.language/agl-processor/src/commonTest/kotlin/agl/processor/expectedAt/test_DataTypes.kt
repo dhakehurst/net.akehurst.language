@@ -47,10 +47,10 @@ class test_DataTypes {
 
         val testData = listOf(
 
-            Data("",0, listOf("'class'","<EOT>")),
-            Data(" ",0, listOf("'class'","<EOT>")),
-            Data(" ",1, listOf("'class'","<EOT>")),
-            Data("class",0, listOf("'class'","<EOT>")),
+            Data("",0, listOf("'class'")),
+            Data(" ",0, listOf("'class'")),
+            Data(" ",1, listOf("'class'")),
+            Data("class",0, listOf("'class'")),
             Data("class",5, listOf("ID")),
             Data("class ",5, listOf("ID")),
             Data("class ",6, listOf("ID")),
@@ -68,7 +68,7 @@ class test_DataTypes {
             Data("class A { p: X<",15, listOf("ID")),
             Data("class A { p: X<Y",16, listOf("'<'", "','","'>'")),
             Data("class A { p: X<Y>",17, listOf("ID", "}")),
-            Data("class A { p: X<Y> }",19, listOf("'class'","<EOT>")),
+            Data("class A { p: X<Y> }",19, listOf("'class'")),
 
             Data("class A { p: X<Y", 16, listOf("'<'", "','", "'>'")),
         )

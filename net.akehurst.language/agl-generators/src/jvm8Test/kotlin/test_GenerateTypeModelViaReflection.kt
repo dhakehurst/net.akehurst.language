@@ -4,6 +4,7 @@ import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -65,10 +66,10 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             baseTm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            emptyList()
+            listOf(AglBase.komposite, AglGrammar.komposite)
         )
-        gen.addPackage("net.akehurst.language.api.language.grammar")
-        gen.addPackage("net.akehurst.language.agl.language.grammar.asm")
+        gen.addPackage("net.akehurst.language.grammar.api")
+        gen.addPackage("net.akehurst.language.grammar.asm")
         val tm = gen.generate()
         return Pair(tm,added)
     }

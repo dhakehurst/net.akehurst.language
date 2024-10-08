@@ -169,7 +169,6 @@ interface PreferenceRule : GrammarItem {
 enum class Associativity { LEFT, RIGHT }
 
 interface PreferenceOption : Formatable {
-
     val item: NonTerminal
     val choiceNumber: Int
     val onTerminals: List<SimpleItem>
@@ -194,7 +193,7 @@ enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE, SUBSTITUTION }
 
 interface OverrideRule : GrammarRule {
     val overrideKind: OverrideKind
-    val overridenRhs: RuleItem
+    val overriddenRhs: RuleItem
 }
 
 interface RuleItem {

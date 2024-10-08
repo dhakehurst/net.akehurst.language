@@ -11,7 +11,7 @@ grammar Base {
     leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
 }
 
-grammar Expressions extends Base {
+grammar Expressions : Base {
     expression
 		= root
 		| literalValue
@@ -56,7 +56,7 @@ grammar Expressions extends Base {
     leaf NULL = 'null' ;
 }
 
-grammar GraphConstruction extends Base {
+grammar GraphConstruction : Base {
 	subgraphConstruction = nodeSrc linkedSubGraphConstruction? whereConstructionClause?;
     nodeSrc = nodeConstruction | nodeReference ;
     nodeReference = NAME ;
@@ -83,7 +83,7 @@ grammar GraphConstruction extends Base {
     aliasDefinition = 'AS' NAME ;
 }
 
-grammar GraphPathExpressions extends Base {
+grammar GraphPathExpressions : Base {
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
 	nodeSelector = nodeTypeReferenceExpression aliasDefinition? ;
@@ -131,7 +131,7 @@ grammar GraphPathExpressions extends Base {
 	linkTypeReference = NAME ;
 }
 
-grammar Queries extends Base {
+grammar Queries : Base {
     query = singleQuery | compositeQuery | letInQuery;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;
     compositeQuery = [ singleQuery / compositionOperator ]2+ ;
@@ -177,7 +177,7 @@ grammar Queries extends Base {
 }
 
 // Traceability Information Model
-grammar TIM extends Base {
+grammar TIM : Base {
     model = 'typed-graph-model' '{'
         nodeList
         linkList
@@ -200,7 +200,7 @@ grammar TIM extends Base {
     leaf INT = "[1-9][0-9]*" ;
 }
 
-grammar Unit extends Base {
+grammar Unit : Base {
 
     unit = query model? ;
     query = Queries::query ;

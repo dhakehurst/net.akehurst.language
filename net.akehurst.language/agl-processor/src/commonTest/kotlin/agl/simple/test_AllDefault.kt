@@ -1057,7 +1057,7 @@ class test_AllDefault {
             unnamedSuperTypeType("S") {
                 typeRef("BC")
                 listType(false) {
-                    primitiveRef("String")
+                    ref("String")
                 }
             }
             stringTypeFor("b")
@@ -1072,7 +1072,7 @@ class test_AllDefault {
             unnamedSubtypeRule("S", "child[0]") {
                 typeRef("BC")
                 listType(false) {
-                    primitiveRef("String")
+                    ref("String")
                 }
             }
             createObject("BC", "BC") {
@@ -1144,7 +1144,7 @@ class test_AllDefault {
             unnamedSuperTypeType("S") {
                 typeRef("BC")
                 listType(false) {
-                    elementRef("D")
+                    ref("D")
                 }
             }
             dataType("BC", "BC") {
@@ -1166,7 +1166,7 @@ class test_AllDefault {
             unnamedSubtypeRule("S", "child[0]") {
                 typeRef("BC")
                 listType(false) {
-                    elementRef("D")
+                    ref("D")
                 }
             }
             createObject("BC", "BC") {
@@ -1819,7 +1819,7 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyListType("a", false, 0) { primitiveRef("String") }
+                propertyListType("a", false, 0) { ref("String") }
             }
             stringTypeFor("a")
         }
@@ -1891,7 +1891,7 @@ class test_AllDefault {
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
-                propertyListType("b", false, 1) { primitiveRef("String") }
+                propertyListType("b", false, 1) { ref("String") }
                 propertyPrimitiveType("c", "String", false, 2)
             }
             stringTypeFor("a")
@@ -2212,11 +2212,11 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyListType("as", false, 0) { primitiveRef("String") }
+                propertyListType("as", false, 0) { ref("String") }
             }
             //listTypeFor("as", StringType)
             dataType("as", "As") {
-                propertyListType("a", false, 0) { primitiveRef("String") }
+                propertyListType("a", false, 0) { ref("String") }
             }
             stringTypeFor("a")
         }
@@ -2390,9 +2390,11 @@ class test_AllDefault {
                 propertyListTypeOf("ab", "AB", false, 0)
             }
             dataType("A", "A") {
+                supertypes("AB")
                 propertyPrimitiveType("a", "String", false, 0)
             }
             dataType("B", "B") {
+                supertypes("AB")
                 propertyPrimitiveType("b", "String", false, 0)
             }
             dataType("AB", "AB") {
@@ -2920,9 +2922,11 @@ class test_AllDefault {
                 propertyListTypeOf("ab", "AB", false, 0)
             }
             dataType("A", "A") {
+                supertypes("AB")
                 propertyPrimitiveType("a", "String", false, 0)
             }
             dataType("B", "B") {
+                supertypes("AB")
                 propertyPrimitiveType("b", "String", false, 0)
             }
             dataType("AB", "AB") {
@@ -3173,11 +3177,11 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyListType("as", false, 0) { primitiveRef("String") }
+                propertyListType("as", false, 0) { ref("String") }
                 propertyPrimitiveType("b", "String", true, 1)
             }
             dataType("As", "As") {
-                propertyListType("a", false, 0) { primitiveRef("String") }
+                propertyListType("a", false, 0) { ref("String") }
             }
             stringTypeFor("A")
             stringTypeFor("B")
@@ -4674,7 +4678,7 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     typeRef("BC")
-                    listType { primitiveRef("String") }
+                    listType { ref("String") }
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -4797,7 +4801,7 @@ class test_AllDefault {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", true, 1) {
                     typeRef("BC")
-                    listType { primitiveRef("String") }
+                    listType { ref("String") }
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
