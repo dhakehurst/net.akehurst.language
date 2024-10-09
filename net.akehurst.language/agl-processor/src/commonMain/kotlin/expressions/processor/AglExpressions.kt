@@ -18,7 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.parser.api.RulePosition
 
 internal object AglExpressions {

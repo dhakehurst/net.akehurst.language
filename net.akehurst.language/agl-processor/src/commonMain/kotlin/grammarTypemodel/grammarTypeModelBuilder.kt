@@ -15,18 +15,19 @@
  *
  */
 
-package net.akehurst.language.agl.grammarTypeModel
+package net.akehurst.language.grammarTypemodel.builder
 
-import net.akehurst.language.typemodel.asm.DataTypeBuilder
-import net.akehurst.language.typemodel.asm.SubtypeListBuilder
-import net.akehurst.language.typemodel.asm.TypeModelDslMarker
-import net.akehurst.language.typemodel.asm.TypeInstanceArgBuilder
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.base.api.*
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.typemodel.builder.DataTypeBuilder
+import net.akehurst.language.typemodel.builder.SubtypeListBuilder
+import net.akehurst.language.typemodel.builder.TypeInstanceArgBuilder
+import net.akehurst.language.typemodel.builder.TypeModelDslMarker
 
 fun grammarTypeModel(
     namespaceQualifiedName: String,

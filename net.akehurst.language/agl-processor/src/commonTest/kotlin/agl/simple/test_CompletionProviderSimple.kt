@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

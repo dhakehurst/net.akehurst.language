@@ -17,22 +17,22 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.transform.asm.*
-import net.akehurst.language.expressions.asm.*
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformNamespace
+import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.transform.asm.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.DataTypeSimple
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -128,7 +128,7 @@ internal class Grammar2Namespaces(
             ?: let {
                 val ns = GrammarTypeNamespaceSimple(
                     qualifiedName = qualifiedName,
-                    imports = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
+                    import = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
                 )
                 typeModel.addAllNamespaceAndResolveImports(listOf(SimpleTypeModelStdLib, ns))
                 ns

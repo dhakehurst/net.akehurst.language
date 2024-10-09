@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

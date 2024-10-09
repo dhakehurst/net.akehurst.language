@@ -17,7 +17,7 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.expressions.processor.AglExpressions
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 
 internal object AglCrossReferences {
     //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {

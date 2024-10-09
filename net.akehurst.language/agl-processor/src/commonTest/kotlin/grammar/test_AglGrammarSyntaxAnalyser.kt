@@ -20,7 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules

@@ -40,7 +40,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker

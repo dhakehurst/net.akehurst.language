@@ -24,7 +24,7 @@ import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.asmSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

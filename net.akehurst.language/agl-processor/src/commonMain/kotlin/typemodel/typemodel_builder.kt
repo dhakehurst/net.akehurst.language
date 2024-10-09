@@ -15,11 +15,11 @@
  *
  */
 
-package net.akehurst.language.typemodel.asm
+package net.akehurst.language.typemodel.builder
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.api.QualifiedName.Companion.isQualifiedName
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.*
 
 @DslMarker
 annotation class TypeModelDslMarker

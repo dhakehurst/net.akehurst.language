@@ -18,7 +18,7 @@ package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 import kotlin.test.Test
@@ -325,7 +325,7 @@ class test_KompositeWalker {
             "b" to 2,
             "c" to 3
         )
-        val type = SimpleTypeModelStdLib.Map.type(arguments = listOf(SimpleTypeModelStdLib.String, SimpleTypeModelStdLib.Integer))
+        val type = SimpleTypeModelStdLib.Map.type(typeArguments = listOf(SimpleTypeModelStdLib.String.asTypeArgument, SimpleTypeModelStdLib.Integer.asTypeArgument))
         sut.walk(WalkInfo("", ""), data, type)
         val expected = "Map<String,Integer> { ['a':String] = 1:Integer, ['b':String] = 2:Integer, ['c':String] = 3:Integer }"
         assertEquals(expected, result)

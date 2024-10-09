@@ -15,9 +15,9 @@
  *
  */
 
-package net.akehurst.language.agl.grammarTypeModel
+package net.akehurst.language.grammarTypemodel.asm
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
@@ -27,14 +27,13 @@ import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
-    qualifiedName: QualifiedName,
-    imports: List<Import>
-) : GrammarTypeNamespaceAbstract(qualifiedName, imports)
+    override val qualifiedName: QualifiedName,
+    import: List<Import>
+) : GrammarTypeNamespaceAbstract(import)
 
 abstract class GrammarTypeNamespaceAbstract(
-    qualifiedName: QualifiedName,
-    imports: List<Import>
-) : TypeNamespaceAbstract(qualifiedName, imports), GrammarTypeNamespace {
+    import: List<Import>
+) : TypeNamespaceAbstract(import), GrammarTypeNamespace {
 
     fun addTypeFor(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse

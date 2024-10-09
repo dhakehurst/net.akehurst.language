@@ -19,7 +19,7 @@ package net.akehurst.language.transform.processor
 
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 
 object AsmTransform {
 

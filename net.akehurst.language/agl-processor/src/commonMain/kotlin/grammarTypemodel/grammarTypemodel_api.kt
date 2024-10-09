@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.api.grammarTypeModel
+package net.akehurst.language.grammarTypemodel.api
 
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance

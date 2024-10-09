@@ -1,9 +1,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.kotlinx.komposite.processor.Komposite
-import net.akehurst.language.agl.generators.GenerateTypeModelViaReflection.Companion.asPossiblyQualifiedName
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.api.QualifiedName.Companion.asQualifiedName
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
@@ -39,6 +37,7 @@ class GenerateTypeModelViaReflection(
             "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
             "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
             "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
+            "java.util.LinkedHashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
             "java.lang.Exception" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
             "java.lang.RuntimeException" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
             "kotlin.Throwable" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
@@ -216,10 +215,7 @@ class GenerateTypeModelViaReflection(
     private fun addSuperTypes(type: TypeDeclaration, kclass: KClass<*>) {
         val imports = mutableListOf<Import>()
         val superTypes = kclass.supertypes.map {
-            toTypeInstance(type, it).let {
-                imports.addAll(it.second)
-                it.first
-            }
+            toTypeInstance(type, it)
         }
         superTypes.forEach { type.addSupertype(it) }
         imports.forEach {
@@ -228,7 +224,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    fun toTypeInstance(context:TypeDeclaration,kType: KType): Pair<TypeInstance,List<Import>> {
+    fun toTypeInstance(context:TypeDeclaration,kType: KType): TypeInstance {
         val targetNamespace = context.namespace
         val targetNamespaceName = targetNamespace.qualifiedName
         val imports = mutableListOf<Import>()
@@ -236,10 +232,7 @@ class GenerateTypeModelViaReflection(
             val tp = it.type
             when(tp) {
                 null -> error("Unsupported")
-                else -> toTypeInstance(context,tp).let {
-                    imports.addAll(it.second)
-                    it.first.asTypeArgument
-                }
+                else -> toTypeInstance(context,tp).asTypeArgument
             }
         }
         val clz = kType.classifier
@@ -263,7 +256,12 @@ class GenerateTypeModelViaReflection(
             is KTypeParameter -> TypeParameterReference(context, subName.simpleName)
             else -> error("Unsupported")
         }
-        return Pair(ti, imports)
+
+        _requires[context.qualifiedName].addAll(imports.map {
+            it.asQualifiedName
+        })
+        imports.forEach { context.namespace.addImport(it) }
+        return ti
     }
 
     private fun addPrimitiveType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
@@ -332,9 +330,7 @@ class GenerateTypeModelViaReflection(
             val prms = c.valueParameters.map { cp ->
                 val pn = net.akehurst.language.typemodel.api.ParameterName(cp.name!!)
                 //val (ty, req) = cp.type.asTypeInstance(ns, type, substituteTypes)
-                val(ti, imps) = toTypeInstance(type, cp.type)
-                _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
-                imps.forEach { ns.addImport(it) }
+                val ti = toTypeInstance(type, cp.type)
                 ParameterDefinitionSimple(pn, ti, null)
             }
             when (type) {
@@ -360,11 +356,9 @@ class GenerateTypeModelViaReflection(
                     mp.javaField == null -> { //must be derived
                         val pn = PropertyName(mp.name)
                         //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                        val(ti, imps) = toTypeInstance(type, mp.returnType)
-                        _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
-                        imps.forEach { ns.addImport(it) }
+                        val ti = toTypeInstance(type, mp.returnType)
                         when {
-                            //comp_ref.second -> addStoredProperty(ns, type, mp, comp_ref.first) // explicit komposite must be stored
+                            comp_ref.second -> addStoredProperty(ns, type, mp, comp_ref.first) // explicit komposite must be stored
                             else -> type.appendPropertyDerived(pn, ti, "from JVM reflection", "")
                         }
                     }
@@ -372,9 +366,7 @@ class GenerateTypeModelViaReflection(
                     Lazy::class.java.isAssignableFrom(mp.javaField!!.type) -> { // also derived
                         val pn = PropertyName(mp.name)
                         //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                        val(ti, imps) = toTypeInstance(type, mp.returnType)
-                        _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
-                        imps.forEach { ns.addImport(it) }
+                        val ti = toTypeInstance(type, mp.returnType)
                         type.appendPropertyDerived(pn, ti, "from JVM reflection", "")
                     }
 
@@ -391,9 +383,7 @@ class GenerateTypeModelViaReflection(
             is StructuredType -> {
                 val pn = PropertyName(mp.name)
                 //val (ty, req) = mp.returnType.asTypeInstance(ns, type, substituteTypes)
-                val(ti, imps) = toTypeInstance(type, mp.returnType)
-                _requires[type.qualifiedName].addAll(imps.map { it.asQualifiedName })
-                imps.forEach { ns.addImport(it) }
+                val ti = toTypeInstance(type, mp.returnType)
                 val vv = when {
                     mp is KMutableProperty1<*, *> -> PropertyCharacteristic.READ_WRITE
                     mp.returnType.isMutableCollection -> PropertyCharacteristic.READ_WRITE
@@ -477,7 +467,7 @@ class GenerateTypeModelViaReflection(
     private fun findClasses(packageName: String): List<KClass<*>> {
         val result = mutableListOf<KClass<*>>()
         val path = "/" + packageName.replace('.', '/')
-        val uri = this::class.java.getResource(path)!!.toURI()
+        val uri = this::class.java.getResource(path)?.toURI() ?: error("Cannot find resource with path '$path'")
         var fileSystem: FileSystem? = null
         val filePath = if (uri.scheme == "jar") {
             fileSystem = FileSystems.newFileSystem(uri, emptyMap<String, Any>())

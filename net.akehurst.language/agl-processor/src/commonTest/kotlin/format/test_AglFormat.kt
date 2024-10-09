@@ -17,7 +17,7 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.format.test.FormatModelTest
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.typemodel.test.TypeModelTest

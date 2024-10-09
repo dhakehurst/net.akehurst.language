@@ -15,13 +15,14 @@
  *
  */
 
-package net.akehurst.language.grammar.asm
+package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.*
 
 @DslMarker
 annotation class GrammarBuilderMarker

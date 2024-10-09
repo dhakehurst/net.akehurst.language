@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.reference.asm.builder
+package net.akehurst.language.reference.builder
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.asm.NavigationSimple

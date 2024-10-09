@@ -28,8 +28,8 @@ class ModelDefault<NT : Namespace<DT>, DT : Definition<DT>>(
 }
 
 class NamespaceDefault<DT : Definition<DT>>(
-    qualifiedName: QualifiedName
-) : NamespaceAbstract<DT>(qualifiedName) {
+    override val qualifiedName: QualifiedName
+) : NamespaceAbstract<DT>() {
 
 }
 
@@ -54,9 +54,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     }
 }
 
-abstract class NamespaceAbstract<DT : Definition<DT>>(
-    override val qualifiedName: QualifiedName
-) : Namespace<DT> {
+abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
 
     override val import: List<Import> = mutableListOf()
 
@@ -111,7 +109,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     // --- Implementation ---
     protected val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
-    protected val _definition = mutableMapOf<SimpleName, DT>()
+    protected val _definition = linkedMapOf<SimpleName, DT>() //order is important
 
     fun addDefinition(value: DT) {
         _definition[value.name] = value

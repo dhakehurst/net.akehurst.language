@@ -117,7 +117,7 @@ class OptionalItemDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        return if (0 == index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = this.item.allTerminal
@@ -152,7 +152,7 @@ class GroupDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        return if (0 == index) this.groupedContent else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        return if (0 == index) this.groupedContent else error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = this.groupedContent.allTerminal
@@ -182,7 +182,7 @@ class EmptyRuleDefault : TangibleItemAbstract(), EmptyRule {
     }
 
     override fun subItem(index: Int): RuleItem {
-        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        error("subitem ${index} not found")
     }
 
     override fun toString(): String = "/* empty */"
@@ -203,7 +203,7 @@ class TerminalDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = setOf(this) //emptySet()
@@ -235,7 +235,7 @@ class NonTerminalDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = emptySet()
@@ -264,7 +264,7 @@ class EmbeddedDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = emptySet()
@@ -277,15 +277,13 @@ class EmbeddedDefault(
 }
 
 sealed class ListOfItemsAbstract(
-    override val min: Int,
-    override val max: Int,
 ) : ConcatenationItemAbstract(), ListOfItems {}
 
 class SimpleListDefault(
-    min_: Int,
-    max_: Int,
+    override val min: Int,
+    override val max: Int,
     override val item: RuleItem
-) : ListOfItemsAbstract(min_, max_), SimpleList {
+) : ListOfItemsAbstract(), SimpleList {
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -295,7 +293,7 @@ class SimpleListDefault(
     }
 
     override fun subItem(index: Int): RuleItem {
-        return if (0 == index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+        return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
     override val allTerminal: Set<Terminal> get() = this.item.allTerminal
@@ -317,12 +315,12 @@ class SimpleListDefault(
 }
 
 class SeparatedListDefault(
-    min_: Int,
-    max_: Int,
+    override val min: Int,
+    override val max: Int,
     override val item: RuleItem,
     override val separator: RuleItem,
     //override val associativity: SeparatedListKind
-) : ListOfItemsAbstract(min_, max_), SeparatedList {
+) : ListOfItemsAbstract(), SeparatedList {
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -336,7 +334,7 @@ class SeparatedListDefault(
         return when (index) {
             0 -> this.item
             1 -> this.separator
-            else -> throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+            else -> error("subitem ${index} not found")
         }
     }
 

@@ -18,7 +18,7 @@
 package net.akehurst.language.transform.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.test.TypeModelTest

@@ -111,8 +111,8 @@ class TransformModelDefault(
 }
 
 internal class TransformNamespaceDefault(
-    qualifiedName: QualifiedName,
-) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(qualifiedName) {
+    override val qualifiedName: QualifiedName,
+) : TransformNamespace, NamespaceAbstract<TransformRuleSet>() {
 
 }
 

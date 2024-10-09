@@ -19,7 +19,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser

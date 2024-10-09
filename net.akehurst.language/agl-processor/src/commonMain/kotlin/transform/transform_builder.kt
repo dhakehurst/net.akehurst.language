@@ -15,28 +15,30 @@
  *
  */
 
-package net.akehurst.language.transform.asm
+package net.akehurst.language.transform.builder
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.asm.*
+import net.akehurst.language.expressions.asm.AssignmentStatementSimple
+import net.akehurst.language.expressions.asm.CreateObjectExpressionSimple
+import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformNamespace
+import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.transform.asm.*
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.SubtypeListBuilder
+import net.akehurst.language.typemodel.builder.SubtypeListBuilder
 
 @DslMarker
 annotation class AsmTransformModelDslMarker

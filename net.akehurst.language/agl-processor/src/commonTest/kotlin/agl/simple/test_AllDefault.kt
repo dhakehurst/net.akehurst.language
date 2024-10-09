@@ -20,7 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
@@ -34,8 +34,8 @@ import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.asm.AsmTransformRuleSetBuilder
-import net.akehurst.language.transform.asm.asmTransform
+import net.akehurst.language.transform.builder.AsmTransformRuleSetBuilder
+import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.transform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test

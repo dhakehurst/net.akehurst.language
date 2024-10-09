@@ -21,8 +21,8 @@ import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
 import kotlin.jvm.JvmInline
 
-class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
-class GrammarRuleItemNotFoundException(message: String) : RuntimeException(message)
+//class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
+//class GrammarRuleItemNotFoundException(message: String) : RuntimeException(message)
 
 
 interface GrammarModel : Model<GrammarNamespace, Grammar> {

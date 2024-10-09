@@ -18,10 +18,10 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 
 object AglBase {
     const val goalRuleName = "qualifiedName"
@@ -80,15 +80,12 @@ object AglBase {
     interface Model {
         cmp namespace
     }
-    interface Namespace {
-        cmp definition
-    }
     
 namespace net.akehurst.language.base.asm
     class NamespaceAbstract {
         cmp _definition
     }
-    """
+"""
 
     /** implemented as kotlin classes **/
     val typeModel: TypeModel by lazy {
@@ -126,6 +123,9 @@ namespace net.akehurst.language.base.asm
                 interfaceType("Model") {
                     typeParameters("NT", "DT")
                     supertype("Formatable")
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
+                        typeArgument("NT")
+                    }
                 }
                 interfaceType("Formatable") {
 
@@ -154,21 +154,19 @@ namespace net.akehurst.language.base.asm
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                     }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
                 }
                 dataType("NamespaceAbstract") {
                     typeParameters("DT")
-                    supertype("net.akehurst.language.base.api.Namespace") { ref("DT") }
-                    constructor_ {
-                        parameter("qualifiedName", "QualifiedName", false)
-                    }
+                    supertype("Namespace") { ref("DT") }
+                    constructor_ {}
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "_definition", "Map", false) {
-                        typeArgument("net.akehurst.language.base.api.SimpleName")
+                        typeArgument("SimpleName")
                         typeArgument("DT")
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
-                        typeArgument("net.akehurst.language.base.api.Import")
+                        typeArgument("Import")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
                 }
                 dataType("ModelDefault") {
                     typeParameters("NT", "DT")
@@ -179,12 +177,12 @@ namespace net.akehurst.language.base.asm
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
-                        typeArgument("net.akehurst.language.base.asm.ModelDefault.NT")
+                        typeArgument("NT")
                     }
                 }
                 dataType("ModelAbstract") {
                     typeParameters("NT", "DT")
-                    supertype("net.akehurst.language.base.api.Model") { ref("NT"); ref("DT") }
+                    supertype("Model") { ref("NT"); ref("DT") }
                     constructor_ {}
                 }
             }

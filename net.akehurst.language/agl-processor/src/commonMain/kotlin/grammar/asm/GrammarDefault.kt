@@ -37,8 +37,8 @@ class GrammarModelDefault(
 fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, listOf(this.namespace as GrammarNamespace))
 
 class GrammarNamespaceDefault(
-    qualifiedName: QualifiedName
-) : GrammarNamespace, NamespaceAbstract<Grammar>(qualifiedName) {
+    override val qualifiedName: QualifiedName
+) : GrammarNamespace, NamespaceAbstract<Grammar>() {
 
 }
 
@@ -112,8 +112,10 @@ abstract class GrammarAbstract(
         }
     }
 
-    override val selfReference = GrammarReferenceDefault(this.namespace, this.name).also {
-        it.resolveAs(this)
+    override val selfReference by lazy {
+        GrammarReferenceDefault(this.namespace, this.name).also {
+            it.resolveAs(this)
+        }
     }
 
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)

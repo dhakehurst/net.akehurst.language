@@ -17,6 +17,7 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.kotlinx.komposite.api.KompositeException
+import net.akehurst.kotlinx.komposite.common.DatatypeRegistry.Companion.isKotlinMap
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.typemodel.api.*
@@ -47,6 +48,7 @@ fun PropertyDeclaration.get(obj: Any): Any? {
     val reflect = obj.reflect()
     return reflect.getProperty(this.name.value)
 }
+
 /*
 fun DatatypeProperty.set(obj: Any, value: Any?) {
     try {
@@ -78,35 +80,44 @@ fun DatatypeProperty.set(obj: Any, value: Any?) {
 }
 */
 fun PropertyDeclaration.set(obj: Any, value: Any?) {
-    try{
+    try {
         val reflect = obj.reflect()
-        if (this.isReadWrite) {
-            reflect.setProperty(this.name.value, value)
-        } else {
-            val existingValue = reflect.getProperty(this.name.value)
-            when {
-                (existingValue is MutableCollection<*> && value is Collection<*>) -> {
-                    existingValue.clear()
-                    (existingValue as MutableCollection<Any>).addAll(value as Collection<Any>)
+        when {
+            (this.isReadWrite) -> {
+                try {
+                    reflect.setProperty(this.name.value, value)
+                } catch (t: Throwable) {
+                    val existingValue = reflect.getProperty(this.name.value)
+                    when {
+                        (existingValue is MutableCollection<*> && value is Collection<*>) -> {
+                            existingValue.clear()
+                            (existingValue as MutableCollection<Any>).addAll(value as Collection<Any>)
+                        }
+
+                        (existingValue is MutableCollection<*> && value is Iterable<*>) -> {
+                            existingValue.clear()
+                            (existingValue as MutableCollection<Any>).addAll(value as Iterable<Any>)
+                        }
+
+                        (existingValue is MutableCollection<*> && value is Array<*>) -> {
+                            existingValue.clear()
+                            (existingValue as MutableCollection<Any>).addAll(value as Array<Any>)
+                        }
+
+                        (existingValue is MutableMap<*, *> && value is Map<*, *>) -> {
+                            existingValue.clear()
+                            (existingValue as MutableMap<Any, Any>).putAll(value as Map<Any, Any>)
+                        }
+
+                        else -> error("Cannot set property ${this.owner.name}.${this.name} to ${value} because it is not a mutable property and not a Mutable Collection/Map")
+                    }
                 }
-                (existingValue is MutableCollection<*> && value is Iterable<*>) -> {
-                    existingValue.clear()
-                    (existingValue as MutableCollection<Any>).addAll(value as Iterable<Any>)
-                }
-                (existingValue is MutableCollection<*> && value is Array<*>) -> {
-                    existingValue.clear()
-                    (existingValue as MutableCollection<Any>).addAll(value as Array<Any>)
-                }
-                (existingValue is MutableMap<*, *> && value is Map<*, *>) -> {
-                    existingValue.clear()
-                    (existingValue as MutableMap<Any, Any>).putAll(value as Map<Any, Any>)
-                }
-                else -> error("Cannot set property ${this.owner.name}.${this.name} to ${value} because it is not a mutable property or Mutable collection")
             }
+            else -> error("Cannot set property ${this.owner.name}.${this.name} to ${value} because it is not a mutable property or Mutable Collection/Map")
         }
 
     } catch (t: Throwable) {
-        throw KompositeException("Unable to set property ${this.owner.name}.${this.name} to ${value} due to ${t.message ?: "Unknown"}")
+        throw KompositeException("Unable to set property ${this.owner.name}.${this.name} to ${value} due to ${t.message ?: "Unknown"}",t)
     }
 }
 

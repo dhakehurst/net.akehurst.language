@@ -18,9 +18,9 @@
 package net.akehurst.language.agl.default_
 
 
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.base.api.DefinitionBlock
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*

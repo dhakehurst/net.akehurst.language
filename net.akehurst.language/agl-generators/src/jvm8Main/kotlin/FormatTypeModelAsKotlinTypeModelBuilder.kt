@@ -6,6 +6,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeParameterReference
 
 data class TypeModelFormatConfiguration(
     val exludedNamespaces: List<QualifiedName> = emptyList(),
@@ -157,6 +158,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                     .joinToString(separator = "\n", postfix = "\n") { st ->
                         val pqn = when {
                             st.declaration.namespace == context -> st.typeName.value
+                            context.import.contains(st.qualifiedTypeName.front.asImport) -> st.typeName.value
                             else -> st.qualifiedTypeName.value // TODO: add import if not name clash
                         }
                         val targs = when {
@@ -210,7 +212,13 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                 val sb = StringBuilder()
                 sb.append("{\n")
                 sb.appendWithEol(pd.typeInstance.typeArguments) {
-                    "${indent.inc}typeArgument(\"${it.type.qualifiedTypeName.value}\")" //TODO: nested args
+                    val ty = it.type
+                    val tan = when{
+                        ty is TypeParameterReference -> ty.typeParameterName.value
+                        ty.namespace == context -> ty.typeName.value
+                        else -> ty.qualifiedTypeName.value
+                    }
+                    "${indent.inc}typeArgument(\"$tan\")" //TODO: nested args
                 }
                 sb.append("${indent}}")
                 sb.toString()

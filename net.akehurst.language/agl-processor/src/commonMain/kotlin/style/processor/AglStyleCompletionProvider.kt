@@ -19,7 +19,7 @@ package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal

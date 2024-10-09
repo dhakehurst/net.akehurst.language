@@ -1,11 +1,14 @@
 package net.akehurst.language.base.processor
 
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_AglBase {
 
@@ -37,4 +40,11 @@ class test_AglBase {
         assertEquals("TestDefinition",resProp.typeInstance.typeArguments[1].type.typeName.value)
     }
 
+
+    @Test
+    fun s() {
+        val str = "a.b.c.d"
+        val pqn = str.asPossiblyQualifiedName
+        assertTrue(pqn is QualifiedName)
+    }
 }

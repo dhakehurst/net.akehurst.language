@@ -20,7 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

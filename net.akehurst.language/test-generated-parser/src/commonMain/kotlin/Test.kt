@@ -36,7 +36,7 @@ import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 
 // sample
 object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, ContextAsmSimple>() {

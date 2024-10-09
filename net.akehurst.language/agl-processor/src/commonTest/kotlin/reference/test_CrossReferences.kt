@@ -18,10 +18,10 @@ package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.reference.asm.builder.crossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.api.CrossReferenceModel
@@ -30,7 +30,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.test.Test

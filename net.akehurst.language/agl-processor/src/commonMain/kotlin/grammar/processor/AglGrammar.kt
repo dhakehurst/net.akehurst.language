@@ -18,10 +18,10 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.asm.grammar
-import net.akehurst.language.transform.asm.asmTransform
+import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 
 object AglGrammar {
 
@@ -369,36 +369,45 @@ interface Embedded {
                 }
                 interfaceType("SeparatedList") {
                     supertype("ListOfItems")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
                 }
                 interfaceType("RuleItem") {
 
                 }
                 interfaceType("PreferenceRule") {
                     supertype("GrammarItem")
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false) {
+                        typeArgument("PreferenceOption")
+                    }
                 }
                 interfaceType("PreferenceOption") {
-                    supertype("net.akehurst.language.base.api.Formatable")
+                    supertype("Formatable")
                 }
                 interfaceType("OverrideRule") {
                     supertype("GrammarRule")
                 }
                 interfaceType("OptionalItem") {
                     supertype("ConcatenationItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
                 }
                 interfaceType("NormalRule") {
                     supertype("GrammarRule")
                 }
                 interfaceType("NonTerminal") {
                     supertype("TangibleItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "targetGrammar", "GrammarReference", false)
                 }
                 interfaceType("ListOfItems") {
                     supertype("ConcatenationItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
                 }
                 interfaceType("Group") {
                     supertype("SimpleItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
                 }
                 interfaceType("GrammarRule") {
                     supertype("GrammarItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
                 }
                 interfaceType("GrammarReference") {
 
@@ -407,28 +416,44 @@ interface Embedded {
 
                 }
                 interfaceType("GrammarNamespace") {
-                    supertype("net.akehurst.language.base.api.Namespace") { ref("Grammar") }
+                    supertype("Namespace") { ref("Grammar") }
                 }
                 interfaceType("GrammarModel") {
-                    supertype("net.akehurst.language.base.api.Model") { ref("GrammarNamespace"); ref("Grammar") }
+                    supertype("Model") { ref("GrammarNamespace"); ref("Grammar") }
                 }
                 interfaceType("GrammarItem") {
-                    supertype("net.akehurst.language.base.api.Formatable")
+                    supertype("Formatable")
                 }
                 interfaceType("Grammar") {
-                    supertype("net.akehurst.language.base.api.Definition") { ref("Grammar") }
+                    supertype("Definition") { ref("Grammar") }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false) {
+                        typeArgument("GrammarReference")
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "grammarRule", "List", false) {
+                        typeArgument("GrammarRule")
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false) {
+                        typeArgument("GrammarOption")
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "preferenceRule", "List", false) {
+                        typeArgument("PreferenceRule")
+                    }
                 }
                 interfaceType("EmptyRule") {
                     supertype("TangibleItem")
                 }
                 interfaceType("Embedded") {
                     supertype("TangibleItem")
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
                 }
                 interfaceType("ConcatenationItem") {
                     supertype("RuleItem")
                 }
                 interfaceType("Concatenation") {
                     supertype("RuleItem")
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false) {
+                        typeArgument("RuleItem")
+                    }
                 }
                 interfaceType("ChoicePriority") {
                     supertype("Choice")
@@ -441,25 +466,15 @@ interface Embedded {
                 }
                 interfaceType("Choice") {
                     supertype("RuleItem")
-                }
-                dataType("GrammarRuleItemNotFoundException") {
-                    supertype("std.Exception")
-                    constructor_ {
-                        parameter("message", "String", false)
-                    }
-                }
-                dataType("GrammarException") {
-                    supertype("std.Exception")
-                    constructor_ {
-                        parameter("message", "String", false)
-                        parameter("cause", "Exception", false)
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
+                        typeArgument("RuleItem")
                     }
                 }
             }
             namespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
                 dataType("TerminalDefault") {
                     supertype("TangibleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.Terminal")
+                    supertype("Terminal")
                     constructor_ {
                         parameter("value", "String", false)
                         parameter("isPattern", "Boolean", false)
@@ -470,55 +485,50 @@ interface Embedded {
                 }
                 dataType("TangibleItemAbstract") {
                     supertype("SimpleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.TangibleItem")
+                    supertype("TangibleItem")
                     constructor_ {}
                 }
                 dataType("SimpleListDefault") {
                     supertype("ListOfItemsAbstract")
-                    supertype("net.akehurst.language.grammar.api.SimpleList")
+                    supertype("SimpleList")
                     constructor_ {
-                        parameter("min_", "Integer", false)
-                        parameter("max_", "Integer", false)
+                        parameter("min", "Integer", false)
+                        parameter("max", "Integer", false)
                         parameter("item", "RuleItem", false)
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
-                }
-                dataType("SimpleItemsBuilder") {
-
-                    constructor_ {
-                        parameter("localNamespace", "Namespace", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "localNamespace", "Namespace", false) {
-                        typeArgument("net.akehurst.language.grammar.api.Grammar")
-                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
                 }
                 dataType("SimpleItemAbstract") {
                     supertype("ConcatenationItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.SimpleItem")
+                    supertype("SimpleItem")
                     constructor_ {}
                 }
                 dataType("SeparatedListDefault") {
                     supertype("ListOfItemsAbstract")
-                    supertype("net.akehurst.language.grammar.api.SeparatedList")
+                    supertype("SeparatedList")
                     constructor_ {
-                        parameter("min_", "Integer", false)
-                        parameter("max_", "Integer", false)
+                        parameter("min", "Integer", false)
+                        parameter("max", "Integer", false)
                         parameter("item", "RuleItem", false)
                         parameter("separator", "RuleItem", false)
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
                 }
                 dataType("RuleItemAbstract") {
-                    supertype("net.akehurst.language.grammar.api.RuleItem")
+                    supertype("RuleItem")
                     constructor_ {}
                     propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "index", "List", false) {
-                        typeArgument("std.Integer")
+                        typeArgument("Integer")
                     }
                 }
                 dataType("PreferenceRuleDefault") {
                     supertype("GrammarItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.PreferenceRule")
+                    supertype("PreferenceRule")
                     constructor_ {
                         parameter("grammar", "Grammar", false)
                         parameter("forItem", "SimpleItem", false)
@@ -527,23 +537,11 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "forItem", "SimpleItem", false)
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.PreferenceOption")
-                    }
-                }
-                dataType("PreferenceRuleBuilder") {
-
-                    constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("forItem", "SimpleItem", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "forItem", "SimpleItem", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "optionList", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.PreferenceOption")
+                        typeArgument("PreferenceOption")
                     }
                 }
                 dataType("PreferenceOptionDefault") {
-                    supertype("net.akehurst.language.grammar.api.PreferenceOption")
+                    supertype("PreferenceOption")
                     constructor_ {
                         parameter("item", "NonTerminal", false)
                         parameter("choiceNumber", "Integer", false)
@@ -554,12 +552,12 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "choiceNumber", "Integer", false)
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "item", "NonTerminal", false)
                     propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "onTerminals", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.SimpleItem")
+                        typeArgument("SimpleItem")
                     }
                 }
                 dataType("OverrideRuleDefault") {
                     supertype("GrammarRuleAbstract")
-                    supertype("net.akehurst.language.grammar.api.OverrideRule")
+                    supertype("OverrideRule")
                     constructor_ {
                         parameter("grammar", "Grammar", false)
                         parameter("name", "GrammarRuleName", false)
@@ -573,10 +571,11 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "overrideKind", "OverrideKind", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
                 }
                 dataType("OptionalItemDefault") {
                     supertype("ConcatenationItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.OptionalItem")
+                    supertype("OptionalItem")
                     constructor_ {
                         parameter("item", "RuleItem", false)
                     }
@@ -584,7 +583,7 @@ interface Embedded {
                 }
                 dataType("NormalRuleDefault") {
                     supertype("GrammarRuleAbstract")
-                    supertype("net.akehurst.language.grammar.api.NormalRule")
+                    supertype("NormalRule")
                     constructor_ {
                         parameter("grammar", "Grammar", false)
                         parameter("name", "GrammarRuleName", false)
@@ -596,10 +595,11 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rhs", "RuleItem", false)
                 }
                 dataType("NonTerminalDefault") {
                     supertype("TangibleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.NonTerminal")
+                    supertype("NonTerminal")
                     constructor_ {
                         parameter("targetGrammar", "GrammarReference", false)
                         parameter("ruleReference", "GrammarRuleName", false)
@@ -609,63 +609,36 @@ interface Embedded {
                 }
                 dataType("ListOfItemsAbstract") {
                     supertype("ConcatenationItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.ListOfItems")
-                    constructor_ {
-                        parameter("min", "Integer", false)
-                        parameter("max", "Integer", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
+                    supertype("ListOfItems")
+                    constructor_ {}
                 }
                 dataType("GroupDefault") {
                     supertype("SimpleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.Group")
+                    supertype("Group")
                     constructor_ {
                         parameter("groupedContent", "RuleItem", false)
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
                 }
-                dataType("GroupConcatBuilder") {
-
-                    constructor_ {}
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "items", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
-                    }
-                }
-                dataType("GroupChoiceBuilder") {
-
-                    constructor_ {
-                        parameter("localNamespace", "Namespace", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "alternatives", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "localNamespace", "Namespace", false) {
-                        typeArgument("net.akehurst.language.grammar.api.Grammar")
-                    }
-                }
-                dataType("Grammar_asm_builderKt") {
-
-                }
                 dataType("GrammarRuleAbstract") {
                     supertype("GrammarItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.GrammarRule")
+                    supertype("GrammarRule")
                     constructor_ {}
                 }
                 dataType("GrammarReferenceDefault") {
-                    supertype("net.akehurst.language.grammar.api.GrammarReference")
+                    supertype("GrammarReference")
                     constructor_ {
                         parameter("localNamespace", "Namespace", false)
                         parameter("nameOrQName", "PossiblyQualifiedName", false)
                     }
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "localNamespace", "Namespace", false) {
-                        typeArgument("net.akehurst.language.grammar.api.Grammar")
+                        typeArgument("Grammar")
                     }
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "nameOrQName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "resolved", "Grammar", false)
                 }
                 dataType("GrammarOptionDefault") {
-                    supertype("net.akehurst.language.grammar.api.GrammarOption")
+                    supertype("GrammarOption")
                     constructor_ {
                         parameter("name", "String", false)
                         parameter("value", "String", false)
@@ -674,26 +647,27 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
                 }
                 dataType("GrammarNamespaceDefault") {
-                    supertype("net.akehurst.language.grammar.api.GrammarNamespace")
-                    supertype("net.akehurst.language.base.asm.NamespaceAbstract") { ref("net.akehurst.language.grammar.api.Grammar") }
+                    supertype("GrammarNamespace")
+                    supertype("NamespaceAbstract") { ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                     }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
                 }
                 dataType("GrammarModelDefault") {
-                    supertype("net.akehurst.language.grammar.api.GrammarModel")
-                    supertype("net.akehurst.language.base.asm.ModelAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
+                    supertype("GrammarModel")
+                    supertype("ModelAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
                         parameter("namespace", "List", false)
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.GrammarNamespace")
+                        typeArgument("GrammarNamespace")
                     }
                 }
                 dataType("GrammarItemAbstract") {
-                    supertype("net.akehurst.language.grammar.api.GrammarItem")
+                    supertype("GrammarItem")
                     constructor_ {}
                 }
                 dataType("GrammarDefaultKt") {
@@ -707,42 +681,35 @@ interface Embedded {
                         parameter("options", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.GrammarOption")
-                    }
-                }
-                dataType("GrammarBuilder") {
-
-                    constructor_ {
-                        parameter("grammar", "GrammarAbstract", false)
+                        typeArgument("GrammarOption")
                     }
                 }
                 dataType("GrammarAbstract") {
-                    supertype("net.akehurst.language.grammar.api.Grammar")
+                    supertype("Grammar")
                     constructor_ {
                         parameter("namespace", "GrammarNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.GrammarReference")
+                        typeArgument("GrammarReference")
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "grammarRule", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.GrammarRule")
+                        typeArgument("GrammarRule")
                     }
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "GrammarNamespace", false)
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "preferenceRule", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.PreferenceRule")
+                        typeArgument("PreferenceRule")
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "selfReference", "GrammarReferenceDefault", false)
                 }
                 dataType("EmptyRuleDefault") {
                     supertype("TangibleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.EmptyRule")
+                    supertype("EmptyRule")
                     constructor_ {}
                 }
                 dataType("EmbeddedDefault") {
                     supertype("TangibleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.Embedded")
+                    supertype("Embedded")
                     constructor_ {
                         parameter("embeddedGoalName", "GrammarRuleName", false)
                         parameter("embeddedGrammarReference", "GrammarReference", false)
@@ -750,71 +717,59 @@ interface Embedded {
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGoalName", "GrammarRuleName", false)
                     propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
                 }
-                dataType("ConcatenationItemBuilder") {
-                    supertype("SimpleItemsBuilder")
-                    constructor_ {
-                        parameter("localNamespace", "Namespace", false)
-                    }
-                }
                 dataType("ConcatenationItemAbstract") {
                     supertype("RuleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.ConcatenationItem")
+                    supertype("ConcatenationItem")
                     constructor_ {}
                 }
                 dataType("ConcatenationDefault") {
                     supertype("RuleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.Concatenation")
+                    supertype("Concatenation")
                     constructor_ {
                         parameter("items", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
+                        typeArgument("RuleItem")
                     }
                 }
                 dataType("ChoicePriorityDefault") {
                     supertype("ChoiceAbstract")
-                    supertype("net.akehurst.language.grammar.api.ChoicePriority")
+                    supertype("ChoicePriority")
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
+                        typeArgument("RuleItem")
                     }
                 }
                 dataType("ChoiceLongestDefault") {
                     supertype("ChoiceAbstract")
-                    supertype("net.akehurst.language.grammar.api.ChoiceLongest")
+                    supertype("ChoiceLongest")
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
-                    }
-                }
-                dataType("ChoiceItemBuilder") {
-                    supertype("SimpleItemsBuilder")
-                    constructor_ {
-                        parameter("localNamespace", "Namespace", false)
+                        typeArgument("RuleItem")
                     }
                 }
                 dataType("ChoiceAmbiguousDefault") {
                     supertype("ChoiceAbstract")
-                    supertype("net.akehurst.language.grammar.api.ChoiceAmbiguous")
+                    supertype("ChoiceAmbiguous")
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
+                        typeArgument("RuleItem")
                     }
                 }
                 dataType("ChoiceAbstract") {
                     supertype("RuleItemAbstract")
-                    supertype("net.akehurst.language.grammar.api.Choice")
+                    supertype("Choice")
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("net.akehurst.language.grammar.api.RuleItem")
+                        typeArgument("RuleItem")
                     }
                 }
             }

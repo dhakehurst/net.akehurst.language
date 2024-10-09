@@ -31,7 +31,7 @@ class NormalRuleDefault(
     private var _rhs: RuleItem? = null
     override var rhs: RuleItem
         get() {
-            return this._rhs ?: throw GrammarException("rhs of rule must be set", null)
+            return this._rhs ?: error("rhs of rule must be set")
         }
         set(value) {
             value.setOwningRule(this, listOf(0))

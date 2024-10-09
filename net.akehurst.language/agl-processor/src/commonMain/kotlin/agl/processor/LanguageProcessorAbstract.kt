@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.completionProvider.SpineDefault
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner

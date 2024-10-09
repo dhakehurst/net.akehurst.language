@@ -16,7 +16,7 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.grammar.asm.grammar
+import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet

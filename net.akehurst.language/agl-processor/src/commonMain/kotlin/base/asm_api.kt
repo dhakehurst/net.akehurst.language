@@ -17,7 +17,6 @@
 
 package net.akehurst.language.base.api
 
-import net.akehurst.language.base.api.QualifiedName.Companion.isQualifiedName
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
@@ -27,6 +26,8 @@ val String.asPossiblyQualifiedName
         this.isQualifiedName -> QualifiedName(this)
         else -> SimpleName(this)
     }
+val String.isQualifiedName: Boolean get() = this.contains(".")
+val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
 
 interface PossiblyQualifiedName {
     companion object {
@@ -45,10 +46,6 @@ interface PossiblyQualifiedName {
  */
 @JvmInline
 value class QualifiedName(override val value: String) : PossiblyQualifiedName {
-    companion object {
-        val String.isQualifiedName: Boolean get() = this.contains(".")
-        val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
-    }
 
     constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
 
@@ -108,6 +105,7 @@ interface Formatable {
 /**
  * A group of related namespaces in which the definitions may reference each other
  */
+//TODO: consider using alternative words for this interface - Domain, System, Unit, Module !
 interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
 

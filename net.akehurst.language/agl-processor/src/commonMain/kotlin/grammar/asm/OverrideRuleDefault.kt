@@ -32,7 +32,7 @@ data class OverrideRuleDefault(
     private var _overridenRhs: RuleItem? = null
     override var overriddenRhs: RuleItem
         get() {
-            return this._overridenRhs ?: throw GrammarException("overridenRhs of rule must be set", null)
+            return this._overridenRhs ?: error("overridenRhs of rule must be set")
         }
         set(value) {
             value.setOwningRule(this, listOf(0))

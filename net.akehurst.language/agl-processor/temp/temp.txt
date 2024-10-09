@@ -1,0 +1,620 @@
+Type 'net.akehurst.language.base.api.Definition' requires the following:
+  'std'
+Type 'net.akehurst.language.base.asm.ModelDefault' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.base.api.SimpleName' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.Indent' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.Asm_apiKt' requires the following:
+  'std'
+Type 'net.akehurst.language.base.asm.NamespaceDefault' requires the following:
+  'net.akehurst.language.base.api'
+Type 'net.akehurst.language.base.api.PossiblyQualifiedName' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.Formatable' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.Model' requires the following:
+  'std'
+Type 'net.akehurst.language.base.asm.NamespaceAbstract' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.base.asm.ModelAbstract' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.base.api.Namespace' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.Import' requires the following:
+  'std'
+Type 'net.akehurst.language.base.api.QualifiedName' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.PreferenceRuleDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.EmptyRuleDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarRule' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarReference' requires the following:
+  'std'
+  'net.akehurst.language.base.api'
+Type 'net.akehurst.language.grammar.api.Choice' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarItem' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.ConcatenationItem' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.TerminalDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.PreferenceOptionDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarOptionDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.SimpleListDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.SimpleItemAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+Type 'net.akehurst.language.grammar.asm.RuleItemAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarReferenceDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+  'net.akehurst.language.base.api'
+Type 'net.akehurst.language.grammar.api.TangibleItem' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.SimpleItem' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.NonTerminalDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.PreferenceOption' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.SimpleList' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarOption' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarDefaultKt' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarModel' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.TangibleItemAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+Type 'net.akehurst.language.grammar.asm.OptionalItemDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.NormalRuleDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ChoicePriorityDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ListOfItemsAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+Type 'net.akehurst.language.grammar.asm.GrammarAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+  'net.akehurst.language.base.api'
+Type 'net.akehurst.language.grammar.asm.SeparatedListDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.OptionalItem' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarRuleName' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.SeparatedList' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.GrammarNamespace' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarRuleAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.Embedded' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.NormalRule' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.Grammar' requires the following:
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.ChoicePriority' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.Concatenation' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.ChoiceAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.EmptyRule' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.Group' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.GroupDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.ChoiceAmbiguous' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.RuleItem' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarItemAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ChoiceAmbiguousDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ConcatenationDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.OverrideRule' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.EmbeddedDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ConcatenationItemAbstract' requires the following:
+  'net.akehurst.language.grammar.api'
+Type 'net.akehurst.language.grammar.asm.GrammarNamespaceDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'net.akehurst.language.base.asm'
+  'net.akehurst.language.base.api'
+Type 'net.akehurst.language.grammar.api.NonTerminal' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarModelDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'net.akehurst.language.base.asm'
+  'net.akehurst.language.base.api'
+  'std'
+Type 'net.akehurst.language.grammar.asm.ChoiceLongestDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.ListOfItems' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.ChoiceLongest' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.OverrideRuleDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'std'
+Type 'net.akehurst.language.grammar.api.PreferenceRule' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.api.Terminal' requires the following:
+  'std'
+Type 'net.akehurst.language.grammar.asm.GrammarDefault' requires the following:
+  'net.akehurst.language.grammar.api'
+  'net.akehurst.language.base.api'
+  'std'
+typeModel("Grammar", true, listOf(SimpleTypeModelStdLib)) {
+  namespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
+    enumType("SeparatedListKind", listOf("Flat", "Left", "Right"))
+    enumType("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
+    enumType("Associativity", listOf("LEFT", "RIGHT"))
+    valueType("GrammarRuleName") {
+
+      constructor_ {
+        parameter("value", "String", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+    }
+    interfaceType("Terminal") {
+      supertype("TangibleItem")
+    }
+    interfaceType("TangibleItem") {
+      supertype("SimpleItem")
+    }
+    interfaceType("SimpleList") {
+      supertype("ListOfItems")
+    }
+    interfaceType("SimpleItem") {
+      supertype("ConcatenationItem")
+    }
+    interfaceType("SeparatedList") {
+      supertype("ListOfItems")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
+    }
+    interfaceType("RuleItem") {
+
+    }
+    interfaceType("PreferenceRule") {
+      supertype("GrammarItem")
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false){
+        typeArgument("PreferenceOption")
+      }
+    }
+    interfaceType("PreferenceOption") {
+      supertype("Formatable")
+    }
+    interfaceType("OverrideRule") {
+      supertype("GrammarRule")
+    }
+    interfaceType("OptionalItem") {
+      supertype("ConcatenationItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+    }
+    interfaceType("NormalRule") {
+      supertype("GrammarRule")
+    }
+    interfaceType("NonTerminal") {
+      supertype("TangibleItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "targetGrammar", "GrammarReference", false)
+    }
+    interfaceType("ListOfItems") {
+      supertype("ConcatenationItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+    }
+    interfaceType("Group") {
+      supertype("SimpleItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
+    }
+    interfaceType("GrammarRule") {
+      supertype("GrammarItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
+    }
+    interfaceType("GrammarReference") {
+
+    }
+    interfaceType("GrammarOption") {
+
+    }
+    interfaceType("GrammarNamespace") {
+      supertype("Namespace"){ ref("Grammar") }
+    }
+    interfaceType("GrammarModel") {
+      supertype("Model"){ ref("GrammarNamespace"); ref("Grammar") }
+    }
+    interfaceType("GrammarItem") {
+      supertype("Formatable")
+    }
+    interfaceType("Grammar") {
+      supertype("Definition"){ ref("Grammar") }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false){
+        typeArgument("GrammarReference")
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "grammarRule", "List", false){
+        typeArgument("GrammarRule")
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false){
+        typeArgument("GrammarOption")
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "preferenceRule", "List", false){
+        typeArgument("PreferenceRule")
+      }
+    }
+    interfaceType("EmptyRule") {
+      supertype("TangibleItem")
+    }
+    interfaceType("Embedded") {
+      supertype("TangibleItem")
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
+    }
+    interfaceType("ConcatenationItem") {
+      supertype("RuleItem")
+    }
+    interfaceType("Concatenation") {
+      supertype("RuleItem")
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+    interfaceType("ChoicePriority") {
+      supertype("Choice")
+    }
+    interfaceType("ChoiceLongest") {
+      supertype("Choice")
+    }
+    interfaceType("ChoiceAmbiguous") {
+      supertype("Choice")
+    }
+    interfaceType("Choice") {
+      supertype("RuleItem")
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+  }
+  namespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+    dataType("TerminalDefault") {
+      supertype("TangibleItemAbstract")
+      supertype("Terminal")
+      constructor_ {
+        parameter("value", "String", false)
+        parameter("isPattern", "Boolean", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "id", "String", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isPattern", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+    }
+    dataType("TangibleItemAbstract") {
+      supertype("SimpleItemAbstract")
+      supertype("TangibleItem")
+      constructor_ {}
+    }
+    dataType("SimpleListDefault") {
+      supertype("ListOfItemsAbstract")
+      supertype("SimpleList")
+      constructor_ {
+        parameter("min", "Integer", false)
+        parameter("max", "Integer", false)
+        parameter("item", "RuleItem", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
+    }
+    dataType("SimpleItemAbstract") {
+      supertype("ConcatenationItemAbstract")
+      supertype("SimpleItem")
+      constructor_ {}
+    }
+    dataType("SeparatedListDefault") {
+      supertype("ListOfItemsAbstract")
+      supertype("SeparatedList")
+      constructor_ {
+        parameter("min", "Integer", false)
+        parameter("max", "Integer", false)
+        parameter("item", "RuleItem", false)
+        parameter("separator", "RuleItem", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
+    }
+    dataType("RuleItemAbstract") {
+      supertype("RuleItem")
+      constructor_ {}
+      propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "index", "List", false){
+        typeArgument("Integer")
+      }
+    }
+    dataType("PreferenceRuleDefault") {
+      supertype("GrammarItemAbstract")
+      supertype("PreferenceRule")
+      constructor_ {
+        parameter("grammar", "Grammar", false)
+        parameter("forItem", "SimpleItem", false)
+        parameter("optionList", "List", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "forItem", "SimpleItem", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false){
+        typeArgument("PreferenceOption")
+      }
+    }
+    dataType("PreferenceOptionDefault") {
+      supertype("PreferenceOption")
+      constructor_ {
+        parameter("item", "NonTerminal", false)
+        parameter("choiceNumber", "Integer", false)
+        parameter("onTerminals", "List", false)
+        parameter("associativity", "Associativity", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "associativity", "Associativity", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "choiceNumber", "Integer", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "item", "NonTerminal", false)
+      propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "onTerminals", "List", false){
+        typeArgument("SimpleItem")
+      }
+    }
+    dataType("OverrideRuleDefault") {
+      supertype("GrammarRuleAbstract")
+      supertype("OverrideRule")
+      constructor_ {
+        parameter("grammar", "Grammar", false)
+        parameter("name", "GrammarRuleName", false)
+        parameter("isSkip", "Boolean", false)
+        parameter("isLeaf", "Boolean", false)
+        parameter("overrideKind", "OverrideKind", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "overrideKind", "OverrideKind", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
+    }
+    dataType("OptionalItemDefault") {
+      supertype("ConcatenationItemAbstract")
+      supertype("OptionalItem")
+      constructor_ {
+        parameter("item", "RuleItem", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+    }
+    dataType("NormalRuleDefault") {
+      supertype("GrammarRuleAbstract")
+      supertype("NormalRule")
+      constructor_ {
+        parameter("grammar", "Grammar", false)
+        parameter("name", "GrammarRuleName", false)
+        parameter("isSkip", "Boolean", false)
+        parameter("isLeaf", "Boolean", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rhs", "RuleItem", false)
+    }
+    dataType("NonTerminalDefault") {
+      supertype("TangibleItemAbstract")
+      supertype("NonTerminal")
+      constructor_ {
+        parameter("targetGrammar", "GrammarReference", false)
+        parameter("ruleReference", "GrammarRuleName", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "ruleReference", "GrammarRuleName", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "targetGrammar", "GrammarReference", false)
+    }
+    dataType("ListOfItemsAbstract") {
+      supertype("ConcatenationItemAbstract")
+      supertype("ListOfItems")
+      constructor_ {}
+    }
+    dataType("GroupDefault") {
+      supertype("SimpleItemAbstract")
+      supertype("Group")
+      constructor_ {
+        parameter("groupedContent", "RuleItem", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
+    }
+    dataType("GrammarRuleAbstract") {
+      supertype("GrammarItemAbstract")
+      supertype("GrammarRule")
+      constructor_ {}
+    }
+    dataType("GrammarReferenceDefault") {
+      supertype("GrammarReference")
+      constructor_ {
+        parameter("localNamespace", "Namespace", false)
+        parameter("nameOrQName", "PossiblyQualifiedName", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "localNamespace", "Namespace", false){
+        typeArgument("Grammar")
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "nameOrQName", "PossiblyQualifiedName", false)
+      propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "resolved", "Grammar", false)
+    }
+    dataType("GrammarOptionDefault") {
+      supertype("GrammarOption")
+      constructor_ {
+        parameter("name", "String", false)
+        parameter("value", "String", false)
+      }
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "name", "String", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+    }
+    dataType("GrammarNamespaceDefault") {
+      supertype("GrammarNamespace")
+      supertype("NamespaceAbstract"){ ref("net.akehurst.language.grammar.api.Grammar") }
+      constructor_ {
+        parameter("qualifiedName", "QualifiedName", false)
+      }
+    }
+    dataType("GrammarModelDefault") {
+      supertype("GrammarModel")
+      supertype("ModelAbstract"){ ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
+      constructor_ {
+        parameter("name", "SimpleName", false)
+        parameter("namespace", "List", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false){
+        typeArgument("GrammarNamespace")
+      }
+    }
+    dataType("GrammarItemAbstract") {
+      supertype("GrammarItem")
+      constructor_ {}
+    }
+    dataType("GrammarDefaultKt") {
+
+    }
+    dataType("GrammarDefault") {
+      supertype("GrammarAbstract")
+      constructor_ {
+        parameter("namespace", "GrammarNamespace", false)
+        parameter("name", "SimpleName", false)
+        parameter("options", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false){
+        typeArgument("GrammarOption")
+      }
+    }
+    dataType("GrammarAbstract") {
+      supertype("Grammar")
+      constructor_ {
+        parameter("namespace", "GrammarNamespace", false)
+        parameter("name", "SimpleName", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false){
+        typeArgument("GrammarReference")
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "grammarRule", "List", false){
+        typeArgument("GrammarRule")
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
+      propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "GrammarNamespace", false)
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "preferenceRule", "List", false){
+        typeArgument("PreferenceRule")
+      }
+    }
+    dataType("EmptyRuleDefault") {
+      supertype("TangibleItemAbstract")
+      supertype("EmptyRule")
+      constructor_ {}
+    }
+    dataType("EmbeddedDefault") {
+      supertype("TangibleItemAbstract")
+      supertype("Embedded")
+      constructor_ {
+        parameter("embeddedGoalName", "GrammarRuleName", false)
+        parameter("embeddedGrammarReference", "GrammarReference", false)
+      }
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGoalName", "GrammarRuleName", false)
+      propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
+    }
+    dataType("ConcatenationItemAbstract") {
+      supertype("RuleItemAbstract")
+      supertype("ConcatenationItem")
+      constructor_ {}
+    }
+    dataType("ConcatenationDefault") {
+      supertype("RuleItemAbstract")
+      supertype("Concatenation")
+      constructor_ {
+        parameter("items", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+    dataType("ChoicePriorityDefault") {
+      supertype("ChoiceAbstract")
+      supertype("ChoicePriority")
+      constructor_ {
+        parameter("alternative", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+    dataType("ChoiceLongestDefault") {
+      supertype("ChoiceAbstract")
+      supertype("ChoiceLongest")
+      constructor_ {
+        parameter("alternative", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+    dataType("ChoiceAmbiguousDefault") {
+      supertype("ChoiceAbstract")
+      supertype("ChoiceAmbiguous")
+      constructor_ {
+        parameter("alternative", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+    dataType("ChoiceAbstract") {
+      supertype("RuleItemAbstract")
+      supertype("Choice")
+      constructor_ {
+        parameter("alternative", "List", false)
+      }
+      propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false){
+        typeArgument("RuleItem")
+      }
+    }
+  }}

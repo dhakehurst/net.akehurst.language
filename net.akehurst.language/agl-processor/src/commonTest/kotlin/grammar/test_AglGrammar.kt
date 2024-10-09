@@ -18,11 +18,23 @@ class test_AglGrammar {
         assertNotNull(actual)
         val grm = actual.findFirstByNameOrNull(SimpleName("GrammarDefault"))
         assertNotNull(grm)
+
         val grm_name = grm.findPropertyOrNull(PropertyName("name"))
         assertNotNull(grm_name)
         assertEquals("SimpleName",grm_name.typeInstance.declaration.name.value)
+
         val grm_extends = grm.findPropertyOrNull(PropertyName("extends"))
         assertNotNull(grm_extends)
         assertTrue(grm_extends.isReadWrite)
+
     }
+
+    @Test
+    fun supertype_correctly_created() {
+        val grmNs = AglGrammar.typeModel.findFirstByNameOrNull(SimpleName("GrammarNamespaceDefault"))
+        assertNotNull(grmNs)
+        assertEquals("GrammarNamespace", grmNs.supertypes[0].typeName.value)
+        assertEquals("NamespaceAbstract", grmNs.supertypes[1].typeName.value)
+    }
+
 }

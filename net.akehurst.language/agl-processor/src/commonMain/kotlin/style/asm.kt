@@ -56,9 +56,9 @@ class AglStyleModelDefault(
 }
 
 class StyleNamespaceDefault(
-    qualifiedName: QualifiedName,
+    override val qualifiedName: QualifiedName,
     override val import: List<Import>
-) : StyleNamespace, NamespaceAbstract<StyleSet>(qualifiedName) {
+) : StyleNamespace, NamespaceAbstract<StyleSet>() {
 
     override val rules: List<StyleSet>  get() = super.definition
 

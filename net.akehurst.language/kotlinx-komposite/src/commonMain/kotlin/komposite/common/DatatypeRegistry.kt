@@ -23,10 +23,10 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.TypeModelSimpleAbstract
-import net.akehurst.language.typemodel.asm.typeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.reflect.KClass
 
-class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {
+class DatatypeRegistry : TypeModelSimpleAbstract() {
 
     companion object {
         val KOTLIN_STD_STRING = """
@@ -95,6 +95,8 @@ class DatatypeRegistry : TypeModelSimpleAbstract(SimpleName("registry")) {
             }
         """.trimIndent()
     }
+
+    override val name: SimpleName = SimpleName("registry")
 
     private val _primitiveMappers = mutableMapOf<KClass<*>, PrimitiveMapper<*, *>>()
 

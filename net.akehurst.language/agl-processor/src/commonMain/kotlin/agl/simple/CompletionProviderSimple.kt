@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.asm.api.Asm

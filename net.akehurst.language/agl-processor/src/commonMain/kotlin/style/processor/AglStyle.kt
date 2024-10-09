@@ -16,8 +16,8 @@
 
 package net.akehurst.language.style.processor
 
-import net.akehurst.language.grammar.asm.grammar
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.grammar.builder.grammar
 
 object AglStyle {
     const val goalRuleName = "unit"

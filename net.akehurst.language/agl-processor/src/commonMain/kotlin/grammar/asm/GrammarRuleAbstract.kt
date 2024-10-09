@@ -109,7 +109,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
                     this.compressRuleItem(compressedName, item.referencedRule(grammar).rhs)
                 }
 
-                else -> throw GrammarException("GrammarRule ${item.owningRule.name}, compressing ${item::class.simpleName} to leaf is not yet supported", null)
+                else -> error("GrammarRule ${item.owningRule.name}, compressing ${item::class.simpleName} to leaf is not yet supported")
             }
             //cr.grammar = grammar
             return cr

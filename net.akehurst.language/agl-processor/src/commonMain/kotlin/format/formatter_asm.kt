@@ -19,7 +19,7 @@ package net.akehurst.language.format.asm
 
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase

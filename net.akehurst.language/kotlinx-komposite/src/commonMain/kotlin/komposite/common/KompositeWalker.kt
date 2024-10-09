@@ -225,17 +225,23 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun walkValueWithType(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
+        val dataKClassName = data::class.simpleName!! //TODO: want qualified name here when JS supports it
         val dt = targetType.declaration
+        val rdt = when(dt) {
+            is CollectionType -> dt // can't get runtime-type of kotlin collection types
+            else -> registry.findFirstByNameOrNull(SimpleName(dataKClassName))
+                ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
+        }
         return when {
             targetType == SimpleTypeModelStdLib.AnyType -> walkValue(owningProperty, path, info, data, null) // figure out type from data
-            else -> when (dt) {
-                is PrimitiveType -> walkPrimitive(path, info, data, dt)
-                is ValueType -> walkValueType(path, info, data, dt)
-                is EnumType -> walkEnum(path, info, data, dt)
-                is SingletonType -> walkSingleton(path, info, data, dt)
+            else -> when (rdt) {
+                is SingletonType -> walkSingleton(path, info, data, rdt)
+                is PrimitiveType -> walkPrimitive(path, info, data, rdt)
+                is ValueType -> walkValueType(path, info, data, rdt)
+                is EnumType -> walkEnum(path, info, data, rdt)
                 is CollectionType -> walkCollection(owningProperty, path, info, data, targetType)
                 is DataType -> walkObject(owningProperty, path, info, data, targetType)
-                else -> throw KompositeException("Don't know how to walk object with targetType: ${dt.signature(null, 0)}")
+                else -> throw KompositeException("Don't know how to walk object with targetType: ${rdt.signature(null, 0)}")
             }
         }
     }
@@ -265,6 +271,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return when {
             null == propValue -> walkNull(path, info, propValType)
             propDt is PrimitiveType -> walkPrimitive(path, info, propValue, propDt)
+            propDt is SingletonType -> walkSingleton(path, info, propValue, propDt)
             propDt is ValueType -> walkValueType(path, info, propValue, propDt)
             propDt is EnumType -> walkEnum(path, info, propValue, propDt)
             owningProperty.isComposite -> walkValueWithType(owningProperty, path, info, propValue, propValType)
@@ -275,7 +282,8 @@ class KompositeWalker<P : Any?, A : Any?>(
 
     protected fun walkObject(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
         //val dt = targetType.declaration as DataType
-        //TODO: would like to use qualifiedNAme but not suported on JS
+        //TODO: would like to use qualifiedName but not supported on JS
+        //FIXME: duplicated code here !
         val rdt = registry.findFirstByNameOrNull(SimpleName(data::class.simpleName!!))
             ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
         val dt = rdt as DataType
@@ -353,6 +361,10 @@ class KompositeWalker<P : Any?, A : Any?>(
         return when {
             null == value -> walkNull(path, info, elementType)
             //registry.isPrimitive(value) -> walkPrimitive(path, info, value)
+            elementType.declaration is SingletonType -> walkSingleton(path, info, value, elementType.declaration as SingletonType)
+            elementType.declaration is PrimitiveType -> walkPrimitive(path, info, value, elementType.declaration as PrimitiveType)
+            elementType.declaration is ValueType -> walkValueType(path, info, value, elementType.declaration as ValueType)
+            elementType.declaration is EnumType -> walkEnum(path, info, value, elementType.declaration as EnumType)
             null == owningProperty || owningProperty.isComposite -> walkValueWithType(owningProperty, path, info, value, elementType)
             owningProperty.isReference -> walkReference(owningProperty, path, info, value)
             else -> throw KompositeException("Don't know how to walk Collection element $owningProperty[${path.last()}] = $value")

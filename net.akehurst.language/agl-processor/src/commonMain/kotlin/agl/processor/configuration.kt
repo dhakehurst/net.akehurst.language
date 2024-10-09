@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.simple.*
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
