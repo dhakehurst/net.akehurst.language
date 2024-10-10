@@ -362,10 +362,10 @@ class KompositeWalker<P : Any?, A : Any?>(
             else -> {
                 val rdt = runtimeTypeFor(data, elementType)
                 when {
-                    rdt is SingletonType -> walkSingleton(path, info, data, elementType.declaration as SingletonType)
-                    rdt is PrimitiveType -> walkPrimitive(path, info, data, elementType.declaration as PrimitiveType)
-                    rdt is ValueType -> walkValueType(path, info, data, elementType.declaration as ValueType)
-                    rdt is EnumType -> walkEnum(path, info, data, elementType.declaration as EnumType)
+                    rdt is SingletonType -> walkSingleton(path, info, data, rdt )
+                    rdt is PrimitiveType -> walkPrimitive(path, info, data, rdt )
+                    rdt is ValueType -> walkValueType(path, info, data, rdt )
+                    rdt is EnumType -> walkEnum(path, info, data, rdt )
                     null == owningProperty || owningProperty.isComposite -> walkValueWithType(owningProperty, path, info, data, elementType)
                     owningProperty.isReference -> walkReference(owningProperty, path, info, data)
                     else -> throw KompositeException("Don't know how to walk Collection element $owningProperty[${path.last()}] = $data")
