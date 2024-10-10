@@ -27,7 +27,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.simple.asmSimple
+import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters

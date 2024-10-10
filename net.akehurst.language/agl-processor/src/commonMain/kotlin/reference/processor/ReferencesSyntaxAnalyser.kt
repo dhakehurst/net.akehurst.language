@@ -25,7 +25,9 @@ import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.reference.api.CrossReferenceNamespace
 import net.akehurst.language.reference.api.DeclarationsForNamespace
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
@@ -36,8 +38,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     override fun registerHandlers() {
         super.register(this::unit)
         super.register(this::namespace)
-        super.register(this::imports)
-        super.register(this::import)
         super.register(this::declarations)
         super.register(this::rootIdentifiables)
         super.register(this::scopes)
@@ -57,7 +57,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::ofType)
         super.register(this::typeReferences)
         super.register(this::possiblyQualifiedTypeReference)
-        super.register(this::qualifiedName)
         super.register(this::simpleTypeName)
     }
 
@@ -70,43 +69,36 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
     )
 
-    // unit = namespace* ;
+    // override unit = namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceModelDefault {
-        val namespace = children as List<DeclarationsForNamespace>
-        val result = CrossReferenceModelDefault()
-        namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
+        val namespace = children as List<CrossReferenceNamespace>
+        val result = CrossReferenceModelDefault(SimpleName("Unit"), namespace)
+        //namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result
     }
 
-    // namespace = namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
-    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DeclarationsForNamespace {
+    // override namespace = namespace = 'namespace' qualifiedName import* declarations  ;
+    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceNamespace {
         val qualifiedName = children[1] as QualifiedName
-        val imports = children[3] as List<Import>
-        val declarations = children[4] as (DeclarationsForNamespace) -> Unit
-        val result = DeclarationsForNamespaceDefault(qualifiedName, imports)
-        declarations.invoke(result)
-        return result
+        val imports = children[2] as List<Import>
+        val declarations = children[3] as (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault
+        val ns = CrossReferenceNamespaceDefault(qualifiedName, imports)
+        val def = declarations.invoke(ns)
+        ns.addDefinition(def)
+        return ns
     }
-
-    // imports = import*;
-    private fun imports(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Import> =
-        children as List<Import>
-
-    // import = 'import' qualifiedName ;
-    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
-        Import((children[1] as PossiblyQualifiedName).value)
 
     // declarations = rootIdentifiables scopes referencesOpt
-    private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
+    private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault {
         val rootIdentifiables = children[0] as List<IdentifiableDefault>
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
-        return { decl ->
+        return { ns ->
+            val decl = DeclarationsForNamespaceDefault(ns)
             (decl.scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
-            referencesOpt?.let {
-                decl.references.addAll(referencesOpt)
-            }
+            referencesOpt?.let { decl.references.addAll(referencesOpt) }
+            decl
         }
     }
 
@@ -221,10 +213,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     // possiblyQualifiedTypeReference = qualifiedName
     private fun possiblyQualifiedTypeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
         children[0] as PossiblyQualifiedName
-
-    // qualifiedName : (IDENTIFIER / '.')+ ;
-    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
-        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
 
     // simpleTypeName = IDENTIFIER ;
     private fun simpleTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =

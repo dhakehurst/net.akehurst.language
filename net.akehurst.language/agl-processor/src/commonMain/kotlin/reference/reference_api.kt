@@ -17,27 +17,25 @@
 
 package net.akehurst.language.reference.api
 
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.typemodel.api.PropertyName
 
-interface CrossReferenceModel {
+interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNamespace> {
 
     val declarationsForNamespace: Map<QualifiedName, DeclarationsForNamespace>
-
-    val isEmpty: Boolean
 
     fun isScopeDefinedFor(possiblyQualifiedTypeName: PossiblyQualifiedName): Boolean
     fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression>
     fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName): List<QualifiedName>
 }
 
-interface DeclarationsForNamespace {
+interface CrossReferenceNamespace : Namespace<DeclarationsForNamespace> {
 
-    val qualifiedName: QualifiedName
+}
+
+interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
+
     val importedNamespaces: List<Import>
 
     /**

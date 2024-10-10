@@ -15,10 +15,11 @@
  *
  */
 
-package net.akehurst.language.asm.simple
+package net.akehurst.language.asm.builder
 
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
@@ -35,7 +36,6 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.simple.ScopeSimple
-import net.akehurst.language.typemodel.api.TupleType
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
@@ -48,7 +48,7 @@ annotation class AsmSimpleBuilderMarker
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
     defaultNamespace: QualifiedName = SimpleTypeModelStdLib.qualifiedName,
-    crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(),
+    crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference"), emptyList()),
     context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,

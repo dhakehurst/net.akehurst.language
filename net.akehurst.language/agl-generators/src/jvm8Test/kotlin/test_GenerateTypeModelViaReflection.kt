@@ -1,5 +1,6 @@
 package net.akehurst.language.agl.generators
 
+import net.akehurst.language.asm.simple.AglAsm
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -87,6 +88,30 @@ class test_GenerateTypeModelViaReflection {
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
+
+    fun gen_asm():Pair<TypeModel,List<QualifiedName>> {
+        val baseTm = gen_base()
+        val added = baseTm.namespace.map { it.qualifiedName }
+        val gen = GenerateTypeModelViaReflection(
+            SimpleName("Asm"),
+            baseTm.namespace,
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            listOf(AglBase.komposite, AglAsm.komposite)
+        )
+        gen.include("net.akehurst.language.collections.ListSeparated")
+        gen.addPackage("net.akehurst.language.asm.api")
+        gen.addPackage("net.akehurst.language.asm.simple")
+        val tm = gen.generate()
+        return Pair(tm, added)
+    }
+
+    @Test
+    fun test_format_asm() {
+        val (tm,added) = gen_asm()
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf()))
+    }
+
 
 
     fun gen_runtime(): TypeModel {
@@ -196,7 +221,7 @@ class test_GenerateTypeModelViaReflection {
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
 
-    fun gen_asm():Pair<TypeModel,List<QualifiedName>> {
+    fun gen_scope():Pair<TypeModel,List<QualifiedName>> {
         //TODO: remove - builder needs these and no way to exclude builder at present
         val (typemodel,added1) = gen_typemodel()
         val (reference,added2) = gen_reference()
@@ -204,11 +229,11 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             (typemodel.namespace + reference.namespace).toSet().toList(),
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            emptyList()
+            listOf(AglBase.komposite, AglAsm.komposite)
         )
         //gen.include("net.akehurst.language.collections.ListSeparated")
-        gen.exclude("net.akehurst.language.asm.api.AsmSimpleBuilder")
-        gen.addPackage("net.akehurst.language.api.scope")
+        gen.exclude("net.akehurst.language.asm.simple.AsmSimpleBuilder")
+////        gen.addPackage("net.akehurst.language.api.scope")
         gen.addPackage("net.akehurst.language.scope.simple")
         gen.addPackage("net.akehurst.language.asm.api")
         gen.addPackage("net.akehurst.language.asm.simple")
@@ -217,7 +242,7 @@ class test_GenerateTypeModelViaReflection {
     }
 
     @Test
-    fun test_format_asm() {
+    fun test_format_scope() {
         val (tm,added) = gen_asm()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf()))

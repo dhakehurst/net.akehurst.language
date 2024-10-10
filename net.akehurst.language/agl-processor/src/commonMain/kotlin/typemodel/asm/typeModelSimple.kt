@@ -481,9 +481,9 @@ abstract class TypeNamespaceAbstract(
 
     override val singletonType: Set<SingletonType> get() = ownedTypesByName.values.filterIsInstance<SingletonType>().toSet()
     override val primitiveType: Set<PrimitiveType> get() = ownedTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
+    override val valueType: Set<ValueType> get() = ownedTypesByName.values.filterIsInstance<ValueType>().toSet()
     override val enumType: Set<EnumType> get() = ownedTypesByName.values.filterIsInstance<EnumType>().toSet()
     override val collectionType: Set<CollectionType> get() = ownedTypesByName.values.filterIsInstance<CollectionType>().toSet()
-    override val valueType: Set<ValueType> get() = ownedTypesByName.values.filterIsInstance<ValueType>().toSet()
     override val interfaceType: Set<InterfaceType> get() = ownedTypesByName.values.filterIsInstance<InterfaceType>().toSet()
     override val dataType: Set<DataType> get() = ownedTypesByName.values.filterIsInstance<DataType>().toSet()
 
@@ -1109,9 +1109,20 @@ class ValueTypeSimple(
 
     override val constructors: List<ConstructorDeclaration> = mutableListOf()
 
+    override val valueProperty: PropertyDeclaration get() = when(constructors.size) {
+        0 -> error("ValueType must have a constructor before its valuePropertyName can be read.")
+        else -> when (constructors[0].parameters.size) {
+            0 -> error("ValueType primary (first) constructor must have at least one parameter")
+            1 -> this.findPropertyOrNull(PropertyName(constructors[0].parameters[0].name.value))
+                ?: error("There is no property with name '${constructors[0].parameters[0].name.value}' corresponding the the primary constructor argument")
+            else -> error("ValueType primary (first) constructor must have only one parameter")
+        }
+    }
+
     fun addConstructor(parameters: List<ParameterDeclaration>) {
         val cons = ConstructorDeclarationSimple(this, parameters)
         (constructors as MutableList).add(cons)
+
     }
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {

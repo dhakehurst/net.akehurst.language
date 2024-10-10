@@ -157,7 +157,7 @@ interface Grammar : Definition<Grammar> {
 }
 
 @JvmInline
-value class GrammarRuleName(val value: String) {
+value class GrammarRuleName(override val value: String):PublicValueType {
     override fun toString(): String = value
 }
 
@@ -189,7 +189,11 @@ interface GrammarRule : GrammarItem {
 interface NormalRule : GrammarRule {
 }
 
-enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE, SUBSTITUTION }
+enum class OverrideKind {
+    REPLACE,
+    APPEND_ALTERNATIVE,
+    SUBSTITUTION
+}
 
 interface OverrideRule : GrammarRule {
     val overrideKind: OverrideKind

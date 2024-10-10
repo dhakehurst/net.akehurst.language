@@ -25,7 +25,7 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.simple.asmSimple
+import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName

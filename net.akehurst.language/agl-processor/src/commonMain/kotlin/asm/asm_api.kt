@@ -17,6 +17,7 @@
 
 package net.akehurst.language.asm.api
 
+import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
@@ -69,7 +70,7 @@ interface AsmReference {
 }
 
 @JvmInline
-value class PropertyValueName(val value: String) {
+value class PropertyValueName(override val value: String): PublicValueType {
     override fun toString(): String = value
 }
 

@@ -23,7 +23,7 @@ import net.akehurst.language.agl.TransformString
 import net.akehurst.language.agl.TypeModelString
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.simple.asmSimple
+import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.FixMethodOrder
 import org.junit.runners.MethodSorters

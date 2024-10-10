@@ -263,6 +263,7 @@ interface TupleType : TypeDeclaration {
 
 interface ValueType : StructuredType {
     val constructors: List<ConstructorDeclaration>
+    val valueProperty: PropertyDeclaration
 }
 
 interface InterfaceType : StructuredType {
@@ -303,7 +304,7 @@ interface CollectionType : StructuredType {
 }
 
 @JvmInline
-value class PropertyName(val value: String) {
+value class PropertyName(override val value: String):PublicValueType {
     override fun toString(): String = value
 }
 
@@ -419,7 +420,7 @@ enum class PropertyCharacteristic {
 }
 
 @JvmInline
-value class MethodName(val value: String)
+value class MethodName(override val value: String):PublicValueType
 
 interface MethodDeclaration {
     val owner: TypeDeclaration
@@ -434,7 +435,7 @@ interface ConstructorDeclaration {
 }
 
 @JvmInline
-value class ParameterName(val value: String)
+value class ParameterName(override val value: String):PublicValueType
 
 interface ParameterDeclaration {
     val name: ParameterName

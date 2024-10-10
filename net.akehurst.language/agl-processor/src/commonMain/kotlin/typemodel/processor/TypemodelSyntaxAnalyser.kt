@@ -1,9 +1,12 @@
 package net.akehurst.language.agl.typemodel.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
@@ -23,12 +26,15 @@ data class TypeRefInfo(
 
 class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
 
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Base") to BaseSyntaxAnalyser()
+    )
+
     override fun registerHandlers() {
-        super.register(this::namespace)
-        super.register(this::import)
-        super.register(this::qualifiedName)
 
         super.register(this::unit)
+        super.register(this::namespace)
+
         super.register(this::declaration)
         super.register(this::primitive)
         super.register(this::enum)
@@ -41,23 +47,9 @@ class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeM
         super.register(this::typeArgumentList)
     }
 
-    // --- Base ---
-
-    // namespace = 'namespace' qualifiedName ;
-    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        children[1] as List<String>
-
-    // import = 'import' qualifiedName ;
-    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        children[1] as List<String>
-
-    // qualifiedName = [IDENTIFIER / '.']+ ;
-    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        (children as List<String>).toSeparatedList().items
-
     // --- Typemodel ---
 
-    // unit = namespace declaration+ ;
+    // override unit = namespace declaration+ ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
         val result = TypeModelSimple(SimpleName("aTypeModel"))
         val namespaces = (children as List<TypeNamespace?>).filterNotNull()
@@ -66,6 +58,10 @@ class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeM
         }
         return result
     }
+
+    // override namespace = 'namespace' qualifiedName ;
+    private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        children[1] as List<String>
 
     // declaration = primitive | enum | collection | datatype ;
     private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDeclaration =

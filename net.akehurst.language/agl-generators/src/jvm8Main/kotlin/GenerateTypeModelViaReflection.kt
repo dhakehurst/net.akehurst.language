@@ -131,7 +131,7 @@ class GenerateTypeModelViaReflection(
             assert(it.issues.errors.isEmpty()) { it.issues.errors.toString() }
             it.asm!!
         }
-    }.reduce { acc, km ->
+    }.fold(TypeModelSimple(SimpleName("Komposite"))) { acc, km ->
         acc.addAllNamespaceAndResolveImports(km.namespace)
         acc
     }
@@ -287,8 +287,7 @@ class GenerateTypeModelViaReflection(
     }
 
     private fun addValueType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        val type = ValueTypeSimple(ns, SimpleName(kclass.simpleName!!))
-        ns.addDefinition(type)
+        val type = ns.findOwnedOrCreateValueTypeNamed( SimpleName(kclass.simpleName!!))
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
         addConstructors(ns, type, kclass)
@@ -304,8 +303,7 @@ class GenerateTypeModelViaReflection(
     }
 
     private fun addDataType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        val type = DataTypeSimple(ns, SimpleName(kclass.simpleName!!))
-        ns.addDefinition(type)
+        val type = ns.findOwnedOrCreateDataTypeNamed( SimpleName(kclass.simpleName!!))
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
         addConstructors(ns, type, kclass)

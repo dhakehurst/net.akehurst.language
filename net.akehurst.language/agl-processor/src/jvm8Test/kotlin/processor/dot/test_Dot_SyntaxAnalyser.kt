@@ -23,7 +23,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.typemodel.test.TypeModelTest
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.simple.asmSimple
+import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals

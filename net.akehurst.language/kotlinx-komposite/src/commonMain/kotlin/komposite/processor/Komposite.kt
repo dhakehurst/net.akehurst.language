@@ -73,8 +73,8 @@ object Komposite {
                      MULTI_LINE_COMMENT = "[/][*](?:.|\n)*?[*][/]" ;
                      SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
             
-                unit = namespace+ ;
-                namespace = 'namespace' qualifiedName declaration+;
+                unit = namespace* ;
+                namespace = 'namespace' qualifiedName declaration*;
                 qualifiedName = [ NAME / '.']+ ;
                 declaration = declKind NAME '{' property* '}' ;
                 declKind = 'interface' | 'class' ;

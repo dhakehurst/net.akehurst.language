@@ -35,8 +35,10 @@ object AglBase {
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
-    namespace = 'namespace' qualifiedName ;
+    unit = namespace* ;
+    namespace = 'namespace' qualifiedName import* definition*;
     import = 'import' qualifiedName ;
+    definition = 'definition' IDENTIFIER ;
     qualifiedName = [IDENTIFIER / '.']+ ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
   }"""
@@ -50,8 +52,14 @@ object AglBase {
             concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/") }
             concatenation("SINGLE_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("//[^\\n\\r]*") }
 
-            concatenation("namespace") { lit("namespace"); ref("qualifiedName") }
+            list("unit",0,-1) { ref("namespace") }
+            concatenation("namespace") {
+                lit("namespace"); ref("qualifiedName")
+                lst(0,-1) {ref("import")}
+                lst(0,-1) {ref("definition")}
+            }
             concatenation("import") { lit("import"); ref("qualifiedName") }
+            concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
             separatedList("qualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
             concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
         }
@@ -160,12 +168,12 @@ namespace net.akehurst.language.base.asm
                     typeParameters("DT")
                     supertype("Namespace") { ref("DT") }
                     constructor_ {}
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
+                        typeArgument("Import")
+                    }
                     propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "_definition", "Map", false) {
                         typeArgument("SimpleName")
                         typeArgument("DT")
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
-                        typeArgument("Import")
                     }
                 }
                 dataType("ModelDefault") {

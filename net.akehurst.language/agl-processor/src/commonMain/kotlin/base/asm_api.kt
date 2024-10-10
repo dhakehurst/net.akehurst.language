@@ -21,7 +21,7 @@ import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
 // [https://youtrack.jetbrains.com/issue/IDEA-359261/value-class-extension-methods-not-working-when-defined-in-companion-object]
-val String.asPossiblyQualifiedName
+val String.asPossiblyQualifiedName:PossiblyQualifiedName
     get() = when {
         this.isQualifiedName -> QualifiedName(this)
         else -> SimpleName(this)
@@ -45,7 +45,7 @@ interface PossiblyQualifiedName {
  * A qualified name, separator assumed to be '.'
  */
 @JvmInline
-value class QualifiedName(override val value: String) : PossiblyQualifiedName {
+value class QualifiedName(override val value: String) : PossiblyQualifiedName,PublicValueType {
 
     constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
 
@@ -54,7 +54,7 @@ value class QualifiedName(override val value: String) : PossiblyQualifiedName {
     val parts: List<SimpleName> get() = value.split(".").map { it.asSimpleName }
     val last: SimpleName get() = parts.last()
     val front: QualifiedName get() = QualifiedName(parts.dropLast(1).joinToString(separator = "."))
-    val asPossiblyQualified: PossiblyQualifiedName get() = value.asPossiblyQualifiedName
+    val asPossiblyQualified: PossiblyQualifiedName get() = this.value.asPossiblyQualifiedName
 
     fun append(lastPart: SimpleName) = QualifiedName(this, lastPart)
 
@@ -71,7 +71,7 @@ val String.isSimpleName: Boolean get() = this.contains(".").not()
 val String.asSimpleName: SimpleName get() = SimpleName(this)
 
 @JvmInline
-value class SimpleName(override val value: String) : PossiblyQualifiedName {
+value class SimpleName(override val value: String) : PossiblyQualifiedName,PublicValueType {
     companion object {
         //FIXME: from here - see above
     }
@@ -82,13 +82,19 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName {
     override fun toString(): String = value
 }
 
+// This is added so that any value class will correctly
+// make its 'value' public in JS
+interface PublicValueType {
+    val value:Any
+}
+
 /**
  * A qualified name of something to import.
  *
  * Separator assumed to be '.'
  */
 @JvmInline
-value class Import(val value: String) {
+value class Import(override val value: String) :PublicValueType {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
     override fun toString() = value
 }

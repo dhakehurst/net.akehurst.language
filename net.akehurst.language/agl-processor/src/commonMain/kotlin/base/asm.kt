@@ -19,20 +19,6 @@ package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
 
-
-class ModelDefault<NT : Namespace<DT>, DT : Definition<DT>>(
-    override val name: SimpleName,
-    override val namespace: List<NT>
-) : ModelAbstract<NT, DT>() {
-
-}
-
-class NamespaceDefault<DT : Definition<DT>>(
-    override val qualifiedName: QualifiedName
-) : NamespaceAbstract<DT>() {
-
-}
-
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     //override val namespace: List<NT>
 ) : Model<NT, DT> {
@@ -122,3 +108,28 @@ abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
     }
 }
 
+class ModelDefault(
+    override val name: SimpleName,
+    override val namespace: List<NamespaceDefault>
+) : ModelAbstract<NamespaceDefault, DefinitionDefault>() {
+
+}
+
+class NamespaceDefault(
+    override val qualifiedName: QualifiedName
+) : NamespaceAbstract<DefinitionDefault>() {
+
+}
+
+class DefinitionDefault(
+    override val namespace: Namespace<DefinitionDefault>,
+    override val name: SimpleName,
+) : Definition<DefinitionDefault> {
+
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
+
+    override fun asString(indent: Indent): String {
+        TODO("not implemented")
+    }
+
+}

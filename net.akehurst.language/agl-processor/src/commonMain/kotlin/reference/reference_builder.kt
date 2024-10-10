@@ -17,14 +17,11 @@
 package net.akehurst.language.reference.builder
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.asm.NavigationSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.reference.asm.*
 
@@ -45,13 +42,14 @@ class CrossReferenceModelBuilder(
     private var _declarationsFor = mutableListOf<DeclarationsForNamespace>()
 
     fun declarationsFor(namespaceQualifiedName: String, init: DeclarationsForNamespaceBuilder.() -> Unit) {
-        val b = DeclarationsForNamespaceBuilder(QualifiedName(namespaceQualifiedName))
+        val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName), emptyList())
+        val b = DeclarationsForNamespaceBuilder(ns)
         b.init()
         _declarationsFor.add(b.build())
     }
 
     fun build(): CrossReferenceModel {
-        val result = CrossReferenceModelDefault()
+        val result = CrossReferenceModelDefault(SimpleName("CrossReference"), mutableListOf())
         _declarationsFor.forEach {
             result.declarationsForNamespace[it.qualifiedName] = it
         }
@@ -61,7 +59,7 @@ class CrossReferenceModelBuilder(
 
 @CrossReferenceModelBuilderMarker
 class DeclarationsForNamespaceBuilder(
-    private val _qualifiedName: QualifiedName
+    private val namespace: CrossReferenceNamespace
 ) {
     private val _importedNamespaces = mutableListOf<Import>()
     private val _references = mutableListOf<ReferenceDefinition>()
@@ -85,7 +83,8 @@ class DeclarationsForNamespaceBuilder(
     }
 
     fun build(): DeclarationsForNamespace {
-        val result = DeclarationsForNamespaceDefault(_qualifiedName, _importedNamespaces)
+        val result = DeclarationsForNamespaceDefault(namespace)
+        _importedNamespaces.forEach { TODO() }
         _scopes.forEach { result.scopeDefinition[it.scopeForTypeName] = it }
         result.references.addAll(_references)
         return result

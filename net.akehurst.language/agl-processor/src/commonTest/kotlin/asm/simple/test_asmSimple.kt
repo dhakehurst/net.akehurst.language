@@ -17,6 +17,7 @@
 package net.akehurst.language.asm.simple
 
 import net.akehurst.language.asm.api.AsmPrimitive
+import net.akehurst.language.asm.builder.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

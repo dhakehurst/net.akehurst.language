@@ -34,13 +34,23 @@ fun SingletonType.objectInstance(): Any {
     }
 }
 
-fun DataType.construct(vararg constructorArgs: Any?): Any {
+fun DataType.constructDataType(vararg constructorArgs: Any?): Any {
     try {
         val cls = this.clazz
         val obj = cls.reflect().construct(*constructorArgs)
         return obj
     } catch (t: Throwable) {
         throw KompositeException("Unable to construct ${this.name} from ${constructorArgs.toList()} due to ${t.message ?: "Unknown"}")
+    }
+}
+
+fun ValueType.constructValueType(value: Any): Any {
+    try {
+        val cls = this.clazz
+        val obj = cls.reflect().construct(value)
+        return obj
+    } catch (t: Throwable) {
+        throw KompositeException("Unable to construct ${this.name} from ${value} due to ${t.message ?: "Unknown"}")
     }
 }
 

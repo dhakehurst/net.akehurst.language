@@ -90,7 +90,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
-            CrossReferenceModelDefault(),
+            CrossReferenceModelDefault(SimpleName(p.grammar!!.name.value), emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

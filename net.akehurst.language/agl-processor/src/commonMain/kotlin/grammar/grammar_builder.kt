@@ -71,6 +71,20 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         }
     }
 
+    private fun createRule(grammarRuleName: GrammarRuleName, overrideKind: OverrideKind?, isSkip: Boolean, isLeaf: Boolean, rhs: RuleItem) = when (overrideKind) {
+        null -> {
+            val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+            gr.rhs = rhs
+            gr
+        }
+
+        else -> {
+            val gr = OverrideRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf, overrideKind)
+            gr.overriddenRhs = rhs
+            gr
+        }
+    }
+
     fun terminalLiteral(value: String): Terminal {
         return terminal(value, false)
     }
@@ -79,31 +93,31 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         return terminal(value, true)
     }
 
-    fun empty(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false) {
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = EmptyRuleDefault()
+    fun empty(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false) {
+        val rhs = EmptyRuleDefault()
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun choice(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: ChoiceItemBuilder.() -> Unit) {
+    fun choice(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: ChoiceItemBuilder.() -> Unit) {
         val ib = ChoiceItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = ChoiceLongestDefault(items)
+        val rhs = ChoiceLongestDefault(items)
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun concatenation(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
+    fun concatenation(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
         val ib = ConcatenationItemBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = ConcatenationDefault(items)
+        val rhs = ConcatenationDefault(items)
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun optional(grammarRuleName: String, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun optional(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
@@ -112,12 +126,12 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
             1 -> Unit
             else -> error("An optional must have only one item defined")
         }
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = OptionalItemDefault(items[0])
+        val rhs = OptionalItemDefault(items[0])
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun list(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun list(grammarRuleName: String, min: Int, max: Int, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
@@ -126,12 +140,12 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
             1 -> Unit
             else -> error("A simple list must have only one item defined")
         }
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = SimpleListDefault(min, max, items[0])
+        val rhs = SimpleListDefault(min, max, items[0])
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 
-    fun separatedList(grammarRuleName: String, min: Int, max: Int, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
+    fun separatedList(grammarRuleName: String, min: Int, max: Int, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
         val ib = SimpleItemsBuilder(grammar.namespace)
         ib.init()
         val items = ib.build()
@@ -141,8 +155,8 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
             2 -> Unit
             else -> error("A simple list must have only two items defined - item & separator")
         }
-        val gr = NormalRuleDefault(this.grammar, GrammarRuleName(grammarRuleName), isSkip, isLeaf)
-        gr.rhs = SeparatedListDefault(min, max, items[0], items[1])
+        val rhs = SeparatedListDefault(min, max, items[0], items[1])
+        val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
         this.grammar.grammarRule.add(gr)
     }
 

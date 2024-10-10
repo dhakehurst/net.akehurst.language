@@ -18,18 +18,20 @@ package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.grammar.api.GrammarNamespace
 import net.akehurst.language.typemodel.api.PropertyName
 
-class CrossReferenceModelDefault
-    : CrossReferenceModel {
+class CrossReferenceModelDefault(
+    override val name: SimpleName,
+    override val namespace: List<CrossReferenceNamespace>
+) : ModelAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(), CrossReferenceModel {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
@@ -119,10 +121,22 @@ class CrossReferenceModelDefault
     private val _referenceForProperty = mutableMapOf<Pair<QualifiedName, PropertyName>, List<QualifiedName>>()
 }
 
-data class DeclarationsForNamespaceDefault(
+class CrossReferenceNamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val importedNamespaces: List<Import>
+    override val import: List<Import>
+) : NamespaceAbstract<DeclarationsForNamespace>(), CrossReferenceNamespace {
+
+}
+
+data class DeclarationsForNamespaceDefault(
+    override val namespace: CrossReferenceNamespace
 ) : DeclarationsForNamespace {
+
+    override val name = SimpleName("Declarations")
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+
+    override val importedNamespaces: List<Import> get() = namespace.import
+
     override val scopeDefinition = mutableMapOf<SimpleName, ScopeDefinition>()
     override val references = mutableListOf<ReferenceDefinition>()
 
@@ -153,6 +167,10 @@ data class DeclarationsForNamespaceDefault(
         val scope = scopeDefinition[scopeForTypeName]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
         return identifiable?.identifiedBy
+    }
+
+    override fun asString(indent: Indent): String {
+        TODO("not implemented")
     }
 }
 

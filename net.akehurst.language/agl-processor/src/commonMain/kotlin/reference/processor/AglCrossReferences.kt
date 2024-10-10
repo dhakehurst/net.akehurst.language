@@ -17,6 +17,7 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
 
 internal object AglCrossReferences {
@@ -31,11 +32,12 @@ internal object AglCrossReferences {
         name = "CrossReferences"
     ) {
         extendsGrammar(AglExpressions.grammar.selfReference)
-        list("unit", 0, -1) { ref("namespace") }
-        concatenation("namespace") {
-            lit("namespace"); ref("qualifiedName"); lit("{"); ref("imports"); ref("declarations"); lit("}")
+        list("unit", 0, -1, overrideKind = OverrideKind.REPLACE) { ref("namespace") }
+        concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+            lit("namespace"); ref("qualifiedName")
+            lst(0, -1) { ref("import") }
+            ref("declarations")
         }
-        list("imports", 0, -1) { ref("import") }
         concatenation("declarations") {
             ref("rootIdentifiables"); ref("scopes"); opt { ref("references") }
         }
@@ -81,9 +83,8 @@ internal object AglCrossReferences {
 
 grammar CrossReferences extends Expressions {
 
-    unit = namespace* ;
-    namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
-    imports = import*;
+    override unit = namespace* ;
+    override namespace = 'namespace' qualifiedName import* declarations ;
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
     scopes = scope* ;

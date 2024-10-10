@@ -210,10 +210,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         PropertyName(children[0] as String)
 
-
     //methodReference = IDENTIFIER ;
     private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         MethodName(children[0] as String)
-
 
 }

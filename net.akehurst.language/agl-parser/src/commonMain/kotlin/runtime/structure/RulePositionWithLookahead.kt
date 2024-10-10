@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class StateNumber(val value:Int)
+value class StateNumber(val value:Int) //: PublicValueType
 
 //TODO: how is this different to ParentRelation ?
 internal data class RulePositionWithLookahead(

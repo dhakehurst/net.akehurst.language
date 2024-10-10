@@ -24,6 +24,7 @@ import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
@@ -146,7 +147,7 @@ class test_CrossReferences {
 
         val result = aglProc.process(text)
 
-        val expected = CrossReferenceModelDefault()
+        val expected = CrossReferenceModelDefault(SimpleName(""), emptyList())
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -164,7 +165,7 @@ class test_CrossReferences {
 
         val result = aglProc.process(text)
 
-        val expected = CrossReferenceModelDefault()
+        val expected = CrossReferenceModelDefault(SimpleName(""), emptyList())
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -180,9 +181,8 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 scope Rule1 { }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {

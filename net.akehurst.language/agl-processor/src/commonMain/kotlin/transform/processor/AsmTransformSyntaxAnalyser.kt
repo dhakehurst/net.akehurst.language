@@ -68,7 +68,7 @@ class AsmTransformSyntaxAnalyser(
         super.register(this::possiblyQualifiedTypeName)
     }
 
-    // unit = namespace transformList ;
+    // override unit = namespace transformList ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
         val namespaceQName = QualifiedName((children[0] as List<String>).joinToString(separator = "."))
         val namespace = TransformNamespaceDefault(namespaceQName)

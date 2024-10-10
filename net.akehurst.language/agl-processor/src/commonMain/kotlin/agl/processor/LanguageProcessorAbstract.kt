@@ -24,6 +24,7 @@ import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.processor.FormatterSimple
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.grammar.api.Grammar
@@ -116,7 +117,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val crossReferenceModel: CrossReferenceModel by lazy {
         val res = configuration.crossReferenceModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: CrossReferenceModelDefault()
+        res?.asm ?: CrossReferenceModelDefault(SimpleName(grammar.name.value), emptyList())
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {

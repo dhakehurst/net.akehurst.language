@@ -25,6 +25,7 @@ import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
@@ -35,12 +36,12 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
         get() = TODO("not implemented")
 
     override val ruleSet: RuleSet = generated.ruleSet
+    override val grammar: Grammar = generated.grammar
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
-    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault()
+    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(SimpleName(grammar.name.value), emptyList())
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
-    override val grammar: Grammar = generated.grammar
 
     init {
         generated.automata.forEach { (userGoalRuleName, automaton) ->

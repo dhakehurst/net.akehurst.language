@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
@@ -35,6 +36,10 @@ internal class AglGrammarSyntaxAnalyser(
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     private val _localStore = mutableMapOf<String, Any>()
+
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Base") to BaseSyntaxAnalyser()
+    )
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarModel>> = emptyMap()
 
@@ -78,13 +83,12 @@ internal class AglGrammarSyntaxAnalyser(
         this.register(this::nonTerminal)
         this.register(this::embedded)
         this.register(this::terminal)
-        this.register(this::qualifiedName)
         this.register(this::preferenceOption)
         this.register(this::choiceNumber)
         this.register(this::associativity)
     }
 
-    // unit : namespace grammar+ ;
+    // override unit : namespace grammar+ ;
     private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarModel {
         val namespace = children[0] as GrammarNamespaceDefault
         val grammarList = children[1] as List<Grammar>
@@ -93,7 +97,7 @@ internal class AglGrammarSyntaxAnalyser(
         return unit
     }
 
-    // namespace : 'namespace' qualifiedName ;
+    // override namespace : 'namespace' qualifiedName ;
     private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
         val nsName = when (qualifiedName) {
@@ -328,7 +332,6 @@ internal class AglGrammarSyntaxAnalyser(
     private fun rangeMax(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
         children[0] as Int
 
-
     //rangeMaxUnbounded = '+' ;
     private fun rangeMaxUnbounded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int = -1
 
@@ -419,10 +422,6 @@ internal class AglGrammarSyntaxAnalyser(
 //        }
         return TerminalDefault(escaped, isPattern)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
-
-    // qualifiedName : (IDENTIFIER / '.')+ ;
-    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
-        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
     private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> PreferenceRule {

@@ -33,6 +33,7 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -43,22 +44,22 @@ import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class GrammarString(val value: String)
+value class GrammarString(override val value: String):PublicValueType
 
 @JvmInline
-value class TypeModelString(val value: String)
+value class TypeModelString(override val value: String):PublicValueType
 
 @JvmInline
-value class TransformString(val value: String)
+value class TransformString(override val value: String):PublicValueType
 
 @JvmInline
-value class CrossReferenceString(val value: String)
+value class CrossReferenceString(override val value: String):PublicValueType
 
 @JvmInline
-value class StyleString(val value: String)
+value class StyleString(override val value: String):PublicValueType
 
 @JvmInline
-value class FormatString(val value: String)
+value class FormatString(override val value: String):PublicValueType
 
 
 object Agl {
