@@ -97,14 +97,10 @@ internal class AglGrammarSyntaxAnalyser(
         return unit
     }
 
-    // override namespace : 'namespace' qualifiedName ;
+    // override namespace : 'namespace' possiblyQualifiedName ;
     private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarNamespace {
-        val qualifiedName = children[1] as PossiblyQualifiedName
-        val nsName = when (qualifiedName) {
-            is QualifiedName -> qualifiedName
-            is SimpleName -> QualifiedName(qualifiedName.value)
-            else -> error("Unsupported")
-        }
+        val pqn = children[1] as PossiblyQualifiedName
+        val nsName = pqn.asQualifiedName(null)
         val ns = GrammarNamespaceDefault(nsName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         _localStore["namespace"] = ns
         return ns
@@ -147,7 +143,7 @@ internal class AglGrammarSyntaxAnalyser(
         else -> error("Unsupported choice")
     }
 
-    // extends = 'extends' [qualifiedName / ',']+ ;
+    // extends = 'extends' [possiblyQualifiedName / ',']+ ;
     private fun extends(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         val localNamespace = _localStore["namespace"] as Namespace<Grammar>
         val extendNameList = children[1] as List<PossiblyQualifiedName>
@@ -375,7 +371,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun groupedContent(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem =
         children[0] as RuleItem
 
-    // nonTerminal : qualifiedName ;
+    // nonTerminal : possiblyQualifiedName ;
     private fun nonTerminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NonTerminal {
         val pqn = children[0] as PossiblyQualifiedName
         return when (pqn) {
@@ -396,7 +392,7 @@ internal class AglGrammarSyntaxAnalyser(
         }
     }
 
-    // embedded = qualifiedName '::' nonTerminal ;
+    // embedded = possiblyQualifiedName '::' nonTerminal ;
     private fun embedded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Embedded {
         val namespace = _localStore["namespace"] as Namespace<Grammar>
         val embeddedGrammarStr = children[0] as PossiblyQualifiedName

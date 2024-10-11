@@ -20,8 +20,6 @@ package net.akehurst.language.expressions.api
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PropertyName
 
 interface Expression {
     fun asString(indent: Indent): String
@@ -61,11 +59,11 @@ interface NavigationExpression : Expression {
 interface NavigationPart
 
 interface PropertyCall : NavigationPart {
-    val propertyName: PropertyName
+    val propertyName: String
 }
 
 interface MethodCall : NavigationPart {
-    val methodName: MethodName
+    val methodName: String
     val arguments: List<Expression>
 }
 
@@ -74,7 +72,7 @@ interface IndexOperation : NavigationPart {
 }
 
 interface AssignmentStatement {
-    val lhsPropertyName: PropertyName
+    val lhsPropertyName: String
     val rhs: Expression
 
     fun asString(indent: Indent): String

@@ -52,7 +52,6 @@ class AglStyleModelDefault(
         }
     }
 
-
 }
 
 class StyleNamespaceDefault(

@@ -26,8 +26,6 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -36,6 +34,7 @@ import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
@@ -45,7 +44,8 @@ class ReferencesSemanticAnalyser(
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
 
-    private var _context:ContextFromTypeModel? = null
+    private var _context: ContextFromTypeModel? = null
+    private var _typeResolver: ExpressionTypeResolver? = null
 
     override fun clear() {
         _grammarNamespace = null
@@ -62,23 +62,25 @@ class ReferencesSemanticAnalyser(
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         _context = context
+        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, issues) }
+
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
-                    val impNs = context.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
-                    when (impNs) {
+                    val ns = context.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
+                    when (ns) {
                         null -> raiseError(it, "Namespace to import not found")
                     }
-                    impNs
+                    ns
                 }
 
-                val ns = context.typeModel.findNamespaceOrNull(it.qualifiedName)
+                val ns = context.typeModel.findNamespaceOrNull(it.namespace.qualifiedName)
                 when (ns) {
                     null -> issues.raise(
                         LanguageIssueKind.ERROR,
                         LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                         null,
-                        "Namespace '${it.qualifiedName}' not found in typeModel."
+                        "Namespace '${it.namespace.qualifiedName}' not found in typeModel."
                     )
 
                     else -> {
@@ -117,7 +119,7 @@ class ReferencesSemanticAnalyser(
             val scopedType = _grammarNamespace?.findTypeNamed(scopeDef.scopeForTypeName)
             if (null == scopedType) {
                 //if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                raiseError(ReferencesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Type '${scopeDef.scopeForTypeName}' not found")
+                raiseError(ReferencesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Scope type '${scopeDef.scopeForTypeName}' not found")
             } else {
                 //OK
             }
@@ -130,24 +132,18 @@ class ReferencesSemanticAnalyser(
             val identifiedBy = identifiable.identifiedBy
             when {
                 null == identifiedType -> {
-                    raiseError(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
+                    raiseError(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "simpleTypeName"), "Type to identify '${identifiable.typeName}' not found")
                 }
 
-                identifiedBy is RootExpression && identifiedBy.isNothing -> Unit
-                identifiedBy is NavigationExpression -> {
-                    // only check this if the typeName is valid - else it is always invalid
-                    //TODO: check this in context of typeName GrammarRule
-                    val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
-                    val identifyingProperty = typeResolver.typeFor(identifiedBy, identifiedType.type())
-                    //val identifyingProperty = identifiedBy.typeOfNavigationExpressionFor(identifiedType.type())
-                    if (null == identifyingProperty) {
-                        //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
-                        raiseError(
-                            ReferencesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
-                            "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
-                        )
-                    } else {
-                        //OK
+                else -> {
+                    val identifyingProperty = _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
+                    when (identifyingProperty) {
+                        SimpleTypeModelStdLib.NothingType -> {
+                            raiseError(
+                                ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression"),
+                                "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
+                            )
+                        }
                     }
                 }
             }
@@ -158,7 +154,6 @@ class ReferencesSemanticAnalyser(
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
-                //if (context.rootScope.isMissing(ref.inTypeName, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
                 raiseError(
                     ReferencesSyntaxAnalyser.PropertyValue(ref, "in"),
                     "Referring type '${ref.inTypeName}' not found"
@@ -166,17 +161,9 @@ class ReferencesSemanticAnalyser(
             }
 
             else -> {
-//            val typeScope = context.rootScope.childScopes[ref.inTypeName]
-//            if (null == typeScope) {
-//                raiseError(
-//                    AglScopesSyntaxAnalyser.PropertyValue(ref, "propertyReference"),
-//                    "Child scope '${ref.inTypeName}' not found"
-//                )
-//            } else {
                 for (refExpr in ref.referenceExpressionList) {
                     checkReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
                 }
-//            }
             }
         }
     }
@@ -189,8 +176,8 @@ class ReferencesSemanticAnalyser(
         importedNamespaces: List<TypeNamespace>
     ) =
         when (refExpr) {
-            is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
-            is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
+            is ReferenceExpressionPropertyDefault -> checkPropertyReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
+            is ReferenceExpressionCollectionDefault -> checkCollectionReferenceExpression(crossReferenceModel, contextType, ref, refExpr, importedNamespaces)
             else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
         }
 
@@ -198,7 +185,7 @@ class ReferencesSemanticAnalyser(
         crossReferenceModel: CrossReferenceModel,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
-        refExpr: CollectionReferenceExpressionDefault,
+        refExpr: ReferenceExpressionCollectionDefault,
         importedNamespaces: List<TypeNamespace>
     ) {
         refExpr.ofType?.let {
@@ -207,10 +194,12 @@ class ReferencesSemanticAnalyser(
                 null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.expression}', the of-type '$it' is not found")
             }
         }
-        val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
-        val collTypeInstance = typeResolver.typeFor( refExpr.expression,contextType.type())
+        val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
         when (collTypeInstance.declaration) {
-            null -> TODO()
+            SimpleTypeModelStdLib.NothingType -> {
+                TODO()
+            }
+
             is CollectionType -> {
                 val loopVarType = collTypeInstance.typeArguments[0].type.declaration
                 val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
@@ -240,21 +229,9 @@ class ReferencesSemanticAnalyser(
         crossReferenceModel: CrossReferenceModel,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
-        refExpr: PropertyReferenceExpressionDefault,
+        refExpr: ReferenceExpressionPropertyDefault,
         importedNamespaces: List<TypeNamespace>
     ) {
-        //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
-        //from = 'from' navigation ;
-        val typeResolver = ExpressionTypeResolver(_context!!.typeModel)
-        val prop = typeResolver.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
-        //val prop = refExpr.referringPropertyNavigation.lastPropertyDeclarationFor(contextType.type())
-        if (null == prop) {
-            raiseError(
-                ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
-                "For references in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
-            )
-        }
-
         refExpr.refersToTypeName.forEachIndexed { i, n ->
             if (null == findReferredToType(n, importedNamespaces)) {
                 raiseError(
@@ -266,13 +243,23 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        if (null != prop) {
-            val qualifiedTypeNames = refExpr.refersToTypeName.mapNotNull { findReferredToType(it, importedNamespaces)?.qualifiedName }
-            (crossReferenceModel as CrossReferenceModelDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name, qualifiedTypeNames)
+        val prop = _typeResolver!!.lastPropertyDeclarationFor(refExpr.referringPropertyNavigation, contextType.type())
+        when (prop) {
+            null -> {
+                raiseError(
+                    ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
+                    "For references in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
+                )
+            }
+
+            else -> {
+                val qualifiedTypeNames = refExpr.refersToTypeName.mapNotNull { findReferredToType(it, importedNamespaces)?.qualifiedName }
+                (crossReferenceModel as CrossReferenceModelDefault).addRecordReferenceForProperty(prop.owner.qualifiedName, prop.name.value, qualifiedTypeNames)
+            }
         }
     }
 
-    fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
+    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
         return _grammarNamespace?.findTypeNamed(name)
             ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name as SimpleName) }
     }

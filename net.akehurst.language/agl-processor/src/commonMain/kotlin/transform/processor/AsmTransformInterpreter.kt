@@ -24,6 +24,7 @@ import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.AsmValue
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.base.api.QualifiedName
@@ -81,9 +82,10 @@ class AsmTransformInterpreter(
         }
         val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
 
-        val PARSE_NODE_TYPE_LEAF  = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Leaf"))!!
+        val PARSE_NODE_TYPE_LEAF = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Leaf"))!!
+
         // TODO: create properer parse Node, Leaf, Branch, etc types
-        val PARSE_NODE_TYPE_BRANCH_SIMPLE  = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Branch"))!!
+        val PARSE_NODE_TYPE_BRANCH_SIMPLE = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Branch"))!!
         /*= parseNodeNamespace.createTupleType().let {
             val args = mutableListOf(
                 TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
@@ -103,16 +105,16 @@ class AsmTransformInterpreter(
         }*/
 
         val PARSE_NODE_TYPE_BRANCH_SEPARATED = parseNodeNamespace.findOwnedTypeNamed(SimpleName("BranchSeparated"))!!
-            /*parseNodeNamespace.createTupleType().let {
-            val args = mutableListOf(
-                TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
-                TypeArgumentNamedSimple(ALTERNATIVE, SimpleTypeModelStdLib.Integer),
-                TypeArgumentNamedSimple(LEAF, SimpleTypeModelStdLib.String),
-                TypeArgumentNamedSimple(CHILDREN, SLIST_OF_ANY),
-                TypeArgumentNamedSimple(CHILD, SLIST_OF_ANY),
-            )
-            it.typeTuple(args)
-        }*/
+        /*parseNodeNamespace.createTupleType().let {
+        val args = mutableListOf(
+            TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
+            TypeArgumentNamedSimple(ALTERNATIVE, SimpleTypeModelStdLib.Integer),
+            TypeArgumentNamedSimple(LEAF, SimpleTypeModelStdLib.String),
+            TypeArgumentNamedSimple(CHILDREN, SLIST_OF_ANY),
+            TypeArgumentNamedSimple(CHILD, SLIST_OF_ANY),
+        )
+        it.typeTuple(args)
+    }*/
         /*.also {
             it.appendPropertyStored(PATH, SimpleTypeModelStdLib.String, CMP_STR_MEM)
             it.appendPropertyStored(ALTERNATIVE, SimpleTypeModelStdLib.Integer, CMP_STR_MEM)
@@ -151,7 +153,7 @@ class AsmTransformInterpreter(
 
     private fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        asm.setProperty(st.lhsPropertyName.asValueName, propValue, asm.property.size)
+        asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
     private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): AsmValue {

@@ -83,7 +83,7 @@ class CompletionProviderSimple(
             null -> TODO()
             else -> {
                 val refTypeNames = expectedPropName.flatMap {
-                    crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, it)
+                    crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, it.value)
                 }
                 val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                 val items = refTypes.flatMap { refType ->

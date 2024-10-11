@@ -26,8 +26,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
@@ -73,24 +72,24 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // root = propertyReference ;
     private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
-        val v = children[0] as PropertyName
+        val v = children[0] as String
         return when {
-            v.value.startsWith("\$") -> when (v.value) {
+            v.startsWith("\$") -> when (v) {
                 RootExpressionSimple.NOTHING.name -> RootExpressionSimple.NOTHING
                 RootExpressionSimple.SELF.name -> RootExpressionSimple.SELF
-                else -> RootExpressionSimple(v.value)
+                else -> RootExpressionSimple(v)
             }
 
-            else -> RootExpressionSimple(v.value)
+            else -> RootExpressionSimple(v)
         }
     }
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option) {
-        0 -> LiteralExpressionSimple(LiteralExpressionSimple.BOOLEAN, (children[0] as String).toBoolean())
-        1 -> LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, (children[0] as String).toInt())
-        2 -> LiteralExpressionSimple(LiteralExpressionSimple.REAL, (children[0] as String).toDouble())
-        3 -> LiteralExpressionSimple(LiteralExpressionSimple.STRING, (children[0] as String))
+        0 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
+        1 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, (children[0] as String).toInt())
+        2 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, (children[0] as String).toDouble())
+        3 -> LiteralExpressionSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, (children[0] as String))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
@@ -150,14 +149,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // assignment = propertyName ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
-        val lhsPropertyName = children[0] as PropertyName
+        val lhsPropertyName = children[0] as String
         val rhs = children[2] as Expression
         return AssignmentStatementSimple(lhsPropertyName, rhs)
     }
 
     // propertyName = IDENTIFIER | SPECIAL
     private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        PropertyName(children[0] as String)
+        children[0] as String
 
     // with = 'with' '(' expression ')' expression ;
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
@@ -185,13 +184,13 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // propertyCall = '.' propertyReference ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
-        val id = children[1] as PropertyName
+        val id = children[1] as String
         return PropertyCallSimple(id)
     }
 
     // methodCall = '.' methodReference '(' ')' ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
-        val methodReference = children[1] as MethodName
+        val methodReference = children[1] as String
         //TODO: arguments
         return MethodCallSimple(methodReference, emptyList())
     }
@@ -208,10 +207,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // propertyReference = IDENTIFIER | SPECIAL
     private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        PropertyName(children[0] as String)
+        children[0] as String
 
     //methodReference = IDENTIFIER ;
     private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        MethodName(children[0] as String)
+        children[0] as String
 
 }

@@ -349,7 +349,8 @@ class GenerateTypeModelViaReflection(
 
         kclass.declaredMemberProperties.forEach { mp ->
             val comp_ref = kompOrRefFor(kclass, mp)
-            if (mp.visibility == KVisibility.PUBLIC || comp_ref.first == PropertyCharacteristic.COMPOSITE) {
+            // if public OR explicitly marked composite
+            if (mp.visibility == KVisibility.PUBLIC || (comp_ref.second && comp_ref.first == PropertyCharacteristic.COMPOSITE)) {
                 when {
                     mp.javaField == null -> { //must be derived
                         val pn = PropertyName(mp.name)

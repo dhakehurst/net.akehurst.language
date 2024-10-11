@@ -20,7 +20,9 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarReference
 import net.akehurst.language.grammar.asm.GrammarReferenceDefault
@@ -31,6 +33,12 @@ import net.akehurst.language.style.api.*
 import net.akehurst.language.style.asm.*
 
 internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
+
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("Base") to BaseSyntaxAnalyser()
+    )
+
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
     override fun registerHandlers() {
         super.register(this::unit)
@@ -43,10 +51,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::styleList)
         super.register(this::style)
         super.register(this::styleValue)
-        super.register(this::qualifiedName)
     }
-
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
     private val _localStore = mutableMapOf<String, Any>()
 
@@ -59,11 +64,11 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         return su
     }
 
-    // namespace = namespace qualifiedName ;
+    // namespace = namespace possiblyQualifiedName ;
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
-        val qualifiedName = children[1] as QualifiedName
+        val qualifiedName = children[1] as PossiblyQualifiedName
         val imports = emptyList<Import>()
-        return StyleNamespaceDefault(qualifiedName, imports)
+        return StyleNamespaceDefault(qualifiedName.asQualifiedName(null), imports)
     }
 
     // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
@@ -78,7 +83,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         }
     }
 
-    // extends = ':' [qualifiedName / ',']+ ;
+    // extends = ':' [possiblyQualifiedName / ',']+ ;
     fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<StyleSetReference>  {
         val localNamespace = _localStore["namespace"] as StyleNamespace
         val extendNameList = children[1] as List<PossiblyQualifiedName>
@@ -155,7 +160,4 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun styleValue(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
         children[0] as String
 
-    // qualifiedName : (IDENTIFIER / '.')+ ;
-    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
-        QualifiedName((children as List<String>).joinToString(separator = ""))
 }

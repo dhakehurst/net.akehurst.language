@@ -42,8 +42,6 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
 
 abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
 
-    override val import: List<Import> = mutableListOf()
-
     override val definition: List<DT> get() = _definition.values.toList()
 
     override val definitionByName: Map<SimpleName, DT> get() = _definition
@@ -116,7 +114,8 @@ class ModelDefault(
 }
 
 class NamespaceDefault(
-    override val qualifiedName: QualifiedName
+    override val qualifiedName: QualifiedName,
+    override val import: List<Import>
 ) : NamespaceAbstract<DefinitionDefault>() {
 
 }

@@ -36,10 +36,10 @@ object AglBase {
     skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
     unit = namespace* ;
-    namespace = 'namespace' qualifiedName import* definition*;
-    import = 'import' qualifiedName ;
+    namespace = 'namespace' possiblyQualifiedName import* definition*;
+    import = 'import' possiblyQualifiedName ;
     definition = 'definition' IDENTIFIER ;
-    qualifiedName = [IDENTIFIER / '.']+ ;
+    possiblyQualifiedName = [IDENTIFIER / '.']+ ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
   }"""
 
@@ -54,13 +54,13 @@ object AglBase {
 
             list("unit",0,-1) { ref("namespace") }
             concatenation("namespace") {
-                lit("namespace"); ref("qualifiedName")
+                lit("namespace"); ref("possiblyQualifiedName")
                 lst(0,-1) {ref("import")}
                 lst(0,-1) {ref("definition")}
             }
-            concatenation("import") { lit("import"); ref("qualifiedName") }
+            concatenation("import") { lit("import"); ref("possiblyQualifiedName") }
             concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
-            separatedList("qualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
+            separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
             concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
         }
     }
@@ -100,6 +100,7 @@ namespace net.akehurst.language.base.asm
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
         typeModel("Base", true, listOf(SimpleTypeModelStdLib)) {
             namespace("net.akehurst.language.base.api", listOf("std")) {
+                interfaceType("PublicValueType") {}
                 valueType("SimpleName") {
                     supertype("PossiblyQualifiedName")
                     constructor_ {

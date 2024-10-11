@@ -41,6 +41,7 @@ import net.akehurst.language.transform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
 
@@ -91,7 +92,7 @@ class TransformModelDefault(
         return if (_namespace.containsKey(qualifiedName)) {
             _namespace[qualifiedName]!!
         } else {
-            val ns = TransformNamespaceDefault(qualifiedName)//, imports)
+            val ns = TransformNamespaceDefault(qualifiedName,imports)//, imports)
             addNamespace(ns)
             ns
         }
@@ -112,6 +113,7 @@ class TransformModelDefault(
 
 internal class TransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
+    override val import: List<Import>
 ) : TransformNamespace, NamespaceAbstract<TransformRuleSet>() {
 
 }
@@ -158,7 +160,7 @@ internal abstract class TransformationRuleAbstract : TransformationRule {
         val CHILD_0 = ExpressionSelfStatementSimple(
             NavigationSimple(
                 start = RootExpressionSimple("child"),
-                parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, 0))))
+                parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, 0))))
             )
         )
     }

@@ -35,7 +35,7 @@ object AglGrammar {
 grammar AglGrammar extends Base {
     unit = namespace grammar+ ;
     grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
-    extends = ':' [qualifiedName / ',']+ ;
+    extends = ':' [possiblyQualifiedName / ',']+ ;
     option = '@' IDENTIFIER ':' value ;
     value = IDENTIFIER | LITERAL ;
     rule = grammarRule | overrideRule | preferenceRule ;
@@ -65,8 +65,8 @@ grammar AglGrammar extends Base {
     separatedList = '[' simpleItemOrGroup '/' simpleItemOrGroup ']' multiplicity ;
     group = '(' groupedContent ')' ;
     groupedContent = concatenation | choice ;
-    nonTerminal = qualifiedName ;
-    embedded = qualifiedName '::' nonTerminal ;
+    nonTerminal = possiblyQualifiedName ;
+    embedded = possiblyQualifiedName '::' nonTerminal ;
     terminal = LITERAL | PATTERN ;
     leaf LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
     leaf PATTERN = "\"(\\\"|[^\"])*\"" ;
@@ -97,7 +97,7 @@ grammar AglGrammar extends Base {
                 lit("}")
             }
             concatenation("extends") {
-                lit(":"); spLst(1, -1) { ref("qualifiedName"); lit(",") }
+                lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
             }
             concatenation("option") {
                 lit("@"); ref("IDENTIFIER"); lit(":"); ref("value")
@@ -195,9 +195,9 @@ grammar AglGrammar extends Base {
                 ref("concatenation")
                 ref("choice")
             }
-            concatenation("nonTerminal") { ref("qualifiedName") }
+            concatenation("nonTerminal") { ref("possiblyQualifiedName") }
             concatenation("embedded") {
-                ref("qualifiedName"); lit("::"); ref("nonTerminal")
+                ref("possiblyQualifiedName"); lit("::"); ref("nonTerminal")
             }
             choice("terminal") {
                 ref("LITERAL")
@@ -252,7 +252,7 @@ grammar AglGrammar extends Base {
 
     val formatStr = """
 namespace net.akehurst.language.Grammar {
-    Namespace -> 'namespace §qualifiedName'
+    Namespace -> 'namespace §possiblyQualifiedName'
     Grammar -> 'grammar §name §{extendsOpt()}{
                  §{options.join(§eol)}
                  §{rules.join(§eol)}

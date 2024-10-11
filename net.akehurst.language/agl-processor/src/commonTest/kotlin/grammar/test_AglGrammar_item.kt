@@ -16,8 +16,6 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -67,7 +65,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 SINGLE_LINE_COMMENT : '// a single line comment'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' }
+                possiblyQualifiedName { IDENTIFIER : 'a' }
             }
         """
         test(sentence, goal, expected)
@@ -85,7 +83,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 SINGLE_LINE_COMMENT : '//'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' }
+                possiblyQualifiedName { IDENTIFIER : 'a' }
             }
         """
         )
@@ -109,7 +107,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 MULTI_LINE_COMMENT : '/* a single line comment⏎sfgh⏎*/'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' }
+                possiblyQualifiedName { IDENTIFIER : 'a' }
             }
         """
         )
@@ -203,20 +201,20 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun qualifiedName__a() {
-        val result = parse("qualifiedName", "a")
-        val expected = this.sppt("qualifiedName { IDENTIFIER  : 'a'  }")
+    fun possiblyQualifiedName__a() {
+        val result = parse("possiblyQualifiedName", "a")
+        val expected = this.sppt("possiblyQualifiedName { IDENTIFIER  : 'a'  }")
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
-    fun qualifiedName__a_b() {
-        val result = parse("qualifiedName", "a.b")
+    fun possiblyQualifiedName__a_b() {
+        val result = parse("possiblyQualifiedName", "a.b")
         val expected = this.sppt(
             """
-            qualifiedName {
+            possiblyQualifiedName {
                 IDENTIFIER  : 'a' 
                 '.'
                 IDENTIFIER  : 'b' 
@@ -229,11 +227,11 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun qualifiedName__a_b_c() {
-        val result = parse("qualifiedName", "a.b.c")
+    fun possiblyQualifiedName__a_b_c() {
+        val result = parse("possiblyQualifiedName", "a.b.c")
         val expected = this.sppt(
             """
-            qualifiedName {
+            possiblyQualifiedName {
                 IDENTIFIER  : 'a' 
                 '.'
                 IDENTIFIER  : 'b' 
@@ -265,7 +263,7 @@ class test_AglGrammar_item {
         val result = parse("simpleItem", "a")
         val expected = this.sppt(
             """
-            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+            simpleItem|1 { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -278,7 +276,7 @@ class test_AglGrammar_item {
         val result = parse("simpleItem", "z.y.x.B.a")
         val expected = this.sppt(
             """
-            simpleItem { nonTerminal { qualifiedName {
+            simpleItem { nonTerminal { possiblyQualifiedName {
               IDENTIFIER : 'z'
               '.'
               IDENTIFIER : 'y'
@@ -437,7 +435,7 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             simpleList {
-                simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
+                simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } }
                 multiplicity { '*' }
             }
         """.trimIndent()
@@ -485,7 +483,7 @@ class test_AglGrammar_item {
         val result = parse("concatenationItem", "a")
         val expected = this.sppt(
             """
-            concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } } }
+            concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -530,7 +528,7 @@ class test_AglGrammar_item {
         val result = parse("concatenation", "a")
         val expected = this.sppt(
             """
-             concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } } } }
+             concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -544,13 +542,13 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             concatenation {
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } }
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } }
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } }
             }
         """.trimIndent()
         )
@@ -565,15 +563,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             priorityChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } } }
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } } }
             }
         """.trimIndent()
         )
@@ -588,15 +586,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
              simpleChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                 IDENTIFIER : 'a' WHITESPACE : ' '
                 } } } } } }
                 '|' WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                 IDENTIFIER : 'b' WHITESPACE : ' '
                 } } } } } }
                 '|' WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } } }
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } } }
             }
         """.trimIndent()
         )
@@ -611,13 +609,13 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             choice|2 { simpleChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
                 } } } } } }
                 '|'
                 WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } } }
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'b' } } } } } }
             } }
         """.trimIndent()
         )
@@ -632,15 +630,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             choice { priorityChoice {
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } } }
+                concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } } }
             } }
         """.trimIndent()
         )
@@ -666,7 +664,7 @@ class test_AglGrammar_item {
                 '='
                 rhs { concatenation { concatenationItem { simpleItemOrGroup { group {
                 '('
-                    groupedContent { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {IDENTIFIER : 'b' } } } } } } }
+                    groupedContent { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {IDENTIFIER : 'b' } } } } } } }
                 ')'
                 } } } } }
                 ';'
@@ -687,8 +685,8 @@ class test_AglGrammar_item {
             group {
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } }
               } }
               ')'
             }
@@ -708,8 +706,8 @@ class test_AglGrammar_item {
             concatenation { concatenationItem { simpleItemOrGroup { group { 
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } }
               } }
               ')'
             } } } }
@@ -727,9 +725,9 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
              embedded {
-              qualifiedName { IDENTIFIER : 'X' }
+              possiblyQualifiedName { IDENTIFIER : 'X' }
               '::'
-              nonTerminal { qualifiedName { IDENTIFIER : 'y' } }
+              nonTerminal { possiblyQualifiedName { IDENTIFIER : 'y' } }
              }
             """.trimIndent()
         )
@@ -745,9 +743,9 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
              rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { embedded {
-              qualifiedName { IDENTIFIER : 'X' }
+              possiblyQualifiedName { IDENTIFIER : 'X' }
               '::'
-              nonTerminal { qualifiedName { IDENTIFIER : 'y' } }
+              nonTerminal { possiblyQualifiedName { IDENTIFIER : 'y' } }
              } } } } } }
             """.trimIndent()
         )
@@ -765,8 +763,8 @@ class test_AglGrammar_item {
             rhs { concatenation { concatenationItem { simpleItemOrGroup {  group {
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } }
               } }
               ')'
             } } } } }
@@ -790,17 +788,17 @@ class test_AglGrammar_item {
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
                 rhs { choice { priorityChoice {
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
                         IDENTIFIER : 'a' WHITESPACE : ' '
                     } } } } } }
                     '<'
                     WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
                         IDENTIFIER : 'b' WHITESPACE : ' '
                     } } } } } }
                     '<'
                     WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItemOrGroup { simpleItem|1 { nonTerminal { possiblyQualifiedName {
                         IDENTIFIER : 'c' WHITESPACE : ' '
                     } } } } } }
                 } } }
@@ -852,7 +850,7 @@ rule { grammarRule {
   WHITESPACE : ' '
   '='
   WHITESPACE : ' '
-  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
     IDENTIFIER : 'a'
     WHITESPACE : ' '
   } } } } } } }
@@ -880,7 +878,7 @@ rule { grammarRule {
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 { concatenation {  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                rhs|1 { concatenation {  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
                 } } } } } } }
@@ -910,7 +908,7 @@ rule { grammarRule {
   WHITESPACE : ' '
   '='
   WHITESPACE : ' '
-  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
     IDENTIFIER : 'a'
     WHITESPACE : ' '
   } } } } } } }
@@ -941,7 +939,7 @@ rule { grammarRule {
               '='
               WHITESPACE : ' '
               rhs { concatenation { concatenationItem { listOfItems { simpleList {
-                simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
+                simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } }
                 multiplicity {
                   '*'
                   WHITESPACE : ' '
@@ -973,9 +971,9 @@ rule { grammarRule {
   '='
   rhs { concatenation { concatenationItem { listOfItems { separatedList {
     '['
-    simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
+    simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } }
     '/'
-    simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+    simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } }
     ']'
     multiplicity { '*' }
   } } } } }
@@ -1006,11 +1004,11 @@ rule { grammarRule {
               rhs { concatenation { concatenationItem { simpleItemOrGroup { group {
                 '('
                 groupedContent { concatenation {
-                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                     IDENTIFIER : 'b'
                     WHITESPACE : ' '
                   } } } } }
-                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } } }
                 } }
                 ')'
               } } } } }
@@ -1039,16 +1037,16 @@ rule { grammarRule {
               IDENTIFIER : 's'
               '='
               rhs { concatenation {
-                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } } }
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'a' } } } } }
                 concatenationItem { simpleItemOrGroup { group {
                   '('
                   groupedContent { concatenation {
-                    concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+                    concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
                       IDENTIFIER : 'b'
                       WHITESPACE : ' '
                     } } } } }
                     concatenationItem { listOfItems { simpleList {
-                      simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                      simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } }
                       multiplicity { '?' }
                     } } }
                   } }
@@ -1085,11 +1083,11 @@ rule { grammarRule {
     '('
     groupedContent { choice { simpleChoice {
       concatenation {
-        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
           IDENTIFIER : 'a'
           WHITESPACE : ' '
         } } } } }
-        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
           IDENTIFIER : 'b'
           WHITESPACE : ' '
         } } } } }
@@ -1097,7 +1095,7 @@ rule { grammarRule {
       '|'
       WHITESPACE : ' '
       concatenation { concatenationItem { listOfItems { simpleList {
-        simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+        simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName { IDENTIFIER : 'c' } } } }
         multiplicity { '?' }
       } } } }
     } } }
@@ -1139,7 +1137,7 @@ grammar {
     WHITESPACE : ' '
     '='
     WHITESPACE : ' '
-    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
       IDENTIFIER : 'a'
       WHITESPACE : ' '
     } } } } } } }
@@ -1181,7 +1179,7 @@ grammar {
     WHITESPACE : ' '
     '='
     WHITESPACE : ' '
-    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { qualifiedName {
+    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { possiblyQualifiedName {
       IDENTIFIER : 'a'
       WHITESPACE : ' '
     } } } } } } }
@@ -1208,12 +1206,12 @@ grammar {
         val expected = """
             preferenceRule {
               'preference' WHITESPACE : ' '
-              simpleItem { nonTerminal { qualifiedName {
+              simpleItem { nonTerminal { possiblyQualifiedName {
                 IDENTIFIER : 's' WHITESPACE : ' '
               } } }
               '{' WHITESPACE : '⏎  '
               §preferenceRule§multi1 { preferenceOption {
-                nonTerminal { qualifiedName {
+                nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
                 choiceNumber { §empty }

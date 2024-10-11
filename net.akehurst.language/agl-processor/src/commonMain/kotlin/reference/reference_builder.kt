@@ -39,20 +39,21 @@ class CrossReferenceModelBuilder(
 
 ) {
 
-    private var _declarationsFor = mutableListOf<DeclarationsForNamespace>()
+    private var _namespaces = mutableListOf<CrossReferenceNamespaceDefault>()
 
     fun declarationsFor(namespaceQualifiedName: String, init: DeclarationsForNamespaceBuilder.() -> Unit) {
-        val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName), emptyList())
+        val imports = mutableListOf<Import>()
+        val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName), imports)
         val b = DeclarationsForNamespaceBuilder(ns)
         b.init()
-        _declarationsFor.add(b.build())
+        val (def, imps) =b.build()
+        imports.addAll(imps)
+        ns.addDefinition(def)
+        _namespaces.add(ns)
     }
 
     fun build(): CrossReferenceModel {
-        val result = CrossReferenceModelDefault(SimpleName("CrossReference"), mutableListOf())
-        _declarationsFor.forEach {
-            result.declarationsForNamespace[it.qualifiedName] = it
-        }
+        val result = CrossReferenceModelDefault(SimpleName("CrossReference"), _namespaces)
         return result
     }
 }
@@ -82,12 +83,11 @@ class DeclarationsForNamespaceBuilder(
         _references.add(b.build())
     }
 
-    fun build(): DeclarationsForNamespace {
+    fun build(): Pair<DeclarationsForNamespace, List<Import>> {
         val result = DeclarationsForNamespaceDefault(namespace)
-        _importedNamespaces.forEach { TODO() }
         _scopes.forEach { result.scopeDefinition[it.scopeForTypeName] = it }
         result.references.addAll(_references)
-        return result
+        return Pair(result,_importedNamespaces)
     }
 }
 
@@ -135,7 +135,7 @@ class ReferenceDefinitionBuilder(
             fromResult.asm?.let { if (it is NavigationExpression) it else null } ?: error("Navigation not created from given fromExpressionStr")
         }
 
-        _refExpressionList.add(PropertyReferenceExpressionDefault(refPropNav, refersToTypes.map { it.asPossiblyQualifiedName }, fromNav))
+        _refExpressionList.add(ReferenceExpressionPropertyDefault(refPropNav, refersToTypes.map { it.asPossiblyQualifiedName }, fromNav))
     }
 
     fun collection() {

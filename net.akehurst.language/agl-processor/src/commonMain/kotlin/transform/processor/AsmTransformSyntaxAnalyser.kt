@@ -71,7 +71,7 @@ class AsmTransformSyntaxAnalyser(
     // override unit = namespace transformList ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
         val namespaceQName = QualifiedName((children[0] as List<String>).joinToString(separator = "."))
-        val namespace = TransformNamespaceDefault(namespaceQName)
+        val namespace = TransformNamespaceDefault(namespaceQName, emptyList())
         val transformBuilders = children[1] as List<(TransformNamespace) -> TransformRuleSet>
         transformBuilders.map {
             val tr = it.invoke(namespace)
@@ -145,14 +145,14 @@ class AsmTransformSyntaxAnalyser(
 
     // assignmentStatement = propertyName ':=' Expression.expression ;
     private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementSimple {
-        val propName = children[0] as PropertyName
+        val propName = children[0] as String
         val expr = children[2] as Expression
         return AssignmentStatementSimple(propName, expr)
     }
 
     // propertyName = IDENTIFIER ;
-    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyName =
-        PropertyName(children[0] as String)
+    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
 
     // grammarRuleName = IDENTIFIER ;
     private fun grammarRuleName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRuleName =

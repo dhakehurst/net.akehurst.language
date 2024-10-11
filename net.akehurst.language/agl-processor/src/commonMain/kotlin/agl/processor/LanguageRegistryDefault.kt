@@ -31,7 +31,7 @@ import net.akehurst.language.format.processor.AglFormatCompletionProvider
 import net.akehurst.language.format.processor.AglFormatSemanticAnalyser
 import net.akehurst.language.format.processor.AglFormatSyntaxAnalyser
 import net.akehurst.language.grammar.processor.*
-import net.akehurst.language.reference.processor.AglCrossReferences
+import net.akehurst.language.reference.processor.AglCrossReference
 import net.akehurst.language.reference.processor.ReferencesCompletionProvider
 import net.akehurst.language.reference.processor.ReferencesSemanticAnalyser
 import net.akehurst.language.reference.processor.ReferencesSyntaxAnalyser
@@ -85,7 +85,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val asmTransformLanguageIdentity: LanguageIdentity = LanguageIdentity( AsmTransform.grammar.qualifiedName.value)
         override val styleLanguageIdentity: LanguageIdentity = LanguageIdentity( AglStyle.grammar.qualifiedName.value)
         override val formatLanguageIdentity: LanguageIdentity = LanguageIdentity( AglFormat.grammar.qualifiedName.value)
-        override val crossReferenceLanguageIdentity: LanguageIdentity =LanguageIdentity(  AglCrossReferences.grammar.qualifiedName.value)
+        override val crossReferenceLanguageIdentity: LanguageIdentity =LanguageIdentity(  AglCrossReference.grammar.qualifiedName.value)
 
         override val base: LanguageDefinition<Any, SentenceContext<String>> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
@@ -208,11 +208,11 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<CrossReferenceModel, ContextFromTypeModel>(
                     identity = crossReferenceLanguageIdentity,
-                    AglCrossReferences.grammar,
+                    AglCrossReference.grammar,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglCrossReferences.grammar.name.value)
-                        defaultGoalRuleName(AglCrossReferences.goalRuleName)
+                        targetGrammarName(AglCrossReference.grammar.name.value)
+                        defaultGoalRuleName(AglCrossReference.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -224,7 +224,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                             Agl.fromString(
                                 Agl.registry.agl.style.processor!!,
                                 Agl.registry.agl.style.processor!!.optionsDefault(),
-                                AglCrossReferences.styleStr
+                                AglCrossReference.styleStr
                             )
                         }
                         completionProvider { ProcessResultDefault(ReferencesCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }

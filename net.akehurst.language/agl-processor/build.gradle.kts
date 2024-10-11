@@ -50,7 +50,10 @@ kotlinxReflect {
             "net.akehurst.language.grammarTypemodel.*",
             "net.akehurst.language.asm.**",
             "net.akehurst.language.expressions.**",
-            "net.akehurst.language.reference.**"
+            "net.akehurst.language.reference.**",
+
+            "net.akehurst.language.api.processor.**",
+            "net.akehurst.language.agl.processor.ProcessOptionsDefault"
         )
     )
 }

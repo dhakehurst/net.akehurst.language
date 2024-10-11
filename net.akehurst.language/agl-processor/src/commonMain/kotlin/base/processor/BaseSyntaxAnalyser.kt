@@ -18,10 +18,7 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Namespace
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.*
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
@@ -35,7 +32,7 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         super.register(this::namespace)
         super.register(this::import)
         super.register(this::definition)
-        super.register(this::qualifiedName)
+        super.register(this::possiblyQualifiedName)
     }
 
     //unit = namespace* ;
@@ -45,12 +42,13 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         return result
     }
 
-    //namespace = 'namespace' qualifiedName import* definition*;
+    //namespace = 'namespace' possiblyQualifiedName import* definition*;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NamespaceDefault {
-        val qualifiedName = children[1] as QualifiedName
-        val ns = NamespaceDefault(qualifiedName)
+        val pqn = children[1] as PossiblyQualifiedName
         val import = children[2] as List<Import>
         val definition = children[3] as List<(NamespaceDefault) -> DefinitionDefault>
+
+        val ns = NamespaceDefault(pqn.asQualifiedName(null), import)
         definition.forEach {
             val def = it.invoke(ns)
             ns.addDefinition(def)
@@ -58,9 +56,9 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         return ns
     }
 
-    // import = 'import' qualifiedName ;
+    // import = 'import' possiblyQualifiedName ;
     private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
-       Import( (children[1] as QualifiedName).value )
+       Import( (children[1] as PossiblyQualifiedName).value )
 
     //definition = 'definition' IDENTIFIER ;
     private fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (NamespaceDefault) -> DefinitionDefault {
@@ -68,8 +66,8 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         return { ns -> DefinitionDefault(ns,id) }
     }
 
-    // qualifiedName = [IDENTIFIER / '.']+ ;
-    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): QualifiedName =
-        QualifiedName((children as List<String>).joinToString(separator = ""))
+    // possiblyQualifiedName = [IDENTIFIER / '.']+ ;
+    private fun possiblyQualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        (children as List<String>).joinToString(separator = "").asPossiblyQualifiedName
 
 }

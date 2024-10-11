@@ -114,7 +114,7 @@ class ExpressionsInterpreterOverTypedObject(
 ) {
 
     val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val typeResolver = ExpressionTypeResolver(typeModel)
+    val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'
@@ -167,10 +167,10 @@ class ExpressionsInterpreterOverTypedObject(
     }
 
     private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.qualifiedTypeName) {
-        LiteralExpressionSimple.BOOLEAN -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Boolean)
-        LiteralExpressionSimple.INTEGER -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Integer)
-        LiteralExpressionSimple.REAL -> AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Real)
-        LiteralExpressionSimple.STRING -> AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.String)
+        SimpleTypeModelStdLib.Boolean.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Boolean)
+        SimpleTypeModelStdLib.Integer.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Integer)
+        SimpleTypeModelStdLib.Real.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.Real)
+        SimpleTypeModelStdLib.String.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(SimpleTypeModelStdLib.String)
         else -> error("should not happen")
     }
 
@@ -185,7 +185,7 @@ class ExpressionsInterpreterOverTypedObject(
         val result =
             expression.parts.fold(start) { acc, it ->
                 when (it) {
-                    is PropertyCall -> evaluatePropertyName(acc, it.propertyName)
+                    is PropertyCall -> evaluatePropertyName(acc, PropertyName(it.propertyName))
                     is MethodCall -> TODO()
                     is IndexOperation -> evaluateIndexOperation(evc, acc, it.indices)
                     else -> error("should not happen")
@@ -367,11 +367,11 @@ class ExpressionsInterpreterOverTypedObject(
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setProperty(it.lhsPropertyName.asValueName, value.asmValue, tuple.property.size)
+            tuple.setProperty(PropertyName(it.lhsPropertyName).asValueName, value.asmValue, tuple.property.size)
             //tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
             //val selfType = evc.self?.type ?: error("No self Type")
             //val exprType =  typeResolver.typeFor( it.rhs,selfType) ?: error("Cannot get type for expression '${it.rhs}' over type '$selfType'")
-            typeArgs.add(TypeArgumentNamedSimple(it.lhsPropertyName, value.type))
+            typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
         }
         return tuple.toTypedObject(tupleType.type(typeArgs))
     }
@@ -392,7 +392,7 @@ class ExpressionsInterpreterOverTypedObject(
 
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            obj.setProperty(it.lhsPropertyName.asValueName, value.asmValue, obj.property.size)
+            obj.setProperty(PropertyName(it.lhsPropertyName).asValueName, value.asmValue, obj.property.size)
         }
         return obj.toTypedObject(typeDecl.type())
     }

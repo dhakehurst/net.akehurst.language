@@ -60,6 +60,8 @@ class test_CrossReferences {
 
             assertEquals(expIssues, result.issues.all, result.issues.toString())
             val actual = result.asm!!
+            println(actual.asString())
+            assertEquals(expected.asString(), actual.asString())
             assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace?.toMap())
             val expNs = expected.declarationsForNamespace[QualifiedName("test.Test")]!!
             val actNs = actual.declarationsForNamespace[QualifiedName("test.Test")]!!
@@ -205,9 +207,8 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 scope RuleX { }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -218,8 +219,8 @@ class test_CrossReferences {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(32, 11, 2, 5),
-                "Type 'RuleX' not found"
+                InputLocation(30, 11, 2, 5),
+                "Scope type 'RuleX' not found"
             )
         )
 
@@ -238,11 +239,10 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 scope Rule1 {
                     identify Rule2 by rule3
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -268,11 +268,10 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 scope Rule1 {
                     identify RuleX by rule3
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -286,8 +285,8 @@ class test_CrossReferences {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(57, 18, 3, 5),
-                "Type 'RuleX' not found"
+                InputLocation(55, 18, 3, 5),
+                "Type to identify 'RuleX' not found"
             )
         )
 
@@ -308,11 +307,10 @@ class test_CrossReferences {
 
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 scope Rule1 {
                     identify Rule2 by ruleX
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -326,8 +324,14 @@ class test_CrossReferences {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(36, 23, 2, 5),
-                "In scope for 'Rule1', 'ruleX' not found for identifying property of 'Rule2'"
+                null,
+                "'Rule2' has no property named 'ruleX'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(64, 27, 3, 5),
+                "In scope for type 'Rule1', 'ruleX' not found for identifying property of 'Rule2'"
             )
         )
 
@@ -338,22 +342,21 @@ class test_CrossReferences {
     @Test
     fun one_reference() {
         val grammarStr = """
-                namespace test
-                grammar Test {
-                    rule1 = 'X' rule2 'Y' ;
-                    rule2 = 'a' rule3 ;
-                    rule3 = "[a-z]" ;
-                }
-            """.trimIndent()
+            namespace test
+            grammar Test {
+                rule1 = 'X' rule2 'Y' ;
+                rule2 = 'a' rule3 ;
+                rule3 = "[a-z]" ;
+            }
+        """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 references {
                     in Rule2 {
                         property rule3 refers-to Rule1
                     }
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -371,22 +374,21 @@ class test_CrossReferences {
     @Test
     fun one_reference_unknown_rules() {
         val grammarStr = """
-                namespace test
-                grammar Test {
-                    rule1 = 'X' rule2 'Y' ;
-                    rule2 = 'a' rule3 ;
-                    rule3 = "[a-z]" ;
-                }
-            """.trimIndent()
+            namespace test
+            grammar Test {
+                rule1 = 'X' rule2 'Y' ;
+                rule2 = 'a' rule3 ;
+                rule3 = "[a-z]" ;
+            }
+        """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 references {
                     in RuleX {
                         property ruleY refers-to RuleZ|RuleW
                     }
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -400,20 +402,8 @@ class test_CrossReferences {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(20, 8, 2, 5),
-                "Referring type 'RuleX' not found in scope"
-            ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(51, 39, 2, 11),
-                "For reference in 'RuleX' referred to type 'RuleZ' not found"
-            ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(51, 39, 2, 11),
-                "For reference in 'RuleX' referred to type 'RuleW' not found"
+                InputLocation(48, 12, 3, 5),
+                "Referring type 'RuleX' not found"
             )
         )
 
@@ -433,13 +423,12 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 references {
                     in Rule1 {
                         property rule2 refers-to Rule1|Rule2|Rule3
                     }
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -466,13 +455,12 @@ class test_CrossReferences {
             """.trimIndent()
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 references {
                     in Rule2 {
                         property rule3 refers-to AnExternalType1 | AnExternalType2
                     }
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {
@@ -518,14 +506,13 @@ class test_CrossReferences {
         }
 
         val sentence = """
-            namespace test.Test {
+            namespace test.Test
                 import external
                 references {
                     in Rule2 {
                         property rule3 refers-to AnExternalType1 | AnExternalType2
                     }
                 }
-            }
         """.trimIndent()
 
         val expected = crossReferenceModel {

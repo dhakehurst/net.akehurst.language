@@ -81,7 +81,7 @@ class AsmTransformNamespaceBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val namespace = TransformNamespaceDefault(qualifiedName)
+    private val namespace = TransformNamespaceDefault(qualifiedName, emptyList())
 
     fun transform(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
         val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typeModel, createTypes)
@@ -227,13 +227,13 @@ class AsmTransformRuleSetBuilder internal constructor(
 @AsmTransformModelDslMarker
 class AssignmentBuilder() {
 
-    private val _assignments = mutableListOf<Pair<PropertyName, Expression>>()
+    private val _assignments = mutableListOf<Pair<String, Expression>>()
 
     fun assignment(lhsPropertyName: String, expressionStr: String) {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
         check(res.issues.isEmpty()) { res.issues.toString() }
         val expr = res.asm!!
-        _assignments.add(Pair(PropertyName(lhsPropertyName), expr))
+        _assignments.add(Pair(lhsPropertyName, expr))
     }
 
     fun build(): List<AssignmentStatement> {

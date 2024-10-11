@@ -18,15 +18,13 @@ package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.reference.api.*
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
-import net.akehurst.language.grammar.api.GrammarNamespace
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.reference.api.*
 
 class CrossReferenceModelDefault(
     override val name: SimpleName,
@@ -47,7 +45,7 @@ class CrossReferenceModelDefault(
         }
     }
 
-    override val declarationsForNamespace = mutableMapOf<QualifiedName, DeclarationsForNamespace>()
+    override val declarationsForNamespace get() = namespace.associate { Pair(it.qualifiedName, it.declarationsForNamespace) }
 
     override val isEmpty: Boolean get() = declarationsForNamespace.isEmpty() || declarationsForNamespace.values.all { it.isEmpty }
 
@@ -111,14 +109,14 @@ class CrossReferenceModelDefault(
         }
     }
 
-    override fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName): List<QualifiedName> =
+    override fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName> =
         _referenceForProperty[Pair(typeQualifiedName, propertyName)] ?: emptyList()
 
-    fun addRecordReferenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName, refersToQualifiedTypeNames: List<QualifiedName>) {
+    fun addRecordReferenceForProperty(typeQualifiedName: QualifiedName, propertyName: String, refersToQualifiedTypeNames: List<QualifiedName>) {
         _referenceForProperty[Pair(typeQualifiedName, propertyName)] = refersToQualifiedTypeNames
     }
 
-    private val _referenceForProperty = mutableMapOf<Pair<QualifiedName, PropertyName>, List<QualifiedName>>()
+    private val _referenceForProperty = mutableMapOf<Pair<QualifiedName, String>, List<QualifiedName>>()
 }
 
 class CrossReferenceNamespaceDefault(
@@ -126,6 +124,7 @@ class CrossReferenceNamespaceDefault(
     override val import: List<Import>
 ) : NamespaceAbstract<DeclarationsForNamespace>(), CrossReferenceNamespace {
 
+    override val declarationsForNamespace get() = this.definition.first()
 }
 
 data class DeclarationsForNamespaceDefault(
@@ -158,9 +157,9 @@ data class DeclarationsForNamespaceDefault(
         }
     }
 
-    override fun referenceForPropertyOrNull(typeName: SimpleName, propertyName: PropertyName): ReferenceExpression? {
+    override fun referenceForPropertyOrNull(typeName: SimpleName, propertyName: String): ReferenceExpression? {
         val refs = referencesFor(typeName)
-        return refs.firstOrNull { it is PropertyReferenceExpressionDefault }
+        return refs.firstOrNull { it is ReferenceExpressionPropertyDefault }
     }
 
     override fun identifyingExpressionFor(scopeForTypeName: SimpleName, typeName: SimpleName): Expression? {
@@ -170,7 +169,12 @@ data class DeclarationsForNamespaceDefault(
     }
 
     override fun asString(indent: Indent): String {
-        TODO("not implemented")
+        val sb = StringBuilder()
+        val scps = scopeDefinition.values.joinToString(separator = "\n") {
+            "$indent${it.asString(indent)}"
+        }
+        sb.append(scps)
+        return sb.toString()
     }
 }
 
@@ -178,12 +182,31 @@ data class ScopeDefinitionDefault(
     override val scopeForTypeName: SimpleName
 ) : ScopeDefinition {
     override val identifiables = mutableListOf<Identifiable>()
+
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        sb.append("scope ${scopeForTypeName.value} {")
+        if (this.identifiables.isEmpty()) {
+            sb.append(" }")
+        } else {
+            sb.append("\n")
+            for (id in this.identifiables) {
+                sb.append(id.asString(indent.inc))
+            }
+            sb.append("\n$indent}")
+        }
+        return sb.toString()
+    }
 }
 
 data class IdentifiableDefault(
     override val typeName: SimpleName,
     override val identifiedBy: Expression
-) : Identifiable
+) : Identifiable {
+    override fun asString(indent: Indent): String {
+        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent)}"
+    }
+}
 
 data class ReferenceDefinitionDefault(
     /**
@@ -193,23 +216,36 @@ data class ReferenceDefinitionDefault(
 
     override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {
+
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        sb.append("in ${inTypeName.value} {\n")
+        for (re in referenceExpressionList) {
+            sb.append(re.asString(indent.inc))
+        }
+        return sb.toString()
+    }
 }
 
 abstract class ReferenceExpressionAbstract : ReferenceExpression
 
-data class PropertyReferenceExpressionDefault(
-    /**
-     * navigation to the property that is a reference
-     */
-    val referringPropertyNavigation: NavigationExpression,
+data class ReferenceExpressionPropertyDefault(
+    override val referringPropertyNavigation: NavigationExpression,
+    override val refersToTypeName: List<PossiblyQualifiedName>,
+    override val fromNavigation: NavigationExpression?
+) : ReferenceExpressionAbstract(), ReferenceExpressionProperty {
 
-    /**
-     * type of the asm element referred to
-     */
-    val refersToTypeName: List<PossiblyQualifiedName>,
-
-    val fromNavigation: NavigationExpression?
-) : ReferenceExpressionAbstract() {
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        val rp = referringPropertyNavigation.asString(indent)
+        val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
+        val fr = when (fromNavigation) {
+            null -> ""
+            else -> " " + fromNavigation.asString(indent)
+        }
+        sb.append("${indent}property $rp refers-to $rt$fr")
+        return sb.toString()
+    }
 
     /*    override fun isReference(propertyName: String): Boolean {
             return this.referringPropertyName == propertyName
@@ -221,11 +257,32 @@ data class PropertyReferenceExpressionDefault(
         }*/
 }
 
-data class CollectionReferenceExpressionDefault(
-    val expression: Expression,
-    val ofType: PossiblyQualifiedName?,
-    val referenceExpressionList: List<ReferenceExpressionAbstract>
-) : ReferenceExpressionAbstract() {
+data class ReferenceExpressionCollectionDefault(
+    override val expression: Expression,
+    override val ofType: PossiblyQualifiedName?,
+    override val referenceExpressionList: List<ReferenceExpressionAbstract>
+) : ReferenceExpressionAbstract(), ReferenceExpressionCollection {
+
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        val ex = expression.asString(indent)
+        val ot = when (ofType) {
+            null -> ""
+            else -> " of-type" + ofType.value
+        }
+        sb.append("${indent}forall $ex$ot refers-to {\n")
+        when {
+            referenceExpressionList.isEmpty() -> sb.append(" }")
+            else -> {
+                for(re in referenceExpressionList) {
+                    sb.append(re.asString(indent.inc))
+                }
+                sb.append("\n${indent}}")
+            }
+        }
+        return sb.toString()
+    }
+
     /*    override fun isReference(propertyName: String): Boolean {
             return this.referenceExpressionList.any { it.isReference(propertyName) }
         }

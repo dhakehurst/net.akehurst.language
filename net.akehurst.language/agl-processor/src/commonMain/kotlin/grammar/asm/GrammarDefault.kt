@@ -40,6 +40,8 @@ class GrammarNamespaceDefault(
     override val qualifiedName: QualifiedName
 ) : GrammarNamespace, NamespaceAbstract<Grammar>() {
 
+    // no support for importing grammars currently, mutable so serialisation works
+    override val import: List<Import> = mutableListOf()
 }
 
 /**

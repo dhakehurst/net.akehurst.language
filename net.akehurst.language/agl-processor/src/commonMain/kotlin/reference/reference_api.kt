@@ -19,7 +19,8 @@ package net.akehurst.language.reference.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.expressions.api.NavigationExpression
+import net.akehurst.language.reference.asm.ReferenceExpressionAbstract
 
 interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNamespace> {
 
@@ -27,11 +28,11 @@ interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNa
 
     fun isScopeDefinedFor(possiblyQualifiedTypeName: PossiblyQualifiedName): Boolean
     fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression>
-    fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: PropertyName): List<QualifiedName>
+    fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName>
 }
 
 interface CrossReferenceNamespace : Namespace<DeclarationsForNamespace> {
-
+    val declarationsForNamespace: DeclarationsForNamespace
 }
 
 interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
@@ -61,7 +62,7 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
      */
     fun referencesFor(typeName: SimpleName): List<ReferenceExpression>
 
-    fun referenceForPropertyOrNull(typeName: SimpleName, propertyName: PropertyName): ReferenceExpression?
+    fun referenceForPropertyOrNull(typeName: SimpleName, propertyName: String): ReferenceExpression?
 
     /**
      *
@@ -74,22 +75,42 @@ interface DeclarationsForNamespace : Definition<DeclarationsForNamespace> {
 
 }
 
-interface ReferenceDefinition {
+interface ReferenceDefinition  : Formatable {
     val inTypeName: SimpleName
     val referenceExpressionList: List<ReferenceExpression>
 }
 
-interface ScopeDefinition {
+interface ScopeDefinition : Formatable {
     val scopeForTypeName: SimpleName
     val identifiables: List<Identifiable>
 }
 
-interface Identifiable {
+interface Identifiable  : Formatable {
     val typeName: SimpleName
     val identifiedBy: Expression
 }
 
-interface ReferenceExpression {
+interface ReferenceExpression  : Formatable {
 
+}
+
+interface ReferenceExpressionProperty : ReferenceExpression {
+    /**
+     * navigation to the property that is a reference
+     */
+    val referringPropertyNavigation: NavigationExpression
+
+    /**
+     * type of the asm element referred to
+     */
+    val refersToTypeName: List<PossiblyQualifiedName>
+
+    val fromNavigation: NavigationExpression?
+}
+
+interface ReferenceExpressionCollection : ReferenceExpression {
+    val expression: Expression
+    val ofType: PossiblyQualifiedName?
+    val referenceExpressionList: List<ReferenceExpressionAbstract>
 }
 

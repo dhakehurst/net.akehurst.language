@@ -19,6 +19,8 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
@@ -41,7 +43,8 @@ class test_ExpressionsSemantics {
         val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list"
-        val typeResolver = ExpressionTypeResolver(tm)
+        val issues = IssueHolder(LanguageProcessorPhase.ALL)
+        val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
@@ -63,7 +66,8 @@ class test_ExpressionsSemantics {
 
         val expression = "list.front"
 
-        val typeResolver = ExpressionTypeResolver(tm)
+        val issues = IssueHolder(LanguageProcessorPhase.ALL)
+        val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
@@ -85,7 +89,8 @@ class test_ExpressionsSemantics {
 
         val expression = "list.front.join"
 
-        val typeResolver = ExpressionTypeResolver(tm)
+        val issues = IssueHolder(LanguageProcessorPhase.ALL)
+        val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(SimpleTypeModelStdLib.String, actual)

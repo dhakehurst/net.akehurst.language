@@ -20,11 +20,6 @@ import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-
 
 abstract class ExpressionAbstract : Expression {
 
@@ -143,13 +138,6 @@ data class LiteralExpressionSimple(
     override val value: Any
 ) : ExpressionAbstract(), LiteralExpression {
 
-    companion object {
-        val BOOLEAN = SimpleTypeModelStdLib.Boolean.qualifiedTypeName
-        val INTEGER = SimpleTypeModelStdLib.Integer.qualifiedTypeName
-        val REAL = SimpleTypeModelStdLib.Real.qualifiedTypeName
-        val STRING = SimpleTypeModelStdLib.String.qualifiedTypeName
-    }
-
     override fun toString(): String = value.toString()
 }
 
@@ -162,13 +150,13 @@ data class NavigationSimple(
 }
 
 data class PropertyCallSimple(
-    override val propertyName: PropertyName
+    override val propertyName: String
 ) : PropertyCall {
     override fun toString(): String = ".$propertyName"
 }
 
 data class MethodCallSimple(
-    override val methodName: MethodName,
+    override val methodName: String,
     override val arguments: List<Expression>
 ) : MethodCall {
 
@@ -183,17 +171,17 @@ data class IndexOperationSimple(
 }
 
 class AssignmentStatementSimple(
-    override val lhsPropertyName: PropertyName,
+    override val lhsPropertyName: String,
     override val rhs: Expression
 ) : AssignmentStatement {
 
-    val resolvedLhs get() = _resolvedLhs
+    //val resolvedLhs get() = _resolvedLhs
 
-    private lateinit var _resolvedLhs: PropertyDeclaration
+    //private lateinit var _resolvedLhs: PropertyDeclaration
 
-    fun resolveLhsAs(propertyDeclaration: PropertyDeclaration) {
-        _resolvedLhs = propertyDeclaration
-    }
+   // fun resolveLhsAs(propertyDeclaration: PropertyDeclaration) {
+    //    _resolvedLhs = propertyDeclaration
+   // }
 
     override fun asString(indent: Indent): String = "$lhsPropertyName := ${rhs.asString(indent)}"
 

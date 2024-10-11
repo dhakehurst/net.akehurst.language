@@ -19,14 +19,13 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
-import net.akehurst.language.asm.simple.asValueName
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.expressions.processor.toTypedObject
-import net.akehurst.language.reference.asm.CollectionReferenceExpressionDefault
-import net.akehurst.language.reference.asm.PropertyReferenceExpressionDefault
+import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
+import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.PossiblyQualifiedName
@@ -38,6 +37,7 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -119,13 +119,13 @@ class ReferenceResolverSimple(
 
     private fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext, self: AsmValue) {
         when (refExpr) {
-            is PropertyReferenceExpressionDefault -> handlePropertyReferenceExpression(refExpr, context, self)
-            is CollectionReferenceExpressionDefault -> handleCollectionReferenceExpression(refExpr, context, self)
+            is ReferenceExpressionPropertyDefault -> handlePropertyReferenceExpression(refExpr, context, self)
+            is ReferenceExpressionCollectionDefault -> handleCollectionReferenceExpression(refExpr, context, self)
             else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
         }
     }
 
-    private fun handlePropertyReferenceExpression(refExpr: PropertyReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
+    private fun handlePropertyReferenceExpression(refExpr: ReferenceExpressionPropertyDefault, context: ReferenceExpressionContext, self: AsmValue) {
         // 'in' typeReference '{' referenceExpression* '}'
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
@@ -270,7 +270,7 @@ class ReferenceResolverSimple(
         }
     }
 
-    private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
+    private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext, self: AsmValue) {
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
@@ -311,7 +311,7 @@ class ReferenceResolverSimple(
                         val exp = this.start
                         val pn = when(exp) {
                             is RootExpression -> PropertyValueName(exp.name)
-                            is PropertyCall -> exp.propertyName.asValueName
+                            is PropertyCall -> PropertyValueName(exp.propertyName)
                             else -> error("Unsupoorted")
                         }
                         root.property[pn] ?: error("Cannot navigate '$this' from null value")
@@ -324,7 +324,7 @@ class ReferenceResolverSimple(
                 val front = listOf(this.start) + this.parts.dropLast(1)
                 var v = root
                 for (pn in front) {
-                    val pd = typeModel.typeOf(v).findPropertyOrNull((pn as PropertyCall).propertyName)
+                    val pd = typeModel.typeOf(v).findPropertyOrNull(PropertyName((pn as PropertyCall).propertyName))
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> {
@@ -336,7 +336,7 @@ class ReferenceResolverSimple(
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {
-                        v.property[lastProp.asValueName] ?: error("Cannot navigate '$this' from null value")
+                        v.property[PropertyValueName(lastProp)] ?: error("Cannot navigate '$this' from null value")
                     }
 
                     else -> error("Cannot navigate '$this' from null value")

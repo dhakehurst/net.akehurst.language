@@ -160,21 +160,21 @@ internal class Grammar2TransformRuleSet(
         fun TypeInstance.toLeafAsStringTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("leaf")) }
         fun TypeInstance.toListTrRule() = this.let { t -> transformationRule(t, RootExpressionSimple("children")) }
         fun TypeInstance.toSListItemsTrRule() =
-            this.let { t -> transformationRule(t, NavigationSimple(RootExpressionSimple("children"), listOf(PropertyCallSimple(PropertyName("items"))))) }
+            this.let { t -> transformationRule(t, NavigationSimple(RootExpressionSimple("children"), listOf(PropertyCallSimple("items")))) }
 
         fun TypeInstance.toSubtypeTrRule() = this.let { t -> transformationRule(t, EXPRESSION_CHILD(0)) }
         fun TypeInstance.toUnnamedSubtypeTrRule() = this.let { t -> transformationRule(t, EXPRESSION_CHILD(0)) }
 
         fun EXPRESSION_CHILD(childIndex: Int) = NavigationSimple(
             start = RootExpressionSimple("child"),
-            parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, childIndex))))
+            parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, childIndex))))
         )
 
         fun EXPRESSION_CHILD_i_prop(childIndex: Int, pName: PropertyName) = NavigationSimple(
             start = RootExpressionSimple("child"),
             parts = listOf(
-                IndexOperationSimple(listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, childIndex))),
-                PropertyCallSimple(pName)
+                IndexOperationSimple(listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, childIndex))),
+                PropertyCallSimple(pName.value)
             )
         )
 
@@ -347,7 +347,7 @@ internal class Grammar2TransformRuleSet(
                             val options = subtypeTransforms.mapIndexed { idx, it ->
                                 WhenOptionSimple(
                                     condition = InfixExpressionSimple(
-                                        listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, idx), RootExpressionSimple("\$alternative")),
+                                        listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, idx), RootExpressionSimple("\$alternative")),
                                         listOf("==")
                                     ),
                                     expression = it.expression
@@ -543,7 +543,7 @@ internal class Grammar2TransformRuleSet(
                 val options = subtypeTransforms.mapIndexed { idx, it ->
                     WhenOptionSimple(
                         condition = InfixExpressionSimple(
-                            listOf(LiteralExpressionSimple(LiteralExpressionSimple.INTEGER, idx), RootExpressionSimple("\$alternative")),
+                            listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, idx), RootExpressionSimple("\$alternative")),
                             listOf("==")
                         ),
                         expression = it.expression
@@ -936,7 +936,7 @@ internal class Grammar2TransformRuleSet(
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
         val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
         //(trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
-        return AssignmentStatementSimple(lhsPropertyName = uniqueName, rhs = rhsExpression)
+        return AssignmentStatementSimple(lhsPropertyName = uniqueName.value, rhs = rhsExpression)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: PropertyName): PropertyName {

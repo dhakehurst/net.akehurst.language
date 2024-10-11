@@ -25,10 +25,8 @@ import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.reference.api.CrossReferenceNamespace
-import net.akehurst.language.reference.api.DeclarationsForNamespace
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
@@ -77,12 +75,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         return result
     }
 
-    // override namespace = namespace = 'namespace' qualifiedName import* declarations  ;
+    // override namespace = namespace = 'namespace' possiblyQualified import* declarations  ;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceNamespace {
-        val qualifiedName = children[1] as QualifiedName
+        val qualifiedName = children[1] as PossiblyQualifiedName
         val imports = children[2] as List<Import>
         val declarations = children[3] as (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault
-        val ns = CrossReferenceNamespaceDefault(qualifiedName, imports)
+        val ns = CrossReferenceNamespaceDefault(qualifiedName.asQualifiedName(null), imports)
         val def = declarations.invoke(ns)
         ns.addDefinition(def)
         return ns
@@ -151,7 +149,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val inTypeName = children[1] as SimpleName
         val referenceExpressionList = children[3] as List<ReferenceExpressionAbstract>
         val def = ReferenceDefinitionDefault(inTypeName, referenceExpressionList)
-        //locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
+        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
         // locationMap[PropertyValue(def, "propertyReference")] = locationMap[referringPropertyName]!!
         //typeReferences.forEachIndexed { i, n ->
         //    locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
@@ -168,7 +166,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         children[0] as ReferenceExpressionAbstract
 
     //propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
-    private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpressionDefault {
+    private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionPropertyDefault {
         val expr = children[1] as Expression
         val typeReferences = children[3] as List<PossiblyQualifiedName>
         val from = children[4] as NavigationExpression?
@@ -181,8 +179,11 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
                 NavigationSimple(RootExpressionSimple.ERROR, emptyList())
             }
         }
-
-        return PropertyReferenceExpressionDefault(navigation, typeReferences, from)
+        return ReferenceExpressionPropertyDefault(navigation, typeReferences, from).also {
+            typeReferences.forEachIndexed { i, n ->
+                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
+            }
+        }
     }
 
     // from = 'from' navigation
@@ -190,11 +191,11 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         children[1] as NavigationExpression
 
     // collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
-    private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
+    private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpressionCollectionDefault {
         val rootOrNavigation = children[1] as Expression
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
         val ofType = children[2] as PossiblyQualifiedName?
-        return CollectionReferenceExpressionDefault(rootOrNavigation, ofType, referenceExpression)
+        return ReferenceExpressionCollectionDefault(rootOrNavigation, ofType, referenceExpression)
     }
 
     // ofType = 'of-type' possiblyQualifiedTypeReference ;
@@ -207,10 +208,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // typeReferences = [possiblyQualifiedTypeReference / '|']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> { //List<Pair<String, InputLocation>> {
-        return (children as List<PossiblyQualifiedName>).toSeparatedList<Any, QualifiedName, String>().items
+        return (children as List<PossiblyQualifiedName>).toSeparatedList<Any, PossiblyQualifiedName, String>().items
     }
 
-    // possiblyQualifiedTypeReference = qualifiedName
+    // possiblyQualifiedTypeReference = possiblyQualifiedName
     private fun possiblyQualifiedTypeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
         children[0] as PossiblyQualifiedName
 

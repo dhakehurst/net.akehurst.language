@@ -36,7 +36,7 @@ internal object AglFormat {
             ref("namespace"); lst(1, -1) { ref("format") }
         }
         concatenation("format") {
-            lit("format"); ref("qualifiedName"); lit("{");
+            lit("format"); ref("IDENTIFIER"); lit("{");
             lst(1, -1) { ref("formatRule") }
             lit("}")
         }
@@ -81,7 +81,7 @@ internal object AglFormat {
         grammar AglFormat extends Expressions {        
             unit = namespace formatList ;
             formatList = format+ ;
-            format = 'format' qualifiedName '{' ruleList '}' ;
+            format = 'format' IDENTIFIER '{' ruleList '}' ;
             ruleList = formatRule+ ;
             formatRule = typeReference '->' formatExpression ;
             formatExpression

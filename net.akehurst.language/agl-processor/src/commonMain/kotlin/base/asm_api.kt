@@ -37,8 +37,10 @@ interface PossiblyQualifiedName {
     val value: String
     val simpleName: SimpleName
 
-    /** if this is a SimpleName, append it to the give qualifiedName, else return the QualifiedName **/
-    fun asQualifiedName(namespace: QualifiedName): QualifiedName
+    /** if this is a SimpleName, append it to the given qualifiedName (or just the simple name if namespace is null),
+     *  else return the QualifiedName
+     **/
+    fun asQualifiedName(namespace: QualifiedName?): QualifiedName
 }
 
 /**
@@ -59,8 +61,9 @@ value class QualifiedName(override val value: String) : PossiblyQualifiedName,Pu
     fun append(lastPart: SimpleName) = QualifiedName(this, lastPart)
 
     override val simpleName: SimpleName get() = last
-    override fun asQualifiedName(namespace: QualifiedName) = this
     val asImport: Import get() = Import(this.value)
+
+    override fun asQualifiedName(namespace: QualifiedName?) = this
 
     override fun toString(): String = value
 }
@@ -77,7 +80,10 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName,Publi
     }
 
     override val simpleName: SimpleName get() = this
-    override fun asQualifiedName(namespace: QualifiedName) = namespace.append(this)
+    override fun asQualifiedName(namespace: QualifiedName?) = when (namespace) {
+        null -> QualifiedName(this.value)
+        else -> namespace.append(this)
+    }
 
     override fun toString(): String = value
 }
