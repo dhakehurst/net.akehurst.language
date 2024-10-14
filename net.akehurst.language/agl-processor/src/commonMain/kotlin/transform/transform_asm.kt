@@ -111,14 +111,14 @@ class TransformModelDefault(
     }
 }
 
-internal class TransformNamespaceDefault(
+class TransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
     override val import: List<Import>
 ) : TransformNamespace, NamespaceAbstract<TransformRuleSet>() {
 
 }
 
-internal class TransformRuleSetDefault(
+class TransformRuleSetDefault(
     override val namespace: TransformNamespace,
     override val name: SimpleName,
     _rules: List<TransformationRule>
@@ -154,10 +154,10 @@ internal class TransformRuleSetDefault(
     }
 }
 
-internal abstract class TransformationRuleAbstract : TransformationRule {
+abstract class TransformationRuleAbstract : TransformationRule {
 
     companion object {
-        val CHILD_0 = ExpressionSelfStatementSimple(
+        internal val CHILD_0 = ExpressionSelfStatementSimple(
             NavigationSimple(
                 start = RootExpressionSimple("child"),
                 parts = listOf(IndexOperationSimple(listOf(LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, 0))))
@@ -188,7 +188,7 @@ internal abstract class TransformationRuleAbstract : TransformationRule {
     abstract override fun toString(): String
 }
 
-internal class TransformationRuleDefault(
+class TransformationRuleDefault(
     override val possiblyQualifiedTypeName: PossiblyQualifiedName,
     override val expression: Expression
 ) : TransformationRuleAbstract() {

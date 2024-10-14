@@ -618,7 +618,7 @@ internal class ParseGraph(
     }
 
     private fun doRecordGoal(goal: SpptDataNode) {
-        this.treeData.complete.setRoot(goal)
+        this.treeData.complete.setRootTo(goal)
         this._goals.add(goal)
         this.goalMatchedAll = this.scanner.isEnd(sentence, goal.nextInputPosition)
     }

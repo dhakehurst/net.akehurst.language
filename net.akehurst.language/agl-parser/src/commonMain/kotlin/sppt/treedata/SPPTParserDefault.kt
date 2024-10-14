@@ -312,7 +312,7 @@ internal class TreeParser(
         val gr = rrs.goalRuleFor[userGoalNode.rule]!!
         val pseudoRoot = CompleteTreeDataNode(gr, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.nextInputNoSkip, userGoalNode.option)
         treeData.setChildren(pseudoRoot, listOf(userGoalNode), false)
-        treeData.setRoot(pseudoRoot)
+        treeData.setRootTo(pseudoRoot)
         return treeData
     }
 

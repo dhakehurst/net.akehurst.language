@@ -122,7 +122,7 @@ interface TreeData {
 
     // Mutation
     fun start(initialSkipData: TreeData?)
-    fun setRoot(root: SpptDataNode)
+    fun setRootTo(root: SpptDataNode)
     fun setUserGoalChildrenAfterInitialSkip(nug: SpptDataNode, userGoalChildren: List<SpptDataNode>)
     fun setChildren(parent: SpptDataNode, completeChildren: List<SpptDataNode>, isAlternative: Boolean)
     fun setSkipDataAfter(leafNodeIndex: SpptDataNode, skipData: TreeData)

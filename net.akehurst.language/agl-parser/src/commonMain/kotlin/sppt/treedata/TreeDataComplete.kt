@@ -142,7 +142,7 @@ class TreeDataComplete(
 
     override fun preferred(node: SpptDataNode): SpptDataNode? = this._preferred[node.preferred]
 
-    override fun setRoot(root: SpptDataNode) {
+    override fun setRootTo(root: SpptDataNode) {
         this.root = root
     }
 

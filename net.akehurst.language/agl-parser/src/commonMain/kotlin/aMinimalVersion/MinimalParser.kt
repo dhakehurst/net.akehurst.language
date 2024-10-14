@@ -452,7 +452,7 @@ class MinimalParser private constructor(
     }
 
     private fun recordGoal(sppf: TreeDataGrowing<GSSNodeForMinimal, CompleteNodeForMinimal>, hd: GSSNodeForMinimal) {
-        sppf.complete.setRoot(hd.complete)
+        sppf.complete.setRootTo(hd.complete)
         gss.dropStack(hd) {}
     }
 

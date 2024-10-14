@@ -42,8 +42,8 @@ class TreeDataComplete2(
     // made public for serialisation support
     val completeChildren: Map<SpptDataNode, Map<Int, List<SpptDataNode>>> get() = this._complete
 
-    override var root: SpptDataNode? = null; private set
-    override var initialSkip: TreeData? = null; private set
+    override var root: SpptDataNode? = null // Can't have set being private for JS serialisation, private set
+    override var initialSkip: TreeData? = null // Can't have set being private for JS serialisation, private set
 
     override val userRoot get() = childrenFor(root!!).first().second.first()
 
@@ -113,7 +113,7 @@ class TreeDataComplete2(
 
     override fun preferred(node: SpptDataNode): SpptDataNode? = this._preferred[node.preferred]
 
-    override fun setRoot(root: SpptDataNode) {
+    override fun setRootTo(root: SpptDataNode) {
         this.root = root
     }
 
