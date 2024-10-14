@@ -160,5 +160,5 @@ class AsmTransformSyntaxAnalyser(
 
     // possiblyQualifiedTypeName = qualifiedName ;
     private fun possiblyQualifiedTypeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
-        ((children[0] as List<String>).joinToString(separator = ".")).asPossiblyQualifiedName
+        children[0] as PossiblyQualifiedName
 }

@@ -561,11 +561,16 @@ internal class Grammar2TransformRuleSet(
     private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
         //val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
         val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
-        val assignments = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
         val typeArgs = ttSub.property.map { TypeArgumentNamedSimple(it.name, it.typeInstance) }
         val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
+
+        //To avoid recursion issue, create and cahce tr-rule before creating assignments
+        val assignments = mutableListOf<AssignmentStatement>()
         val tr = transformationRule(ti, CreateTupleExpressionSimple(assignments))
         this._grRuleItemToTrRule[ruleItem] = tr
+        val asses = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
+        assignments.addAll(asses)
+
         return when {
             ttSub.allProperty.isEmpty() -> {
                 val trn = SimpleTypeModelStdLib.NothingType.toNoActionTrRule()

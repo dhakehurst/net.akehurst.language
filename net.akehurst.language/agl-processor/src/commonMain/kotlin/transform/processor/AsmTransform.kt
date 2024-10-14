@@ -63,7 +63,7 @@ object AsmTransform {
         }
         concatenation("propertyName") { ref("IDENTIFIER") }
         concatenation("grammarRuleName") { ref("IDENTIFIER") }
-        concatenation("possiblyQualifiedTypeName") { ref("qualifiedName") }
+        concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
     }
 
     const val grammarStr = """
@@ -72,7 +72,7 @@ namespace net.akehurst.language.agl
 grammar Transform : Base {
 
     unit = namespace transform+ ;
-    namespace = 'namespace' qualifiedName ;
+    namespace = 'namespace' possiblyQualifiedName ;
     transform = 'transform' IDENTIFIER '{' transformRule+ '} ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
@@ -87,7 +87,7 @@ grammar Transform : Base {
     expression = Expression::expression ;
    
     grammarRuleName = IDENTIFIER ;
-    possiblyQualifiedTypeName = qualifiedName ;
+    possiblyQualifiedTypeName = possiblyQualifiedName ;
 
 }
     """

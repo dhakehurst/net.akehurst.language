@@ -5630,7 +5630,7 @@ class test_AllDefault {
             optional("§S§opt1", "X", isPseudo = true)
             choiceLongest("X") {
                 ref("R")
-                ref( "D")
+                ref("D")
             }
             choiceLongest("R") {
                 ref("§R§group1")
@@ -5650,37 +5650,37 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyPrimitiveType("a","String",false,0)
-                propertyUnnamedSuperType("x",true,1) {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("x", true, 1) {
                     unnamedSuperType {
                         tupleType {
                             tupleType("\$group", false) {
-                                typeRef("b","String", false)
-                                typeRef("c","String", false)
+                                typeRef("b", "String", false)
+                                typeRef("c", "String", false)
                             }
                         }
                         tupleType {
                             tupleType("\$group", false) {
-                                typeRef("c","String", false)
-                                typeRef("d","String", false)
+                                typeRef("c", "String", false)
+                                typeRef("d", "String", false)
                             }
                         }
                     }
                     typeRef("String", false)
                 }
-                propertyPrimitiveType("e","String",false,2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
             unnamedSuperTypeType("R") {
                 tupleType {
                     tupleType("\$group", false) {
-                        typeRef("b","String", false)
-                        typeRef("c","String", false)
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
                     }
                 }
                 tupleType {
                     tupleType("\$group", false) {
-                        typeRef("c","String", false)
-                        typeRef("d","String", false)
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
                     }
                 }
             }
@@ -5688,14 +5688,14 @@ class test_AllDefault {
                 unnamedSuperType {
                     tupleType {
                         tupleType("\$group", false) {
-                            typeRef("b","String", false)
-                            typeRef("c","String", false)
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
                         }
                     }
                     tupleType {
                         tupleType("\$group", false) {
-                            typeRef("c","String", false)
-                            typeRef("d","String", false)
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
                         }
                     }
                 }
@@ -5714,11 +5714,12 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a","child[0]")
-                assignment("x","with(child[1]) child[0]")
-                assignment("e","child[2]")
+                assignment("a", "child[0]")
+                assignment("x", "with(child[1]) child[0]")
+                assignment("e", "child[2]")
             }
-            unnamedSubtypeRule("R","""
+            unnamedSubtypeRule(
+                "R", """
                 when {
                   0 == §alternative -> tuple {
                       §group := with(child[0]) tuple {
@@ -5733,32 +5734,33 @@ class test_AllDefault {
                       }
                   }
                 } 
-                """.trimIndent().replace("§","\$")) {
+                """.trimIndent().replace("§", "\$")
+            ) {
                 tupleType {
                     tupleType("\$group", false) {
-                        typeRef("b","String", false)
-                        typeRef("c","String", false)
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
                     }
                 }
                 tupleType {
                     tupleType("\$group", false) {
-                        typeRef("c","String", false)
-                        typeRef("d","String", false)
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
                     }
                 }
             }
-            unnamedSubtypeRule("X",  "child[0]") {
+            unnamedSubtypeRule("X", "child[0]") {
                 unnamedSuperType {
                     tupleType {
                         tupleType("\$group", false) {
-                            typeRef("b","String", false)
-                            typeRef("c","String", false)
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
                         }
                     }
                     tupleType {
                         tupleType("\$group", false) {
-                            typeRef("c","String", false)
-                            typeRef("d","String", false)
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
                         }
                     }
                 }
@@ -5786,7 +5788,7 @@ class test_AllDefault {
                     }
                 }
             }
-            define(sentence ="abce", sppt = "S { a:'a' §S§opt1 { X { R { §R§group1 { b:'b' c:'c' } } } } e:'e' }") {
+            define(sentence = "abce", sppt = "S { a:'a' §S§opt1 { X { R { §R§group1 { b:'b' c:'c' } } } } e:'e' }") {
                 asmSimple {
                     element("S") {
                         propertyString("a", "a")
@@ -5800,7 +5802,7 @@ class test_AllDefault {
                     }
                 }
             }
-            define(sentence ="axe", sppt = "S { a:'a' §S§opt1 { X { D { 'x' } } } e:'e' }") {
+            define(sentence = "axe", sppt = "S { a:'a' §S§opt1 { X { D { 'x' } } } e:'e' }") {
                 asmSimple {
                     element("S") {
                         propertyString("a", "a")
@@ -6013,14 +6015,14 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = ruleSet("test.Test") {
-            pattern("WS", "\\s+",isSkip = true)
+            pattern("WS", "\\s+", isSkip = true)
             concatenation("S") { ref("type") }
             concatenation("type") { ref("NAME"); ref("§type§opt1") }
             optional("§type§opt1", "typeArgs", isPseudo = true)
             concatenation("typeArgs") { literal("<"); ref("typeArgList"); literal(">") }
-            sList("typeArgList",1,-1,"type","','")
-            pattern("NAME","[a-zA-Z][a-zA-Z0-9]*")
-            literal("','",",")
+            sList("typeArgList", 1, -1, "type", "','")
+            pattern("NAME", "[a-zA-Z][a-zA-Z0-9]*")
+            literal("','", ",")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             // S = type ;
@@ -6562,6 +6564,98 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S")
+        }
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "a", sppt = "S { 'a' }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun _9_recursion() {
+        val grammarStr = """
+                namespace test
+                grammar Test {
+                    S = as | bs | cs ;
+                    as = a* ;
+                    bs = [b/',']+ ;
+                    cs = 'c' | cs 'c' ;
+                    leaf a = 'a' 'a' ;
+                    leaf b = 'b' 'b' ;
+                }
+        """.trimIndent()
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
+                ref("as")
+                ref("bs")
+                ref("cs")
+            }
+            multi("as", 0, -1, "a")
+            sList("bs", 1, -1, "b", "','")
+            choiceLongest("cs") {
+                concatenation { literal("c") }
+                concatenation { ref("cs"); literal("c") }
+            }
+            pattern("a", "(\\Qa\\E)(\\Qa\\E)") //TODO: better conversion should be done
+            pattern("b", "(\\Qb\\E)(\\Qb\\E)")
+            literal(",")
+        }
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
+            unnamedSuperTypeType("S") {
+                typeRef("As")
+                typeRef("Bs")
+                unnamedSuperType {
+                    typeRef("String")
+                    tupleType { }
+                }
+            }
+            dataType("as", "As") {
+                propertyListType("a", false, 0) { ref("String") }
+            }
+            dataType("bs", "Bs") {
+                propertyListType("b", false, 0) { ref("String") }
+            }
+            unnamedSuperTypeType("cs") {
+                typeRef("String")
+                tupleType { }
+            }
+            stringTypeFor("a")
+            stringTypeFor("b")
+        }
+        val expectedTr = asmGrammarTransform(
+            "test.Test",
+            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            true
+        ) {
+            unnamedSubtypeRule("S", "child[0]") {
+                typeRef("As")
+                typeRef("Bs")
+                unnamedSuperType {
+                    typeRef("String")
+                    tupleType { }
+                }
+            }
+            createObject("as", "As") {
+                assignment("a", "children")
+            }
+            createObject("bs", "Bs") {
+                assignment("b", "children.items")
+            }
+            unnamedSubtypeRule("cs", "child[0]") {
+                typeRef("String")
+                tupleType { }
+            }
+            leafStringRule("a")
+            leafStringRule("b")
         }
         test(
             grammarStr = grammarStr,
