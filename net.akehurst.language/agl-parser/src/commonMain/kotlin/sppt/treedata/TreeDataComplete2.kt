@@ -186,7 +186,7 @@ class TreeDataComplete2(
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
-        other !is TreeDataComplete -> false
+        other !is TreeDataComplete2 -> false
         else -> other.forStateSetNumber == this.forStateSetNumber
     }
 

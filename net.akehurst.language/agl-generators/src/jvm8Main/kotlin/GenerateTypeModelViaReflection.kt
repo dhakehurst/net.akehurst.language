@@ -1,5 +1,6 @@
 package net.akehurst.language.agl.generators
 
+import net.akehurst.kotlinx.komposite.common.DatatypeRegistry
 import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -24,24 +25,7 @@ class GenerateTypeModelViaReflection(
     companion object {
         const val STD_LIB = "net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib"
 
-        val KOTLIN_TO_AGL = mapOf(
-            "kotlin.Any" to SimpleTypeModelStdLib.AnyType.qualifiedTypeName.value,
-            "kotlin.Boolean" to SimpleTypeModelStdLib.Boolean.qualifiedTypeName.value,
-            "kotlin.String" to SimpleTypeModelStdLib.String.qualifiedTypeName.value,
-            "kotlin.Int" to SimpleTypeModelStdLib.Integer.qualifiedTypeName.value,
-            "kotlin.Double" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
-            "kotlin.Float" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
-            "kotlin.Pair" to SimpleTypeModelStdLib.Pair.qualifiedName.value,
-            "kotlin.collections.Collection" to SimpleTypeModelStdLib.Collection.qualifiedName.value,
-            "kotlin.collections.List" to SimpleTypeModelStdLib.List.qualifiedName.value,
-            "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
-            "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
-            "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
-            "java.util.LinkedHashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
-            "java.lang.Exception" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
-            "java.lang.RuntimeException" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
-            "kotlin.Throwable" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
-        )
+        val KOTLIN_TO_AGL = DatatypeRegistry.KOTLIN_TO_AGL
 
         val KClass<*>.isInterface get() = java.isInterface
         val KClass<*>.isEnum get() = this.isSubclassOf(Enum::class)

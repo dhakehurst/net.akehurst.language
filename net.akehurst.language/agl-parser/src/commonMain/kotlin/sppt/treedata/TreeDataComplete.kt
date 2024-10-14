@@ -22,7 +22,7 @@ import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.SpptWalker
 import net.akehurst.language.sppt.api.TreeData
 
-internal data class PreferredNode(
+data class PreferredNode(
     val rule: Rule,
     val startPosition: Int
 ) {
@@ -33,7 +33,6 @@ class CompleteTreeDataNode(
     override val rule: Rule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
-
     override val nextInputNoSkip: Int,
     override val option: Int
 ) : SpptDataNode {

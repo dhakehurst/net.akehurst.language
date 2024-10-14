@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
 
 
 /*
@@ -55,8 +56,11 @@ internal class GrowingNodeIndex(
         }
     }
 
-    val complete by lazy {
-        CompleteNodeIndex(runtimeState.state, startPosition, nextInputPositionBeforeSkip, nextInputPositionAfterSkip)
+    val complete:SpptDataNode by lazy {
+        val rule = runtimeState.state.firstRule
+        val option = runtimeState.optionList[0]
+        CompleteTreeDataNode(rule, startPosition, nextInputPositionAfterSkip, nextInputPositionBeforeSkip, option)
+        //CompleteNodeIndex(runtimeState.state, startPosition, nextInputPositionBeforeSkip, nextInputPositionAfterSkip)
     }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPositionAfterSkip, numNonSkipChildren).contentHashCode()

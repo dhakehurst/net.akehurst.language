@@ -19,6 +19,8 @@ kotlinxReflect {
             "net.akehurst.language.issues.**",
             "net.akehurst.language.scanner.**",
             "net.akehurst.language.parser.**",
+
+            "net.akehurst.language.agl.runtime.structure.**"
         )
     )
 }

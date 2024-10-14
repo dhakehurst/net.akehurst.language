@@ -22,6 +22,7 @@ import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimpleAbstract
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.reflect.KClass
@@ -71,6 +72,9 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 collectionType("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
                 collectionType("Map", listOf("K", "V"))
                 collectionType("EmptySet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collectionType("EmptyList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
+                //TODO: need a java -> kotlin name mapping really, this is class java.util.SingletonList
+                collectionType("SingletonList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
             }
         }
         //val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"
@@ -96,6 +100,26 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 collection Map<K,V>
             }
         """.trimIndent()
+
+        val KOTLIN_TO_AGL = mapOf(
+            "kotlin.Any" to SimpleTypeModelStdLib.AnyType.qualifiedTypeName.value,
+            "kotlin.Boolean" to SimpleTypeModelStdLib.Boolean.qualifiedTypeName.value,
+            "kotlin.String" to SimpleTypeModelStdLib.String.qualifiedTypeName.value,
+            "kotlin.Int" to SimpleTypeModelStdLib.Integer.qualifiedTypeName.value,
+            "kotlin.Double" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
+            "kotlin.Float" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
+            "kotlin.Pair" to SimpleTypeModelStdLib.Pair.qualifiedName.value,
+            "kotlin.collections.Collection" to SimpleTypeModelStdLib.Collection.qualifiedName.value,
+            "kotlin.collections.List" to SimpleTypeModelStdLib.List.qualifiedName.value,
+            "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
+            "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
+            "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
+            "java.util.HashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
+            "java.util.LinkedHashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
+            "java.lang.Exception" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
+            "java.lang.RuntimeException" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
+            "kotlin.Throwable" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
+        )
     }
 
     override val name: SimpleName = SimpleName("registry")
@@ -130,6 +154,8 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         //TODO: use qualified name when possible (i.e. when JS reflection supports qualified names)
         //val qname = cls.qualifiedName ?: error("class does not have a qualifiedName!")
         //return this.findByQualifiedNameOrNull(QualifiedName( qname))
+
+        //TODO: use KOTLIN_TO_AGL name mapping
         val qname = cls.simpleName ?: error("class does not have a simple name!")
         return this.findFirstByNameOrNull(SimpleName( qname))
     }

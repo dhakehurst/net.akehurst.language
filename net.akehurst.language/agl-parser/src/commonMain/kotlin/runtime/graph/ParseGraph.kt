@@ -16,7 +16,9 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
@@ -24,6 +26,7 @@ import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.collections.binaryHeap
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.TreeDataGrowing
 
@@ -90,7 +93,7 @@ internal class ParseGraph(
         KEEP_BOTH_AS_ALTERNATIVES,
     }
 
-    internal val _goals: MutableSet<CompleteNodeIndex> = mutableSetOf()
+    internal val _goals: MutableSet<SpptDataNode> = mutableSetOf()
 
     // TODO: is the fifo version faster ? it might help with processing heads in a better order!
     var _gss = GraphStructuredStack<GrowingNodeIndex>(binaryHeap { parent, child ->
@@ -148,9 +151,9 @@ internal class ParseGraph(
         }
     })
 
-    var treeData = TreeDataGrowing<GrowingNodeIndex, CompleteNodeIndex>(stateSetNumber)
+    var treeData = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(stateSetNumber)
 
-    val goals: Set<CompleteNodeIndex> get() = this._goals
+    val goals: Set<SpptDataNode> get() = this._goals
 
     var goalMatchedAll = true
 
@@ -265,14 +268,14 @@ internal class ParseGraph(
         return this._gss.pop(head)
     }
 
-    private fun preferNewCompleteParentFirstChild(oldParent: CompleteNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
+    private fun preferNewCompleteParentFirstChild(oldParent: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
         this.treeData.setFirstChildForComplete(newParent.complete, child, false)
         //this.dropGrowingHead(oldParent.gni!!) //TODO: do we need to do this...would one be growing ?
         this.addGrowingHead(previous, newParent)
         return true
     }
 
-    private fun preferNewCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex?): Boolean {
+    private fun preferNewCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
         // addNewPreferredTreeData(null, newParent, child)
         //createNewHeadAndDropExisting(oldParent, newParent, previous)
         this.treeData.setNextChildForCompleteParent(oldParent, newParent.complete, child, false)
@@ -281,7 +284,7 @@ internal class ParseGraph(
         return true
     }
 
-    private fun preferExistingCompleteParentFirstChild(oldParent: CompleteNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
+    private fun preferExistingCompleteParentFirstChild(oldParent: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
         // ( dropNewHeadAndKeepExisting )
         // don't change TreeData
         // keep oldParent - no need to do anything with it
@@ -291,7 +294,7 @@ internal class ParseGraph(
         return false // did not 'grow' the head
     }
 
-    private fun preferExistingCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex?): Boolean {
+    private fun preferExistingCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
         // ( dropNewHeadAndKeepExisting )
         // don't change TreeData
         // keep oldParent - no need to do anything with it
@@ -301,35 +304,35 @@ internal class ParseGraph(
         return false // did not 'grow' the head
     }
 
-    private fun keepBothCompleteParentsFirstChild(oldParent: CompleteNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
+    private fun keepBothCompleteParentsFirstChild(oldParent: SpptDataNode, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
         this.treeData.setFirstChildForComplete(newParent.complete, child, true)
         this.addGrowingHead(previous, newParent)
         return true
     }
 
-    private fun keepBothCompleteParentsLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex?): Boolean {
+    private fun keepBothCompleteParentsLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
         this.treeData.setNextChildForCompleteParent(oldParent, newParent.complete, child, true)
         this.addGrowingHead(previous, newParent)
         return true
     }
 
-    private fun useExistingCompleteParentFirstChild(newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
+    private fun useExistingCompleteParentFirstChild(newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex): Boolean {
         //this.treeData.setFirstChildForComplete(oldParent.complete, child, false)
         //this.addGrowingHead(previous, oldParent)
         this.addGrowingHead(previous, newParent)
         return true
     }
 
-    private fun useExistingCompleteParentLastChild(newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex?): Boolean {
+    private fun useExistingCompleteParentLastChild(newParent: GrowingNodeIndex, child: SpptDataNode, previous: GrowingNodeIndex?): Boolean {
         //this.treeData.setInCompleteParentChildAt(oldParent, oldParent.complete, child, false)
         //this.addGrowingHead(previous, oldParent)
         this.addGrowingHead(previous, newParent)
         return true
     }
 
-    private fun mergeDecisionOnLength(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex, ifEqual: () -> MergeOptions): MergeOptions {
-        val existingLength = existingParent.nextInputPositionAfterSkip - existingParent.startPosition
-        val newLength = newParent.nextInputPositionAfterSkip - newParent.startPosition
+    private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+        val existingLength = existingParent.nextInputPosition - existingParent.startPosition
+        val newLength = newParent.nextInputPosition - newParent.startPosition
         return when {
             newLength > existingLength -> MergeOptions.PREFER_NEW
             existingLength > newLength -> MergeOptions.PREFER_EXISTING
@@ -337,10 +340,10 @@ internal class ParseGraph(
         }
     }
 
-    private fun mergeDecisionOnPriority(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex, ifEqual: () -> MergeOptions): MergeOptions {
-        if (Debug.CHECK) check(existingParent.state.isChoice && newParent.state.isChoice && existingParent.state.runtimeRules == newParent.state.runtimeRules) //are we comparing things with a choice
-        val existingPriority = existingParent.priorityList[0] //TODO: is there definitely only 1 ?
-        val newPriority = newParent.priorityList[0]
+    private fun mergeDecisionOnPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+        if (Debug.CHECK) check(existingParent.rule.isChoice && newParent.rule.isChoice && existingParent.rule == newParent.rule) //are we comparing things with a choice
+        val existingPriority = existingParent.option
+        val newPriority = newParent.option
         return when {
             newPriority > existingPriority -> MergeOptions.PREFER_NEW
             existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
@@ -348,11 +351,16 @@ internal class ParseGraph(
         }
     }
 
-    private fun mergeDecision(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex): MergeOptions {
+    private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeOptions {
         return when {
-            newParent.state.isChoice -> {
-                if (Debug.CHECK) check(newParent.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
-                when (newParent.state.firstRuleChoiceKind) {
+            newParent.rule.isChoice -> {
+                val rhs =  (newParent.rule as RuntimeRule).rhs
+                val choiceKind = when(rhs) {
+                    is RuntimeRuleRhsChoice -> rhs.choiceKind
+                    else -> null
+                }
+                if (Debug.CHECK) check(null!=choiceKind) //TODO: could remove this check if always passes
+                when (choiceKind!!) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
                         mergeDecisionOnPriority(existingParent, newParent) {
@@ -609,10 +617,10 @@ internal class ParseGraph(
         doRecordGoal(goal.complete)
     }
 
-    private fun doRecordGoal(goal: CompleteNodeIndex) {
+    private fun doRecordGoal(goal: SpptDataNode) {
         this.treeData.complete.setRoot(goal)
         this._goals.add(goal)
-        this.goalMatchedAll = this.scanner.isEnd(sentence, goal.nextInputPositionAfterSkip)
+        this.goalMatchedAll = this.scanner.isEnd(sentence, goal.nextInputPosition)
     }
 
     private fun prevOfToString(n: GrowingNodeIndex): String {

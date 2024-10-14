@@ -18,7 +18,6 @@
 package net.akehurst.language.parser.aMinimalVersion
 
 import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
-import net.akehurst.language.agl.runtime.graph.TreeDataGrowing
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.*
@@ -32,6 +31,7 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.treedata.TreeDataGrowing
 
 class AutomatonForMinimal(
     val runtimeRuleSet: RuntimeRuleSet,

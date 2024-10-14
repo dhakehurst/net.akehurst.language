@@ -29,6 +29,15 @@ class GrammarModelDefault(
     override val namespace: List<GrammarNamespace>
 ) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>() {
 
+    override fun hashCode(): Int = arrayOf(name, namespace).contentHashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is GrammarModel -> false
+        this.name != other.name -> false
+        this.namespace != other.namespace -> false
+        else -> true
+    }
+
+    override fun toString(): String = "GrammarModel '$name'"
 }
 
 /**

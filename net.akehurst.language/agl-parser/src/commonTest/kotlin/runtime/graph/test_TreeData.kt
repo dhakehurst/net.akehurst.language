@@ -20,20 +20,19 @@ import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
-import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
-import net.akehurst.language.sppt.treedata.SPPTFromTreeData
-import net.akehurst.language.sppt.treedata.SPPTParserDefault
-import net.akehurst.language.sppt.treedata.TreeDataComplete
+import net.akehurst.language.sentence.common.SentenceDefault
+import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.treedata.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-internal class test_TreeData {
+class test_TreeData {
 
-    val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(RegexEnginePlatform, emptyList()), 0)
+    private val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(RegexEnginePlatform, emptyList()), 0)
 
     @Test
     fun construct() {
@@ -79,7 +78,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -105,7 +104,7 @@ internal class test_TreeData {
         val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, 0, RulePositionRuntime.END_OF_RULE)))
         val state_b = SM.createState(listOf(RulePositionRuntime(rule_b, 0, RulePositionRuntime.END_OF_RULE)))
         val state_c = SM.createState(listOf(RulePositionRuntime(rule_c, 0, RulePositionRuntime.END_OF_RULE)))
-        val sut = TreeDataGrowing<GrowingNodeIndex, CompleteNodeIndex>(0)
+        val sut = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(0)
 
         val sentence = "abc"
 
@@ -135,7 +134,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
