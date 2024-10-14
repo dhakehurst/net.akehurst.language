@@ -60,47 +60,53 @@ object AglTypemodel {
 
 
     const val komposite = """namespace net.akehurst.language.typemodel.api
-interface TypeInstance {
-    cmp typeArguments
-}
-interface TypeDeclaration {
-    cmp supertypes
-    cmp typeParameters
-}
-interface ValueType {
-    cmp constructors
-}
-interface DataType {
-    cmp constructors
-}
-interface UnnamedSupertypeType {
-    cmp subtypes
-}
-interface PropertyDeclaration {
-    cmp typeInstance
-}
-interface ConstructorDeclaration {
-    cmp parameters
-}
-interface MethodDeclaration {
-    cmp parameters
-}
-interface ParameterDeclaration {
-    cmp typeInstance
-}
+    interface TypeInstance {
+        cmp typeArguments
+    }
+    interface TypeDeclaration {
+        cmp supertypes
+        cmp typeParameters
+    }
+    interface ValueType {
+        cmp constructors
+    }
+    interface DataType {
+        cmp constructors
+    }
+    interface UnnamedSupertypeType {
+        cmp subtypes
+    }
+    interface PropertyDeclaration {
+        cmp typeInstance
+    }
+    interface ConstructorDeclaration {
+        cmp parameters
+    }
+    interface MethodDeclaration {
+        cmp parameters
+    }
+    interface ParameterDeclaration {
+        cmp typeInstance
+    }
 
 namespace net.akehurst.language.typemodel.asm
-class TypeNamespaceAbstract {
-    cmp ownedUnnamedSupertypeType
-    cmp ownedTupleTypes
-}
-class TypeDeclarationSimpleAbstract {
-    cmp propertyByIndex
-}
-class TypeInstanceSimple {
-    // must be explicitly cmp because it is declared an interface
-    cmp qualifiedOrImportedTypeName
-}
+    class TypeNamespaceAbstract {
+        cmp ownedUnnamedSupertypeType
+        cmp ownedTupleTypes
+    }
+    class TypeDeclarationSimpleAbstract {
+        cmp propertyByIndex
+    }
+    class TypeInstanceSimple {
+        // must be explicitly cmp because it is declared an interface
+        cmp qualifiedOrImportedTypeName
+    }
+
+namespace net.akehurst.language.grammarTypemodel.api
+    interface GrammarTypeNamespace {
+        cmp allRuleNameToType
+    }
+
 """
 
     val typeModel by lazy {
@@ -629,6 +635,10 @@ class TypeInstanceSimple {
             namespace("net.akehurst.language.grammarTypemodel.api", listOf("net.akehurst.language.typemodel.api", "std", "net.akehurst.language.grammar.api")) {
                 interfaceType("GrammarTypeNamespace") {
                     supertype("TypeNamespace")
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "allRuleNameToType", "Map", false) {
+                        typeArgument("GrammarRuleName")
+                        typeArgument("TypeInstance")
+                    }
                 }
             }
             namespace(
@@ -656,7 +666,7 @@ class TypeInstanceSimple {
                     constructor_ {
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "allRuleNameToType", "Map", false) {
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "allRuleNameToType", "Map", false) {
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
                     }

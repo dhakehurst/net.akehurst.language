@@ -321,7 +321,6 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun walkCollection(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
-        val dt = targetType.declaration as CollectionType
         return when (data) {
             is Array<*> -> walkColl(owningProperty, path, info, data.toList(), targetType)
             is Set<*> -> walkColl(owningProperty, path, info, data, targetType)
@@ -332,19 +331,19 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun walkColl(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, coll: Collection<*>, targetType: TypeInstance): WalkInfo<P, A> {
-        val dt = targetType.declaration as CollectionType
-        val elementType = targetType.typeArguments[0]
-        val infolb = this.collBegin(path, info, coll, dt, elementType.type)
+        val rdt = runtimeTypeFor(coll, targetType) as CollectionType
+        val elementType = targetType.typeArguments.getOrNull(0)?.type ?: SimpleTypeModelStdLib.AnyType
+        val infolb = this.collBegin(path, info, coll, rdt, elementType)
         var acc = infolb.acc
         val path_elements = path + this.configuration.ELEMENTS
         coll.forEachIndexed { index, element ->
             val ppath = path_elements + index.toString()
             val infobEl = WalkInfo(infolb.up, acc)
-            val infoElb = this.collElementBegin(ppath, infobEl, element, elementType.type)
-            val infoElv = this.walkCollElement(owningProperty, ppath, infoElb, element, elementType.type)
-            val infoEle = this.collElementEnd(ppath, infoElv, element, elementType.type)
+            val infoElb = this.collElementBegin(ppath, infobEl, element, elementType)
+            val infoElv = this.walkCollElement(owningProperty, ppath, infoElb, element, elementType)
+            val infoEle = this.collElementEnd(ppath, infoElv, element, elementType)
             val infoEls = if (index < coll.size - 1) {
-                val infoas = this.collSeparate(ppath, infoEle, coll, dt, element, elementType.type)
+                val infoas = this.collSeparate(ppath, infoEle, coll, rdt, element, elementType)
                 WalkInfo(infolb.up, infoas.acc)
             } else {
                 //last one
@@ -353,7 +352,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             acc = infoEls.acc
         }
         val infole = WalkInfo(infolb.up, acc)
-        return this.collEnd(path, infole, coll, dt, elementType.type)
+        return this.collEnd(path, infole, coll, rdt, elementType)
     }
 
     protected fun walkCollElement(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any?, elementType: TypeInstance): WalkInfo<P, A> {
@@ -436,7 +435,7 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun runtimeTypeFor(data: Any, targetType: TypeInstance): TypeDeclaration {
-        val dt = targetType.declaration
+        val dt = targetType.declarationOrNull
         return when (dt) {
             is CollectionType -> dt // can't get runtime-type of kotlin collection types
             else -> {

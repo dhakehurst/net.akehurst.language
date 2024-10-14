@@ -1,7 +1,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.scope.simple.ScopeSimple
+import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 

@@ -21,6 +21,8 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.scanner.api.ScanOptions
+import net.akehurst.language.scanner.common.ScanOptionsDefault
 
 class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),
@@ -29,11 +31,6 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault(),
     override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
-
-class ScanOptionsDefault(
-) : ScanOptions
-
-
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true

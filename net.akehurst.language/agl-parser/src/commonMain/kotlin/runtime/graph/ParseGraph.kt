@@ -25,6 +25,7 @@ import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.collections.binaryHeap
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.treedata.TreeDataGrowing
 
 internal class ParseGraph(
     val sentence: Sentence,

@@ -138,6 +138,8 @@ interface TypeInstance {
      */
     val declaration: TypeDeclaration
 
+    val declarationOrNull: TypeDeclaration?
+
     /**
      * properties from this type, and all supertypes, with type parameters resolved
      */

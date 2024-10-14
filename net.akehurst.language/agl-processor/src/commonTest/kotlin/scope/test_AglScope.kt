@@ -15,18 +15,19 @@
  *
  */
 
-package net.akehurst.language.typemodel.processor
+package net.akehurst.language.scope.processor
 
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.typemodel.api.PropertyName
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_AglTypemodel2 {
+class test_AglScope {
 
     @Test
     fun typemodel() {
-        val actual = AglTypemodel.typeModel
+        val actual = AglScope.typeModel
 
         assertNotNull(actual)
     }
@@ -34,11 +35,18 @@ class test_AglTypemodel2 {
 
     @Test
     fun domainTypes() {
-        val td = AglTypemodel.typeModel.findFirstByNameOrNull(SimpleName("TypeModel"))
+        val td = AglScope.typeModel.findFirstByNameOrNull(SimpleName("Scope"))
         assertNotNull(td)
-        assertEquals("TypeModel", td.name.value)
-        assertEquals("Model", td.supertypes[0].typeName.value)
-        assertEquals("TypeNamespace", td.supertypes[0].typeArguments[0].type.typeName.value)
-        assertEquals("TypeDeclaration", td.supertypes[0].typeArguments[1].type.typeName.value)
+        assertEquals("Scope", td.name.value)
+        val itemsProp = td.findPropertyOrNull(PropertyName("items"))
+        assertNotNull(itemsProp)
+        assertEquals("Map", itemsProp.typeInstance.typeName.value)
+        assertEquals(2, itemsProp.typeInstance.typeArguments.size)
+        val itemsArg2 = itemsProp.typeInstance.typeArguments[1]
+        assertEquals("Map", itemsArg2.type.typeName.value)
+        assertEquals(2, itemsArg2.type.typeArguments.size)
+
+        val resItemsProp = td.type().allResolvedProperty[PropertyName("items")]
+        assertNotNull(itemsProp)
     }
 }

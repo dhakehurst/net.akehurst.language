@@ -26,12 +26,13 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.regex.api.RegexEngine
-import net.akehurst.language.scanner.api.Matchable
-import net.akehurst.language.scanner.api.MatchableKind
-import net.akehurst.language.scanner.api.ScanResult
-import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.LeafData
+
+class ScanOptionsDefault(
+) : ScanOptions
+
 
 data class ScanResultDefault(
     override val tokens: List<LeafData>,

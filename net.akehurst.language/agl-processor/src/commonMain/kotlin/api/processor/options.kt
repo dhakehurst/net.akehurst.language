@@ -18,11 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
-
-interface ScanOptions {
-}
-
-
+import net.akehurst.language.scanner.api.ScanOptions
 
 /**
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)

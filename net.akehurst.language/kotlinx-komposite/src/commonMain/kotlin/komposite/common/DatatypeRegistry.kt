@@ -46,6 +46,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 collection List<E>
                 collection Set<E>
                 collection Map<K,V>
+                collection EmptySet
             }
         """.trimIndent()
 
@@ -69,12 +70,13 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 collectionType("List", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
                 collectionType("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
                 collectionType("Map", listOf("K", "V"))
+                collectionType("EmptySet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
             }
         }
-        val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"
-        val TypeDeclaration.isKotlinList get() = this.qualifiedName.value=="kotlin.collections.List"
-        val TypeDeclaration.isKotlinSet get() = this.qualifiedName.value=="kotlin.collections.Set"
-        val TypeDeclaration.isKotlinMap get() = this.qualifiedName.value=="kotlin.collections.Map"
+        //val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"
+        //val TypeDeclaration.isKotlinList get() = this.qualifiedName.value=="kotlin.collections.List"
+        //val TypeDeclaration.isKotlinSet get() = this.qualifiedName.value=="kotlin.collections.Set"
+        //val TypeDeclaration.isKotlinMap get() = this.qualifiedName.value=="kotlin.collections.Map"
 
         val JAVA_STD = """
             namespace java.lang {

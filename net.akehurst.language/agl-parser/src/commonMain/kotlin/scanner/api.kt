@@ -48,6 +48,9 @@ interface Scanner {
     fun scan(sentence: Sentence, startAtPosition: Int = 0, offsetPosition: Int = 0): ScanResult
 }
 
+interface ScanOptions {
+}
+
 enum class MatchableKind { EOT, LITERAL, REGEX }
 
 data class Matchable(

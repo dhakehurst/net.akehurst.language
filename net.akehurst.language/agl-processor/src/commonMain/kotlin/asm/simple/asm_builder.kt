@@ -35,7 +35,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.scope.api.Scope
-import net.akehurst.language.scope.simple.ScopeSimple
+import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType

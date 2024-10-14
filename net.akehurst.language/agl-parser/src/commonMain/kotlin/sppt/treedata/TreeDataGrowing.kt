@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.graph
+package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.TreeData
-import net.akehurst.language.sppt.treedata.treeData
 
 class TreeDataGrowing<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int

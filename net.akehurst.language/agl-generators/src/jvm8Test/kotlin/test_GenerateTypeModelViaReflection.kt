@@ -8,6 +8,7 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.processor.AglCrossReference
+import net.akehurst.language.scope.processor.AglScope
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -159,6 +160,28 @@ class test_GenerateTypeModelViaReflection {
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
 
+    fun gen_scope():Pair<TypeModel,List<QualifiedName>> {
+        val (btm,_) = gen_base()
+        val added = btm.namespace.map { it.qualifiedName }
+        val gen = GenerateTypeModelViaReflection(
+            SimpleName("Scope"),
+            btm.namespace,
+            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
+            listOf(AglBase.komposite, AglScope.komposite)
+        )
+        gen.addPackage("net.akehurst.language.scope.api")
+        gen.addPackage("net.akehurst.language.scope.asm")
+        val tm = gen.generate()
+        return Pair(tm,added)
+    }
+
+    @Test
+    fun test_format_scope() {
+        val (tm,added) = gen_scope()
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+    }
+
     fun gen_style():Pair<TypeModel,List<QualifiedName>> {
         val (baseTm,_) = gen_base()
         val added = baseTm.namespace.map { it.qualifiedName }
@@ -223,33 +246,4 @@ class test_GenerateTypeModelViaReflection {
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
 
-
-
-
-    fun gen_scope():Pair<TypeModel,List<QualifiedName>> {
-        //TODO: remove - builder needs these and no way to exclude builder at present
-        val (typemodel,added1) = gen_typemodel()
-        val (reference,added2) = gen_reference()
-        val gen = GenerateTypeModelViaReflection(
-            SimpleName("Test"),
-            (typemodel.namespace + reference.namespace).toSet().toList(),
-            GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglAsm.komposite)
-        )
-        //gen.include("net.akehurst.language.collections.ListSeparated")
-        gen.exclude("net.akehurst.language.asm.simple.AsmSimpleBuilder")
-////        gen.addPackage("net.akehurst.language.api.scope")
-        gen.addPackage("net.akehurst.language.scope.simple")
-        gen.addPackage("net.akehurst.language.asm.api")
-        gen.addPackage("net.akehurst.language.asm.simple")
-        val tm = gen.generate()
-        return Pair(tm, added1+added2)
-    }
-
-    @Test
-    fun test_format_scope() {
-        val (tm,added) = gen_asm()
-        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf()))
-    }
 }

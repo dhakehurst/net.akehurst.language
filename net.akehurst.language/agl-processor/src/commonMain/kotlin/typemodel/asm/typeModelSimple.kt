@@ -137,8 +137,6 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
 
 abstract class TypeInstanceAbstract() : TypeInstance {
 
-    abstract val typeOrNull: TypeDeclaration?
-
     override val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
         get() {
             val typeArgMap = createTypeArgMap()
@@ -171,7 +169,7 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                     else -> ""
                 }
                 val name = when {
-                    typeArguments.isEmpty() -> typeOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
+                    typeArguments.isEmpty() -> declarationOrNull?.signature(context, currentDepth + 1) ?: this.typeName.value
                     else -> declaration.name.value
                 }
                 return "${name}$args$n"
@@ -218,12 +216,13 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 
     protected open fun createTypeArgMap(): Map<TypeParameter, TypeInstance> {
         val typeArgMap = mutableMapOf<TypeParameter, TypeInstance>()
-        typeOrNull?.typeParameters?.forEachIndexed { index, it ->
+        declarationOrNull?.typeParameters?.forEachIndexed { index, it ->
             val tp = it
-            val ta = this.typeArguments[index]
+            // maybe the type arg has not been explicitly provided, in which case provide AnyType
+            val ta = this.typeArguments.getOrNull(index) ?: SimpleTypeModelStdLib.AnyType.asTypeArgument
             typeArgMap[tp] = when (ta) {
                 is TypeArgument -> ta.type
-                else -> TODO()
+                else -> error("Unsupported")
             }
         }
         return typeArgMap
@@ -244,7 +243,7 @@ class TypeParameterReference(
 
     override val typeArguments: List<TypeArgument> = emptyList()
 
-    override val typeOrNull: TypeDeclaration? = null
+    override val declarationOrNull: TypeDeclaration? = null
 
     override val declaration: TypeDeclaration get() = error("TypeParameterReference does not have a declaration")
 
@@ -320,11 +319,11 @@ class TypeInstanceSimple(
         }
 
     override val typeName: SimpleName
-        get() = typeOrNull?.name
+        get() = declarationOrNull?.name
             ?: qualifiedOrImportedTypeName.simpleName
 
     override val qualifiedTypeName: QualifiedName
-        get() = typeOrNull?.qualifiedName
+        get() = declarationOrNull?.qualifiedName
             ?: when (qualifiedOrImportedTypeName) {
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
@@ -332,10 +331,10 @@ class TypeInstanceSimple(
             }
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
-    override val typeOrNull: TypeDeclaration? get() = namespace.findTypeNamed(qualifiedOrImportedTypeName)
+    override val declarationOrNull: TypeDeclaration? get() = namespace.findTypeNamed(qualifiedOrImportedTypeName)
 
     override val declaration: TypeDeclaration
-        get() = typeOrNull
+        get() = declarationOrNull
             ?: error("Cannot resolve TypeDefinition '$qualifiedOrImportedTypeName', not found in namespace '${namespace.qualifiedName}'. Is an import needed?")
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance {
@@ -380,7 +379,7 @@ class TupleTypeInstanceSimple(
 
     override val typeName: SimpleName get() = declaration.name
     override val qualifiedTypeName: QualifiedName get() = declaration.qualifiedName
-    override val typeOrNull: TypeDeclaration get() = declaration
+    override val declarationOrNull: TypeDeclaration get() = declaration
     override val declaration: TypeDeclaration = SimpleTypeModelStdLib.TupleType
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance {
@@ -424,7 +423,7 @@ class UnnamedSupertypeTypeInstance(
     override val typeName: SimpleName get() = UnnamedSupertypeType.NAME.last
     override val qualifiedTypeName: QualifiedName get() = UnnamedSupertypeType.NAME
 
-    override val typeOrNull: TypeDeclaration get() = declaration
+    override val declarationOrNull: TypeDeclaration get() = declaration
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance {
         val thisTypeArgMap = createTypeArgMap()

@@ -47,13 +47,17 @@ kotlinxReflect {
             "net.akehurst.language.base.**",
             "net.akehurst.language.grammar.**",
             "net.akehurst.language.typemodel.**",
-            "net.akehurst.language.grammarTypemodel.*",
+            "net.akehurst.language.grammarTypemodel.**",
             "net.akehurst.language.asm.**",
             "net.akehurst.language.expressions.**",
             "net.akehurst.language.reference.**",
+            "net.akehurst.language.scope.**",
+            "net.akehurst.language.api.semanticAnalyser.SentenceContext",
 
             "net.akehurst.language.api.processor.**",
-            "net.akehurst.language.agl.processor.ProcessOptionsDefault"
+            "net.akehurst.language.agl.processor.**",
+            "net.akehurst.language.agl.simple.ContextAsmSimple",
+            "net.akehurst.language.agl.semanticAnalyser.**"
         )
     )
 }

@@ -17,7 +17,6 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.kotlinx.komposite.api.KompositeException
-import net.akehurst.kotlinx.komposite.common.DatatypeRegistry.Companion.isKotlinMap
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.typemodel.api.*

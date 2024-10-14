@@ -64,7 +64,7 @@ class GenerateTypeModelViaReflection(
             val clz = this.classifier
             return when(clz) {
                 is KClass<*> -> clz.isSubclassOf(MutableCollection::class) || clz.isSubclassOf(MutableMap::class)
-                is KTypeParameter -> TODO()
+                is KTypeParameter -> false //have to say false because we can't know if it is a mutable collection until instantiation
                 else -> error("Unsupported")
             }
         }

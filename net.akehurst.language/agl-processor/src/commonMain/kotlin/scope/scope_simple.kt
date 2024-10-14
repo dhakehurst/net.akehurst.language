@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.scope.simple
+package net.akehurst.language.scope.asm
 
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.api.Scope

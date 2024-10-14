@@ -21,6 +21,8 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.scanner.api.ScanOptions
+import net.akehurst.language.scanner.common.ScanOptionsDefault
 
 @DslMarker
 annotation class ProcessOptionsDslMarker
