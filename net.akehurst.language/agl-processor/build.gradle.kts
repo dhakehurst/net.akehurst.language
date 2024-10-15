@@ -46,6 +46,7 @@ kotlinxReflect {
         listOf(
             "net.akehurst.language.base.**",
             "net.akehurst.language.grammar.**",
+            "net.akehurst.language.style.**",
             "net.akehurst.language.typemodel.**",
             "net.akehurst.language.grammarTypemodel.**",
             "net.akehurst.language.asm.**",

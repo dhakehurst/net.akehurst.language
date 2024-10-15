@@ -57,6 +57,7 @@ import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
 import net.akehurst.language.style.processor.AglStyleSyntaxAnalyser
 
 interface AglLanguages {
+    val baseLanguageIdentity: LanguageIdentity
     val expressionsLanguageIdentity: LanguageIdentity
     val grammarLanguageIdentity: LanguageIdentity
     val asmTransformLanguageIdentity: LanguageIdentity
@@ -70,7 +71,7 @@ interface AglLanguages {
     val asmTransform: LanguageDefinition<TransformModel, ContextFromGrammar>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
-    val formatter: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
+    val format: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -79,7 +80,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
     override val agl: AglLanguages = object : AglLanguages {
-        val baseLanguageIdentity: LanguageIdentity =LanguageIdentity( AglBase.grammar.qualifiedName.value)
+        override val baseLanguageIdentity: LanguageIdentity =LanguageIdentity( AglBase.grammar.qualifiedName.value)
         override val expressionsLanguageIdentity: LanguageIdentity = LanguageIdentity( AglExpressions.grammar.qualifiedName.value)
         override val grammarLanguageIdentity: LanguageIdentity = LanguageIdentity( AglGrammar.grammar.qualifiedName.value)
         override val asmTransformLanguageIdentity: LanguageIdentity = LanguageIdentity( AsmTransform.grammar.qualifiedName.value)
@@ -233,7 +234,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val formatter by lazy {
+        override val format by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<AglFormatterModel, SentenceContext<String>>(
                     identity = formatLanguageIdentity,
@@ -327,7 +328,18 @@ class LanguageRegistryDefault : LanguageRegistry {
     }
 
     override fun <AsmType : Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>? {
-        return this._registry[identity] as LanguageDefinition<AsmType, ContextType>?
+        // the agl languages are not registered until they are first accessed
+        // thus need to check for them explicitly
+        return when(identity) {
+            agl.baseLanguageIdentity -> agl.base
+            agl.expressionsLanguageIdentity -> agl.expressions
+            agl.grammarLanguageIdentity -> agl.grammar
+            agl.asmTransformLanguageIdentity -> agl.asmTransform
+            agl.styleLanguageIdentity -> agl.style
+            agl.formatLanguageIdentity -> agl.format
+            agl.crossReferenceLanguageIdentity -> agl.crossReference
+            else -> this._registry[identity]
+        }  as LanguageDefinition<AsmType, ContextType>?
     }
 
     /**

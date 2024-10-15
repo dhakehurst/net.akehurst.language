@@ -42,7 +42,7 @@ import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
-typealias ResolveFunction = (ref: AsmPath) -> AsmValue?
+typealias ResolveFunction = (ref: AsmPath) -> AsmStructure?
 
 data class ReferenceExpressionContext(
     val element: AsmValue,

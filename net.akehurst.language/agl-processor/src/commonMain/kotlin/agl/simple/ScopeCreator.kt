@@ -25,6 +25,7 @@ import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
@@ -34,10 +35,14 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
+typealias CreateReferableFunction = (ref: String, AsmStructure) -> Unit?
+
+
 class ScopeCreator(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModelDefault,
     val rootScope: Scope<AsmPath>,
+    val createReferableFunction : CreateReferableFunction?,
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
 ) : AsmTreeWalker {
@@ -129,26 +134,12 @@ class ScopeCreator(
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
             when {
                 scopeLocalReference is AsmNothing -> {
-//                issues.warn(
-//                    this.locationMap[el],
-//                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
-//                )
-                    val contextRef = el.path
-                    val added = scope.addToScope(el.qualifiedTypeName.value, el.qualifiedTypeName, contextRef)
-                    when (added) {
-                        true -> Unit
-                        else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
-                    }
+                    addToScopeAs(scope,el, el.qualifiedTypeName.value)
                 }
 
                 scopeLocalReference is AsmPrimitive && scopeLocalReference.isStdString -> {
-                    val contextRef = el.path
                     val ref = (scopeLocalReference.value) as String
-                    val added = scope.addToScope(ref, el.qualifiedTypeName, contextRef)
-                    when (added) {
-                        true -> Unit
-                        else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")
-                    }
+                    addToScopeAs(scope,el, ref)
                 }
 
                 // List<String>
@@ -182,12 +173,7 @@ class ScopeCreator(
                             val contextRef = el.path
                             var nextScope = scope
                             for (ref in refList) {
-                                val added = nextScope.addToScope(ref, el.qualifiedTypeName, contextRef)
-                                when (added) {
-                                    true -> Unit
-                                    else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")
-                                }
-
+                                addToScopeAs(nextScope, el, ref)
                                 nextScope = nextScope.createOrGetChildScope(ref, el.qualifiedTypeName, contextRef)
                             }
                         }
@@ -201,10 +187,21 @@ class ScopeCreator(
                     )
                 }
             }
-
         } else {
             // no need to add it to scope
         }
+    }
+
+    private fun addToScopeAs(scope: Scope<AsmPath>, el: AsmStructure, referableName:String) {
+        val added = scope.addToScope(referableName, el.qualifiedTypeName, el.path)
+        when (added) {
+            true -> when(createReferableFunction) {
+                null -> Unit
+                else -> createReferableFunction.invoke(referableName, el)
+            }
+            else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
+        }
+
     }
 
     private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue = when (this) {

@@ -94,12 +94,12 @@ class TreeDataComplete2(
 
     // index --> map-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = hashMapOf<SpptDataNode, MutableMap<Int, List<SpptDataNode>>>()
-
+    // need to be public for serialisation
+    /*private*/ val _complete = hashMapOf<SpptDataNode, MutableMap<Int, List<SpptDataNode>>>()
     // map startPosition -> CN
-    private val _preferred = hashMapOf<PreferredNode, SpptDataNode>()
-    private val _skipDataAfter = hashMapOf<SpptDataNode, TreeData>()
-    private val _embeddedFor = hashMapOf<SpptDataNode, TreeData>()
+    /*private*/ val _preferred = hashMapOf<PreferredNode, SpptDataNode>()
+    /*private*/ val _skipDataAfter = hashMapOf<SpptDataNode, TreeData>()
+    /*private*/ val _embeddedFor = hashMapOf<SpptDataNode, TreeData>()
 
     // --- used only by TreeData ---
     fun reset() {

@@ -28,7 +28,7 @@ object AglStyle {
 
     const val grammarStr = """namespace net.akehurst.language.agl.language
 grammar Style : Base {
-    unit = namespace styleSet+ ;
+    unit = namespace styleSet* ;
     styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
     rule = selectorExpression '{' styleList '}' ;
@@ -58,7 +58,7 @@ grammar Style : Base {
         extendsGrammar(AglBase.grammar.selfReference)
 
         concatenation("unit") {
-            ref("namespace"); lst(1, -1) { ref("styleSet") }
+            ref("namespace"); lst(0, -1) { ref("styleSet") }
         }
         concatenation("styleSet") {
             lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");

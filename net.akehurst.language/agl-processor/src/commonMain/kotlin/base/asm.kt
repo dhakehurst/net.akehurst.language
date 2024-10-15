@@ -19,9 +19,7 @@ package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
 
-abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
-    //override val namespace: List<NT>
-) : Model<NT, DT> {
+abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>> : Model<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
 
@@ -38,6 +36,16 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         sb.append(ns)
         return sb.toString()
     }
+
+    // --- Any ---
+    override fun hashCode(): Int = listOf(name, namespace.hashCode()).hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is Model<*, *> -> false
+        this.name != other.name -> false
+        this.namespace != other.namespace -> false
+        else -> true
+    }
+    override fun toString(): String = "Domain '$name'"
 }
 
 abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {

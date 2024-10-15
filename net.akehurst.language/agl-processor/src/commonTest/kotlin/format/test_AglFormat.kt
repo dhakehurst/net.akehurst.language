@@ -119,7 +119,7 @@ class test_AglFormat {
         )
 
         private fun test_process(data: TestData) {
-            val result = Agl.registry.agl.formatter.processor!!.process(data.sentence)
+            val result = Agl.registry.agl.format.processor!!.process(data.sentence)
             assertNotNull(result.asm, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
             data.expectedAsm?.let {
@@ -130,14 +130,14 @@ class test_AglFormat {
 
     @Test
     fun check_grammar() {
-        val proc = Agl.registry.agl.formatter.processor
-        assertTrue(Agl.registry.agl.formatter.issues.errors.isEmpty(), Agl.registry.agl.formatter.issues.toString())
+        val proc = Agl.registry.agl.format.processor
+        assertTrue(Agl.registry.agl.format.issues.errors.isEmpty(), Agl.registry.agl.format.issues.toString())
         assertNotNull(proc)
     }
 
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.formatter.processor!!.typeModel
+        val actual = Agl.registry.agl.format.processor!!.typeModel
         val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
@@ -153,7 +153,7 @@ class test_AglFormat {
 
     @Test
     fun parse() {
-        val processor = Agl.registry.agl.formatter.processor!!
+        val processor = Agl.registry.agl.format.processor!!
         for (td in testData) {
             println("Parsing '${td.sentence}'")
             val result = processor.parse(td.sentence)

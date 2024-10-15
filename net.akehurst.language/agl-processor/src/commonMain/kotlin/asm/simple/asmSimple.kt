@@ -91,8 +91,12 @@ open class AsmSimple() : Asm {
 
     fun createStructure(asmPath: AsmPath, typeName: QualifiedName): AsmStructureSimple {
         val el = AsmStructureSimple(asmPath, typeName)
-        this.elementIndex[asmPath] = el
+        //this.elementIndex[asmPath] = el
         return el
+    }
+
+    override fun addToIndex(value: AsmStructure) {
+        this.elementIndex[value.path] = value
     }
 
     override fun traverseDepthFirst(callback: AsmTreeWalker) {
@@ -230,6 +234,10 @@ class AsmReferenceSimple(
             else -> value!!.qualifiedTypeName
         }
 
+    override fun resolveAs(value: AsmStructure?) {
+        this.value = value
+    }
+
     override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
         null -> "<unresolved> &$reference"
         else -> "&{'${value!!.path.value}' : ${value!!.typeName}}"
@@ -360,7 +368,7 @@ class AsmStructurePropertySimple(
         val v = this.value
         when {
             v is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
-            v is AsmReferenceSimple -> v.value = referredValue
+            v is AsmReference-> v.resolveAs(referredValue)
             v is AsmPrimitive && v.value is String -> {
                 val ref = AsmReferenceSimple(v.value as String, referredValue)
                 this.value = ref

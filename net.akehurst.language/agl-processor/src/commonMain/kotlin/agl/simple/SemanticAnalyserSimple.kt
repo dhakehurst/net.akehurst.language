@@ -79,7 +79,10 @@ class SemanticAnalyserSimple(
     }
 
     private fun buildScope(asm: Asm, rootScope: Scope<AsmPath>) {
-        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, rootScope, _locationMap, _issues)
+        val createReferable:CreateReferableFunction = {ref, item ->
+            asm.addToIndex(item)
+        }
+        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, rootScope, createReferable,_locationMap, _issues)
         asm.traverseDepthFirst(scopeCreator)
     }
 

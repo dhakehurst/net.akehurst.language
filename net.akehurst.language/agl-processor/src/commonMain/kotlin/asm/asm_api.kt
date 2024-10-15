@@ -37,8 +37,8 @@ interface Asm {
     val root: List<AsmValue>
     val elementIndex: Map<AsmPath, AsmStructure>
 
+    fun addToIndex(value:AsmStructure)
     fun traverseDepthFirst(callback: AsmTreeWalker)
-
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }
 
@@ -67,6 +67,8 @@ interface AsmPrimitive : AsmValue {
 interface AsmReference {
     val reference: String
     val value: AsmStructure?
+
+    fun resolveAs(value: AsmStructure?)
 }
 
 @JvmInline
