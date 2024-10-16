@@ -76,6 +76,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 //TODO: need a java -> kotlin name mapping really, this is class java.util.SingletonList
                 collectionType("SingletonList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
                 collectionType("HashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collectionType("LinkedHashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
             }
         }
         //val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"
@@ -114,6 +115,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
             "kotlin.collections.List" to SimpleTypeModelStdLib.List.qualifiedName.value,
             "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
             "java.util.HashSet" to SimpleTypeModelStdLib.Set.qualifiedName.value,
+            "java.util.LinkedHashSet" to SimpleTypeModelStdLib.Set.qualifiedName.value,
             "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
             "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
             "java.util.HashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
