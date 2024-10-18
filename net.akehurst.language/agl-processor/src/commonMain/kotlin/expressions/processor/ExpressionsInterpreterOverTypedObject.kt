@@ -186,7 +186,7 @@ class ExpressionsInterpreterOverTypedObject(
             expression.parts.fold(start) { acc, it ->
                 when (it) {
                     is PropertyCall -> evaluatePropertyName(acc, PropertyName(it.propertyName))
-                    is MethodCall -> TODO()
+                    is MethodCall -> evaluateMethodCall(evc, acc, MethodName(it.methodName), it.arguments)
                     is IndexOperation -> evaluateIndexOperation(evc, acc, it.indices)
                     else -> error("should not happen")
                 }
@@ -224,6 +224,23 @@ class ExpressionsInterpreterOverTypedObject(
             }
 
             else -> obj.getPropertyValue(pd)
+        }
+    }
+
+    private fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args:List<Expression>) : TypedObject{
+        val type = obj.type
+        val md = type.declaration.findMethodOrNull(methodName)
+        return when(md) {
+            null -> {
+                issues.error(null, "Method '$methodName' not found on type '${obj.type.typeName}'")
+                AsmNothingSimple.toTypedObject(SimpleTypeModelStdLib.NothingType)
+            }
+            else -> {
+                val argValues = args.map {
+                    evaluateExpression(evc, it)
+                }
+                obj.
+            }
         }
     }
 

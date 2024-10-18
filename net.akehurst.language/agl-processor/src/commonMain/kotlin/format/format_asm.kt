@@ -17,6 +17,7 @@
 package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.FormatString
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.ProcessResult
@@ -30,10 +31,10 @@ class AglFormatterModelFromAsm(
 ) : AglFormatterModel {
 
     companion object {
-        fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
+        fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: FormatString): ProcessResult<AglFormatterModel> {
             val proc = Agl.registry.agl.format.processor ?: error("Formatter language not found!")
             return proc.process(
-                sentence = aglFormatterModelSentence,
+                sentence = aglFormatterModelSentence.value,
                 Agl.options {
                     semanticAnalysis { context(context) }
                 }

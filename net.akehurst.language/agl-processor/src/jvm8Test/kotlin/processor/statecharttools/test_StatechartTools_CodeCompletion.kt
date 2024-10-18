@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
@@ -76,7 +77,7 @@ class test_StatechartTools_CodeCompletion {
                             }
                         }*/
             val cfg = Agl.configuration(Agl.configurationDefault()) {
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), CrossReferenceString( crossReferenceModelStr)) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }

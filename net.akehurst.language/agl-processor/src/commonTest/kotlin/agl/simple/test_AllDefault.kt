@@ -6362,7 +6362,7 @@ class test_AllDefault {
         val grammarStr = """
             namespace test
             grammar Test {
-                skip WS = "\s+" ;
+                skip leaf WS = "\s+" ;
                 S = ID (NAME | NUMBER)* ;
                 leaf ID = "[a-z]" ;
                 leaf NUMBER = "[0-9]+" ;
@@ -6370,18 +6370,38 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = ruleSet("test.Test") {
-            concatenation("S") { literal("a") }
+            pattern("WS","\\s+", isSkip = true)
+            concatenation("S") { ref("ID"); ref("§S§multi1") }
+            multi("§S§multi1",0,-1,"§S§choice1", isPseudo = true)
+            choiceLongest("§S§choice1", isPseudo = true) {
+                ref("NAME")
+                ref("NUMBER")
+            }
+            pattern("ID", "[a-z]")
+            pattern("NAME", "[a-zA-Z][a-zA-Z0-9]+")
+            pattern("NUMBER", "[0-9]+" )
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
+                propertyPrimitiveType("id", "String", false, 0)
+                propertyListType("\$choiceList", false, 1) { ref("String") }
             }
+            stringTypeFor("ID")
+            stringTypeFor("NAME")
+            stringTypeFor("NUMBER")
         }
         val expectedTr = asmGrammarTransform(
             "test.Test",
             typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
             true
         ) {
-            createObject("S", "S")
+            createObject("S", "S") {
+                assignment("id", "child[0]")
+                assignment("\$choiceList","with (child[1]) children.map{ it.child[0] }")
+            }
+            leafStringRule("ID")
+            leafStringRule("NAME")
+            leafStringRule("NUMBER")
         }
         test(
             grammarStr = grammarStr,
@@ -6389,9 +6409,19 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "a", sppt = "S { ID:'a' §S§multi1 { <EMPTY_LIST> } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
+                        propertyString("id", "a")
+                        propertyListOfString("\$choiceList", emptyList())
+                    }
+                }
+            }
+            define(sentence = "a bb 12", sppt = "S { ID:'a' WS:' ' §S§multi1 { §S§choice1 { NAME:'bb' WS:' ' } §S§choice1 { NUMBER:'12' } } }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S") {
+                        propertyString("id", "a")
+                        propertyListOfString("\$choiceList", listOf("bb", "12"))
                     }
                 }
             }

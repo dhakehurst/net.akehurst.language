@@ -35,7 +35,7 @@ import kotlin.test.assertTrue
 class test_SemanticAnalyserSimple_datatypes {
 
     private companion object {
-        val grammarStr = """
+        val grammarStr = GrammarString("""
             namespace test
             
             grammar Test {
@@ -57,8 +57,8 @@ class test_SemanticAnalyserSimple_datatypes {
                 leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
                 leaf type = ID;
             }
-        """.trimIndent()
-        val crossReferenceModelStr = """
+        """.trimIndent())
+        val crossReferenceModelStr = CrossReferenceString("""
             namespace test.Test {
                 identify Primitive by id
                 identify Datatype by id
@@ -70,10 +70,10 @@ class test_SemanticAnalyserSimple_datatypes {
                     }
                 }
             }
-        """.trimIndent()
+        """.trimIndent())
         val processor = Agl.processorFromStringSimple(
-            grammarDefinitionStr = GrammarString(grammarStr),
-            crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+            grammarDefinitionStr = grammarStr,
+            crossReferenceModelStr = crossReferenceModelStr
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel

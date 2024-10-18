@@ -143,19 +143,19 @@ object Agl {
     ): LanguageProcessorResult<Asm, ContextAsmSimple> {
         val config = Agl.configuration(configurationBase) {
             if (null != typeModelStr) {
-                typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr.value) }
+                typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), transformStr.value) }
+                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), transformStr) }
             }
             if (null != crossReferenceModelStr) {
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr.value) }
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), styleModelStr.value) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), styleModelStr) }
             }
             if (null != formatterModelStr) {
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr.value) }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)

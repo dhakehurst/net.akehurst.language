@@ -77,8 +77,11 @@ grammar Expression extends Base {
     whenOption = expression '->' expression ;
     
     propertyCall = '.' propertyReference ;
-    methodCall = '.' methodReference '(' argumentList ')' ;
+    methodCall = '.' methodReference '(' argumentList ')' lambda? ;
     argumentList = [expression / ',']* ;
+    
+    lambda = '{' expression '}' ;
+    
     propertyReference = SPECIAL | IDENTIFIER ;
     methodReference = IDENTIFIER ;
     indexOperation = '[' indexList ']' ;
@@ -174,11 +177,14 @@ grammar Expression extends Base {
             lit("."); ref("propertyReference")
         }
         concatenation("methodCall") {
-            lit("."); ref("methodReference"); lit("("); ref("argumentList"); lit(")")
+            lit("."); ref("methodReference")
+            lit("("); ref("argumentList"); lit(")")
+            opt { ref("lambda") }
         }
         separatedList("argumentList", 0, -1) {
             ref("expression"); lit(",")
         }
+        concatenation("lambda") {lit("{"); ref("expression"); lit("}")}
         choice("propertyReference") {
             ref("SPECIAL")
             ref("IDENTIFIER")

@@ -17,6 +17,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.transform.asm.TransformModelDefault
@@ -146,7 +148,7 @@ internal class LanguageProcessorConfigurationDefault(
     override var crossReferenceModelResolver: CrossReferenceModelResolver<Asm, ContextAsmSimple>? = { p ->
         CrossReferenceModelDefault.fromString(
             ContextFromTypeModel(p.typeModel),
-            ""
+            CrossReferenceString("")
         )
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextAsmSimple>? = { p ->
@@ -162,7 +164,7 @@ internal class LanguageProcessorConfigurationDefault(
         )
     },
     override var formatterResolver: FormatterResolver<Asm, ContextAsmSimple>? = { p ->
-        AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "")
+        AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(

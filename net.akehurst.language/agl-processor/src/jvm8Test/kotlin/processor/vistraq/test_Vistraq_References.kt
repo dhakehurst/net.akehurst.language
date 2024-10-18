@@ -17,6 +17,9 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.FormatString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -43,11 +46,11 @@ import kotlin.test.assertTrue
 class test_Vistraq_References {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
-        private val scopeModelStr = this::class.java.getResource("/vistraq/version_/references.agl")?.readText() ?: error("File not found")
+        private val grammarStr = GrammarString(this::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found"))
+        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/vistraq/version_/references.agl")?.readText() ?: error("File not found"))
 
         private val grammarList =
-            Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
                 .let {
                     check(it.issues.errors.isEmpty()) { it.issues.toString() }
                     it.asm!!
@@ -67,7 +70,7 @@ class test_Vistraq_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 //completionProvider { p ->
                 //     ProcessResultDefault(
                 //        CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
@@ -114,7 +117,7 @@ class test_Vistraq_References {
     fun crossReferenceModel() {
         val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
         val result = Agl.registry.agl.crossReference.processor!!.process(
-            scopeModelStr,
+            scopeModelStr.value,
             Agl.options {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }

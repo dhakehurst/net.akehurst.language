@@ -18,6 +18,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
@@ -55,6 +56,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::whenOption)
         super.register(this::propertyCall)
         super.register(this::methodCall)
+        super.register(this::argumentList)
+        super.register(this::lambda)
         super.register(this::indexOperation)
         super.register(this::indexList)
         super.register(this::propertyReference)
@@ -188,11 +191,24 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return PropertyCallSimple(id)
     }
 
-    // methodCall = '.' methodReference '(' ')' ;
+    // methodCall = '.' methodReference '(' argumentList ')' lambda? ;
     private fun methodCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): MethodCall {
         val methodReference = children[1] as String
-        //TODO: arguments
-        return MethodCallSimple(methodReference, emptyList())
+        val argumentList = children[3] as List<Expression>
+        val lambda = children[5] as LambdaExpression?
+        val args = argumentList + (lambda?.let{ listOf(it) } ?: emptyList())
+        return MethodCallSimple(methodReference, args)
+    }
+
+    // argumentList = [expression / ',']* ;
+    private fun argumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> {
+        return (children as List<Any>).toSeparatedList<Any, Expression, String>().items
+    }
+
+    // lambda = '{' expression '}' ;
+    private fun lambda(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LambdaExpression {
+        val expression = children[1] as Expression
+        return LambdaExpressionSimple(expression)
     }
 
     // indexOperation = '[' indexList ']' ;

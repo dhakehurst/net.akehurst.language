@@ -17,6 +17,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.StyleString
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
@@ -33,7 +36,7 @@ import kotlin.properties.Delegates
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    grammarStrArg: String?,
+    grammarStrArg: GrammarString?,
     private val aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -68,13 +71,13 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             super._processor_cache.reset()
         }
 
-    override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var grammarStr: GrammarString? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
             updateGrammarStr(oldValue, newValue)
         }
     }
 
-    override var crossReferenceModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var crossReferenceModelStr: CrossReferenceString? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
             updateCrossReferenceModelStr(oldValue, newValue)
         }
@@ -93,7 +96,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             }
         }
     */
-    override var styleStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var styleStr: StyleString? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
             updateStyleStr(oldValue, newValue)
         }
@@ -103,7 +106,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         grammarStr = grammarStrArg
     }
 
-    override fun update(grammarStr: String?, crossReferenceModelStr: String?, styleStr: String?) {
+    override fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?) {
         this._doObservableUpdates = false
         val oldGrammarStr = this.grammarStr
         val oldScopeModelStr = this.crossReferenceModelStr
@@ -131,11 +134,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this._doObservableUpdates = true
     }
 
-    private fun updateGrammarStr(oldValue: String?, newValue: String?) {
+    private fun updateGrammarStr(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue, aglOptions)
+            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue?.value, aglOptions)
             this._issues.addAll(res.issues)
-            this.grammarList = when {
+            this.grammarModel = when {
                 res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"), emptyList())
                 else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last), emptyList())
             }
@@ -143,7 +146,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    private fun updateCrossReferenceModelStr(oldValue: String?, newValue: String?) {
+    private fun updateCrossReferenceModelStr(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) {
         if (oldValue != newValue) {
             super._crossReferenceModelResolver = {
                 when {
@@ -174,13 +177,13 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    private fun updateStyleStr(oldValue: String?, newValue: String?) {
+    private fun updateStyleStr(oldValue: StyleString?, newValue: StyleString?) {
         if (oldValue != newValue) {
             super._styleResolver = {
                 if (null == newValue) {
                     ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
-                    val res = Agl.registry.agl.style.processor!!.process(newValue)
+                    val res = Agl.registry.agl.style.processor!!.process(newValue.value)
                     when {
                         res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
                         res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)

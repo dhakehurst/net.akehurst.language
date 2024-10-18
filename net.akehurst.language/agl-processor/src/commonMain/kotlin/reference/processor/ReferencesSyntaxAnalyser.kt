@@ -208,7 +208,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // typeReferences = [possiblyQualifiedTypeReference / '|']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> { //List<Pair<String, InputLocation>> {
-        return (children as List<PossiblyQualifiedName>).toSeparatedList<Any, PossiblyQualifiedName, String>().items
+        return (children as List<Any>).toSeparatedList<Any, PossiblyQualifiedName, String>().items
     }
 
     // possiblyQualifiedTypeReference = possiblyQualifiedName

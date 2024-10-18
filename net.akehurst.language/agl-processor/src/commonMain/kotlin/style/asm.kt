@@ -16,6 +16,7 @@
 package net.akehurst.language.style.asm
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.StyleString
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.api.processor.ProcessResult
@@ -43,10 +44,10 @@ class AglStyleModelDefault(
             it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
         }
 
-        fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
+        fun fromString(context: ContextFromGrammar, aglStyleModelSentence: StyleString): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
             return proc.process(
-                sentence = aglStyleModelSentence,
+                sentence = aglStyleModelSentence.value,
                 options = Agl.options { semanticAnalysis { context(context) } }
             )
         }

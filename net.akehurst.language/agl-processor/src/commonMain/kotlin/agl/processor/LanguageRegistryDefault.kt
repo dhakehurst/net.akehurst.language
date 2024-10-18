@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
 import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
 import net.akehurst.language.expressions.processor.ExpressionsCompletionProvider
@@ -309,7 +310,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        grammarStr: String?,
+        grammarStr: GrammarString?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>

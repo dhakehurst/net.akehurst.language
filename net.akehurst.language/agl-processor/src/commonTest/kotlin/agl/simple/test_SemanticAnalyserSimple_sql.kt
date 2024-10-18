@@ -34,9 +34,8 @@ import kotlin.test.assertTrue
 class test_SemanticAnalyserSimple_sql {
 
     private companion object {
-        val grammarStr = """
+        val grammarStr = GrammarString("""
 namespace net.akehurst.language
-
 grammar SQL {
     skip WS = "\s+" ;
 
@@ -96,8 +95,8 @@ grammar SQL {
     leaf FROM   = "from|FROM"   ;
     leaf VALUES = "values|VALUES"   ;
 }
-        """.trimIndent()
-        val crossReferenceModelStr = """
+        """.trimIndent())
+        val crossReferenceModelStr = CrossReferenceString("""
             namespace net.akehurst.language.SQL {
                 identify TableDefinition by table-id
                 scope TableDefinition {
@@ -124,10 +123,10 @@ grammar SQL {
                     }
                 }
             }
-        """.trimIndent()
+        """.trimIndent())
         val processor = Agl.processorFromStringSimple(
-            grammarDefinitionStr = GrammarString(grammarStr),
-            crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+            grammarDefinitionStr = (grammarStr),
+            crossReferenceModelStr = (crossReferenceModelStr)
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel

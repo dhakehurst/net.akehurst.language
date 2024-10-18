@@ -163,6 +163,18 @@ data class MethodCallSimple(
     override fun toString(): String = ".$methodName(${arguments.joinToString()})"
 }
 
+data class LambdaExpressionSimple(
+    override val expression: Expression
+) : LambdaExpression {
+
+    override fun asString(indent: Indent): String {
+        return "{ $expression }"
+    }
+
+    override fun toString(): String = "{ $expression }"
+}
+
+
 data class IndexOperationSimple(
     override val indices: List<Expression>
 ) : IndexOperation {

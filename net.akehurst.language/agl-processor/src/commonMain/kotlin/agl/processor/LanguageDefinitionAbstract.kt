@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.*
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -24,7 +24,6 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
@@ -43,9 +42,9 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: LanguageIdentity
-    abstract override var grammarStr: String?
+    abstract override var grammarStr: GrammarString?
 
-    override var grammarList: GrammarModel by Delegates.observable(grammarList) { _, oldValue, newValue ->
+    override var grammarModel: GrammarModel by Delegates.observable(grammarList) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -54,7 +53,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override val targetGrammar: Grammar? get() = this.grammarList.allDefinitions.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarList.primary
+    override val targetGrammar: Grammar? get() = this.grammarModel.allDefinitions.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarModel.primary
 
     abstract override val isModifiable: Boolean
 
@@ -70,7 +69,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
     }
 
-    abstract override var crossReferenceModelStr: String?
+    abstract override var crossReferenceModelStr: CrossReferenceString?
 
     override val typeModel: TypeModel?
         get() = this.processor?.typeModel
@@ -113,7 +112,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val issues: IssueCollection<LanguageIssue> get() = _issues
 
-    abstract override var styleStr: String?
+    abstract override var styleStr: StyleString?
 
     override val style: AglStyleModel?
         get() {
@@ -141,15 +140,15 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 //        }
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
-    override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: GrammarModel, newValue: GrammarModel) -> Unit>()
-    override val crossReferenceModelStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val crossReferenceModelStrObservers = mutableListOf<(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) -> Unit>()
 
     //override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
-    override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val formatterStrObservers = mutableListOf<(oldValue: FormatString?, newValue: FormatString?) -> Unit>()
 
     //override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
-    override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val styleStrObservers = mutableListOf<(oldValue: StyleString?, newValue: StyleString?) -> Unit>()
     //override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity.value

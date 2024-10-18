@@ -17,6 +17,7 @@
 
 package net.akehurst.language.typemodel.asm
 
+import net.akehurst.language.agl.TypeModelString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -28,7 +29,7 @@ class TypeModelSimple(
 ) : TypeModelSimpleAbstract() {
 
     companion object {
-        fun fromString(typeModelStr: String): ProcessResult<TypeModel> {
+        fun fromString(typeModelStr: TypeModelString): ProcessResult<TypeModel> {
             TODO()
 //            val proc = Agl.registry.agl.typeModel.processor ?: error("TypeModel language not found!")
 //            return proc.process(

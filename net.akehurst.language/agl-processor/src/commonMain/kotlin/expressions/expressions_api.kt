@@ -67,6 +67,10 @@ interface MethodCall : NavigationPart {
     val arguments: List<Expression>
 }
 
+interface LambdaExpression : Expression {
+    val expression: Expression
+}
+
 interface IndexOperation : NavigationPart {
     val indices: List<Expression>
 }

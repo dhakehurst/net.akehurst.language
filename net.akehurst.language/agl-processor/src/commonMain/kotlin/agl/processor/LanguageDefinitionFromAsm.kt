@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.agl.StyleString
 import net.akehurst.language.grammar.asm.asGrammarModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -40,21 +43,21 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
             error("Cannot set the configuration of a LanguageDefinitionFromAsm")
         }
 
-    override var grammarStr: String?
-        get() = this.grammarList.asString()
+    override var grammarStr: GrammarString?
+        get() = this.grammarModel.asString().let { GrammarString(it) }
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
     override val isModifiable: Boolean = false
 
-    override var crossReferenceModelStr: String?
-        get() = this.crossReferenceModel.toString() //TODO:
+    override var crossReferenceModelStr: CrossReferenceString?
+        get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
         set(value) {
             error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
         }
 
-    override var styleStr: String?
-        get() = this.style?.asString()
+    override var styleStr: StyleString?
+        get() = this.style?.asString() ?.let { StyleString(it) }
         set(value) {
             error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
         }
@@ -67,7 +70,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
 
      */
 
-    override fun update(grammarStr: String?, crossReferenceModelStr: String?, styleStr: String?) {
+    override fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?) {
         error("Cannot update a LanguageDefinitionFromAsm using Strings")
     }
 }

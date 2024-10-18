@@ -64,22 +64,22 @@ class test_Agl {
 
     @Test
     fun process() {
-        val grammarStr = """
+        val grammarStr =GrammarString( """
             namespace test
 
             grammar Test {
               a = "[a-z]" ;
             }
-        """.trimIndent()
+        """.trimIndent())
         val sentence = "a"
-        val myProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        val myProcessor = Agl.processorFromStringSimple((grammarStr)).processor!!
         val result = myProcessor.process(sentence)
         //TODO
     }
 
     @Test
     fun grammar_styleStr() {
-        val actual = Agl.registry.agl.grammar.styleStr
+        val actual = Agl.registry.agl.grammar.styleStr?.value
         val expected = AglGrammar.styleStr
         assertEquals(expected, actual)
     }

@@ -16,6 +16,9 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.FormatString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
@@ -44,13 +47,13 @@ import kotlin.test.assertTrue
 class test_StatechartTools_References {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
-        private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
+        private val grammarStr = GrammarString(this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText()?: error("File not found"))
+        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found"))
 
-        private val grammarList =
-            Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
+        private val grammarModel =
+            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
-            val grm = grammarList.allDefinitions?.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
+            val grm = grammarModel.allDefinitions.firstOrNull { it.name.value == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
@@ -64,7 +67,7 @@ class test_StatechartTools_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
@@ -94,13 +97,13 @@ class test_StatechartTools_References {
 
     @Test
     fun typeModel() {
-        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = TransformModelDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = TransformModelDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
         val extNs = typeModel.findOrCreateNamespace(QualifiedName("external"), listOf(Import("std")))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("AnnotationType"))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("BuiltInType"))
@@ -110,7 +113,7 @@ class test_StatechartTools_References {
         typeModel.resolveImports()
 
         val result = Agl.registry.agl.crossReference.processor!!.process(
-            scopeModelStr,
+            scopeModelStr.value,
             Agl.options {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }

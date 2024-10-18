@@ -559,17 +559,18 @@ internal class Grammar2TransformRuleSet(
 
     private var tupleCount = 0
     private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
-        //val cor = CreateTupleTransformationRuleSimple(ti.typeName).also { it.resolveTypeAs(ti) }
-        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
-        val typeArgs = ttSub.property.map { TypeArgumentNamedSimple(it.name, it.typeInstance) }
-        val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
-
-        //To avoid recursion issue, create and cahce tr-rule before creating assignments
+        //To avoid recursion issue, create and cache tr-rule before creating assignments
         val assignments = mutableListOf<AssignmentStatement>()
-        val tr = transformationRule(ti, CreateTupleExpressionSimple(assignments))
+        val tr = transformationRuleUnresolved(SimpleTypeModelStdLib.TupleType.qualifiedName, CreateTupleExpressionSimple(assignments))
         this._grRuleItemToTrRule[ruleItem] = tr
+        //create dummy DataType to hold property defs
+        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
         val asses = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
         assignments.addAll(asses)
+
+        val typeArgs = ttSub.property.map { TypeArgumentNamedSimple(it.name, it.typeInstance) }
+        val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
+        tr.resolveTypeAs(ti)
 
         return when {
             ttSub.allProperty.isEmpty() -> {

@@ -16,6 +16,9 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.CrossReferenceString
+import net.akehurst.language.agl.FormatString
+import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -37,11 +40,11 @@ import kotlin.test.assertTrue
 class test_StatechartTools_Singles {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
+        private val grammarStr = GrammarString(this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found"))
 
-        private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
+        private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found"))
 
-        private val formatterStr = """
+        private val formatterStr = FormatString("""
            namespace com.itemis.create.Expressions {
                AssignmentExpression -> "§expression §assignmentOperator §expression2"
                FeatureCall -> "§elementReferenceExpression\§list"
@@ -53,9 +56,9 @@ class test_StatechartTools_Singles {
                ElementReferenceExpression -> id
                PrimitiveValueExpression -> literal
            }
-        """.replace("§", "\$")
+        """.replace("§", "\$"))
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
             .also {
                 assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
             }

@@ -18,6 +18,7 @@
 package net.akehurst.language.transform.asm
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.TransformString
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypeModelMapping
 import net.akehurst.language.agl.simple.GrammarModel2TransformModel
@@ -52,10 +53,10 @@ class TransformModelDefault(
 ) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>() {
 
     companion object {
-        fun fromString(context: ContextFromGrammar, transformStr: String): ProcessResult<TransformModel> {
+        fun fromString(context: ContextFromGrammar, transformStr: TransformString): ProcessResult<TransformModel> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             return proc.process(
-                sentence = transformStr,
+                sentence = transformStr.value,
                 Agl.options {
                     semanticAnalysis { context(context) }
                 }
@@ -199,7 +200,12 @@ class TransformationRuleDefault(
 
     override fun toString(): String = "${expression} as $possiblyQualifiedTypeName"
 }
-
+internal fun transformationRuleUnresolved(qualifiedTypeName: QualifiedName, expression: Expression): TransformationRuleDefault {
+    return TransformationRuleDefault(
+        qualifiedTypeName,
+        expression
+    )
+}
 internal fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {
     return TransformationRuleDefault(
         type.qualifiedTypeName,
