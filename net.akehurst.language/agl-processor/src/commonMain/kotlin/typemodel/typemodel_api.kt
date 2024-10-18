@@ -145,6 +145,8 @@ interface TypeInstance {
      */
     val allResolvedProperty: Map<PropertyName, PropertyDeclarationResolved>
 
+    val allResolvedMethod: Map<MethodName, MethodDeclarationResolved>
+
     val asTypeArgument: TypeArgument
 
     fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
@@ -187,6 +189,11 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
     val allProperty: Map<PropertyName, PropertyDeclaration>
 
     /**
+     * all methods from this and transitive closure of supertypes
+     */
+    val allMethod: Map<MethodName, MethodDeclaration>
+
+    /**
      * information about this type
      */
     val metaInfo: Map<String, String>
@@ -215,8 +222,7 @@ interface TypeDeclaration : Definition<TypeDeclaration> {
         name: MethodName,
         parameters: List<ParameterDeclaration>,
         typeInstance: TypeInstance,
-        description: String,
-        body: (self: Any, arguments: List<Any>) -> Any
+        description: String
     )
 
     fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String)
@@ -428,8 +434,16 @@ interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: MethodName
     val parameters: List<ParameterDeclaration>
+    val returnType: TypeInstance
     val description: String
+
+    fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
+
 }
+
+interface MethodDeclarationPrimitive : MethodDeclaration
+interface MethodDeclarationDerived : MethodDeclaration
+interface MethodDeclarationResolved : MethodDeclaration
 
 interface ConstructorDeclaration {
     val owner: TypeDeclaration

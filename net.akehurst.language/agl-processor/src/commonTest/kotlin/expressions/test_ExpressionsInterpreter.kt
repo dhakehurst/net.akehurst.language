@@ -252,6 +252,39 @@ class test_ExpressionsInterpreter {
     }
 
     @Test
+    fun structure_propertyListOfA_get() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("Test") {
+                    propertyListTypeOf("aList", "A", false, 0)
+                }
+                dataType("A") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val asm = asmSimple(typeModel = tm) {
+            element("Test") {
+                propertyListOfElement("aList") {
+                    element("A") {
+                        propertyString("prop1", "v1")
+                    }
+                    element("A") {
+                        propertyString("prop1", "v2")
+                    }
+                    element("A") {
+                        propertyString("prop1", "v3")
+                    }
+                }
+            }
+        }
+        val self = asm.root[0]
+
+        val expected = AsmPrimitiveSimple.stdString("v2")
+        test(tm, self, "aList.get(1).prop1", expected)
+    }
+
+    @Test
     fun structure_propertyListOfA_map() {
         val tm = typeModel("test", true) {
             namespace("ns") {

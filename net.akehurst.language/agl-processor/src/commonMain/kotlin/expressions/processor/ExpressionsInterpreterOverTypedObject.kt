@@ -20,12 +20,9 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.asm.simple.*
-import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
@@ -68,6 +65,8 @@ interface TypedObject {
 
     fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject
 
+    fun callMethod(methodDeclaration: MethodDeclaration, arguments:List<TypedObject>): TypedObject
+
     fun asString(): String
 }
 
@@ -77,14 +76,16 @@ class TypedObjectAsmValue(
 ) : TypedObject {
 
     override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
+        val propRes = this.type.allResolvedProperty[propertyDeclaration.name]!!
         val ao = when (propertyDeclaration) {
             is PropertyDeclarationDerived -> TODO()
             is PropertyDeclarationPrimitive -> {
                 val type = this.type.declaration
-                val typeProps = StdLibPrimitiveExecutions.property[type] ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
+                val typeProps = StdLibPrimitiveExecutions.property[type]
+                    ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                 val propExec = typeProps[propertyDeclaration]
                     ?: error("StdLibPrimitiveExecutions not found for property '${propertyDeclaration.name}' of TypeDeclaration '${type.qualifiedName}'")
-                propExec.invoke(self, propertyDeclaration)
+                propExec.invoke(self, propRes)
             }
 
             is PropertyDeclarationStored -> when (self) {
@@ -94,7 +95,26 @@ class TypedObjectAsmValue(
 
             else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
         }
-        return TypedObjectAsmValue(propertyDeclaration.typeInstance, ao)
+        return TypedObjectAsmValue(propRes.typeInstance, ao)
+    }
+
+    override fun callMethod(methodDeclaration: MethodDeclaration, arguments: List<TypedObject>): TypedObject {
+        val methRes =  this.type.allResolvedMethod[methodDeclaration.name]!!
+        val ao = when (methodDeclaration) {
+            is MethodDeclarationPrimitiveSimple -> {
+                val type = this.type.declaration
+                val typeMeths = StdLibPrimitiveExecutions.method[type]
+                    ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
+                val methExec = typeMeths[methodDeclaration]
+                    ?: error("StdLibPrimitiveExecutions not found for method '${methodDeclaration.name}' of TypeDeclaration '${type.qualifiedName}'")
+                methExec.invoke(self, methRes, arguments)
+            }
+            is MethodDeclarationDerivedSimple ->{
+                TODO()
+            }
+            else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
+        }
+        return TypedObjectAsmValue(methRes.returnType, ao)
     }
 
     override fun asString(): String = self.asString()
@@ -239,7 +259,7 @@ class ExpressionsInterpreterOverTypedObject(
                 val argValues = args.map {
                     evaluateExpression(evc, it)
                 }
-                obj.
+                obj.callMethod(md, argValues)
             }
         }
     }
@@ -456,4 +476,25 @@ object StdLibPrimitiveExecutions {
         )
     )
 
+    val method = mapOf<TypeDeclaration, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<TypedObject>) -> AsmValue)>>(
+        SimpleTypeModelStdLib.List to mapOf(
+            SimpleTypeModelStdLib.List.findMethodOrNull(MethodName("get"))!! to { self, meth, args ->
+                check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1==args.size)  { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                check(args[0] .asmValue is AsmPrimitive) {"Method '${meth.name}' takes an ${SimpleTypeModelStdLib.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                check(SimpleTypeModelStdLib.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) {"Method '${meth.name}' takes an ${SimpleTypeModelStdLib.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val arg1 = args[0].asmValue as AsmPrimitive
+                val idx = arg1.value as Int
+                self.elements.get(idx)
+            },
+            SimpleTypeModelStdLib.Collection.findMethodOrNull(MethodName("map"))!! to { self, meth, args ->
+                check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                val lambda = args[0] as LambdaExpression
+                val mapped = self.elements.map {
+                    TODO()
+                }
+                AsmListSimple(mapped)
+            }
+        )
+    )
 }

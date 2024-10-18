@@ -152,6 +152,20 @@ abstract class TypeInstanceAbstract() : TypeInstance {
             return superProps + ownResolveProps
         }
 
+    override val allResolvedMethod: Map<MethodName, MethodDeclarationResolved>
+        get() {
+            val typeArgMap = createTypeArgMap()
+            val superProps = declaration.supertypes.map {
+                val resIt = it.resolved(typeArgMap)
+                resIt.allResolvedMethod
+            }.fold(mapOf<MethodName, MethodDeclarationResolved>()) { acc, it -> acc + it }
+            val ownResolveProps = declaration.method.associate {
+                val rp = it.resolved(typeArgMap)
+                Pair(it.name, rp)
+            }
+            return superProps + ownResolveProps
+        }
+
     override val asTypeArgument: TypeArgument get() = TypeArgumentSimple(this)
 
     override fun notNullable() = this.declaration.type(typeArguments, false)
@@ -775,7 +789,9 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
             it.declaration.allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
 
-    val allMethod: Map<MethodName, MethodDeclaration> get() = method.associateBy { it.name }
+    override val allMethod: Map<MethodName, MethodDeclaration> get() =supertypes.flatMap {
+        it.declaration.allMethod.values
+    }.associateBy { it.name } + this.method.associateBy { it.name }
 
     /**
      * information about this type
@@ -843,17 +859,18 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
         name: MethodName,
         parameters: List<ParameterDeclaration>,
         typeInstance: TypeInstance,
-        description: String,
-        body: (self: Any, arguments: List<Any>) -> Any
+        description: String
     ) {
-        MethodDeclarationPrimitive(this, name, parameters, description, body)
+        val m = MethodDeclarationPrimitiveSimple(this, name, parameters, typeInstance, description)
+        this.addMethod(m)
     }
 
     /**
      * append a method/function with the expression that should execute
      */
     override fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String) {
-        MethodDeclarationDerived(this, name, parameters, description, body)
+        val m = MethodDeclarationDerivedSimple(this, name, parameters, typeInstance, description, body)
+        this.addMethod(m)
     }
 
     override fun asStringInContext(context: TypeNamespace): String = signature(context, 0)
@@ -1375,25 +1392,49 @@ class PropertyDeclarationResolvedSimple(
     override val index: Int get() = -1 // should never be included in owners list
 }
 
-internal class MethodDeclarationPrimitive(
+abstract class MethodDeclarationAbstract() : MethodDeclaration {
+    override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved = MethodDeclarationResolvedSimple(
+        this.owner,
+        this.name,
+        this.parameters.map {
+            ParameterDefinitionSimple(it.name, it.typeInstance.resolved(typeArguments),it.defaultValue)
+        },
+        this.returnType.resolved(typeArguments),
+        this.description
+    )
+}
+
+internal class MethodDeclarationPrimitiveSimple(
     override val owner: TypeDeclaration,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
-    override val description: String,
-    val body: (self: Any, arguments: List<Any>) -> Any
-) : MethodDeclaration {
+    override val returnType: TypeInstance,
+    override val description: String
+) : MethodDeclarationAbstract(), MethodDeclarationPrimitive {
 
 }
 
-class MethodDeclarationDerived(
+class MethodDeclarationDerivedSimple(
     override val owner: TypeDeclaration,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
+    override val returnType: TypeInstance,
     override val description: String,
     val body: String
-) : MethodDeclaration {
+) : MethodDeclarationAbstract(), MethodDeclarationDerived {
 
 }
+
+class MethodDeclarationResolvedSimple(
+    override val owner: TypeDeclaration,
+    override val name: MethodName,
+    override val parameters: List<ParameterDeclaration>,
+    override val returnType: TypeInstance,
+    override val description: String
+) : MethodDeclarationAbstract(), MethodDeclarationResolved {
+
+}
+
 
 class ParameterDefinitionSimple(
     override val name: net.akehurst.language.typemodel.api.ParameterName,

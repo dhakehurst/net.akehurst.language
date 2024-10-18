@@ -51,6 +51,9 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
         td.appendPropertyStored(PropertyName("second"), TypeParameterReference(td, SimpleName("S")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 1)
     }
 
+    private val LambdaType_typeName = SimpleName("LambdaType")
+    val Lambda = super.findOrCreateSpecialTypeNamed(LambdaType_typeName).type()
+
     private val TupleType_typeName = SimpleName("TupleType")
     val TupleType = TupleTypeSimple(this, TupleType_typeName).also { typeDecl ->
         this.addDeclaration(typeDecl)
@@ -59,6 +62,12 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
     private val Collection_typeName = SimpleName("Collection")
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+        typeDecl.appendMethodPrimitive(
+            MethodName("map"),
+            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl, Lambda.typeName), null)),
+            TypeParameterReference(typeDecl, SimpleName("E")),
+            "A list created by mapping each element using the given lambda expression."
+        )
     }
     private val List_typeName = SimpleName("List")
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
@@ -83,14 +92,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
             listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(typeDecl, Integer.typeName), null)),
             TypeParameterReference(typeDecl, SimpleName("E")),
             "The element at the given index."
-        ) { it, arguments ->
-            check(it is List<*>) { "Method 'get' is only applicably to List objects." }
-            check(1 == arguments.size) { "Method 'get' should only have 1 (Integer) argument." }
-            check(arguments[0] is Int)
-            val self = it as List<Any>
-            val arg1 = arguments[0] as Int
-            self[arg1]
-        }
+        )
     }
     val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed(SimpleName("ListSeparated")).also { typeDecl ->
         typeDecl.addSupertype(List.type(listOf(AnyType.asTypeArgument)))
