@@ -73,10 +73,9 @@ class WithExpressionSimple(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        sb.append("with(${withContext.asString(indent)}) {\n")
+        sb.append("with(${withContext.asString(indent)}) ")
         val ni = indent.inc
-        sb.append("${ni}${expression.asString(ni)}\n")
-        sb.append("${indent}}")
+        sb.append(expression.asString(ni))
         return sb.toString()
     }
 

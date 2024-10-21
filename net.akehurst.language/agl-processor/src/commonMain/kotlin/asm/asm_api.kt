@@ -124,6 +124,10 @@ interface AsmListSeparated : AsmList {
     override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 }
 
+interface AsmLambda {
+    fun invoke( args:Map<String, AsmValue> ) : AsmValue
+}
+
 interface AsmTreeWalker {
     fun beforeRoot(root: AsmValue)
     fun afterRoot(root: AsmValue)

@@ -20,6 +20,7 @@ package net.akehurst.language.asm.simple
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
@@ -360,6 +361,10 @@ class AsmStructurePropertySimple(
     value: AsmValue
 ) : AsmStructureProperty {
 
+    companion object {
+        const val TO_STRING_MAX_LEN = 30
+    }
+
     override var value: AsmValue = value; private set
 
     override val isReference: Boolean get() = this.value is AsmReferenceSimple
@@ -415,7 +420,7 @@ class AsmStructurePropertySimple(
             is AsmList -> {
                 val elems = v.elements.joinToString()
                 val elemsStr = when{
-                    elems.length > 20 -> elems.substring(0,20) + "..."
+                    elems.length > TO_STRING_MAX_LEN -> elems.substring(0,TO_STRING_MAX_LEN) + "..."
                     else -> elems
                 }
                 "$name = [$elemsStr]"
@@ -484,4 +489,24 @@ class AsmListSeparatedSimple(
     }
 
     override fun toString(): String = elements.toString()
+}
+
+class AsmLambdaSimple(
+    val func: (it:AsmValue) -> AsmValue
+) : AsmValueAbstract(), AsmLambda {
+
+    override val qualifiedTypeName = SimpleTypeModelStdLib.Lambda.qualifiedTypeName
+
+    override fun invoke(args: Map<String, AsmValue>): AsmValue {
+        val it = args["it"]!!
+        return this.func.invoke(it)
+    }
+
+    override fun equalTo(other: AsmValue): Boolean {
+        return false
+    }
+
+    override fun asString(currentIndent: String, indentIncrement: String): String {
+        return "{ <expre> }"
+    }
 }

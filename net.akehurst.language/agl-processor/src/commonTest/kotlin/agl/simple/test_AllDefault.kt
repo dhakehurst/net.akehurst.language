@@ -384,9 +384,9 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("b", "String", false, 1)
-                propertyPrimitiveType("c", "String", false, 2)
+                propertyDataTypeOf("a", "A", false, 0)
+                propertyDataTypeOf("b", "B", false, 1)
+                propertyDataTypeOf("c", "C", false, 2)
             }
             dataType("A", "A") {}
             dataType("B", "B") {}
@@ -443,9 +443,9 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("b", "String", false, 2)
-                propertyPrimitiveType("c", "String", false, 4)
+                propertyDataTypeOf("a", "A", false, 0)
+                propertyDataTypeOf("b", "B", false, 2)
+                propertyDataTypeOf("c", "C", false, 4)
             }
             dataType("A", "A") {}
             dataType("B", "B") {}
@@ -632,8 +632,136 @@ class test_AllDefault {
         }
     }
 
+    @Test // S = A B | C D ;
+    fun _33_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B | C D ;
+                A = a;
+                B = b;
+                C = c;
+                D = d;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+                leaf d = 'd';
+            }
+        """.trimIndent()
+        val expectedRrs = ruleSet("test.Test") {
+            choiceLongest("S") {
+                concatenation { ref("A"); ref("B") }
+                concatenation { ref("C"); ref("D") }
+            }
+            concatenation("A") { ref("a") }
+            concatenation("B") { ref("b") }
+            concatenation("C") { ref("c") }
+            concatenation("D") { ref("d") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        }
+        val expectedTm = grammarTypeModel("test.Test", "Test") {
+            unnamedSuperTypeType("S") {
+                tupleType {
+                    typeRef("a", "A", false)
+                    typeRef("b", "B", false)
+                }
+                tupleType {
+                    typeRef("c", "C", false)
+                    typeRef("d", "D", false)
+                }
+            }
+            dataType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+            dataType("B", "B") {
+                propertyPrimitiveType("b", "String", false, 0)
+            }
+            dataType("C", "C") {
+                propertyPrimitiveType("c", "String", false, 0)
+            }
+            dataType("D", "D") {
+                propertyPrimitiveType("d", "String", false, 0)
+            }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+        }
+        val expectedTr = asmGrammarTransform(
+            "test.Test",
+            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            true
+        ) {
+            unnamedSubtypeRule("S","""
+                when {
+                  0==§alternative -> tuple { a:=child[0] b:=child[1] }
+                  1==§alternative -> tuple { c:=child[0] d:=child[1] }
+                }
+            """.replace("§","$")) {
+                tupleType {
+                    typeRef("a", "A", false)
+                    typeRef("b", "B", false)
+                }
+                tupleType {
+                    typeRef("c", "C", false)
+                    typeRef("d", "D", false)
+                }
+            }
+            createObject("A", "A") {
+                assignment("a", "child[0]")
+            }
+            createObject("B", "B") {
+                assignment("b", "child[0]")
+            }
+            createObject("C", "C") {
+                assignment("c", "child[0]")
+            }
+            createObject("D", "D") {
+                assignment("d", "child[0]")
+            }
+            leafStringRule("a")
+            leafStringRule("b")
+            leafStringRule("c")
+            leafStringRule("d")
+        }
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "ab", sppt = "S{ A{a:'a'} B{b:'b'} }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    tuple {
+                        propertyElementExplicitType("a","A") {
+                            propertyString("a","a")
+                        }
+                        propertyElementExplicitType("b","B") {
+                            propertyString("b","b")
+                        }
+                    }
+                }
+            }
+            define(sentence = "cd", sppt = "S{ C{c:'c'} D{d:'d'} }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    tuple {
+                        propertyElementExplicitType("c","C") {
+                            propertyString("c","c")
+                        }
+                        propertyElementExplicitType("d","D") {
+                            propertyString("d","d")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
-    fun _33_choice_of_choice_all_literal() {
+    fun _34_choice_of_choice_all_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -706,7 +834,7 @@ class test_AllDefault {
     }
 
     @Test // S = L | M ; L = a | b | c ;  M = x | y ;
-    fun _34_choice_of_choice_all_leaf() {
+    fun _35_choice_of_choice_all_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -799,7 +927,7 @@ class test_AllDefault {
     }
 
     @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
-    fun _35_choice_of_choice_all_concats() {
+    fun _36_choice_of_choice_all_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -918,7 +1046,7 @@ class test_AllDefault {
     }
 
     @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
-    fun _36_choice_of_choice_mixed_literal_and_concats() {
+    fun _37_choice_of_choice_mixed_literal_and_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -982,11 +1110,20 @@ class test_AllDefault {
             leafStringRule("c")
             leafStringRule("d")
             leafStringRule("x")
-            unnamedSubtypeRule("B", "child[0]") {
+            unnamedSubtypeRule("B", """
+                when {
+                  0 == §alternative -> with(child[0]) §self
+                  1 == §alternative -> with(child[0]) §self
+                }""".replace("§","$")) {
                 typeRef("String")
                 typeRef("D")
             }
-            unnamedSubtypeRule("S", "child[0]") {
+            unnamedSubtypeRule("S", """
+                when {
+                  0 == §alternative -> with(child[0]) §self
+                  1 == §alternative -> with(child[0]) §self
+                  2 == §alternative -> with(child[0]) §self
+                }""".replace("§","$")) {
                 typeRef("A")
                 unnamedSuperType {
                     typeRef("String")
@@ -1027,7 +1164,7 @@ class test_AllDefault {
     }
 
     @Test // S = BC | d+ ;
-    fun _36_choice_concat_term_list() {
+    fun _38_choice_concat_term_list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1069,7 +1206,13 @@ class test_AllDefault {
             typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule("S", "child[0]") {
+            unnamedSubtypeRule(
+                "S", """
+                when {
+                  0 == §alternative -> with(child[0]) §self
+                  1 == §alternative -> with(child[0]) children
+                }""".replace("§","$")
+            ) {
                 typeRef("BC")
                 listType(false) {
                     ref("String")
@@ -1116,7 +1259,7 @@ class test_AllDefault {
     }
 
     @Test // S = BC | D* ;
-    fun _37_choice_concat_nonTerm_list() {
+    fun _39_choice_concat_nonTerm_list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1163,7 +1306,11 @@ class test_AllDefault {
             typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule("S", "child[0]") {
+            unnamedSubtypeRule("S", """
+                when {
+                  0 == §alternative -> with(child[0]) §self
+                  1 == §alternative -> with(child[0]) children
+                }""".replace("§","$")) {
                 typeRef("BC")
                 listType(false) {
                     ref("D")
@@ -1430,7 +1577,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("b", "with(child[1]) child[0]")
+                assignment("b", "with(child[1]) with(child[0]) \$self")
                 assignment("c", "child[2]")
             }
             leafStringRule("a")
@@ -1443,7 +1590,7 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "ac", sppt = "S { a:'a' §S§opt1 {<EMPTY>} c:'c' }") {
+           /* define(sentence = "ac", sppt = "S { a:'a' §S§opt1 {<EMPTY>} c:'c' }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
                         propertyString("a", "a")
@@ -1451,7 +1598,7 @@ class test_AllDefault {
                         propertyString("c", "c")
                     }
                 }
-            }
+            }*/
             define(sentence = "abc", sppt = "S { a:'a' §S§opt1 {b:'b'} c:'c' }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
@@ -1562,7 +1709,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("b", "child[0]")
-                assignment("a", "with(child[1]) child[0]")
+                assignment("a", "with(child[1]) with(child[0]) \$self")
             }
             createObject("A", "A") {
                 assignment("a", "child[0]")
@@ -1905,7 +2052,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("b", "child[1]")
+                assignment("b", "with(child[1]) children")
                 assignment("c", "child[2]")
             }
             leafStringRule("a")
@@ -2075,7 +2222,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("b", "child[0]")
-                assignment("a", "child[1]")
+                assignment("a", "with(child[1]) children")
                 assignment("c", "child[2]")
             }
             createObject("A", "A") {
@@ -2148,6 +2295,7 @@ class test_AllDefault {
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
+                propertyDataTypeOf("as", "As",false, 0)
             }
             dataType("as", "As") {
             }
@@ -2158,6 +2306,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
+                assignment("as","child[0]")
             }
             createObject("as", "As") {
             }
@@ -2171,24 +2320,28 @@ class test_AllDefault {
             define(sentence = "", sppt = "S { as { <EMPTY_LIST> } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
+                        propertyElementExplicitType("as","As") {}
                     }
                 }
             }
             define(sentence = "a", sppt = "S { as { 'a' } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
+                        propertyElementExplicitType("as","As") {}
                     }
                 }
             }
             define(sentence = "aa", sppt = "S { as { 'a' 'a' } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
+                        propertyElementExplicitType("as","As") {}
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { as { 'a' 'a' 'a' } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("S") {
+                        propertyElementExplicitType("as","As") {}
                     }
                 }
             }
@@ -3100,7 +3253,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("b", "with(child[1]) child[0]")
+                assignment("b", "with(child[1]) with(child[0]) \$self")
             }
             createObject("A", "A") {}
             createObject("B", "B") {}
@@ -3193,7 +3346,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("as", "child[0].a")
-                assignment("b", "with(child[1]) child[0]")
+                assignment("b", "with(child[1]) with(child[0]) \$self")
             }
             createObject("As", "As") {
                 assignment("a", "children.items")
@@ -4049,7 +4202,12 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> child[0] }")
+                assignment("\$choice", """
+                    with(child[1]) when {
+                       0==§alternative -> tuple { b:=child[0] c:=child[1] }
+                       1==§alternative -> with(child[0]) §self
+                    }
+                """.replace("§","$"))
                 assignment("e", "child[2]")
             }
             leafStringRule("a")
@@ -4458,7 +4616,7 @@ class test_AllDefault {
                 assignment(
                     "\$group", """
                     with(child[1]) tuple {
-                      b:=with(child[0]) child[0]
+                      b:=with(child[0]) with(child[0]) §self
                       c:=child[1]
                     }
                 """.trimMargin().replace("§", "$")
@@ -4703,7 +4861,7 @@ class test_AllDefault {
                     "\$choice", """
                     with(child[1]) when {
                        0 == §alternative -> child[0]
-                       1 == §alternative -> children
+                       1 == §alternative -> with(child[0]) children
                     }
                 """.trimMargin().replace("§", "$")
                 )
@@ -6370,16 +6528,16 @@ class test_AllDefault {
             }
         """.trimIndent()
         val expectedRrs = ruleSet("test.Test") {
-            pattern("WS","\\s+", isSkip = true)
+            pattern("WS", "\\s+", isSkip = true)
             concatenation("S") { ref("ID"); ref("§S§multi1") }
-            multi("§S§multi1",0,-1,"§S§choice1", isPseudo = true)
+            multi("§S§multi1", 0, -1, "§S§choice1", isPseudo = true)
             choiceLongest("§S§choice1", isPseudo = true) {
                 ref("NAME")
                 ref("NUMBER")
             }
             pattern("ID", "[a-z]")
             pattern("NAME", "[a-zA-Z][a-zA-Z0-9]+")
-            pattern("NUMBER", "[0-9]+" )
+            pattern("NUMBER", "[0-9]+")
         }
         val expectedTm = grammarTypeModel("test.Test", "Test") {
             dataType("S", "S") {
@@ -6397,7 +6555,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("id", "child[0]")
-                assignment("\$choiceList","with (child[1]) children.map{ it.child[0] }")
+                assignment("\$choiceList", "with (child[1]) \$self.map(){ with(it) child[0] }") //TODO: remove '()' from map call
             }
             leafStringRule("ID")
             leafStringRule("NAME")

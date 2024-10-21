@@ -33,6 +33,7 @@ object ExpressionsTest {
             expected is CreateObjectExpression && actual is CreateObjectExpression -> exAssertEquals(expected, actual)
             expected is WithExpression && actual is WithExpression -> exAssertEquals(expected, actual)
             expected is WhenExpression && actual is WhenExpression -> exAssertEquals(expected, actual)
+            expected is LambdaExpression && actual is LambdaExpression -> exAssertEquals(expected, actual)
             else -> fail("Type of transformation rules do not match: ${expected::class.simpleName} != ${actual::class.simpleName}")
         }
     }
@@ -106,6 +107,11 @@ object ExpressionsTest {
     fun exAssertEquals(expected: WhenOption, actual: WhenOption) {
         exAssertEquals(expected.condition, actual.condition)
         exAssertEquals(expected.expression, actual.expression)
+    }
+
+    fun exAssertEquals(expected: LambdaExpression, actual: LambdaExpression) {
+        //TODO: args
+        exAssertEquals(expected.expression, actual.expression, "Lambda is different")
     }
 
     fun exAssertEquals(expected: PropertyCall, actual: PropertyCall) {

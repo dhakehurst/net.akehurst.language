@@ -21,6 +21,7 @@ import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -312,8 +313,11 @@ class test_ExpressionsInterpreter {
             }
         }
         val self = asm.root[0]
-
-        val expected = AsmPrimitiveSimple.stdString("strValue")
+        val expected = AsmListSimple(listOf(
+            AsmPrimitiveSimple.stdString("v1") ,
+            AsmPrimitiveSimple.stdString("v2") ,
+            AsmPrimitiveSimple.stdString("v3")
+        ))
         test(tm, self, "aList.map() {it.prop1}", expected)
     }
 }

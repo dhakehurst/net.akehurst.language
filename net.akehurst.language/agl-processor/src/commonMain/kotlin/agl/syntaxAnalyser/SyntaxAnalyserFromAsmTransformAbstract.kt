@@ -256,6 +256,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         val nodeRule = nodeInfo.node.rule
         return when {
             null == parentTypeDecl -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING)
+            /*
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo -> transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
                 else -> {
@@ -275,7 +276,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
             }
-
+*/
             nodeRule.isListSeparated -> when {
                 nodeRule.isPseudo -> transformationRule(
                     SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument)),
@@ -568,13 +569,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 3)
         self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 4)
 
-        val evc = EvaluationContext.of(
-            mapOf(
-                AsmTransformInterpreter.SELF to self.toTypedObject(selfType)
-            )
-        )
-
-        val asm = _trf.evaluate(evc, downData.path, downData.trRule.forNode)
+        val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to self.toTypedObject(selfType)))
+        val tr = downData.trRule.forNode
+        val asm = _trf.evaluate(evc, downData.path, tr)
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
         }

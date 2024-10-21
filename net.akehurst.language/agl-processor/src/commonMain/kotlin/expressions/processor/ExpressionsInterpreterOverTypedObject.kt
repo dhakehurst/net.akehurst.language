@@ -160,6 +160,7 @@ class ExpressionsInterpreterOverTypedObject(
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
         is WhenExpression -> this.evaluateWhen(evc, expression)
+        is LambdaExpression -> this.evaluateLambda(evc, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
@@ -433,6 +434,15 @@ class ExpressionsInterpreterOverTypedObject(
         }
         return obj.toTypedObject(typeDecl.type())
     }
+
+    private fun evaluateLambda(evc: EvaluationContext, expression:LambdaExpression):TypedObject {
+        val lambdaType = SimpleTypeModelStdLib.Lambda //TODO: typeargs like tuple
+        return AsmLambdaSimple({ it ->
+            val newEvc = evc.child(mapOf("it" to it.toTypedObject(SimpleTypeModelStdLib.AnyType)))
+            evaluateExpression(newEvc, expression.expression).asmValue
+        }).toTypedObject(lambdaType)
+    }
+
 }
 
 object StdLibPrimitiveExecutions {
@@ -489,9 +499,12 @@ object StdLibPrimitiveExecutions {
             },
             SimpleTypeModelStdLib.Collection.findMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                val lambda = args[0] as LambdaExpression
+                check(1 == args.size) {"Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0].asmValue is AsmLambda) {"Method '${meth.name}' first argument must be a lambda, got '${args[0].asmValue::class.simpleName}'." }
+                val lambda = args[0].asmValue as AsmLambda
                 val mapped = self.elements.map {
-                    TODO()
+                    val args = mapOf("it" to it)
+                    lambda.invoke(args)
                 }
                 AsmListSimple(mapped)
             }

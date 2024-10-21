@@ -286,7 +286,7 @@ internal class ConverterToRuntimeRules(
         val items = when (target) {
             is Concatenation -> target.items.map { this.runtimeRuleForRuleItem(it, arg) }
             is ConcatenationItem -> listOf(runtimeRuleForRuleItem(target, arg))
-            else -> TODO()
+            else -> error("Should not happen")
         }
         return RuntimeRuleRhsConcatenation(rule, items)
     }

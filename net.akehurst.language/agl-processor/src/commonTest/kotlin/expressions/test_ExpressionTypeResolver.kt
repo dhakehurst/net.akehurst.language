@@ -26,7 +26,7 @@ import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_ExpressionsSemantics {
+class test_ExpressionTypeResolver {
 
     @Test
     fun typeOfExpressionStr__list() {

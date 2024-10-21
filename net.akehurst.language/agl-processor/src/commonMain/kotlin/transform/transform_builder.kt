@@ -18,14 +18,14 @@
 package net.akehurst.language.transform.builder
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.EXPRESSION_CHILD
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.asm.AssignmentStatementSimple
-import net.akehurst.language.expressions.asm.CreateObjectExpressionSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.api.WhenExpression
+import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.transform.api.TransformModel
@@ -198,10 +198,6 @@ class AsmTransformRuleSetBuilder internal constructor(
         val expr = expression(expressionStr)
         val tr = TransformationRuleDefault(UnnamedSupertypeType.NAME, expr)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
-        //val stList = subtypeNames.map { it.asPossiblyQualifiedName }.map { n ->
-        //_rules.first { it.resolvedType.typeName == n }.resolvedType
-        //    ns.findTypeNamed(n)?.type() ?: error("TypeDeclaration '$n' not found")
-        //}
         val t = ns.createUnnamedSupertypeType(subtypes)
         tr.resolveTypeAs(t.type())
         _rules.add(tr)
