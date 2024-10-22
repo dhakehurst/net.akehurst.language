@@ -778,6 +778,11 @@ internal class Grammar2TransformRuleSet(
             // Empty and Terminals do not create properties
             is EmptyRule -> null
             is Terminal -> null
+            // diff result for non-terms that are refs to Lists or Optional
+            is NonTerminal -> {
+                val refRule = ruleItem.referencedRuleOrNull(this.grammar)
+                createPropertyDeclarationAndAssignmentForReferencedRule(refRule, et, ruleItem, childIndex)
+            }
             else -> {
                 val tr = trRuleForRuleItem(ruleItem, true)
                 val rhs = when (ruleItem) {
@@ -902,6 +907,7 @@ internal class Grammar2TransformRuleSet(
     ): AssignmentStatement? {
         val rhs = refRule?.rhs
         return when (rhs) {
+            /*
             is Terminal -> {
                 val t = SimpleTypeModelStdLib.String
                 val pName = propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration)
@@ -920,7 +926,7 @@ internal class Grammar2TransformRuleSet(
                 //val pName = propertyNameFor(et, ruleItem, t.resolvedType.declaration)
                 //createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
-
+*/
             // If rhs is directly  List
             is ListOfItems -> {
                 val ignore = when (rhs) {
