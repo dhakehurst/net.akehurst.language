@@ -6498,7 +6498,6 @@ class test_AllDefault {
                 skip WS = "\s+" ;
                 S = ID NAME* ;
                 leaf ID = "[a-z]" ;
-                leaf NUMBER = "[0-9]+" ;
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
@@ -6612,7 +6611,7 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("id", "child[0]")
-                assignment("\$choiceList", "with (child[1]) \$self.map(){ with(it) child[0] }") //TODO: remove '()' from map call
+                assignment("\$choiceList", "with (child[1]) children.map(){ with(it) child[0] }") //TODO: remove '()' from map call
             }
             leafStringRule("ID")
             leafStringRule("NAME")
@@ -6637,6 +6636,29 @@ class test_AllDefault {
                     element("S") {
                         propertyString("id", "a")
                         propertyListOfString("\$choiceList", listOf("bb", "12"))
+                    }
+                }
+            }
+            define(
+                sentence = "a bb 12 cc 45 dd 98",
+                sppt = """
+                  S {
+                     ID:'a' WS:' '
+                     §S§multi1 {
+                        §S§choice1 { NAME:'bb' WS:' ' }
+                        §S§choice1 { NUMBER:'12' WS:' ' }
+                        §S§choice1 { NAME:'cc' WS:' ' }
+                        §S§choice1 { NUMBER:'45' WS:' ' }
+                        §S§choice1 { NAME:'dd' WS:' ' }
+                        §S§choice1 { NUMBER:'98' }
+                     }
+                  }
+                """.trimIndent()
+            ) {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S") {
+                        propertyString("id", "a")
+                        propertyListOfString("\$choiceList", listOf("bb", "12", "cc", "45", "dd", "98"))
                     }
                 }
             }

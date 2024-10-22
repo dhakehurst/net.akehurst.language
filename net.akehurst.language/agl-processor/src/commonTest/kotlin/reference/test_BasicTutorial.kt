@@ -21,13 +21,13 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_BasicTutorial {
 
@@ -60,7 +60,7 @@ grammar BasicTutorial {
         """.trimIndent()
 
         val referencesStr = """
-namespace net.akehurst.language.example.BasicTutorial {
+namespace net.akehurst.language.example.BasicTutorial
     identify TargetDef by name   
     references {
         in Greeting {
@@ -69,15 +69,28 @@ namespace net.akehurst.language.example.BasicTutorial {
             }
         }
     }
-}
         """.trimIndent()
 
-        val processor = Agl.processorFromStringSimple(
+        val _processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr),
             crossReferenceModelStr = CrossReferenceString(referencesStr)
         ).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.processor!!
+        }
+
+        fun testPass(sentence: String) {
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+            check(_processor.issues.errors.isEmpty()){ _processor.issues.toString()}
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertNotNull(result.asm)
+        }
+
+        fun testFail(sentence: String, expectedIssues: Set<LanguageIssue>) {
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+            assertTrue(_processor.issues.errors.isEmpty(), _processor.issues.toString())
+            assertEquals(result.issues.all, expectedIssues)
+            assertNull(result.asm)
         }
     }
 
@@ -92,9 +105,7 @@ namespace net.akehurst.language.example.BasicTutorial {
             Hello George !
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
-
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        testPass(sentence)
     }
 
     @Test
@@ -109,7 +120,7 @@ namespace net.akehurst.language.example.BasicTutorial {
             Hello George !
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+
 
         val expIssues = setOf(
             LanguageIssue(
@@ -119,6 +130,6 @@ namespace net.akehurst.language.example.BasicTutorial {
             )
         )
 
-        assertEquals(expIssues, result.issues.all)
+        testFail(sentence, expIssues)
     }
 }

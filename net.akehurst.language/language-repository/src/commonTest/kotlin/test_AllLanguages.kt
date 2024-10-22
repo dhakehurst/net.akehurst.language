@@ -28,6 +28,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 val rootFs = localCurrentDirVfs["languages"].jail()
+//val filterBy = { n:String -> true }
+val filterBy = { n:String -> n == "_private" }
 
 @IsStableType
 data class TestData(
@@ -203,20 +205,25 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
 private suspend fun fetchTestData(): List<TestData> {
     val testData = mutableListOf<TestData>()
     println("languages ${rootFs.listNames()}")
-    rootFs.listNames().forEach { lang ->
-        rootFs[lang].listNames().forEach { ver ->
-            //val grammarPath = "$lang/$ver"
-            val grammars = fetchGrammars(rootFs[lang][ver])
-            println("grammars for $lang/$ver: ${grammars.joinToString { it.name }}")
-            val validSentences = fetchSentences(rootFs[lang][ver], "valid")
-            //println("validSentences ${validSentences.joinToString { it.name }}")
-            val invalidSentences = fetchSentences(rootFs[lang][ver], "invalid")
-            grammars.forEach { grammarData ->
-                validSentences.forEach { sentenceData ->
-                    testData.add(TestData(grammarData, sentenceData, true))
-                }
-                invalidSentences.forEach { sentenceData ->
-                    testData.add(TestData(grammarData, sentenceData, false))
+    rootFs.listNames().filter(filterBy)
+        .forEach { lang ->
+        if (lang.startsWith(".")) {
+            //do nothing, avoid dirs such as .DS_Store
+        } else {
+            rootFs[lang].listNames().forEach { ver ->
+                //val grammarPath = "$lang/$ver"
+                val grammars = fetchGrammars(rootFs[lang][ver])
+                println("grammars for $lang/$ver: ${grammars.joinToString { it.name }}")
+                val validSentences = fetchSentences(rootFs[lang][ver], "valid")
+                //println("validSentences ${validSentences.joinToString { it.name }}")
+                val invalidSentences = fetchSentences(rootFs[lang][ver], "invalid")
+                grammars.forEach { grammarData ->
+                    validSentences.forEach { sentenceData ->
+                        testData.add(TestData(grammarData, sentenceData, true))
+                    }
+                    invalidSentences.forEach { sentenceData ->
+                        testData.add(TestData(grammarData, sentenceData, false))
+                    }
                 }
             }
         }

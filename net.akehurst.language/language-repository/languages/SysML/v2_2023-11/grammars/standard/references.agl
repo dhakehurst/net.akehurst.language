@@ -1,4 +1,4 @@
-namespace net.akehurst.language.sysML.SysMLv2_0 {
+namespace net.akehurst.language.sysML.SysMLv2_0
 
     identify AliasMember by name
 //    identify SimpleClassifier by classifierDeclaration.identification.name
@@ -84,4 +84,3 @@ namespace net.akehurst.language.sysML.SysMLv2_0 {
         }
     }
 */
-}

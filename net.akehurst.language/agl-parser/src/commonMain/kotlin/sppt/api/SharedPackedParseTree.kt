@@ -100,11 +100,6 @@ data class LeafData(
             }
         }
     }
-
-    //    fun matchedText(sentence: Sentence): String = sentence.text.substring(location.position, location.position + location.length)
-    //fun matchedText(sentence: Sentence): String = sentence.text.substring(position, position + length)
-
-    //fun location(sentence: Sentence): InputLocation = sentence.locationFor(position, length)
 }
 
 interface TreeData {

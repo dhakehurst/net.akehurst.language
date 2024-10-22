@@ -1,4 +1,4 @@
-namespace vistraq.query.TIM {
+namespace vistraq.query.TIM
     identify NodeType by name
     identify LinkType by linkTypeId.name
 
@@ -8,9 +8,8 @@ namespace vistraq.query.TIM {
             property name2 refers-to NodeType
         }
     }
-}
 
-namespace vistraq.query.GraphPathExpressions {
+namespace vistraq.query.GraphPathExpressions
     import vistraq.query.TIM
 
     references {
@@ -18,4 +17,3 @@ namespace vistraq.query.GraphPathExpressions {
             property name refers-to NodeType
         }
     }
-}

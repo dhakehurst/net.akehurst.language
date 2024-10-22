@@ -166,7 +166,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     //}
 
     fun leafStringRule(grammarRuleName: String) {
-        val tr = TransformationRuleDefault(SimpleTypeModelStdLib.String.qualifiedTypeName, RootExpressionSimple("leaf"))
+        val tr = TransformationRuleDefault(SimpleTypeModelStdLib.String.qualifiedTypeName, RootExpressionSimple.SELF) //("leaf"))
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         tr.resolveTypeAs(SimpleTypeModelStdLib.String)
         _rules.add(tr)
