@@ -26,26 +26,26 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embedded1 : test_LeftCornerParserAbstract() {
+class test_embedded1 : test_LeftCornerParserAbstract() {
 
     private companion object {
         // one grammar
         //S = a B c
         //B = b
-        val Sn = runtimeRuleSet {
+        val Sn = runtimeRuleSet("test.Sn") {
             concatenation("S") { literal("a"); ref("B"); literal("c"); }
             concatenation("B") { literal("b") }
         }
 
         // two grammars, B embedded in S
         // B = b ;
-        val B = runtimeRuleSet {
+        val B = runtimeRuleSet("test.B") {
             concatenation("B") { literal("b") }
         }
 
         // S = a gB c ;
         // gB = B::B ;
-        val S = runtimeRuleSet {
+        val S = runtimeRuleSet("test.S") {
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
             embedded("gB", B, "B")
         }
@@ -167,7 +167,7 @@ internal class test_embedded1 : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "B" to B
+                "test.B" to B
             ),
             goal = goal,
             sentence = sentence,

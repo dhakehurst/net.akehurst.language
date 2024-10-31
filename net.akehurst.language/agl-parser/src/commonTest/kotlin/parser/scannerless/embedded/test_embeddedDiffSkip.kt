@@ -23,13 +23,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
+class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
 
     private companion object {
         // two grammars, B embedded in S
         // Bs = B+ ;
         // B = b ;
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("test.Inner") {
             concatenation("WS", true) { literal("_") }
             multi("Bs", 1, -1, "B")
             concatenation("B") { literal("b") }
@@ -37,7 +37,7 @@ internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
 
         // S = a gB c ;
         // gB = Inner::B ;
-        val S = runtimeRuleSet {
+        val S = runtimeRuleSet("test.S") {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
             embedded("gB", Inner, "Bs")
@@ -113,7 +113,7 @@ internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -139,7 +139,7 @@ internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -165,7 +165,7 @@ internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -195,7 +195,7 @@ internal class test_embeddedDiffSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,

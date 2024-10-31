@@ -108,6 +108,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     override fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?) {
         this._doObservableUpdates = false
+        this._issues.clear()
         val oldGrammarStr = this.grammarStr
         val oldScopeModelStr = this.crossReferenceModelStr
         val oldStyleStr = this.styleStr

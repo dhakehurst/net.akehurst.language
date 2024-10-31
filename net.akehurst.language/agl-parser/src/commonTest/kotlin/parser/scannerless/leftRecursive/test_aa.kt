@@ -71,7 +71,7 @@ internal class test_aa : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+        assertFailsWith<IllegalStateException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
@@ -96,7 +96,7 @@ internal class test_aa : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+        assertFailsWith<IllegalStateException> {
             super.test(
                 rrs = rrs,
                 goal = goal,

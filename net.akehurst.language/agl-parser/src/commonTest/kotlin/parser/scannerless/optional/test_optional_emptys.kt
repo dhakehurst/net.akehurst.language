@@ -22,9 +22,14 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_emptys : test_LeftCornerParserAbstract() {
+class test_optional_emptys : test_LeftCornerParserAbstract() {
     //TransitionReaction = StextTrigger? ('/' ReactionEffect)? ('#' TransitionProperty*)?;
-    // S = 'a'?
+    // TR = ST? RE? TP?
+    // ST = ID
+    // RE = '/' EX
+    // TP = '#' ID
+    // EX = ASS | ID
+    // ASS = ID = ID
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("TR") { ref("optST"); ref("optRE"); ref("optTP") }

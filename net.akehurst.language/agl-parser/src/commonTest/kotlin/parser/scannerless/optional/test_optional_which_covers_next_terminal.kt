@@ -17,102 +17,67 @@
 package net.akehurst.language.parser.leftcorner.multi
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_multi_1_n_literal : test_LeftCornerParserAbstract() {
+class test_optional_which_covers_next_terminal : test_LeftCornerParserAbstract() {
 
-    // S = 'a'+
+    // S = 'b' 'a'? As ;
     private companion object {
         val rrs = runtimeRuleSet {
-            multi("S",1,-1,"'a'")
-            literal("'a'","a")
+            concatenation("S") { literal("b"); ref("oa"); ref("as") }
+            optional("oa", "'a'")
+            multi("as",1,-1, "'a'")
+            literal( "a")
         }
         val goal = "S"
     }
 
     @Test
-    fun empty_fails() {
+    fun empty() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs,goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
         ),issues.errors)
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun ba() {
+        val sentence = "ba"
 
         val expected = """
-            S { 'a' }
+            S { 'b' oa{<EMPTY>} as {'a'} }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
-    fun aa() {
-        val sentence = "aa"
+    fun baa() {
+        val sentence = "baa"
 
         val expected = """
-            S { 'a' 'a' }
+            S { 'b' oa{ 'a' } as {'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 1, true, expected)
     }
 
     @Test
-    fun aaa() {
-        val sentence = "aaa"
+    fun baaa() {
+        val sentence = "baaa"
 
         val expected = """
-            S { 'a' 'a' 'a' }
+            S { 'b' oa{ 'a' } as {'a' 'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 1, true, expected)
     }
 
-    @Test
-    fun aaaa() {
-        val sentence = "aaaa"
-
-        val expected = """
-            S { 'a' 'a' 'a' 'a' }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a50() {
-        val sentence = "a".repeat(50)
-
-        val expected = "S { "+"'a' ".repeat(50)+" }"
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a500() {
-        val sentence = "a".repeat(500)
-
-        val expected = "S { "+"'a' ".repeat(500)+" }"
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a2000() {
-        val sentence = "a".repeat(2000)
-
-        val expected = "S { "+"'a' ".repeat(2000)+" }"
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
 }

@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multi_2_n_literal : test_LeftCornerParserAbstract() {
+class test_multi_2_n_literal : test_LeftCornerParserAbstract() {
 
     // S = 'a'2+
     private companion object {

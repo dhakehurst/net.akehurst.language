@@ -104,7 +104,7 @@ internal class ParseGraph(
         // 3) choice point order - how to order diff choice points?
         // 4) choice last
         // 5) high priority first if same choice point...else !!
-        //TODO: how do we ensure lower choices are done first ?
+        //TODO: Really don't want the parse to depend on order of this
         when {
 //            parent.startPosition == child.startPosition && parent.state.firstRule.isEmptyTerminal -> -1
 //            parent.startPosition == child.startPosition && child.state.firstRule.isEmptyTerminal -> 1
@@ -132,9 +132,9 @@ internal class ParseGraph(
                     }
 
                     else -> when {
-                        // startPosition higher number first
-                        parent.startPosition < child.startPosition -> -1
-                        parent.startPosition > child.startPosition -> 1
+                        // startPosition lower number first
+                        parent.startPosition < child.startPosition -> 1
+                        parent.startPosition > child.startPosition -> -1
                         else -> 0
                     }
                 }
@@ -142,9 +142,9 @@ internal class ParseGraph(
                 parent.state.isAtEnd -> -1 // shift child first
                 child.state.isAtEnd -> 1 // shift parent first
                 else -> when {
-                    // startPosition higher number first
-                    parent.startPosition < child.startPosition -> -1
-                    parent.startPosition > child.startPosition -> 1
+                    // startPosition lower number first
+                    parent.startPosition < child.startPosition -> 1
+                    parent.startPosition > child.startPosition -> -1
                     else -> 0
                 }
             }
@@ -641,9 +641,9 @@ internal class ParseGraph(
 
     override fun toString(): String {
         val heads = this._gss.heads
-        return "[${heads.size}] " + heads.joinToString(separator = "\n") { h ->
+        return "Heads [${heads.size}] \n" + heads.joinToString(separator = "\n") { h ->
             val p = this.prevOfToString(h)
-            "${h}$p"
+            "  ${h}$p"
         }
     }
 }

@@ -218,7 +218,7 @@ internal class RuntimeParser(
             checkForTerminationRequest()
             val graph = this.graph //TODO: remove..for debug only
             if (Debug.OUTPUT_RUNTIME) {
-                println("$steps --------------------------------------")
+                println("step $steps --------------------------------------")
                 println(graph)
             }
 
@@ -410,16 +410,7 @@ internal class RuntimeParser(
                 else -> error("Internal Error: should never happen")
             }
         }
-        //val vlhg = transWithValidLookahead.groupBy { it.first.to }
-        //val ss = mutableMapOf<LookaheadSetPart, List<Pair<Transition,LookaheadSetPart>>>()
-        //for (tgtGrp in vlhg) {
-        //    for (x in tgtGrp.value) {
-        //        for(x2 in ss.keys) {
-        //            if (x2.fullContent.containsAll(x.second.fullContent)) {
-        //            }
-        //        }
-        //    }
-        //}
+
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
@@ -707,7 +698,7 @@ internal class RuntimeParser(
                     }
                     val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (growArgs.noLookahead || hasLh) {
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                         this.graph.growNextChild(
                             head = head,
                             previous = previous,
@@ -759,7 +750,7 @@ internal class RuntimeParser(
                     if (parseArgs.noLookahead || hasLh) {
                         val startPosition = l.startPosition
                         val nextInputPosition = l.nextInputPosition //TODO: should just be/pass nextInputPositionAfterSkip
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
                         val pos = if (null != skipParser && skipParser.failedReasons.isNotEmpty()) {
@@ -823,7 +814,7 @@ internal class RuntimeParser(
                             }
                         }.toSet()
                     }
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                     this.graph.createWithFirstChild(
                         head = head,
                         previous = previous,
@@ -852,7 +843,7 @@ internal class RuntimeParser(
                     val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs)
                     val hasLh = lhWithMatch.first//isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (parseArgs.noLookahead || hasLh) {
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                         this.graph.growNextChild(
                             head = head,
                             previous = previous,
@@ -994,7 +985,7 @@ internal class RuntimeParser(
                     }.toSet()
                     val skipData = this.tryParseSkipUntilNone(skipLh, ni, parseArgs)//, lh) //TODO: does the result get reused?
                     //val nextInput = skipData?.nextInputPosition ?: ni
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
                     this.graph.pushEmbeddedToStackOf(
                         head,
                         transition.to,

@@ -327,13 +327,13 @@ FIntegerConstant = E_BigInteger ;
 FBooleanConstant = EBoolean ;
 FStringConstant = STRING ;
 
-OperatorOr = "||" ;
-OperatorAnd = "&&" ;
-OperatorEquality = "==" | "!=" ;
-OperatorRelational = "<" | "<=" | ">=" | ">" ;
-OperatorAdditive = "+" | "-" ;
-OperatorMultiplicative = "*" | "/" ;
-OperatorUnary = "!" | "-" ;
+OperatorOr = '||' ;
+OperatorAnd = '&&' ;
+OperatorEquality = '==' | '!=' ;
+OperatorRelational = '<' | '<=' | '>=' | '>' ;
+OperatorAdditive = '+' | '-' ;
+OperatorMultiplicative = '*' | '/' ;
+OperatorUnary = '!'| '-' ;
 
 // **************************************************************
 // annotations
@@ -357,7 +357,7 @@ leaf BINARY = ('0b'|'0B')('0'|'1')+ ;
 
 leaf ANNOTATION_STRING =
 	'@' (("[a-z]")|'-')+ (' '|'\t')* ':'
-	( ('\\' ('b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\')) | ('\\*'|'\\@') | "[^\\*@]" )*
+	( ('\\' ('b'|'t'|'n'|'f'|'r'|'u'|'"'|'\''|'\\')) | ('\\*'|'\\@') | "[^\\*@]" )*
 ;
 
 

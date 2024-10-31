@@ -23,17 +23,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multi01_x2_nested : test_LeftCornerParserAbstract() {
+class test_optional_x2 : test_LeftCornerParserAbstract() {
 
-    // S = AB V 'd'
-    // AB = A B
+    // S = A B V 'd'
     // A = 'a'?
     // B = 'b'?
     // V = "[a-c]"
     private companion object {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { ref("AB"); ref("V"); literal("d") }
-            concatenation("AB") { ref("A"); ref("B") }
+        private val rrs = runtimeRuleSet {
+            concatenation("S") { ref("A"); ref("B"); ref("V"); literal("d") }
             optional("A", "'a'")
             literal("'a'", "a")
             optional("B", "'b'")
@@ -45,7 +43,6 @@ internal class test_multi01_x2_nested : test_LeftCornerParserAbstract() {
 
     @Test
     fun empty_fails() {
-
         val sentence = ""
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
@@ -62,11 +59,9 @@ internal class test_multi01_x2_nested : test_LeftCornerParserAbstract() {
         val sentence = "abcd"
 
         val expected = """
-            S {
-              AB {
-                A { 'a' }
-                B { 'b' }
-              }
+             S {
+              A { 'a' }
+              B { 'b' }
               V:'c'
               'd'
             }
@@ -86,11 +81,9 @@ internal class test_multi01_x2_nested : test_LeftCornerParserAbstract() {
         val sentence = "acd"
 
         val expected = """
-            S {
-              AB {
-                A { 'a' }
-                B|1 { §empty }
-              }
+             S {
+              A { 'a' }
+              B|1 { §empty }
               V:'c'
               'd'
             }
@@ -105,4 +98,69 @@ internal class test_multi01_x2_nested : test_LeftCornerParserAbstract() {
         )
     }
 
+    @Test
+    fun bcd() {
+        val sentence = "bcd"
+
+        val expected = """
+             S {
+              A|1 { §empty }
+              B { 'b' }
+              V:'c'
+              'd'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun cd() {
+        val sentence = "cd"
+
+        val expected = """
+             S {
+              A|1 { §empty }
+              B|1 { §empty }
+              V:'c'
+              'd'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun ad() {
+        val sentence = "ad"
+
+        val expected = """
+             S {
+              A|1 { §empty }
+              B|1 { §empty }
+              V:'a'
+              'd'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
 }

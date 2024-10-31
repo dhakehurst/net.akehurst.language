@@ -73,7 +73,7 @@ internal class test_PascalRange : test_LeftCornerParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = *arrayOf(expected)
         )
     }
@@ -92,12 +92,12 @@ internal class test_PascalRange : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 }

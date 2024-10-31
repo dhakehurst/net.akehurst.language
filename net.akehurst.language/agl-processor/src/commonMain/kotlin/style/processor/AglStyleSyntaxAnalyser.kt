@@ -22,10 +22,6 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarReference
-import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.treedata.locationForNode
@@ -45,6 +41,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         super.register(this::namespace)
         super.register(this::styleSet)
         super.register(this::rule)
+        super.register(this::metaRule)
+        super.register(this::tagRule)
         super.register(this::selectorExpression)
         super.register(this::selectorAndComposition)
         super.register(this::selectorSingle)
@@ -75,7 +73,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun styleSet(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: StyleNamespaceDefault) -> Unit {
         val name = SimpleName(children[1] as String)
         val extends = (children[2] as List<StyleSetReference>?) ?: emptyList()
-        val rules: List<AglStyleRule> = children[4] as List<AglStyleRule>
+        val rules: List<AglStyleTagRule> = children[4] as List<AglStyleTagRule>
         return { ns ->
             val ss = AglStyleSetDefault(ns, name, extends)
             ns.addDefinition(ss)
@@ -95,12 +93,27 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         return extended
     }
 
-    // rule = selectorExpression '{' styleList '}' ;
-    fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule {
+    //  rule = metaRule | styleRule ;
+    fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule =
+     children[0] as AglStyleRule
+
+    // metaRule = '$$' PATTERN '{' styleList '}' ;
+    fun metaRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleMetaRule {
+        val patternStr = children[1] as String //TODO: ? selector combinations, and/or/contains etc
+        val escaped = patternStr.replace("\\\"", "\"")
+        val regex = Regex(escaped.trim('"'))
+        val styles: List<AglStyleDeclaration> = children[3] as List<AglStyleDeclaration>
+        val rule = AglStyleMetaRuleDefault(regex)
+        styles.forEach { rule.declaration[it.name] = it }
+        return rule
+    }
+
+    // tagRule = selectorExpression '{' styleList '}' ;
+    fun tagRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleTagRule {
         val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
 
         val styles: List<AglStyleDeclaration> = children[2] as List<AglStyleDeclaration>
-        val rule = AglStyleRuleDefault(selector)
+        val rule = AglStyleTagRuleDefault(selector)
         styles.forEach { rule.declaration[it.name] = it }
         return rule
     }
@@ -121,7 +134,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
         (children as List<Any>).toSeparatedList<Any, AglStyleSelector, String>().items
 
-    // selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
+    // selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
         // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
         // but keep the enclosing (single or double) quotes
@@ -137,7 +150,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
             0 -> AglStyleSelectorKind.LITERAL
             1 -> AglStyleSelectorKind.PATTERN
             2 -> AglStyleSelectorKind.RULE_NAME
-            3 -> AglStyleSelectorKind.META
+            3 -> AglStyleSelectorKind.SPECIAL
             else -> error("Internal error: AglStyleSelectorKind not handled")
         }
         //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")

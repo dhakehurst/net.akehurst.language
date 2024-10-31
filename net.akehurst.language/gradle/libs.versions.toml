@@ -10,11 +10,16 @@ credentials = "3.0"
 jsIntegration = "2.0.20"
 
 korlibs = "6.0.0-alpha9"
-
+kotest = "5.9.1"
 
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
+
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

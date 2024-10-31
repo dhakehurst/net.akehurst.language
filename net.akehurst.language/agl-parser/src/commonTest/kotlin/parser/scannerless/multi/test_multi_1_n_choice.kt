@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
+class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
 
     // S = AB+
     // AB = a | b

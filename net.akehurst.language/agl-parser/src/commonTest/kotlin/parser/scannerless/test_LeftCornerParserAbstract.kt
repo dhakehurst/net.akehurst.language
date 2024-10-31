@@ -36,7 +36,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.measureTimedValue
 
-internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
+abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs as RuntimeRuleSet,
@@ -101,10 +101,13 @@ internal abstract class test_LeftCornerParserAbstract(val build: Boolean = false
         if (printAutomaton) println(rrs.usedAutomatonToString(options.goalRuleName!!))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets.mapKeys { it.key })
-        expectedTrees.forEach { sppt.addTree(it) }
-        val expected = sppt.tree
+        val expectedSppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets.mapKeys { it.key })
+        expectedTrees.forEach { expectedSppt.addTree(it) }
+        val expected = expectedSppt.tree
         assertEquals(expected.toStringAllWithIndent("  ", true).trim(), result.sppt!!.toStringAllWithIndent("  ", true).trim())
+
+        assertEquals(sentence, result.sppt!!.asSentence)
+
         //FIXME: add back this assert
 //        assertEquals(expected, result.sppt)
 //        assertEqualsWarning(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")

@@ -22,8 +22,6 @@ import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarReference
 import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(
@@ -36,13 +34,13 @@ class AglStyleModelDefault(
         const val KEYWORD_STYLE_ID = "\$keyword"
         const val NO_STYLE_ID = "\$nostyle"
 
-        val DEFAULT_NO_STYLE = AglStyleRuleDefault(
-            listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.META))
-        ).also {
-            it.declaration["foreground"] = AglStyleDeclaration("foreground", "black")
-            it.declaration["background"] = AglStyleDeclaration("background", "white")
-            it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
-        }
+        //val DEFAULT_NO_STYLE = AglStyleTagRuleDefault(
+        //    listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.SPECIAL))
+       // ).also {
+        //    it.declaration["foreground"] = AglStyleDeclaration("foreground", "black")
+        //    it.declaration["background"] = AglStyleDeclaration("background", "white")
+        //    it.declaration["font-style"] = AglStyleDeclaration("font-style", "normal")
+        //}
 
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: StyleString): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
@@ -60,7 +58,7 @@ class StyleNamespaceDefault(
     override val import: List<Import>
 ) : StyleNamespace, NamespaceAbstract<StyleSet>() {
 
-    override val rules: List<StyleSet>  get() = super.definition
+    override val styleSet: List<StyleSet>  get() = super.definition
 
 }
 
@@ -73,6 +71,9 @@ class AglStyleSetDefault(
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
 
     override val rules: List<AglStyleRule> = mutableListOf()
+
+    override val metaRules: List<AglStyleMetaRule> get() = rules.filterIsInstance<AglStyleMetaRule>()
+    override val tagRules: List<AglStyleTagRule> get() = rules.filterIsInstance<AglStyleTagRule>()
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
@@ -97,9 +98,29 @@ data class StyleSetReferenceDefault(
     }
 }
 
-data class AglStyleRuleDefault(
+data class AglStyleMetaRuleDefault(
+    override val pattern: Regex
+) : AglStyleMetaRule {
+
+    // order matters
+    override var declaration = linkedMapOf<String, AglStyleDeclaration>()
+
+    override fun asString(indent: Indent): String {
+        val sb = StringBuilder()
+        val sel = this.pattern.pattern
+        sb.append("$sel {\n")
+        val newIndent = indent.inc
+        val decls = declaration.values // do not sort, order matters
+            .joinToString(separator = "\n") { "$newIndent${it.name}: ${it.value};" }
+        sb.append(decls)
+        sb.append("\n$indent}")
+        return sb.toString()
+    }
+}
+
+data class AglStyleTagRuleDefault(
     override val selector: List<AglStyleSelector>
-) : AglStyleRule {
+) : AglStyleTagRule {
 
     // order matters
     override var declaration = linkedMapOf<String, AglStyleDeclaration>()
@@ -116,11 +137,4 @@ data class AglStyleRuleDefault(
         return sb.toString()
     }
 
-    override fun toCss(): String {
-        return """
-            ${this.selector.joinToString(separator = ", ") { it.value }} {
-                ${this.declaration.values.joinToString(separator = "\n") { it.toCss() }}
-            }
-         """.trimIndent()
-    }
 }

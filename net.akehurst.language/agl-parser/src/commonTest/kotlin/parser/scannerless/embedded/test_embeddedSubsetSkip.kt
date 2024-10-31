@@ -23,13 +23,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
+class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
 
     private companion object {
         // two grammars, B embedded in S
         // Bs = B+ ;
         // B = b ;
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("test.Inner") {
             pattern("WSi", "\\s+", true)
             multi("Bs", 1, -1, "B")
             concatenation("B") { literal("b") }
@@ -37,7 +37,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
 
         // S = a gB c ;
         // gB = Inner::B ;
-        val S = runtimeRuleSet {
+        val S = runtimeRuleSet("test.S") {
             pattern("WSo", "\\s+", true)
             concatenation("COMMENT", true) { pattern("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/") }
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
@@ -114,7 +114,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -140,7 +140,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -166,7 +166,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -194,7 +194,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -222,7 +222,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -250,7 +250,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -293,7 +293,7 @@ internal class test_embeddedSubsetSkip : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,

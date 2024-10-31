@@ -10,10 +10,10 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":agl-processor:cleanJvm8Test" />
-          <option value=":agl-processor:jvm8Test" />
+          <option value=":agl-parser:cleanJvm8Test" />
+          <option value=":agl-parser:jvm8Test" />
           <option value="--tests" />
-          <option value="&quot;net.akehurst.language.parser.scanondemand.*&quot;" />
+          <option value="&quot;net.akehurst.language.parser.leftcorner.*&quot;" />
         </list>
       </option>
       <option name="vmOptions" value="" />

@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_arglist : test_LeftCornerParserAbstract() {
+class test_arglist : test_LeftCornerParserAbstract() {
 
     // S = 'a' ( 'c' 'a' )* ;
     private companion object {

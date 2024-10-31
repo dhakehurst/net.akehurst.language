@@ -28,8 +28,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 val rootFs = localCurrentDirVfs["languages"].jail()
-//val filterBy = { n:String -> true }
-val filterBy = { n:String -> n == "_private" }
+val filterBy = { n:String -> true }
+//val filterBy = { n:String -> n == "_private" }
 
 @IsStableType
 data class TestData(

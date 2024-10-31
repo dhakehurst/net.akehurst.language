@@ -113,8 +113,8 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
               's'
               n : '\'n\''
               '{'
-              Popt { §empty }
-              RList { §empty }
+              Popt { <EMPTY> }
+              RList { <EMPTY_LIST> }
               '}'
             }
         """.trimIndent()
@@ -206,12 +206,12 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
               's'
               n : '\'n\''
               '{'
-              Popt { §empty }
+              Popt { <EMPTY> }
               RList { R {
                 'r'
                 n : '\'n\''
                 '{'
-                SList { §empty }
+                SList { <EMPTY_LIST> }
                 '}'
               } }
               '}'

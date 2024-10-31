@@ -17,9 +17,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
-val version_korge: String by project
-val version_kotest: String = "5.8.0"
-
 plugins {
     // id("io.kotest.multiplatform") version ("5.7.2")
 }
@@ -35,10 +32,10 @@ dependencies {
 //    commonTestImplementation("com.soywiz.korlibs.korge:korio:$version_korio")
     commonMainApi(libs.korlibs.korio)
 
-    commonTestImplementation("io.kotest:kotest-assertions-core:$version_kotest")
-    commonTestImplementation("io.kotest:kotest-framework-engine:$version_kotest")
-    commonTestImplementation("io.kotest:kotest-framework-datatest:$version_kotest")
-    jvm8TestImplementation("io.kotest:kotest-runner-junit5:$version_kotest")
+    commonTestImplementation(libs.kotest.assertions.core)
+    commonTestImplementation(libs.kotest.framework.engine)
+    commonTestImplementation(libs.kotest.framework.datatest)
+    jvm8TestImplementation(libs.kotest.runner.junit5)
 
 }
 
@@ -55,7 +52,6 @@ tasks.withType<Test>().configureEach {
         events(PASSED, SKIPPED, FAILED, STANDARD_OUT)
         exceptionFormat = TestExceptionFormat.FULL
     }
-
 }
 
 kotlin {

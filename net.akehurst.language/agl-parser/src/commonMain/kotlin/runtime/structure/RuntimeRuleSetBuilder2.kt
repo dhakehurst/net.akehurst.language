@@ -20,7 +20,7 @@ import net.akehurst.language.parser.api.*
 
 fun ruleSet(name: String, init: RuleSetBuilder.() -> Unit) : RuleSet = runtimeRuleSet(name, init)
 
-internal fun runtimeRuleSet(qualifiedName: String = "Grammar", init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
+internal fun runtimeRuleSet(qualifiedName: String = "RRS", init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2(qualifiedName)
     b.init()
     return b.build()

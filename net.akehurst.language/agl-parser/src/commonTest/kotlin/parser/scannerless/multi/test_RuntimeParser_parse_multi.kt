@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_RuntimeParser_parse_multi : test_LeftCornerParserAbstract() {
+class test_RuntimeParser_parse_multi : test_LeftCornerParserAbstract() {
 
     // r = m
     // m = a b? a

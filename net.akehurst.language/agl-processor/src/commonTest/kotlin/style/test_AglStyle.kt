@@ -23,6 +23,9 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.style.api.AglStyleMetaRule
+import net.akehurst.language.style.api.AglStyleSelectorKind
+import net.akehurst.language.style.api.AglStyleTagRule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -116,7 +119,8 @@ class test_AglStyle {
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
-        assertEquals(0, result.asm!!.allDefinitions[0].rules[0].declaration.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals(0, actual_0_0.declaration.size)
     }
 
     @Test
@@ -138,12 +142,13 @@ class test_AglStyle {
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
-        assertEquals("ID", result.asm!!.allDefinitions[0].rules[0].selector.first().value)
-        assertEquals(2, result.asm!!.allDefinitions[0].rules[0].declaration.entries.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals("ID", actual_0_0.selector.first().value)
+        assertEquals(2, actual_0_0.declaration.entries.size)
     }
 
     @Test
-    fun multiLeafRules() {
+    fun multipleLeafRules() {
         val text = """
             namespace test
             styles Test {
@@ -184,6 +189,8 @@ class test_AglStyle {
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals(AglStyleSelectorKind.PATTERN, actual_0_0.selector[0].kind)
     }
 
     @Test
@@ -202,7 +209,8 @@ class test_AglStyle {
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
-        assertEquals(3, result.asm!!.allDefinitions[0].rules[0].selector.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+        assertEquals(3, actual_0_0.selector.size)
     }
     //TODO more tests
 
@@ -231,6 +239,50 @@ class test_AglStyle {
                 )
             ), result.issues.all
         )
+    }
+
+    @Test
+    fun oneSpecialRule() {
+
+        val text = """
+            namespace test
+            styles Test {
+                ${"$"}nostyle {
+                    -fx-fill: green;
+                    -fx-font-weight: bold;
+                }
+            }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleTagRule
+    }
+
+    @Test
+    fun oneMetaRule() {
+
+        val text = """
+            namespace test
+            styles Test {
+                ${"$$"} "'([^']+)'" {
+                    -fx-fill: green;
+                    -fx-font-weight: bold;
+                }
+            }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm!!.allDefinitions.size)
+        assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
+        val actual_0_0 = result.asm!!.allDefinitions[0].rules[0] as AglStyleMetaRule
     }
 
 }

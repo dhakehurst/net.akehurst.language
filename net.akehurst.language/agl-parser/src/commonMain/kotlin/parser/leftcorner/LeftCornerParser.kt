@@ -112,7 +112,7 @@ class LeftCornerParser(
         var totalWork = maxNumHeads
 
         while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
+            if (Debug.OUTPUT_RUNTIME) println("season $seasons ===================================")
             val steps = rp.grow3(possibleEndOfText, parseArgs)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)

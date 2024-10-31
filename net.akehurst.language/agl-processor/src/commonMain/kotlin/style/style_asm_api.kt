@@ -18,14 +18,13 @@
 package net.akehurst.language.style.api
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.grammar.api.Grammar
 
 interface AglStyleModel : Model<StyleNamespace, StyleSet> {
 
 }
 
 interface StyleNamespace : Namespace<StyleSet> {
-    val rules: List<StyleSet>
+    val styleSet: List<StyleSet>
 }
 
 interface StyleSetReference {
@@ -39,17 +38,23 @@ interface StyleSetReference {
 interface StyleSet : Definition<StyleSet> {
     val extends: List<StyleSetReference>
     val rules : List<AglStyleRule>
+    val metaRules: List<AglStyleMetaRule>
+    val tagRules: List<AglStyleTagRule>
 }
 
 interface AglStyleRule : Formatable {
-    val selector: List<AglStyleSelector>
-
     val declaration: Map<String, AglStyleDeclaration>
-
-    fun toCss(): String
 }
 
-enum class AglStyleSelectorKind { LITERAL, PATTERN, RULE_NAME, META }
+interface AglStyleMetaRule : AglStyleRule {
+    val pattern:Regex
+}
+
+interface AglStyleTagRule : AglStyleRule {
+    val selector: List<AglStyleSelector>
+}
+
+enum class AglStyleSelectorKind { SPECIAL, LITERAL, PATTERN, RULE_NAME }
 data class AglStyleSelector(
     val value: String,
     val kind: AglStyleSelectorKind
@@ -58,6 +63,4 @@ data class AglStyleSelector(
 data class AglStyleDeclaration(
     val name: String,
     val value: String
-) {
-    fun toCss() = "$name : $value ;"
-}
+)

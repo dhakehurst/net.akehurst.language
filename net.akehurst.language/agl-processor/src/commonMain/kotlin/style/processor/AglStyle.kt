@@ -31,20 +31,22 @@ grammar Style : Base {
     unit = namespace styleSet* ;
     styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
-    rule = selectorExpression '{' styleList '}' ;
+    rule = metaRule | tagRule ;
+    metaRule = '${'$'}${'$'}' PATTERN '{' styleList '}' ;
+    tagRule = selectorExpression '{' styleList '}' ;
     selectorExpression
      = selectorAndComposition
      | selectorSingle
      ; //TODO
     selectorAndComposition = [selectorSingle /',']2+ ;
-    selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
+    selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
     styleList = style* ;
     style = STYLE_ID ':' styleValue ';' ;
     styleValue = STYLE_VALUE | STRING ;
     
     leaf LITERAL = "'([^'\\]|\\.)+'" ;
     leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
-    leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
+    leaf SPECIAL_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
     leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
     leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;
@@ -68,7 +70,14 @@ grammar Style : Base {
         concatenation("extends") {
             lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
         }
-        concatenation("rule") {
+        choice("rule") {
+            ref("metaRule")
+            ref("tagRule")
+        }
+        concatenation("metaRule") {
+            lit("$$"); ref("PATTERN"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
+        }
+        concatenation("tagRule") {
             ref("selectorExpression"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
         }
         choice("selectorExpression") {
@@ -80,13 +89,13 @@ grammar Style : Base {
             ref("LITERAL")
             ref("PATTERN")
             ref("IDENTIFIER")
-            ref("META_IDENTIFIER")
+            ref("SPECIAL_IDENTIFIER")
         }
         // these must match what is in the AglGrammarGrammar
         concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
         concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)*\"") }
 
-        concatenation("META_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
+        concatenation("SPECIAL_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
 
         concatenation("style") {
             ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")

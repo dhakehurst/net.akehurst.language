@@ -24,11 +24,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embedded2 : test_LeftCornerParserAbstract() {
+class test_embedded2 : test_LeftCornerParserAbstract() {
 
     private companion object {
 
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("test.Inner") {
             pattern("WS", "\\s+", true)
             pattern("COMMENT", "/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", true)
             concatenation("TR") { ref("optST"); ref("optRE"); ref("optTP") }
@@ -50,7 +50,7 @@ internal class test_embedded2 : test_LeftCornerParserAbstract() {
 
         // S = 's' '{' I '}' ;
         // I = Inner::TR ;
-        val S = runtimeRuleSet {
+        val S = runtimeRuleSet("test.S") {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("s"); literal("{"); ref("I"); literal("}"); }
             embedded("I", Inner, "TR")
@@ -130,7 +130,7 @@ internal class test_embedded2 : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -160,7 +160,7 @@ internal class test_embedded2 : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -190,7 +190,7 @@ internal class test_embedded2 : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -221,7 +221,7 @@ internal class test_embedded2 : test_LeftCornerParserAbstract() {
         super.test2(
             rrs = S,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,

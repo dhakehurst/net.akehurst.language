@@ -36,7 +36,6 @@ class SPPTFromTreeData(
     }
 
     override val asSentence: String by lazy {
-        //SPPT2InputText().visitTree(this, "")
         val walker = SpptWalkerToInputSentence(sentence)
         this.treeData.traverseTreeDepthFirst(walker, false)
         walker.output

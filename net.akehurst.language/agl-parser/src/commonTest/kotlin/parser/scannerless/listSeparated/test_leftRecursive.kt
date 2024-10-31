@@ -62,7 +62,7 @@ internal class test_leftRecursive  : test_LeftCornerParserAbstract() {
 
         val expected = "S { E { 'a' } }"
 
-        assertFailsWith<ParserTerminatedException> {
+        assertFailsWith<IllegalStateException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
@@ -85,7 +85,7 @@ internal class test_leftRecursive  : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+        assertFailsWith<IllegalStateException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
@@ -108,7 +108,7 @@ internal class test_leftRecursive  : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+        assertFailsWith<IllegalStateException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
