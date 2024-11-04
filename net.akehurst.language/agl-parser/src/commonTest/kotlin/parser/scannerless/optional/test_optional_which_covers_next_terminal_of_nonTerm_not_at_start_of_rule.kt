@@ -23,14 +23,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_optional_which_covers_next_terminal : test_LeftCornerParserAbstract() {
+class test_optional_which_covers_next_terminal_of_nonTerm_not_at_start_of_rule : test_LeftCornerParserAbstract() {
 
-    // S = 'b' 'a'? As ;
+    // S = 'b' 'a'? as ; as = 'a' | 'a' as ;
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("b"); ref("oa"); ref("as") }
             optional("oa", "'a'")
-            multi("as",1,-1, "'a'")
+            choiceLongest("as") {
+                ref("'a'")
+                ref("aas")
+            }
+            concatenation("aas") {  ref("'a'"); ref("as") }
             literal( "a")
         }
         val goal = "S"
@@ -43,7 +47,18 @@ class test_optional_which_covers_next_terminal : test_LeftCornerParserAbstract()
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),"^",setOf("'b'"))
+        ),issues.errors)
+    }
+
+    @Test
+    fun b() {
+        val sentence = "b"
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"b^",setOf("'a'"))
         ),issues.errors)
     }
 
@@ -74,10 +89,21 @@ class test_optional_which_covers_next_terminal : test_LeftCornerParserAbstract()
         val sentence = "baaa"
 
         val expected = """
-            S { 'b' oa{ 'a' } as {'a' 'a'} }
+            S { 'b' oa{ 'a' } as { aas { 'a' as { 'a' } } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, true, expected)
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun baaaa() {
+        val sentence = "baaaa"
+
+        val expected = """
+            S { 'b' oa{ 'a' } as { aas { 'a' as { aas { 'a' as { 'a' } } } } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
 }

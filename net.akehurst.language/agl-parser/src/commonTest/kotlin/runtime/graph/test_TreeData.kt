@@ -70,7 +70,7 @@ class test_TreeData {
             graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
             graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null).complete
         )
-        graph.treeData.complete.setRootTo(CompleteNodeIndex(state_Ge, 0, 1, 1))
+        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 1, 1,0,0))
 
         val expected = sppt.addTree(
             """
@@ -126,7 +126,7 @@ class test_TreeData {
             graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null),
             graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null).complete,
         )
-        graph.treeData.complete.setRootTo(CompleteNodeIndex(state_Ge, 0, 3, 3))
+        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 3, 3,0,0))
 
         val expected = sppt.addTree(
             """

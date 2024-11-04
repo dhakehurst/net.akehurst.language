@@ -310,7 +310,7 @@ internal class TreeParser(
         val rrs = this.runtimeRuleSetInUse.pop()
         val treeData = this.treeDataStack.pop()
         val gr = rrs.goalRuleFor[userGoalNode.rule]!!
-        val pseudoRoot = CompleteTreeDataNode(gr, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.nextInputNoSkip, userGoalNode.option)
+        val pseudoRoot = CompleteTreeDataNode(gr, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.nextInputNoSkip, userGoalNode.option,0)
         treeData.setChildren(pseudoRoot, listOf(userGoalNode), false)
         treeData.setRootTo(pseudoRoot)
         return treeData
@@ -318,18 +318,18 @@ internal class TreeParser(
 
     private fun emptyLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
         val terminalRule = RuntimeRuleSet.EMPTY
-        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
+        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
     }
 
     private fun emptyListLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
         val terminalRule = RuntimeRuleSet.EMPTY_LIST
-        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
+        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
     }
 
     private fun leaf(tag: String, text: String, startPosition: Int, nextInputPosition: Int) {
         _sentenceBuilder.append(text)
         val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(tag)
-        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
+        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
         childrenStack.peek().add(leaf)
     }
 
@@ -347,7 +347,7 @@ internal class TreeParser(
         val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val nextInputNoSkip = children.lastOrNull()?.nextInputNoSkip ?: 0
 
-        val tn = CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, lastNodeStart.option)
+        val tn = CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, lastNodeStart.option,0)
         val isAlternative = this.treeDataStack.peek().childrenFor(tn).isNotEmpty()
         this.treeDataStack.peek().setChildren(tn, children, isAlternative)
         when {
@@ -390,7 +390,7 @@ internal class TreeParser(
         val startPosition = emRoot.startPosition
         val nextInputPosition = emRoot.nextInputPosition
         val nextInputNoSkip = emRoot.nextInputNoSkip
-        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputNoSkip, 0)
+        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputNoSkip, 0,0)
         childrenStack.peek().add(leaf)
         this.treeDataStack.peek().setEmbeddedTreeFor(leaf, embTreeData)
         return embTreeData

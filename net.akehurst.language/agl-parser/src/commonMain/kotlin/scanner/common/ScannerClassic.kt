@@ -38,7 +38,7 @@ class ScannerClassic(
 ) : ScannerAbstract(regexEngine) {
 
     companion object {
-        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1)
+        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1,-1)
     }
 
     //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
@@ -64,8 +64,8 @@ class ScannerClassic(
     override fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode? {
         val l = _leaves[position]
         val res = when {
-            terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0)
-            terminalRule.isEmptyListTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY_LIST, position, position, position, 0)
+            terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0,0)
+            terminalRule.isEmptyListTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY_LIST, position, position, position, 0,0)
             null == l -> {
                 val lf = scanAt(sentence, position)
                 _leaves[position] = lf
@@ -94,7 +94,7 @@ class ScannerClassic(
                 0 -> null
                 else -> {
                     val nip = position + matchLength
-                    CompleteTreeDataNode(it, position, nip, nip, 0)
+                    CompleteTreeDataNode(it, position, nip, nip, 0,0)
                 }
             }
         }

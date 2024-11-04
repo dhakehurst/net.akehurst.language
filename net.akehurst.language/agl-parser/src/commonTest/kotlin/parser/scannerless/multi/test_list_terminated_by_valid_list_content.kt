@@ -110,7 +110,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
 
         val expeccted = """
             S {
-              L { 'a' }
+              L { 'a' WS:' ' 'a' WS:' '}
               A : 'a'
             } 
             """
@@ -125,7 +125,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
 
         val expeccted = """
             S {
-              L { 'a' }
+              L { 'a' 'a' 'a'}
               A : 'a'
             } 
             """

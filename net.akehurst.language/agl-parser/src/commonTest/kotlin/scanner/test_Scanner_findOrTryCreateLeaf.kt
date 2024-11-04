@@ -67,7 +67,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = RuntimeRuleSet.EMPTY
 
-        val expected = CompleteTreeDataNode(RuntimeRuleSet.EMPTY, 0, 0, 0, 0)
+        val expected = CompleteTreeDataNode(RuntimeRuleSet.EMPTY, 0, 0, 0, 0,-1)
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -125,7 +125,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = rrs.findRuntimeRule("'abc'")
 
-        val expected = CompleteTreeDataNode(rule, 0, 3, 3, 0)
+        val expected = CompleteTreeDataNode(rule, 0, 3, 3, 0,-1)
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -140,7 +140,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = rrs.findRuntimeRule("a2c")
 
-        val expected = CompleteTreeDataNode(rule, 0, 1, 1, 0)
+        val expected = CompleteTreeDataNode(rule, 0, 1, 1, 0,-1)
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -155,7 +155,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 1
         val rule = rrs.findRuntimeRule("a2c")
 
-        val expected = CompleteTreeDataNode(rule, 1, 2, 2, 0)
+        val expected = CompleteTreeDataNode(rule, 1, 2, 2, 0,-1)
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -181,10 +181,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0),
-            CompleteTreeDataNode(patName, 6, 7, 7, 0),
-            CompleteTreeDataNode(litSemi, 7, 8, 8, 0)
+            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
+            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
+            CompleteTreeDataNode(patName, 6, 7, 7, 0,-1),
+            CompleteTreeDataNode(litSemi, 7, 8, 8, 0,-1)
         )
         assertEquals(expected, actual)
     }
@@ -211,10 +211,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0),
-            CompleteTreeDataNode(patName, 6, 7, 7, 0),
-            CompleteTreeDataNode(litSemi, 7, 8, 8, 0)
+            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
+            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
+            CompleteTreeDataNode(patName, 6, 7, 7, 0,-1),
+            CompleteTreeDataNode(litSemi, 7, 8, 8, 0,-1)
         )
         assertEquals(expected, actual)
     }
@@ -240,10 +240,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0),
-            CompleteTreeDataNode(patName, 6, 11, 11, 0),
-            CompleteTreeDataNode(litSemi, 11, 12, 12, 0)
+            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
+            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
+            CompleteTreeDataNode(patName, 6, 11, 11, 0,-1),
+            CompleteTreeDataNode(litSemi, 11, 12, 12, 0,-1)
         )
         assertEquals(expected, actual)
     }
@@ -270,10 +270,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0),
-            CompleteTreeDataNode(litClass, 6, 11, 11, 0),
-            CompleteTreeDataNode(litSemi, 11, 12, 12, 0)
+            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
+            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
+            CompleteTreeDataNode(litClass, 6, 11, 11, 0,-1),
+            CompleteTreeDataNode(litSemi, 11, 12, 12, 0,-1)
         )
         assertEquals(expected, actual)
     }

@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_optional_which_covers_next_terminal_at_start : test_LeftCornerParserAbstract() {
+class test_optional_which_covers_next_terminal_of_multi_at_start : test_LeftCornerParserAbstract() {
 
     // S = 'a'? As ;
     private companion object {
@@ -70,8 +70,8 @@ class test_optional_which_covers_next_terminal_at_start : test_LeftCornerParserA
     }
 
     @Test
-    fun baaa() {
-        val sentence = "baaa"
+    fun aaa() {
+        val sentence = "aaa"
 
         val expected = """
             S { oa{ 'a' } as {'a' 'a'} }

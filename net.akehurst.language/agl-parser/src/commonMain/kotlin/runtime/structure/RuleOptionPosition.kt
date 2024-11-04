@@ -38,12 +38,18 @@ class RulePositionRuntime(
         const val START_OF_RULE = 0
         const val END_OF_RULE = -1
 
+
+        // Option is used to compute priority in choice and dynamic priority
+        // EMPTY should be the lowest priority so that full is preferred
+        TODO: reverse these values
         const val OPTION_OPTIONAL_ITEM = 0
         const val OPTION_OPTIONAL_EMPTY = 1
 
+        //TODO: reverse these values
         const val OPTION_MULTI_ITEM = 0
         const val OPTION_MULTI_EMPTY = 1
 
+        //TODO: reverse these values
         const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
         const val OPTION_SLIST_EMPTY = 1
 

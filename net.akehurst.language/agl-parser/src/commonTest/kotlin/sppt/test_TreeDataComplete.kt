@@ -63,7 +63,7 @@ internal class test_TreeDataComplete {
         val a = rrs.findRuntimeRule("'a'")
 
         val expected = listOf<Pair<Int, List<SpptDataNode>>>()
-        val parent = CompleteTreeDataNode(a, 0, 1, 1, 0)
+        val parent = CompleteTreeDataNode(a, 0, 1, 1, 0,-1)
 
         test(sentence, rrs, "S", parent, expected)
     }
@@ -78,9 +78,9 @@ internal class test_TreeDataComplete {
         val a = rrs.findRuntimeRule("'a'")
 
         val expected = listOf<Pair<Int, List<SpptDataNode>>>(
-            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0)))
+            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0,-1)))
         )
-        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0)
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0,-1)
 
         test(sentence, rrs, "S", parent, expected)
     }
@@ -101,9 +101,9 @@ internal class test_TreeDataComplete {
         val a = rrs.findRuntimeRule("'a'")
 
         val expected = listOf<Pair<Int, List<SpptDataNode>>>(
-            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0)))
+            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0,-1)))
         )
-        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0)
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0,-1)
 
         test(sentence, rrs, "S", parent, expected)
     }

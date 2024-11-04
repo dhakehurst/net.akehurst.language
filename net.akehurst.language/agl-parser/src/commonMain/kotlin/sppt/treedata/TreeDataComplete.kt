@@ -34,7 +34,8 @@ class CompleteTreeDataNode(
     override val startPosition: Int,
     override val nextInputPosition: Int,
     override val nextInputNoSkip: Int,
-    override val option: Int
+    override val option: Int,
+    override val dynamicPriority: Int
 ) : SpptDataNode {
 
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()

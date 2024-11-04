@@ -767,7 +767,7 @@ class test_Agl_processorFromStringSimple_parse {
         val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
-        val result2 = pr.processor!!.parse("aa");
+        val result2 = pr.processor!!.parse("aa")
         val expected2 = pr.processor!!.spptParser.parse(
             """
              a { 'a' 'a' }

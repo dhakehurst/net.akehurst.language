@@ -24,6 +24,7 @@ interface SpptDataNode {
     val nextInputPosition: Int
     val nextInputNoSkip: Int
     val option: Int
+    val dynamicPriority:Int
 }
 
 data class ChildInfo(

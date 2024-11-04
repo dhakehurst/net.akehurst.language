@@ -216,7 +216,8 @@ class CompleteNodeForMinimal(
     override val startPosition: Int,
     override val nextInputPosition: Int,
     override val nextInputNoSkip: Int, // not part of definition, just easy way to pass it to SPPF
-    override val option: Int // not part of definition, just easy way to pass it to SPPF
+    override val option: Int, // not part of definition, just easy way to pass it to SPPF
+    override val dynamicPriority: Int
 ) : SpptDataNode {
 
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
@@ -267,7 +268,7 @@ class MinimalParser private constructor(
             }
         }
 
-        private val GSSNodeForMinimal.complete get() = CompleteNodeForMinimal(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option)
+        private val GSSNodeForMinimal.complete get() = CompleteNodeForMinimal(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option,0) //TODO: dynamicPriority!
 
         private fun GraphStructuredStack<GSSNodeForMinimal>.setRoot(
             state: StateForMinimal,

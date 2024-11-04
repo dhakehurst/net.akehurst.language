@@ -351,6 +351,12 @@ internal class ParseGraph(
         }
     }
 
+    private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions = when {
+        newParent.dynamicPriority > existingParent.dynamicPriority -> MergeOptions.PREFER_NEW
+        newParent.dynamicPriority < existingParent.dynamicPriority -> MergeOptions.PREFER_EXISTING
+        else -> ifEqual()
+    }
+
     private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeOptions {
         return when {
             newParent.rule.isChoice -> {
@@ -379,7 +385,9 @@ internal class ParseGraph(
             }
 
             else -> mergeDecisionOnLength(existingParent, newParent) {
-                MergeOptions.UNDECIDABLE
+                //mergeDecisionOnDynamicPriority(existingParent, newParent) {
+                    MergeOptions.UNDECIDABLE
+                //}
             }
         }
     }

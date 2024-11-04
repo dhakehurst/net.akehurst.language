@@ -59,9 +59,11 @@ internal class GrowingNodeIndex(
     val complete:SpptDataNode by lazy {
         val rule = runtimeState.state.firstRule
         val option = runtimeState.optionList[0]
-        CompleteTreeDataNode(rule, startPosition, nextInputPositionAfterSkip, nextInputPositionBeforeSkip, option)
+        CompleteTreeDataNode(rule, startPosition, nextInputPositionAfterSkip, nextInputPositionBeforeSkip, option,dynamicPriority)
         //CompleteNodeIndex(runtimeState.state, startPosition, nextInputPositionBeforeSkip, nextInputPositionAfterSkip)
     }
+
+    val dynamicPriority:Int get() = childrenPriorities?.map { it.get(0) }?.reduce() { acc, i ->  acc+ i} ?: 0 //TODO: this needs improving
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPositionAfterSkip, numNonSkipChildren).contentHashCode()
 
@@ -97,7 +99,7 @@ internal class GrowingNodeIndex(
     }
 
 }
-
+/*
 // Because of embedded grammars and skipnodes (as embedded)
 // this must also contain the id of the TreeData...or rather an id of the grammar/ParserStateSet that it belongs to
 // also the treeData object is needed when getting children of a node in the conversion to SPPT
@@ -112,7 +114,8 @@ internal class CompleteNodeIndex(
     val state: ParserState,
     override val startPosition: Int,
     val nextInputPositionBeforeSkip: Int,
-    val nextInputPositionAfterSkip: Int
+    val nextInputPositionAfterSkip: Int,
+    override val dynamicPriority: Int
 ) : SpptDataNode {
 
     init {
@@ -174,3 +177,4 @@ internal class CompleteNodeIndex(
         }
     */
 }
+*/
