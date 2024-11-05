@@ -55,8 +55,8 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
         val vr = rrs.findRuntimeRule("var")
 
         val stateSet = ParserStateSet(0, rrs, S, false, AutomatonKind.LOOKAHEAD_1, false)
-        val s1 = stateSet.createState(listOf(RP(v, o0, EOR)))
-        val s2 = stateSet.createState(listOf(RP(vr, o0, EOR)))
+        val s1 = stateSet.createState(listOf(RP(v, oN, EOR)))
+        val s2 = stateSet.createState(listOf(RP(vr, oN, EOR)))
         val tr1 = Transition(
             from = s1,
             to = s2,

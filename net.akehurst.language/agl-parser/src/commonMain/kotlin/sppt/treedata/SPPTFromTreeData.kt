@@ -38,7 +38,7 @@ class SPPTFromTreeData(
     override val asSentence: String by lazy {
         val walker = SpptWalkerToInputSentence(sentence)
         this.treeData.traverseTreeDepthFirst(walker, false)
-        walker.output
+        walker.output.sortedBy { it.length }.last() //Use longest match
     }
 
     override val countTrees: Int by lazy {

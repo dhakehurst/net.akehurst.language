@@ -109,7 +109,7 @@ leaf booleanLiteral      = 'false' | 'true';
                 println("end embedded")
             }
 
-            override fun error(msg: String, path: PathFunction) {
+            override fun treeError(msg: String, path: PathFunction) {
                 println("error $msg")
             }
 

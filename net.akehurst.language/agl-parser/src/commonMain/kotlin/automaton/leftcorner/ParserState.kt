@@ -19,6 +19,7 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.parser.api.OptionNum
 
 class ParserState(
     val number: StateNumber,
@@ -42,8 +43,8 @@ class ParserState(
     val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
     val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
     val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
-    val optionList: List<Int> by lazy { this.rulePositions.map { it.option }.toList() }
-    val priorityList: List<Int> get() = optionList
+    val optionList: List<OptionNum> by lazy { this.rulePositions.map { it.option }.toList() }
+    val priorityList: List<Int> get() = optionList.map { it.value }
     val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
     val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
@@ -55,6 +56,8 @@ class ParserState(
         }.toSet().toList()
     }
     val isChoice: Boolean by lazy { this.firstRule.isChoice }
+    val isOptional: Boolean by lazy { this.firstRule.isOptional }
+    val isList: Boolean by lazy { this.firstRule.isList }
 
     val firstRuleChoiceKind by lazy {
         if (Debug.CHECK) check(1 == this.choiceKindList.size)

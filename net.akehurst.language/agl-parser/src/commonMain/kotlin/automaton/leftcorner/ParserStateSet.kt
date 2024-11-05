@@ -21,6 +21,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
+import net.akehurst.language.parser.api.RulePosition
 
 class ParserStateSet(
     val number: Int,
@@ -70,8 +71,8 @@ class ParserStateSet(
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startRulePosition by lazy { RulePositionRuntime(goalRule, 0, RulePositionRuntime.START_OF_RULE) }
-    val finishRulePosition by lazy { RulePositionRuntime(goalRule, 0, RulePositionRuntime.END_OF_RULE) }
+    val startRulePosition by lazy { RulePositionRuntime(goalRule, RulePosition.OPTION_NONE, RulePosition.START_OF_RULE) }
+    val finishRulePosition by lazy { RulePositionRuntime(goalRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE) }
     val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 

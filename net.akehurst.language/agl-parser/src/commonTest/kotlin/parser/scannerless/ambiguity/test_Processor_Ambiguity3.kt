@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -64,7 +65,7 @@ internal class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
             concatenation("P2") { ref("P"); literal("a") }
             preferenceFor("'a'") {
                 left("P1", setOf("'a'"))
-                leftOption("P", 2, setOf("'b'","'a'"))
+                leftOption("P", OptionNum(2), setOf("'b'","'a'"))
                 left("Q", setOf("'c'"))
             }
         }

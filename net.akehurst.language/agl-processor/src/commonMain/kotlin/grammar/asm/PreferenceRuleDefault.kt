@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.parser.api.OptionNum
 
 data class PreferenceRuleDefault(
     override val grammar: Grammar,
@@ -36,7 +37,7 @@ data class PreferenceRuleDefault(
 
 data class PreferenceOptionDefault(
     override val item: NonTerminal,
-    override val choiceNumber: Int,
+    override val choiceNumber: OptionNum,
     override val onTerminals: List<SimpleItem>,
     override val associativity: Associativity
 ) : PreferenceOption {

@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
+import net.akehurst.language.parser.api.OptionNum
 import kotlin.jvm.JvmInline
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -170,7 +171,7 @@ enum class Associativity { LEFT, RIGHT }
 
 interface PreferenceOption : Formatable {
     val item: NonTerminal
-    val choiceNumber: Int
+    val choiceNumber: OptionNum
     val onTerminals: List<SimpleItem>
     val associativity: Associativity
 }

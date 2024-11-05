@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
 
 /**
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
@@ -80,7 +81,7 @@ class RuntimeRule(
         }
 
     override val isChoice get() = this.rhs is RuntimeRuleRhsChoice
-    val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
+    override val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
     override val isOptional: Boolean get() = this.rhs is RuntimeRuleRhsOptional
     override val isListOptional: Boolean get() = this.rhs is RuntimeRuleRhsList && 0 == (this.rhs as RuntimeRuleRhsList).min
     override val isList get() = this.rhs is RuntimeRuleRhsList
@@ -99,7 +100,7 @@ class RuntimeRule(
 
     //val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
 
-    internal val asTerminalRulePosition by lazy { RulePositionRuntime(this, 0, RulePositionRuntime.END_OF_RULE) }
+    internal val asTerminalRulePosition by lazy { RulePositionRuntime(this, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE) }
 
     //used in automaton build
     internal val rulePositions: Set<RulePositionRuntime> get() = rulePositionsAtStart + rulePositionsNotAtStart

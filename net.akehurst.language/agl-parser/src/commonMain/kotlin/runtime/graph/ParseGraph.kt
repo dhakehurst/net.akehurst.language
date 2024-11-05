@@ -184,7 +184,7 @@ internal class ParseGraph(
         nextInputPositionBeforeSkip: Int,
         nextInputPositionAfterSkip: Int,
         numNonSkipChildren: Int,
-        childrenPriorities: List<List<Int>>? //maybe may a map, so we can have lists of priorities of preferred descendants!
+        childrenPriorities: List<List<Int>> //maybe may a map, so we can have lists of priorities of preferred descendants!
     ): GrowingNodeIndex {
         val listSize = GrowingNodeIndex.listSize(state.runtimeRules.first(), numNonSkipChildren)
         return GrowingNodeIndex(
@@ -342,8 +342,8 @@ internal class ParseGraph(
 
     private fun mergeDecisionOnPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
         if (Debug.CHECK) check(existingParent.rule.isChoice && newParent.rule.isChoice && existingParent.rule == newParent.rule) //are we comparing things with a choice
-        val existingPriority = existingParent.option
-        val newPriority = newParent.option
+        val existingPriority = existingParent.option.asIndex
+        val newPriority = newParent.option.asIndex
         return when {
             newPriority > existingPriority -> MergeOptions.PREFER_NEW
             existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
@@ -351,21 +351,28 @@ internal class ParseGraph(
         }
     }
 
-    private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions = when {
-        newParent.dynamicPriority > existingParent.dynamicPriority -> MergeOptions.PREFER_NEW
-        newParent.dynamicPriority < existingParent.dynamicPriority -> MergeOptions.PREFER_EXISTING
-        else -> ifEqual()
+    private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+        for (i in existingParent.dynamicPriority.indices) {
+            val e = existingParent.dynamicPriority[i]
+            val n = newParent.dynamicPriority[i]
+            when {
+                n > e -> return MergeOptions.PREFER_NEW
+                n < e -> return MergeOptions.PREFER_EXISTING
+                else -> Unit
+            }
+        }
+        return ifEqual()
     }
 
     private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeOptions {
         return when {
             newParent.rule.isChoice -> {
-                val rhs =  (newParent.rule as RuntimeRule).rhs
-                val choiceKind = when(rhs) {
+                val rhs = (newParent.rule as RuntimeRule).rhs
+                val choiceKind = when (rhs) {
                     is RuntimeRuleRhsChoice -> rhs.choiceKind
                     else -> null
                 }
-                if (Debug.CHECK) check(null!=choiceKind) //TODO: could remove this check if always passes
+                if (Debug.CHECK) check(null != choiceKind) //TODO: could remove this check if always passes
                 when (choiceKind!!) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
@@ -385,9 +392,9 @@ internal class ParseGraph(
             }
 
             else -> mergeDecisionOnLength(existingParent, newParent) {
-                //mergeDecisionOnDynamicPriority(existingParent, newParent) {
-                    MergeOptions.UNDECIDABLE
-                //}
+                mergeDecisionOnDynamicPriority(existingParent, newParent) {
+                MergeOptions.UNDECIDABLE
+                }
             }
         }
     }
@@ -399,7 +406,7 @@ internal class ParseGraph(
      */
     fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?): GrowingNodeIndex {
         val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPosition ?: startPosition
-        val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, null)
+        val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, emptyList())
         this._gss.root(st)
         this.treeData.initialise(st, initialSkipData)
         return st
@@ -419,7 +426,7 @@ internal class ParseGraph(
         skipData: TreeData?
     ): Boolean {
         val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
-        val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
+        val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, emptyList())
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
@@ -443,7 +450,7 @@ internal class ParseGraph(
         skipData: TreeData?
     ): Boolean {
         val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
-        val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
+        val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, emptyList())
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
@@ -470,7 +477,12 @@ internal class ParseGraph(
         if (Debug.CHECK) check(head.isComplete)
         val child = head.complete
         //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
-        val childrenPriorities = listOf(head.state.priorityList)
+        val childrenPriorities = when {
+            head.state.isChoice -> listOf(head.state.priorityList)
+            head.state.isOptional -> listOf(head.state.priorityList)
+            head.state.isList -> listOf(head.state.priorityList)
+            else -> emptyList()
+        }
         val parent =
             this.createGrowingNodeIndex(
                 parentState,
@@ -524,8 +536,13 @@ internal class ParseGraph(
         val child = head.complete
         val newParentNumNonSkipChildren = previous.numNonSkipChildren + 1
         //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
-        val childPrio = listOf(head.state.priorityList)
-        val childrenPriorities: List<List<Int>> = previous.childrenPriorities?.plus(childPrio)
+        val childPrio = when {
+            head.state.isChoice -> listOf(head.state.priorityList)
+            head.state.isOptional -> listOf(head.state.priorityList)
+            head.state.isList -> listOf(head.state.priorityList)
+            else -> emptyList()
+        }
+        val childrenPriorities: List<List<Int>> = previous.childrenPriorities.plus(childPrio)
             ?: childPrio //Goal scenario
         val newParent = this.createGrowingNodeIndex(
             newParentState,

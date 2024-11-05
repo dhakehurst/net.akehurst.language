@@ -18,6 +18,8 @@
 package net.akehurst.language.sppt.treedata
 
 import net.akehurst.language.collections.MutableStack
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sppt.api.*
 
 internal interface StackData {
@@ -42,7 +44,7 @@ internal data class StackInfo(
     /**
      * num children for each alternative set for this node
      */
-    override val numChildrenAlternatives: Map<Int, Int>,
+    override val numChildrenAlternatives: Map<OptionNum, Int>,
 
     /**
      * num skip children of this node
@@ -77,17 +79,17 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         // handle <GOAL>
         val goal = treeData.root!!
         val userRoot = treeData.childrenFor(goal)[0].second[0]
-        val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
+        val parentAlt = AltInfo(RulePosition.OPTION_NONE, 0, 1) //no parent alts for root, probably not used
         when {
             userRoot.rule.isTerminal -> {
                 val urchildOfTotal = ChildInfo(0, 0, 1)
-                val altOfTotal = AltInfo(0, 0, 1)
+                val altOfTotal = AltInfo(RulePosition.OPTION_NONE, 0, 1)
                 stack.push(StackInfo(false, userRoot, parentAlt, altOfTotal, urchildOfTotal, emptyMap(), -1))
             }
 
             else -> {
                 val urchildOfTotal = ChildInfo(0, 0, 1)
-                val uralternatives = treeData.childrenFor(userRoot).sortedBy { it.first }
+                val uralternatives = treeData.childrenFor(userRoot).sortedBy { it.first.asIndex }
                 val altInfo = AlternativesInfo(userRoot, true)
                 path.push(altInfo)
                 stack.push(altInfo)
@@ -143,12 +145,12 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         val goal = treeData.root!!
         val skipMulti = treeData.childrenFor(goal)[0].second[0]
         val multi = treeData.childrenFor(skipMulti)[0].second
-        val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
+        val parentAlt = AltInfo(RulePosition.OPTION_NONE, 0, 1) //no parent alts for root, probably not used
         for (i in multi.indices.reversed()) {
             val n = multi[i]
             val childOfTotal = ChildInfo(i, i, multi.size + 1) //TODO: is this correct ?
             val skp = treeData.childrenFor(n)[0].second[0]
-            stack.push(StackInfo(false, skp, parentAlt, AltInfo(0, 0, 1), childOfTotal, emptyMap(), -1))
+            stack.push(StackInfo(false, skp, parentAlt, AltInfo(RulePosition.OPTION_NONE, 0, 1), childOfTotal, emptyMap(), -1))
         }
 
         while (stack.isNotEmpty) {
@@ -219,11 +221,11 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         } else {
             val altInfo = AlternativesInfo(info.node, false)
             if (path.elements.any { it.node == altInfo.node }) {
-                callback.error("Loop in Tree, Grammar has a recursive path that does not consume any input.") {
+                callback.treeError("Loop in Tree, Grammar has a recursive path that does not consume any input.") {
                     path.elements.map { it.node }
                 }
             } else {
-                val alternatives = treeData.childrenFor(info.node).sortedBy { it.first }
+                val alternatives = treeData.childrenFor(info.node).sortedBy { it.first.asIndex }
                 path.push(altInfo)
                 stack.push(altInfo)
                 val numChildrenAlternatives = alternatives.associate { Pair(it.first, it.second.size) }
@@ -243,7 +245,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
     private fun traverseLeaf(callback: SpptWalker, skipDataAsTree: Boolean, info: StackInfo) {
         if (info.node.rule.isEmbedded) {
             val ed = treeData.embeddedFor(info.node) ?: error("Cannot find embedded TreeData for '${info.node}'")
-            val numChildrenAlternatives = mapOf(0 to 1) //FIXME: should recalc this from embedded data
+            val numChildrenAlternatives = mapOf(RulePosition.OPTION_NONE to 1) //FIXME: should recalc this from embedded data
             val numSkipChildren = treeData.skipDataAfter(info.node)?.let { numSkipChildren(it) } ?: 0
             val stackData = StackInfo(true, info.node, info.parentAlt, info.alt, info.child, numChildrenAlternatives, numSkipChildren)
             callback.beginEmbedded(stackData)

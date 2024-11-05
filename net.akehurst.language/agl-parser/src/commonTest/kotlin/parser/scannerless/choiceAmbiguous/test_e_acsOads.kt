@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_e_acsOads : test_LeftCornerParserAbstract() {
+class test_e_acsOads : test_LeftCornerParserAbstract() {
 
     // S = 'e' ambig
     // ambig = acs || ads
@@ -119,7 +119,7 @@ internal class test_e_acsOads : test_LeftCornerParserAbstract() {
         val sentence = "ea"
 
         val expected1 = """
-            S { 'e' ambig { acs { 'a' } } }
+            S { 'e' ambig|0 { acs { 'a' } } }
         """.trimIndent()
 
         val expected2 = """

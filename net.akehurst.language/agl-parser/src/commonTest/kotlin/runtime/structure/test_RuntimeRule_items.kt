@@ -40,8 +40,8 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(a))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(a))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -59,11 +59,11 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
-        check(RP(S,o0, SOR),setOf(a))
-        check(RP(S,o0, EOR),setOf())
+        check(RP(S,oN, SOR),setOf(a))
+        check(RP(S,oN, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -83,11 +83,11 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
-        check(RP(S, OME, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OME, EOR),setOf())
+        check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oLE, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -106,13 +106,13 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
-        check(RP(S, OME, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OME, EOR),setOf())
-        check(RP(S, OMI, SOR),setOf(a))
-        check(RP(S,OMI, EOR),setOf())
+        check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oLE, EOR),setOf())
+        check(RP(S, oLI, SOR),setOf(a))
+        check(RP(S,oLI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -131,14 +131,14 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(5, S.rulePositions.size)
-        check(RP(S, OME, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OME, EOR),setOf())
-        check(RP(S, OMI, SOR),setOf(a))
-        check(RP(S,OMI, PMI),setOf(a))
-        check(RP(S,OMI, EOR),setOf())
+        check(RP(S, oLE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oLE, EOR),setOf())
+        check(RP(S, oLI, SOR),setOf(a))
+        check(RP(S,oLI, PMI),setOf(a))
+        check(RP(S,oLI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 
@@ -160,13 +160,13 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
-        check(RP(S, OLE, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OLE, EOR),setOf())
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oSE, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -188,15 +188,15 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(6, S.rulePositions.size)
-        check(RP(S, OLE, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OLE, EOR),setOf())
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S, OLI, PLI),setOf(a))
-        check(RP(S, OLS, PLS),setOf(c))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oSE, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S, oSI, PLI),setOf(a))
+        check(RP(S, oSS, PLS),setOf(c))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -218,15 +218,15 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(6, S.rulePositions.size)
-        check(RP(S, OLE, SOR),setOf(EMPTY_LIST))
-        check(RP(S,OLE, EOR),setOf())
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S, OLI, PLI),setOf(a))
-        check(RP(S, OLS, PLS),setOf(c))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSE, SOR),setOf(EMPTY_LIST))
+        check(RP(S,oSE, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S, oSI, PLI),setOf(a))
+        check(RP(S, oSS, PLS),setOf(c))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -248,11 +248,11 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(2, S.rulePositions.size)
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -274,13 +274,13 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S, OLI, PLI),setOf(a))
-        check(RP(S, OLS, PLS),setOf(c))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S, oSI, PLI),setOf(a))
+        check(RP(S, oSS, PLS),setOf(c))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -302,13 +302,13 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(4, S.rulePositions.size)
-        check(RP(S, OLI, SOR),setOf(a))
-        check(RP(S, OLI, PLI),setOf(a))
-        check(RP(S, OLS, PLS),setOf(c))
-        check(RP(S,OLI, EOR),setOf())
+        check(RP(S, oSI, SOR),setOf(a))
+        check(RP(S, oSI, PLI),setOf(a))
+        check(RP(S, oSS, PLS),setOf(c))
+        check(RP(S,oSI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
         assertEquals(0, c.rulePositions.size)
     }
@@ -329,14 +329,14 @@ internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
         //then
         assertEquals(2, G.rulePositions.size)
-        check(RP(G,o0, SOR),setOf(S))
-        check(RP(G,o0, EOR),setOf())
+        check(RP(G,oN, SOR),setOf(S))
+        check(RP(G,oN, EOR),setOf())
         assertEquals(5, S.rulePositions.size)
-        check(RP(S, OME, SOR),setOf(EMPTY))
-        check(RP(S,OME, EOR),setOf())
-        check(RP(S, OMI, SOR),setOf(a))
-        check(RP(S,OMI, PMI),setOf(a))
-        check(RP(S,OMI, EOR),setOf())
+        check(RP(S, oLE, SOR),setOf(EMPTY))
+        check(RP(S,oLE, EOR),setOf())
+        check(RP(S, oLI, SOR),setOf(a))
+        check(RP(S,oLI, PMI),setOf(a))
+        check(RP(S,oLI, EOR),setOf())
         assertEquals(0, a.rulePositions.size)
     }
 

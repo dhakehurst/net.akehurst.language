@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -51,7 +52,7 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, 0, RulePositionRuntime.END_OF_RULE)
+            RulePositionRuntime(S, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
         )
 
         //when
@@ -77,7 +78,7 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.END_OF_RULE)
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -98,8 +99,8 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
         )
         assertEquals(expected, actual)
     }
@@ -121,13 +122,13 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected1 = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.START_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE),
         )
         val expected2 = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.POSITION_MULIT_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
         )
         assertEquals(expected1, actual1)
         assertEquals(expected2, actual2)
@@ -151,7 +152,7 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.END_OF_RULE)
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -173,8 +174,8 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
         assertEquals(expected, actual)
     }
@@ -196,10 +197,10 @@ class test_RuntimeRule_rulePositions {
 
         //then
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
         assertEquals(expected, actual)
     }
@@ -217,10 +218,10 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -243,10 +244,10 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.END_OF_RULE),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -269,7 +270,7 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -292,9 +293,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -317,9 +318,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -342,9 +343,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -367,9 +368,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -392,9 +393,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -417,9 +418,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -442,9 +443,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -467,9 +468,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
@@ -492,9 +493,9 @@ class test_RuntimeRule_rulePositions {
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_ITEM),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.POSITION_SLIST_SEPARATOR),
-            RulePositionRuntime(S, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.END_OF_RULE),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePositionRuntime(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when

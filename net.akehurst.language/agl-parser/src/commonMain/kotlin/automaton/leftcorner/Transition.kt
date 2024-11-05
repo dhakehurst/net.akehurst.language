@@ -18,6 +18,7 @@ package net.akehurst.language.automaton.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.parser.api.RulePosition
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 
@@ -127,14 +128,14 @@ class Transition(
                 ParseAction.GRAFT -> when (tgtRhs) {
                     is RuntimeRuleRhsListSimple -> when {
                         targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
-                        targetRp.position == RulePositionRuntime.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
                         else -> TODO()
                     }
 
                     is RuntimeRuleRhsListSeparated -> when {
                         targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
-                        targetRp.position == RulePositionRuntime.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
-                        targetRp.position == RulePositionRuntime.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
                         else -> TODO()
                     }
 

@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ab_cOa_bc : test_LeftCornerParserAbstract() {
+class test_ab_cOa_bc : test_LeftCornerParserAbstract() {
 
     // S = ab_c || a_bc;
     // ab_c = ab 'c'

@@ -95,35 +95,46 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
                 val children = stack.pop(numChildren)
-                val adjChildren = when {
-                    nodeInfo.node.rule.isList -> children.reversed() //listOf(children.filterNotNull())
-                    else -> children.reversed()
-                }
-
+                val adjChildren = children.reversed()
+                val branchName = nodeInfo.node.rule.tag
+                val handler = syntaxAnalyserStack.peek().findBranchHandler<Any>(branchName, false)
                 when {
                     nodeInfo.node.rule.isOptional -> {
                         val v = adjChildren[0]
-                        val obj = when(v) {
+                        val child = when (v) {
                             EMPTY_TERMINAL_VALUE -> null
                             EMPTY_LIST_VALUE -> error("should not happen")
                             else -> v
                         }
-                        obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
-                        stack.push(obj)
+                        when (handler) {
+                            null -> stack.push(child)
+                            else -> {
+                                val obj = handler.invoke(nodeInfo, listOf(child), sentence)
+                                obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                                stack.push(obj)
+                            }
+                        }
                     }
 
-                    else -> {
-                        val branchName = nodeInfo.node.rule.tag
+                    nodeInfo.node.rule.isList -> {
                         val chldn = when {
                             nodeInfo.node.rule.isListOptional && 1 == children.size && EMPTY_LIST_VALUE == children[0] -> emptyList<Any>()
                             else -> adjChildren
                         }
-                        val handler = syntaxAnalyserStack.peek().findBranchHandler<Any>(branchName, false)
-                        if (null == handler) {
-                            //error("Cannot find SyntaxAnalyser branch handler method named $branchName or ${branchName}_end")
-                            stack.push(chldn)
-                        } else {
-                            val obj = handler.invoke(nodeInfo, chldn, sentence)
+                        when (handler) {
+                            null -> stack.push(chldn)
+                            else -> {
+                                val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                                obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                                stack.push(obj)
+                            }
+                        }
+                    }
+
+                    else -> when (handler) {
+                        null -> stack.push(adjChildren)
+                        else -> {
+                            val obj = handler.invoke(nodeInfo, adjChildren, sentence)
                             obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                             stack.push(obj)
                         }
@@ -155,7 +166,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 stack.push(obj)
             }
 
-            override fun error(msg: String, path: PathFunction) {
+            override fun treeError(msg: String, path: PathFunction) {
                 kotlin.error(msg)
             }
 

@@ -22,6 +22,7 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sppt.api.SharedPackedParseTree
+import kotlin.jvm.JvmInline
 
 interface RuleSet {
     val nonSkipTerminals: List<Rule>
@@ -54,6 +55,7 @@ interface Rule {
     val isEmbedded: Boolean
 
     val isChoice: Boolean
+    val isChoiceAmbiguous: Boolean
     val isList: Boolean
     val isListSimple: Boolean
     val isListSeparated: Boolean
@@ -73,23 +75,46 @@ interface PrefRule {
     val contextRule: Rule
 }
 
+@JvmInline
+value class OptionNum(val value:Int) {
+    val asIndex:Int get() {
+        if(value < 0) error("Should not happen")
+        return value
+    }
+
+    override fun toString(): String = when(this) {
+        RulePosition.OPTION_NONE -> "oN"
+        RulePosition.OPTION_OPTIONAL_EMPTY -> "OE"
+        RulePosition.OPTION_OPTIONAL_ITEM -> "OI"
+        RulePosition.OPTION_MULTI_EMPTY -> "LE"
+        RulePosition.OPTION_MULTI_ITEM -> "LI"
+        RulePosition.OPTION_SLIST_EMPTY -> "SE"
+        RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR -> "SI"
+        else -> "$value"
+    }
+}
+
 interface RulePosition {
     val rule: Rule
-    val option: Int
+    val option: OptionNum
     val position: Int
 
     companion object {
         const val START_OF_RULE = 0
         const val END_OF_RULE = -1
 
-        const val OPTION_OPTIONAL_ITEM = 0
-        const val OPTION_OPTIONAL_EMPTY = 1
+        val OPTION_NONE = OptionNum(-1)
 
-        const val OPTION_MULTI_ITEM = 0
-        const val OPTION_MULTI_EMPTY = 1
+        // Option is used to compute priority in choice and dynamic priority
+        // EMPTY should be the lowest priority so that full is preferred
+        val OPTION_OPTIONAL_ITEM = OptionNum(-2)
+        val OPTION_OPTIONAL_EMPTY = OptionNum(-3)
 
-        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
-        const val OPTION_SLIST_EMPTY = 1
+        val OPTION_MULTI_ITEM = OptionNum(-4)
+        val OPTION_MULTI_EMPTY = OptionNum(-5)
+
+        val OPTION_SLIST_ITEM_OR_SEPERATOR = OptionNum(-6)
+        val OPTION_SLIST_EMPTY = OptionNum(-7)
 
         //for use in multi and separated list
         const val POSITION_MULIT_ITEM = 1 //TODO: make -ve

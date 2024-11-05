@@ -71,27 +71,27 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))       // G = . S
-            val s1 = state(RP(T_c, 0, EOR))     // c
-            val s2 = state(RP(T_d, 0, EOR))     // d
-            val s3 = state(RP(C1, 0, 1))   // C1 = c . C
-            val s4 = state(RP(C, 1, EOR))       // C = C1 .
-            val s5 = state(RP(C1, 0, EOR))      // C1 = c C .
-            val s6 = state(RP(C, 0, EOR))       // C = d .
-            val s7 = state(RP(S, 0, 1))    // S = C . C
-            val s8 = state(RP(S, 0, EOR))       // S = C C .
-            val s9 = state(RP(G, 0, EOR))       // G = S .
+            val s0 = state(RP(G, oN, SOR))       // G = . S
+            val s1 = state(RP(T_c, oN, EOR))     // c
+            val s2 = state(RP(T_d, oN, EOR))     // d
+            val s3 = state(RP(C1, oN, 1))   // C1 = c . C
+            val s4 = state(RP(C, o1, EOR))       // C = C1 .
+            val s5 = state(RP(C1, oN, EOR))      // C1 = c C .
+            val s6 = state(RP(C, oN, EOR))       // C = d .
+            val s7 = state(RP(S, oN, 1))    // S = C . C
+            val s8 = state(RP(S, oN, EOR))       // S = C C .
+            val s9 = state(RP(G, oN, EOR))       // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s0, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
 
-            transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C1, 0, 0)))
-            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
-            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C1, oN, 0)))
+            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, oN, 0)))
+            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, oN, 0)))
 
-            transition(s3, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 1, 0)))
-            transition(s7, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 1, 0)))
-            transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, 1, 0)))
+            transition(s3, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, o1, 0)))
+            transition(s7, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, o1, 0)))
+            transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, o1, 0)))
 
             transition(s0, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s3, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
@@ -100,20 +100,20 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             transition(s7, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s7, s3, s2, WIDTH, setOf(EOT), emptySet(), null)
 
-            transition(s3, s4, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, 0, 1)))
-            transition(s7, s4, s8, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, 0, 1)))
-            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, 0, 0)))
+            transition(s3, s4, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, oN, 1)))
+            transition(s7, s4, s8, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, oN, 1)))
+            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, oN, 0)))
 
-            transition(s3, s5, s6, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 0, 0)))
-            transition(s0, s5, s6, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, 0, 0)))
+            transition(s3, s5, s6, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, oN, 0)))
+            transition(s0, s5, s6, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, oN, 0)))
 
-            transition(s3, s6, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, 0, 1)))
-            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, 0, 0)))
+            transition(s3, s6, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, oN, 1)))
+            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, oN, 0)))
 
             transition(s0, s7, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s7, s2, WIDTH, setOf(EOT), emptySet(), null)
 
-            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, 0)))
+            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, 0)))
 
         }
 

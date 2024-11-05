@@ -16,6 +16,7 @@
 
 package net.akehurst.language.sppt.api
 
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.Rule
 
 interface SpptDataNode {
@@ -23,8 +24,8 @@ interface SpptDataNode {
     val startPosition: Int
     val nextInputPosition: Int
     val nextInputNoSkip: Int
-    val option: Int
-    val dynamicPriority:Int
+    val option: OptionNum
+    val dynamicPriority:List<Int>
 }
 
 data class ChildInfo(
@@ -34,7 +35,7 @@ data class ChildInfo(
 )
 
 data class AltInfo(
-    val option: Int,
+    val option: OptionNum,
     val index: Int,
     val totalMatched: Int
 )
@@ -46,7 +47,7 @@ interface SpptDataNodeInfo {
     val alt: AltInfo
     val child: ChildInfo
 
-    val numChildrenAlternatives: Map<Int, Int>
+    val numChildrenAlternatives: Map<OptionNum, Int>
     val totalChildrenFromAllAlternatives: Int
     val numSkipChildren: Int
 }
@@ -79,8 +80,7 @@ interface SpptWalker {
     fun beginEmbedded(nodeInfo: SpptDataNodeInfo)
     fun endEmbedded(nodeInfo: SpptDataNodeInfo)
 
-    //fun error(msg: String, path: () -> List<SpptDataNode>)
-    fun error(msg: String, path: PathFunction)
+    fun treeError(msg: String, path: PathFunction)
 }
 
 data class LeafData(
@@ -109,7 +109,7 @@ interface TreeData {
     val initialSkip: TreeData?
     val isEmpty: Boolean
     fun skipDataAfter(node: SpptDataNode): TreeData?
-    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>>
+    fun childrenFor(node: SpptDataNode): List<Pair<OptionNum, List<SpptDataNode>>>
     fun embeddedFor(node: SpptDataNode): TreeData?
     fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
     fun preferred(node: SpptDataNode): SpptDataNode?

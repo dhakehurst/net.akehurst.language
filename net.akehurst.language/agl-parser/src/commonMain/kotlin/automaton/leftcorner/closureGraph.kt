@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.MapNotNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.RulePosition
 
 internal data class RulePositionUpInfo(
     val context: RulePositionRuntime,
@@ -241,15 +242,15 @@ internal class ClosureGraph(
                         is RuntimeRuleRhsChoice -> "${rr.tag}.${rp.option}"
                         is RuntimeRuleRhsListSimple -> when {
                             rp.isAtStart -> rr.tag + ".b"
-                            rp.position == RulePositionRuntime.POSITION_MULIT_ITEM -> rr.tag + ".i"
+                            rp.position == RulePosition.POSITION_MULIT_ITEM -> rr.tag + ".i"
                             rp.isAtEnd -> rr.tag + ".e"
                             else -> TODO()
                         }
 
                         is RuntimeRuleRhsListSeparated -> when {
                             rp.isAtStart -> rr.tag + ".b"
-                            rp.position == RulePositionRuntime.POSITION_SLIST_SEPARATOR -> rr.tag + ".s"
-                            rp.position == RulePositionRuntime.POSITION_SLIST_ITEM -> rr.tag + ".i"
+                            rp.position == RulePosition.POSITION_SLIST_SEPARATOR -> rr.tag + ".s"
+                            rp.position == RulePosition.POSITION_SLIST_ITEM -> rr.tag + ".i"
                             rp.isAtEnd -> rr.tag + ".e"
                             else -> TODO()
                         }

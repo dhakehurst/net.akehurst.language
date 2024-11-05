@@ -493,7 +493,7 @@ class test_Agl_processorFromStringSimple_parse {
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
-        //assertEquals(expected1, result1.sppt)
+        assertEquals(expected1, result1.sppt)
         assertTrue(result1.issues.isEmpty())
 
         val result2 = pr.processor!!.parse("a");
@@ -503,7 +503,7 @@ class test_Agl_processorFromStringSimple_parse {
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
-        //assertEquals(expected2, result2.sppt)
+        assertEquals(expected2, result2.sppt)
         assertTrue(result2.issues.isEmpty())
 
         val result3 = pr.processor!!.parse("aaa");
@@ -1593,7 +1593,7 @@ class test_Agl_processorFromStringSimple_parse {
             """
             S {
                 'a'
-                §S§choice1 { 'b' }
+                §S§choice1|0 { 'b' }
             }
         """
         )

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.*
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 
@@ -59,18 +60,18 @@ internal class AutomatonBuilderDefault(
     val HEIGHT = ParseAction.HEIGHT
     val GRAFT = ParseAction.GRAFT
 
-    override fun state(ruleNumber: Int, option: Int, position: Int) {
+    override fun state(ruleNumber: Int, option: OptionNum, position: Int) { //TODO: maybe use OptionNum in the signature?
         when {
             RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> state(result.goalRule, option, position)
-            else -> state(rrs.runtimeRules[ruleNumber], option, position)
+            else -> state(rrs.runtimeRules[ruleNumber],  option, position)
         }
     }
 
     override fun state(rp: RulePosition) {
         result.createState(listOf(rp as RulePositionRuntime))
     }
-    internal fun state(rule: Rule) = state(rule, 0, RulePositionRuntime.END_OF_RULE)
-    internal fun state(rule: Rule, option: Int, position: Int) = result.createState(listOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
+    internal fun state(rule: Rule) = state(rule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
+    internal fun state(rule: Rule, option: OptionNum, position: Int) = result.createState(listOf(RulePositionRuntime(rule as RuntimeRule, option, position)))
 
     internal fun state(vararg rulePositions: RulePositionRuntime) = result.createState(rulePositions.toList())
 
@@ -185,7 +186,7 @@ internal class TransitionBuilderDefault internal constructor(
         _context = states
     }
 
-    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) = ctx(RulePositionRuntime(runtimeRule, option, position))
+    fun ctx(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = ctx(RulePositionRuntime(runtimeRule, option, position))
     fun ctx(vararg rulePositions: RulePositionRuntime) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
@@ -198,10 +199,10 @@ internal class TransitionBuilderDefault internal constructor(
 
     fun src(runtimeRule: RuntimeRule) {
         check(this.action == ParseAction.HEIGHT || this.action == ParseAction.GRAFT || this.action == ParseAction.GOAL)
-        src(runtimeRule, 0, RulePositionRuntime.END_OF_RULE)
+        src(runtimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
     }
 
-    fun src(runtimeRule: RuntimeRule, option: Int, position: Int) = src(setOf(RulePositionRuntime(runtimeRule, option, position)))
+    fun src(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = src(setOf(RulePositionRuntime(runtimeRule, option, position)))
     fun src(rulePositions: Set<RulePositionRuntime>) {
         val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
         this.src(state)
@@ -211,8 +212,8 @@ internal class TransitionBuilderDefault internal constructor(
         _src = state
     }
 
-    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, 0, RulePositionRuntime.END_OF_RULE)
-    fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) = tgt(setOf(RulePositionRuntime(runtimeRule, option, position)))
+    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)
+    fun tgt(runtimeRule: RuntimeRule, option: OptionNum, position: Int) = tgt(setOf(RulePositionRuntime(runtimeRule, option, position)))
     fun tgt(rulePositions: Set<RulePositionRuntime>) {
         val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
         this.tgt(state)
@@ -249,7 +250,7 @@ internal class TransitionBuilderDefault internal constructor(
     /**
      * graft prev guard
      */
-    fun gpg(runtimeRule: RuntimeRule, option: Int, position: Int) {
+    fun gpg(runtimeRule: RuntimeRule, option: OptionNum, position: Int) {
         val set = setOf(RulePositionRuntime(runtimeRule, option, position))
         this.gpg(set)
     }

@@ -85,23 +85,23 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, o0, SR))    // G = . S
-            state(RP(G, o0, EOR))    // G = S .
-            state(RP(S, o0, EOR))    // S = E .
-            state(RP(E, o0, EOR))    // E = E1 .
+            state(RP(G, oN, SR))    // G = . S
+            state(RP(G, oN, EOR))    // G = S .
+            state(RP(S, oN, EOR))    // S = E .
+            state(RP(E, oN, EOR))    // E = E1 .
             state(RP(E, o1, EOR))    // E = T .
-            state(RP(T, o0, EOR))    // T = T1 .
-            state(RP(T, o0, EOR))    // T = F .
-            state(RP(F, o0, EOR))    // F = v .
-            state(RP(F, o0, EOR))    // F = F2 .
-            state(RP(F2, o0, EOR))   // F2 = ( E ) .
-            state(RP(o, o0, EOR))    // ( .
-            state(RP(E1, o0, EOR))   // E1 = E a T .
-            state(RP(c, o0, EOR))    // ) .
-            state(RP(v, o0, EOR))    // v .
-            state(RP(T1, o0, EOR))   // T1 = T m F .
-            state(RP(m, o0, EOR))    // m .
-            state(RP(a, o0, EOR))    // a .
+            state(RP(T, oN, EOR))    // T = T1 .
+            state(RP(T, oN, EOR))    // T = F .
+            state(RP(F, oN, EOR))    // F = v .
+            state(RP(F, oN, EOR))    // F = F2 .
+            state(RP(F2, oN, EOR))   // F2 = ( E ) .
+            state(RP(o, oN, EOR))    // ( .
+            state(RP(E1, oN, EOR))   // E1 = E a T .
+            state(RP(c, oN, EOR))    // ) .
+            state(RP(v, oN, EOR))    // v .
+            state(RP(T1, oN, EOR))   // T1 = T m F .
+            state(RP(m, oN, EOR))    // m .
+            state(RP(a, oN, EOR))    // a .
             state(RP(F2, o1, EOR))    // F2 = ( . E )
             state(RP(F2, o2, EOR))    // F2 = ( E . )
             state(RP(E1, o1, EOR))    // E1 = E . a T
@@ -109,9 +109,9 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
             state(RP(T1, o1, EOR))    // T1 = T . m F
             state(RP(T1, o2, EOR))    // T1 = T m . F
 
-            trans(WIDTH) { src(G, o0, SR); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)) }
-            trans(WIDTH) { src(E1, o0, p2); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)); }
-            trans(WIDTH) { src(F2, o0, p1); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)); }
+            trans(WIDTH) { src(G, oN, SR); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)) }
+            trans(WIDTH) { src(E1, oN, p2); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)); }
+            trans(WIDTH) { src(F2, oN, p1); tgt(o); lhg(setOf(v, o)); ctx(RP(G, oN, SOR)); }
             /*
             transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
             transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }

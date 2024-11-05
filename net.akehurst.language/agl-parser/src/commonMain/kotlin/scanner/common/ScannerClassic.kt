@@ -17,10 +17,12 @@
 
 package net.akehurst.language.scanner.common
 
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.api.RegexEngine
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.sentence.api.Sentence
@@ -38,7 +40,7 @@ class ScannerClassic(
 ) : ScannerAbstract(regexEngine) {
 
     companion object {
-        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1,-1)
+        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, RulePosition.OPTION_NONE, emptyList())
     }
 
     //    val issues = IssueHolder(LanguageProcessorPhase.SCAN)
@@ -64,8 +66,8 @@ class ScannerClassic(
     override fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): CompleteTreeDataNode? {
         val l = _leaves[position]
         val res = when {
-            terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, 0,0)
-            terminalRule.isEmptyListTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY_LIST, position, position, position, 0,0)
+            terminalRule.isEmptyTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY, position, position, position, RulePosition.OPTION_NONE,emptyList())
+            terminalRule.isEmptyListTerminal -> CompleteTreeDataNode(RuntimeRuleSet.EMPTY_LIST, position, position, position, RulePosition.OPTION_NONE,emptyList())
             null == l -> {
                 val lf = scanAt(sentence, position)
                 _leaves[position] = lf
@@ -94,7 +96,7 @@ class ScannerClassic(
                 0 -> null
                 else -> {
                     val nip = position + matchLength
-                    CompleteTreeDataNode(it, position, nip, nip, 0,0)
+                    CompleteTreeDataNode(it, position, nip, nip, RulePosition.OPTION_NONE,emptyList())
                 }
             }
         }

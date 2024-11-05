@@ -703,8 +703,8 @@ class test_mscript {
             }
         }
 
+        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty())
         assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
 
@@ -713,10 +713,10 @@ class test_mscript {
 
         val text = "x=1"
         val parseResult = sut.parse(text, Agl.parseOptions { goalRuleName("assignment") })
-        assertTrue(parseResult.issues.errors.isEmpty())
+        assertTrue(parseResult.issues.errors.isEmpty(),parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -740,7 +740,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {

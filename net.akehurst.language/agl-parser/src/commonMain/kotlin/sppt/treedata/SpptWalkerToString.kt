@@ -70,7 +70,7 @@ import net.akehurst.language.sppt.api.SpptWalker
         val tag = if (nodeInfo.alt.totalMatched <= 1) {
             nodeInfo.node.rule.tag
         } else {
-            "${nodeInfo.node.rule.tag}|${nodeInfo.alt.option}"
+            "${nodeInfo.node.rule.tag}|${nodeInfo.alt.option.asIndex}"
         }
         if (siblings == 1) {
             sb.append("$tag {$eol")
@@ -100,7 +100,7 @@ import net.akehurst.language.sppt.api.SpptWalker
 
     }
 
-    override fun error(msg: String, path: PathFunction) {
+    override fun treeError(msg: String, path: PathFunction) {
         val p = path.invoke()
         sb.append("${currentIndent}Error at ${p.last().startPosition}: '$msg'")
         println("${currentIndent}Error at ${p.last().startPosition}: '$msg'")

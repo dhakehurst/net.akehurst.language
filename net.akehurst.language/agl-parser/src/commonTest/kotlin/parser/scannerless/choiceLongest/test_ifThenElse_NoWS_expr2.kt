@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -39,8 +40,8 @@ internal class test_ifThenElse_NoWS_expr2 : test_LeftCornerParserAbstract() {
             }
             pattern("VAR", "U|V|W|X|Y|Z")
             preferenceFor("expr") {
-                rightOption("expr", 1, setOf("'then'"))
-                rightOption("expr", 2, setOf("'then'", "'else'"))
+                rightOption("expr", OptionNum(1), setOf("'then'"))
+                rightOption("expr", OptionNum(2), setOf("'then'", "'else'"))
             }
         }
         val goal = "S"

@@ -58,7 +58,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt, "${sppt?.toStringAllWithIndent("  ")}")
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("A","'a'"))
+            parseError(InputLocation(1,2,1,1),"a^",setOf("A","'a'"))
         ),issues.errors)
     }
 
@@ -93,15 +93,17 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
     }
 
     @Test
-    fun aaa_fail() {
+    fun aaa_pass() {
         val sentence = "aaa"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
-        assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"aa^a",setOf("<EOT>"))
-        ),issues.errors)
+        val expeccted = """
+            S {
+              L { 'a' 'a' }
+              A : 'a'
+            } 
+            """
 
+        super.test(rrs, goal, sentence, 1, expeccted)
     }
 
     @Test

@@ -22,6 +22,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart.Companion.unionAll
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.RulePosition
 
 internal class BuildCacheLC1(
     stateSet: ParserStateSet
@@ -88,7 +89,7 @@ internal class BuildCacheLC1(
         ) {
             val to: List<RulePositionRuntime>
                 get() = when (this.action) {
-                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePositionRuntime(it, 0, RulePositionRuntime.END_OF_RULE) }
+                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePositionRuntime(it, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE) }
                     ParseAction.HEIGHT, ParseAction.GRAFT -> this.parent?.rulePosition?.next()?.toList() ?: emptyList()
                     ParseAction.GOAL -> listOf(prev.atEnd())
                 }

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
 import net.akehurst.language.automaton.leftcorner.ParserState
 import net.akehurst.language.automaton.leftcorner.Transition
+import net.akehurst.language.parser.api.OptionNum
 
 internal data class StateInfoUncompressed(
     val rulePosition: RulePositionRuntime,
@@ -34,7 +35,7 @@ internal class RuntimeState(
 
 
     val isAtEnd: Boolean get() = state.isAtEnd
-    val optionList: List<Int> get() = state.optionList
+    val optionList: List<OptionNum> get() = state.optionList
 
     val uncompressed: Set<StateInfoUncompressed> by lazy {
         //TODO: Maybe runtimeLookahead should be indexed by RulePosition

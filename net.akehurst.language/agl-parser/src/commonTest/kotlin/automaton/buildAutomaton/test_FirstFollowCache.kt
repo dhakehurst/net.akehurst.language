@@ -45,7 +45,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
     }
 
     private fun check_calcAllClosure(G: RuntimeRule, expectedShortStr: Set<String>) {
-        val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
+        val graph = ClosureGraph(RP(G, oN, SR), RP(G, oN, SR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 
         val actualShortStr = graph.nonRootClosures.flatMap { cls -> cls.shortString }.toSet()
@@ -74,7 +74,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         nextContextFollow: LookaheadSetPart,
         expected: Set<FirstTerminalInfo>
     ) {
-        val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
+        val graph = ClosureGraph(RP(G, oN, SR), RP(G, oN, SR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 
         val actual = sut.firstTerminalInContext(context, rulePosition, nextContextFollow)
@@ -94,7 +94,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
     }
 
     private fun check_parentInContext_all(G: RuntimeRule, contextContext: RulePositionRuntime, context: RulePositionRuntime, rule: RuntimeRule, expected: Set<ParentNext>) {
-        val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
+        val graph = ClosureGraph(RP(G, oN, SR), RP(G, oN, SR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 
         val actual = sut.parentInContext(contextContext, context, rule)
@@ -114,7 +114,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val c = rrs.findRuntimeRule("'c'")
 
         check_calcFirstTermClosure(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 "G",
                 "G-S[0]",
@@ -137,7 +137,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
         // G=.S -- W[b] --> 'a'
         check_firstTerminalInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(b))
             )
@@ -145,15 +145,15 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
         // G=.S -- H[b](EOT) --> S=a.bc
         check_parentInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT, a,
             setOf(
-                ParentNext(firstPosition = true, rulePosition = RP(S, o0, p1), expectedAt = LHS(b), parentExpectedAt = LHS(EOT))
+                ParentNext(firstPosition = true, rulePosition = RP(S, oN, p1), expectedAt = LHS(b), parentExpectedAt = LHS(EOT))
             )
         )
 
         // S=a.bc -- W[c] --> 'b'
         check_firstTerminalInContext(
-            RP(G, o0, SOR), RP(S, o0, p1), LookaheadSetPart.RT,
+            RP(G, oN, SOR), RP(S, oN, p1), LookaheadSetPart.RT,
             setOf(
                 FirstTerminalInfo(terminalRule = b, parentExpectedAt = LHS(c))
             )
@@ -162,7 +162,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // G=.S -- W --> 'a'
         check_firstTerminalInContext_all(
             G,
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(b))
             )
@@ -186,7 +186,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val a = rrs.findRuntimeRule("'a'")
 /*
         check_calcFirstTermClosure(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 "G",
                 "G-S.0",
@@ -231,7 +231,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
         // G=.S -- W --> 'a'
         check_firstTerminalInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(EOT)),
                 FirstTerminalInfo(a, LHS(a))
@@ -241,16 +241,16 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // a -- H[<EOT>](<EOT>) --> S=a.    | G-S.0-'a'
         // a -- H[a](a, <EOT>) --> S=a.     | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT, a,
             setOf(
-                ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
-                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a, EOT))
+                ParentNext(true, RP(S, oN, ER), LHS(EOT), LHS(EOT)),
+                ParentNext(true, RP(S, oN, ER), LHS(a), LHS(a, EOT))
             )
         )
 
         // S1=S.a -- W[RT] --> 'a'
         check_firstTerminalInContext(
-            RP(G, o0, SOR), RP(S1, o0, p1), LookaheadSetPart.RT,
+            RP(G, oN, SOR), RP(S1, oN, p1), LookaheadSetPart.RT,
             setOf(
                 FirstTerminalInfo(a, LHS(RT))
             )
@@ -259,7 +259,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // G=.S -- W --> 'a'
         check_firstTerminalInContext_all(
             G,
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(EOT)),
                 FirstTerminalInfo(a, LHS(a))
@@ -270,10 +270,10 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // a -- H[a](a, <EOT>) --> S=a.     | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext_all(
             G,
-            RP(G, o0, SR), RP(G, o0, SR), a,
+            RP(G, oN, SR), RP(G, oN, SR), a,
             setOf(
-                ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
-                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a, EOT))
+                ParentNext(true, RP(S, oN, ER), LHS(EOT), LHS(EOT)),
+                ParentNext(true, RP(S, oN, ER), LHS(a), LHS(a, EOT))
             )
         )
 */
@@ -281,11 +281,11 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // S -- H[a](a,<EOT>) --> S1=S.a       | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext_all(
             G,
-            RP(G, o0, SR), RP(G, o0, SR), S,
+            RP(G, oN, SR), RP(G, oN, SR), S,
             setOf(
-                ParentNext(true, RP(G, o0, ER), LHS(EOT), LHS()),
-                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(EOT)),
-                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(a))
+                ParentNext(true, RP(G, oN, ER), LHS(EOT), LHS()),
+                ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(EOT)),
+                ParentNext(true, RP(S1, oN, p1), LHS(a), LHS(a))
             )
         )
 //ParentNext(firstPosition=true, rulePosition=0.RP(<GOAL>,0,-1), firstOf=LHS(<EOT>), parentFollow=LHS()),
@@ -296,7 +296,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // S1=S.a -- W[<EOT>,a] --> 'a'
         check_firstTerminalInContext_all(
             G,
-            RP(G, o0, SOR), RP(S1, o0, p1), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(S1, oN, p1), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(EOT)),
                 FirstTerminalInfo(a, LHS(a))
@@ -335,7 +335,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val b = rrs.findRuntimeRule("'b'")
 
         check_calcFirstTermClosure(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 "G",
                 "G-S.b",
@@ -361,7 +361,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // G=.S -- W[b,<EOT>] --> 'a'
         // G=.S -- W[<EOT>] --> <empty>
         check_firstTerminalInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 FirstTerminalInfo(a, LHS(b, EOT)),
                 FirstTerminalInfo(EMPTY, LHS(EOT))
@@ -369,10 +369,10 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         )
 
         check_parentInContext(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT, a,
             setOf(
-                ParentNext(true, RP(S, OLI, PLS), LHS(b), LHS(EOT)),
-                ParentNext(true, RP(S, OLI, ER), LHS(EOT), LHS(EOT))
+                ParentNext(true, RP(S, oSI, PLS), LHS(b), LHS(EOT)),
+                ParentNext(true, RP(S, oSI, ER), LHS(EOT), LHS(EOT))
             )
         )
 
@@ -410,7 +410,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val G = rrs.goalRuleFor[NE]
 
         check_calcFirstTermClosure(
-            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            RP(G, oN, SOR), RP(G, oN, SOR), LookaheadSetPart.EOT,
             setOf(
                 "G-NE.0",
                 "G-NE.1",

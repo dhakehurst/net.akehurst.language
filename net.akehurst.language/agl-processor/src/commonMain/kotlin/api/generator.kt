@@ -35,6 +35,8 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     companion object {
         const val GOAL_RULE = RuntimeRuleSet.GOAL_RULE_NUMBER
 
+        val OP_NONE = RulePosition.OPTION_NONE
+
         const val SR = RulePosition.START_OF_RULE
         const val ER = RulePosition.END_OF_RULE
 

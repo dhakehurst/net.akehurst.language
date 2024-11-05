@@ -39,7 +39,7 @@ internal class GrowingNodeIndex(
     val nextInputPositionBeforeSkip: Int,
     val nextInputPositionAfterSkip: Int,
     val numNonSkipChildren: Int, //for use with MULTI and SEPARATED_LIST
-    val childrenPriorities: List<List<Int>>?
+    val childrenPriorities: List<List<Int>>
 ) {
 
     companion object {
@@ -63,7 +63,7 @@ internal class GrowingNodeIndex(
         //CompleteNodeIndex(runtimeState.state, startPosition, nextInputPositionBeforeSkip, nextInputPositionAfterSkip)
     }
 
-    val dynamicPriority:Int get() = childrenPriorities?.map { it.get(0) }?.reduce() { acc, i ->  acc+ i} ?: 0 //TODO: this needs improving
+    val dynamicPriority:List<Int> get() = childrenPriorities.map { it.get(0) }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPositionAfterSkip, numNonSkipChildren).contentHashCode()
 

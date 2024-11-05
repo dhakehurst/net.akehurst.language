@@ -123,7 +123,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     //             | selectorSingle
     //             ; //TODO
     fun selectorExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
-        when (nodeInfo.alt.option) {
+        when (nodeInfo.alt.option.asIndex) {
             0 -> children[0] as List<AglStyleSelector>
             1 -> listOf(children[0] as AglStyleSelector)
             else -> error("Internal error: alternative 'selectorExpression' not handled")
@@ -146,7 +146,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         } else {
             mt.replace("\\'", "'").replace("\\\\", "\\")
         }
-        val kind = when (nodeInfo.alt.option) {
+        val kind = when (nodeInfo.alt.option.asIndex) {
             0 -> AglStyleSelectorKind.LITERAL
             1 -> AglStyleSelectorKind.PATTERN
             2 -> AglStyleSelectorKind.RULE_NAME

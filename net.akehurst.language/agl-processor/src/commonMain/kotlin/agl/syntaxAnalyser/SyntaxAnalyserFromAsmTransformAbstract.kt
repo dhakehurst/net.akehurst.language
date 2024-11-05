@@ -199,7 +199,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: PathFunction) {
+            override fun treeError(msg: String, path: PathFunction) {
                 issues.error(null, "Error 'msg' at '${path.invoke().joinToString(separator = "/")}'")
             }
 
@@ -310,7 +310,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                         }
 
                         is UnnamedSupertypeType -> {
-                            val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option]
+                            val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option.asIndex]
                             transformationRule(subtype, RootExpressionSimple.SELF)
                         }
 
@@ -402,7 +402,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         if (Debug.CHECK) check(parentTypeUsage.isNullable)
-        val tu = (parentTypeUsage.declaration as UnnamedSupertypeType).subtypes[nodeInfo.parentAlt.option]
+        val tu =  (parentTypeUsage.declaration as UnnamedSupertypeType).subtypes[nodeInfo.alt.option.asIndex]
         return tu
     }
 
@@ -414,7 +414,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     private fun typeForParentElement(parentType: DataType, nodeInfo: SpptDataNodeInfo): TypeInstance {
         return when {
             parentType.subtypes.isNotEmpty() -> {
-                val t = parentType.subtypes[nodeInfo.parentAlt.option]
+                val t = parentType.subtypes[nodeInfo.parentAlt.option.asIndex]
                 return t
             }
 
@@ -429,7 +429,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         val type = typeUse.declaration
         return when {
             type is DataType && type.subtypes.isNotEmpty() -> {
-                val t = type.subtypes[nodeInfo.alt.option]
+                val t = type.subtypes[nodeInfo.alt.option.asIndex]
                 t
             }
 
@@ -497,18 +497,20 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 }
             }
 
-            typeDecl is UnnamedSupertypeType -> when {
-                // special cases where PT is compressed for choice of concats
-                nodeInfo.node.rule.isChoice -> when {
-                    typeDecl.subtypes[nodeInfo.alt.option].declaration is TupleType -> DownData2(
-                        p,
-                        NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option].toSubtypeTrRule())
-                    )
+            typeDecl is UnnamedSupertypeType -> {
+                when {
+                    // special cases where PT is compressed for choice of concats
+                    nodeInfo.node.rule.isChoice -> when {
+                        typeDecl.subtypes[nodeInfo.alt.option.asIndex].declaration is TupleType -> DownData2(
+                            p,
+                            NodeTrRules(trRule, typeDecl.subtypes[nodeInfo.alt.option.asIndex].toSubtypeTrRule())
+                        )
+
+                        else -> DownData2(p, NodeTrRules(trRule))
+                    }
 
                     else -> DownData2(p, NodeTrRules(trRule))
                 }
-
-                else -> DownData2(p, NodeTrRules(trRule))
             }
 
             else -> DownData2(p, NodeTrRules(trRule))
@@ -520,7 +522,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         return when {
             type is UnnamedSupertypeType -> when {
                 nodeInfo.node.rule.isChoice && type.subtypes.isNotEmpty() -> {
-                    val t = type.subtypes[nodeInfo.alt.option]
+                    val t = type.subtypes[nodeInfo.alt.option.asIndex]
                     t
                 }
 
@@ -553,7 +555,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
 
         val asmPath = AsmAnySimple.stdAny(downData.path)
-        val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option)
+        val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option.value)
         val leaf = when { //FIXME: only sometimes need this!
             children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
             else -> AsmNothingSimple
@@ -602,7 +604,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     }
 
                     is UnnamedSupertypeType -> {
-                        val actualType = type.subtypes[target.alt.option].declaration
+                        val actualType = type.subtypes[target.alt.option.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType, downData.path, children)
                             else -> children[0].value as AsmValue
@@ -885,7 +887,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     is TupleType -> createTupleFrom(sentence, propType, path, childData.value as List<ChildData>)
 
                     is UnnamedSupertypeType -> {
-                        val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option].declaration
+                        val opt = childData.nodeInfo.parentAlt.option
+                        if(RulePosition.OPTION_NONE == opt) error("Should not happen")
+                        val actualType = propType.subtypes[opt.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType as TupleType, path, childData.value as List<ChildData>)
                             else -> {

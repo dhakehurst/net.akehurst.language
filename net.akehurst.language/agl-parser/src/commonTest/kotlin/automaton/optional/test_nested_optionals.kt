@@ -80,16 +80,16 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, o0, SR))
-            val s1 = state(RP(i, o0, EOR))
-            val s2 = state(RP(S, o0, p1))
-            val s3 = state(RP(a, o0, EOR))
+            val s0 = state(RP(G, oN, SR))
+            val s1 = state(RP(i, oN, EOR))
+            val s2 = state(RP(S, oN, p1))
+            val s3 = state(RP(a, oN, EOR))
 
 
 
-            trans(WIDTH) { ctx(G, o0, SR); src(S, o0, p1); tgt(a); lhg(b) }
-            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, p1); tgt(i); lhg(a) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(i); tgt(S, o0, p1); lhg(a) }
+            trans(WIDTH) { ctx(G, oN, SR); src(S, oN, p1); tgt(a); lhg(b) }
+            trans(WIDTH) { ctx(G, oN, SOR); src(G, oN, p1); tgt(i); lhg(a) }
+            trans(HEIGHT) { ctx(G, oN, SOR); src(i); tgt(S, oN, p1); lhg(a) }
 
         }
         AutomatonTest.assertEquals(expected, actual)

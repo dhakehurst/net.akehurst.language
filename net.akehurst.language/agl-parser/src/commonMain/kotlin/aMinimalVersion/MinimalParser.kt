@@ -25,6 +25,8 @@ import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.binaryHeap
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.api.Sentence
@@ -59,7 +61,7 @@ class AutomatonForMinimal(
     val states get() = _states.values
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startState = createState(RulePositionRuntime(goalRule, 0, 0))
+    val startState = createState(RulePositionRuntime(goalRule, RulePosition.OPTION_NONE, 0))
 
     val usedRules: Set<RuntimeRule> by lazy {
         this.runtimeRuleSet.calcUsedRules(this.startState.rp.rule)
@@ -216,8 +218,8 @@ class CompleteNodeForMinimal(
     override val startPosition: Int,
     override val nextInputPosition: Int,
     override val nextInputNoSkip: Int, // not part of definition, just easy way to pass it to SPPF
-    override val option: Int, // not part of definition, just easy way to pass it to SPPF
-    override val dynamicPriority: Int
+    override val option: OptionNum, // not part of definition, just easy way to pass it to SPPF
+    override val dynamicPriority: List<Int>
 ) : SpptDataNode {
 
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
@@ -268,7 +270,7 @@ class MinimalParser private constructor(
             }
         }
 
-        private val GSSNodeForMinimal.complete get() = CompleteNodeForMinimal(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option,0) //TODO: dynamicPriority!
+        private val GSSNodeForMinimal.complete get() = CompleteNodeForMinimal(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option, emptyList()) //TODO: dynamicPriority!
 
         private fun GraphStructuredStack<GSSNodeForMinimal>.setRoot(
             state: StateForMinimal,

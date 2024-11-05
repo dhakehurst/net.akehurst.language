@@ -105,35 +105,35 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(d, 0, EOR))      // d
-            val s2 = state(RP(b, 0, EOR))      // b
-            val s3 = state(RP(rA, 0, EOR))     // A = d .
-            val s4 = state(RP(rB, 0, EOR))     // B = d .
-            val s5 = state(RP(S1, 0, 1))  // S1 = A . a
-            val s6 = state(RP(a, 0, EOR))
-            val s7 = state(RP(S1, 0, EOR))
-            val s8 = state(RP(S, 0, EOR))
-            val s9 = state(RP(G, 0, ER))
-            val s10 = state(RP(S3, 0, 1))
-            val s11 = state(RP(c, 0, ER))
-            val s12 = state(RP(S3, 0, ER))
-            val s13 = state(RP(S, 2, ER))
-            val s14 = state(RP(S2, 0, 1), RP(S4, 0, 1))
-            val s15 = state(RP(S2, 0, 2))
-            val s16 = state(RP(S2, 0, ER))
-            val s17 = state(RP(S, 1, ER))
-            val s18 = state(RP(S4, 0, 2))
-            val s19 = state(RP(S4, 0, ER))
-            val s20 = state(RP(S, 3, ER))
+            val s0 = state(RP(G, oN, SOR))      // G = . S
+            val s1 = state(RP(d, oN, EOR))      // d
+            val s2 = state(RP(b, oN, EOR))      // b
+            val s3 = state(RP(rA, oN, EOR))     // A = d .
+            val s4 = state(RP(rB, oN, EOR))     // B = d .
+            val s5 = state(RP(S1, oN, 1))  // S1 = A . a
+            val s6 = state(RP(a, oN, EOR))
+            val s7 = state(RP(S1, oN, EOR))
+            val s8 = state(RP(S, oN, EOR))
+            val s9 = state(RP(G, oN, ER))
+            val s10 = state(RP(S3, oN, 1))
+            val s11 = state(RP(c, oN, ER))
+            val s12 = state(RP(S3, oN, ER))
+            val s13 = state(RP(S, o2, ER))
+            val s14 = state(RP(S2, oN, 1), RP(S4, oN, 1))
+            val s15 = state(RP(S2, oN, 2))
+            val s16 = state(RP(S2, oN, ER))
+            val s17 = state(RP(S, o1, ER))
+            val s18 = state(RP(S4, oN, 2))
+            val s19 = state(RP(S4, oN, ER))
+            val s20 = state(RP(S, o3, ER))
 
             transition(s0, s0, s1, WIDTH, setOf(a, c), setOf(setOf(EOT)), setOf())
             transition(s0, s0, s2, WIDTH, setOf(d), setOf(setOf(EOT)), setOf())
 
-            transition(s0, s1, s3, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rA, 0, 0)))
-            transition(s0, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rB, 0, 0)))
-            transition(s14, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rA, 0, 0)))
-            transition(s14, s1, s4, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rB, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rA, oN, 0)))
+            transition(s0, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rB, oN, 0)))
+            transition(s14, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rA, oN, 0)))
+            transition(s14, s1, s4, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rB, oN, 0)))
 
             transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(setOf(EOT)), setOf())
             transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(setOf(EOT)), setOf())

@@ -77,19 +77,19 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, o0, SR)       // G = . S
+            state(G, oN, SR)       // G = . S
             state(tVAR)           // VAR
             state(tIF)           // 'if'
-            state(rIfThenElse, o0, p1)   // ifthenelse = 'if' . expr 'then' expr 'else' expr ;
-            state(rIfThen, o0, p1)       // ifthen = 'if' . expr 'then' expr ;
+            state(rIfThenElse, oN, p1)   // ifthenelse = 'if' . expr 'then' expr 'else' expr ;
+            state(rIfThen, oN, p1)       // ifthen = 'if' . expr 'then' expr ;
             state(rExpr)       // G = S .
 
-            trans(WIDTH) { src(G, o0, SR); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, o0, SR) }
-            trans(WIDTH) { src(rIfThenElse, o0, p1); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, o0, SR) }
-            trans(WIDTH) { src(rIfThenElse, o0, p1); tgt(tVAR); lhg(setOf(tTHEN)); ctx(G, o0, SR) }
+            trans(WIDTH) { src(G, oN, SR); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tIF); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
+            trans(WIDTH) { src(rIfThenElse, oN, p1); tgt(tVAR); lhg(setOf(tTHEN)); ctx(G, oN, SR) }
 
-            trans(HEIGHT) { src(tIF); tgt(rIfThen, o0, p1); lhg(setOf(tVAR, tIF)); ctx(G, o0, SR) }
-            trans(HEIGHT) { src(tIF); tgt(rIfThenElse, o0, p1); lhg(setOf(tVAR, tIF)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(tIF); tgt(rIfThen, oN, p1); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
+            trans(HEIGHT) { src(tIF); tgt(rIfThenElse, oN, p1); lhg(setOf(tVAR, tIF)); ctx(G, oN, SR) }
 
         }
 
@@ -145,25 +145,25 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, o0, SR)
+            state(G, oN, SR)
             state(tVAR)
             state(tIF)
             state(G)
             state(S)
             state(rIfThenElse)
-            state(rIfThenElse, o0, 4)
+            state(rIfThenElse, oN, 4)
             state(rIfThen)
-            state(rIfThenElse, o0, 2)
-            state(rIfThen, o0, 2)
+            state(rIfThenElse, oN, 2)
+            state(rIfThen, oN, 2)
             state(rExpr, o1, ER)
             state(tTHEN)
-            state(rConditional, o0, ER)
+            state(rConditional, oN, ER)
             state(tELSE)
             state(rConditional, o1, ER)
-            state(rExpr, o0, ER)
-            state(RP(rIfThenElse, o0, p1), RP(rIfThen, o0, p1))
-            state(rIfThen, o0, p3)
-            state(rIfThenElse, o0, p5)
+            state(rExpr, oN, ER)
+            state(RP(rIfThenElse, oN, p1), RP(rIfThen, oN, p1))
+            state(rIfThen, oN, p3)
+            state(rIfThenElse, oN, p5)
         }
 
         AutomatonTest.assertEquals(expected, actual)

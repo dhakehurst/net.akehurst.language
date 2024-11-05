@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_acsOads_e : test_LeftCornerParserAbstract() {
+class test_acsOads_e : test_LeftCornerParserAbstract() {
 
     // S = ambig 'e'
     // ambig = acs || ads

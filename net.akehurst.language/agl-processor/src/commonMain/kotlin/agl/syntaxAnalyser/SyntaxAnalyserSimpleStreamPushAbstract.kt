@@ -200,7 +200,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                 // do nothing
             }
 
-            override fun error(msg: String, path: PathFunction) {
+            override fun treeError(msg: String, path: PathFunction) {
                 TODO("not implemented")
             }
 
@@ -304,7 +304,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         if (Debug.CHECK) check(parentTypeUsage.isNullable)
-        val tu = (parentTypeUsage.declaration as UnnamedSupertypeType).subtypes[nodeInfo.parentAlt.option]
+        val tu = (parentTypeUsage.declaration as UnnamedSupertypeType).subtypes[nodeInfo.parentAlt.option.asIndex]
         return tu
     }
 
@@ -316,7 +316,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
     private fun typeForParentElement(parentType: DataType, nodeInfo: SpptDataNodeInfo): TypeInstance {
         return when {
             parentType.subtypes.isNotEmpty() -> {
-                val t = parentType.subtypes[nodeInfo.parentAlt.option]
+                val t = parentType.subtypes[nodeInfo.parentAlt.option.asIndex]
                 return t
             }
 
@@ -331,7 +331,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         val type = typeUse.declaration
         return when {
             type is DataType && type.subtypes.isNotEmpty() -> {
-                val t = type.subtypes[nodeInfo.alt.option]
+                val t = type.subtypes[nodeInfo.alt.option.asIndex]
                 t
             }
 
@@ -390,7 +390,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
             type is UnnamedSupertypeType -> when {
                 // special cases where PT is compressed for choice of concats
                 nodeInfo.node.rule.isChoice -> when {
-                    type.subtypes[nodeInfo.alt.option].declaration is TupleType -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option])
+                    type.subtypes[nodeInfo.alt.option.asIndex].declaration is TupleType -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option.asIndex])
                     else -> NodeTypes(typeUsage)
                 }
 
@@ -406,7 +406,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         return when {
             type is UnnamedSupertypeType -> when {
                 nodeInfo.node.rule.isChoice && type.subtypes.isNotEmpty() -> {
-                    val t = type.subtypes[nodeInfo.alt.option]
+                    val t = type.subtypes[nodeInfo.alt.option.asIndex]
                     t
                 }
 
@@ -441,7 +441,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                     }
 
                     is UnnamedSupertypeType -> {
-                        val actualType = type.subtypes[target.alt.option].declaration
+                        val actualType = type.subtypes[target.alt.option.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType, downData.path, children)
                             else -> children[0].value
@@ -654,7 +654,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                     is TupleType -> createTupleFrom(sentence, propType, path, childData.value as List<ChildDataAny>)
 
                     is UnnamedSupertypeType -> {
-                        val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option].declaration
+                        val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType, path, childData.value as List<ChildDataAny>)
                             else -> {

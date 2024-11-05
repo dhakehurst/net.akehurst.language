@@ -46,10 +46,10 @@ internal class test_multi_1_n_choice : test_AutomatonAbstract() {
         val b = rrs.findRuntimeRule("'b'")
 
         val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePositionRuntime(a, 0, RulePositionRuntime.END_OF_RULE)))
-        val s2 = SM.createState(listOf(RulePositionRuntime(b, 0, RulePositionRuntime.END_OF_RULE)))
-        val s3 = SM.createState(listOf(RulePositionRuntime(AB, 0, RulePositionRuntime.END_OF_RULE)))
-        val s4 = SM.createState(listOf(RulePositionRuntime(S, 0, RulePositionRuntime.END_OF_RULE)))
+        val s1 = SM.createState(listOf(RulePositionRuntime(a, oN, ER)))
+        val s2 = SM.createState(listOf(RulePositionRuntime(b, oN, ER)))
+        val s3 = SM.createState(listOf(RulePositionRuntime(AB, oN, ER)))
+        val s4 = SM.createState(listOf(RulePositionRuntime(S, oN, ER)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
         val lhs_ab = SM.createLookaheadSet(false, false, false, setOf(a, b))

@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -55,22 +56,22 @@ class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_S = SM.createState(listOf(RulePositionRuntime(rule_S, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_S = SM.createState(listOf(RulePositionRuntime(rule_S, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
         val sut = graph.treeData
 
         val sentence = "a"
 
         sut.setFirstChildForGrowing(
-            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
-            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0, null).complete,
+            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, emptyList()),
+            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0, emptyList()).complete,
         )
         sut.setFirstChildForGrowing(
-            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
-            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null).complete
+            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1, emptyList()),
+            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, emptyList()).complete
         )
-        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 1, 1,0,0))
+        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 1, 1,RulePosition.OPTION_NONE,emptyList()))
 
         val expected = sppt.addTree(
             """
@@ -97,36 +98,36 @@ class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_S1 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, 1)))
-        val state_S2 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, 2)))
-        val state_S3 = SM.createState(listOf(RulePositionRuntime(rule_S, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_b = SM.createState(listOf(RulePositionRuntime(rule_b, 0, RulePositionRuntime.END_OF_RULE)))
-        val state_c = SM.createState(listOf(RulePositionRuntime(rule_c, 0, RulePositionRuntime.END_OF_RULE)))
+        val state_Ge = SM.createState(listOf(RulePositionRuntime(rule_G, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_S1 = SM.createState(listOf(RulePositionRuntime(rule_S, RulePosition.OPTION_NONE, 1)))
+        val state_S2 = SM.createState(listOf(RulePositionRuntime(rule_S, RulePosition.OPTION_NONE, 2)))
+        val state_S3 = SM.createState(listOf(RulePositionRuntime(rule_S, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePositionRuntime(rule_a, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_b = SM.createState(listOf(RulePositionRuntime(rule_b, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
+        val state_c = SM.createState(listOf(RulePositionRuntime(rule_c, RulePosition.OPTION_NONE, RulePosition.END_OF_RULE)))
         val sut = TreeDataGrowing<GrowingNodeIndex, SpptDataNode>(0)
 
         val sentence = "abc"
 
         sut.setFirstChildForGrowing(
-            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
-            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0, null).complete,
+            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, emptyList()),
+            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0, emptyList()).complete,
         )
         sut.setNextChildForGrowingParent(
-            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
-            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, null),
-            graph.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY), 1, 2, 2, 0, null).complete,
+            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, emptyList()),
+            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, emptyList()),
+            graph.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY), 1, 2, 2, 0, emptyList()).complete,
         )
         sut.setNextChildForGrowingParent(
-            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, null),
-            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 3, null),
-            graph.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY), 2, 3, 3, 0, null).complete,
+            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, emptyList()),
+            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 3, emptyList()),
+            graph.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY), 2, 3, 3, 0, emptyList()).complete,
         )
         sut.setFirstChildForGrowing(
-            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null),
-            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null).complete,
+            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1, emptyList()),
+            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1, emptyList()).complete,
         )
-        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 3, 3,0,0))
+        graph.treeData.complete.setRootTo(CompleteTreeDataNode(state_Ge.firstRule, 0, 3, 3,RulePosition.OPTION_NONE,emptyList()))
 
         val expected = sppt.addTree(
             """

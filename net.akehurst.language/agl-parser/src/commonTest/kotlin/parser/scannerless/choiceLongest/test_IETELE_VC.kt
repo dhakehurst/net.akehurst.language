@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -43,8 +44,8 @@ internal class test_IETELE_VC : test_LeftCornerParserAbstract() {
             }
             concatenation("V") { literal("v") }
             preferenceFor("E") {
-                rightOption("C",0, setOf("'t'"))
-                rightOption("C",1, setOf("'t'","'s'"))
+                rightOption("C",OptionNum(0), setOf("'t'"))
+                rightOption("C", OptionNum(1), setOf("'t'","'s'"))
             }
         }
         val goal = "S"

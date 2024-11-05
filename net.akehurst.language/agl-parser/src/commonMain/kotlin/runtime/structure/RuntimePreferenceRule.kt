@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.PrefRule
 
 class RuntimePreferenceRule(
@@ -29,7 +30,7 @@ class RuntimePreferenceRule(
     data class RuntimePreferenceOption(
         val precedence: Int,
         val target: RuntimeRule,
-        val option: Int,
+        val option: OptionNum,
         val operators: Set<RuntimeRule>,
         val associativity: Assoc
     )

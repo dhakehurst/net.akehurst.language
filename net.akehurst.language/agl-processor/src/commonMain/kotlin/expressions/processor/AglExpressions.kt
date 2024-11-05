@@ -210,7 +210,7 @@ grammar Expression extends Base {
             optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("INFIX_OPERATOR"))
             // really want to match the 'ER' position ??
             optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("->"))
-            optionRight("whenOption", 0, listOf("->"))
+            optionRight("whenOption", RulePosition.OPTION_NONE, listOf("->"))
         }
     }
 

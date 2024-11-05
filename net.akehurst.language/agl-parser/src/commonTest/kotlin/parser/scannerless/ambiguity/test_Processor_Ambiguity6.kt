@@ -154,9 +154,9 @@ internal class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
         assertEquals("Pr", Pr.rule.tag)
         assertEquals("Ev", Ev.rule.tag)
 
-        assertEquals(0, Ex.option)
-        assertEquals(1, Pr.option)
-        assertEquals(0, Ev.option)
+        assertEquals(0, Ex.option.value)
+        assertEquals(1, Pr.option.value)
+        assertEquals(0, Ev.option.value)
     }
 
     @Test

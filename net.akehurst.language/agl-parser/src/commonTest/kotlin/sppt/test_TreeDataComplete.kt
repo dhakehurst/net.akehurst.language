@@ -20,6 +20,8 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -33,7 +35,7 @@ import net.akehurst.language.sppt.treedata.SpptWalkerToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_TreeDataComplete {
+class test_TreeDataComplete {
 
     companion object {
         fun TreeData.asString(sentence: Sentence): String {
@@ -42,7 +44,7 @@ internal class test_TreeDataComplete {
             return walker.output
         }
 
-        fun test(sentence: String, rrs: RuntimeRuleSet, goal: String, parent: SpptDataNode, expected: List<Pair<Int, List<SpptDataNode>>>) {
+        fun test(sentence: String, rrs: RuntimeRuleSet, goal: String, parent: SpptDataNode, expected: List<Pair<OptionNum, List<SpptDataNode>>>) {
             //when ()
             val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
             val tree = parser.parse(sentence, ParseOptionsDefault(goal)).sppt!!.treeData
@@ -62,8 +64,8 @@ internal class test_TreeDataComplete {
         }
         val a = rrs.findRuntimeRule("'a'")
 
-        val expected = listOf<Pair<Int, List<SpptDataNode>>>()
-        val parent = CompleteTreeDataNode(a, 0, 1, 1, 0,-1)
+        val expected = listOf<Pair<OptionNum, List<SpptDataNode>>>()
+        val parent = CompleteTreeDataNode(a, 0, 1, 1, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, "S", parent, expected)
     }
@@ -77,10 +79,10 @@ internal class test_TreeDataComplete {
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
 
-        val expected = listOf<Pair<Int, List<SpptDataNode>>>(
-            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0,-1)))
+        val expected = listOf<Pair<OptionNum, List<SpptDataNode>>>(
+            Pair(RulePosition.OPTION_NONE, listOf(CompleteTreeDataNode(a, 0, 1, 1, RulePosition.OPTION_NONE, emptyList())))
         )
-        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0,-1)
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, "S", parent, expected)
     }
@@ -99,11 +101,12 @@ internal class test_TreeDataComplete {
         }
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
+        val rA = rrs.findRuntimeRule("A")
 
-        val expected = listOf<Pair<Int, List<SpptDataNode>>>(
-            Pair(0, listOf(CompleteTreeDataNode(a, 0, 1, 1, 0,-1)))
+        val expected = listOf<Pair<OptionNum, List<SpptDataNode>>>(
+            Pair(OptionNum(1), listOf(CompleteTreeDataNode(rA, 0, 1, 1, OptionNum(1), emptyList())))
         )
-        val parent = CompleteTreeDataNode(S, 0, 1, 1, 0,-1)
+        val parent = CompleteTreeDataNode(S, 0, 1, 1, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, "S", parent, expected)
     }

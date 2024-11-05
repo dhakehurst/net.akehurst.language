@@ -34,6 +34,7 @@ import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parsermessages.Message
 import net.akehurst.language.scanner.common.ScannerClassic
@@ -457,8 +458,8 @@ internal class RuntimeParser(
                         val p2 = t2.to.rulePositions.first().position
                         when {
                             p1 == p2 -> 0
-                            RulePositionRuntime.END_OF_RULE == p1 -> 1
-                            RulePositionRuntime.END_OF_RULE == p2 -> -1
+                            RulePosition.END_OF_RULE == p1 -> 1
+                            RulePosition.END_OF_RULE == p2 -> -1
                             p1 > p2 -> 1
                             p1 < p2 -> -1
                             else -> 0// should never happen !
@@ -533,8 +534,8 @@ internal class RuntimeParser(
             val p2 = t2.first.to.rulePositions.first().position
             when {
                 p1 == p2 -> 0
-                RulePositionRuntime.END_OF_RULE == p1 -> 1
-                RulePositionRuntime.END_OF_RULE == p2 -> -1
+                RulePosition.END_OF_RULE == p1 -> 1
+                RulePosition.END_OF_RULE == p2 -> -1
                 p1 > p2 -> 1
                 p1 < p2 -> -1
                 else -> 0// should never happen !
@@ -554,8 +555,8 @@ internal class RuntimeParser(
                 val p2 = t2.first.to.rulePositions.first().position
                 when {
                     p1 == p2 -> 0
-                    RulePositionRuntime.END_OF_RULE == p1 -> 1
-                    RulePositionRuntime.END_OF_RULE == p2 -> -1
+                    RulePosition.END_OF_RULE == p1 -> 1
+                    RulePosition.END_OF_RULE == p2 -> -1
                     p1 > p2 -> 1
                     p1 < p2 -> -1
                     else -> 0// should never happen !

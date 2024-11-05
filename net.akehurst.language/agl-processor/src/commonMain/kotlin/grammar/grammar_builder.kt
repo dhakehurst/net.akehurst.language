@@ -23,6 +23,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
+import net.akehurst.language.parser.api.OptionNum
 
 @DslMarker
 annotation class GrammarBuilderMarker
@@ -331,7 +332,7 @@ class PreferenceRuleBuilder(
 ) {
     val optionList = mutableListOf<PreferenceOption>()
 
-    fun optionLeft(nonTerminalName: String, choiceNumber: Int, terminals: List<String>) {
+    fun optionLeft(nonTerminalName: String, choiceNumber: OptionNum, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
@@ -342,7 +343,7 @@ class PreferenceRuleBuilder(
         )
     }
 
-    fun optionRight(nonTerminalName: String, choiceNumber: Int, terminals: List<String>) {
+    fun optionRight(nonTerminalName: String, choiceNumber: OptionNum, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),

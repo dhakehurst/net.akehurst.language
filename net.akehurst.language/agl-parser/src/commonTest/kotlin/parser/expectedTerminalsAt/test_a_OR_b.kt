@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.leftcorner.expectedTerminalsAt
+package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet

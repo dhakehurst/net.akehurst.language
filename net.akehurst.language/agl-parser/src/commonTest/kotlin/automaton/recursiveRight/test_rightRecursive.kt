@@ -46,12 +46,12 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val a = rrs.findRuntimeRule("'a'")
 
         val s0 = SM.startState
-        val s1 = SM.createState(listOf(RulePositionRuntime(a, 0, RulePositionRuntime.END_OF_RULE)))
-        val s2 = SM.createState(listOf(RulePositionRuntime(S, 0, RulePositionRuntime.END_OF_RULE)))
-        val s3 = SM.createState(listOf(RulePositionRuntime(S1, 0, 1)))
-        val s4 = SM.createState(listOf(RulePositionRuntime(S1, 0, RulePositionRuntime.END_OF_RULE)))
-        val s5 = SM.createState(listOf(RulePositionRuntime(G, 0, RulePositionRuntime.END_OF_RULE)))
-        val s6 = SM.createState(listOf(RulePositionRuntime(S, 1, RulePositionRuntime.END_OF_RULE)))
+        val s1 = SM.createState(listOf(RulePositionRuntime(a, oN, ER)))
+        val s2 = SM.createState(listOf(RulePositionRuntime(S, o0, ER)))
+        val s3 = SM.createState(listOf(RulePositionRuntime(S1, oN, 1)))
+        val s4 = SM.createState(listOf(RulePositionRuntime(S1, oN, ER)))
+        val s5 = SM.createState(listOf(RulePositionRuntime(G, oN, ER)))
+        val s6 = SM.createState(listOf(RulePositionRuntime(S, o1, ER)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
         val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
@@ -78,13 +78,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G, o0, SR)
-            state(G, o0, EOR)
-            state(S, o0, EOR)
+            state(G, oN, SR)
+            state(G, oN, EOR)
+            state(S, oN, EOR)
             state(S, o1, EOR)
-            state(S1, o0, p1)
-            state(S1, o0, EOR)
-            state(a, o0, EOR)
+            state(S1, oN, p1)
+            state(S1, oN, EOR)
+            state(a, oN, EOR)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.regex.api.RegexEngine
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.sentence.api.Sentence
@@ -33,7 +34,7 @@ class ScannerOnDemand(
 
     companion object {
         val END_OF_TEXT = 3.toChar().toString()
-        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1,-1)
+        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, RulePosition.OPTION_NONE,emptyList())
     }
 
     // seems faster to match literal with regex than substring and startsWith !
@@ -140,13 +141,13 @@ class ScannerOnDemand(
     private fun tryCreateLeaf(sentence: Sentence, position: Int, terminalRuntimeRule: RuntimeRule): CompleteTreeDataNode {
         return when (terminalRuntimeRule.rhs) {
             is RuntimeRuleRhsEmpty -> {
-                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, 0,0)
+                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, RulePosition.OPTION_NONE,emptyList())
                 this.leaves[terminalRuntimeRule, position] = leaf
                 leaf
             }
 
             is RuntimeRuleRhsEmptyList -> {
-                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, 0,0)
+                val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, position, position, RulePosition.OPTION_NONE,emptyList())
                 this.leaves[terminalRuntimeRule, position] = leaf
                 leaf
             }
@@ -158,7 +159,7 @@ class ScannerOnDemand(
                     LEAF_NONE
                 } else {
                     val nextInputPosition = position + matchLength
-                    val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, nextInputPosition, nextInputPosition, 0,0)
+                    val leaf = CompleteTreeDataNode(terminalRuntimeRule, position, nextInputPosition, nextInputPosition, RulePosition.OPTION_NONE,emptyList())
                     this.leaves[terminalRuntimeRule, position] = leaf
                     leaf
                 }

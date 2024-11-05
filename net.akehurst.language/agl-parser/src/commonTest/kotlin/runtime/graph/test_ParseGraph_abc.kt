@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RulePositionWithLookahead
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.LookaheadSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
@@ -74,7 +75,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(SentenceDefault(text), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-        val startState = RulePositionWithLookahead(RulePositionRuntime(gr, 0, 0), emptySet())
+        val startState = RulePositionWithLookahead(RulePositionRuntime(gr, RulePosition.OPTION_NONE, 0), emptySet())
         //sut.start(startState, rrs)
         TODO()
         val actual = sut.canGrow

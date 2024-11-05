@@ -65,30 +65,30 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))                                   // G = . S
-            val s1 = state(RP(a, 0, EOR))                                   // a .
-            val s2 = state(RP(ABCZ, 0, 1), RP(ABCY, 0, 1))    // ABCZ = a . b c z , ABCY = a . b c y
-            val s3 = state(RP(b, 0, EOR))                                   // b .
-            val s4 = state(RP(ABCZ, 0, 2), RP(ABCY, 0, 2))    // ABCZ = a b . c z , ABCY = a b . c y
-            val s5 = state(RP(c, 0, EOR))                                   // c .
-            val s6 = state(RP(ABCZ, 0, 3), RP(ABCY, 0, 3))    // ABCZ = a b c . z , ABCY = a b c . y
-            val s7 = state(RP(z, 0, EOR))                                   // z .
-            val s8 = state(RP(y, 0, EOR))                                   // y .
-            val s9 = state(RP(ABCZ, 0, EOR))                                // ABCZ = abcz .
-            val s10 = state(RP(S, 0, EOR))                                  // S = ABCZ .
-            val s11 = state(RP(G, 0, EOR))                                  // G = S .
+            val s0 = state(RP(G, oN, SOR))                                   // G = . S
+            val s1 = state(RP(a, oN, EOR))                                   // a .
+            val s2 = state(RP(ABCZ, oN, 1), RP(ABCY, oN, 1))    // ABCZ = a . b c z , ABCY = a . b c y
+            val s3 = state(RP(b, oN, EOR))                                   // b .
+            val s4 = state(RP(ABCZ, oN, 2), RP(ABCY, oN, 2))    // ABCZ = a b . c z , ABCY = a b . c y
+            val s5 = state(RP(c, oN, EOR))                                   // c .
+            val s6 = state(RP(ABCZ, oN, 3), RP(ABCY, oN, 3))    // ABCZ = a b c . z , ABCY = a b c . y
+            val s7 = state(RP(z, oN, EOR))                                   // z .
+            val s8 = state(RP(y, oN, EOR))                                   // y .
+            val s9 = state(RP(ABCZ, oN, EOR))                                // ABCZ = abcz .
+            val s10 = state(RP(S, oN, EOR))                                  // S = ABCZ .
+            val s11 = state(RP(G, oN, EOR))                                  // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 0), RP(ABCY, 0, 0)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 0), RP(ABCY, oN, 0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 1), RP(ABCY, 0, 1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 1), RP(ABCY, oN, 1)))
             transition(s0, s4, s5, WIDTH, setOf(z, y), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z, y), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 2), RP(ABCY, 0, 2)))
+            transition(s4, s5, s6, GRAFT, setOf(z, y), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 2), RP(ABCY, oN, 2)))
             transition(s0, s6, s7, WIDTH, setOf(EOT), setOf(), null)
             transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
-            transition(s6, s7, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 3)))
-            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, 0, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, 0)))
+            transition(s6, s7, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 3)))
+            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, oN, 0)))
+            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, 0)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -105,30 +105,30 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))                                   // G = . S
-            val s1 = state(RP(a, 0, ER))                                   // a .
-            val s2 = state(RP(ABCZ, 0, 1), RP(ABCY, 0, 1))    // ABCZ = a . b c z , ABCY = a . b c y
-            val s3 = state(RP(b, 0, ER))                                   // b .
-            val s4 = state(RP(ABCZ, 0, 2), RP(ABCY, 0, 2))    // ABCZ = a b . c z , ABCY = a b . c y
-            val s5 = state(RP(c, 0, ER))                                   // c .
-            val s6 = state(RP(ABCZ, 0, 3), RP(ABCY, 0, 3))    // ABCZ = a b c . z , ABCY = a b c . y
-            val s7 = state(RP(z, 0, ER))                                   // z .
-            val s8 = state(RP(y, 0, ER))                                   // y .
-            val s9 = state(RP(ABCY, 0, ER))                                // ABCY = abcy .
-            val s10 = state(RP(S, 1, ER))                                  // S = ABCY .
-            val s11 = state(RP(G, 0, ER))                                  // G = S .
+            val s0 = state(RP(G, oN, SOR))                                   // G = . S
+            val s1 = state(RP(a, oN, ER))                                   // a .
+            val s2 = state(RP(ABCZ, oN, 1), RP(ABCY, oN, 1))    // ABCZ = a . b c z , ABCY = a . b c y
+            val s3 = state(RP(b, oN, ER))                                   // b .
+            val s4 = state(RP(ABCZ, oN, 2), RP(ABCY, oN, 2))    // ABCZ = a b . c z , ABCY = a b . c y
+            val s5 = state(RP(c, oN, ER))                                   // c .
+            val s6 = state(RP(ABCZ, oN, 3), RP(ABCY, oN, 3))    // ABCZ = a b c . z , ABCY = a b c . y
+            val s7 = state(RP(z, oN, ER))                                   // z .
+            val s8 = state(RP(y, oN, ER))                                   // y .
+            val s9 = state(RP(ABCY, oN, ER))                                // ABCY = abcy .
+            val s10 = state(RP(S, o1, ER))                                  // S = ABCY .
+            val s11 = state(RP(G, oN, ER))                                  // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 0), RP(ABCY, 0, 0)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 0), RP(ABCY, oN, 0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 1), RP(ABCY, 0, 1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 1), RP(ABCY, oN, 1)))
             transition(s0, s4, s5, WIDTH, setOf(z, y), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z, y), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 2), RP(ABCY, 0, 2)))
+            transition(s4, s5, s6, GRAFT, setOf(z, y), setOf(setOf(EOT)), setOf(RP(ABCZ, oN, 2), RP(ABCY, oN, 2)))
             transition(s0, s6, s7, WIDTH, setOf(EOT), setOf(), null)
             transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
-            transition(s6, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCY, 0, 3)))
-            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, 1, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, 0)))
+            transition(s6, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCY, oN, 3)))
+            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, o1, 0)))
+            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, oN, 0)))
 
         }
 
@@ -150,20 +150,20 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))                                   // G = . S
-            val s1 = state(RP(G, 0, ER))                                  // G = S .
-            val s2 = state(RP(S, 0, ER))                                  // S = ABCZ .
-            val s3 = state(RP(S, 1, ER))                                  // S = ABCY .
-            val s4 = state(RP(ABCY, 0, ER))                                // ABCY = abcy .
-            val s5 = state(RP(y, 0, ER))                                   // y .
-            val s6 = state(RP(c, 0, ER))                                   // c .
-            val s7 = state(RP(b, 0, ER))                                   // b .
-            val s8 = state(RP(a, 0, ER))                                   // a .
-            val s9 = state(RP(ABCZ, 0, ER))                                // ABCZ = abcz .
-            val s10 = state(RP(z, 0, ER))                                   // z .
-            val s11 = state(RP(ABCZ, 0, 1), RP(ABCY, 0, 1))    // ABCZ = a . b c z , ABCY = a . b c y
-            val s12 = state(RP(ABCZ, 0, 2), RP(ABCY, 0, 2))    // ABCZ = a b . c z , ABCY = a b . c y
-            val s13 = state(RP(ABCZ, 0, 3), RP(ABCY, 0, 3))    // ABCZ = a b c . z , ABCY = a b c . y
+            val s0 = state(RP(G, oN, SOR))                                   // G = . S
+            val s1 = state(RP(G, oN, ER))                                  // G = S .
+            val s2 = state(RP(S, o0, ER))                                  // S = ABCZ .
+            val s3 = state(RP(S, o1, ER))                                  // S = ABCY .
+            val s4 = state(RP(ABCY, oN, ER))                                // ABCY = abcy .
+            val s5 = state(RP(y, oN, ER))                                   // y .
+            val s6 = state(RP(c, oN, ER))                                   // c .
+            val s7 = state(RP(b, oN, ER))                                   // b .
+            val s8 = state(RP(a, oN, ER))                                   // a .
+            val s9 = state(RP(ABCZ, oN, ER))                                // ABCZ = abcz .
+            val s10 = state(RP(z, oN, ER))                                   // z .
+            val s11 = state(RP(ABCZ, oN, 1), RP(ABCY, oN, 1))    // ABCZ = a . b c z , ABCY = a . b c y
+            val s12 = state(RP(ABCZ, oN, 2), RP(ABCY, oN, 2))    // ABCZ = a b . c z , ABCY = a b . c y
+            val s13 = state(RP(ABCZ, oN, 3), RP(ABCY, oN, 3))    // ABCZ = a b c . z , ABCY = a b c . y
         }
 
         AutomatonTest.assertEquals(expected, actual)

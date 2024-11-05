@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -72,7 +74,7 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_NONE, RulePosition.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -92,7 +94,7 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_NONE, RulePosition.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -117,9 +119,9 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, 0, RulePositionRuntime.START_OF_RULE),
-            RulePositionRuntime(r, 1, RulePositionRuntime.START_OF_RULE),
-            RulePositionRuntime(r, 2, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, OptionNum(0), RulePosition.START_OF_RULE),
+            RulePositionRuntime(r,  OptionNum(1), RulePosition.START_OF_RULE),
+            RulePositionRuntime(r,  OptionNum(2), RulePosition.START_OF_RULE)
         )
         assertEquals(expected, actual)
     }
@@ -140,8 +142,8 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_EMPTY, RulePositionRuntime.START_OF_RULE),
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE),
+            RulePositionRuntime(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -163,7 +165,7 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -186,7 +188,7 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_MULTI_ITEM, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
 
         )
         assertEquals(expected, actual)
@@ -208,8 +210,8 @@ class test_RuntimeRule_rulePositionsAtStart {
 
         //then
         val expected = setOf<RulePositionRuntime>(
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_SLIST_EMPTY, RulePositionRuntime.START_OF_RULE),
-            RulePositionRuntime(r, RulePositionRuntime.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePositionRuntime.START_OF_RULE)
+            RulePositionRuntime(r, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePositionRuntime(r, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE)
 
         )
         assertEquals(expected, actual)

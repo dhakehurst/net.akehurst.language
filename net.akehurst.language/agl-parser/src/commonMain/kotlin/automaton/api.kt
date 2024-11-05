@@ -16,6 +16,7 @@
 
 package net.akehurst.language.automaton.api
 
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 
 enum class AutomatonKind {
@@ -42,7 +43,7 @@ internal annotation class AglAutomatonDslMarker
 @AglAutomatonDslMarker
 interface AutomatonBuilder {
     fun state(rp:RulePosition)
-    fun state(ruleNumber:Int, option:Int, position:Int)
+    fun state(ruleNumber:Int, option: OptionNum, position:Int)
     fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }
 

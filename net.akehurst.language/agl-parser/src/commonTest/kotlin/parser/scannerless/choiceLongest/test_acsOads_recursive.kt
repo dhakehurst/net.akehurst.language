@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_acsOads_recursive : test_LeftCornerParserAbstract() {
+class test_acsOads_recursive : test_LeftCornerParserAbstract() {
 
     // S = C
     // C = acs | ads
@@ -43,10 +43,10 @@ internal class test_acsOads_recursive : test_LeftCornerParserAbstract() {
             concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
             choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
             concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
-            preferenceFor("'a'") {
-                left("acs", setOf("<EOT>"))
-                left("ads", setOf("<EOT>"))
-            }
+            //preferenceFor("'a'") {
+            //    left("acs", setOf("<EOT>"))
+            //    left("ads", setOf("<EOT>"))
+           // }
         }
         val goal = "S"
     }

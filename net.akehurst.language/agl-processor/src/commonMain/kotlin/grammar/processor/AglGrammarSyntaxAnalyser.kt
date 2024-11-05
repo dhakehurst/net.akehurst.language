@@ -25,6 +25,8 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.treedata.locationForNode
@@ -137,7 +139,7 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // value = IDENTIFIER | LITERAL ;
-    private fun value(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String = when (target.alt.option) {
+    private fun value(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String = when (target.alt.option.asIndex) {
         0 -> children[0] as String
         1 -> (children[0] as String).let { it.substring(1, it.length - 1) }
         else -> error("Unsupported choice")
@@ -404,7 +406,7 @@ internal class AglGrammarSyntaxAnalyser(
     // terminal : LITERAL | PATTERN ;
     private fun terminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Terminal {
         // Must match what is done in AglStyleSyntaxAnalyser.selectorSingle
-        val isPattern = when (target.alt.option) {
+        val isPattern = when (target.alt.option.asIndex) {
             0 -> false
             else -> true
         }
@@ -433,9 +435,9 @@ internal class AglGrammarSyntaxAnalyser(
     private fun preferenceOption(target: SpptDataNodeInfo, children: List<Any?>, arg: Any?): PreferenceOption {
         val item = children[0] as NonTerminal
         val choiceNumber = when {
-            null == children[1] -> 0
-            children[1] is String -> (children[1] as String).toInt() //FIXME: choiceNumber not called!
-            else -> children[1] as Int
+            null == children[1] -> RulePosition.OPTION_NONE
+            //children[1] is String -> OptionNum((children[1] as String).toInt()) //FIXME: choiceNumber not called!
+            else -> OptionNum(children[1] as Int)
         }
         val terminalList = children[3] as List<SimpleItem>
         val assStr = children[4] as String

@@ -57,13 +57,13 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<Asm, Context
 
     private val automaton_S = aut(ruleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
         // 0: G = . S
-        state(GOAL_RULE, 0, SR)
+        state(GOAL_RULE, OP_NONE, SR)
         // 1: G = S .
-        state(GOAL_RULE, 0, ER)
+        state(GOAL_RULE, OP_NONE, ER)
         // 2: S = a .
-        state(0, 0, ER)
+        state(0, OP_NONE, ER)
         // 3: a.
-        state(1, 0, ER)
+        state(1, OP_NONE, ER)
 
         transition(WIDTH) { source(0); target(3) }
     }

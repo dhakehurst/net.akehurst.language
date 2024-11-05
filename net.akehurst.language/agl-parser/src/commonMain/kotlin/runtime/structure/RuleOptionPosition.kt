@@ -16,13 +16,15 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
+import kotlin.jvm.JvmInline
 
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
 data class RuleOption(
     val runtimeRule: RuntimeRule,
-    val option: Int
+    val option: OptionNum
 ) {
     val isGoal = this.runtimeRule.isGoal
 
@@ -31,38 +33,14 @@ data class RuleOption(
 
 class RulePositionRuntime(
     override val rule: RuntimeRule,
-    override val option: Int,
+    override val option: OptionNum,
     override val position: Int
 ) : RulePosition {
-    companion object {
-        const val START_OF_RULE = 0
-        const val END_OF_RULE = -1
-
-
-        // Option is used to compute priority in choice and dynamic priority
-        // EMPTY should be the lowest priority so that full is preferred
-        TODO: reverse these values
-        const val OPTION_OPTIONAL_ITEM = 0
-        const val OPTION_OPTIONAL_EMPTY = 1
-
-        //TODO: reverse these values
-        const val OPTION_MULTI_ITEM = 0
-        const val OPTION_MULTI_EMPTY = 1
-
-        //TODO: reverse these values
-        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
-        const val OPTION_SLIST_EMPTY = 1
-
-        //for use in multi and separated list
-        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
-        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
-        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
-    }
 
     val identity: RuleOptionId = RuleOption(rule, option) //TODO: Make this an Int
 
-    val isAtStart get() = START_OF_RULE == position
-    val isAtEnd get() = END_OF_RULE == position
+    val isAtStart get() = RulePosition.START_OF_RULE == position
+    val isAtEnd get() = RulePosition.END_OF_RULE == position
     val isGoal: Boolean get() = this.rule.isGoal
     val isTerminal get() = this.rule.isTerminal
     val isEmbedded get() = this.rule.isEmbedded
@@ -74,7 +52,7 @@ class RulePositionRuntime(
             this.rule.rhs.rhsItemsAt(option, position)
         }
 
-    fun atEnd() = RulePositionRuntime(this.rule, this.option, END_OF_RULE)
+    fun atEnd() = RulePositionRuntime(this.rule, this.option, RulePosition.END_OF_RULE)
     fun next(): Set<RulePositionRuntime> = when {
         isAtEnd -> emptySet()
         else -> rule.rhs.nextRulePositions(this)
@@ -98,6 +76,7 @@ class RulePositionRuntime(
             else -> rule.tag
         }
         val rhs = rule.rhs
+        /*
         val o = when (rhs) {
             is RuntimeRuleRhsTerminal -> option
             is RuntimeRuleRhsNonTerminal -> when (rhs) {
@@ -105,18 +84,20 @@ class RulePositionRuntime(
                 is RuntimeRuleRhsConcatenation -> option
                 is RuntimeRuleRhsChoice -> option
                 is RuntimeRuleRhsOptional -> when (option) {
-                    OPTION_MULTI_EMPTY -> "E"
-                    OPTION_MULTI_ITEM -> "I"
+                    RulePosition.OPTION_MULTI_EMPTY -> "E"
+                    RulePosition.OPTION_MULTI_ITEM -> "I"
                     else -> option
                 }
 
                 is RuntimeRuleRhsList -> when (option) {
-                    OPTION_MULTI_EMPTY -> "E"
-                    OPTION_MULTI_ITEM -> "I"
+                    RulePosition.OPTION_MULTI_EMPTY -> "E"
+                    RulePosition.OPTION_MULTI_ITEM -> "I"
                     else -> option
                 }
             }
         }
+        */
+        val o = option.toString()
         val pos = when (position) {
             0 -> "SR"
             -1 -> "ER"
@@ -129,24 +110,24 @@ class RulePositionRuntime(
                 is RuntimeRuleRhsConcatenation -> pos
                 is RuntimeRuleRhsChoice -> pos
                 is RuntimeRuleRhsOptional -> when (position) {
-                    START_OF_RULE -> "BR"
-                    END_OF_RULE -> "ER"
+                    RulePosition.START_OF_RULE -> "BR"
+                    RulePosition. END_OF_RULE -> "ER"
                     else -> pos
                 }
 
                 is RuntimeRuleRhsList -> when (rhs) {
                     is RuntimeRuleRhsListSimple -> when (position) {
-                        START_OF_RULE -> "BR"
-                        POSITION_MULIT_ITEM -> "MI"
-                        END_OF_RULE -> "ER"
+                        RulePosition.START_OF_RULE -> "BR"
+                        RulePosition.POSITION_MULIT_ITEM -> "MI"
+                        RulePosition.END_OF_RULE -> "ER"
                         else -> pos
                     }
 
                     is RuntimeRuleRhsListSeparated -> when (position) {
-                        START_OF_RULE -> "BR"
-                        POSITION_SLIST_SEPARATOR -> "LS"
-                        POSITION_SLIST_ITEM -> "LI"
-                        END_OF_RULE -> "ER"
+                        RulePosition.START_OF_RULE -> "BR"
+                        RulePosition.POSITION_SLIST_SEPARATOR -> "LS"
+                        RulePosition.POSITION_SLIST_ITEM -> "LI"
+                        RulePosition. END_OF_RULE -> "ER"
                         else -> pos
                     }
                 }

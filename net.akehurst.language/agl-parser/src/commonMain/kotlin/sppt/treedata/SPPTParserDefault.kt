@@ -16,10 +16,13 @@
 
 package net.akehurst.language.sppt.treedata
 
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.regexMatcher
@@ -159,7 +162,7 @@ internal data class RuleReference(val qname: QName?, val name: String) {
 
 internal data class NodeStart(
     val ref: RuleReference,
-    val option: Int,
+    val option: OptionNum,
     val sentenceStartPosition: Int,
     val sentenceNextInputPosition: Int
 )
@@ -270,13 +273,13 @@ internal class TreeParser(
     private fun scanBranchStart() {
         val id = scanner.next(Tokens.ID)
         scanner.next(Tokens.CHILDREN_START)
-        beginBranch(id, 0)
+        beginBranch(id, RulePosition.OPTION_NONE)
     }
 
     // ID OPTION CHILDREN_START('{')
     private fun scanBranchStartWithOption() {
         val id = scanner.next(Tokens.ID)
-        val option = scanner.next(Tokens.OPTION).substring(1).toInt()
+        val option = OptionNum(scanner.next(Tokens.OPTION).substring(1).toInt())
         scanner.next(Tokens.CHILDREN_START)
         beginBranch(id, option)
     }
@@ -310,7 +313,7 @@ internal class TreeParser(
         val rrs = this.runtimeRuleSetInUse.pop()
         val treeData = this.treeDataStack.pop()
         val gr = rrs.goalRuleFor[userGoalNode.rule]!!
-        val pseudoRoot = CompleteTreeDataNode(gr, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.nextInputNoSkip, userGoalNode.option,0)
+        val pseudoRoot = CompleteTreeDataNode(gr, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.nextInputNoSkip, RulePosition.OPTION_NONE,emptyList())
         treeData.setChildren(pseudoRoot, listOf(userGoalNode), false)
         treeData.setRootTo(pseudoRoot)
         return treeData
@@ -318,22 +321,22 @@ internal class TreeParser(
 
     private fun emptyLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
         val terminalRule = RuntimeRuleSet.EMPTY
-        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
+        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, RulePosition.OPTION_NONE,emptyList())
     }
 
     private fun emptyListLeaf(startPosition: Int, nextInputPosition: Int): CompleteTreeDataNode {
         val terminalRule = RuntimeRuleSet.EMPTY_LIST
-        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
+        return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, RulePosition.OPTION_NONE,emptyList())
     }
 
     private fun leaf(tag: String, text: String, startPosition: Int, nextInputPosition: Int) {
         _sentenceBuilder.append(text)
         val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(tag)
-        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0,0)
+        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, RulePosition.OPTION_NONE,emptyList())
         childrenStack.peek().add(leaf)
     }
 
-    private fun beginBranch(ruleName: String, option: Int) {
+    private fun beginBranch(ruleName: String, option: OptionNum) {
         nodeNamesStack.push(NodeStart(RuleReference(null, ruleName), option, sentenceStartPosition, sentenceNextInputPosition))
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
     }
@@ -347,7 +350,21 @@ internal class TreeParser(
         val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val nextInputNoSkip = children.lastOrNull()?.nextInputNoSkip ?: 0
 
-        val tn = CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, lastNodeStart.option,0)
+        val tn = when {
+            rr.isOptional -> when {
+                children[0].rule.isEmptyTerminal -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_OPTIONAL_EMPTY, emptyList())
+                else -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_OPTIONAL_ITEM, emptyList())
+            }
+            rr.isListSimple -> when {
+                children[0].rule.isEmptyListTerminal -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_MULTI_EMPTY, emptyList())
+                else -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_MULTI_ITEM, emptyList())
+            }
+            rr.isListSeparated -> when {
+                children[0].rule.isEmptyListTerminal -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_SLIST_EMPTY, emptyList())
+                else -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, emptyList())
+            }
+            else -> CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, lastNodeStart.option, emptyList())
+        }
         val isAlternative = this.treeDataStack.peek().childrenFor(tn).isNotEmpty()
         this.treeDataStack.peek().setChildren(tn, children, isAlternative)
         when {
@@ -358,10 +375,10 @@ internal class TreeParser(
 
     private fun beginEmbedded(embLeafName: String, embGramPossiblyQualifiedName: String, embGoalName: String) {
         // outer leaf
-        nodeNamesStack.push(NodeStart(RuleReference(null, embLeafName), 0, sentenceStartPosition, sentenceNextInputPosition))
+        nodeNamesStack.push(NodeStart(RuleReference(null, embLeafName), RulePosition.OPTION_NONE, sentenceStartPosition, sentenceNextInputPosition))
 
         // embedded branch start
-        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramPossiblyQualifiedName), embGoalName), 0, sentenceStartPosition, sentenceNextInputPosition))
+        nodeNamesStack.push(NodeStart(RuleReference(QName(embGramPossiblyQualifiedName), embGoalName), RulePosition.OPTION_NONE, sentenceStartPosition, sentenceNextInputPosition))
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
 
         // handle PossiblyQualifiedName resolution
@@ -390,7 +407,7 @@ internal class TreeParser(
         val startPosition = emRoot.startPosition
         val nextInputPosition = emRoot.nextInputPosition
         val nextInputNoSkip = emRoot.nextInputNoSkip
-        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputNoSkip, 0,0)
+        val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputNoSkip, RulePosition.OPTION_NONE,emptyList())
         childrenStack.peek().add(leaf)
         this.treeDataStack.peek().setEmbeddedTreeFor(leaf, embTreeData)
         return embTreeData

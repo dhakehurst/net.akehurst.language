@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a01 : test_LeftCornerParserAbstract() {
+class test_literal_a01 : test_LeftCornerParserAbstract() {
 
     // S = ['a' / ',']?
     private companion object {
@@ -39,7 +39,7 @@ internal class test_literal_a01 : test_LeftCornerParserAbstract() {
     fun empty() {
         val sentence = ""
 
-        val expected = "S|1 { <EMPTY_LIST> }"
+        val expected = "S { <EMPTY_LIST> }"
 
         super.test(rrs, goal, sentence, 1, expected)
     }

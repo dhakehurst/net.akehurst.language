@@ -16,7 +16,10 @@
 
 package net.akehurst.language.sppt.treedata
 
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.SpptWalker
 import net.akehurst.language.sppt.api.TreeData
@@ -40,7 +43,7 @@ class TreeDataComplete2(
     override val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
 
     // made public for serialisation support
-    val completeChildren: Map<SpptDataNode, Map<Int, List<SpptDataNode>>> get() = this._complete
+    val completeChildren: Map<SpptDataNode, Map<OptionNum, List<SpptDataNode>>> get() = this._complete
 
     override var root: SpptDataNode? = null // Can't have set being private for JS serialisation, private set
     override var initialSkip: TreeData? = null // Can't have set being private for JS serialisation, private set
@@ -48,11 +51,11 @@ class TreeDataComplete2(
     override val userRoot get() = childrenFor(root!!).first().second.first()
 
     override fun setUserGoalChildrenAfterInitialSkip(nug: SpptDataNode, userGoalChildren: List<SpptDataNode>) {
-        this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
+        this._complete[nug] = mutableMapOf(RulePosition.OPTION_NONE to userGoalChildren.toMutableList())
     }
 
     //TODO: is _preferred actually useful ??
-    override fun childrenFor(node: SpptDataNode): List<Pair<Int, List<SpptDataNode>>> {
+    override fun childrenFor(node: SpptDataNode): List<Pair<OptionNum, List<SpptDataNode>>> {
 //        val keys = this._complete.keys.filter {
 //            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
 //        }
@@ -95,7 +98,7 @@ class TreeDataComplete2(
     // index --> map-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
     // need to be public for serialisation
-    /*private*/ val _complete = hashMapOf<SpptDataNode, MutableMap<Int, List<SpptDataNode>>>()
+    /*private*/ val _complete = hashMapOf<SpptDataNode, MutableMap<OptionNum, List<SpptDataNode>>>()
     // map startPosition -> CN
     /*private*/ val _preferred = hashMapOf<PreferredNode, SpptDataNode>()
     /*private*/ val _skipDataAfter = hashMapOf<SpptDataNode, TreeData>()

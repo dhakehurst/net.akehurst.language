@@ -20,6 +20,7 @@ package net.akehurst.language.scanner.common
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.api.Rule
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.sppt.treedata.CompleteTreeDataNode
@@ -67,7 +68,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = RuntimeRuleSet.EMPTY
 
-        val expected = CompleteTreeDataNode(RuntimeRuleSet.EMPTY, 0, 0, 0, 0,-1)
+        val expected = CompleteTreeDataNode(RuntimeRuleSet.EMPTY, 0, 0, 0, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -125,7 +126,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = rrs.findRuntimeRule("'abc'")
 
-        val expected = CompleteTreeDataNode(rule, 0, 3, 3, 0,-1)
+        val expected = CompleteTreeDataNode(rule, 0, 3, 3, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -140,7 +141,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 0
         val rule = rrs.findRuntimeRule("a2c")
 
-        val expected = CompleteTreeDataNode(rule, 0, 1, 1, 0,-1)
+        val expected = CompleteTreeDataNode(rule, 0, 1, 1, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -155,7 +156,7 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val position = 1
         val rule = rrs.findRuntimeRule("a2c")
 
-        val expected = CompleteTreeDataNode(rule, 1, 2, 2, 0,-1)
+        val expected = CompleteTreeDataNode(rule, 1, 2, 2, RulePosition.OPTION_NONE, emptyList())
 
         test(sentence, rrs, position, rule, expected)
     }
@@ -181,10 +182,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
-            CompleteTreeDataNode(patName, 6, 7, 7, 0,-1),
-            CompleteTreeDataNode(litSemi, 7, 8, 8, 0,-1)
+            CompleteTreeDataNode(litClass, 0, 5, 5, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patWS, 5, 6, 6, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patName, 6, 7, 7, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(litSemi, 7, 8, 8, RulePosition.OPTION_NONE, emptyList())
         )
         assertEquals(expected, actual)
     }
@@ -211,10 +212,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
-            CompleteTreeDataNode(patName, 6, 7, 7, 0,-1),
-            CompleteTreeDataNode(litSemi, 7, 8, 8, 0,-1)
+            CompleteTreeDataNode(litClass, 0, 5, 5, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patWS, 5, 6, 6, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patName, 6, 7, 7, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(litSemi, 7, 8, 8, RulePosition.OPTION_NONE, emptyList())
         )
         assertEquals(expected, actual)
     }
@@ -240,10 +241,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
-            CompleteTreeDataNode(patName, 6, 11, 11, 0,-1),
-            CompleteTreeDataNode(litSemi, 11, 12, 12, 0,-1)
+            CompleteTreeDataNode(litClass, 0, 5, 5, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patWS, 5, 6, 6, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patName, 6, 11, 11, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(litSemi, 11, 12, 12, RulePosition.OPTION_NONE, emptyList())
         )
         assertEquals(expected, actual)
     }
@@ -270,10 +271,10 @@ internal class test_Scanner_findOrTryCreateLeaf {
         val actual = listOf(l1, l2, l3, l4)
 
         val expected = listOf(
-            CompleteTreeDataNode(litClass, 0, 5, 5, 0,-1),
-            CompleteTreeDataNode(patWS, 5, 6, 6, 0,-1),
-            CompleteTreeDataNode(litClass, 6, 11, 11, 0,-1),
-            CompleteTreeDataNode(litSemi, 11, 12, 12, 0,-1)
+            CompleteTreeDataNode(litClass, 0, 5, 5, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(patWS, 5, 6, 6, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(litClass, 6, 11, 11, RulePosition.OPTION_NONE, emptyList()),
+            CompleteTreeDataNode(litSemi, 11, 12, 12, RulePosition.OPTION_NONE, emptyList())
         )
         assertEquals(expected, actual)
     }

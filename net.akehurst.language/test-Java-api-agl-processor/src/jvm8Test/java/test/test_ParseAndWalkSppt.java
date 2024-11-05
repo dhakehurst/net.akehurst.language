@@ -103,7 +103,7 @@ public class test_ParseAndWalkSppt {
             }
 
             @Override
-            public void error(@NotNull String msg, @NotNull PathFunction path) {
+            public void treeError(@NotNull String msg, @NotNull PathFunction path) {
                 System.out.println(msg);
             }
         };
