@@ -33,16 +33,20 @@ class test_VistraqQuery_Singles {
 
     private companion object {
 
-        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
+        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor<Asm, ContextAsmSimple> = tgqlprocessor()
 
         fun tgqlprocessor(): LanguageProcessor<Asm, ContextAsmSimple> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!! //TODO: use build
+            return Agl.processorFromStringSimple(GrammarString(grammarStr)).let {
+                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                it.processor!!
+            } //TODO: use build
         }
 
         fun test_process(sentence: String, goal: String) {
             val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+            assertTrue(processor.issues.errors.isEmpty(), processor.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         }
 

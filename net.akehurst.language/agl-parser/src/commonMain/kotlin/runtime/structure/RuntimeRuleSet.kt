@@ -470,11 +470,21 @@ class RuntimeRuleSet(
             .map {
                 "  " + it.asString
             }.joinToString("\n")
-        return """
+        val precRules = this.precedenceRules
+            .sortedBy { it.contextRule.tag }
+            .joinToString(separator = "\n") {
+                val opts = it.options.joinToString(separator = "\n") {
+                    "    ${it.precedence} ${it.associativity} ${it.target.tag} ${it.option} ${it.operators}"
+                }
+                "  PREC ${it.contextRule.tag} {\n${opts}\n  }"
+            }
+        val s = """
 RuntimeRuleSet '$qualifiedName' {
 ${rulesStr}
+${precRules}
 }
 """.trimIndent()
+        return s
     }
 
     override fun hashCode(): Int = number

@@ -89,6 +89,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
                 this.analyseGrammar(context, grammar)
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
+                this.checkPreferenceRules(grammar)
                 if (issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
                 }
@@ -250,6 +251,43 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
 
                     else -> {
                         this._unusedRules[grammar]!!.remove(rule)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkPreferenceRules(grammar: Grammar) {
+        for(pr in grammar.preferenceRule) {
+            for (po in pr.optionList) {
+                val refRuleRhs = po.item.referencedRule(grammar).rhs
+                when (refRuleRhs) {
+                    is Choice -> {
+                        when {
+                            po.choiceNumber.isChoiceOption -> Unit
+                            else -> issueError(po, "Preference option for Choice Rule '${po.item.ruleReference.value}' must have a valid choice number", null)
+                        }
+                    }
+
+                    is SimpleList -> {
+                        when {
+                            po.choiceNumber.isListSimpleOption -> Unit
+                            else -> issueError(po, "Preference option for List(Simple) Rule '${po.item.ruleReference.value}' must have a valid option indicator EMPTY|ITEM", null)
+                        }
+                    }
+
+                    is SeparatedList -> {
+                        when {
+                            po.choiceNumber.isListSeparatedOption -> Unit
+                            else -> issueError(po, "Preference option for List(Separated) Rule '${po.item.ruleReference.value}' must have a valid option indicator EMPTY|ITEM", null)
+                        }
+                    }
+
+                    else -> {
+                        when {
+                            po.choiceNumber.isNoneOption -> Unit
+                            else -> issueError(po, "Preference option for Rule must have no option indicator", null)
+                        }
                     }
                 }
             }

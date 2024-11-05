@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
+class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
     /**
      * From [https://pdfs.semanticscholar.org/eeac/392e02671b0edcd81ae080a5117e5f9584f5.pdf]
      * Generalised Parsing: Some Costs. Adrian Johnstone, Elizabeth Scott, and Giorgios Economopoulos
@@ -66,7 +66,7 @@ internal class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
             preferenceFor("'a'") {
                 left("P1", setOf("'a'"))
                 leftOption("P", OptionNum(2), setOf("'b'","'a'"))
-                left("Q", setOf("'c'"))
+                leftOption("Q", OptionNum(0), setOf("'c'"))
             }
         }
         val goal = "S"

@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -156,7 +157,7 @@ internal class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
 
         assertEquals(0, Ex.option.value)
         assertEquals(1, Pr.option.value)
-        assertEquals(0, Ev.option.value)
+        assertEquals(RulePosition.OPTION_NONE, Ev.option)
     }
 
     @Test

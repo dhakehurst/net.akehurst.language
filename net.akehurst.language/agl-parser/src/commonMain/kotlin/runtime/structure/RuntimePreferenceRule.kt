@@ -17,23 +17,25 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.automaton.leftcorner.LookaheadSetPart
+import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.PrefOption
 import net.akehurst.language.parser.api.PrefRule
 
 class RuntimePreferenceRule(
     override val contextRule: RuntimeRule,
-    val options: List<RuntimePreferenceOption>
+    override val options: List<RuntimePreferenceOption>
 ) : PrefRule {
 
-    enum class Assoc { NONE, LEFT, RIGHT }
-
     data class RuntimePreferenceOption(
-        val precedence: Int,
-        val target: RuntimeRule,
-        val option: OptionNum,
-        val operators: Set<RuntimeRule>,
-        val associativity: Assoc
-    )
+        override val precedence: Int,
+        override  val target: RuntimeRule,
+        override  val option: OptionNum,
+        override val operators: Set<RuntimeRule>,
+        override  val associativity: Assoc
+    ) : PrefOption {
+
+    }
 
     fun precedenceFor(to: List<RulePositionRuntime>, lh: LookaheadSetPart): List<RuntimePreferenceOption> {
         val r = options.filter { pr ->

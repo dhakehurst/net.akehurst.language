@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
+class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
     /*
     S = 's' n '{' P? RList '}' ;
     P = 'p' '{' Inner::SP? '}' ;
@@ -38,12 +38,12 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
      * SP = x?
      */
     private companion object {
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("test.Inner") {
             concatenation("SP") { ref("xopt") }
             optional("xopt", "x")
             literal("x", "x")
         }
-        val rrs = runtimeRuleSet {
+        val Outer = runtimeRuleSet("test.Outer") {
             concatenation("S") { literal("s"); ref("n"); literal("{"); ref("Popt"); ref("RList"); literal("}") }
             optional("Popt", "P")
             concatenation("P") { literal("p"); literal("{"); ref("SPopt"); literal("}") }
@@ -63,7 +63,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         val goal = "n"
         val sentence = "''"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        val (sppt, issues) = super.testFail(Outer, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
@@ -82,7 +82,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(
-            rrs = rrs,
+            rrs = Outer,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -95,7 +95,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        val (sppt, issues) = super.testFail(Outer, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
@@ -120,7 +120,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(
-            rrs = rrs,
+            rrs = Outer,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -144,15 +144,15 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
                 SPopt { eSP : Inner::SP { xopt { §empty } } }
                 '}'
               } }
-              RList { §empty }
+              RList { <EMPTY_LIST> }
               '}'
             }
         """.trimIndent()
 
         super.test2(
-            rrs = rrs,
+            rrs = Outer,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -178,15 +178,15 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
                 SPopt {  eSP : Inner::SP { xopt { x:'x' } } }
                 '}'
               } }
-              RList { §empty }
+              RList { <EMPTY_LIST> }
               '}'
             }
         """.trimIndent()
 
         super.test2(
-            rrs = rrs,
+            rrs = Outer,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -219,9 +219,9 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test2(
-            rrs = rrs,
+            rrs = Outer,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -236,7 +236,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
     fun S_with_non_empty_RList_bad_n_fails() {
         val sentence = "s'n'{r''{}}"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        val (sppt, issues) = super.testFail(Outer, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
@@ -264,7 +264,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
                 'r'
                 n : '\'n\''
                 '{'
-                SList { §empty }
+                SList { <EMPTY_LIST> }
                 '}'
               } }
               '}'
@@ -272,9 +272,9 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test2(
-            rrs = rrs,
+            rrs = Outer,
             embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
+                "test.Inner" to Inner
             ),
             goal = goal,
             sentence = sentence,
@@ -289,7 +289,7 @@ internal class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
     fun S_with_non_empty_p_and_non_empty_RList_bad_n_fails() {
         val sentence = "s'n'{p{}r''{}}"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        val (sppt, issues) = super.testFail(Outer, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(

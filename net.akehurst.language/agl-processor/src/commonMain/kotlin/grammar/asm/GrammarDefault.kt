@@ -225,7 +225,7 @@ abstract class GrammarAbstract(
             val r = resolve(rule, inheritedRules) ?: rule
             resolvedRules[r.name] = r
         }
-        resolvedRules.values.toOrderedSet()
+        allInheritedResolvedGrammarRule + resolvedRules.values.toOrderedSet()
     }
 
     override val allResolvedTerminal: Set<Terminal> by lazy {

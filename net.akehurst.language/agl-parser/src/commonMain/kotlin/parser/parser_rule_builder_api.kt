@@ -34,6 +34,8 @@ interface RuleSetBuilder {
     fun literal(name: String?, literalUnescaped: String, isSkip: Boolean = false)
     fun pattern(value: String, isSkip: Boolean = false)
     fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean = false)
+
+    fun preferenceFor(precedenceContextRuleName: String, init: PrecedenceBuilder.() -> Unit)
 }
 
 @RuntimeRuleSetDslMarker
@@ -51,4 +53,32 @@ interface ChoiceBuilder {
     fun ref(ruleName: String)
     fun literal(value: String)
     fun pattern(pattern: String)
+}
+
+interface PrecedenceBuilder {
+
+    /**
+     * indicate that @param ruleName is
+     */
+    //fun none(ruleName: String)
+
+    /**
+     * indicate that @param ruleName is left-associative
+     */
+    fun left(ruleName: String, operatorRuleNames: Set<String>)
+
+    /**
+     * indicate that @param ruleName is right-associative
+     */
+    fun leftOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>)
+
+    /**
+     * indicate that @param ruleName is right-associative
+     */
+    fun right(ruleName: String, operatorRuleNames: Set<String>)
+
+    /**
+     * indicate that @param ruleName is right-associative
+     */
+    fun rightOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>)
 }

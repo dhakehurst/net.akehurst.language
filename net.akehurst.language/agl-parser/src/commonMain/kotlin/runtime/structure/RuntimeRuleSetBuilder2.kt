@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.parser.api.*
+import std.extensions.implies
 
 fun ruleSet(name: String, init: RuleSetBuilder.() -> Unit) : RuleSet = runtimeRuleSet(name, init)
 
@@ -161,7 +162,7 @@ internal class RuntimeRuleSetBuilder2(
         this._ruleBuilders[ruleName] = rb
     }
 
-    fun preferenceFor(precedenceContextRuleName: String, init: PrecedenceRuleBuilder.() -> Unit) {
+    override fun preferenceFor(precedenceContextRuleName: String, init: PrecedenceBuilder.() -> Unit) {
         val b = PrecedenceRuleBuilder(precedenceContextRuleName)
         b.init()
         this._precedenceRuleBuilders.add(b)
@@ -259,39 +260,39 @@ internal class RuntimeRuleChoiceBuilder(
 @RuntimeRuleSetDslMarker
 internal class PrecedenceRuleBuilder(
     val contextRuleName: String
-) {
+) : PrecedenceBuilder {
 
     data class Quad<out A, out B, out C, out D>(val first: A, val second: B, val third: C, val fourth: D)
 
-    private val _rules = mutableListOf<Quad<String, OptionNum, Set<String>, RuntimePreferenceRule.Assoc>>()
+    private val _rules = mutableListOf<Quad<String, OptionNum, Set<String>, Assoc>>()
 
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun none(ruleName: String) {
-        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, emptySet(), RuntimePreferenceRule.Assoc.NONE))
-    }
+   // override fun none(ruleName: String) {
+   //     _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, emptySet(), RuntimePreferenceRule.Assoc.NONE))
+   // }
 
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun left(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
+    override fun left(ruleName: String, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.LEFT))
     }
 
-    fun leftOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
+    override fun leftOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, option, operatorRuleNames, Assoc.LEFT))
     }
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun right(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
+    override fun right(ruleName: String, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.RIGHT))
     }
 
-    fun rightOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
+    override fun rightOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, option, operatorRuleNames, Assoc.RIGHT))
     }
 
     fun build(ruleMap: Map<String, RuntimeRule>): RuntimePreferenceRule {
@@ -299,6 +300,10 @@ internal class PrecedenceRuleBuilder(
         val rules = _rules.mapIndexed { idx, it ->
             val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
             val ops = it.third.map { ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
+            check(r.isChoice implies it.second.isChoiceOption) { "Choice rule must have a valid Option number" }
+            check(r.isOptional implies it.second.isOptionalOption) { "Optional rule must have a valid Option indicator EMPTY or ITEM" }
+            check(r.isListSimple implies it.second.isListSimpleOption) { "List(Simple) rule must have a valid Option indicator EMPTY or ITEM" }
+            check(r.isListSeparated implies it.second.isListSeparatedOption) { "List(Separated) rule must have a valid Option indicator EMPTY or ITEM" }
             RuntimePreferenceRule.RuntimePreferenceOption(idx, r, it.second, ops.toSet(), it.fourth)
         }
         return RuntimePreferenceRule(contextRule, rules)

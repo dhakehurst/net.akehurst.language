@@ -25,9 +25,9 @@ grammar Expressions : Base {
         ;
 	preference expression {
 	  conditionalExpression on '?' left
-	  infixLogical on logicalOperator left
-	  infixComparison on comparisonOperator left
-	  infixArithmetic on arithmeticOperator left
+	  infixLogical ITEM on logicalOperator left
+	  infixComparison ITEM on comparisonOperator left
+	  infixArithmetic ITEM on arithmeticOperator left
   	  navigationExpression on '.' left
 	}
 

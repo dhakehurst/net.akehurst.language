@@ -18,13 +18,14 @@ package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_acsOads_sList : test_LeftCornerParserAbstract() {
+class test_acsOads_sList : test_LeftCornerParserAbstract() {
 
     // S = acs | ads
     // acs = [a / 'c' ]+
@@ -41,8 +42,8 @@ internal class test_acsOads_sList : test_LeftCornerParserAbstract() {
             literal("'c'", "c")
             literal("'d'", "d")
             preferenceFor("'a'") {
-                left("acs", setOf("<EOT>"))
-                left("ads", setOf("<EOT>"))
+                leftOption("acs", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
+                leftOption("ads", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
             }
         }
         val goal = "S"

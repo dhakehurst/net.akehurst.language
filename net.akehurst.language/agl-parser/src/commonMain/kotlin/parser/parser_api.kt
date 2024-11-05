@@ -73,6 +73,17 @@ interface Rule {
 
 interface PrefRule {
     val contextRule: Rule
+    val options: List<PrefOption>
+}
+
+enum class Assoc { NONE, LEFT, RIGHT }
+
+interface PrefOption {
+    val precedence: Int
+    val target: Rule
+    val option: OptionNum
+    val operators: Set<Rule>
+    val associativity: Assoc
 }
 
 @JvmInline
@@ -81,6 +92,12 @@ value class OptionNum(val value:Int) {
         if(value < 0) error("Should not happen")
         return value
     }
+
+    val isChoiceOption get() = value >= 0
+    val isNoneOption get() = this == RulePosition.OPTION_NONE
+    val isOptionalOption get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_OPTIONAL_ITEM
+    val isListSimpleOption get() = this == RulePosition.OPTION_MULTI_EMPTY || this == RulePosition.OPTION_MULTI_ITEM
+    val isListSeparatedOption get() = this == RulePosition.OPTION_SLIST_EMPTY || this == RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
 
     override fun toString(): String = when(this) {
         RulePosition.OPTION_NONE -> "oN"

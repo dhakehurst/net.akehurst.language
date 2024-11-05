@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.leftcorner.choicePriority
+package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -25,11 +25,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
+class test_bodmas_sList_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
 
+    // skip WS = "\s+" ;
     // S =  expr ;
-    // expr = root < group < div < mul < add < sub ;
-    // root = var < bool ;
+    // expr = root | group | div | mul | add | sub ;
+    // root = var < bool
     // sub = [ expr / '-' ]2+ ;
     // add = [ expr / '+' ]2+ ;
     // mul = [ expr / '*' ]2+ ;
@@ -37,12 +38,11 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
     // group = '(' expr ')' ;
     // bool = 'true' | 'false' ;
     // var = "[a-zA-Z]+" ;
-    // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")
                 ref("group")
                 ref("div")
@@ -59,7 +59,10 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
             sList("add", 2, -1, "expr", "'+'")
             sList("sub", 2, -1, "expr", "'-'")
             concatenation("group") { literal("("); ref("expr"); literal(")") }
-            choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
+            choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("true")
+                literal("false")
+            }
             concatenation("var") { pattern("[a-zA-Z]+") }
             literal("'/'", "/")
             literal("'*'", "*")
@@ -83,7 +86,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^", setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
             ), issues.errors)
     }
 
@@ -98,6 +101,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -105,12 +109,12 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              S{ expr { root|1 {
+              expr { root|1 {
                 bool { 'true' }
-              } } }
+              } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 2, expected)
+        super.test(rrs, "expr", sentence, 2, expected)
     }
 
     @Test
@@ -129,7 +133,22 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
     }
 
     @Test
-    fun group_a() {
+    fun S_var() {
+        val sentence = "var"
+
+        val expected = """
+            S {
+              expr { root {
+                var { "[a-zA-Z]+" : 'var' }
+              } }
+            }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun S_group_a() {
         val sentence = "(a)"
 
         val expected = """
@@ -145,6 +164,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -164,6 +184,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -183,6 +204,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -202,6 +224,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -221,6 +244,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
+
     }
 
     @Test
@@ -229,11 +253,11 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
 
         val expected = """
             S {
-             expr|4 {
+             expr {
               add {
                 expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
-                expr|3 {
+                expr {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
@@ -274,68 +298,14 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
     }
 
     @Test
-    fun a_mul_b_mul_c_add_d() {
-        val sentence = "a*b*c+d"
-
-        val expected = """
-            S {
-             expr|4 {
-              add {
-                expr|3 {
-                  mul {
-                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'c' } } }
-                  }
-                }
-               '+'
-               expr { root { var { "[a-zA-Z]+" : 'd' } } }
-              }
-             }
-            }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a_add_b_mul_c_mul_d_add_f_add_g() {
-        val sentence = "a+b*c*d+f+g"
-
-        val expected = """
-         S { expr|4 { add {
-              expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              '+'
-              expr|3 { mul {
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                  '*'
-                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
-                  '*'
-                  expr { root { var { "[a-zA-Z]+" : 'd' } } }
-                } }
-              '+'
-              expr { root { var { "[a-zA-Z]+" : 'f' } } }
-              '+'
-              expr { root { var { "[a-zA-Z]+" : 'g' } } }
-            } } }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
     fun a_add_b_add_c_add_d() {
-        val sentence = "a+b+c+c+d"
+        val sentence = "a+b+c+d"
 
         val expected = """
-             S { expr|4 { add {
+             S { expr { add {
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   '+'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                  '+'
-                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   '+'
                   expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   '+'
@@ -348,7 +318,7 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
 
     @Test
     fun a_add_b_add_c_add_d_add_e_add_f() {
-        val sentence = "a+b+c+c+d+e+f"
+        val sentence = "a+b+c+d+e+f"
 
         val expected = """
          S { expr|4 { add {
@@ -358,9 +328,32 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
               '+'
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'c' } } }
-              '+'
               expr { root { var { "[a-zA-Z]+" : 'd' } } }
+              '+'
+              expr { root { var { "[a-zA-Z]+" : 'e' } } }
+              '+'
+              expr { root { var { "[a-zA-Z]+" : 'f' } } }
+            } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun a_add_b_add_c_mul_d_add_e_add_f() {
+        val sentence = "a+b+c*d+e+f"
+
+        val expected = """
+         S { expr|4 { add {
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
+              '+'
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
+              '+'
+              expr|3 { mul {
+                expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                '*'
+                expr { root { var { "[a-zA-Z]+" : 'd' } } }
+              } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'e' } } }
               '+'
@@ -397,6 +390,5 @@ class test_bodmas_sList_root_choicePriority : test_LeftCornerParserAbstract() {
 
         super.test(rrs, goal, sentence, 1, expected)
     }
-
 
 }

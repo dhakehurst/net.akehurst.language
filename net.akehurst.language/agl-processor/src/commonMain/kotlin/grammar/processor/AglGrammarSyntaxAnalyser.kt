@@ -44,6 +44,10 @@ internal class AglGrammarSyntaxAnalyser(
     )
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarModel>> = emptyMap()
+    override fun clear() {
+        super.clear()
+        this._localStore.clear()
+    }
 
     override fun registerHandlers() {
         this.register(this::unit)
@@ -114,19 +118,19 @@ internal class AglGrammarSyntaxAnalyser(
         val name = SimpleName(children[1] as String)
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
         val options = (children[4] as List<GrammarOption>)
-        val rules = children[5] as List<(Grammar) -> GrammarItem>
-
+        val rules = children[5] as List<Pair<Boolean, (Grammar) -> GrammarItem>>
+        val grmRules = rules.filter { it.first }.map { it.second }
+        val precRules = rules.filter { it.first.not() }.map { it.second }
         val grmr = GrammarDefault(namespace, name, options)
         grmr.extends.addAll(extends)
         _localStore["grammar"] = grmr
-        rules.forEach { f ->
+        grmRules.forEach { f ->
             val item = f(grmr)
-            when (item) {
-                is OverrideRule -> grmr.grammarRule.add(item)
-                is GrammarRule -> grmr.grammarRule.add(item)
-                is PreferenceRule -> grmr.preferenceRule.add(item)
-                else -> error("Not handled")
-            }
+            grmr.grammarRule.add(item as GrammarRule)
+        }
+        precRules.forEach { f ->
+            val item = f(grmr)
+            grmr.preferenceRule.add(item as PreferenceRule)
         }
         return grmr
     }
@@ -158,31 +162,31 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // rules : rule+ ;
-    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(Grammar) -> GrammarItem> =
-        children as List<(Grammar) -> GrammarItem>
+    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Pair<Boolean, (Grammar) -> GrammarItem>> =
+        children as List<Pair<Boolean, (Grammar) -> GrammarItem>>
 
     // rule = overrideRule | grammarRule | preferenceRule
-    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> GrammarItem =
-        children[0] as (Grammar) -> GrammarItem
+    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Boolean, (Grammar) -> GrammarItem> =
+        children[0] as Pair<Boolean, (Grammar) -> GrammarItem>
 
     // grammarRule : ruleTypeLabels IDENTIFIER '=' rhs ';' ;
-    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> NormalRule {
+    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Boolean, (Grammar) -> GrammarRule> {
         val type = children[0] as List<String>
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = GrammarRuleName(children[1] as String)
         val rhs = children[3] as RuleItem
 
-        return { grammar ->
+        return Pair(true,{ grammar ->
             val result = NormalRuleDefault(grammar, name, isSkip, isLeaf)
             result.rhs = rhs
             result
                 .also { this.locationMap[it] = sentence.locationForNode(target.node) }
-        }
+        })
     }
 
     // overrideRule : 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
-    private fun overrideRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> OverrideRule {
+    private fun overrideRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Boolean, (Grammar) -> OverrideRule> {
         val type = children[1] as List<String>
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
@@ -196,12 +200,12 @@ internal class AglGrammarSyntaxAnalyser(
         }
         val rhs = children[4] as RuleItem
 
-        return { grammar ->
+        return Pair(true,{ grammar ->
             val result = OverrideRuleDefault(grammar, identifier, isSkip, isLeaf, overrideKind)
             result.overriddenRhs = rhs
             result
                 .also { this.locationMap[it] = sentence.locationForNode(target.node) }
-        }
+        })
     }
 
     // overrideOperator = '=' | '+|' ;
@@ -412,33 +416,25 @@ internal class AglGrammarSyntaxAnalyser(
         }
         val mt = children[0] as String
         val escaped = mt.substring(1, mt.length - 1)
-        //TODO: check these unescapings, e.g. '\\n'
-//        val value = if (isPattern) {
-//            escaped.replace("\\\"", "\"")
-//        } else {
-//            escaped.replace("\\'", "'").replace("\\\\", "\\")
-//        }
         return TerminalDefault(escaped, isPattern)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
-    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> PreferenceRule {
+    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence):Pair<Boolean, (Grammar) -> PreferenceRule> {
         val forItem = children[1] as SimpleItem
-        val optionList = children[3] as List<PreferenceOption>
-        return { grammar ->
+        val optionListFunc = children[3] as List<(Grammar) -> PreferenceOption>
+        return Pair(false,{ grammar ->
+            val optionList = optionListFunc.map { it.invoke(grammar) }
             PreferenceRuleDefault(grammar, forItem, optionList)
                 .also { this.locationMap[it] = sentence.locationForNode(target.node) }
-        }
+        })
     }
 
     // preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
-    private fun preferenceOption(target: SpptDataNodeInfo, children: List<Any?>, arg: Any?): PreferenceOption {
+    private fun preferenceOption(target: SpptDataNodeInfo, children: List<Any?>, arg: Any?): (Grammar) -> PreferenceOption {
         val item = children[0] as NonTerminal
-        val choiceNumber = when {
-            null == children[1] -> RulePosition.OPTION_NONE
-            //children[1] is String -> OptionNum((children[1] as String).toInt()) //FIXME: choiceNumber not called!
-            else -> OptionNum(children[1] as Int)
-        }
+        val choiceIndicator = children[1] // OptionNum | ChoiceIndicator
+
         val terminalList = children[3] as List<SimpleItem>
         val assStr = children[4] as String
         val associativity = when (assStr) {
@@ -446,13 +442,41 @@ internal class AglGrammarSyntaxAnalyser(
             "right" -> Associativity.RIGHT
             else -> error("Internal Error: associativity value '$assStr' not supported")
         }
-        return PreferenceOptionDefault(item, choiceNumber, terminalList, associativity)
+        return { grammar ->
+            val optionNum = when (choiceIndicator) {
+                is OptionNum -> choiceIndicator
+                is ChoiceIndicator -> when (item.referencedRule(grammar).rhs) {
+                    is Choice -> when (choiceIndicator) {
+                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_OPTIONAL_EMPTY
+                        ChoiceIndicator.ITEM -> RulePosition.OPTION_OPTIONAL_ITEM
+                    }
+
+                    is SimpleList -> when (choiceIndicator) {
+                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_MULTI_EMPTY
+                        ChoiceIndicator.ITEM -> RulePosition.OPTION_MULTI_ITEM
+                    }
+
+                    is SeparatedList -> when (choiceIndicator) {
+                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_SLIST_EMPTY
+                        ChoiceIndicator.ITEM -> RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+                    }
+
+                    else -> error("Internal Error: Rule subtype '${item.referencedRule(grammar).rhs}' not supported")
+                }
+
+                else -> error("Unsupported")
+            }
+            PreferenceOptionDefault(item, optionNum, terminalList, associativity)
+        }
     }
 
-    // choiceNumber = POSITIVE_INTEGER? ;
-    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int? {
-        val n = children[0] as String?
-        return n?.toInt()
+    // choiceNumber = POSITIVE_INTEGER? | CHOICE_INDICATOR ;
+    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any {
+        return when (target.alt.option.asIndex) {
+            0 -> (children[0] as String?)?.let { OptionNum(it.toInt()) } ?: RulePosition.OPTION_NONE
+            1 -> ChoiceIndicator.valueOf(children[0] as String)
+            else -> error("Internal Error: choiceNumber not supported")
+        }
     }
 
     // associativity = 'left' | 'right' ;

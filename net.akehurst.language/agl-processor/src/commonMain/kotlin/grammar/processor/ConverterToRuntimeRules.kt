@@ -24,6 +24,7 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.PrefRule
 
 /**
@@ -165,8 +166,8 @@ internal class ConverterToRuntimeRules(
                 }
             }.toSet()
             val assoc = when (it.associativity) {
-                Associativity.LEFT -> RuntimePreferenceRule.Assoc.LEFT
-                Associativity.RIGHT -> RuntimePreferenceRule.Assoc.RIGHT
+                Associativity.LEFT -> Assoc.LEFT
+                Associativity.RIGHT -> Assoc.RIGHT
             }
             RuntimePreferenceRule.RuntimePreferenceOption(prec, tgt, opt, terminals, assoc)
         }

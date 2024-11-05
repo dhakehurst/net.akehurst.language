@@ -34,6 +34,7 @@ import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parsermessages.Message
@@ -598,8 +599,8 @@ internal class RuntimeParser(
                         val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
                         val assoc = byTarget.flatMap {
                             when (it.key.second) {
-                                RuntimePreferenceRule.Assoc.NONE -> it.value
-                                RuntimePreferenceRule.Assoc.LEFT -> when {
+                                Assoc.NONE -> it.value
+                                Assoc.LEFT -> when {
                                     it.key.first[0].isList -> {
                                         val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
                                         val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
@@ -612,7 +613,7 @@ internal class RuntimeParser(
                                     else -> it.value.filter { it.first.action == ParseAction.GRAFT }
                                 }
 
-                                RuntimePreferenceRule.Assoc.RIGHT -> when {
+                                Assoc.RIGHT -> when {
                                     it.key.first[0].isList -> {
                                         val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
                                         val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }

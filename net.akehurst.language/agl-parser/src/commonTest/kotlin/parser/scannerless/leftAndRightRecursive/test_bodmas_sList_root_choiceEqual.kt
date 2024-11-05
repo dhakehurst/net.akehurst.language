@@ -18,13 +18,14 @@ package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstract() {
+class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;
@@ -36,10 +37,8 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
     // group = '(' expr ')' ;
     // bool = 'true' | 'false' ;
     // var = "[a-zA-Z]+" ;
-    // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")
@@ -67,12 +66,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
             literal("'*'", "*")
             literal("'+'", "+")
             literal("'-'", "-")
+
             preferenceFor("expr") {
-                left("sub", setOf("'-'"))
-                left("add", setOf("'+'"))
-                left("mul", setOf("'*'"))
-                left("div", setOf("'/'"))
+                leftOption("sub", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'-'"))
+                leftOption("add", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
+                leftOption("mul", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'*'"))
+                leftOption("div", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
             }
+
         }
         val goal = "S"
     }
@@ -168,14 +169,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
 
     @Test
     fun a_div_b() {
-        val sentence = "a / b"
+        val sentence = "a/b"
 
         val expected = """
             S {
               expr|2 {
                 div {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '/' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  '/'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -188,14 +189,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
 
     @Test
     fun a_mul_b() {
-        val sentence = "a * b"
+        val sentence = "a*b"
 
         val expected = """
             S {
               expr|3 {
                 mul {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '*' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  '*'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -208,14 +209,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
 
     @Test
     fun a_add_b() {
-        val sentence = "a + b"
+        val sentence = "a+b"
 
         val expected = """
             S {
               expr|4 {
                 add {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '+' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  '+'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -228,14 +229,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_LeftCornerParserAbstrac
 
     @Test
     fun a_sub_b() {
-        val sentence = "a - b"
+        val sentence = "a-b"
 
         val expected = """
             S {
               expr|5 {
                 sub {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '-' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  '-'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }

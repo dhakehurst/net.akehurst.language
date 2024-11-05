@@ -17,20 +17,34 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.collections.CollectionsTest.matches
+import net.akehurst.language.parser.api.PrefOption
+import net.akehurst.language.parser.api.PrefRule
+import net.akehurst.language.parser.api.RuleSet
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 //FIXME: REPEAT - because no MPP test-fixtures
 internal object RuntimeRuleSetTest {
 
+    fun assertRrsEquals(expected: RuleSet, actual: RuleSet) = assertRrsEquals(expected as RuntimeRuleSet,actual as RuntimeRuleSet)
+
     fun assertRrsEquals(expected: RuntimeRuleSet, actual: RuntimeRuleSet) {
         assertEquals(expected.toString(), actual.toString())
         assertTrue(expected.matches(actual))
     }
 
-    fun RuntimeRuleSet.matches(other: RuntimeRuleSet) = when {
-        this.runtimeRules.size != other.runtimeRules.size -> false
-        else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t, o -> t.matches(o) }
+    fun RuleSet.matches(other: RuleSet) = (this as RuntimeRuleSet).matches(other as RuntimeRuleSet)
+
+    fun RuntimeRuleSet.matches(other: RuntimeRuleSet) :Boolean{
+        val rrs = when {
+            this.runtimeRules.size != other.runtimeRules.size -> false
+            else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t, o -> t.matches(o) }
+        }
+        val prs = when {
+            this.precedenceRules.size != other.precedenceRules.size -> false
+            else -> this.precedenceRules.sortedBy { it.contextRule.tag }.matches(other.precedenceRules.sortedBy { it.contextRule.tag }) { t, o -> t.matches(o) }
+        }
+        return rrs && prs
     }
 
     fun RulePositionRuntime.matches(other: RulePositionRuntime): Boolean = when {
@@ -113,4 +127,22 @@ internal object RuntimeRuleSetTest {
             }
         }
     }
+
+    fun PrefRule.matches(other: PrefRule): Boolean {
+        return when {
+            this.contextRule.tag != other.contextRule.tag -> false
+            this.options.size != other.options.size -> false
+            else -> this.options.matches(other.options) { t,o -> t.matches(o) }
+        }
+    }
+
+    fun PrefOption.matches(other: PrefOption): Boolean = when {
+        this.precedence != other.precedence -> false
+        this.target.tag!=other.target.tag -> false
+        this.option!=other.option -> false
+        this.operators!=other.operators -> false
+        this.associativity!=other.associativity -> false
+        else -> true
+    }
+
 }

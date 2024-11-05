@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -49,8 +50,8 @@ internal class test_da_sList_root_choicePriority : test_LeftCornerParserAbstract
             literal("'/'", "/")
             literal("'+'", "+")
             preferenceFor("expr") {
-                left("add", setOf("'+'"))
-                left("div", setOf("'/'"))
+                leftOption("add", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
+                leftOption("div", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
             }
         }
         val goal = "S"

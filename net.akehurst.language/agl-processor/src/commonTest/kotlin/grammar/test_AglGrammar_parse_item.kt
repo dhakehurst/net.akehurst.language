@@ -27,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_AglGrammar_item {
+class test_AglGrammar_parse_item {
 
     private companion object {
         private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammar.grammar)
@@ -1196,7 +1196,7 @@ grammar {
     }
 
     @Test
-    fun preferenceRule() {
+    fun preferenceRule_no_indicator() {
         val goal = "preferenceRule"
         val sentence = """
             preference s {
@@ -1214,7 +1214,127 @@ grammar {
                 nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
-                choiceNumber { §empty }
+                choiceNumber { §choiceNumber§opt1 { <EMPTY> }  }
+                'on' WHITESPACE : ' '
+                terminalList {
+                  simpleItem { terminal { LITERAL : '\'a\'' } }
+                  ','
+                  simpleItem { terminal { LITERAL : '\'b\'' } }
+                  ','
+                  simpleItem { terminal {
+                    LITERAL : '\'c\'' WHITESPACE : ' '
+                  } }
+                }
+                associativity {
+                  'left' WHITESPACE : '⏎'
+                }
+              } }
+              '}'
+            }
+        """
+        test(sentence, goal, expected)
+    }
+
+    @Test
+    fun preferenceRule_number_indicator() {
+        val goal = "preferenceRule"
+        val sentence = """
+            preference s {
+              x 2 on 'a','b','c' left
+            }
+        """.trimIndent()
+        val expected = """
+            preferenceRule {
+              'preference' WHITESPACE : ' '
+              simpleItem { nonTerminal { possiblyQualifiedName {
+                IDENTIFIER : 's' WHITESPACE : ' '
+              } } }
+              '{' WHITESPACE : '⏎  '
+              §preferenceRule§multi1 { preferenceOption {
+                nonTerminal { possiblyQualifiedName {
+                  IDENTIFIER : 'x' WHITESPACE : ' '
+                } }
+                choiceNumber { §choiceNumber§opt1 { POSITIVE_INTEGER : '2' WHITESPACE : ' ' }  }
+                'on' WHITESPACE : ' '
+                terminalList {
+                  simpleItem { terminal { LITERAL : '\'a\'' } }
+                  ','
+                  simpleItem { terminal { LITERAL : '\'b\'' } }
+                  ','
+                  simpleItem { terminal {
+                    LITERAL : '\'c\'' WHITESPACE : ' '
+                  } }
+                }
+                associativity {
+                  'left' WHITESPACE : '⏎'
+                }
+              } }
+              '}'
+            }
+        """
+        test(sentence, goal, expected)
+    }
+
+    @Test
+    fun preferenceRule_EMPTY_indicator() {
+        val goal = "preferenceRule"
+        val sentence = """
+            preference s {
+              x EMPTY on 'a','b','c' left
+            }
+        """.trimIndent()
+        val expected = """
+            preferenceRule {
+              'preference' WHITESPACE : ' '
+              simpleItem { nonTerminal { possiblyQualifiedName {
+                IDENTIFIER : 's' WHITESPACE : ' '
+              } } }
+              '{' WHITESPACE : '⏎  '
+              §preferenceRule§multi1 { preferenceOption {
+                nonTerminal { possiblyQualifiedName {
+                  IDENTIFIER : 'x' WHITESPACE : ' '
+                } }
+                choiceNumber { CHOICE_INDICATOR : 'EMPTY' WHITESPACE : ' '  }
+                'on' WHITESPACE : ' '
+                terminalList {
+                  simpleItem { terminal { LITERAL : '\'a\'' } }
+                  ','
+                  simpleItem { terminal { LITERAL : '\'b\'' } }
+                  ','
+                  simpleItem { terminal {
+                    LITERAL : '\'c\'' WHITESPACE : ' '
+                  } }
+                }
+                associativity {
+                  'left' WHITESPACE : '⏎'
+                }
+              } }
+              '}'
+            }
+        """
+        test(sentence, goal, expected)
+    }
+
+    @Test
+    fun preferenceRule_ITEM_indicator() {
+        val goal = "preferenceRule"
+        val sentence = """
+            preference s {
+              x EMPTY on 'a','b','c' left
+            }
+        """.trimIndent()
+        val expected = """
+            preferenceRule {
+              'preference' WHITESPACE : ' '
+              simpleItem { nonTerminal { possiblyQualifiedName {
+                IDENTIFIER : 's' WHITESPACE : ' '
+              } } }
+              '{' WHITESPACE : '⏎  '
+              §preferenceRule§multi1 { preferenceOption {
+                nonTerminal { possiblyQualifiedName {
+                  IDENTIFIER : 'x' WHITESPACE : ' '
+                } }
+                choiceNumber { CHOICE_INDICATOR : 'ITEM' WHITESPACE : ' ' }
                 'on' WHITESPACE : ' '
                 terminalList {
                   simpleItem { terminal { LITERAL : '\'a\'' } }

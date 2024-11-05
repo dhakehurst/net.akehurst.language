@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
@@ -60,8 +61,8 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             optional("oG", "G")
             concatenation("G") { literal("s"); ref("oA") }
             preferenceFor("<EMPTY>") {
-                leftOption("oA", OptionNum(1), setOf("'t'"))
-                leftOption("oP", OptionNum(1), setOf("'t'"))
+                leftOption("oA", RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
+                leftOption("oP", RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
             }
         }
 

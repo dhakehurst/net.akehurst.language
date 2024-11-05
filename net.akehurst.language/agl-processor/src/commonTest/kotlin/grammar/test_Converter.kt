@@ -20,7 +20,9 @@ import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
+import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class test_Converter {
@@ -558,13 +560,42 @@ class test_Converter {
     }
 
     @Test
-    fun preference() {
-        // S = v | A | M
+    fun preference_ITEM() {
+        // S = v | A | D
         // v = "[a-z]+"
         // A = S + S
-        // M = S / S
-        val grammar = grammar("test", "test") {
-            TODO()
+        // D = [S / '/']2+
+        val grammar = grammar("test", "Test") {
+            choice("S") {
+                ref("v")
+                ref("A")
+                ref("D")
+            }
+            concatenation("v", isLeaf = true) { pat("[a-z]+") }
+            concatenation("A") { ref("S"); lit("+"); ref("S") }
+            separatedList("D", 2, -1) { ref("S"); lit("/") }
+            preference("S") {
+                optionLeft("D", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("/"))
+            }
         }
+
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
+
+        val expected = ruleSet("test.Test") {
+            choiceLongest("S") {
+                ref("v")
+                ref("A")
+                ref("D")
+            }
+            pattern("v", "[a-z]+")
+            concatenation("A") { ref("S"); literal("+"); ref("S") }
+            sList("D", 2, -1, "S", "'/'")
+            literal("/")
+            preferenceFor("S") {
+                leftOption("D", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
+            }
+        }
+
+        RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 }

@@ -75,9 +75,10 @@ grammar AglGrammar extends Base {
     
     preferenceRule = 'preference' simpleItem '{' preferenceOption* '}' ;
     preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
-    choiceNumber = POSITIVE_INTEGER? ;
+    choiceNumber = POSITIVE_INTEGER? | CHOICE_INDICATOR ;
     terminalList = [simpleItem / ',']+ ;
     associativity = 'left' | 'right' ;
+    leaf CHOICE_INDICATOR = "EMPTY|ITEM" ;
 }
 """
 
@@ -216,12 +217,16 @@ grammar AglGrammar extends Base {
             concatenation("preferenceOption") {
                 ref("nonTerminal"); ref("choiceNumber"); lit("on"); ref("terminalList"); ref("associativity")
             }
-            optional("choiceNumber") { ref("POSITIVE_INTEGER") }
+            choice("choiceNumber") {
+                concat { opt { ref("POSITIVE_INTEGER") } }
+                concat { ref("CHOICE_INDICATOR") }
+            }
             separatedList("terminalList", 1, -1) { ref("simpleItem"); lit(",") }
             choice("associativity") {
                 lit("left")
                 lit("right")
             }
+            concatenation("CHOICE_INDICATOR", isLeaf = true) { pat("EMPTY|ITEM") }
         }
     }
 
