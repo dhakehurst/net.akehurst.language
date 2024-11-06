@@ -1214,7 +1214,7 @@ grammar {
                 nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
-                choiceNumber { §choiceNumber§opt1 { <EMPTY> }  }
+                §preferenceOption§opt1 { <EMPTY> }
                 'on' WHITESPACE : ' '
                 terminalList {
                   simpleItem { terminal { LITERAL : '\'a\'' } }
@@ -1254,7 +1254,7 @@ grammar {
                 nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
-                choiceNumber { §choiceNumber§opt1 { POSITIVE_INTEGER : '2' WHITESPACE : ' ' }  }
+                §preferenceOption§opt1 { choiceNumber { POSITIVE_INTEGER : '2' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {
                   simpleItem { terminal { LITERAL : '\'a\'' } }
@@ -1294,7 +1294,7 @@ grammar {
                 nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
-                choiceNumber { CHOICE_INDICATOR : 'EMPTY' WHITESPACE : ' '  }
+                §preferenceOption§opt1 { choiceNumber { CHOICE_INDICATOR : 'EMPTY' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {
                   simpleItem { terminal { LITERAL : '\'a\'' } }
@@ -1320,7 +1320,7 @@ grammar {
         val goal = "preferenceRule"
         val sentence = """
             preference s {
-              x EMPTY on 'a','b','c' left
+              x ITEM on 'a','b','c' left
             }
         """.trimIndent()
         val expected = """
@@ -1334,7 +1334,7 @@ grammar {
                 nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
                 } }
-                choiceNumber { CHOICE_INDICATOR : 'ITEM' WHITESPACE : ' ' }
+                §preferenceOption§opt1 { choiceNumber { CHOICE_INDICATOR : 'ITEM' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {
                   simpleItem { terminal { LITERAL : '\'a\'' } }

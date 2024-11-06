@@ -13,7 +13,7 @@
           <option value=":agl-processor:cleanJvm8Test" />
           <option value=":agl-processor:jvm8Test" />
           <option value="--tests" />
-          <option value="&quot;net.akehurst.language.agl.language.grammar.*&quot;" />
+          <option value="&quot;net.akehurst.language.grammar.processor.*&quot;" />
         </list>
       </option>
       <option name="vmOptions" value="" />

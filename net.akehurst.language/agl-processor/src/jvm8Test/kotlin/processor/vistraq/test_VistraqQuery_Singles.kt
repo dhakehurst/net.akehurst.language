@@ -44,182 +44,188 @@ class test_VistraqQuery_Singles {
             } //TODO: use build
         }
 
-        fun test_process(sentence: String, goal: String) {
-            val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        fun test_process(sentence: String, goal: String, grammarName: String? = null) {
+            val proc = when (grammarName) {
+                null -> processor
+                else -> Agl.processorFromStringSimple(
+                    GrammarString(grammarStr),
+                    configurationBase = Agl.configuration(Agl.configurationDefault()) {
+                        targetGrammarName(grammarName)
+                    }
+                ).let {
+                    assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                    it.processor!!
+                }
+            }
+            val result = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
             assertTrue(processor.issues.errors.isEmpty(), processor.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        }
+
+        fun test_process_fail(sentence: String, goal: String, grammarName: String? = null, expected: Set<LanguageIssue>) {
+            val proc = when (grammarName) {
+                null -> processor
+                else -> Agl.processorFromStringSimple(
+                    GrammarString(grammarStr),
+                    configurationBase = Agl.configuration(Agl.configurationDefault()) {
+                        targetGrammarName(grammarName)
+                    }
+                ).let {
+                    assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                    it.processor!!
+                }
+            }
+            val result = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+            assertEquals(expected, result.issues.all)
         }
 
     }
 
     @Test
-    fun parse_NULL_null() {
+    fun Expressions_process_NULL_null() {
         val sentence = "null"
+        val grammarName = "Expressions"
         val goal = "NULL"
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_REAL_0() {
+    fun Expressions_process_REAL_0__fail() {
         val sentence = "0"
+        val grammarName = "Expressions"
         val goal = "REAL"
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
-        assertNull(result.sppt)
-        assertEquals(
-            setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("REAL"))
-            ), result.issues.all
+        val expected = setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("REAL"))
         )
+        test_process_fail(sentence, goal, grammarName, expected)
     }
 
     @Test
-    fun parse_REAL_p0() {
+    fun Expressions_process_REAL_p0__fail() {
         val sentence = ".0"
+        val grammarName = "Expressions"
         val goal = "REAL"
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
-        assertNull(result.sppt)
-        assertEquals(
-            setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("REAL"))
-            ), result.issues.all
+        val expected =  setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("REAL"))
         )
-
+        test_process_fail(sentence, goal, grammarName, expected)
     }
 
     @Test
-    fun parse_REAL_0p0() {
+    fun Expressions_process_REAL_0p0() {
         val sentence = "0.0"
+        val grammarName = "Expressions"
         val goal = "REAL"
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_REAL_3p14() {
+    fun Expressions_process_REAL_3p14() {
         val sentence = "3.14"
+        val grammarName = "Expressions"
         val goal = "REAL"
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_expression_1() {
-        val queryStr = "1"
+    fun Expressions_process_expression_1() {
+        val sentence = "1"
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_literalValue_0p1() {
-        val queryStr = "0.1"
+    fun Expressions_process_literalValue_0p1() {
+        val sentence = "0.1"
+        val grammarName = "Expressions"
         val goal = "literalValue"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_expression_0p1() {
-        val queryStr = "0.1"
+    fun Expressions_process_expression_true() {
+        val sentence = "true"
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_nodeSelector_NOT_A() {
-        val queryStr = "NOT A"
+    fun Expressions_process_navigationExpression_apb() {
+        val sentence = "a.b"
+        val grammarName = "Expressions"
+        val goal = "navigationExpression"
+        test_process(sentence, goal, grammarName)
+    }
+
+    @Test
+    fun Expressions_process_expression_apb() {
+        val sentence = "a.b"
+        val grammarName = "Expressions"
+        val goal = "expression"
+        test_process(sentence, goal, grammarName)
+    }
+
+    @Test
+    fun Expressions_process_expression_0p1() {
+        val sentence = "0.1"
+        val grammarName = "Expressions"
+        val goal = "expression"
+        test_process(sentence, goal, grammarName)
+    }
+
+    @Test
+    fun GraphPathExpressions_process_nodeSelector_NOT_A() {
+        val sentence = "NOT A"
+        val grammarName = "GraphPathExpressions"
         val goal = "nodeSelector"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_pathExpression_NOT_A() {
-        val queryStr = "NOT A"
+    fun GraphPathExpressions_process_pathExpression_NOT_A() {
+        val sentence = "NOT A"
+        val grammarName = "GraphPathExpressions"
         val goal = "pathExpression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_pathQuery_MATCH_NOT_A() {
-        val queryStr = "MATCH NOT A"
+    fun Queries_process_pathQuery_MATCH_NOT_A() {
+        val sentence = "MATCH NOT A"
+        val grammarName = "Queries"
         val goal = "pathQuery"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
-    }
-
-    @Test
-    fun parse_expression_literalValue_true() {
-        val queryStr = "true"
-        val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test(timeout = 5000)
-    fun parse_expression_long_3() {
-        val queryStr = "a.p AND b.p AND c.p AND d.p"
+    fun Expressions_process_expression_3x_AND_nav_3() {
+        val sentence = "a.p AND b.p AND c.p AND d.p"
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
-        println(result.sppt!!.toStringAllWithIndent("  "))
+        test_process(sentence, goal, grammarName)
     }
 
     @Test(timeout = 5000)
-    fun parse_expression_long_5() {
-        val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
+    fun Expressions_process_expression_5x_AND_nav() {
+        val sentence = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test//(timeout = 5000)
-    fun parse_expression_long_11() {
-        val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
+    fun Expressions_process_expression_11x_AND_nav() {
+        val sentence = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test//(timeout = 5000)
-    fun parse_expression_long_fromBlog() {
-        val queryStr = """
+    fun Expressions_process_long_fromBlog() {
+        val sentence = """
      ms.released == true
      AND ft.status == 'done'
      AND task.status == 'done'
@@ -233,98 +239,92 @@ class test_VistraqQuery_Singles {
      AND binary.version == ms.version
      AND binary.publishedDate < ms.dueDate
         """.trimIndent()
+        val grammarName = "Expressions"
         val goal = "expression"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt, result.issues.toString())
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_whereClause_expression_literalValue_true() {
-        val queryStr = "WHERE true"
+    fun Queries_process_whereClause_expression_literalValue_true() {
+        val sentence = "WHERE true"
+        val grammarName = "Queries"
         val goal = "whereClause"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_pathQuery1() {
-        val queryStr = "MATCH Milestone WHERE true"
+    fun Queries_process_pathQuery1() {
+        val sentence = "MATCH Milestone WHERE true"
+        val grammarName = "Queries"
         val goal = "pathQuery"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_singleQuery_MATCH_X_RETURN_1() {
-        val queryStr = "MATCH Milestone RETURN VALUE 1"
+    fun Queries_process_singleQuery_MATCH_X_RETURN_1() {
+        val sentence = "MATCH Milestone RETURN VALUE 1"
+        val grammarName = "Queries"
         val goal = "singleQuery"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test
-    fun parse_singleQuery_MATCH_X_WHERE_t_RETURN_1() {
-        val queryStr = """
+    fun Queries_process_singleQuery_MATCH_X_WHERE_t_RETURN_1() {
+        val sentence = """
    MATCH Milestone WHERE true RETURN VALUE 1
         """.trimIndent()
+        val grammarName = "Queries"
         val goal = "singleQuery"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
+    }
+
+    @Test
+    fun Queries_process_columnDefinition() {
+        val sentence = "COLUMN a CONTAINING a;"
+        val grammarName = "Queries"
+        val goal = "columnDefinition"
+        test_process(sentence, goal,grammarName)
+    }
+
+    @Test
+    fun Queries_process_columnDefinition_with_whereClause() {
+        val sentence = "COLUMN a CONTAINING a WHERE true;"
+        val grammarName = "Queries"
+        val goal = "columnDefinition"
+        test_process(sentence, goal,grammarName)
     }
 
     @Test(timeout = 5000)
-    fun parse_q2() {
-        val queryStr = """
+    fun Queries_process_query1() {
+        val sentence = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a;"
+        val grammarName = "Queries"
+        val goal = "query"
+        test_process(sentence, goal, grammarName)
+    }
+
+    @Test(timeout = 5000)
+    fun Queries_process_q2() {
+        val sentence = """
             FOR TIMESPAN all EVERY month
              FROM artefactCount
              RETURN TABLE
-             COLUMN timestamp CONTAINING timestamp
-             COLUMN count CONTAINING count
-             COLUMN X CONTAINING Name WHERE Name=='X'
-             COLUMN Y CONTAINING Name WHERE Name=='Y'
+             COLUMN timestamp CONTAINING timestamp;
+             COLUMN count CONTAINING count;
+             COLUMN X CONTAINING Name WHERE Name=='X';
+             COLUMN Y CONTAINING Name WHERE Name=='Y';
         """.trimIndent()
+        val grammarName = "Queries"
         val goal = "query"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @Test(timeout = 5000)
-    fun parse_query1() {
-        val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
-        //val queryStr = "MATCH A  RETURN 1"
-        val goal = "query"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        assertNotNull(result.sppt)
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
-    }
-
-    @Test(timeout = 5000)
-    fun parse_query2() {
-        val queryStr = """
+    fun Queries_process_query2() {
+        val sentence = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
  MATCH Milestone AS ms
    WHERE ms.dueDate <= now
-   RETURN TABLE COLUMN Due CONTAINING COUNT(ms)
+   RETURN TABLE COLUMN Due CONTAINING COUNT(ms);
  JOIN
    MATCH Milestone AS ms
     ( LINKED * TIMES WITH Bug AS bug
@@ -339,28 +339,23 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         ) ) )
     LINKED 1 TIMES TO Build AS build
     LINKED 1 TIMES TO Binary AS binary
-   RETURN TABLE COLUMN Met CONTAINING COUNT(ms)
+   RETURN TABLE COLUMN Met CONTAINING COUNT(ms);
  JOIN
-   RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100
+   RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100;
         """.trimIndent()
-        //val queryStr = "MATCH A  RETURN 1"
-
+        val grammarName = "Queries"
         val goal = "query"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
+        test_process(sentence, goal, grammarName)
     }
 
     @ExperimentalTime
     @Test//(timeout = 10000)
-    fun parse_fromBlog() {
+    fun Queries_process__fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
  MATCH Milestone AS ms
    WHERE ms.dueDate <= now
-   RETURN TABLE COLUMN Due CONTAINING COUNT(ms)
+   RETURN TABLE COLUMN Due CONTAINING COUNT(ms);
  JOIN
    MATCH Milestone AS ms
     ( LINKED * TIMES WITH Bug AS bug
@@ -382,54 +377,50 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
      AND bResult.value == 'pass' AND build.buildDate < ms.dueDate
      AND build.version == ms.version AND binary.version == ms.version
      AND binary.publishedDate < ms.dueDate
-   RETURN TABLE COLUMN Met CONTAINING COUNT(ms)
+   RETURN TABLE COLUMN Met CONTAINING COUNT(ms);
  JOIN
-   RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100
+   RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100;
         """.trimIndent()
 
-            println("parse")
-            val goal = "query"
-            processor.parse(queryStr, ParseOptionsDefault(goal))
-            println("timed parse")
-            val v = measureTimedValue {
-                processor.parse(queryStr, ParseOptionsDefault(goal))
-            }
-            println(v.duration)
-            val result = v.value
-            assertNotNull(result.sppt)
-            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-            val resultStr = result.sppt!!.asSentence
-            assertEquals(queryStr, resultStr)
-
-            val res = processor.process(queryStr)
-            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-    }
-
-    @Test
-    fun parse_returnTable1() {
-        val queryStr = "RETURN TABLE COLUMN a CONTAINING a ORDER BY a"
-        val goal = "returnTable"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt, result.issues.toString())
-        println(result.issues)
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
-    }
-
-    @Test
-    fun parse_returnTable() {
-        val queryStr = "MATCH A AS a LINKED TO B AS b RETURN TABLE COLUMN a CONTAINING a.identity COLUMN b CONTAINING b.identity ORDER BY a"
-        val goal = "singleQuery"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
-        assertNotNull(result.sppt, result.issues.toString())
-        val resultStr = result.sppt!!.asSentence
-        assertEquals(queryStr, resultStr)
-    }
-
-    @Test
-    fun process_RETURN_null() {
-        val sentence = "RETURN VALUE null"
+        println("parse")
         val goal = "query"
-        test_process(sentence, goal)
+        processor.parse(queryStr, ParseOptionsDefault(goal))
+        println("timed parse")
+        val v = measureTimedValue {
+            processor.parse(queryStr, ParseOptionsDefault(goal))
+        }
+        println(v.duration)
+        val result = v.value
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val resultStr = result.sppt!!.asSentence
+        assertEquals(queryStr, resultStr)
+
+        val res = processor.process(queryStr)
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun Queries_process_returnTable1() {
+        val sentence = "RETURN TABLE COLUMN a CONTAINING a; ORDER BY a"
+        val grammarName = "Queries"
+        val goal = "returnTable"
+        test_process(sentence, goal,grammarName)
+    }
+
+    @Test
+    fun Queries_process_returnTable2() {
+        val sentence = "MATCH A AS a LINKED TO B AS b RETURN TABLE COLUMN a CONTAINING a.identity; COLUMN b CONTAINING b.identity; ORDER BY a"
+        val grammarName = "Queries"
+        val goal = "singleQuery"
+        test_process(sentence, goal,grammarName)
+    }
+
+    @Test
+    fun Queries_process_RETURN_null() {
+        val sentence = "RETURN VALUE null"
+        val grammarName = "Queries"
+        val goal = "query"
+        test_process(sentence, goal,grammarName)
     }
 }

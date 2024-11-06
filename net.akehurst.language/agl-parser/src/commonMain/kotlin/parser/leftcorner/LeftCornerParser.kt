@@ -47,6 +47,21 @@ data class ParseResultDefault(
     override val issues: IssueCollection<LanguageIssue>
 ) : ParseResult
 
+data class ParseFailureRuntime(
+    override val failedSpines: List<RuntimeSpine>
+) : ParseFailure {
+
+    val expectedTerminals get() = failedSpines.flatMap { it.expectedNextTerminals }.toSet()
+    val expected get() = expectedTerminals.map { it.tag }.toSet()
+
+    fun message(sentence: Sentence, location: InputLocation): String {
+        val p = failedSpines.map { it.elements.last().tag }.joinToString(separator = " | ")
+        val contextInText = sentence.contextInText(location.position)
+        val message = "Failed to match {$p} at: $contextInText"
+        return message
+    }
+}
+
 class LeftCornerParser(
     val scanner: Scanner,
     ruleSet: RuleSet
@@ -77,11 +92,12 @@ class LeftCornerParser(
     }
 
     override fun parseForGoal(goalRuleName: String, sentenceText: String): ParseResult =
-        this.parse(sentenceText,
+        this.parse(
+            sentenceText,
             ParseOptionsDefault(
                 goalRuleName = goalRuleName
             )
-   )
+        )
 
     override fun parse(sentenceText: String, options: ParseOptions): ParseResult {
         check(sentenceText.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentenceText.length}" }
@@ -136,8 +152,7 @@ class LeftCornerParser(
                 val failedAtPosition = map.keys.max()
                 val nextExpected = map[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
-                //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, fr, rp.stateSet.automatonKind, rp.stateSet, max)
-                addParseIssue(sentence, loc, nextExpected.flatMap { it.expectedNextTerminals }.toSet(), seasons, maxNumHeads)
+                addParseIssue(sentence, loc, nextExpected, seasons, maxNumHeads)
                 val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
                 ParseResultDefault(sppt, this._issues)
             } else {
@@ -156,17 +171,23 @@ class LeftCornerParser(
     private fun addParseIssue(
         sentence: Sentence,
         lastLocation: InputLocation,
-        expectedTerminals: Set<RuntimeRule>,
+        nextExpected: List<RuntimeSpine>,
         seasons: Int,
         maxNumHeads: Int
     ) {
+        val expectedTerminals = nextExpected.flatMap { it.expectedNextTerminals }.toSet()
         val expected = expectedTerminals.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
         val errorLength = 1 //TODO: determine a better length
         val location = sentence.locationFor(errorPos, errorLength)
 
+        val p = nextExpected.map { it.elements.last().tag }.joinToString(separator = " | ")
         val contextInText = sentence.contextInText(location.position)
-        this._issues.error(location, contextInText, expected)
+        val message = "Failed to match {$p} at: $contextInText"
+
+        val failData = ParseFailureRuntime(nextExpected)
+
+        this._issues.error(location, message, expected)
     }
 
     private fun findNextExpectedAfterError3(

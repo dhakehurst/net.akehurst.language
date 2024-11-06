@@ -332,22 +332,24 @@ class PreferenceRuleBuilder(
 ) {
     val optionList = mutableListOf<PreferenceOption>()
 
-    fun optionLeft(nonTerminalName: String, choiceNumber: OptionNum, terminals: List<String>) {
+    fun optionLeft(nonTerminalName: String, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
-                choiceNumber = choiceNumber,
+                choiceIndicator = choiceIndicator,
+                choiceNumber =  choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 Associativity.LEFT
             )
         )
     }
 
-    fun optionRight(nonTerminalName: String, choiceNumber: OptionNum, terminals: List<String>) {
+    fun optionRight(nonTerminalName: String, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
-                choiceNumber = choiceNumber,
+                choiceIndicator = choiceIndicator,
+                choiceNumber =  choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 Associativity.RIGHT
             )

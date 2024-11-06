@@ -128,6 +128,7 @@ internal class AglGrammarSyntaxAnalyser(
             val item = f(grmr)
             grmr.grammarRule.add(item as GrammarRule)
         }
+
         precRules.forEach { f ->
             val item = f(grmr)
             grmr.preferenceRule.add(item as PreferenceRule)
@@ -430,10 +431,15 @@ internal class AglGrammarSyntaxAnalyser(
         })
     }
 
-    // preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
+    // preferenceOption = nonTerminal choiceNumber? 'on' terminalList associativity ;
     private fun preferenceOption(target: SpptDataNodeInfo, children: List<Any?>, arg: Any?): (Grammar) -> PreferenceOption {
         val item = children[0] as NonTerminal
-        val choiceIndicator = children[1] // OptionNum | ChoiceIndicator
+        val ci = children[1] as Pair<ChoiceIndicator, Int>?
+        val choiceIndicator = when {
+            null==ci -> ChoiceIndicator.NONE
+            else -> ci.first
+        }
+        val choiceNumber = ci?.second ?: -1
 
         val terminalList = children[3] as List<SimpleItem>
         val assStr = children[4] as String
@@ -443,38 +449,16 @@ internal class AglGrammarSyntaxAnalyser(
             else -> error("Internal Error: associativity value '$assStr' not supported")
         }
         return { grammar ->
-            val optionNum = when (choiceIndicator) {
-                is OptionNum -> choiceIndicator
-                is ChoiceIndicator -> when (item.referencedRule(grammar).rhs) {
-                    is Choice -> when (choiceIndicator) {
-                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_OPTIONAL_EMPTY
-                        ChoiceIndicator.ITEM -> RulePosition.OPTION_OPTIONAL_ITEM
-                    }
 
-                    is SimpleList -> when (choiceIndicator) {
-                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_MULTI_EMPTY
-                        ChoiceIndicator.ITEM -> RulePosition.OPTION_MULTI_ITEM
-                    }
-
-                    is SeparatedList -> when (choiceIndicator) {
-                        ChoiceIndicator.EMPTY -> RulePosition.OPTION_SLIST_EMPTY
-                        ChoiceIndicator.ITEM -> RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
-                    }
-
-                    else -> error("Internal Error: Rule subtype '${item.referencedRule(grammar).rhs}' not supported")
-                }
-
-                else -> error("Unsupported")
-            }
-            PreferenceOptionDefault(item, optionNum, terminalList, associativity)
+            PreferenceOptionDefault(item, choiceIndicator,choiceNumber, terminalList, associativity)
         }
     }
 
-    // choiceNumber = POSITIVE_INTEGER? | CHOICE_INDICATOR ;
-    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any {
+    // choiceNumber = POSITIVE_INTEGER | CHOICE_INDICATOR ;
+    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<ChoiceIndicator, Int> {
         return when (target.alt.option.asIndex) {
-            0 -> (children[0] as String?)?.let { OptionNum(it.toInt()) } ?: RulePosition.OPTION_NONE
-            1 -> ChoiceIndicator.valueOf(children[0] as String)
+            0 -> Pair(ChoiceIndicator.NUMBER,(children[0] as String).toInt())
+            1 -> Pair(ChoiceIndicator.valueOf(children[0] as String),-1)
             else -> error("Internal Error: choiceNumber not supported")
         }
     }

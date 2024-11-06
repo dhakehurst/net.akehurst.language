@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.sentence.api.InputLocation
 
 
@@ -264,29 +265,33 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
                 when (refRuleRhs) {
                     is Choice -> {
                         when {
-                            po.choiceNumber.isChoiceOption -> Unit
-                            else -> issueError(po, "Preference option for Choice Rule '${po.item.ruleReference.value}' must have a valid choice number", null)
+                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
+                            po.choiceNumber >= 0 -> Unit
+                            else -> issueError(po, "Preference option for Choice Rule '${po.item.ruleReference.value}' must have a valid choice number {NUMBER}", null)
                         }
                     }
 
                     is SimpleList -> {
                         when {
-                            po.choiceNumber.isListSimpleOption -> Unit
-                            else -> issueError(po, "Preference option for List(Simple) Rule '${po.item.ruleReference.value}' must have a valid option indicator EMPTY|ITEM", null)
+                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
+                            po.choiceIndicator==ChoiceIndicator.ITEM -> Unit
+                            else -> issueError(po, "Preference option for List(Simple) Rule '${po.item.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
                         }
                     }
 
                     is SeparatedList -> {
                         when {
-                            po.choiceNumber.isListSeparatedOption -> Unit
-                            else -> issueError(po, "Preference option for List(Separated) Rule '${po.item.ruleReference.value}' must have a valid option indicator EMPTY|ITEM", null)
+                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
+                            po.choiceIndicator==ChoiceIndicator.ITEM -> Unit
+                            else -> issueError(po, "Preference option for List(Separated) Rule '${po.item.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
                         }
                     }
 
                     else -> {
                         when {
-                            po.choiceNumber.isNoneOption -> Unit
-                            else -> issueError(po, "Preference option for Rule must have no option indicator", null)
+                            po.choiceIndicator==ChoiceIndicator.NONE -> Unit
+                            po.choiceNumber < 0 -> Unit
+                            else -> issueError(po, "Preference option for Rule '${po.item.ruleReference.value}' must have no option indicator {NONE}", null)
                         }
                     }
                 }

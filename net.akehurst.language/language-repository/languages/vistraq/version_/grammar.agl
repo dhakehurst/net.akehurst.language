@@ -200,7 +200,7 @@ grammar TIM : Base {
     leaf INT = "[1-9][0-9]*" ;
 }
 
-grammar Unit : Base {
+grammar Unit : Base { // extend Base to get the skip rules
 
     unit = query model? ;
     query = Queries::query ;

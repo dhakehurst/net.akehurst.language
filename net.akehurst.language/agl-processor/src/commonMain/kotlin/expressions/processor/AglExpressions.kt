@@ -18,6 +18,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.parser.api.RulePosition
@@ -207,10 +208,10 @@ grammar Expression extends Base {
         // ideally graft it into a 'whenOption'
         // next best thing is to graft into an infix an end it if lh=='->'
         preference("expression") {
-            optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("INFIX_OPERATOR"))
+            optionRight("infix", ChoiceIndicator.ITEM,-1, listOf("INFIX_OPERATOR"))
             // really want to match the 'ER' position ??
-            optionRight("infix", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("->"))
-            optionRight("whenOption", RulePosition.OPTION_NONE, listOf("->"))
+            optionRight("infix", ChoiceIndicator.ITEM,-1, listOf("->"))
+            optionRight("whenOption", ChoiceIndicator.NONE,-1, listOf("->"))
         }
     }
 

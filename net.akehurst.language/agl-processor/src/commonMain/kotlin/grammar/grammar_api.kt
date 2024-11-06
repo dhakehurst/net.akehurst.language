@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.parser.api.OptionNum
 import kotlin.jvm.JvmInline
 
@@ -171,7 +172,8 @@ enum class Associativity { LEFT, RIGHT }
 
 interface PreferenceOption : Formatable {
     val item: NonTerminal
-    val choiceNumber: OptionNum
+    val choiceIndicator: ChoiceIndicator
+    val choiceNumber: Int
     val onTerminals: List<SimpleItem>
     val associativity: Associativity
 }

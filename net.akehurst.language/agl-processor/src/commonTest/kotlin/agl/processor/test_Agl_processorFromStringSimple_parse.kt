@@ -25,17 +25,20 @@ import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
 class test_Agl_processorFromStringSimple_parse {
+    private companion object {
+         fun test_parse(grammarStr: String, sentence: String, expectedStr: String) {
+            val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
+            assertTrue(pr.issues.isEmpty(), pr.issues.toString())
+            assertNotNull(pr.processor)
 
-    private fun test(grammarStr: String, sentence: String, expectedStr: String) {
-        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
+            val result = pr.processor!!.parse(sentence)
+            assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val result = pr.processor!!.parse(sentence)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+            val expected = pr.processor!!.spptParser.parse(expectedStr)
+            assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+            //TODO: assertEquals(expected, result.sppt)
+        }
 
-        val expected = pr.processor!!.spptParser.parse(expectedStr)
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-        //TODO: assertEquals(expected, result.sppt)
     }
 
     @BeforeTest
@@ -44,8 +47,7 @@ class test_Agl_processorFromStringSimple_parse {
     }
 
     @Test
-    fun single_line_comment() {
-
+    fun single_line_comment_at_start() {
         val grammarStr = """
             // single line comment
             namespace test
@@ -54,23 +56,11 @@ class test_Agl_processorFromStringSimple_parse {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("a")
-        val expected = pr.processor!!.spptParser.parse(
-            """
-            a { 'a' }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-        //TODO: ? assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
+        test_parse(grammarStr, "a", "a { 'a' }")
     }
 
     @Test
-    fun empty() {
-
+    fun rule_empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -78,18 +68,7 @@ class test_Agl_processorFromStringSimple_parse {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("");
-        val expected = pr.processor!!.spptParser.parse(
-            """
-            a { §empty }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-        assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
+        test_parse(grammarStr, "", "a { <EMPTY> }")
     }
 
     @Test
@@ -819,7 +798,7 @@ class test_Agl_processorFromStringSimple_parse {
     }
 
     @Test
-    fun nonTerminal_multi_0_1() {
+    fun nonTerminal_optional() {
 
         val grammarStr = """
             namespace test
@@ -851,6 +830,63 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
         assertEquals(expected2, result2.sppt)
         assertTrue(result2.issues.isEmpty())
+    }
+
+    @Test
+    fun concat_nonTerminal_optional() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'b' a? ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
+        assertNotNull(pr.processor)
+
+        val result1 = pr.processor!!.parse("b");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { 'b' §S§opt1 { <EMPTY> } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+//        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
+
+        val result2 = pr.processor!!.parse("ba");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { 'b' §S§opt1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+    }
+
+    @Test
+    fun concat_nonTerminal_optA_optB_optC() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A? B? C? ;
+                A = 'a' ;
+                B = 'b' ;
+                C = 'c' ;
+            }
+        """.trimIndent()
+
+        test_parse(grammarStr, "", "S { §S§opt1 { <EMPTY> } §S§opt2 { <EMPTY> } §S§opt3 { <EMPTY> }}")
+        test_parse(grammarStr, "a", "S { §S§opt1 { A {'a'} } §S§opt2 { <EMPTY> } §S§opt3 { <EMPTY> }}")
+        test_parse(grammarStr, "b", "S { §S§opt1 { <EMPTY> } §S§opt2 { B {'b'} } §S§opt3 { <EMPTY> }}")
+        test_parse(grammarStr, "c", "S { §S§opt1 { <EMPTY> } §S§opt2 { <EMPTY> } §S§opt3 { C {'c'} }}")
+        test_parse(grammarStr, "ab", "S { §S§opt1 { A {'a'} } §S§opt2 {B {'b'} } §S§opt3 { <EMPTY> }}")
+        test_parse(grammarStr, "ac", "S { §S§opt1 { A {'a'} } §S§opt2 { <EMPTY> } §S§opt3 { C {'c'} }}")
+        test_parse(grammarStr, "bc", "S { §S§opt1 { <EMPTY> } §S§opt2 { B {'b'} } §S§opt3 { C {'c'} }}")
+        test_parse(grammarStr, "abc", "S { §S§opt1 { A {'a'} } §S§opt2 { B {'b'} } §S§opt3 { C {'c'} }}")
     }
 
     @Test
@@ -1857,10 +1893,10 @@ class test_Agl_processorFromStringSimple_parse {
                 }
             }
         """.trimIndent()
-        test(grammarStr, "v", "S{ v:'v' }")
-        test(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
-        test(grammarStr, "a/b", "S{ D{ S{v:'a'} '/' S{v:'b'} } }")
-        test(
+        test_parse(grammarStr, "v", "S{ v:'v' }")
+        test_parse(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
+        test_parse(grammarStr, "a/b", "S{ D{ S{v:'a'} '/' S{v:'b'} } }")
+        test_parse(
             grammarStr, "a+b/c", """
             S { A {
               S { v : 'a' }
@@ -1886,15 +1922,15 @@ class test_Agl_processorFromStringSimple_parse {
                 D = [S / '*']2+ ;
                 
                 preference S {
-                  A on '+' left
-                  D on '*' left
+                  A ITEM on '+' left
+                  D ITEM on '*' left
                 }
             }
         """.trimIndent()
-        test(grammarStr, "v", "S{ v:'v' }")
-        test(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
-        test(grammarStr, "a*b", "S{ D{ S{v:'a'} '*' S{v:'b'} } }")
-        test(
+        test_parse(grammarStr, "v", "S{ v:'v' }")
+        test_parse(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
+        test_parse(grammarStr, "a*b", "S{ D{ S{v:'a'} '*' S{v:'b'} } }")
+        test_parse(
             grammarStr, "a+b+c", """
             S { A {
               S { v : 'a' }
@@ -1905,7 +1941,7 @@ class test_Agl_processorFromStringSimple_parse {
             } }
         """.trimIndent()
         )
-        test(
+        test_parse(
             grammarStr, "a+b*c", """
             S { A {
               S { v : 'a' }
@@ -1918,7 +1954,7 @@ class test_Agl_processorFromStringSimple_parse {
             } }
         """.trimIndent()
         )
-        test(
+        test_parse(
             grammarStr, "a*b+c", """
             S { A {
               S { D {

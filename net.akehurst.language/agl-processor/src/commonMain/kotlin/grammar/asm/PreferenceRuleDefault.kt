@@ -35,11 +35,12 @@ data class PreferenceRuleDefault(
     override fun toString(): String = "preference $forItem { ... }"
 }
 
-enum class ChoiceIndicator { EMPTY, ITEM }
+enum class ChoiceIndicator { NONE, EMPTY, ITEM, NUMBER }
 
 data class PreferenceOptionDefault(
     override val item: NonTerminal,
-    override val choiceNumber: OptionNum,
+    override val choiceIndicator: ChoiceIndicator,
+    override val choiceNumber: Int,
     override val onTerminals: List<SimpleItem>,
     override val associativity: Associativity
 ) : PreferenceOption {

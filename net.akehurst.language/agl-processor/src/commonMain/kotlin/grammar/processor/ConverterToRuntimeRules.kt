@@ -24,8 +24,11 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.parser.api.Assoc
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.PrefRule
+import net.akehurst.language.parser.api.RulePosition
 
 /**
  * arg: String =
@@ -148,7 +151,26 @@ internal class ConverterToRuntimeRules(
         val options = target.optionList.mapIndexed { idx, it ->
             val prec = idx
             val tgt = findNamedRule(it.item.ruleReference.value)!!
-            val opt = it.choiceNumber
+            val refRhs = it.item.referencedRule(grammar).rhs
+            val optionNum = when (it.choiceIndicator) {
+                ChoiceIndicator.NONE -> RulePosition.OPTION_NONE
+                ChoiceIndicator.EMPTY -> when (refRhs) {
+                    is OptionalItem -> RulePosition.OPTION_OPTIONAL_EMPTY
+                    is SimpleList ->  RulePosition.OPTION_MULTI_EMPTY
+                    is SeparatedList -> RulePosition.OPTION_SLIST_EMPTY
+                    else -> error("Only Optional and List items can be EMPTY")
+                }
+                ChoiceIndicator.ITEM -> when (refRhs) {
+                    is OptionalItem -> RulePosition.OPTION_OPTIONAL_ITEM
+                    is SimpleList ->  RulePosition.OPTION_MULTI_ITEM
+                    is SeparatedList -> RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+                    else -> error("Only Optional and List items can be ITEM")
+                }
+                ChoiceIndicator.NUMBER -> when (refRhs) {
+                    is Choice -> OptionNum(it.choiceNumber)
+                    else -> error("Only Choice items can be NUMBER")
+                }
+            }
             val terminals = it.onTerminals.map {
                 when (it) {
                     is Terminal -> findTerminal(it.value) ?: error("Terminal '${it.value}' not found")
@@ -169,7 +191,7 @@ internal class ConverterToRuntimeRules(
                 Associativity.LEFT -> Assoc.LEFT
                 Associativity.RIGHT -> Assoc.RIGHT
             }
-            RuntimePreferenceRule.RuntimePreferenceOption(prec, tgt, opt, terminals, assoc)
+            RuntimePreferenceRule.RuntimePreferenceOption(prec, tgt, optionNum, terminals, assoc)
         }
         return RuntimePreferenceRule(contextRule, options)
     }

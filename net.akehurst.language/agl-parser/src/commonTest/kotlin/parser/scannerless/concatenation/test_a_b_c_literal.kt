@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_a_b_c_literal : test_LeftCornerParserAbstract() {
+class test_a_b_c_literal : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -70,7 +70,7 @@ internal class test_a_b_c_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
+                parseError(InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^",setOf("'b'"))
             ), issues.errors)
     }
 

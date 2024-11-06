@@ -200,3 +200,7 @@ interface Parser {
     fun expectedTerminalsAt(sentenceText: String, position: Int, options: ParseOptions): Set<Rule>
 
 }
+
+interface ParseFailure {
+    val failedSpines: List<RuntimeSpine>
+}

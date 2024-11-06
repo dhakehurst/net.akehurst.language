@@ -20,6 +20,7 @@ import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -575,7 +576,7 @@ class test_Converter {
             concatenation("A") { ref("S"); lit("+"); ref("S") }
             separatedList("D", 2, -1) { ref("S"); lit("/") }
             preference("S") {
-                optionLeft("D", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, listOf("/"))
+                optionLeft("D", ChoiceIndicator.ITEM, -1, listOf("/"))
             }
         }
 

@@ -264,9 +264,25 @@ class test_AglGrammarSyntaxAnalyser {
         assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
     }
 
+    @Test
+    fun rule_optional() {
+        val sentence = """
+            namespace ns.test
+            grammar Test {
+              a = 'a'? ;
+            }
+        """.trimIndent()
+        val sppt = parse(sentence)
+        //println(sppt.toStringAll)
+        val sut = AglGrammarSyntaxAnalyser()
+        val res = sut.transform(sppt) { _, _ -> TODO() }
+        println(res.asm!!.asString())
+
+        assertTrue(res.asm!!.allDefinitions[0].findAllResolvedGrammarRule(GrammarRuleName("a")) != null)
+    }
 
     @Test
-    fun rule_multiplicity_0n() {
+    fun rule_list_simple_0n() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -283,7 +299,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_1n() {
+    fun rule_list_simple_1n() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -300,11 +316,11 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_01() {
+    fun rule_list_simple_01() {
         val sentence = """
             namespace ns.test
             grammar Test {
-              a = 'a'? ;
+              a = 'a'0..1 ;
             }
         """.trimIndent()
         val sppt = parse(sentence)
@@ -317,7 +333,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_4n() {
+    fun rule_list_simple_4n() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -334,7 +350,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_4() {
+    fun rule_list_simple_4() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -351,7 +367,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_b4() {
+    fun rule_list_simple_b4() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -368,7 +384,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_47() {
+    fun rule_list_simple_47() {
         val sentence = """
             namespace ns.test
             grammar Test {
@@ -385,7 +401,7 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
-    fun rule_multiplicity_b47() {
+    fun rule_list_simple_b47() {
         val sentence = """
             namespace ns.test
             grammar Test {

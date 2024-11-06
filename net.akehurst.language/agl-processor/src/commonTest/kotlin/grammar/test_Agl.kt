@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.processor
+package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString

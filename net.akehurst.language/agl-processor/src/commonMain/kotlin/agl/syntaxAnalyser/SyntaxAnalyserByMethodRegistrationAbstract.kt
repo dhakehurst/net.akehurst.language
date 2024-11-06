@@ -95,12 +95,12 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
                 val children = stack.pop(numChildren)
-                val adjChildren = children.reversed()
+                val reverseChildren = children.reversed()
                 val branchName = nodeInfo.node.rule.tag
                 val handler = syntaxAnalyserStack.peek().findBranchHandler<Any>(branchName, false)
                 when {
                     nodeInfo.node.rule.isOptional -> {
-                        val v = adjChildren[0]
+                        val v = reverseChildren[0]
                         val child = when (v) {
                             EMPTY_TERMINAL_VALUE -> null
                             EMPTY_LIST_VALUE -> error("should not happen")
@@ -119,12 +119,12 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                     nodeInfo.node.rule.isList -> {
                         val chldn = when {
                             nodeInfo.node.rule.isListOptional && 1 == children.size && EMPTY_LIST_VALUE == children[0] -> emptyList<Any>()
-                            else -> adjChildren
+                            else -> reverseChildren
                         }
                         when (handler) {
                             null -> stack.push(chldn)
                             else -> {
-                                val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                                val obj = handler.invoke(nodeInfo, chldn, sentence)
                                 obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                                 stack.push(obj)
                             }
@@ -132,9 +132,9 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                     }
 
                     else -> when (handler) {
-                        null -> stack.push(adjChildren)
+                        null -> stack.push(reverseChildren)
                         else -> {
-                            val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                            val obj = handler.invoke(nodeInfo, reverseChildren, sentence)
                             obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                             stack.push(obj)
                         }
