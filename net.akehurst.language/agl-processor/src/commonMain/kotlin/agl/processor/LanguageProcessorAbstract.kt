@@ -262,8 +262,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 else -> {
                     when {
                         it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)
-                        it.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", it.unescapedTerminalValue)
-                        else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
+                        it.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", "${it.tag}")
+                        else -> CompletionItem(CompletionItemKind.SEGMENT, it.tag, it.tag) //TODO
                     }
                 }
             }

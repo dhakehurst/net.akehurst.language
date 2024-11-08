@@ -47,10 +47,10 @@ jsIntegration {
     nodeSrcDirectory.set(jsSrcDir)
     nodeOutDirectory.set(jsOutDir)
 
-    productionCommand.set(listOf("run tsc -p ${jsSrcDir} --outDir ${jsOutDir}"))
-    developmentCommand.set(listOf(
-        "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}",
-        "node out/run_all.mjs"
+    productionCommand.set(mapOf("tscProd" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}"))
+    developmentCommand.set(mapOf(
+        "tscDev" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}",
+        "test" to "node out/run_all.mjs"
     ))
 }
 

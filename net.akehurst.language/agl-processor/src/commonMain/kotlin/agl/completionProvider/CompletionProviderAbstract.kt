@@ -67,7 +67,7 @@ abstract class CompletionProviderAbstract<in AsmType, in ContextType> : Completi
             else -> terminalItem.id
         }
         val ci = when {
-            terminalItem.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<$name>", terminalItem.value)
+            terminalItem.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<$name>", name)
             else -> CompletionItem(CompletionItemKind.LITERAL, terminalItem.value, name)
         }
         return listOf(ci)

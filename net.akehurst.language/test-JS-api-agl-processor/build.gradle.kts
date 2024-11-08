@@ -25,8 +25,8 @@ jsIntegration {
     nodeSrcDirectory.set(jsSrcDir)
     nodeOutDirectory.set(jsOutDir)
 
-    productionCommand.set(listOf("run build"))
-    developmentCommand.set(listOf("run build"))
+    productionCommand.set(mapOf("prod" to "run build"))
+    developmentCommand.set(mapOf("dev" to "run build"))
 }
 
 

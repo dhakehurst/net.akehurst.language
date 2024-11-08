@@ -28,7 +28,7 @@ enum class CompletionItemKind {
 data class CompletionItem(
     val kind: CompletionItemKind,
     val text: String,
-    val name: String
+    val label: String
 ) {
     var description: String = ""
 }
