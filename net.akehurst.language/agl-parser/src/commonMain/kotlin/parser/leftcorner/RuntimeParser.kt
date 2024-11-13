@@ -276,7 +276,7 @@ internal class RuntimeParser(
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
-            if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+            if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) {ambiguity(head, transTaken, possibleEndOfText)}
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
@@ -299,7 +299,7 @@ internal class RuntimeParser(
                 grown = grown || b
             }
         }
-        if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+        if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) {ambiguity(head, transTaken, possibleEndOfText)}
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }

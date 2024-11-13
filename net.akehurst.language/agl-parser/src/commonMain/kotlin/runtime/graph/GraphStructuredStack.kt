@@ -59,12 +59,10 @@ class GraphStructuredStack<E>(
     }
 
     fun root(head: E): Boolean {
-        //_previous[head] = hashSetOf()
-        //_count[head] = 0
         this._growingHeadHeap[head] = head
         val set = _previous[head]
         val createdNewHead = if (null == set) {
-            _previous[head] = hashSetOf()
+            _previous[head] = linkedSetOf()
             this._count[head] = 0
             true
         } else {
@@ -111,7 +109,7 @@ class GraphStructuredStack<E>(
         this._growingHeadHeap.remove(currentHead)
         var set = _previous[nextHead]
         if (null == set) {
-            set = hashSetOf()
+            set = linkedSetOf()
             _previous[nextHead] = set
             _count[nextHead] = 0
             this._growingHeadHeap[nextHead] = nextHead
@@ -122,7 +120,7 @@ class GraphStructuredStack<E>(
         if (added) {
             val hc = this._count[currentHead]
             if (null == hc) { // should not happen !
-                _previous[currentHead] = hashSetOf()
+                _previous[currentHead] = linkedSetOf()
                 this._count[currentHead] = 1
             } else {
                 this._count[currentHead] = hc + 1

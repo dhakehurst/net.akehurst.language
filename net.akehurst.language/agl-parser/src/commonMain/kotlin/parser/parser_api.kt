@@ -87,7 +87,7 @@ interface PrefOption {
 }
 
 @JvmInline
-value class OptionNum(val value:Int) {
+value class OptionNum(val value:Int) :Comparable<OptionNum> {
     val asIndex:Int get() {
         if(value < 0) error("Should not happen")
         return value
@@ -98,6 +98,8 @@ value class OptionNum(val value:Int) {
     val isOptionalOption get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_OPTIONAL_ITEM
     val isListSimpleOption get() = this == RulePosition.OPTION_MULTI_EMPTY || this == RulePosition.OPTION_MULTI_ITEM
     val isListSeparatedOption get() = this == RulePosition.OPTION_SLIST_EMPTY || this == RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
+    override fun compareTo(other: OptionNum): Int = this.value.compareTo(other.value)
 
     override fun toString(): String = when(this) {
         RulePosition.OPTION_NONE -> "oN"

@@ -22,11 +22,13 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
+import testFixture.utils.parseError
 import kotlin.test.*
 
 class test_Agl_processorFromStringSimple_parse {
+
     private companion object {
-         fun test_parse(grammarStr: String, sentence: String, expectedStr: String) {
+        fun test_parse(grammarStr: String, sentence: String, expectedStr: String) {
             val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
             assertTrue(pr.issues.isEmpty(), pr.issues.toString())
             assertNotNull(pr.processor)
@@ -39,6 +41,15 @@ class test_Agl_processorFromStringSimple_parse {
             //TODO: assertEquals(expected, result.sppt)
         }
 
+        fun test_parse_fails(grammarStr: String, sentence: String, expected: Set<LanguageIssue>) {
+            val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
+            assertTrue(pr.issues.isEmpty(), pr.issues.toString())
+            assertNotNull(pr.processor)
+
+            val result = pr.processor!!.parse(sentence)
+            assertEquals(null, result.sppt)
+            assertEquals(expected, result.issues.all)
+        }
     }
 
     @BeforeTest
@@ -509,9 +520,10 @@ class test_Agl_processorFromStringSimple_parse {
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
-        val result1 = pr.processor!!.parse("")
+        val sentence1 = ""
+        val result1 = pr.processor!!.parse(sentence1)
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(0, 1, 1, 1), sentence1, setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("a");
@@ -1592,20 +1604,18 @@ class test_Agl_processorFromStringSimple_parse {
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
         assertNotNull(pr.processor)
 
-        val result1 = pr.processor!!.parse("")
-        assertEquals(null, result1.sppt)
-        assertEquals(
-            setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), result1.issues.all
+        val sentence1 = ""
+        test_parse_fails(
+            grammarStr, sentence1, setOf(
+                parseError(InputLocation(0, 1, 1, 1), sentence1, setOf("<GOAL>"), setOf("'a'"))
+            )
         )
 
-        val result2 = pr.processor!!.parse("a")
-        assertEquals(null, result2.sppt)
-        assertEquals(
-            setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "c"))
-            ), result2.issues.all
+        val sentence2 = "a"
+        test_parse_fails(
+            grammarStr, sentence2, setOf(
+                parseError(InputLocation(1, 2, 1, 1), sentence2, setOf("<GOAL>"), setOf("'b'", "c"))
+            )
         )
 
         val result3 = pr.processor!!.parse("b")

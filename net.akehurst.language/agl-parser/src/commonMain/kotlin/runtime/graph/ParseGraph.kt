@@ -508,14 +508,14 @@ internal class ParseGraph(
             if (null != existingComplete) {
                 // already completed this parent - should we use new or existing parent
                 val md = this.mergeDecision(existingComplete, newParent)
-                println("MergeDecision-F on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
+                //println("MergeDecision-F on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     MergeChoice.UNDECIDABLE -> {
-                        //useExistingCompleteParentFirstChild(parent, child, previous)
-                        keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                        useExistingCompleteParentFirstChild(parent, child, previous)
+                        //keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
                 }
             } else {
@@ -568,14 +568,14 @@ internal class ParseGraph(
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
                 val md = this.mergeDecision(existingComplete,newParent)
-                println("MergeDecision-N on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
+                //println("MergeDecision-N on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
                 when (md.choice) {
                     MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
                     MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     MergeChoice.UNDECIDABLE -> {
-                        //useExistingCompleteParentLastChild(parent, child, prevPrev)
-                        keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                        useExistingCompleteParentLastChild(parent, child, prevPrev)
+                        //keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
                 }
             } else {

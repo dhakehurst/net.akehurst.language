@@ -202,7 +202,7 @@ internal class ClosureGraph(
                     // do nothing, terminate recursion
                     // this.downInfo already set to empty
                 } else {
-                    this.downInfo = hashSetOf()
+                    this.downInfo = linkedSetOf()
                     this._resolveDownCalled = true
                     val children = this.children //graph.startChildrenOf(this)
                     if (children.isEmpty()) {
@@ -337,8 +337,8 @@ internal class ClosureGraph(
 
     }
 
-    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { hashSetOf() } }
-    private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { hashSetOf() }
+    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { linkedSetOf() } }
+    private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { linkedSetOf() }
 
     // so we can test ClosureGraph
     internal val parentsOf: Map<ClosureItem, Set<ClosureItem>> get() = _parentsOf

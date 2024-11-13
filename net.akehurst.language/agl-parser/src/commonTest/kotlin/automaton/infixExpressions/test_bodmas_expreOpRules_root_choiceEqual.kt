@@ -19,7 +19,7 @@ package net.akehurst.language.automaton.leftcorner.infixExpressions
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
-import net.akehurst.language.automaton.leftcorner.AutomatonTest
+import testFixture.utils.AutomatonTest
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonAbstract
 import net.akehurst.language.parser.leftcorner.LeftCornerParser

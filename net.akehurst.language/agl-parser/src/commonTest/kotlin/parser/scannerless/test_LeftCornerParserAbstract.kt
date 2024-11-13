@@ -95,11 +95,14 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         scanner.matchables
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.goalRuleName!!)
+
+        options.reportGrammarAmbiguities = true
         val (result, duration) = measureTimedValue {
             parser.parse(sentence, options)
         }
         println("Duration: $duration")
         if (printAutomaton) println(rrs.usedAutomatonToString(options.goalRuleName!!))
+        if(result.issues.isNotEmpty()) println(result.issues)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val expectedSppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets.mapKeys { it.key })
@@ -130,6 +133,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.goalRuleName!!)
         val r = parser.parse(sentence, options)
+        println(r.issues)
         return r
     }
 

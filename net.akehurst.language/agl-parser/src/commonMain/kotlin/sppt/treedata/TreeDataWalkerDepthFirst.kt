@@ -225,7 +225,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     path.elements.map { it.node }
                 }
             } else {
-                val alternatives = treeData.childrenFor(info.node).sortedBy { it.first.asIndex }
+                val alternatives = treeData.childrenFor(info.node).sortedBy { it.first }
                 path.push(altInfo)
                 stack.push(altInfo)
                 val numChildrenAlternatives = alternatives.associate { Pair(it.first, it.second.size) }

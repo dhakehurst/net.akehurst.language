@@ -18,7 +18,7 @@ package net.akehurst.language.automaton.leftcorner.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
-import net.akehurst.language.automaton.leftcorner.AutomatonTest
+import testFixture.utils.AutomatonTest
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.automaton.leftcorner.automaton
 import net.akehurst.language.automaton.leftcorner.test_AutomatonAbstract

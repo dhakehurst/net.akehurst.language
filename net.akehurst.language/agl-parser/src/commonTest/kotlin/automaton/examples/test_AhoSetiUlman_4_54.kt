@@ -22,6 +22,7 @@ import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import testFixture.utils.AutomatonTest
 import kotlin.test.Test
 
 class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {

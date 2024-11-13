@@ -18,6 +18,7 @@ package net.akehurst.language.parser.leftcorner.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -33,19 +34,19 @@ class test_ifThenElse_NoWS_conditional2 : test_LeftCornerParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choiceLongest("expr") {
                 ref("var")
                 ref("conditional")
             }
-            choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choiceLongest("conditional") {
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr") }
             }
             concatenation("var") { ref("VAR") }
             pattern("VAR", "U|V|W|X|Y|Z")
             //preferenceFor("expr") {
-            //    rightOption("conditional", 0, setOf("'then'"))
-            //    rightOption("conditional", 1,  setOf("'then'","'else'"))
+            //    rightOption("conditional", OptionNum(0), setOf("'then'"))
+            //    rightOption("conditional", OptionNum(1),  setOf("'then'","'else'"))
             //}
         }
         val goal = "S"
