@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_ConcatChoice : test_LeftCornerParserAbstract() {
+class test_ConcatChoice : test_LeftCornerParserAbstract() {
 
     // rhs = concatenation | choice
     // choice = choicePriority | choiceLongest

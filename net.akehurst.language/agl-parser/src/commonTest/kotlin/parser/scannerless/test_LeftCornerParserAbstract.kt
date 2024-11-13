@@ -29,6 +29,7 @@ import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import kotlin.test.assertEquals
@@ -132,6 +133,14 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         return r
     }
 
+    protected fun parseError(location: InputLocation, sentence: String, tryingFor:Set<String>, expected: Set<String>):LanguageIssue {
+        val failed = tryingFor.sorted().joinToString(separator = " | ")
+        val posIndication = SentenceDefault(sentence).contextInText(location.position)
+        val message = "Failed to match {$failed} at: $posIndication"
+        return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, message, expected)
+    }
+
+    @Deprecated("", ReplaceWith("parseError(InputLocation, sentence, tryingFor, expected)"))
     protected fun parseError(location: InputLocation, message: String, expected: Set<String>) =
         LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, message, expected)
 

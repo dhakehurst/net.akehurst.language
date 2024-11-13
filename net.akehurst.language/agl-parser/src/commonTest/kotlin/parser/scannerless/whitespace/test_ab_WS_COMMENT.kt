@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
+class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*"

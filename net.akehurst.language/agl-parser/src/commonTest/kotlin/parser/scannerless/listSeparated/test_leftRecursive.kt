@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
-internal class test_leftRecursive  : test_LeftCornerParserAbstract() {
+class test_leftRecursive  : test_LeftCornerParserAbstract() {
 
     // S = E
     // E = 'a' | L
@@ -52,7 +52,7 @@ internal class test_leftRecursive  : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 

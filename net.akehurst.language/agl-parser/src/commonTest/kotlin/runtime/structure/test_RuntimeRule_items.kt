@@ -20,7 +20,7 @@ import net.akehurst.language.automaton.leftcorner.test_AutomatonUtilsAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
+class test_RuntimeRule_items : test_AutomatonUtilsAbstract() {
 
     fun check(rp:RulePositionRuntime, expected:Set<RuntimeRule>) {
         val actual = rp.items

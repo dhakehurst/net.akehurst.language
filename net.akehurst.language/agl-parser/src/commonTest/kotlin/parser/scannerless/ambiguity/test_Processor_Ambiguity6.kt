@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
+class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
     /**
      * Expression = PrimaryExpression | ... | AssignmentExpression ;
      * AssignmentExpression = Expression '=' Expression ;
@@ -83,7 +83,7 @@ internal class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("ID", "'vo'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("ID", "'vo'"))
             ), issues.errors
         )
     }

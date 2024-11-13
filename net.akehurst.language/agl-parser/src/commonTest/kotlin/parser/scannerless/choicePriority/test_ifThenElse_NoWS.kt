@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_NoWS : test_LeftCornerParserAbstract() {
+class test_ifThenElse_NoWS : test_LeftCornerParserAbstract() {
 
     // invert the dangling else
 
@@ -69,7 +69,7 @@ internal class test_ifThenElse_NoWS : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^", setOf("'W'","'X'","'Y'","'Z'","'if'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"), setOf("'W'","'X'","'Y'","'Z'","'if'"))
         ),issues.errors)
     }
 

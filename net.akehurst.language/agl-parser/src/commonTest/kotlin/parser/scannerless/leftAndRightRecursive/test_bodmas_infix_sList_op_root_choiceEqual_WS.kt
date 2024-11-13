@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
+class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | infix ;
@@ -64,7 +64,7 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerP
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
         ),issues.errors)
     }
 

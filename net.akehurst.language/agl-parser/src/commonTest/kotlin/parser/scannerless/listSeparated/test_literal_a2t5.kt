@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a2t5 : test_LeftCornerParserAbstract() {
+class test_literal_a2t5 : test_LeftCornerParserAbstract() {
 
     // S = [a / 'b'][2..5]
     // a = 'a'
@@ -45,7 +45,7 @@ internal class test_literal_a2t5 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 
@@ -56,7 +56,7 @@ internal class test_literal_a2t5 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'b'"))
         ),issues.errors)
     }
 
@@ -67,7 +67,7 @@ internal class test_literal_a2t5 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"ab^",setOf("'a'"))
+            parseError(InputLocation(2,3,1,1),sentence, setOf("S"),setOf("'a'"))
         ),issues.errors)
     }
 
@@ -140,7 +140,7 @@ internal class test_literal_a2t5 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(9,10,1,1),"ababababa^ba",setOf("<EOT>"))
+            parseError(InputLocation(9,10,1,1),sentence, setOf("'a'"),setOf("<EOT>"))
         ),issues.errors)
     }
 }

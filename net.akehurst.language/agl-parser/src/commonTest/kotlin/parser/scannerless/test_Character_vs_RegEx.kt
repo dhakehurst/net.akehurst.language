@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.*
 
-internal class test_Character_vs_RegEx : test_LeftCornerParserAbstract() {
+class test_Character_vs_RegEx : test_LeftCornerParserAbstract() {
 
 
     private companion object {

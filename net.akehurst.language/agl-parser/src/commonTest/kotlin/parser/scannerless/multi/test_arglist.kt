@@ -43,7 +43,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -67,7 +67,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>", "'c'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("<EOT>", "'c'"))
             ), issues.errors
         )
     }

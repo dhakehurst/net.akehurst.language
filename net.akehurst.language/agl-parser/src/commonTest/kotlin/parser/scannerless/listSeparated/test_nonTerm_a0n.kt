@@ -25,7 +25,7 @@ import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
+class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
     // S = [a / ',' ]*
     // a = 'a'
@@ -82,7 +82,7 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         )
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>", "','"))
+               parseError( InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("<EOT>", "','"))
             ), issues.errors
         )
     }
@@ -116,7 +116,7 @@ internal class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
         )
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(3, 4, 1, 1), "a,a^a", setOf("<EOT>", "','"))
+                parseError( InputLocation(3, 4, 1, 1), sentence, setOf("S"), setOf("<EOT>", "','"))
             ), issues.errors
         )
     }

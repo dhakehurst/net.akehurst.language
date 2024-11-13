@@ -58,7 +58,7 @@ class test_a_b_c_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+                parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
             ), issues.errors)
     }
 
@@ -70,7 +70,7 @@ class test_a_b_c_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^",setOf("'b'"))
+                parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'b'"))
             ), issues.errors)
     }
 
@@ -82,7 +82,7 @@ class test_a_b_c_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
+                parseError(InputLocation(2,3,1,1),sentence, setOf("S"),setOf("'c'"))
             ), issues.errors)
     }
 
@@ -94,7 +94,7 @@ class test_a_b_c_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3,4,1,1),"abc^d",setOf("<EOT>"))
+                parseError(InputLocation(3,4,1,1),sentence, setOf("S"),setOf("<EOT>"))
             ), issues.errors)
     }
 }

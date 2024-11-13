@@ -26,7 +26,7 @@ import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_aObcLiteral : test_LeftCornerParserAbstract() {
+class test_aObcLiteral : test_LeftCornerParserAbstract() {
 
     // S = a < b c;
     // a = 'a' ;
@@ -53,7 +53,7 @@ internal class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"Failed to match {<GOAL>} at: ^",setOf("'a'","'b'"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)
@@ -79,7 +79,7 @@ internal class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^b", setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^b", setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)
@@ -92,7 +92,7 @@ internal class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^bc",setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)

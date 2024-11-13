@@ -17,7 +17,7 @@
 package net.akehurst.language.automaton.leftcorner
 
 //FIXME: REPEAT - because no MPP test-fixtures
-internal abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
+abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
 
     fun <T1, T2, T3> List<Triple<T1, T2, T3>>.testAll(f: (arg1: T1, arg2: T2, arg3: T3) -> Unit) {
         for (data in this) {

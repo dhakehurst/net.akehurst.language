@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_AB_ESB : test_LeftCornerParserAbstract() {
+class test_AB_ESB : test_LeftCornerParserAbstract() {
 
     //  S = E S B | A B
     //  A = a | a A
@@ -60,7 +60,7 @@ internal class test_AB_ESB : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^c", setOf("'a'", "'e'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'e'"))
             ), issues.errors
         )
     }
@@ -73,7 +73,7 @@ internal class test_AB_ESB : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'", "'e'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'e'"))
             ), issues.errors
         )
     }

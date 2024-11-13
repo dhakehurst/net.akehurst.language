@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_RuntimeParser {
+class test_RuntimeParser {
 
     @Test
     fun construct() {

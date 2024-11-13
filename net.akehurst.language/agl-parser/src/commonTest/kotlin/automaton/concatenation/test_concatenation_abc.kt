@@ -29,7 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_concatenation_abc : test_AutomatonAbstract() {
+class test_concatenation_abc : test_AutomatonAbstract() {
     // S =  'a' 'b' 'c' ;
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)

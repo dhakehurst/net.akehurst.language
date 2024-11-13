@@ -23,7 +23,7 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.collections.CollectionsTest.matches
 
 //FIXME: REPEAT - because no MPP test-fixtures
-internal object AutomatonTest {
+object AutomatonTest {
 
     data class MatchConfiguration(
         val in_actual_substitue_lookahead_RT_with: Set<RuntimeRule>? = null,

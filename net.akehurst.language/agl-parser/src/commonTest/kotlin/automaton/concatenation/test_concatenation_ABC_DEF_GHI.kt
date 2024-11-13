@@ -26,7 +26,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
+class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
     // S = ABC DEF GHI
     // ABC =  AB C
     // AB = 'a' 'b'

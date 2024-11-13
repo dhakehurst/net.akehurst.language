@@ -24,7 +24,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.assertEquals
 
-internal abstract class test_ExpectedTerminasAtAbstract {
+abstract class test_ExpectedTerminasAtAbstract {
 
     protected data class TestData(val sentence: String, val position: Int, val expected: Set<String>)
 

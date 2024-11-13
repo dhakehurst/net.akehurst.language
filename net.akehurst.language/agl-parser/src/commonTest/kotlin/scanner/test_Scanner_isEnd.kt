@@ -24,7 +24,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_Scanner_isEnd {
+class test_Scanner_isEnd {
 
     companion object {
 

@@ -18,7 +18,7 @@ package net.akehurst.language.parser.leftcorner.leftAndRightRecursive
 
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 
-internal abstract class test_bodmas_Abstract : test_LeftCornerParserAbstract() {
+abstract class test_bodmas_Abstract : test_LeftCornerParserAbstract() {
 
     abstract fun empty_fails()
     abstract fun a()

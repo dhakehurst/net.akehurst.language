@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_TELE_VC : test_LeftCornerParserAbstract() {
+class test_TELE_VC : test_LeftCornerParserAbstract() {
 
     // S = E ;
     // E = V | C             // expr = var | conditional
@@ -53,7 +53,7 @@ internal class test_TELE_VC : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'v'","'t'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'v'","'t'"))
         ),issues.errors)
     }
 

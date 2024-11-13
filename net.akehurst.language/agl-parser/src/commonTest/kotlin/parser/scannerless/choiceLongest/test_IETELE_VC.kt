@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_IETELE_VC : test_LeftCornerParserAbstract() {
+class test_IETELE_VC : test_LeftCornerParserAbstract() {
 
     // S = E ;
     // E = V | C                   // expr = var | conditional
@@ -59,7 +59,7 @@ internal class test_IETELE_VC : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'", "'i'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'v'", "'i'"))
             ), issues.errors
         )
     }

@@ -24,7 +24,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
+class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
     // S = C C ;
     // C = c C | d ;
     //

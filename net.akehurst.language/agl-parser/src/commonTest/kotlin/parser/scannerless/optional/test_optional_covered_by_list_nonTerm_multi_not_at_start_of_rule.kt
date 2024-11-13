@@ -23,21 +23,23 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test_LeftCornerParserAbstract() {
+class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_LeftCornerParserAbstract() {
 
-    // S = 'b' 'a'? As ; As = 'a'+
+    // S = 'b' as 'a'? ; vs = v+ ; v = [a-z]
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("b"); ref("oa"); ref("as") }
+            concatenation("S") { literal("b");  ref("vs"); ref("oa") }
             optional("oa", "'a'")
-            multi("as",1,-1, "'a'")
+            multi("vs",1,-1,"v")
+            concatenation("vvs") {  ref("v"); ref("vs") }
             literal( "a")
+            pattern("v","[a-z]")
         }
         val goal = "S"
     }
 
     @Test
-    fun empty() {
+    fun empty__fails() {
         val sentence = ""
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
@@ -48,11 +50,22 @@ class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test
     }
 
     @Test
+    fun b__fails() {
+        val sentence = "b"
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("v"))
+        ),issues.errors)
+    }
+
+    @Test
     fun ba() {
         val sentence = "ba"
 
         val expected = """
-            S { 'b' oa{<EMPTY>} as {'a'} }
+            S { 'b' vs {v:'a'} oa{<EMPTY>} }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
@@ -63,10 +76,21 @@ class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test
         val sentence = "baa"
 
         val expected = """
-            S { 'b' oa{ 'a' } as {'a'} }
+            S { 'b' vs { v:'a' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, true, expected)
+        super.test(rrs, goal, sentence, 2, expected)
+    }
+
+    @Test
+    fun bxa() {
+        val sentence = "bxa"
+
+        val expected = """
+            S { 'b'  vs { v:'x' } oa{ 'a' } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -74,10 +98,21 @@ class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test
         val sentence = "baaa"
 
         val expected = """
-            S { 'b' oa{ 'a' } as {'a' 'a'} }
+            S { 'b' vs { v:'a' v:'a' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, true, expected)
+        super.test(rrs, goal, sentence, 2, expected)
+    }
+
+    @Test
+    fun baaaa() {
+        val sentence = "baaaa"
+
+        val expected = """
+            S { 'b'  vs { v:'a' v:'a' v:'a' } oa{ 'a' } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
 }

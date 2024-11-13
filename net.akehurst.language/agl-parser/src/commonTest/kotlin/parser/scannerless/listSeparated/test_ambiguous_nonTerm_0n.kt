@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
+class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
 
     // S = [ambig / sep ]*
     // ambig = a1 | a2

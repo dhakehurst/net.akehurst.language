@@ -25,7 +25,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_rightRecursive : test_AutomatonAbstract() {
+class test_rightRecursive : test_AutomatonAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;

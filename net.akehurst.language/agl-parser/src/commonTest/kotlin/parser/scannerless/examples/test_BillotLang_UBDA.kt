@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_BillotLang_UBDA : test_LeftCornerParserAbstract() {
+class test_BillotLang_UBDA : test_LeftCornerParserAbstract() {
     /**
      * A = 'a' | AA
      */
@@ -49,8 +49,9 @@ internal class test_BillotLang_UBDA : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues.errors)
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test

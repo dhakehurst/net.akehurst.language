@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_exprOpExprRules_choicePriority : test_LeftCornerParserAbstract() {
+class test_bodmas_exprOpExprRules_choicePriority : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // expr = var < bool < group < div < mul < add < sub ;
@@ -76,7 +76,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_LeftCornerParse
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
             ), issues.errors)
     }
 

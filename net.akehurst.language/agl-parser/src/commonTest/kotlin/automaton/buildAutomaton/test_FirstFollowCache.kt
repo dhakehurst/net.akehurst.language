@@ -23,9 +23,9 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
+class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
-    val sut = FirstFollowCache3()
+    internal val sut = FirstFollowCache3()
 
     private fun check_calcFirstTermClosure(context: RulePositionRuntime, rulePosition: RulePositionRuntime, nextContextFollow: LookaheadSetPart, expectedShortStr: Set<String>) {
         val graph = ClosureGraph(context, rulePosition, nextContextFollow)

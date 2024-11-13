@@ -23,9 +23,9 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_FirstOf : test_AutomatonUtilsAbstract() {
+class test_FirstOf : test_AutomatonUtilsAbstract() {
 
-    val sut = FirstOf()
+    internal val sut = FirstOf()
 
     private fun check_expectedAt(rulePosition: RulePositionRuntime, ifReachedEnd: LookaheadSetPart, expected: Set<RuntimeRule>) {
         val actual = sut.expectedAt(rulePosition, ifReachedEnd)

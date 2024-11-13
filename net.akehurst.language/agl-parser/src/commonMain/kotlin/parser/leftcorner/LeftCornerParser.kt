@@ -181,7 +181,7 @@ class LeftCornerParser(
         val errorLength = 1 //TODO: determine a better length
         val location = sentence.locationFor(errorPos, errorLength)
 
-        val p = nextExpected.map { it.elements.last().tag }.joinToString(separator = " | ")
+        val p = nextExpected.map { it.elements.last().tag }.toSet().sorted().joinToString(separator = " | ")
         val contextInText = sentence.contextInText(location.position)
         val message = "Failed to match {$p} at: $contextInText"
 

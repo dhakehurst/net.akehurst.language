@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 
-internal class test_ab : test_ExpectedTerminasAtAbstract() {
+class test_ab : test_ExpectedTerminasAtAbstract() {
 
     // skip leaf WS = "\s+" ;
     // S = 'a' ;

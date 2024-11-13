@@ -23,7 +23,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_sList_compositeMulti : test_AutomatonAbstract() {
+class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     // S = [nl / ';']*
     // nl = N cnm

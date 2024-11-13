@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_BillotLang_PicoEnglish : test_LeftCornerParserAbstract() {
+class test_BillotLang_PicoEnglish : test_LeftCornerParserAbstract() {
     /**
      * S = NP VP | S PP
      * NP = 'n' | 'det' 'n' | NP PP
@@ -64,7 +64,7 @@ internal class test_BillotLang_PicoEnglish : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs,goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'n'","'d'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'n'","'d'"))
         ),issues.errors)
     }
 

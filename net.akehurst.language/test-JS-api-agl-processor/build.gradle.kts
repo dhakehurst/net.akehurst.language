@@ -22,8 +22,10 @@ val jsSrcDir = project.layout.buildDirectory.dir("dist/js/developmentLibrary")
 val jsOutDir = project.layout.buildDirectory.dir("dist/rollup")
 
 jsIntegration {
-    nodeSrcDirectory.set(jsSrcDir)
-    nodeOutDirectory.set(jsOutDir)
+    nodeSrcDirectoryDev.set(jsSrcDir)
+    nodeOutDirectoryDev.set(jsOutDir)
+    nodeSrcDirectoryProd.set(jsSrcDir)
+    nodeOutDirectoryProd.set(jsOutDir)
 
     productionCommand.set(mapOf("prod" to "run build"))
     developmentCommand.set(mapOf("dev" to "run build"))

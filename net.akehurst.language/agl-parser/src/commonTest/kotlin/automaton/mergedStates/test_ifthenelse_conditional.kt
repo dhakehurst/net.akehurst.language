@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
+class test_ifthenelse_conditional : test_AutomatonAbstract() {
 
     // S =  expr ;
     // expr = var | conditional ;

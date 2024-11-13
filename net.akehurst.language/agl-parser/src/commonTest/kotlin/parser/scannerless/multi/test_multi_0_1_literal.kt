@@ -65,7 +65,7 @@ class test_multi_0_1_literal : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("<EOT>"))
             ), issues.errors
         )
     }

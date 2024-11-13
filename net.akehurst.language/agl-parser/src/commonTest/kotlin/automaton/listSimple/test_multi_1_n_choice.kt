@@ -25,7 +25,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_multi_1_n_choice : test_AutomatonAbstract() {
+class test_multi_1_n_choice : test_AutomatonAbstract() {
 
     // S =  AB+
     // AB = a | b

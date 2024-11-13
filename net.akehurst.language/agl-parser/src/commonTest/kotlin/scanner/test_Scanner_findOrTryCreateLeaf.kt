@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_Scanner_findOrTryCreateLeaf {
+class test_Scanner_findOrTryCreateLeaf {
 
     companion object {
 

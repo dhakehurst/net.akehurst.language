@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
+class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstract() {
 
     //    S = E
     //    E = E1 | T

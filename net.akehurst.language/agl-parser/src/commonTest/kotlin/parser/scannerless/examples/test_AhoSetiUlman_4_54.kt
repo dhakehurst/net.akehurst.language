@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.fail
 
-internal class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
+class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
 
     // S = CC ;
     // C = cC | d ;
@@ -49,7 +49,7 @@ internal class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^", setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
             ), issues.errors
         )
     }
@@ -62,7 +62,7 @@ internal class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "d^", setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
             ), issues.errors
         )
     }

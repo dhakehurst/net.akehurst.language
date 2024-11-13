@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a2n : test_LeftCornerParserAbstract() {
+class test_literal_a2n : test_LeftCornerParserAbstract() {
 
     // S = ['a' / ',']2+
     private companion object {
@@ -43,7 +43,7 @@ internal class test_literal_a2n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+                parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
             ), issues.errors)
     }
 
@@ -55,7 +55,7 @@ internal class test_literal_a2n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^",setOf("','"))
+                parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("','"))
             ), issues.errors)
     }
 
@@ -67,7 +67,7 @@ internal class test_literal_a2n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2,3,1,1),"a,^",setOf("'a'"))
+                parseError(InputLocation(2,3,1,1),sentence, setOf("S"),setOf("'a'"))
             ), issues.errors)
     }
 
@@ -79,7 +79,7 @@ internal class test_literal_a2n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^a",setOf("','"))
+                parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("','"))
             ), issues.errors)
     }
 
@@ -100,7 +100,7 @@ internal class test_literal_a2n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
+                parseError(InputLocation(3,4,1,1),sentence, setOf("S"),setOf("','","<EOT>"))
             ), issues.errors)
     }
 

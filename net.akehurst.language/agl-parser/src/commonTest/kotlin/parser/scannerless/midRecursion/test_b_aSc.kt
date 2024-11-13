@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_b_aSc : test_LeftCornerParserAbstract() {
+class test_b_aSc : test_LeftCornerParserAbstract() {
 
     /*
         S = b | a S c ;

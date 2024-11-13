@@ -23,25 +23,26 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_optional_which_covers_next_terminal_of_nonTerm_not_at_start_of_rule : test_LeftCornerParserAbstract() {
+class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCornerParserAbstract() {
 
-    // S = 'b' 'a'? as ; as = 'a' | 'a' as ;
+    // S = 'b' as 'a'? ; vs = v | v vs ; v = [a-z]
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("b"); ref("oa"); ref("as") }
+            concatenation("S") { literal("b");  ref("vs"); ref("oa") }
             optional("oa", "'a'")
-            choiceLongest("as") {
-                ref("'a'")
-                ref("aas")
+            choiceLongest("vs") {
+                ref("v")
+                ref("vvs")
             }
-            concatenation("aas") {  ref("'a'"); ref("as") }
+            concatenation("vvs") {  ref("v"); ref("vs") }
             literal( "a")
+            pattern("v","[a-z]")
         }
         val goal = "S"
     }
 
     @Test
-    fun empty() {
+    fun empty__fails() {
         val sentence = ""
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
@@ -52,13 +53,13 @@ class test_optional_which_covers_next_terminal_of_nonTerm_not_at_start_of_rule :
     }
 
     @Test
-    fun b() {
+    fun b__fails() {
         val sentence = "b"
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("v"))
         ),issues.errors)
     }
 
@@ -67,7 +68,7 @@ class test_optional_which_covers_next_terminal_of_nonTerm_not_at_start_of_rule :
         val sentence = "ba"
 
         val expected = """
-            S { 'b' oa{<EMPTY>} as {'a'} }
+            S { 'b' vs {v:'a'} oa{<EMPTY>} }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
@@ -78,29 +79,48 @@ class test_optional_which_covers_next_terminal_of_nonTerm_not_at_start_of_rule :
         val sentence = "baa"
 
         val expected = """
-            S { 'b' oa{ 'a' } as {'a'} }
+            S { 'b' vs { vvs { v:'a' vs { v:'a' } } } oa{<EMPTY>} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, true, expected)
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test
-    fun baaa() {
-        val sentence = "baaa"
+    fun bxa() {
+        val sentence = "bxa"
 
+        // result is based on dynamic-prio
+        // prio of vs is tested before prio of oa
+        // The dynamic-prio of vs is based on order of choices and vss it higher than v
+        // Thus the S-alternative with vs being vss is chosen over the option of oa being non-empty
         val expected = """
-            S { 'b' oa{ 'a' } as { aas { 'a' as { 'a' } } } }
+            S { 'b' vs { vvs { v:'x' vs { v:'a' } } } oa { <EMPTY> } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test
-    fun baaaa() {
-        val sentence = "baaaa"
+    fun bxxa() {
+        val sentence = "bxxa"
+
+        // result is based on dynamic-prio
+        // prio of vs is tested before prio of oa
+        // The dynamic-prio of vs is based on order of choices and vss it higher than v
+        // Thus the option with vs being vss is chosen over the option of oa being non-empty
+        val expected = """
+             S { 'b' vs { vvs { v:'x' vs { v:'x' } } } oa { 'a' } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 2, expected)
+    }
+
+    @Test
+    fun bxxxa() {
+        val sentence = "bxxxa"
 
         val expected = """
-            S { 'b' oa{ 'a' } as { aas { 'a' as { aas { 'a' as { 'a' } } } } } }
+            S { 'b' vs { vvs { v:'x' vs { vvs { v:'x' vs { v:'a' } } } } } oa{<EMPTY>} }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)

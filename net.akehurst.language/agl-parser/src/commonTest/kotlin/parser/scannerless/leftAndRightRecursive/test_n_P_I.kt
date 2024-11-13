@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_n_P_I : test_LeftCornerParserAbstract() {
+class test_n_P_I : test_LeftCornerParserAbstract() {
 
     // S = a | P | I         // name | propertyCall | infix
     // P = S 'p' a ;         // S '.' name

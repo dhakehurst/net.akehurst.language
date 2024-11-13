@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
+class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;
@@ -81,7 +81,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCorner
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("var","'true'","'false'","'('"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("var","'true'","'false'","'('"))
         ),issues.errors)
     }
 

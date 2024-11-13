@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_literal_a0n_optSep : test_LeftCornerParserAbstract() {
+class test_literal_a0n_optSep : test_LeftCornerParserAbstract() {
 
     // S = ['a' / sep]*
     // sep = ','?

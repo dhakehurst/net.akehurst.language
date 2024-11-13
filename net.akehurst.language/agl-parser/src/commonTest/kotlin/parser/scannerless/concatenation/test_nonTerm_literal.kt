@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_nonTerm_literal : test_LeftCornerParserAbstract() {
+class test_nonTerm_literal : test_LeftCornerParserAbstract() {
 
     // S = ab 'c';
     // ab = 'a' 'b' ;

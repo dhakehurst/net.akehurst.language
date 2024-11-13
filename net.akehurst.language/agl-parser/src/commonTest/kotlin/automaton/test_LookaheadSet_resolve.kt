@@ -19,7 +19,7 @@ package net.akehurst.language.automaton.leftcorner
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_LookaheadSet_resolve : test_AutomatonUtilsAbstract() {
+class test_LookaheadSet_resolve : test_AutomatonUtilsAbstract() {
 
     @Test
     fun no_substitution() {

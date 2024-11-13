@@ -44,8 +44,11 @@ val jsOutDir = project.layout.projectDirectory.dir("ts/out")
 //val jsOutDir = project.layout.buildDirectory.dir("dist/js/developmentLibrary/tsout")
 
 jsIntegration {
-    nodeSrcDirectory.set(jsSrcDir)
-    nodeOutDirectory.set(jsOutDir)
+    nodeSrcDirectoryDev.set(jsSrcDir)
+    nodeOutDirectoryDev.set(jsOutDir)
+    nodeSrcDirectoryProd.set(jsSrcDir)
+    nodeOutDirectoryProd.set(jsOutDir)
+
 
     productionCommand.set(mapOf("tscProd" to "run tsc -p ${jsSrcDir} --outDir ${jsOutDir}"))
     developmentCommand.set(mapOf(

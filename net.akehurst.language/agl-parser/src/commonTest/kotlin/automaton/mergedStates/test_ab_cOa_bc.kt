@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_ab_cOa_bc : test_AutomatonAbstract() {
+class test_ab_cOa_bc : test_AutomatonAbstract() {
 
     // S = ab_c | a_bc;
     // ab_c = ab 'c'

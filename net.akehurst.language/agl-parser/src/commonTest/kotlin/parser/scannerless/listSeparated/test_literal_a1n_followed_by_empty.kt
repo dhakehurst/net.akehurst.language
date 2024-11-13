@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstract() {
+class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstract() {
 
     // S = A B? ;
     // A = ['a'/'.']+ ;
@@ -48,7 +48,7 @@ internal class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstrac
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -75,7 +75,7 @@ internal class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstrac
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>", "'.'", "'b'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("<EOT>", "'.'", "'b'"))
             ), issues.errors
         )
     }
@@ -88,7 +88,7 @@ internal class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstrac
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "a.^", setOf("'a'"))
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("A"), setOf("'a'"))
             ), issues.errors
         )
 

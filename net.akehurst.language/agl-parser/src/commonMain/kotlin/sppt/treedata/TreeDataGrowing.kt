@@ -97,23 +97,31 @@ class TreeDataGrowing<GN, CN : SpptDataNode>(
     }
 
     fun setNextChildForCompleteParent(oldParent: GN, newParent: CN, nextChild: CN, isAlternative: Boolean) {
-        val children = this._growingChildren[oldParent]!! //should never be null //TODO: remove it
-        //val children = this._growingChildren.remove(oldParent)!!
-        //val nextChildIndex = oldParent.numNonSkipChildren
-        val nextChildIndex = children.size
-        //clone children so the other can keep growing if need be
-        //TODO: performance don't want to copy
-        val cpy = children.toMutableList()
-        when {
-            cpy.size > nextChildIndex -> {
-                cpy[nextChildIndex] = nextChild
-            }
+        //TODO: want to not build tree is some situations, however tree is used for resolving ambiguities!
+        //old parent should normally by still growing,
+        //however, when grammar is ambiguous, the oldParent could have been completed by some other option, thus no longer growing
+        val children = this._growingChildren[oldParent]
+        if(null!=children) {
+            //val children = this._growingChildren.remove(oldParent)!!
+            //val nextChildIndex = oldParent.numNonSkipChildren
+            val nextChildIndex = children.size
+            //clone children so the other can keep growing if need be
+            //TODO: performance don't want to copy
+            val cpy = children.toMutableList()
+            when {
+                cpy.size > nextChildIndex -> {
+                    cpy[nextChildIndex] = nextChild
+                }
 
-            cpy.size == nextChildIndex -> cpy.add(nextChild)
-            else -> error("Internal error: should never happen")
+                cpy.size == nextChildIndex -> cpy.add(nextChild)
+                else -> error("Internal error: should never happen")
+            }
+            this.complete.setChildren(newParent, cpy, isAlternative)
+            //cpy.forEach { this.incrementParents(it) }
+        } else {
+            //must have already been completed!
+            TODO("Need to figure out what to do here ! - write suitable test")
         }
-        this.complete.setChildren(newParent, cpy, isAlternative)
-        //cpy.forEach { this.incrementParents(it) }
     }
 
     fun setNextChildForGrowingParent(oldParent: GN, newParent: GN, nextChild: CN) {

@@ -23,7 +23,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_sList_0_n_literal : test_AutomatonAbstract() {
+class test_sList_0_n_literal : test_AutomatonAbstract() {
     // S =  ['a' / 'b']* ;
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)

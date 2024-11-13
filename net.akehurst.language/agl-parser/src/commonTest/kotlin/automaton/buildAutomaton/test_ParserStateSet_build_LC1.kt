@@ -25,7 +25,7 @@ import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
 
-internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
+class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
     private companion object {
         val automatonKind = AutomatonKind.LOOKAHEAD_1

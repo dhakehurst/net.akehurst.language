@@ -29,7 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class test_keywords : test_LeftCornerParserAbstract() {
+class test_keywords : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -111,10 +111,8 @@ internal class test_keywords : test_LeftCornerParserAbstract() {
         val sentence = "class class;"
 
         val expectedIssues = listOf(
-            LanguageIssue(
-                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, //TODO: should this be SCAN ?
-                InputLocation(6, 7, 1, 1),
-                "class ^class;", setOf("NAME")
+            parseError(//TODO: should this be SCAN error?
+                InputLocation(6, 7, 1, 1), sentence, setOf("<GOAL>"), setOf("NAME")
             )
         )
 

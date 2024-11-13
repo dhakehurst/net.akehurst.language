@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class  test_a : test_LeftCornerParserAbstract() {
+class  test_a : test_LeftCornerParserAbstract() {
 
     private companion object {
         // S =  'a' | S1 ;
@@ -47,7 +47,7 @@ internal class  test_a : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+                parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
             ), issues.errors)
     }
 

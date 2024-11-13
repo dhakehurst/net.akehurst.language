@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
+class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
 
     private companion object {
         // two grammars, B embedded in S
@@ -54,7 +54,7 @@ internal class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -67,7 +67,7 @@ internal class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -80,7 +80,7 @@ internal class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'"))
             ), issues.errors
         )
     }
@@ -93,7 +93,7 @@ internal class test_embeddedSupersetSkip : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'", "'c'"))
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("'b'", "'c'"))
             ), issues.errors
         )
     }

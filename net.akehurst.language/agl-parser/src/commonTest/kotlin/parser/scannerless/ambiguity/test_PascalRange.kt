@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_PascalRange : test_LeftCornerParserAbstract() {
+class test_PascalRange : test_LeftCornerParserAbstract() {
 
     /*
      * expr : range | real ;
@@ -54,7 +54,7 @@ internal class test_PascalRange : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("\"[0-9]+\"","\"([0-9]+[.][0-9]*)|([.][0-9]+)\""))
+                parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("\"[0-9]+\"","\"([0-9]+[.][0-9]*)|([.][0-9]+)\""))
             ), issues.errors
         )
     }

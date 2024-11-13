@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_aObOcO : test_LeftCornerParserAbstract() {
+class test_aObOcO : test_LeftCornerParserAbstract() {
     /*
         S = a? b? c?;
      */
@@ -69,7 +69,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'", "'b'", "'c'", "<EOT>"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "<EOT>"))
             ), issues.errors
         )
     }
@@ -124,7 +124,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "b^a", setOf("'c'", "<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("S"), setOf("'c'", "<EOT>"))
             ), issues.errors
         )
     }
@@ -179,7 +179,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^dc", setOf("'b'", "'c'", "<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'c'", "<EOT>"))
             ), issues.errors
         )
     }
@@ -192,7 +192,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^d", setOf("'c'", "<EOT>"))
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("'c'", "<EOT>"))
             ), issues.errors
         )
     }
@@ -205,7 +205,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3, 4, 1, 1), "abc^d", setOf("<EOT>"))
+                parseError(InputLocation(3, 4, 1, 1), sentence, setOf("S"), setOf("<EOT>"))
             ), issues.errors
         )
     }
@@ -281,7 +281,7 @@ internal class test_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^b", setOf("<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1), "Failed to match {S} at: c^b", setOf("<EOT>"))
             ), issues.errors
         )
     }

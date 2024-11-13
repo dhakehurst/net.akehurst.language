@@ -29,7 +29,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-internal class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
+class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
 
     // S = B S 'c' | 'a'
     // B = 'b' | <empty>
@@ -56,7 +56,7 @@ internal class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'b'", "'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'a'"))
             ), issues.errors
         )
     }
@@ -167,7 +167,7 @@ internal class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             printAutomaton = true,
             expectedTrees = arrayOf(expected)
         )

@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
+class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
 
     // S = A | B
     // A = Y a

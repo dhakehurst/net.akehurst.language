@@ -31,7 +31,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
-internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
+class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
 
     /**
      * S = x S x | x ;
@@ -55,7 +55,7 @@ internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'x'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'x'"))
             ), issues.errors
         )
     }
@@ -85,7 +85,7 @@ internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "xx^", setOf("'x'"))
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("'x'"))
             ), issues.errors
         )
     }
@@ -115,7 +115,7 @@ internal class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(4, 5, 1, 1), "xxxx^", setOf("'x'"))
+                parseError(InputLocation(4, 5, 1, 1), sentence, setOf("S"), setOf("'x'"))
             ), issues.errors
         )
     }

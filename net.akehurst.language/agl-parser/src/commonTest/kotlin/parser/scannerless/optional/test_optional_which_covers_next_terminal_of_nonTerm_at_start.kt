@@ -48,7 +48,7 @@ class test_optional_which_covers_next_terminal_of_nonTerm_at_start : test_LeftCo
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 

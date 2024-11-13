@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_nested_optionals : test_AutomatonAbstract() {
+class test_nested_optionals : test_AutomatonAbstract() {
     /*
         S = 'i' 'a' Rs 'z' ;
         Rs = R+ ;

@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_aObc : test_LeftCornerParserAbstract() {
+class test_aObc : test_LeftCornerParserAbstract() {
 
     // S = a | bc;
     // bc = b c ;
@@ -52,7 +52,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'","'b'"))
         ),issues.errors)
     }
 
@@ -79,7 +79,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^b",setOf("<EOT>"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("<EOT>"))
         ),issues.errors)
     }
 
@@ -90,7 +90,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("<EOT>"))
         ),issues.errors)
     }
 
@@ -117,7 +117,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'c'"))
         ),issues.errors)
     }
 
@@ -128,7 +128,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'","'b'"))
         ),issues.errors)
     }
 
@@ -139,7 +139,7 @@ internal class test_aObc : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^d",setOf("'a'","'b'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'","'b'"))
         ),issues.errors)
     }
 

@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_aObOcO : test_AutomatonAbstract() {
+class test_aObOcO : test_AutomatonAbstract() {
     /*
         S = a? b? c?;
      */

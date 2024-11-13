@@ -71,7 +71,15 @@ internal class ParseGraph(
         }
     }
 
-    enum class MergeOptions {
+    data class MergeDecision(
+        val reason:List<MergeReason>,
+        val choice:MergeChoice,
+        val text:String
+    )
+
+    enum class MergeReason { LENGTH, CHOICE_RULE_LENGTH, CHOICE_RULE_PRIORITY, CHOICE_RULE_AMBIGUOUS, DYNAMIC_PRIORITY }
+
+    enum class MergeChoice {
         /**
          * New head provides NON preferable parse due to higher priority or longer match
          */
@@ -330,41 +338,44 @@ internal class ParseGraph(
         return true
     }
 
-    private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+    private fun mergeDecisionOnLength(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>,ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
+        val newReasonList = reasonList+MergeReason.LENGTH
         val existingLength = existingParent.nextInputPosition - existingParent.startPosition
         val newLength = newParent.nextInputPosition - newParent.startPosition
         return when {
-            newLength > existingLength -> MergeOptions.PREFER_NEW
-            existingLength > newLength -> MergeOptions.PREFER_EXISTING
-            else -> ifEqual()
+            newLength > existingLength -> MergeDecision(newReasonList,MergeChoice.PREFER_NEW, "$newLength > $existingLength")
+            newLength < existingLength -> MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING, "$newLength < $existingLength")
+            else -> ifEqual(newReasonList)
         }
     }
 
-    private fun mergeDecisionOnPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+    private fun mergeDecisionOnPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         if (Debug.CHECK) check(existingParent.rule.isChoice && newParent.rule.isChoice && existingParent.rule == newParent.rule) //are we comparing things with a choice
+        val newReasonList = reasonList+MergeReason.CHOICE_RULE_PRIORITY
         val existingPriority = existingParent.option.asIndex
         val newPriority = newParent.option.asIndex
         return when {
-            newPriority > existingPriority -> MergeOptions.PREFER_NEW
-            existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
-            else -> ifEqual()
+            newPriority > existingPriority -> MergeDecision(newReasonList,MergeChoice.PREFER_NEW,"$newPriority > $existingPriority")
+            newPriority < existingPriority -> MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING,"$newPriority < $existingPriority")
+            else -> ifEqual(newReasonList)
         }
     }
 
-    private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, ifEqual: () -> MergeOptions): MergeOptions {
+    private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
+        val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
         for (i in existingParent.dynamicPriority.indices) {
             val e = existingParent.dynamicPriority[i]
             val n = newParent.dynamicPriority[i]
             when {
-                n > e -> return MergeOptions.PREFER_NEW
-                n < e -> return MergeOptions.PREFER_EXISTING
+                n > e -> return MergeDecision(newReasonList,MergeChoice.PREFER_NEW, "${newParent.dynamicPriority} > ${existingParent.dynamicPriority}")
+                n < e -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING, "${newParent.dynamicPriority} < ${existingParent.dynamicPriority}")
                 else -> Unit
             }
         }
-        return ifEqual()
+        return ifEqual(newReasonList)
     }
 
-    private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeOptions {
+    private fun mergeDecision(existingParent: SpptDataNode, newParent: SpptDataNode): MergeDecision {
         return when {
             newParent.rule.isChoice -> {
                 val rhs = (newParent.rule as RuntimeRule).rhs
@@ -375,25 +386,25 @@ internal class ParseGraph(
                 if (Debug.CHECK) check(null != choiceKind) //TODO: could remove this check if always passes
                 when (choiceKind!!) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
-                    RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
-                        mergeDecisionOnPriority(existingParent, newParent) {
-                            MergeOptions.UNDECIDABLE
+                    RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
+                        mergeDecisionOnPriority(existingParent, newParent,rl) { rl2 ->
+                            MergeDecision(rl2,MergeChoice.UNDECIDABLE,"")
                         }
                     }
 
-                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent) {
-                        mergeDecisionOnLength(existingParent, newParent) {
-                            MergeOptions.UNDECIDABLE
+                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent, emptyList()) {rl ->
+                        mergeDecisionOnLength(existingParent, newParent, rl) {rl2 -> //FIXME: should never happen I think !
+                            MergeDecision(rl2,MergeChoice.UNDECIDABLE,"")
                         }
                     }
 
-                    RuntimeRuleChoiceKind.AMBIGUOUS -> MergeOptions.KEEP_BOTH_AS_ALTERNATIVES
+                    RuntimeRuleChoiceKind.AMBIGUOUS -> MergeDecision(listOf( MergeReason.CHOICE_RULE_AMBIGUOUS),MergeChoice.KEEP_BOTH_AS_ALTERNATIVES,"")
                 }
             }
 
-            else -> mergeDecisionOnLength(existingParent, newParent) {
-                mergeDecisionOnDynamicPriority(existingParent, newParent) {
-                MergeOptions.UNDECIDABLE
+            else -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
+                mergeDecisionOnDynamicPriority(existingParent, newParent, rl) { rl2->
+                    MergeDecision(rl2,MergeChoice.UNDECIDABLE,"${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
                 }
             }
         }
@@ -472,39 +483,39 @@ internal class ParseGraph(
         previous: GrowingNodeIndex,
         parentState: ParserState,
         parentRuntimeLookaheadSet: Set<LookaheadSet>,
-        buildSPPT: Boolean //TODO:
+//        buildSPPT: Boolean //TODO:
     ): Boolean {
         if (Debug.CHECK) check(head.isComplete)
         val child = head.complete
-        //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val childrenPriorities = when {
             head.state.isChoice -> listOf(head.state.priorityList)
             head.state.isOptional -> listOf(head.state.priorityList)
             head.state.isList -> listOf(head.state.priorityList)
             else -> emptyList()
         }
-        val parent =
-            this.createGrowingNodeIndex(
-                parentState,
-                parentRuntimeLookaheadSet,
-                head.startPosition,
-                head.nextInputPositionBeforeSkip,
-                head.nextInputPositionAfterSkip,
-                1,
-                childrenPriorities
-            )
+        val parent = this.createGrowingNodeIndex(
+            parentState,
+            parentRuntimeLookaheadSet,
+            head.startPosition,
+            head.nextInputPositionBeforeSkip,
+            head.nextInputPositionAfterSkip,
+            1,
+            childrenPriorities
+        )
         return if (parent.isComplete) {
             val newParent = parent.complete
             val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
                 // already completed this parent - should we use new or existing parent
-                val shouldDrop = this.mergeDecision(existingComplete, newParent)
-                when (shouldDrop) {
-                    MergeOptions.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
-                    MergeOptions.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
-                    MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
-                    MergeOptions.UNDECIDABLE -> {
-                        useExistingCompleteParentFirstChild(parent, child, previous)
+                val md = this.mergeDecision(existingComplete, newParent)
+                println("MergeDecision-F on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
+                when (md.choice) {
+                    MergeChoice.PREFER_NEW -> preferNewCompleteParentFirstChild(existingComplete, parent, child, previous)
+                    MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
+                    MergeChoice.UNDECIDABLE -> {
+                        //useExistingCompleteParentFirstChild(parent, child, previous)
+                        keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     }
                 }
             } else {
@@ -530,12 +541,11 @@ internal class ParseGraph(
         prevPrev: GrowingNodeIndex?,
         newParentState: ParserState,
         newParentRuntimeLookaheadSet: Set<LookaheadSet>,
-        buildSPPT: Boolean
+        //buildSPPT: Boolean  //TODO:
     ): Boolean {
         if (Debug.CHECK) check(head.isComplete)
         val child = head.complete
         val newParentNumNonSkipChildren = previous.numNonSkipChildren + 1
-        //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val childPrio = when {
             head.state.isChoice -> listOf(head.state.priorityList)
             head.state.isOptional -> listOf(head.state.priorityList)
@@ -543,8 +553,7 @@ internal class ParseGraph(
             else -> emptyList()
         }
         val childrenPriorities: List<List<Int>> = previous.childrenPriorities.plus(childPrio)
-            ?: childPrio //Goal scenario
-        val newParent = this.createGrowingNodeIndex(
+        val parent = this.createGrowingNodeIndex(
             newParentState,
             newParentRuntimeLookaheadSet,
             previous.startPosition,
@@ -554,26 +563,29 @@ internal class ParseGraph(
             childrenPriorities
         )
 
-        return if (newParent.isComplete) {
-            val existingComplete = this.treeData.preferred(newParent.complete)
+        return if (parent.isComplete) {
+            val newParent = parent.complete
+            val existingComplete = this.treeData.preferred(newParent)
             if (null != existingComplete) {
-                val shouldDrop = this.mergeDecision(existingComplete, newParent.complete)
-                when (shouldDrop) {
-                    MergeOptions.PREFER_NEW -> preferNewCompleteParentLastChild(previous, newParent, child, prevPrev)
-                    MergeOptions.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, newParent, child, prevPrev)
-                    MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, newParent, child, prevPrev)
-                    MergeOptions.UNDECIDABLE -> {
-                        useExistingCompleteParentLastChild(newParent, child, prevPrev)
+                val md = this.mergeDecision(existingComplete,newParent)
+                println("MergeDecision-N on ${existingComplete} vs $newParent = ${md.choice} : ${md.reason} ${md.text}")
+                when (md.choice) {
+                    MergeChoice.PREFER_NEW -> preferNewCompleteParentLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
+                    MergeChoice.UNDECIDABLE -> {
+                        //useExistingCompleteParentLastChild(parent, child, prevPrev)
+                        keepBothCompleteParentsLastChild(previous, parent, child, prevPrev)
                     }
                 }
             } else {
-                if (buildSPPT) this.treeData.setNextChildForCompleteParent(previous, newParent.complete, child, false)
-                this.addGrowingHead(prevPrev, newParent)
+                this.treeData.setNextChildForCompleteParent(previous, newParent, child, false)
+                this.addGrowingHead(prevPrev, parent)
                 true
             }
         } else {
-            if (buildSPPT) this.treeData.setNextChildForGrowingParent(previous, newParent, child)
-            this.addGrowingHead(prevPrev, newParent)
+            this.treeData.setNextChildForGrowingParent(previous, parent, child)
+            this.addGrowingHead(prevPrev, parent)
             true
         }
     }

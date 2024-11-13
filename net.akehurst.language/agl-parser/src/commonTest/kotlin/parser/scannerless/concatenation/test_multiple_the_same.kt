@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multiple_the_same : test_LeftCornerParserAbstract() {
+class test_multiple_the_same : test_LeftCornerParserAbstract() {
 
     /*
         WS = "\s+"
@@ -55,7 +55,7 @@ internal class test_multiple_the_same : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("X"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("X"))
             ), issues.errors
         )
     }

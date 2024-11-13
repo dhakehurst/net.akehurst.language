@@ -41,7 +41,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"), setOf("'a'"))
         ),issues.errors)
     }
 
@@ -52,7 +52,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^", setOf("'a'"))
+            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"), setOf("'a'"))
         ),issues.errors)
     }
 
@@ -63,7 +63,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"aa^", setOf("'a'"))
+            parseError(InputLocation(2,3,1,1),sentence, setOf("'a'"), setOf("'a'"))
         ),issues.errors)
     }
 
@@ -74,7 +74,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(3,4,1,1),"aaa^", setOf("'a'"))
+            parseError(InputLocation(3,4,1,1),sentence, setOf("'a'"), setOf("'a'"))
         ),issues.errors)
     }
 
@@ -97,7 +97,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(4,5,1,1),"aaaa^a", setOf("<EOT>"))
+            parseError(InputLocation(4,5,1,1),sentence, setOf("'a'"), setOf("<EOT>"))
         ),issues.errors)
     }
 }

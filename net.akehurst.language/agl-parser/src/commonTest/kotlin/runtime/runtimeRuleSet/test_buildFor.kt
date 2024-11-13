@@ -25,7 +25,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_buildFor : test_AutomatonUtilsAbstract() {
+class test_buildFor : test_AutomatonUtilsAbstract() {
 
     @Test
     fun concatenation() {

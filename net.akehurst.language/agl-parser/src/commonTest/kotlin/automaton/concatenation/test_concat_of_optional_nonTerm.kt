@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
+class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
     //    GenericMethodInvocation = TypeArguments? MethodInvocation ;
     //    MethodInvocation = IDENTIFIER ArgumentList ;

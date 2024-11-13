@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_rules : test_LeftCornerParserAbstract() {
+class test_rules : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {

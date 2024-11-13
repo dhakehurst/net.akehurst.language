@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_LongestChoice : test_LeftCornerParserAbstract() {
+class test_ifThenElse_LongestChoice : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
@@ -58,7 +58,7 @@ internal class test_ifThenElse_LongestChoice : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'if'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("\"[a-zA-Z]+\"", "'if'"))
             ), issues.errors
         )
     }

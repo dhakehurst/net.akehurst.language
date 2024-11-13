@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_hiddenRight : test_LeftCornerParserAbstract() {
+class test_hiddenRight : test_LeftCornerParserAbstract() {
 
     //TODO: this is not hidden right recursion !! - swap the S and the 'c' ?
 
@@ -58,7 +58,7 @@ internal class test_hiddenRight : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 

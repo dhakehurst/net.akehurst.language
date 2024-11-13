@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_e_acsOads_f : test_LeftCornerParserAbstract() {
+class test_e_acsOads_f : test_LeftCornerParserAbstract() {
 
     // S = 'e' ambig 'f'
     // ambig = acs || ads
@@ -55,7 +55,7 @@ internal class test_e_acsOads_f : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'e'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'e'"))
             ), issues.errors
         )
     }

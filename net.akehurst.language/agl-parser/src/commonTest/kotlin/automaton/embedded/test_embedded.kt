@@ -26,7 +26,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_embedded : test_AutomatonAbstract() {
+class test_embedded : test_AutomatonAbstract() {
 
     /*
     B = b ;

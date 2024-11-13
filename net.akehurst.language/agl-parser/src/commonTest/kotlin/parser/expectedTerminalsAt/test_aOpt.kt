@@ -19,7 +19,7 @@ package net.akehurst.language.parser.expectedTerminalsAt
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 
-internal class test_aOpt : test_ExpectedTerminasAtAbstract() {
+class test_aOpt : test_ExpectedTerminasAtAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a'? ;

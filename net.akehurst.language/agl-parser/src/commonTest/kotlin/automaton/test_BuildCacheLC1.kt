@@ -18,7 +18,7 @@ package net.akehurst.language.automaton.leftcorner
 
 import kotlin.test.Test
 
-internal class test_BuildCacheLC1 {
+class test_BuildCacheLC1 {
 
     @Test
     fun x() {

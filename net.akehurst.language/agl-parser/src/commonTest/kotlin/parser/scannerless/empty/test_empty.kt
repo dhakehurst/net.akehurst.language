@@ -22,7 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_empty : test_LeftCornerParserAbstract() {
+class test_empty : test_LeftCornerParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -55,7 +55,7 @@ internal class test_empty : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^a",setOf("<EOT>"))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("<EOT>"))
         ),issues.errors)
     }
 

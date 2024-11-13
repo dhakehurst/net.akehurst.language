@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 //FIXME: REPEAT - because no MPP test-fixtures
-internal object RuntimeRuleSetTest {
+object RuntimeRuleSetTest {
 
     fun assertRrsEquals(expected: RuleSet, actual: RuleSet) = assertRrsEquals(expected as RuntimeRuleSet,actual as RuntimeRuleSet)
 

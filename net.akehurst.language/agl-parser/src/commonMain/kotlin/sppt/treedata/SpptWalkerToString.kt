@@ -92,7 +92,7 @@ import net.akehurst.language.sppt.api.SpptWalker
     }
 
     override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
-        val tag = "${nodeInfo.node.rule.tag}"
+        val tag = nodeInfo.node.rule.tag
         sb.append("${currentIndent}$tag : <EMBED>::")
     }
 

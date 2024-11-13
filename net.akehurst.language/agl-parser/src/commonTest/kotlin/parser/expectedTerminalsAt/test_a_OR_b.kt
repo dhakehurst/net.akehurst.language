@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 
-internal class test_a_OR_b : test_ExpectedTerminasAtAbstract() {
+class test_a_OR_b : test_ExpectedTerminasAtAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a' ;

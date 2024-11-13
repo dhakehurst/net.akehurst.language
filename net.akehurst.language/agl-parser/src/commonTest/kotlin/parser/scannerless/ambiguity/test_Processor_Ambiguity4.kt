@@ -67,7 +67,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^''", setOf("n"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("n"))
             ), issues.errors
         )
     }
@@ -99,7 +99,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'s'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'s'"))
             ), issues.errors
         )
     }
@@ -240,7 +240,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(6, 7, 1, 1), "s'n'{r^''{}}", setOf("n"))
+                parseError(InputLocation(6, 7, 1, 1), sentence, setOf("S"), setOf("n"))
             ), issues.errors
         )
     }
@@ -293,7 +293,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(9, 10, 1, 1), "s'n'{p{}r^''{}}", setOf("n"))
+                parseError(InputLocation(9, 10, 1, 1), sentence, setOf("S"), setOf("n"))
             ), issues.errors
         )
 

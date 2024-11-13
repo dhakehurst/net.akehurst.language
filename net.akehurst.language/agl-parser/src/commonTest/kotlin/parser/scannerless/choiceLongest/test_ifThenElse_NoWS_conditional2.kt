@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_NoWS_conditional2 : test_LeftCornerParserAbstract() {
+class test_ifThenElse_NoWS_conditional2 : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // expr = var | conditional ;
@@ -59,7 +59,7 @@ internal class test_ifThenElse_NoWS_conditional2 : test_LeftCornerParserAbstract
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("VAR", "'if'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("VAR", "'if'"))
             ), issues.errors
         )
     }

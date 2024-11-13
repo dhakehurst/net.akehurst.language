@@ -18,7 +18,7 @@
 package net.akehurst.language.collections
 
 //FIXME: REPEAT - because no MPP test-fixtures
-internal object CollectionsTest {
+object CollectionsTest {
     fun <E> Set<E>.matches(other: Set<E>, matches: (t: E, o: E) -> Boolean): Boolean {
         val thisList = this.toList()
         val foundThis = mutableListOf<E>()

@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_nested_optionals : test_LeftCornerParserAbstract() {
+class test_nested_optionals : test_LeftCornerParserAbstract() {
     /*
         Derived from:
 
@@ -66,7 +66,7 @@ internal class test_nested_optionals : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'i'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'i'"))
             ), issues.errors
         )
     }

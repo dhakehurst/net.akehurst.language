@@ -47,7 +47,7 @@ class test_RuntimeParser_parse_multi : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -60,7 +60,7 @@ class test_RuntimeParser_parse_multi : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'a'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'a'"))
             ), issues.errors
         )
     }

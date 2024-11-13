@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
+class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
     // S =  E ;
     // E = R < M < A ;

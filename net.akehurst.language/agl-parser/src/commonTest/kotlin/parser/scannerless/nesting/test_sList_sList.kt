@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_sList_sList : test_LeftCornerParserAbstract() {
+class test_sList_sList : test_LeftCornerParserAbstract() {
 
     // S = [numList / ';']* ;
     // numList = [NUM / ',']+

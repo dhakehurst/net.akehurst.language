@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_pattern__a : test_LeftCornerParserAbstract() {
+class test_pattern__a : test_LeftCornerParserAbstract() {
 
     //  S = "a"
     private companion object {
@@ -59,7 +59,7 @@ internal class test_pattern__a : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("\"a\""))
+            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"), setOf("\"a\""))
         ),issues.errors)
     }
 }

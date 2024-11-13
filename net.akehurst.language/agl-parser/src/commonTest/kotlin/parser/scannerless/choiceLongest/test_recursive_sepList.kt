@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_recursive_sepList : test_LeftCornerParserAbstract() {
+class test_recursive_sepList : test_LeftCornerParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S2 ;

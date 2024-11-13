@@ -35,7 +35,7 @@ fun SpptDataNode.matchedText(s: Sentence) = s.matchedTextNoSkip(this)
 fun SpptDataNode.skipText(treeData: TreeData) = treeData.skipDataAfter(this)
 
 
-internal class test_InputLocation_singleLine {
+class test_InputLocation_singleLine {
 
     private companion object {
         val S = runtimeRuleSet {

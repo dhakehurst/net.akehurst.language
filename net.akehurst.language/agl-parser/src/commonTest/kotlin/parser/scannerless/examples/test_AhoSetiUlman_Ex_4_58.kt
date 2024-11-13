@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
+class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
 
@@ -47,9 +47,9 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
                 ref("S3")
                 ref("S4")
             }
-            concatenation("S1") { literal("a") ; ref("A"); literal("d") }
+            concatenation("S1") { literal("a"); ref("A"); literal("d") }
             concatenation("S2") { literal("b"); ref("B"); literal("d") }
-            concatenation("S3") { literal("a"); ref("B"); literal("e")}
+            concatenation("S3") { literal("a"); ref("B"); literal("e") }
             concatenation("S4") { literal("b"); ref("A"); literal("e") }
             concatenation("A") { literal("c") }
             concatenation("B") { literal("c") }
@@ -61,44 +61,52 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
     fun a_fails() {
         val sentence = "a"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'c'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun b_fails() {
         val sentence = "b"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun c_fails() {
         val sentence = "c"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun ac_fails() {
         val sentence = "ac"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"ac^",setOf("'d'","'e'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S1","S3"), setOf("'d'", "'e'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -110,11 +118,11 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -161,11 +169,11 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

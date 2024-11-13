@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_expessions_hidden_right : test_LeftCornerParserAbstract() {
+class test_expessions_hidden_right : test_LeftCornerParserAbstract() {
 
     // Simplification from SText Expressions
 

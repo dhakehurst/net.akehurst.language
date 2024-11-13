@@ -24,7 +24,7 @@ import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 
 //FIXME: REPEAT - because no MPP test-fixtures
-internal abstract class test_AutomatonUtilsAbstract {
+abstract class test_AutomatonUtilsAbstract {
     companion object {
         val o0 = OptionNum(0)
         val o1 = OptionNum(1)

@@ -27,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
+class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
@@ -64,7 +64,7 @@ internal class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("var", "'if'"))
+                parseError( InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("var", "'if'"))
             ), issues.errors
         )
     }

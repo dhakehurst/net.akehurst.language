@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-internal class test_Transition : test_AutomatonUtilsAbstract() {
+class test_Transition : test_AutomatonUtilsAbstract() {
 
     @Test
     fun t() {

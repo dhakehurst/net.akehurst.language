@@ -58,7 +58,7 @@ internal class RuntimeParser(
         val defaultStartLocation = InputLocation(0, 0, 1, 0)
 
         data class GrowArgs(
-            val buildTree: Boolean,
+            val buildTree: Boolean, //TODO: want to not build tree is some situations, however tree is used for resolving ambiguities!
             val noLookahead: Boolean,
             val heightGraftOnly: Boolean,
             val nonEmptyWidthOnly: Boolean,
@@ -707,7 +707,7 @@ internal class RuntimeParser(
                             prevPrev = null,
                             newParentState = transition.to,
                             newParentRuntimeLookaheadSet = runtimeLhs,
-                            buildSPPT = growArgs.buildTree
+//                            buildSPPT = growArgs.buildTree
                         )
                     } else {
                         false
@@ -822,7 +822,7 @@ internal class RuntimeParser(
                         previous = previous,
                         parentState = transition.to,
                         parentRuntimeLookaheadSet = newRuntimeLhs,
-                        buildSPPT = parseArgs.buildTree
+//                         buildSPPT = parseArgs.buildTree
                     )
                 } else {
                     recordFailedHeightLh(parseArgs, head, transition, runtimeLhs, possibleEndOfText)
@@ -852,7 +852,7 @@ internal class RuntimeParser(
                             prevPrev = prevPrev,
                             newParentState = transition.to,
                             newParentRuntimeLookaheadSet = runtimeLhs,
-                            buildSPPT = parseArgs.buildTree
+//                            buildSPPT = parseArgs.buildTree
                         )
                     } else {
                         recordFailedGraftLH(parseArgs, head, transition, runtimeLhs, possibleEndOfText)

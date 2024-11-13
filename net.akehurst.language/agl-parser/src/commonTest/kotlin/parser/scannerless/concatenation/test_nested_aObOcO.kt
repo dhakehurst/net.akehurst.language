@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
+class test_nested_aObOcO : test_LeftCornerParserAbstract() {
     /*
         S = Opts t
         Opts = a? b? c?
@@ -50,7 +50,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'", "'b'", "'c'", "'t'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -63,7 +63,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'", "'b'", "'c'", "'t'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -146,7 +146,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "b^a", setOf("'c'", "'t'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("Opts"), setOf("'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -205,7 +205,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^dc", setOf("'b'", "'c'", "'t'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -218,7 +218,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^d", setOf("'c'", "'t'"))
+                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("Opts"), setOf("'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -231,7 +231,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3, 4, 1, 1), "abc^d", setOf("'t'"))
+                parseError(InputLocation(3, 4, 1, 1), sentence, setOf("Opts"), setOf("'t'"))
             ), issues.errors
         )
     }
@@ -315,7 +315,7 @@ internal class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^b", setOf("'t'"))
+                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("Opts"), setOf("'t'"))
             ), issues.errors
         )
     }

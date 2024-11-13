@@ -24,7 +24,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_multi_1_n_literal : test_AutomatonAbstract() {
+class test_multi_1_n_literal : test_AutomatonAbstract() {
 
     // S =  'a'+ ;
 

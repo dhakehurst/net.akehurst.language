@@ -22,7 +22,7 @@ import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_Sentence_locationFor {
+class test_Sentence_locationFor {
 
     @Test
     fun singleLine() {

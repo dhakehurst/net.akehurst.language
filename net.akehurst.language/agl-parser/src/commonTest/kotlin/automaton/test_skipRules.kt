@@ -24,7 +24,7 @@ import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 
-internal class test_skipRules : test_AutomatonAbstract() {
+class test_skipRules : test_AutomatonAbstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"

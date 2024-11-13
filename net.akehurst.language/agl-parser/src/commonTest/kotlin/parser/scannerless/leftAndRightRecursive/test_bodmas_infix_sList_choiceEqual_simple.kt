@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 
-internal class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract() {
+class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract() {
 
     // S = E
     // E = 'v' | I | P

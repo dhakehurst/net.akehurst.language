@@ -23,7 +23,7 @@ import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-internal class test_aa : test_LeftCornerParserAbstract() {
+class test_aa : test_LeftCornerParserAbstract() {
 
     // S  = P | 'a' ;
     // P  = P1 | S ;  // S*

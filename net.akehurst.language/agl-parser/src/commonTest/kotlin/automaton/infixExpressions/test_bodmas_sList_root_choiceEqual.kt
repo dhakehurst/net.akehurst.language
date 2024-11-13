@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
+class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
 
     // S =  E
     // E = R | M | A

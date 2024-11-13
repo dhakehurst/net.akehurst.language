@@ -21,7 +21,7 @@ import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_RulePosition_next {
+class test_RulePosition_next {
 
     private companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT

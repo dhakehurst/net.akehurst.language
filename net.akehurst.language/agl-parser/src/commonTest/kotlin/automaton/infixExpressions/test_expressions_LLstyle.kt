@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_expressions_LLstyle : test_AutomatonAbstract() {
+class test_expressions_LLstyle : test_AutomatonAbstract() {
 
     // S = E
     // E = P
