@@ -138,7 +138,7 @@ internal object RuntimeRuleSetTest {
 
     fun PrefOption.matches(other: PrefOption): Boolean = when {
         this.precedence != other.precedence -> false
-        this.target.tag!=other.target.tag -> false
+        this.spine.tag!=other.spine.tag -> false
         this.option!=other.option -> false
         this.associativity!=other.associativity -> false
         this.operators.size!=other.operators.size -> false

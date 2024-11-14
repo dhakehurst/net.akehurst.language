@@ -44,8 +44,8 @@ class test_ab_cOa_bc : test_LeftCornerParserAbstract() {
             concatenation("ab") { literal("a"); literal("b") }
             concatenation("bc") { literal("b"); literal("c") }
             preferenceFor("'a'") {
-                left("ab", setOf("'b'"))
-                left("a_bc", setOf("'b'"))
+                left(listOf("ab"), setOf("'b'"))
+                left(listOf("a_bc"), setOf("'b'"))
             }
         }
         val goal = "S"

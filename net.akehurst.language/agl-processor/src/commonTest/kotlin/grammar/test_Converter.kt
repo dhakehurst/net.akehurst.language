@@ -576,7 +576,7 @@ class test_Converter {
             concatenation("A") { ref("S"); lit("+"); ref("S") }
             separatedList("D", 2, -1) { ref("S"); lit("/") }
             preference("S") {
-                optionLeft("D", ChoiceIndicator.ITEM, -1, listOf("/"))
+                optionLeft(listOf("D"), ChoiceIndicator.ITEM, -1, listOf("/"))
             }
         }
 
@@ -593,7 +593,7 @@ class test_Converter {
             sList("D", 2, -1, "S", "'/'")
             literal("/")
             preferenceFor("S") {
-                leftOption("D", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
+                leftOption(listOf("D"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
             }
         }
 

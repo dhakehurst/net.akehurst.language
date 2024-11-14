@@ -90,7 +90,9 @@ internal class AglGrammarSyntaxAnalyser(
         this.register(this::embedded)
         this.register(this::terminal)
         this.register(this::preferenceOption)
+        this.register(this::spine)
         this.register(this::choiceNumber)
+        this.register(this::terminalList)
         this.register(this::associativity)
     }
 
@@ -431,9 +433,9 @@ internal class AglGrammarSyntaxAnalyser(
         })
     }
 
-    // preferenceOption = nonTerminal choiceNumber? 'on' terminalList associativity ;
+    // preferenceOption = spine choiceNumber? 'on' terminalList associativity ;
     private fun preferenceOption(target: SpptDataNodeInfo, children: List<Any?>, arg: Any?): (Grammar) -> PreferenceOption {
-        val item = children[0] as NonTerminal
+        val spine = children[0] as Spine
         val ci = children[1] as Pair<ChoiceIndicator, Int>?
         val choiceIndicator = when {
             null==ci -> ChoiceIndicator.NONE
@@ -449,9 +451,15 @@ internal class AglGrammarSyntaxAnalyser(
             else -> error("Internal Error: associativity value '$assStr' not supported")
         }
         return { grammar ->
-
-            PreferenceOptionDefault(item, choiceIndicator,choiceNumber, terminalList, associativity)
+            PreferenceOptionDefault(spine, choiceIndicator,choiceNumber, terminalList, associativity)
         }
+    }
+
+    // spine = [nonTerminal / '<-']+ ;
+    private fun spine(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Spine {
+        val slist = (children as List<Any>).toSeparatedList<Any, NonTerminal, String>()
+        val parts = slist.items
+        return SpineDefault(parts)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // choiceNumber = POSITIVE_INTEGER | CHOICE_INDICATOR ;
@@ -461,6 +469,12 @@ internal class AglGrammarSyntaxAnalyser(
             1 -> Pair(ChoiceIndicator.valueOf(children[0] as String),-1)
             else -> error("Internal Error: choiceNumber not supported")
         }
+    }
+
+    // terminalList = [simpleItem / ',']+ ;
+    private fun terminalList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<SimpleItem> {
+        val slist = (children as List<Any>).toSeparatedList<Any, SimpleItem, String>()
+        return slist.items
     }
 
     // associativity = 'left' | 'right' ;

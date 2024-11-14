@@ -80,7 +80,7 @@ enum class Assoc { NONE, LEFT, RIGHT }
 
 interface PrefOption {
     val precedence: Int
-    val target: Rule
+    val spine: List<Rule>
     val option: OptionNum
     val operators: Set<Rule>
     val associativity: Assoc

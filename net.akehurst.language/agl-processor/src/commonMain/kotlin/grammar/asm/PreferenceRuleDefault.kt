@@ -18,7 +18,6 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.parser.api.OptionNum
 
 data class PreferenceRuleDefault(
     override val grammar: Grammar,
@@ -38,7 +37,7 @@ data class PreferenceRuleDefault(
 enum class ChoiceIndicator { NONE, EMPTY, ITEM, NUMBER }
 
 data class PreferenceOptionDefault(
-    override val item: NonTerminal,
+    override val spine: Spine,
     override val choiceIndicator: ChoiceIndicator,
     override val choiceNumber: Int,
     override val onTerminals: List<SimpleItem>,
@@ -46,7 +45,11 @@ data class PreferenceOptionDefault(
 ) : PreferenceOption {
 
     override fun asString(indent: Indent): String {
-        return "$item $choiceNumber 'on' ${onTerminals.joinToString(separator = ", ")} $associativity ;"
+        return "$spine $choiceNumber 'on' ${onTerminals.joinToString(separator = ", ")} $associativity ;"
     }
 
 }
+
+data class SpineDefault(
+    override val parts: List<NonTerminal>
+):Spine

@@ -40,8 +40,8 @@ class test_ifThenElse_NoWS_expr2 : test_LeftCornerParserAbstract() {
             }
             pattern("VAR", "U|V|W|X|Y|Z")
             preferenceFor("expr") {
-                rightOption("expr", OptionNum(1), setOf("'then'"))
-                rightOption("expr", OptionNum(2), setOf("'then'", "'else'"))
+                rightOption(listOf("expr"), OptionNum(1), setOf("'then'"))
+                rightOption(listOf("expr"), OptionNum(2), setOf("'then'", "'else'"))
             }
         }
         val goal = "S"

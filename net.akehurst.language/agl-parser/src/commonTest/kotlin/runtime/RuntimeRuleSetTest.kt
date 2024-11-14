@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 //FIXME: REPEAT - because no MPP test-fixtures
 object RuntimeRuleSetTest {
 
-    fun assertRrsEquals(expected: RuleSet, actual: RuleSet) = assertRrsEquals(expected as RuntimeRuleSet,actual as RuntimeRuleSet)
+    fun assertRrsEquals(expected: RuleSet, actual: RuleSet) = assertRrsEquals(expected as RuntimeRuleSet, actual as RuntimeRuleSet)
 
     fun assertRrsEquals(expected: RuntimeRuleSet, actual: RuntimeRuleSet) {
         assertEquals(expected.toString(), actual.toString())
@@ -35,7 +35,7 @@ object RuntimeRuleSetTest {
 
     fun RuleSet.matches(other: RuleSet) = (this as RuntimeRuleSet).matches(other as RuntimeRuleSet)
 
-    fun RuntimeRuleSet.matches(other: RuntimeRuleSet) :Boolean{
+    fun RuntimeRuleSet.matches(other: RuntimeRuleSet): Boolean {
         val rrs = when {
             this.runtimeRules.size != other.runtimeRules.size -> false
             else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t, o -> t.matches(o) }
@@ -132,16 +132,16 @@ object RuntimeRuleSetTest {
         return when {
             this.contextRule.tag != other.contextRule.tag -> false
             this.options.size != other.options.size -> false
-            else -> this.options.matches(other.options) { t,o -> t.matches(o) }
+            else -> this.options.matches(other.options) { t, o -> t.matches(o) }
         }
     }
 
     fun PrefOption.matches(other: PrefOption): Boolean = when {
         this.precedence != other.precedence -> false
-        this.target.tag!=other.target.tag -> false
-        this.option!=other.option -> false
-        this.operators!=other.operators -> false
-        this.associativity!=other.associativity -> false
+        this.option != other.option -> false
+        this.operators != other.operators -> false
+        this.associativity != other.associativity -> false
+        this.spine.matches(other.spine) { t, o -> t.tag == o.tag }.not() -> false
         else -> true
     }
 

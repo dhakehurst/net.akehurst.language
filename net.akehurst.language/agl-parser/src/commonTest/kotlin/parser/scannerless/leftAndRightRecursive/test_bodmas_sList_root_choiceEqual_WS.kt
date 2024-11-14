@@ -69,10 +69,10 @@ class test_bodmas_sList_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
             literal("'+'", "+")
             literal("'-'", "-")
             preferenceFor("expr") {
-                leftOption("sub", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'-'"))
-                leftOption("add", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
-                leftOption("mul", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'*'"))
-                leftOption("div", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
+                leftOption(listOf("sub"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'-'"))
+                leftOption(listOf("add"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
+                leftOption(listOf("mul"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'*'"))
+                leftOption(listOf("div"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
             }
         }
         val goal = "S"

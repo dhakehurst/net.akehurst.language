@@ -264,7 +264,7 @@ internal class PrecedenceRuleBuilder(
 
     data class Quad<out A, out B, out C, out D>(val first: A, val second: B, val third: C, val fourth: D)
 
-    private val _rules = mutableListOf<Quad<String, OptionNum, Set<String>, Assoc>>()
+    private val _rules = mutableListOf<Quad<List<String>, OptionNum, Set<String>, Assoc>>()
 
     /**
      * indicate that @param ruleName is left-associative
@@ -276,35 +276,38 @@ internal class PrecedenceRuleBuilder(
     /**
      * indicate that @param ruleName is left-associative
      */
-    override fun left(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.LEFT))
+    override fun left(spine: List<String>, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(spine, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.LEFT))
     }
 
-    override fun leftOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, Assoc.LEFT))
+    override fun leftOption(spine: List<String>, option: OptionNum, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(spine, option, operatorRuleNames, Assoc.LEFT))
     }
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    override fun right(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.RIGHT))
+    override fun right(spine: List<String>, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(spine, RulePosition.OPTION_NONE, operatorRuleNames, Assoc.RIGHT))
     }
 
-    override fun rightOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, Assoc.RIGHT))
+    override fun rightOption(spine: List<String>, option: OptionNum, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(spine, option, operatorRuleNames, Assoc.RIGHT))
     }
 
     fun build(ruleMap: Map<String, RuntimeRule>): RuntimePreferenceRule {
         val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
         val rules = _rules.mapIndexed { idx, it ->
-            val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
+            val sp = it.first.map { p ->
+                ruleMap[p] ?: error("Cannot find rule named '${p}' for target rule in precedence definitions")
+            }
+            val r =sp.last()
             val ops = it.third.map { ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
             check(r.isChoice implies it.second.isChoiceOption) { "Choice rule must have a valid Option number" }
             check(r.isOptional implies it.second.isOptionalOption) { "Optional rule must have a valid Option indicator EMPTY or ITEM" }
             check(r.isListSimple implies it.second.isListSimpleOption) { "List(Simple) rule must have a valid Option indicator EMPTY or ITEM" }
             check(r.isListSeparated implies it.second.isListSeparatedOption) { "List(Separated) rule must have a valid Option indicator EMPTY or ITEM" }
-            RuntimePreferenceRule.RuntimePreferenceOption(idx, r, it.second, ops.toSet(), it.fourth)
+            RuntimePreferenceRule.RuntimePreferenceOption(idx, sp, it.second, ops.toSet(), it.fourth)
         }
         return RuntimePreferenceRule(contextRule, rules)
     }

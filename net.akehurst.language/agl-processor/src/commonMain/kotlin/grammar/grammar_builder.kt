@@ -23,7 +23,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
-import net.akehurst.language.parser.api.OptionNum
 
 @DslMarker
 annotation class GrammarBuilderMarker
@@ -332,10 +331,10 @@ class PreferenceRuleBuilder(
 ) {
     val optionList = mutableListOf<PreferenceOption>()
 
-    fun optionLeft(nonTerminalName: String, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
+    fun optionLeft(spine: List<String>, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
-                item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
+                spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber =  choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
@@ -344,10 +343,10 @@ class PreferenceRuleBuilder(
         )
     }
 
-    fun optionRight(nonTerminalName: String, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
+    fun optionRight(spine: List<String>, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
-                item = NonTerminalDefault(null, GrammarRuleName(nonTerminalName)),
+                spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber =  choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },

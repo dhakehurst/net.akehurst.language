@@ -64,9 +64,9 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
             concatenation("P1") { literal("a"); ref("P") }
             concatenation("P2") { ref("P"); literal("a") }
             preferenceFor("'a'") {
-                left("P1", setOf("'a'"))
-                leftOption("P", OptionNum(2), setOf("'b'","'a'"))
-                leftOption("Q", OptionNum(0), setOf("'c'"))
+                left(listOf("P1"), setOf("'a'"))
+                leftOption(listOf("P"), OptionNum(2), setOf("'b'","'a'"))
+                leftOption(listOf("Q"), OptionNum(0), setOf("'c'"))
             }
         }
         val goal = "S"

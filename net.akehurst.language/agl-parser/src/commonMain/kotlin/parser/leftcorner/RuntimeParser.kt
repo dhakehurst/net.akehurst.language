@@ -22,10 +22,8 @@ import net.akehurst.language.automaton.leftcorner.ParserState.Companion.lhs
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
-import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule.RuntimePreferenceOption
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -43,6 +41,12 @@ import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.TreeData
 import kotlin.math.max
+
+internal data class RuntimeContext(
+    val head: GrowingNodeIndex,
+    val prev:GrowingNodeIndex?, // null if head is goal
+    val prevPrev:GrowingNodeIndex? // null if head is goal
+)
 
 internal class RuntimeParser(
     val sentence: Sentence, //FIXME: should really be a method argument
@@ -250,56 +254,59 @@ internal class RuntimeParser(
 
     private fun growHead(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         return when {
-            head.isGoal -> growGoal(head, possibleEndOfText, growArgs)
-            head.isComplete -> growComplete(head, possibleEndOfText, growArgs)
-            else -> growIncomplete(head, possibleEndOfText, growArgs)
+            head.isGoal -> growGoal(head, possibleEndOfText, growArgs) //GOAL
+            head.isComplete -> growComplete(head, possibleEndOfText, growArgs) // HEIGHT,GRAFT
+            else -> growIncomplete(head, possibleEndOfText, growArgs) // WIDTH, EMBED
         }
     }
 
-    private fun growGoal(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+    private fun growGoal(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, parseArgs: GrowArgs): Boolean {
         return if (head.isComplete) {
             graph.recordGoal(head)
             graph.dropStackWithHead(head)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             false
         } else {
+            val runtimeContext = RuntimeContext(head, null,null)
             var grown = false
             val transTaken = mutableSetOf<Transition>()
             val transitions = head.runtimeState.transitionsGoal(stateSet.startState)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
-            for (tr in transitions) {
+            val trans2 = resolveTransitionAmbiguity(runtimeContext, transitions, possibleEndOfText, parseArgs)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
+            for (tr in trans2) {
                 val b = when (tr.action) {
-                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
-                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, parseArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, parseArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
-            if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) {ambiguity(head, transTaken, possibleEndOfText)}
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
     }
 
-    private fun growIncomplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+    private fun growIncomplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, parseArgs: GrowArgs): Boolean {
         var grown = false
         val prevSet = this.graph.previousOf(head)
         val transTaken = mutableSetOf<Transition>()
         for (previous in prevSet) {
+            val runtimeContext = RuntimeContext(head, previous,null)
             val transitions = head.runtimeState.transitionsInComplete(previous.state)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
-            for (tr in transitions) {
+            val trans2 = resolveTransitionAmbiguity(runtimeContext, transitions, possibleEndOfText, parseArgs)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
+            for (tr in trans2) {
                 val b = when (tr.action) {
-                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
-                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, parseArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, parseArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
         }
-        if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) {ambiguity(head, transTaken, possibleEndOfText)}
+
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
@@ -391,34 +398,12 @@ internal class RuntimeParser(
         possibleEndOfText: Set<LookaheadSet>,
         parseArgs: GrowArgs
     ): Pair<Boolean, Boolean> {
+        val runtimeContext = RuntimeContext(head, previous,prevPrev)
         var grownHeight = false
         var grownGraft = false
         val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
-        val transWithValidLookahead = when {
-            parseArgs.noLookahead -> transitions.map { Pair(it, LookaheadSetPart.ANY) }
-            else -> transitions.mapNotNull {
-                val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
-                when {
-                    lh.first -> Pair(it, lh.second)
-                    else -> null
-                }
-            }
-        }
-        transitions.minus(transWithValidLookahead.map { it.first }).forEach {
-            when (it.action) {
-                ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                ParseAction.GRAFT -> recordFailedGraftLH(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                ParseAction.GOAL -> recordFailedGraftLH(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                else -> error("Internal Error: should never happen")
-            }
-        }
-
-        val trans2 = resolvePrecedence(transWithValidLookahead, head)
+        val trans2 = resolveTransitionAmbiguity(runtimeContext, transitions, possibleEndOfText, parseArgs)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
-        //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
-        if (parseArgs.reportGrammarAmbiguities && trans2.size > 1) {
-            ambiguity(head, trans2, possibleEndOfText)
-        }
         val grouped = trans2.groupBy { it.to.runtimeRulesAsSet }
         for (grp in grouped) {
             when {
@@ -567,11 +552,70 @@ internal class RuntimeParser(
         }
     }
 
-    private fun resolvePrecedence(transitions: List<Pair<Transition, LookaheadSetPart>>, head: GrowingNodeIndex): List<Transition> {
+    private fun resolveTransitionAmbiguity(
+        runtimeContext: RuntimeContext,
+        transitions: List<Transition>,
+        possibleEndOfText: Set<LookaheadSet>,
+        parseArgs: GrowArgs
+    ): List<Transition> {
+        val trans2 = when {
+            runtimeContext.head.isComplete -> {
+                if (null == runtimeContext.prev) {
+                    error("previous must have a value if head is incomplete")
+                }
+                val transWithValidLookahead = when {
+                    parseArgs.noLookahead -> transitions.map { Pair(it, LookaheadSetPart.ANY) }
+                    else -> transitions.mapNotNull {
+                        val lh = matchedLookahead(runtimeContext.head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, runtimeContext.prev.runtimeState.runtimeLookaheadSet)
+                        when {
+                            lh.first -> Pair(it, lh.second)
+                            else -> null
+                        }
+                    }
+                }
+                transitions.minus(transWithValidLookahead.map { it.first }).forEach {
+                    when (it.action) {
+                        ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                        ParseAction.GRAFT -> recordFailedGraftLH(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                        ParseAction.GOAL -> recordFailedGraftLH(parseArgs, runtimeContext.head, it, runtimeContext.prev.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                        else -> error("Internal Error: should never happen")
+                    }
+                }
+                resolvePrecedence(transWithValidLookahead, runtimeContext)
+            }
+
+            else -> transitions
+        }
+        if (parseArgs.reportGrammarAmbiguities && trans2.size > 1) {
+            ambiguity(runtimeContext, trans2, possibleEndOfText)
+        }
+        return trans2
+    }
+
+    private fun precedenceSpineMatches(prOpt: RuntimePreferenceRule.RuntimePreferenceOption, to: RulePositionRuntime, runtimeContext: RuntimeContext): Boolean {
+        val optSpineRev = prOpt.spine.reversed()
+        return when {
+            optSpineRev.size > 2 -> error("Unsupported")
+            to.option != prOpt.option -> false
+            to.rule != optSpineRev.first() -> false
+            optSpineRev.size > 1 && optSpineRev[1] != runtimeContext.prev!!.state.firstRule -> false
+            else -> true
+        }
+    }
+
+    private fun precedenceFor(precRules: RuntimePreferenceRule, to: List<RulePositionRuntime>, lh: LookaheadSetPart,runtimeContext: RuntimeContext): List<RuntimePreferenceOption> {
+        val r = precRules.options.filter { prOpt ->
+            val rpMatch = to.any { precedenceSpineMatches(prOpt, it, runtimeContext) }
+            rpMatch && prOpt.operators.any { lh.fullContent.contains(it) }
+        }
+        return r
+    }
+
+    private fun resolvePrecedence(transitions: List<Pair<Transition, LookaheadSetPart>>, runtimeContext: RuntimeContext): List<Transition> {
         return when {
             2 > transitions.size -> transitions.map { it.first }
             else -> {
-                val precRules = this.stateSet.precedenceRulesFor(head.state)
+                val precRules = this.stateSet.precedenceRulesFor(runtimeContext.head.state)
                 when {
                     null == precRules -> {
                         //if no explicit preference, prefer GRAFT over HEIGHT for same rule
@@ -591,45 +635,50 @@ internal class RuntimeParser(
                     else -> {
                         val precedence = transitions.flatMap { (tr, lh) ->
                             val lhf = lh//.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                            val prec = precRules.precedenceFor(tr.to.rulePositions, lhf)
+                            val prec = precedenceFor(precRules, tr.to.rulePositions, lhf,runtimeContext)
                             prec.map { Pair(tr, it) }
                         }
-                        val max = precedence.map { it.second.precedence }.maxOrNull() ?: 0
-                        val maxPrec = precedence.filter { max == it.second.precedence }
-                        val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
-                        val assoc = byTarget.flatMap {
-                            when (it.key.second) {
-                                Assoc.NONE -> it.value
-                                Assoc.LEFT -> when {
-                                    it.key.first[0].isList -> {
-                                        val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
-                                        val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
-                                        when (left.isEmpty()) {
-                                            true -> grafts
-                                            false -> left
+                        when {
+                            precedence.isEmpty() -> transitions.map { it.first }
+                            else -> {
+                                val max = precedence.map { it.second.precedence }.maxOrNull() ?: 0
+                                val maxPrec = precedence.filter { max == it.second.precedence }
+                                val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
+                                val assoc = byTarget.flatMap {
+                                    when (it.key.second) {
+                                        Assoc.NONE -> it.value
+                                        Assoc.LEFT -> when {
+                                            it.key.first[0].isList -> {
+                                                val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
+                                                val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                                when (left.isEmpty()) {
+                                                    true -> grafts
+                                                    false -> left
+                                                }
+                                            }
+
+                                            else -> it.value.filter { it.first.action == ParseAction.GRAFT }
+                                        }
+
+                                        Assoc.RIGHT -> when {
+                                            it.key.first[0].isList -> {
+                                                val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
+                                                val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                                when (right.isEmpty()) {
+                                                    true -> heights
+                                                    false -> right
+                                                }
+                                            }
+
+                                            else -> it.value.filter { it.first.action == ParseAction.HEIGHT }
                                         }
                                     }
-
-                                    else -> it.value.filter { it.first.action == ParseAction.GRAFT }
                                 }
-
-                                Assoc.RIGHT -> when {
-                                    it.key.first[0].isList -> {
-                                        val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
-                                        val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }
-                                        when (right.isEmpty()) {
-                                            true -> heights
-                                            false -> right
-                                        }
-                                    }
-
-                                    else -> it.value.filter { it.first.action == ParseAction.HEIGHT }
+                                when (assoc.size) {
+                                    0 -> maxPrec.map { it.first }
+                                    else -> assoc.map { it.first }
                                 }
                             }
-                        }
-                        when (assoc.size) {
-                            0 -> maxPrec.map { it.first }
-                            else -> assoc.map { it.first }
                         }
                     }
                 }
@@ -1007,14 +1056,22 @@ internal class RuntimeParser(
         }
     }
 
-    private fun ambiguity(head: GrowingNodeIndex, trans: Collection<Transition>, possibleEndOfText: Set<LookaheadSet>) {
-        val from = head.runtimeState.state.runtimeRules.joinToString(separator = ",") { it.tag }
+    private fun ambiguity(runtimeContext: RuntimeContext, trans: Collection<Transition>, possibleEndOfText: Set<LookaheadSet>) {
+        val from = runtimeContext.head.runtimeState.state.runtimeRules.joinToString(separator = ",") { it.tag }
         val ambigStr = trans.map { tr ->
             val lh: LookaheadSetPart = tr.lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-            val rt: LookaheadSetPart = head.runtimeState.runtimeLookaheadSet.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+            val rt: LookaheadSetPart = runtimeContext.head.runtimeState.runtimeLookaheadSet.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             val lhr = lh.resolve(eot, rt).fullContent
-            "${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lhr.map { it.tag }}"
+            val spine = when(tr.action) {
+                ParseAction.GOAL -> ""
+                ParseAction.GRAFT -> "${runtimeContext.prevPrev!!.state.firstRule.tag} <- "
+                ParseAction.HEIGHT -> "${runtimeContext.prev!!.state.firstRule.tag} <-- "
+                ParseAction.WIDTH -> ""
+                ParseAction.EMBED -> ""
+            }
+
+            "$spine${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lhr.map { it.tag }}"
         }
         val ambigOn = trans.map { it.action }.toSet()
         val ambigOnStr = ambigOn.joinToString(separator = "/") { "$it" }
@@ -1022,7 +1079,7 @@ internal class RuntimeParser(
             1 -> ambigStr.first()
             else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
         }
-        val loc = sentence.locationFor(head.nextInputPositionAfterSkip, 1)
+        val loc = sentence.locationFor(runtimeContext.head.nextInputPositionAfterSkip, 1)
         _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr):\n  ($from) into $into", ambigOn)
     }
 

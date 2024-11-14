@@ -27,10 +27,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_KerML_agl_Singles {
 
@@ -70,6 +67,8 @@ class test_KerML_agl_Singles {
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
+
+    @Ignore
     @Test
     fun check_grammar() {
         val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()

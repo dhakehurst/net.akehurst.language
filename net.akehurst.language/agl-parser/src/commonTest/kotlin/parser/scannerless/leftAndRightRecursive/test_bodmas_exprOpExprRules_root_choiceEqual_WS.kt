@@ -64,10 +64,10 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCornerParserAbs
             }
             pattern("var","[a-zA-Z]+")
             preferenceFor("expr") {
-                left("sub", setOf("'-'"))
-                left("add", setOf("'+'"))
-                left("mul", setOf("'*'"))
-                left("div", setOf("'/'"))
+                left(listOf("sub"), setOf("'-'"))
+                left(listOf("add"), setOf("'+'"))
+                left(listOf("mul"), setOf("'*'"))
+                left(listOf("div"), setOf("'/'"))
             }
         }
 

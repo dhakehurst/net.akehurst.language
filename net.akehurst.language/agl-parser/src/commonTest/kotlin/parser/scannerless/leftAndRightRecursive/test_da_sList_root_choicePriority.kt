@@ -50,8 +50,8 @@ class test_da_sList_root_choicePriority : test_LeftCornerParserAbstract() {
             literal("'/'", "/")
             literal("'+'", "+")
             preferenceFor("expr") {
-                leftOption("add", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
-                leftOption("div", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
+                leftOption(listOf("add"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'+'"))
+                leftOption(listOf("div"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("'/'"))
             }
         }
         val goal = "S"

@@ -150,8 +150,9 @@ internal class ConverterToRuntimeRules(
         }
         val options = target.optionList.mapIndexed { idx, it ->
             val prec = idx
-            val tgt = findNamedRule(it.item.ruleReference.value)!!
-            val refRhs = it.item.referencedRule(grammar).rhs
+            val tgtSpine = it.spine.parts.map { findNamedRule(it.ruleReference.value)!! }
+            val refRhs = it.spine.parts.last().referencedRule(grammar).rhs
+
             val optionNum = when (it.choiceIndicator) {
                 ChoiceIndicator.NONE -> RulePosition.OPTION_NONE
                 ChoiceIndicator.EMPTY -> when (refRhs) {
@@ -191,7 +192,7 @@ internal class ConverterToRuntimeRules(
                 Associativity.LEFT -> Assoc.LEFT
                 Associativity.RIGHT -> Assoc.RIGHT
             }
-            RuntimePreferenceRule.RuntimePreferenceOption(prec, tgt, optionNum, terminals, assoc)
+            RuntimePreferenceRule.RuntimePreferenceOption(prec, tgtSpine, optionNum, terminals, assoc)
         }
         return RuntimePreferenceRule(contextRule, options)
     }

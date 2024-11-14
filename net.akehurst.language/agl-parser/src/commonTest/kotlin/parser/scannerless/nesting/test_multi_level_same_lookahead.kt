@@ -52,8 +52,8 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             literal("'v'", "v")
             concatenation("Q") { literal("q") }
             preferenceFor("Q") {
-                left("U", setOf("'a'"))
-                left("V", setOf("'a'"))
+                left(listOf("U"), setOf("'a'"))
+                left(listOf("V"), setOf("'a'"))
             }
         }
     }

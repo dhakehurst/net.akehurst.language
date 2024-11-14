@@ -61,8 +61,8 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             optional("oG", "G")
             concatenation("G") { literal("s"); ref("oA") }
             preferenceFor("<EMPTY>") {
-                leftOption("oA", RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
-                leftOption("oP", RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
+                leftOption(listOf("oA"), RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
+                leftOption(listOf("oP"), RulePosition.OPTION_OPTIONAL_EMPTY, setOf("'t'"))
             }
         }
 

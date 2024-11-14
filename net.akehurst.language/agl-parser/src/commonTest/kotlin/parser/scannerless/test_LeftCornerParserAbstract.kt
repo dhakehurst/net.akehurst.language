@@ -32,12 +32,19 @@ import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
+import testFixture.data.TestDataParser
+import testFixture.data.ambiguity.Expressions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.measureTimedValue
 
 abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
+    fun test_pass(data:TestDataParser,sentence:String) {
+        val td = data.sentences.first{ it.sentence == sentence }
+        test(data.rrs,data.goal,td.sentence,td.expectedNumGSSHeads,*td.expectedSppt.toTypedArray())
+    }
+
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs as RuntimeRuleSet,

@@ -55,8 +55,8 @@ class test_ifThenElse_NoWS_Inverted : test_LeftCornerParserAbstract() {
                 literal("Z")
             }
             preferenceFor("expr") {
-                right("ifthen", setOf("'then'"))
-                right("ifthenelse", setOf("'then'","'else'"))
+                right(listOf("ifthen"), setOf("'then'"))
+                right(listOf("ifthenelse"), setOf("'then'","'else'"))
             }
         }
         val goal = "S"

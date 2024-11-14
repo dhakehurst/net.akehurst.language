@@ -454,7 +454,7 @@ class RuntimeRuleSet(
         val clonedPrecedenceRules = this.precedenceRules.map {
             val clonedCtx = clonedRules[it.contextRule.tag]!!
             val clonedPrecRules = (it as RuntimePreferenceRule).options.map { pr ->
-                val cTgt = clonedRules[pr.target.tag]!!
+                val cTgt = pr.spine.map{ clonedRules[it.tag]!! }
                 val cOp = pr.operators.map { clonedRules[it.tag]!! }.toSet()
                 RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
@@ -474,7 +474,7 @@ class RuntimeRuleSet(
             .sortedBy { it.contextRule.tag }
             .joinToString(separator = "\n") {
                 val opts = it.options.joinToString(separator = "\n") {
-                    "    ${it.precedence} ${it.associativity} ${it.target.tag} ${it.option} ${it.operators}"
+                    "    ${it.precedence} ${it.associativity} ${it.spine.joinToString(separator = "<-"){it.tag}} ${it.option} ${it.operators}"
                 }
                 "  PREC ${it.contextRule.tag} {\n${opts}\n  }"
             }

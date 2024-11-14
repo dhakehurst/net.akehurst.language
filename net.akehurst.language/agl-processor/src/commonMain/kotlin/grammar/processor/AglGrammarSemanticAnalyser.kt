@@ -261,37 +261,39 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
     private fun checkPreferenceRules(grammar: Grammar) {
         for(pr in grammar.preferenceRule) {
             for (po in pr.optionList) {
-                val refRuleRhs = po.item.referencedRule(grammar).rhs
-                when (refRuleRhs) {
-                    is Choice -> {
-                        when {
-                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
-                            po.choiceNumber >= 0 -> Unit
-                            else -> issueError(po, "Preference option for Choice Rule '${po.item.ruleReference.value}' must have a valid choice number {NUMBER}", null)
+                for(part in po.spine.parts) {
+                    val refRuleRhs = part.referencedRule(grammar).rhs
+                    when (refRuleRhs) {
+                        is Choice -> {
+                            when {
+                                po.choiceIndicator == ChoiceIndicator.NUMBER -> Unit
+                                po.choiceNumber >= 0 -> Unit
+                                else -> issueError(po, "Preference option for Choice Rule '${part.ruleReference.value}' must have a valid choice number {NUMBER}", null)
+                            }
                         }
-                    }
 
-                    is SimpleList -> {
-                        when {
-                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
-                            po.choiceIndicator==ChoiceIndicator.ITEM -> Unit
-                            else -> issueError(po, "Preference option for List(Simple) Rule '${po.item.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
+                        is SimpleList -> {
+                            when {
+                                po.choiceIndicator == ChoiceIndicator.NUMBER -> Unit
+                                po.choiceIndicator == ChoiceIndicator.ITEM -> Unit
+                                else -> issueError(po, "Preference option for List(Simple) Rule '${part.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
+                            }
                         }
-                    }
 
-                    is SeparatedList -> {
-                        when {
-                            po.choiceIndicator==ChoiceIndicator.NUMBER -> Unit
-                            po.choiceIndicator==ChoiceIndicator.ITEM -> Unit
-                            else -> issueError(po, "Preference option for List(Separated) Rule '${po.item.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
+                        is SeparatedList -> {
+                            when {
+                                po.choiceIndicator == ChoiceIndicator.NUMBER -> Unit
+                                po.choiceIndicator == ChoiceIndicator.ITEM -> Unit
+                                else -> issueError(po, "Preference option for List(Separated) Rule '${part.ruleReference.value}' must have a valid option indicator {EMPTY,ITEM}", null)
+                            }
                         }
-                    }
 
-                    else -> {
-                        when {
-                            po.choiceIndicator==ChoiceIndicator.NONE -> Unit
-                            po.choiceNumber < 0 -> Unit
-                            else -> issueError(po, "Preference option for Rule '${po.item.ruleReference.value}' must have no option indicator {NONE}", null)
+                        else -> {
+                            when {
+                                po.choiceIndicator == ChoiceIndicator.NONE -> Unit
+                                po.choiceNumber < 0 -> Unit
+                                else -> issueError(po, "Preference option for Rule '${part.ruleReference.value}' must have no option indicator {NONE}", null)
+                            }
                         }
                     }
                 }

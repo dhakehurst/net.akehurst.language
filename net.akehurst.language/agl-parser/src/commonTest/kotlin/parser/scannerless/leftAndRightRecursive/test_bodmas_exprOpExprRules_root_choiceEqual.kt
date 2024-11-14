@@ -48,8 +48,8 @@ class test_bodmas_exprOpExprRules_root_choiceEqual : test_LeftCornerParserAbstra
             concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
             preferenceFor("expr") {
-                left("add", setOf("'+'"))
-                left("mul",  setOf("'*'"))
+                left(listOf("add"), setOf("'+'"))
+                left(listOf("mul"),  setOf("'*'"))
             }
         }
 

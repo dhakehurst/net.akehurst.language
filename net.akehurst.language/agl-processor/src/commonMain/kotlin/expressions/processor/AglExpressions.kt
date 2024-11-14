@@ -208,10 +208,10 @@ grammar Expression extends Base {
         // ideally graft it into a 'whenOption'
         // next best thing is to graft into an infix an end it if lh=='->'
         preference("expression") {
-            optionRight("infix", ChoiceIndicator.ITEM,-1, listOf("INFIX_OPERATOR"))
+            optionRight(listOf("infix"), ChoiceIndicator.ITEM,-1, listOf("INFIX_OPERATOR"))
             // really want to match the 'ER' position ??
-            optionRight("infix", ChoiceIndicator.ITEM,-1, listOf("->"))
-            optionRight("whenOption", ChoiceIndicator.NONE,-1, listOf("->"))
+            optionRight(listOf("infix"), ChoiceIndicator.ITEM,-1, listOf("->"))
+            optionRight(listOf("whenOption"), ChoiceIndicator.NONE,-1, listOf("->"))
         }
     }
 

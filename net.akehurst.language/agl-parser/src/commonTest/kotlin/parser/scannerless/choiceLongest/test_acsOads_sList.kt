@@ -42,8 +42,8 @@ class test_acsOads_sList : test_LeftCornerParserAbstract() {
             literal("'c'", "c")
             literal("'d'", "d")
             preferenceFor("'a'") {
-                leftOption("acs", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
-                leftOption("ads", RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
+                leftOption(listOf("acs"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
+                leftOption(listOf("ads"), RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, setOf("<EOT>"))
             }
         }
         val goal = "S"

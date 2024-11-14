@@ -36,7 +36,7 @@ class test_expessions_simple : test_LeftCornerParserAbstract() {
             }
             concatenation("I") { ref("E"); literal("o"); ref("E")  }
             preferenceFor("E") {
-                left("I",setOf("'o'"))
+                left(listOf("I"),setOf("'o'"))
             }
         }
         val goal = "S"

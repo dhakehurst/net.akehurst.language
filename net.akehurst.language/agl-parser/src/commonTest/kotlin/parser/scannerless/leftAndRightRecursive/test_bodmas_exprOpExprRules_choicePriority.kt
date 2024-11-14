@@ -57,10 +57,10 @@ class test_bodmas_exprOpExprRules_choicePriority : test_LeftCornerParserAbstract
             choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
             concatenation("var") { pattern("[a-zA-Z]+") }
             preferenceFor("expr") {
-                left("sub", setOf("'-'"))
-                left("add", setOf("'+'"))
-                left("mul", setOf("'*'"))
-                left("div", setOf("'/'"))
+                left(listOf("sub"), setOf("'-'"))
+                left(listOf("add"), setOf("'+'"))
+                left(listOf("mul"), setOf("'*'"))
+                left(listOf("div"), setOf("'/'"))
             }
         }.also {
             // it.buildFor("S", AutomatonKind.LOOKAHEAD_1)

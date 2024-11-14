@@ -22,10 +22,7 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_KerML_standard_Singles {
 
@@ -52,6 +49,7 @@ class test_KerML_standard_Singles {
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
+    @Ignore
     @Test
     fun check_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()

@@ -42,8 +42,8 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
             optional("sep", "','")
             literal("','", ",")
             preferenceFor("'a'") {
-                left("a1", setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
-                left("a2", setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
+                left(listOf("a1"), setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
+                left(listOf("a2"), setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
             }
         }
     }

@@ -29,19 +29,9 @@ class RuntimePreferenceRule(
 
     data class RuntimePreferenceOption(
         override val precedence: Int,
-        override  val target: RuntimeRule,
+        override  val spine: List<RuntimeRule>,
         override  val option: OptionNum,
         override val operators: Set<RuntimeRule>,
         override  val associativity: Assoc
-    ) : PrefOption {
-
-    }
-
-    fun precedenceFor(to: List<RulePositionRuntime>, lh: LookaheadSetPart): List<RuntimePreferenceOption> {
-        val r = options.filter { pr ->
-            val rpMatch = to.any { it.rule == pr.target && it.option == pr.option }
-            rpMatch && pr.operators.any { lh.fullContent.contains(it) }
-        }
-        return r
-    }
+    ) : PrefOption
 }

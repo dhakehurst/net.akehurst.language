@@ -40,7 +40,7 @@ class test_Processor_Ambiguity2 : test_LeftCornerParserAbstract() {
             }
             concatenation("S1") { ref("S"); ref("S") }
             preferenceFor("S") {
-                left("S1", setOf("'a'"))
+                left(listOf("S1"), setOf("'a'"))
             }
         }
         val goal = "S"

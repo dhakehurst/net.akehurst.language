@@ -39,8 +39,8 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
             optional("bOpt", "'b'")
             literal("'b'", "b")
             preferenceFor("'a'") {
-                left("S1", setOf("<EOT>"))
-                leftOption("S", OptionNum(1), setOf("<EOT>"))
+                left(listOf("S1"), setOf("<EOT>"))
+                leftOption(listOf("S"), OptionNum(1), setOf("<EOT>"))
             }
         }
 

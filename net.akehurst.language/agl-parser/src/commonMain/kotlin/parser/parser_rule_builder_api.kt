@@ -65,20 +65,20 @@ interface PrecedenceBuilder {
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun left(ruleName: String, operatorRuleNames: Set<String>)
+    fun left(spine: List<String>, operatorRuleNames: Set<String>)
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun leftOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>)
+    fun leftOption(spine: List<String>, option: OptionNum, operatorRuleNames: Set<String>)
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun right(ruleName: String, operatorRuleNames: Set<String>)
+    fun right(spine: List<String>, operatorRuleNames: Set<String>)
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun rightOption(ruleName: String, option: OptionNum, operatorRuleNames: Set<String>)
+    fun rightOption(spine: List<String>, option: OptionNum, operatorRuleNames: Set<String>)
 }

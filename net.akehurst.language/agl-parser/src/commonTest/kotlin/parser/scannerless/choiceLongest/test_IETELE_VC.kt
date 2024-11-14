@@ -44,8 +44,8 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             }
             concatenation("V") { literal("v") }
             preferenceFor("E") {
-                rightOption("C",OptionNum(0), setOf("'t'"))
-                rightOption("C", OptionNum(1), setOf("'t'","'s'"))
+                rightOption(listOf("C"),OptionNum(0), setOf("'t'"))
+                rightOption(listOf("C"), OptionNum(1), setOf("'t'","'s'"))
             }
         }
         val goal = "S"

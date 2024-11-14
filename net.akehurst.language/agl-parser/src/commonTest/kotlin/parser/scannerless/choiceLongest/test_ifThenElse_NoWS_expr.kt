@@ -43,8 +43,8 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
             concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             pattern("VAR", "U|V|W|X|Y|Z")
             preferenceFor("expr") {
-                right("ifthen", setOf("'then'"))
-                right("ifthenelse", setOf("'then'","'else'"))
+                right(listOf("ifthen"), setOf("'then'"))
+                right(listOf("ifthenelse"), setOf("'then'","'else'"))
             }
         }
         val goal = "S"
