@@ -63,7 +63,7 @@ class test_optional_emptys : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -79,7 +79,7 @@ class test_optional_emptys : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -95,6 +95,6 @@ class test_optional_emptys : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 }

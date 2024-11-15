@@ -66,7 +66,7 @@ class test_group_concat : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -92,7 +92,7 @@ class test_group_concat : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -121,7 +121,7 @@ class test_group_concat : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

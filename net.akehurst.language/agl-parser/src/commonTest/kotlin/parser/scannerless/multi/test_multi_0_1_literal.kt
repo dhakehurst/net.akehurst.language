@@ -42,7 +42,7 @@ class test_multi_0_1_literal : test_LeftCornerParserAbstract() {
             S { <EMPTY_LIST> }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -53,7 +53,7 @@ class test_multi_0_1_literal : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 

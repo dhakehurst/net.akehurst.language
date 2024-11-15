@@ -33,19 +33,24 @@ import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import testFixture.data.TestDataParser
-import testFixture.data.ambiguity.Expressions
+import testFixture.data.TestDataParserSentenceFail
+import testFixture.data.TestDataParserSentencePass
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.measureTimedValue
 
 abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
-    fun test_pass(data:TestDataParser,sentence:String) {
+
+    fun test(data:TestDataParser, sentence:String) {
         val td = data.sentences.first{ it.sentence == sentence }
-        test(data.rrs,data.goal,td.sentence,td.expectedNumGSSHeads,*td.expectedSppt.toTypedArray())
+        when(td) {
+            is TestDataParserSentencePass -> test_pass(data.rrs, data.goal, td.sentence, td.expectedNumGSSHeads, *td.expectedSppt.toTypedArray())
+            is TestDataParserSentenceFail -> test_fail(data.rrs, data.goal, td.sentence, td.expected)
+        }
     }
 
-    fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
+    fun test_pass(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs as RuntimeRuleSet,
             goal,
@@ -54,6 +59,19 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
             false,
             *expectedTrees
         )
+    }
+
+    fun test_fail(rrs: RuleSet, goal: String, sentence: String, expected:Set<LanguageIssue>, options: ParseOptions = ParseOptionsDefault(goal), scannerKind: ScannerKind = ScannerKind.OnDemand) {
+        val scanner = when (scannerKind) {
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
+        }
+        val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
+        if (build) parser.buildFor(options.goalRuleName!!)
+        val r = parser.parse(sentence, options)
+        println(r.issues)
+        assertTrue(r.issues.isNotEmpty(), "Expected parse to fail")
+        assertEquals(expected, r.issues.all)
     }
 
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton: Boolean, vararg expectedTrees: String): SharedPackedParseTree? {

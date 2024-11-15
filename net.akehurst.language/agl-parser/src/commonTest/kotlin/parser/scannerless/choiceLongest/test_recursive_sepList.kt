@@ -47,7 +47,7 @@ class test_recursive_sepList : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

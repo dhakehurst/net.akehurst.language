@@ -55,7 +55,7 @@ class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test
             S { 'b' oa{<EMPTY>} as {'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test

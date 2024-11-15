@@ -76,7 +76,7 @@ class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
             S { C|1 { 'd' } C|1 { 'd' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
 
     }
 
@@ -90,7 +90,7 @@ class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
             S { C { 'd' } C{ C|1 { 'c' C { 'd' } } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

@@ -45,7 +45,7 @@ class test_leftRecursive : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -67,7 +67,7 @@ class test_leftRecursive : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
 //        assertFailsWith<ParserTerminatedException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -91,7 +91,7 @@ class test_leftRecursive : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
 //        assertFailsWith<ParserTerminatedException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

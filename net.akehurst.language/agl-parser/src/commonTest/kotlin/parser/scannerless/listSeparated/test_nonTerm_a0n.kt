@@ -17,9 +17,6 @@
 package net.akehurst.language.parser.leftcorner.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -44,7 +41,7 @@ class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
         val expected = "S|1 { <EMPTY_LIST> }"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -60,7 +57,7 @@ class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
         val expected = "S { a { 'a' } }"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -94,7 +91,7 @@ class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
         val expected = "S {a{'a'} ',' a{'a'}}"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -128,7 +125,7 @@ class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
         val expected = "S {a{'a'} ',' a{'a'} ',' a{'a'}}"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -144,7 +141,7 @@ class test_nonTerm_a0n : test_LeftCornerParserAbstract() {
 
         val expected = "S {a{'a'}" + " ',' a{'a'}".repeat(99) + "}"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

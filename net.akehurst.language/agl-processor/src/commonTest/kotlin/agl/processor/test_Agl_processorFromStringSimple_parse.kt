@@ -84,7 +84,6 @@ class test_Agl_processorFromStringSimple_parse {
 
     @Test
     fun literal() {
-
         val grammarStr = """
             namespace test
             grammar Test {
@@ -92,18 +91,7 @@ class test_Agl_processorFromStringSimple_parse {
             }
         """.trimIndent()
 
-        val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("a");
-        val expected = pr.processor!!.spptParser.parse(
-            """
-            a { 'a' }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-        assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
+        test_parse(grammarStr, "a", "a { 'a' }")
     }
 
     @Test
@@ -1618,11 +1606,12 @@ class test_Agl_processorFromStringSimple_parse {
             )
         )
 
-        val result3 = pr.processor!!.parse("b")
+        val sentence3 ="b"
+        val result3 = pr.processor!!.parse(sentence3)
         assertEquals(null, result3.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^b", setOf("'a'"))
+                parseError( InputLocation(0, 1, 1, 1), sentence3, setOf("<GOAL>"), setOf("'a'"))
             ), result3.issues.all
         )
 

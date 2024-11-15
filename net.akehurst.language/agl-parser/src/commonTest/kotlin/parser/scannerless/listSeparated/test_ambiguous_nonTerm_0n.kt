@@ -55,7 +55,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
 
         val expected = "S { <EMPTY_LIST> }"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -71,7 +71,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
 
         val expected = "S { ambig { a2 {'a'} } }"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -93,7 +93,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
         }
         """.trimMargin()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -115,7 +115,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
         }
         """.trimMargin()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -139,7 +139,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -163,7 +163,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -179,7 +179,7 @@ class test_ambiguous_nonTerm_0n : test_LeftCornerParserAbstract() {
 
         val expected = "S { ambig { a2 { 'a' } }" + " sep {','} ambig { a2 { 'a' } }".repeat(99) + "}"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

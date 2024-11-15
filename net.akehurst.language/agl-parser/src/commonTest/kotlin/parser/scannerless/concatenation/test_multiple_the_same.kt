@@ -68,7 +68,7 @@ class test_multiple_the_same : test_LeftCornerParserAbstract() {
             S { X:'x' Ls|1 { <EMPTY_LIST> } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -87,7 +87,7 @@ class test_multiple_the_same : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

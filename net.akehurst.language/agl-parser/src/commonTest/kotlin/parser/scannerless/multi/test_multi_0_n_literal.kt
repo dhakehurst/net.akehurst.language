@@ -39,7 +39,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
             S { <EMPTY_LIST> }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -50,7 +50,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -61,7 +61,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
             S { 'a' 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -72,7 +72,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 
@@ -84,7 +84,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
             S { 'a' 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -93,7 +93,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
 
         val expected = "S { " + "'a' ".repeat(50) + " }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -102,7 +102,7 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
 
         val expected = "S { " + "'a' ".repeat(500) + " }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -111,6 +111,6 @@ class test_multi_0_n_literal : test_LeftCornerParserAbstract() {
 
         val expected = "S { " + "'a' ".repeat(2000) + " }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 }

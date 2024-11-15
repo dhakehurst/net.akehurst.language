@@ -65,7 +65,7 @@ class test_aObOcLiteral : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -84,7 +84,7 @@ class test_aObOcLiteral : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -103,7 +103,7 @@ class test_aObOcLiteral : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

@@ -58,7 +58,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
             S { AB {'a'} }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -75,7 +75,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
             S { AB|1 {'b'} }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -92,7 +92,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
             S { AB{'a'} AB{'a'} }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -109,7 +109,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
             S { AB{'a'} AB{'a'} AB{'a'} }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -124,7 +124,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
 
         val expected = "S { "+"AB{'a'} ".repeat(50)+" }"
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -139,7 +139,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
 
         val expected = "S { "+"AB{'a'} ".repeat(500)+" }"
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -154,7 +154,7 @@ class test_multi_1_n_choice : test_LeftCornerParserAbstract() {
 
         val expected = "S { "+"AB{'a'} ".repeat(2000)+" }"
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

@@ -19,7 +19,6 @@ package net.akehurst.language.parser.leftcorner.listSeparated
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.parser.api.ParserTerminatedException
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,7 +62,7 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
         val expected = "S { E { 'a' } }"
 
         assertFailsWith<IllegalStateException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -86,7 +85,7 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         assertFailsWith<IllegalStateException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -109,7 +108,7 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         assertFailsWith<IllegalStateException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

@@ -57,7 +57,7 @@ class test_bodmas_exprOpRuleExpr_Longest : test_LeftCornerParserAbstract() {
             S { E { var { "[a-z]+":'a' } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -72,7 +72,7 @@ class test_bodmas_exprOpRuleExpr_Longest : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -91,7 +91,7 @@ class test_bodmas_exprOpRuleExpr_Longest : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -115,7 +115,7 @@ class test_bodmas_exprOpRuleExpr_Longest : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -134,6 +134,6 @@ class test_bodmas_exprOpRuleExpr_Longest : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 }

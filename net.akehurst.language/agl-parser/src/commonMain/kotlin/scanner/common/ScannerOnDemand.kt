@@ -63,7 +63,7 @@ class ScannerOnDemand(
             r
         } else {
             val rhs = (terminalRule as RuntimeRule).rhs as RuntimeRuleRhsTerminal
-            val matched = rhs.matchable?.isLookingAt(sentence.text, position) ?: false
+            val matched = rhs.matchable?.isLookingAt(sentence, position) ?: false
             isLookingAt_cache[Pair(position, terminalRule)] = matched
             matched
         }

@@ -43,6 +43,7 @@ interface Scanner {
     fun reset()
     fun isEnd(sentence: Sentence, position: Int): Boolean
     fun isLookingAt(sentence: Sentence, position: Int, terminalRule: Rule): Boolean
+    fun matchedLength(sentence: Sentence, position: Int, terminalRule: Rule):Int
     fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): SpptDataNode?
 
     fun scan(sentence: Sentence, startAtPosition: Int = 0, offsetPosition: Int = 0): ScanResult
@@ -77,10 +78,10 @@ data class Matchable(
     /**
      * true if the expression matches the text at the given position
      */
-    fun isLookingAt(text: String, atPosition: Int): Boolean = when (kind) {
-        MatchableKind.EOT -> atPosition >= text.length
-        MatchableKind.LITERAL -> text.regionMatches(atPosition, expression, 0, expression.length)
-        MatchableKind.REGEX -> _regEx!!.matchesAt(text, atPosition)
+    fun isLookingAt(sentence: Sentence, atPosition: Int): Boolean = when (kind) {
+        MatchableKind.EOT -> atPosition >= sentence.text.length
+        MatchableKind.LITERAL -> sentence.text.regionMatches(atPosition, expression, 0, expression.length)
+        MatchableKind.REGEX -> _regEx!!.matchesAt(sentence.text, atPosition)
     }
 
     /**

@@ -56,7 +56,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -73,7 +73,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             S|1 { P { S { 'a' } 'p' 'a' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -90,7 +90,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             S|2 { I { S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -107,7 +107,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -124,7 +124,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
             S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -149,7 +149,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -174,7 +174,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -209,7 +209,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -250,7 +250,7 @@ class test_n_P_Im : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

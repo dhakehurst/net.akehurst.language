@@ -72,7 +72,7 @@ class test_abcz_OR_abc : test_LeftCornerParserAbstract() {
          S|1 { ABC { 'a' 'b' 'c' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

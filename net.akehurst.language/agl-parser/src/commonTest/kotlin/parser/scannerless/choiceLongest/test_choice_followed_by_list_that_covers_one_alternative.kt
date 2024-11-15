@@ -86,7 +86,7 @@ class test_choice_followed_by_list_that_covers_one_alternative : test_LeftCorner
         val expected = """
             S { 'a' Ch { 'b' } Cs { 'c' } }
         """
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -102,7 +102,7 @@ class test_choice_followed_by_list_that_covers_one_alternative : test_LeftCorner
         val expected = """
             S { 'a' Ch { 'bc' } Cs { 'c' } }
         """
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -118,7 +118,7 @@ class test_choice_followed_by_list_that_covers_one_alternative : test_LeftCorner
         val expected = """
             S { 'a' Ch { 'bc' } Cs { 'c' 'c' } }
         """
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

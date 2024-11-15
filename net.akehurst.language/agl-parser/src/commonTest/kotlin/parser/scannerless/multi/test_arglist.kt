@@ -56,7 +56,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
             S { 'a' tail { <EMPTY_LIST> } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -80,7 +80,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
             S { 'a' tail { ca { 'c' 'a' } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 
@@ -92,7 +92,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
             S { 'a' tail { ca { 'c' 'a' } ca { 'c' 'a' } ca { 'c' 'a' } ca { 'c' 'a' } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -101,7 +101,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
 
         val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(50) + " } }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -110,7 +110,7 @@ class test_arglist : test_LeftCornerParserAbstract() {
 
         val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(500) + " } }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -119,6 +119,6 @@ class test_arglist : test_LeftCornerParserAbstract() {
 
         val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(2000) + " } }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 }

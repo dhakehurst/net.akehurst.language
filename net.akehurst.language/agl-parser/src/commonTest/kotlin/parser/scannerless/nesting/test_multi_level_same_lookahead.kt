@@ -73,7 +73,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -97,7 +97,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -121,7 +121,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -145,7 +145,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -169,7 +169,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -193,7 +193,7 @@ class test_multi_level_same_lookahead : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

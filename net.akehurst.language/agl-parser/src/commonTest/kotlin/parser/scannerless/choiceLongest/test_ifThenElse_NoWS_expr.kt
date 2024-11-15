@@ -83,7 +83,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -109,7 +109,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -144,7 +144,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -179,7 +179,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -221,7 +221,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

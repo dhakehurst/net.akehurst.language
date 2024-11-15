@@ -1,13 +1,12 @@
 package testFixture.data.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.api.RulePosition
 import testFixture.data.TestDataParser
 import testFixture.data.TestDataParserSentence
+import testFixture.data.TestDataParserSentencePass
+import testFixture.data.TestDataProviderAbstract
 
-object Expressions {
-
-    val LI = RulePosition.OPTION_MULTI_ITEM
+object Expressions : TestDataProviderAbstract() {
 
     val data = listOf(
         TestDataParser(
@@ -28,12 +27,12 @@ object Expressions {
             },
             "S",
             listOf(
-                TestDataParserSentence(
+                TestDataParserSentencePass(
                     "pa",
                     1,
                     listOf("S{ 'p' Exp { Var { ltr:'a' } } }")
                 ),
-                TestDataParserSentence(
+                TestDataParserSentencePass(
                     "paob",
                     1,
                     listOf(
@@ -46,7 +45,7 @@ object Expressions {
                         """.trimIndent()
                     )
                 ),
-                TestDataParserSentence(
+                TestDataParserSentencePass(
                     "paoboc",
                     1,
                     listOf(
@@ -61,12 +60,12 @@ object Expressions {
                         """
                     )
                 ),
-                TestDataParserSentence(
-                    "aobocod",
+                TestDataParserSentencePass(
+                    "paobocod",
                     1,
                     listOf(
                         """
-                            S { Exp { Ifx {
+                            S { 'p' Exp { Ifx {
                               Exp { Var { ltr : 'a' } }
                               op : 'o'
                               Exp { Var { ltr : 'b' } }

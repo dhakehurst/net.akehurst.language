@@ -42,7 +42,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             S { aOpt|1 { §empty } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -62,7 +62,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -79,7 +79,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             S { aOpt { 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -96,7 +96,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             S { WS { "\s+" : ' ' } aOpt { 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -113,7 +113,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             S { aOpt { 'a' WS { "\s+" : ' ' } } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -133,7 +133,7 @@ class test_aOpt : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

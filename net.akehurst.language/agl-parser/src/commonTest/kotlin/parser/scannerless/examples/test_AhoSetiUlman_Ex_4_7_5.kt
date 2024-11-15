@@ -95,7 +95,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_LeftCornerParserAbstract() {
             S { S1 { A { 'd' } 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -112,7 +112,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_LeftCornerParserAbstract() {
             S|1 { S2 { 'b' A { 'd' } 'c' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -129,7 +129,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_LeftCornerParserAbstract() {
             S|2 { S3 { B { 'd' } 'c' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -146,7 +146,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_LeftCornerParserAbstract() {
             S|3 { S4 { 'b' B { 'd' } 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

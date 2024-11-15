@@ -44,7 +44,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -61,7 +61,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -81,7 +81,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -98,7 +98,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             S { S { 'a' WS { "\s+" : ' ' } } 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -121,7 +121,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -144,7 +144,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -167,7 +167,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -182,7 +182,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
 
         val expected = "S { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } }".repeat(499)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -197,7 +197,7 @@ class test_leftRecursive_a : test_LeftCornerParserAbstract() {
 
         val expected = "S { ".repeat(4999) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } }".repeat(4999)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

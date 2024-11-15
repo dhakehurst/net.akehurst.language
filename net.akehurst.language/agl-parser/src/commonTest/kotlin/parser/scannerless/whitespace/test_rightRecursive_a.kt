@@ -46,7 +46,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' }}
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = S,
             goal = goal,
             sentence = sentence,
@@ -65,7 +65,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             S|1 { WS { "\s+" : ' ' } S1 { 'a' WS { "\s+" : ' ' } S { 'a' WS { "\s+" : ' ' } } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = S,
             goal = goal,
             sentence = sentence,
@@ -93,7 +93,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = S,
             goal = goal,
             sentence = sentence,
@@ -110,7 +110,7 @@ class test_rightRecursive_a : test_LeftCornerParserAbstract() {
         val expected = "S { S1 { 'a' WS { \"\\s+\" : ' ' } ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" +" } }".repeat(499)
 
 
-        super.test(
+        super.test_pass(
             rrs = S,
             goal = goal,
             sentence = sentence,

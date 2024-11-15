@@ -264,7 +264,7 @@ class MinimalParser private constructor(
                     val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                     it.setRhs(rhs)
                 }
-                val skipMultiRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_RULE_NUMBER, RuntimeRuleSet.SKIP_RULE_TAG, false, false)
+                val skipMultiRule = RuntimeRule(runtimeRuleSet.number, RuntimeRuleSet.SKIP_RULE_NUMBER, RuntimeRuleSet.SKIP_MULTI_TAG, false, false)
                     .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
                 AutomatonForMinimal(runtimeRuleSet, skipMultiRule)
             }

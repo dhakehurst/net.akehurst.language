@@ -89,7 +89,7 @@ class test_ConcatChoice : test_LeftCornerParserAbstract() {
             } } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

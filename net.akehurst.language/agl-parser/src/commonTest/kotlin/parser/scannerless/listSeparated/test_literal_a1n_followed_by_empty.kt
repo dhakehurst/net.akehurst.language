@@ -64,7 +64,7 @@ class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -105,7 +105,7 @@ class test_literal_a1n_followed_by_empty : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

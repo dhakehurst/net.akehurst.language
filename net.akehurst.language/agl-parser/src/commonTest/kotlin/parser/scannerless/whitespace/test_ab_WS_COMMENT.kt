@@ -43,7 +43,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             S { 'a' 'b' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -61,7 +61,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             S { WS : ' ' 'a' 'b' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -86,7 +86,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -112,7 +112,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence1,
@@ -128,7 +128,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence2,
@@ -146,7 +146,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             S { 'a' 'b' WS : ' ' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -164,7 +164,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             S { WS : ' ' 'a' 'b' WS : ' ' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -182,7 +182,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             S { 'a' WS : ' ' 'b' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -209,7 +209,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -231,7 +231,7 @@ class test_ab_WS_COMMENT : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

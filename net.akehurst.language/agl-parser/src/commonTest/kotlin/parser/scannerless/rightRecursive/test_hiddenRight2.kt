@@ -71,7 +71,7 @@ class test_hiddenRight2 : test_LeftCornerParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -92,7 +92,7 @@ class test_hiddenRight2 : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -113,7 +113,7 @@ class test_hiddenRight2 : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -138,7 +138,7 @@ class test_hiddenRight2 : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

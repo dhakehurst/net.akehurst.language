@@ -81,7 +81,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
             n:'\'nn\''
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = Outer,
             goal = goal,
             sentence = sentence,
@@ -119,7 +119,7 @@ class test_Processor_Ambiguity4 : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = Outer,
             goal = goal,
             sentence = sentence,

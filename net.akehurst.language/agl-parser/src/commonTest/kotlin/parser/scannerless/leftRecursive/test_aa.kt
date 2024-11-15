@@ -18,7 +18,6 @@ package net.akehurst.language.parser.leftcorner.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.api.ParserTerminatedException
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
@@ -51,7 +50,7 @@ class test_aa : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -72,7 +71,7 @@ class test_aa : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         assertFailsWith<IllegalStateException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -97,7 +96,7 @@ class test_aa : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
         assertFailsWith<IllegalStateException> {
-            super.test(
+            super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

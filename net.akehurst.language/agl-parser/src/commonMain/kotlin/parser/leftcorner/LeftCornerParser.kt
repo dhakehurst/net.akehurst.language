@@ -136,27 +136,32 @@ class LeftCornerParser(
         }
 
         val match = rp.graph.treeData.complete
+
         return if (match.root != null) {
-            //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         } else {
-            if (options.reportErrors) {
-                // need to include the 'startSkipFailures',
-                val map = rp.failedReasons //no need to clone it as it will not be modified after this point
-                startSkipFailures.forEach {
-                    val l = map[it.key] ?: mutableListOf()
-                    l.addAll(it.value)
-                    map[it.key] = l
-                }
+            createParseIssuesFromFailures(sentence,options,rp)
+
+            val sppt = null//TODO: provide best effort - SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
+            ParseResultDefault(sppt, this._issues)
+        }
+    }
+
+    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp:RuntimeParser) {
+        if (options.reportErrors) {
+            // need to include the 'startSkipFailures',
+            val map = rp.failedReasons //no need to clone it as it will not be modified after this point
+            //         startSkipFailures.forEach {
+            //             val l = map[it.key] ?: mutableListOf()
+            //             l.addAll(it.value)
+            //             map[it.key] = l
+            //         }
+            if (map.isNotEmpty()) {
                 val failedAtPosition = map.keys.max()
                 val nextExpected = map[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
-                addParseIssue(sentence, loc, nextExpected, seasons, maxNumHeads)
-                val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
-                ParseResultDefault(sppt, this._issues)
-            } else {
-                ParseResultDefault(null, this._issues)
+                addParseIssue(sentence, loc, nextExpected)
             }
         }
     }
@@ -171,9 +176,7 @@ class LeftCornerParser(
     private fun addParseIssue(
         sentence: Sentence,
         lastLocation: InputLocation,
-        nextExpected: List<RuntimeSpine>,
-        seasons: Int,
-        maxNumHeads: Int
+        nextExpected: List<RuntimeSpine>
     ) {
         val expectedTerminals = nextExpected.flatMap { it.expectedNextTerminals }.toSet()
         val expected = expectedTerminals.map { it.tag }.toSet()
@@ -184,8 +187,6 @@ class LeftCornerParser(
         val p = nextExpected.map { it.elements.last().tag }.toSet().sorted().joinToString(separator = " | ")
         val contextInText = sentence.contextInText(location.position)
         val message = "Failed to match {$p} at: $contextInText"
-
-        val failData = ParseFailureRuntime(nextExpected)
 
         this._issues.error(location, message, expected)
     }
@@ -209,7 +210,7 @@ class LeftCornerParser(
                             when {
                                 rhs.rule.isEmptyTerminal -> true
                                 rhs.rule.isEmptyListTerminal -> true
-                                else -> (rhs as RuntimeRuleRhsTerminal).matchable!!.isLookingAt(sentence.text, fr.position)
+                                else -> (rhs as RuntimeRuleRhsTerminal).matchable!!.isLookingAt(sentence, fr.position)
                             }
                         }
 
@@ -226,6 +227,8 @@ class LeftCornerParser(
                     sentence.locationFor(fr.failedAtPosition, 0),
                     RuntimeSpineDefault(fr.head, fr.gssSnapshot, setOf(fr.transition.to.firstRule), fr.head.numNonSkipChildren)
                 )
+
+                is FailedParseExpectedSkipAfter -> TODO()
 
                 is FailedParseReasonGraftRTG -> {
                     val exp = fr.transition.runtimeGuard.expectedWhenFailed(fr.prevNumNonSkipChildren)

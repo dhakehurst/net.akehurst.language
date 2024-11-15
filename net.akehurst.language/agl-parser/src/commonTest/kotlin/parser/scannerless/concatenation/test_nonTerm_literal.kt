@@ -40,7 +40,7 @@ class test_nonTerm_literal : test_LeftCornerParserAbstract() {
             S{ ab {'a' 'b'} 'c' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

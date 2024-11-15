@@ -67,7 +67,7 @@ class test_Johnson_Ambiguous : test_LeftCornerParserAbstract() {
             S|2 { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -87,7 +87,7 @@ class test_Johnson_Ambiguous : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -118,7 +118,7 @@ class test_Johnson_Ambiguous : test_LeftCornerParserAbstract() {
               }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -181,7 +181,7 @@ class test_Johnson_Ambiguous : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -202,7 +202,7 @@ class test_Johnson_Ambiguous : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

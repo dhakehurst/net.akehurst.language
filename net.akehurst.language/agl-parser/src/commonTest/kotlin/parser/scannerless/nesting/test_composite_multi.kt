@@ -47,7 +47,7 @@ class test_composite_multi : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -71,7 +71,7 @@ class test_composite_multi : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

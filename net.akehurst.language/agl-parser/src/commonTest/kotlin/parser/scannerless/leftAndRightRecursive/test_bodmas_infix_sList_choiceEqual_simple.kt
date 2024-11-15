@@ -57,7 +57,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             S { E { 'v' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 
     @Test
@@ -72,7 +72,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 
     @Test
@@ -115,7 +115,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 
     @Test
@@ -136,7 +136,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 
     @Test
@@ -157,7 +157,7 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 
     @Test
@@ -188,6 +188,6 @@ class test_bodmas_infix_sList_choiceEqual_simple : test_LeftCornerParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected)
+        super.test_pass(rrs, goal, sentence, 1,expected)
     }
 }

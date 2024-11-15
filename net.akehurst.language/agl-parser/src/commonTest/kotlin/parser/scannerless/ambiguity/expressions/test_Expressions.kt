@@ -12,21 +12,21 @@ class test_Expressions : test_LeftCornerParserAbstract() {
 
     @Test
     fun a() {
-        test_pass(td,"pa")
+        test(td,"pa")
     }
 
     @Test
     fun aob() {
-        test_pass(td,"paob")
+        test(td,"paob")
     }
 
     @Test
     fun aoboc() {
-        test_pass(td,"paoboc")
+        test(td,"paoboc")
     }
 
     @Test
     fun aobocod() {
-        test_pass(td,"paobocod")
+        test(td,"paobocod")
     }
 }

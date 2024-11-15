@@ -78,6 +78,19 @@ internal class FailedParseReasonWidthTo(
 
 }
 
+internal class FailedParseExpectedSkipAfter(
+    fromSkipParser: Boolean,
+    failedAtPosition: Int,
+    head: GrowingNodeIndex,
+    transition: Transition,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>,
+    firstTerminals: Set<RuntimeRule>
+) : FailedParseReason(fromSkipParser, failedAtPosition, head, transition, gssSnapshot) {
+
+    override val spine = RuntimeSpineDefault(head, gssSnapshot, firstTerminals, head.numNonSkipChildren)
+
+}
+
 // transition.runtimeGuard fails
 internal class FailedParseReasonGraftRTG(
     fromSkipParser: Boolean,

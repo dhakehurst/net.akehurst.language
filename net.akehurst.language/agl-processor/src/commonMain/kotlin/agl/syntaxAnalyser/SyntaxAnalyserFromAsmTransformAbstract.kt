@@ -276,7 +276,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
             }
-*/
+
             nodeRule.isListSeparated -> when {
                 nodeRule.isPseudo -> transformationRule(
                     SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument)),
@@ -288,7 +288,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Should not happen")
                 }
             }
-
+*/
             else -> when {
                 nodeRule.isPseudo -> { //TODO: check if isPseudo maybe just need to return self..higher TR-rule handles pars-tree-nodes?
                     //must be group or choice
@@ -310,7 +310,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                         }
 
                         is UnnamedSupertypeType -> {
-                            val subtype = parentTypeDecl.subtypes[nodeInfo.alt.option.asIndex]
+                            val idx = when { //FIXME: why do we need this difference here ?
+                                nodeRule.isList -> nodeInfo.parentAlt.option.asIndex
+                                else -> nodeInfo.alt.option.asIndex
+                            }
+                            val subtype =parentTypeDecl.subtypes[idx]
                             transformationRule(subtype, RootExpressionSimple.SELF)
                         }
 

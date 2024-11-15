@@ -68,7 +68,7 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
             S { 'b' vs {v:'a'} oa{<EMPTY>} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -79,7 +79,7 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
             S { 'b' vs { v:'a' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 2, expected)
+        super.test_pass(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -90,7 +90,7 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
             S { 'b'  vs { v:'x' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 2, expected)
+        super.test_pass(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -101,7 +101,7 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
             S { 'b' vs { v:'a' v:'a' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 2, expected)
+        super.test_pass(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -112,7 +112,7 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
             S { 'b'  vs { v:'a' v:'a' v:'a' } oa{ 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 2, expected)
+        super.test_pass(rrs, goal, sentence, 2, expected)
     }
 
 }

@@ -109,7 +109,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -129,7 +129,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -152,7 +152,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -178,7 +178,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -225,7 +225,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -240,7 +240,7 @@ class test_Processor_Ambiguity3 : test_LeftCornerParserAbstract() {
 
         val expected = "S { S1 {" + "P { P2 {".repeat(49) + "P {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

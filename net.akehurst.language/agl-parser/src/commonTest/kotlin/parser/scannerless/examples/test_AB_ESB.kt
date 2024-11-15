@@ -89,7 +89,7 @@ class test_AB_ESB : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
 
     }
 
@@ -109,7 +109,7 @@ class test_AB_ESB : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

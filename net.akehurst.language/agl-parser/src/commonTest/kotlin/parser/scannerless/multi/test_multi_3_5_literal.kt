@@ -75,7 +75,7 @@ class test_multi_3_5_literal : test_LeftCornerParserAbstract() {
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -84,7 +84,7 @@ class test_multi_3_5_literal : test_LeftCornerParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(4)+" }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -93,7 +93,7 @@ class test_multi_3_5_literal : test_LeftCornerParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(5)+" }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test

@@ -17,9 +17,6 @@
 package net.akehurst.language.parser.leftcorner
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,7 +40,7 @@ class test_pattern__a : test_LeftCornerParserAbstract() {
             S{ "a":'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal= goal,
             sentence = sentence,

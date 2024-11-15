@@ -70,7 +70,7 @@ class test_group_choice : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -91,7 +91,7 @@ class test_group_choice : test_LeftCornerParserAbstract() {
                     } } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = "choice",
             sentence = sentence,
@@ -117,7 +117,7 @@ class test_group_choice : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -147,7 +147,7 @@ class test_group_choice : test_LeftCornerParserAbstract() {
     } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

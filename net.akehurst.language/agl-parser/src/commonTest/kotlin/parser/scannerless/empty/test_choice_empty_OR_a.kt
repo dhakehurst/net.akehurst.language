@@ -46,7 +46,7 @@ class test_choice_empty_OR_a : test_LeftCornerParserAbstract() {
          S|1 { e { §empty } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -63,7 +63,7 @@ class test_choice_empty_OR_a : test_LeftCornerParserAbstract() {
          S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

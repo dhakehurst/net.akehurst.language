@@ -40,7 +40,7 @@ class test_a_b_c_literal : test_LeftCornerParserAbstract() {
             S{ 'a' 'b' 'c' }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

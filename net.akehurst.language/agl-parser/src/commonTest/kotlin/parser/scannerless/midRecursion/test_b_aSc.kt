@@ -48,7 +48,7 @@ class test_b_aSc : test_LeftCornerParserAbstract() {
          S { 'b' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -66,7 +66,7 @@ class test_b_aSc : test_LeftCornerParserAbstract() {
          S|1 { S1 { 'a' S { 'b' } 'c' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

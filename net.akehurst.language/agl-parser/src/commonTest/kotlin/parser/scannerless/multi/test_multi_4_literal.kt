@@ -87,7 +87,7 @@ class test_multi_4_literal : test_LeftCornerParserAbstract() {
             S { 'a' 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test

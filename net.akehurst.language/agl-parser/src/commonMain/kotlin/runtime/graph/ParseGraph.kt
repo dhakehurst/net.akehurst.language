@@ -77,7 +77,7 @@ internal class ParseGraph(
         val text:String
     )
 
-    enum class MergeReason { LENGTH, CHOICE_RULE_LENGTH, CHOICE_RULE_PRIORITY, CHOICE_RULE_AMBIGUOUS, DYNAMIC_PRIORITY }
+    enum class MergeReason { LENGTH, CHOICE_RULE_LENGTH, CHOICE_RULE_PRIORITY, CHOICE_RULE_AMBIGUOUS, NUM_NON_SKIP_CHILDREN, DYNAMIC_PRIORITY }
 
     enum class MergeChoice {
         /**
@@ -361,14 +361,27 @@ internal class ParseGraph(
         }
     }
 
+    private fun  mergeDecisionOnNumberOfChildren(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: (reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
+        val newReasonList = reasonList+MergeReason.NUM_NON_SKIP_CHILDREN
+        val newNumCh = newParent.dynamicPriority.size //TODO: really need number of non-skip children!
+        val extNumCh = existingParent.dynamicPriority.size //TODO: really need number of non-skip children!
+        return when {
+            newNumCh > extNumCh -> return MergeDecision(newReasonList,MergeChoice.PREFER_NEW, "${newNumCh} > ${extNumCh}")
+            newNumCh < extNumCh -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING, "${newNumCh} < ${extNumCh}")
+            else -> ifEqual(newReasonList)
+        }
+    }
+
     private fun mergeDecisionOnDynamicPriority(existingParent: SpptDataNode, newParent: SpptDataNode, reasonList:List<MergeReason>, ifEqual: ( reasonList:List<MergeReason>) -> MergeDecision): MergeDecision {
         val newReasonList = reasonList+MergeReason.DYNAMIC_PRIORITY
-        for (i in existingParent.dynamicPriority.indices) {
-            val e = existingParent.dynamicPriority[i]
-            val n = newParent.dynamicPriority[i]
+        val extList = existingParent.dynamicPriority
+        val newList = newParent.dynamicPriority
+        for (i in extList.indices) {
+            val e = extList[i]
+            val n = newList[i]
             when {
-                n > e -> return MergeDecision(newReasonList,MergeChoice.PREFER_NEW, "${newParent.dynamicPriority} > ${existingParent.dynamicPriority}")
-                n < e -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING, "${newParent.dynamicPriority} < ${existingParent.dynamicPriority}")
+                n > e -> return MergeDecision(newReasonList,MergeChoice.PREFER_NEW, "${newList} > ${extList}")
+                n < e -> return MergeDecision(newReasonList,MergeChoice.PREFER_EXISTING, "${newList} < ${extList}")
                 else -> Unit
             }
         }
@@ -383,24 +396,38 @@ internal class ParseGraph(
                     is RuntimeRuleRhsChoice -> rhs.choiceKind
                     else -> null
                 }
-                if (Debug.CHECK) check(null != choiceKind) //TODO: could remove this check if always passes
+                //if (Debug.CHECK) check(null != choiceKind) //TODO: could remove this check if always passes
                 when (choiceKind!!) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
                         mergeDecisionOnPriority(existingParent, newParent,rl) { rl2 ->
-                            MergeDecision(rl2,MergeChoice.UNDECIDABLE,"")
+                            mergeDecisionOnDynamicPriority(existingParent, newParent, rl2) { rl3 ->
+                                MergeDecision(rl3, MergeChoice.UNDECIDABLE, "${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
+                            }
                         }
                     }
 
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent, emptyList()) {rl ->
-                        mergeDecisionOnLength(existingParent, newParent, rl) {rl2 -> //FIXME: should never happen I think !
-                            MergeDecision(rl2,MergeChoice.UNDECIDABLE,"")
+                        mergeDecisionOnLength(existingParent, newParent, rl) {rl2 ->
+                            mergeDecisionOnDynamicPriority(existingParent, newParent, rl2) { rl3 ->
+                                MergeDecision(rl3, MergeChoice.UNDECIDABLE, "${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
+                            }
                         }
                     }
 
                     RuntimeRuleChoiceKind.AMBIGUOUS -> MergeDecision(listOf( MergeReason.CHOICE_RULE_AMBIGUOUS),MergeChoice.KEEP_BOTH_AS_ALTERNATIVES,"")
                 }
             }
+
+            newParent.rule.isList -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl1 ->
+                mergeDecisionOnNumberOfChildren(existingParent, newParent, rl1) { rl2 ->
+                    mergeDecisionOnDynamicPriority(existingParent, newParent, rl2) { rl3 ->
+                        MergeDecision(rl3, MergeChoice.UNDECIDABLE, "${newParent.dynamicPriority} == ${existingParent.dynamicPriority}")
+                    }
+                }
+            }
+
+            // newParent.rule.isOptional -> FULL has priority over EMPTY, but that is covered by length below
 
             else -> mergeDecisionOnLength(existingParent, newParent, emptyList()) { rl ->
                 mergeDecisionOnDynamicPriority(existingParent, newParent, rl) { rl2->

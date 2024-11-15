@@ -57,7 +57,7 @@ class test_bodmas_exprOpRuleExpr_Priority : test_LeftCornerParserAbstract() {
             S { E { var { "[a-z]+":'v' } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -72,7 +72,7 @@ class test_bodmas_exprOpRuleExpr_Priority : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -92,7 +92,7 @@ class test_bodmas_exprOpRuleExpr_Priority : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected1)
+        super.test_pass(rrs, goal, sentence, 1, expected1)
     }
 
     @Test
@@ -115,7 +115,7 @@ class test_bodmas_exprOpRuleExpr_Priority : test_LeftCornerParserAbstract() {
     } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

@@ -71,7 +71,7 @@ class test_RuntimeParser_parse_multi : test_LeftCornerParserAbstract() {
 
         val expected = "S { m { 'a' bm|1 { §empty } 'a' } }"
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

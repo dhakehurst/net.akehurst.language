@@ -17,7 +17,6 @@
 package net.akehurst.language.parser.leftcorner.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
 import kotlin.test.Test
@@ -83,7 +82,7 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -106,7 +105,7 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -131,7 +130,7 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -165,7 +164,7 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -206,7 +205,7 @@ class test_RuntimeLookahead : test_LeftCornerParserAbstract() {
             }
         """
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

@@ -19,6 +19,7 @@ package net.akehurst.language.regex.agl
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
+import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,8 +31,8 @@ class test_std_RegEx {
         val rr = RuntimeRule(0, 0, "x", false, false).also {
             it.setRhs(RuntimeRuleRhsPattern(it, "|"))
         }
-        val text = "?"
-        val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.using(RegexEnginePlatform).isLookingAt(text, 0)
+        val sentence = SentenceDefault("?")
+        val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.using(RegexEnginePlatform).isLookingAt(sentence, 0)
 
         assertEquals(false, result)
     }

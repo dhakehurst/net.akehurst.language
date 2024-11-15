@@ -79,7 +79,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -99,7 +99,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
               } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = "expr",
             sentence = sentence,
@@ -120,7 +120,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -141,7 +141,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -166,7 +166,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -192,7 +192,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -218,7 +218,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -244,7 +244,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -270,7 +270,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -294,7 +294,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -317,7 +317,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -342,7 +342,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -371,7 +371,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -400,7 +400,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -429,7 +429,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

@@ -62,7 +62,7 @@ class test_aObOc : test_LeftCornerParserAbstract() {
         val expected = """
             S { a { 'a' } }
         """
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -78,7 +78,7 @@ class test_aObOc : test_LeftCornerParserAbstract() {
         val expected = """
             S|1 { b { 'b' } }
         """
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -94,7 +94,7 @@ class test_aObOc : test_LeftCornerParserAbstract() {
         val expected = """
             S|2 { c { 'c' } }
         """
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

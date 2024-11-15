@@ -78,7 +78,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -104,7 +104,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -130,7 +130,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -162,7 +162,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -193,7 +193,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -226,7 +226,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -267,7 +267,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -304,6 +304,6 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 }

@@ -69,7 +69,7 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -90,7 +90,7 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
          }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -111,7 +111,7 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
          }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -136,12 +136,11 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
          }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            printAutomaton = true,
             expectedTrees = arrayOf(expected)
         )
 
@@ -163,12 +162,11 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
          }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            printAutomaton = true,
             expectedTrees = arrayOf(expected)
         )
 

@@ -494,7 +494,8 @@ class TypeInstanceArgNamedBuilder(
     private val _args = mutableListOf<TypeArgumentNamed>()
 
     fun typeRef(name: String, typeName: String, isNullable: Boolean) {
-        val t = _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
+        val t =_namespace.findTypeNamed(typeName.asPossiblyQualifiedName)?.type(emptyList(), isNullable)
+            ?: _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
         val ta = TypeArgumentNamedSimple(PropertyName(name), t)
         _args.add(ta)
     }

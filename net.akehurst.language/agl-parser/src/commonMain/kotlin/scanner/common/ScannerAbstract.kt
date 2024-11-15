@@ -53,6 +53,12 @@ abstract class ScannerAbstract(
 
     override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
 
+    override fun matchedLength(sentence: Sentence, position: Int, terminalRule: Rule):Int {
+        val rhs = (terminalRule as RuntimeRule).rhs as RuntimeRuleRhsTerminal
+        val len = rhs.matchable?.matchedLength(sentence, position) ?: -1
+        return len
+    }
+
     override fun scan(sentence: Sentence, startAtPosition: Int, offsetPosition: Int): ScanResult {
         //TODO: improve this algorithm...it is not efficient
         this.reset()

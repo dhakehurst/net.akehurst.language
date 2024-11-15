@@ -89,7 +89,7 @@ class test_literal_a2n : test_LeftCornerParserAbstract() {
 
         val expected = "S { 'a' ',' 'a'}"
 
-        super.test(rrs, Companion.goal, sentence, 1, expected)
+        super.test_pass(rrs, Companion.goal, sentence, 1, expected)
     }
 
     @Test
@@ -110,7 +110,7 @@ class test_literal_a2n : test_LeftCornerParserAbstract() {
 
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
-        super.test(rrs, Companion.goal, sentence, 1, expected)
+        super.test_pass(rrs, Companion.goal, sentence, 1, expected)
     }
 
     @Test
@@ -119,7 +119,7 @@ class test_literal_a2n : test_LeftCornerParserAbstract() {
 
         val expected = "S {'a'" + " ',' 'a'".repeat(99) + "}"
 
-        super.test(rrs, Companion.goal, sentence, 1, expected)
+        super.test_pass(rrs, Companion.goal, sentence, 1, expected)
     }
 
 }

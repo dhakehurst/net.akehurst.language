@@ -118,7 +118,7 @@ class test_ab_cOa_bc : test_LeftCornerParserAbstract() {
           } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

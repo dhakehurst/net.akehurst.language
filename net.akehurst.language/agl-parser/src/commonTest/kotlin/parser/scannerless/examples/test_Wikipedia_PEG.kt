@@ -68,7 +68,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
             S { 'x' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -98,7 +98,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
             S { 'x' S { 'x' } 'x' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -126,7 +126,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
 
         val expected = "S { 'x' ".repeat(5) + "} 'x' ".repeat(4) + "}"
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

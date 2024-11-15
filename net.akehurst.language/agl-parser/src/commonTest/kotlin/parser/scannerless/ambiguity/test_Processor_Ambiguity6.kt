@@ -96,7 +96,7 @@ class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
             Ex { Pr { Fc { Rt { ID:'a' } } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -117,7 +117,7 @@ class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -139,7 +139,7 @@ class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -177,7 +177,7 @@ class test_Processor_Ambiguity6 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

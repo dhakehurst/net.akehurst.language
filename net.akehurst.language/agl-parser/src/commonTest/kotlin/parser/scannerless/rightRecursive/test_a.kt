@@ -44,7 +44,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -63,7 +63,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S|1 { S1 { 'a' S { 'a' } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -91,7 +91,7 @@ class test_a : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -107,7 +107,7 @@ class test_a : test_LeftCornerParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(49) + "S { 'a' }" +" } }".repeat(49)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -123,7 +123,7 @@ class test_a : test_LeftCornerParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(149) + "S { 'a' }" +" } }".repeat(149)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -139,7 +139,7 @@ class test_a : test_LeftCornerParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(499) + "S { 'a' }" +" } }".repeat(499)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -155,7 +155,7 @@ class test_a : test_LeftCornerParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(1999) + "S { 'a' }" +" } }".repeat(1999)
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

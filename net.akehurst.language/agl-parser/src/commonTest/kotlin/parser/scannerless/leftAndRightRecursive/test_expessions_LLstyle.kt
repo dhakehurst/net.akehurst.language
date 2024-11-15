@@ -54,7 +54,7 @@ class test_expessions_LLstyle : test_LeftCornerParserAbstract() {
             S { E { P {'a'} } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -71,7 +71,7 @@ class test_expessions_LLstyle : test_LeftCornerParserAbstract() {
             S { E|1 { E1 { E{ P {'a'} } 'o' P {'a'} } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -96,7 +96,7 @@ class test_expessions_LLstyle : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -126,7 +126,7 @@ class test_expessions_LLstyle : test_LeftCornerParserAbstract() {
         """.trimIndent()
 
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

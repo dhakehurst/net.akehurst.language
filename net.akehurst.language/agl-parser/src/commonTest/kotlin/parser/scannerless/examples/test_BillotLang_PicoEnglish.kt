@@ -82,7 +82,7 @@ class test_BillotLang_PicoEnglish : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        val actual = super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

@@ -55,7 +55,7 @@ class test_optional_which_covers_next_terminal_of_multi_at_start : test_LeftCorn
             S { oa{<EMPTY>} as {'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -66,7 +66,7 @@ class test_optional_which_covers_next_terminal_of_multi_at_start : test_LeftCorn
             S { oa{ 'a' } as {'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, true, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -77,7 +77,7 @@ class test_optional_which_covers_next_terminal_of_multi_at_start : test_LeftCorn
             S { oa{ 'a' } as {'a' 'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

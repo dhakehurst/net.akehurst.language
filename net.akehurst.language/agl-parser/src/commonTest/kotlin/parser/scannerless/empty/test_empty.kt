@@ -39,7 +39,7 @@ class test_empty : test_LeftCornerParserAbstract() {
          S { §empty }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

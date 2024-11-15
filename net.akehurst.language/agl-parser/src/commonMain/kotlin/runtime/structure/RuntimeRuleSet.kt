@@ -51,7 +51,7 @@ class RuntimeRuleSet(
 
         const val END_OF_TEXT_TAG = "<EOT>"
         const val GOAL_TAG = "<GOAL>"
-        const val SKIP_RULE_TAG = "<SKIP-MULTI>"
+        const val SKIP_MULTI_TAG = "<SKIP-MULTI>"
         const val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
         const val RUNTIME_LOOKAHEAD_RULE_TAG = "<RT>"
         const val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
@@ -152,7 +152,7 @@ class RuntimeRuleSet(
                 val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                 it.setRhs(rhs)
             }
-            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false, false)
+            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_MULTI_TAG, false, false)
                 .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
 
             //TODO: how to set AutomatonKind here!

@@ -41,7 +41,7 @@ class test_literal_a01 : test_LeftCornerParserAbstract() {
 
         val expected = "S { <EMPTY_LIST> }"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -50,7 +50,7 @@ class test_literal_a01 : test_LeftCornerParserAbstract() {
 
         val expected = "S {'a'}"
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test

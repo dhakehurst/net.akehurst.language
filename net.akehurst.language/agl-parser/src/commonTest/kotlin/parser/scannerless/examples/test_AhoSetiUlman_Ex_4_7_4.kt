@@ -84,7 +84,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
             S { S1 { A { 'd' } 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -95,7 +95,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
             S|1 { S2 { 'b' A { 'd' } 'c' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -106,7 +106,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
             S|2 { S3 { 'd' 'c' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
     @Test
@@ -117,7 +117,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
             S|3 { S4 { 'b' 'd' 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test_pass(rrs, goal, sentence, 1, expected)
     }
 
 }

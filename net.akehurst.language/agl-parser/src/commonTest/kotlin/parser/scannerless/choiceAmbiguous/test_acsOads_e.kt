@@ -79,7 +79,7 @@ class test_acsOads_e : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -107,7 +107,7 @@ class test_acsOads_e : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -128,7 +128,7 @@ class test_acsOads_e : test_LeftCornerParserAbstract() {
             S { ambig|1 { ads { 'a' } } 'e' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

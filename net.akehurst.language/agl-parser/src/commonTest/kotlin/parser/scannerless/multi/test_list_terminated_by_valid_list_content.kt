@@ -73,7 +73,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
             } 
             """
 
-        super.test(rrs, goal, sentence, 1, expeccted)
+        super.test_pass(rrs, goal, sentence, 1, expeccted)
 
     }
 
@@ -88,7 +88,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
             } 
             """
 
-       super.test(rrs, goal, sentence, 1, expeccted)
+       super.test_pass(rrs, goal, sentence, 1, expeccted)
 
     }
 
@@ -103,7 +103,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
             } 
             """
 
-        super.test(rrs, goal, sentence, 1, expeccted)
+        super.test_pass(rrs, goal, sentence, 1, expeccted)
     }
 
     @Test
@@ -117,7 +117,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
             } 
             """
 
-        super.test(rrs, goal, sentence, 1, expeccted)
+        super.test_pass(rrs, goal, sentence, 1, expeccted)
 
     }
 
@@ -132,7 +132,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
             } 
             """
 
-        super.test(rrs, goal, sentence, 1, expeccted)
+        super.test_pass(rrs, goal, sentence, 1, expeccted)
 
     }
 

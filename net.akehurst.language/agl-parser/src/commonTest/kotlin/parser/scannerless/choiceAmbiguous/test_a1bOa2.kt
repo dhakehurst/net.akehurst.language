@@ -82,7 +82,7 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = deterministic,
             goal = goal,
             sentence = sentence,
@@ -103,7 +103,7 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = deterministic,
             goal = goal,
             sentence = sentence,
@@ -146,7 +146,7 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = ambiguous,
             goal = goal,
             sentence = sentence,
@@ -167,7 +167,7 @@ class test_a1bOa2 : test_LeftCornerParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = ambiguous,
             goal = goal,
             sentence = sentence,

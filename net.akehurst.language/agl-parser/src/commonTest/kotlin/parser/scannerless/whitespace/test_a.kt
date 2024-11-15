@@ -40,7 +40,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -58,7 +58,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -76,7 +76,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S { 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
@@ -94,7 +94,7 @@ class test_a : test_LeftCornerParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

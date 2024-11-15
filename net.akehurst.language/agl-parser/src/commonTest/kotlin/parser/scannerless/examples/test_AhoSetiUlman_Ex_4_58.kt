@@ -117,7 +117,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
             S { S1 { 'a' A { 'c' } 'd' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -134,7 +134,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
             S|1 { S2 { 'b' B { 'c' } 'd' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -151,7 +151,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
             S|2 { S3 { 'a' B { 'c' } 'e' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -168,7 +168,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
             S|3 { S4 { 'b' A { 'c' } 'e' } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

@@ -72,7 +72,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             S { E { C { 'i' E { V { 'v' } } 't' E { V { 'v' } } 's' E { V { 'v' } }  } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -89,7 +89,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             S { E { C { 'i' E { V { 'v' } } 't' E { V { 'v' } } } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -114,7 +114,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -138,7 +138,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -165,7 +165,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(
+        super.test_pass(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
