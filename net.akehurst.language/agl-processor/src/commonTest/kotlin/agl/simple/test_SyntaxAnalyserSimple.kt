@@ -74,7 +74,7 @@ class test_SyntaxAnalyserSimple {
         }
 
         fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: RuleSet) {
-            val actual = (proc as LanguageProcessorAbstract).ruleSet as RuntimeRuleSet
+            val actual = (proc as LanguageProcessorAbstract).targetRuleSet as RuntimeRuleSet
             assertEquals(expected.toString(), actual.toString())
             assertTrue(expected.matches(actual))
         }

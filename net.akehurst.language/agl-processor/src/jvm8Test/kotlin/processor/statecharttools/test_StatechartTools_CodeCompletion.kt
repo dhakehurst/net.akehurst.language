@@ -54,7 +54,7 @@ class test_StatechartTools_CodeCompletion {
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         private val processors = lazyMutableMapNonNull<SimpleName, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
-            val grm = grammarList.asm?.allDefinitions?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
+            val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {
                             targetGrammarName(null) //use default
                             defaultGoalRuleName(null) //use default

@@ -28,6 +28,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
 abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : Any> {
@@ -57,7 +58,7 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     abstract val automata: Map<String, Automaton>
 
-    val grammar: Grammar by lazy {
-        Agl.registry.agl.grammar.processor!!.process(grammarString).asm!!.primary!! //FIXME
+    val grammar: GrammarModel by lazy {
+        Agl.registry.agl.grammar.processor!!.process(grammarString).asm!! //FIXME
     }
 }

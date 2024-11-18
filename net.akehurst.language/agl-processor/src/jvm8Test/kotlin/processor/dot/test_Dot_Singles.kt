@@ -280,7 +280,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar!!)
+        val converterToRuntimeRules = ConverterToRuntimeRules(processor.targetGrammar!!)
         val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals)
         val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
 
@@ -1030,7 +1030,7 @@ NAME {
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammar!!.asGrammarModel())) }
+                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammarModel!!)) }
             })
 
         assertNotNull(result.asm)

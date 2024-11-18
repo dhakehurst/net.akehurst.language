@@ -69,8 +69,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 RegexEngineKind.AGL -> RegexEngineAgl
             }
             val scanner = when (scannerKind) {
-                ScannerKind.Classic -> ScannerClassic(regexEngine, it.ruleSet.terminals)
-                ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.ruleSet.terminals)
+                ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet.terminals)
+                ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet.terminals)
             }
             ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
         }

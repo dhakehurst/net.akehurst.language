@@ -36,7 +36,7 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    grammarList: GrammarModel,
+    grammarModel: GrammarModel,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
@@ -44,7 +44,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     abstract override val identity: LanguageIdentity
     abstract override var grammarStr: GrammarString?
 
-    override var grammarModel: GrammarModel by Delegates.observable(grammarList) { _, oldValue, newValue ->
+    override var grammarModel: GrammarModel by Delegates.observable(grammarModel) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -155,16 +155,11 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     // --- implementation ---
 
-    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val g = this.targetGrammar
-        if (null == g) {
-            null
-        } else {
-            val proc = Agl.processorFromGrammar(g, this.configuration)
+    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>> = cached {
+            val proc = Agl.processorFromGrammar(grammarModel, this.configuration)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             processorObservers.forEach { it(null, proc) }
             proc
-        }
     }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
 
     //private var _grammar_cache: CachedValue<Grammar?> = cached {

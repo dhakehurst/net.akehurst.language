@@ -34,12 +34,12 @@ import net.akehurst.language.typemodel.api.TypeInstance
 class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFromGrammar> {
 
     companion object {
-        private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName
+        private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
         private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
         private val aglGrammarNamespace: GrammarTypeNamespace
             get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
-        private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.grammar!!.qualifiedName
+        private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
         private val aglStyleTypeModel = Agl.registry.agl.style.processor!!.typeModel
         private val aglStyleNamespace: GrammarTypeNamespace
             get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")

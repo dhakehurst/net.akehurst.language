@@ -44,22 +44,22 @@ import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class GrammarString(override val value: String):PublicValueType
+value class GrammarString(override val value: String) : PublicValueType
 
 @JvmInline
-value class TypeModelString(override val value: String):PublicValueType
+value class TypeModelString(override val value: String) : PublicValueType
 
 @JvmInline
-value class TransformString(override val value: String):PublicValueType
+value class TransformString(override val value: String) : PublicValueType
 
 @JvmInline
-value class CrossReferenceString(override val value: String):PublicValueType
+value class CrossReferenceString(override val value: String) : PublicValueType
 
 @JvmInline
-value class StyleString(override val value: String):PublicValueType
+value class StyleString(override val value: String) : PublicValueType
 
 @JvmInline
-value class FormatString(override val value: String):PublicValueType
+value class FormatString(override val value: String) : PublicValueType
 
 
 object Agl {
@@ -112,11 +112,11 @@ object Agl {
     }
 
     fun <AsmType : Any, ContextType : Any> processorFromGrammar(
-        grammar: Grammar,
+        grammarModel: GrammarModel,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageProcessor<AsmType, ContextType> {
         val config = configuration ?: configurationBase()
-        return LanguageProcessorDefault<AsmType, ContextType>(grammar, config)
+        return LanguageProcessorDefault<AsmType, ContextType>(grammarModel, config)
     }
 
     /**
@@ -146,13 +146,13 @@ object Agl {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), transformStr) }
+                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), transformStr) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammar!!.asGrammarModel()), styleModelStr) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleModelStr) }
             }
             if (null != formatterModelStr) {
                 formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
@@ -205,14 +205,9 @@ object Agl {
             if (null == res.asm || res.asm!!.isEmpty) {
                 LanguageProcessorResult(null, res.issues)
             } else {
-                val grammar = if (null == configuration?.targetGrammarName) {
-                    res.asm?.primary ?: error("Unable to create processor for $grammarDefinitionStr")
-                } else {
-                    res.asm?.allDefinitions?.firstOrNull { it.name == configuration.targetGrammarName }
-                        ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
-                }
+                val grammarModel = res.asm ?: error("Unable to create processor for $grammarDefinitionStr")
                 val proc = processorFromGrammar(
-                    grammar,
+                    grammarModel,
                     configuration
                 )
                 LanguageProcessorResult(proc, res.issues)

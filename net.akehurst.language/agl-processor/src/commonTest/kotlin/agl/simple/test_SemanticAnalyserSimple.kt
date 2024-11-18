@@ -45,7 +45,7 @@ class test_SemanticAnalyserSimple {
                 check(it.issues.isEmpty()) { it.issues.toString() }
                 it.processor!!
             }
-            assertEquals(processor.grammar!!.qualifiedName, processor.crossReferenceModel.declarationsForNamespace.keys.first())
+            assertEquals(processor.targetGrammar!!.qualifiedName, processor.crossReferenceModel.declarationsForNamespace.keys.first())
             val result = processor.process(sentence, options)
             assertTrue(result.issues.isEmpty(), result.issues.toString())
             assertNotNull(result.asm)

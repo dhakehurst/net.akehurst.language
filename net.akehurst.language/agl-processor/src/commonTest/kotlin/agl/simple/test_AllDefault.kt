@@ -111,7 +111,7 @@ class test_AllDefault {
             assertTrue(procRes.issues.isEmpty(), procRes.issues.toString())
             val proc = procRes.processor!!
 
-            val rrs = (proc as LanguageProcessorAbstract).ruleSet as RuntimeRuleSet
+            val rrs = (proc as LanguageProcessorAbstract).targetRuleSet as RuntimeRuleSet
             assertEquals(testData.expectedRrs.toString(), rrs.toString(), "Different RRS by string")
             assertTrue(testData.expectedRrs.matches(rrs), "Different RRS by match")
 

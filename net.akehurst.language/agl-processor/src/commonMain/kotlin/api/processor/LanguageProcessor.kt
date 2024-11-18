@@ -18,7 +18,6 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
@@ -27,12 +26,15 @@ import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**
@@ -47,9 +49,11 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     val issues: IssueCollection<LanguageIssue>
 
-    val grammar: Grammar?
+    val grammarModel: GrammarModel?
 
-    val ruleSet: RuleSet
+    val targetGrammar:Grammar?
+
+    val targetRuleSet: RuleSet
 
     val scanner: Scanner?
 
@@ -79,6 +83,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      * Evaluating this may or may not modify the typeModel depending on the specifics of the TransformModel
      */
     val asmTransformModel: TransformModel
+
+    val targetAsmTransformRuleSet: TransformRuleSet
 
     /**
      * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor

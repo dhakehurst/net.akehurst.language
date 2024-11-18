@@ -206,7 +206,7 @@ class test_KompositeWalker {
                 result += "'$data':${type.name}"
                 info
             }
-            valueType { path, info, data, type ->
+            valueType { path, info, data, type, value, mapper ->
                 result += "'$data':${type.name}"
                 info
             }

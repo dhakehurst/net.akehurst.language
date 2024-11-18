@@ -18,14 +18,13 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
@@ -35,17 +34,17 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
         get() = TODO("not implemented")
 
-    override val ruleSet: RuleSet = generated.ruleSet
-    override val grammar: Grammar = generated.grammar
+    override val targetRuleSet: RuleSet = generated.ruleSet
+    override val grammarModel: GrammarModel = generated.grammar
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
-    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(SimpleName(grammar.name.value), emptyList())
+    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(grammarModel.name, emptyList())
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
 
     init {
         generated.automata.forEach { (userGoalRuleName, automaton) ->
-            this.ruleSet.addPreBuiltFor(userGoalRuleName, automaton)
+            this.targetRuleSet.addPreBuiltFor(userGoalRuleName, automaton)
         }
     }
 }

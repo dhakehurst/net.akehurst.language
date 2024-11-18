@@ -250,7 +250,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                         //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         syntaxAnalyserResolver {
                             ProcessResultDefault(
-                                AglFormatSyntaxAnalyser(it.typeModel, it.asmTransformModel, it.grammar!!.qualifiedName),
+                                AglFormatSyntaxAnalyser(it.typeModel, it.asmTransformModel, it.targetAsmTransformRuleSet.qualifiedName),
                                 IssueHolder(LanguageProcessorPhase.ALL)
                             )
                         }

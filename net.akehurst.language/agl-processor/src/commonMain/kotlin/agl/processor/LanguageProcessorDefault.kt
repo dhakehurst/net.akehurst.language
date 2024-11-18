@@ -20,22 +20,28 @@ import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
-    override val grammar: Grammar,
+    override val grammarModel: GrammarModel,
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
-    override val ruleSet get() = _runtimeRuleSet
+    override val targetRuleSet get() = _runtimeRuleSet[this.targetGrammar!!.qualifiedName.value]!!
     override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }
 
-    private var _originalRuleMap: Map<Pair<Int, Int>, RuleItem>
-    private var _runtimeRuleSet: RuleSet
+    private var _originalRuleMap: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
+    private var _runtimeRuleSet: MutableMap<String,RuleSet> = mutableMapOf()
 
     init {
-        val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-        _runtimeRuleSet = converterToRuntimeRules.runtimeRuleSet
-        _originalRuleMap = converterToRuntimeRules.originalRuleItemMap
+        for(g in grammarModel.allDefinitions) {
+            val converterToRuntimeRules = ConverterToRuntimeRules(g)
+            val rrs = converterToRuntimeRules.runtimeRuleSet
+            val orm = converterToRuntimeRules.originalRuleItemMap
+            _originalRuleMap.putAll(orm)
+            _runtimeRuleSet[rrs.qualifiedName] = rrs
+        }
     }
 }

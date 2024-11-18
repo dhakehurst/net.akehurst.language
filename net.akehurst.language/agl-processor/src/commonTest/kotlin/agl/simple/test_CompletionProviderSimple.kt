@@ -150,9 +150,9 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "a", "'a'"),
-            CompletionItem(CompletionItemKind.PATTERN, "b", "'b'"),
-            CompletionItem(CompletionItemKind.PATTERN, "c", "'c'")
+            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
+            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'")
         )
         test(
             TestData(
@@ -181,7 +181,7 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
 
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "[a-zA-Z]+")
+            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "NAME")
         )
 
         test(
