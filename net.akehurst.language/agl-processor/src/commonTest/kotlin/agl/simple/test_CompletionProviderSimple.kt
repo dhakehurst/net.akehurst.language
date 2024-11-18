@@ -99,7 +99,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<\"[a-z]\">", "[a-z]")
+            CompletionItem(CompletionItemKind.PATTERN, "<\"[a-z]\">", "\"[a-z]\"")
         )
         test(
             TestData(
@@ -122,7 +122,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "[a-z]")
+            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "PAT")
         )
         test(
             TestData(
@@ -133,6 +133,37 @@ class test_CompletionProviderSimple {
             )
         )
     }
+
+    @Test
+    fun embedded_atStart_leaf_pattern() {
+        val grammarStr = """
+            namespace test
+            grammar Inner {
+                S = A | B ;
+                A = 'a' ;
+                B = 'b' ;
+            }
+            grammar Test {
+                S = Inner::S | C ;
+                C = 'c' ;
+            }
+        """
+        val sentence = ""
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.PATTERN, "a", "'a'"),
+            CompletionItem(CompletionItemKind.PATTERN, "b", "'b'"),
+            CompletionItem(CompletionItemKind.PATTERN, "c", "'c'")
+        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = sentence.length,
+                expected = expected
+            )
+        )
+    }
+
 
     @Test
     fun FailedParseReasonLookahead__varDef_no_scope() {
@@ -178,7 +209,7 @@ class test_CompletionProviderSimple {
         """
         val externalNsName = "external"
         val crossReferencesStr = """
-            namespace test.Test {
+            namespace test.Test 
                 import $externalNsName
                 identify VarDef by name
                 references {
@@ -186,7 +217,6 @@ class test_CompletionProviderSimple {
                         property ref refers-to TypeDef
                     }
                 }
-            }
         """.trimIndent()
 
 

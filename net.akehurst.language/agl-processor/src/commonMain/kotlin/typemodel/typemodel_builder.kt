@@ -42,7 +42,11 @@ class TypeModelBuilder(
     private val resolveImports: Boolean,
     val namespaces: List<TypeNamespace>
 ) {
-    val _model = TypeModelSimple(name)
+    val _model = TypeModelSimple(name).also { m ->
+        namespaces.forEach {
+            m.addNamespace(it)
+        }
+    }
 
     fun namespace(qualifiedName: String, imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName.value), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
         val b = TypeNamespaceBuilder(QualifiedName(qualifiedName), imports.map { Import(it) })
@@ -53,9 +57,6 @@ class TypeModelBuilder(
     }
 
     fun build(): TypeModel {
-        namespaces.forEach {
-            _model.addNamespace(it)
-        }
         if (resolveImports) {
             _model.resolveImports()
         }
@@ -250,12 +251,13 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = if (elementTypeName.isQualifiedName) {
-            _namespace.findTypeNamed(QualifiedName(elementTypeName)) ?: error("Type named '$elementTypeName' not found")
-        } else {
-            _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(elementTypeName))
-        }
-        return property(propertyName, t.type(emptyList(), isNullable), childIndex)
+        //val t = if (elementTypeName.isQualifiedName) {
+        //    _namespace.findTypeNamed(QualifiedName(elementTypeName)) ?: error("Type named '$elementTypeName' not found")
+        //} else {
+       //     _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(elementTypeName))
+        //}
+        val ti = _namespace.createTypeInstance(null, elementTypeName.asPossiblyQualifiedName, emptyList(),isNullable)
+        return property(propertyName, ti, childIndex)
     }
 
     fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {
@@ -566,7 +568,8 @@ class SubtypeListBuilder(
 
     fun typeRef(typeName: String, isNullable: Boolean = false) {
         val pqn = typeName.asPossiblyQualifiedName
-        val ti = _namespace.createTypeInstance(null, pqn, emptyList(), isNullable)
+        val ti = //_namespace.findTypeNamed(pqn)?.type() ?:
+            _namespace.createTypeInstance(null, pqn, emptyList(), isNullable)
         _subtypeList.add(ti)
     }
 

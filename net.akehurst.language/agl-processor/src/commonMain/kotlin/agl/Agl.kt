@@ -73,7 +73,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
-    fun configurationDefault(): LanguageProcessorConfiguration<Asm, ContextAsmSimple> = LanguageProcessorConfigurationDefault()
+    fun configurationSimple(): LanguageProcessorConfiguration<Asm, ContextAsmSimple> = LanguageProcessorConfigurationSimple()
 
     /**
      * build a configuration for a language processor
@@ -138,7 +138,7 @@ object Agl {
         crossReferenceModelStr: CrossReferenceString? = null,
         styleModelStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationDefault(),
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationSimple(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm, ContextAsmSimple> {
         val config = Agl.configuration(configurationBase) {
@@ -172,7 +172,7 @@ object Agl {
         crossReferenceModelStr: String? = null,
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationDefault(),
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationSimple(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),

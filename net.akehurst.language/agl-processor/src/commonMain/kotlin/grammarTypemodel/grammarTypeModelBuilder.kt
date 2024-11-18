@@ -24,20 +24,29 @@ import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.builder.DataTypeBuilder
-import net.akehurst.language.typemodel.builder.SubtypeListBuilder
-import net.akehurst.language.typemodel.builder.TypeInstanceArgBuilder
-import net.akehurst.language.typemodel.builder.TypeModelDslMarker
+import net.akehurst.language.typemodel.builder.*
 
+fun TypeModelBuilder.grammarTypeNamespace(
+    namespaceQualifiedName: String,
+    imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName.value),
+    init: GrammarTypeNamespaceBuilder.() -> Unit
+) {
+    val b = GrammarTypeNamespaceBuilder(_model, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), false)
+    b.init()
+    val ns = b.build()
+    _model.addNamespace(ns)
+}
+
+@Deprecated("does not allow namespaces",ReplaceWith("typeModel(..) { grammarTypeNamespace(..){...} }"))
 fun grammarTypeModel(
     namespaceQualifiedName: String,
     modelName: String,
     imports: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
-    init: GrammarTypeModelBuilder.() -> Unit
+    init: GrammarTypeNamespaceBuilder.() -> Unit
 ): TypeModel {
     val model = TypeModelSimple(SimpleName(modelName))
     imports.forEach { model.addNamespace(it) }
-    val b = GrammarTypeModelBuilder(model, QualifiedName(namespaceQualifiedName), imports.map { Import(it.qualifiedName.value) }.toMutableList())
+    val b = GrammarTypeNamespaceBuilder(model, QualifiedName(namespaceQualifiedName), imports.map { Import(it.qualifiedName.value) }.toMutableList(), true)
     b.init()
     val ns = b.build()
     model.addNamespace(ns)
@@ -46,13 +55,16 @@ fun grammarTypeModel(
 }
 
 @TypeModelDslMarker
-class GrammarTypeModelBuilder(
+class GrammarTypeNamespaceBuilder(
     typeModel: TypeModel,
     namespaceQualifiedName: QualifiedName,
-    imports: MutableList<Import>
+    imports: MutableList<Import>,
+    resolveImports:Boolean
 ) {
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
-        it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
+        if(resolveImports) {
+            it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
+        }
     }
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 

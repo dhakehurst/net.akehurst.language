@@ -30,6 +30,7 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
@@ -1461,33 +1462,33 @@ class test_AllDefault {
             define(sentence = "aa", sppt = "S { S1{ S { a:'a' } a:'a' } }") {
                 asmSimple {
                     element("S1") {
-                        propertyString("s","a")
-                        propertyString("a","a")
+                        propertyString("s", "a")
+                        propertyString("a", "a")
                     }
                 }
             }
             define(sentence = "aaa", sppt = "S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } }") {
                 asmSimple {
                     element("S1") {
-                        propertyElementExplicitType("s","S1") {
-                            propertyString("s","a")
-                            propertyString("a","a")
+                        propertyElementExplicitType("s", "S1") {
+                            propertyString("s", "a")
+                            propertyString("a", "a")
                         }
-                        propertyString("a","a")
+                        propertyString("a", "a")
                     }
                 }
             }
             define(sentence = "aaaa", sppt = "S { S1{ S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } } a:'a' } }") {
                 asmSimple {
                     element("S1") {
-                        propertyElementExplicitType("s","S1") {
-                            propertyElementExplicitType("s","S1") {
-                                propertyString("s","a")
-                                propertyString("a","a")
+                        propertyElementExplicitType("s", "S1") {
+                            propertyElementExplicitType("s", "S1") {
+                                propertyString("s", "a")
+                                propertyString("a", "a")
                             }
-                            propertyString("a","a")
+                            propertyString("a", "a")
                         }
-                        propertyString("a","a")
+                        propertyString("a", "a")
                     }
                 }
             }
@@ -6102,7 +6103,8 @@ class test_AllDefault {
                 leaf a = 'a' ;
             }
             grammar Outer {
-                S = d | B S ;
+                S = d | S1 ;
+                S1 = B S ;
                 B = b Inner::S b | c Inner::S c ;
                 leaf b = 'b' ;
                 leaf c = 'c' ;
@@ -6120,8 +6122,9 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Outer") {
             choiceLongest("S") {
                 concatenation { ref("d") }
-                concatenation { ref("B"); ref("S") }
+                concatenation { ref("S1") }
             }
+            concatenation("S1") { ref("B"); ref("S") }
             choiceLongest("B") {
                 concatenation { ref("b"); ref("§Inner§S§embedded1"); ref("b"); }
                 concatenation { ref("c"); ref("§Inner§S§embedded1"); ref("c") }
@@ -6131,31 +6134,154 @@ class test_AllDefault {
             literal("d", "d")
             embedded("§Inner§S§embedded1", Inner, "S", isPseudo = true)
         }
-        typeModel("Test", true) {
-            namespace("test.Inner") {
-
-            }
-            namespace("test.Outer") {
-
-            }
-        }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                typeRef("String")
-                tupleType {
-
+        val expectedTm = typeModel("Outer", true) {
+            grammarTypeNamespace("test.Inner") {
+                unnamedSuperTypeType("S") {
+                    typeRef("String")
+                    typeRef("S1")
                 }
+                dataType("S1", "S1") {
+                    propertyUnnamedSuperType("s", false, 0) {
+                        typeRef("String")
+                        typeRef("S1")
+                    }
+                    propertyPrimitiveType("a", "String", false, 1)
+                }
+                stringTypeFor("a")
             }
-            stringTypeFor("a")
-            dataType("S", "S") {
+            grammarTypeNamespace("test.Outer") {
+                unnamedSuperTypeType("S") {
+                    typeRef("S1")
+                    typeRef("String")
+                }
+                dataType("S1", "S1") {
+                    propertyUnnamedSuperType("b", false, 0) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            unnamedSuperTypeOf("s", false) {
+                                typeRef("S1")
+                                typeRef("String")
+                            }
+                            typeRef("b2", "String", false)
+                        }
+                        tupleType {
+                            typeRef("c", "String", false)
+                            unnamedSuperTypeOf("s", false) {
+                                typeRef("S1")
+                                typeRef("String")
+                            }
+                            typeRef("c2", "String", false)
+                        }
+                    }
+                    propertyUnnamedSuperType("s", false, 1) {
+                        typeRef("S1")
+                        typeRef("String")
+                    }
+                }
+                unnamedSuperTypeType("B") {
+                    tupleType {
+                        typeRef("b", "String", false)
+                        unnamedSuperTypeOf("s", false) {
+                            typeRef("test.Inner.S1") //TODO: wrong way around ?
+                            typeRef("String")
+                        }
+                        typeRef("b2", "String", false)
+                    }
+                    tupleType {
+                        typeRef("c", "String", false)
+                        unnamedSuperTypeOf("s", false) {
+                            typeRef("test.Inner.S1")
+                            typeRef("String")
+                        }
+                        typeRef("c2", "String", false)
+                    }
+                }
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
             }
         }
-        val expectedTr = asmGrammarTransform(
-            "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+        val expectedTr = asmTransform(
+            "Outer",
+            typeModel("Outer", true) {
+                namespace("test.Outer") {} //default adds 'std' namespace
+                namespace("test.Inner") {} //default adds 'std' namespace
+            },
             true
         ) {
-            createObject("S", "S")
+            namespace("test") {
+                transform("Inner") {
+                    unnamedSubtypeRule(
+                        "S", """
+                       when {
+                          0 == §alternative -> with(child[0]) §self
+                          1 == §alternative -> with(child[0]) §self
+                       }
+                    """.trimIndent().replace("§", "\$")
+                    ) {
+                        typeRef("String")
+                        typeRef("S1")
+                    }
+                    createObject("S1", "S1") {
+                        assignment("s", "child[0]")
+                        assignment("a", "child[1]")
+                    }
+                    leafStringRule("a")
+                }
+                transform("Outer") {
+                    unnamedSubtypeRule(
+                        "S", """
+                       when {
+                          0 == §alternative -> with(child[0]) §self
+                          1 == §alternative -> with(child[0]) §self
+                       }
+                    """.trimIndent().replace("§", "\$")
+                    ) {
+                        typeRef("String")
+                        typeRef("S1")
+                    }
+                    createObject("S1", "S1") {
+                        assignment("b", "child[0]")
+                        assignment("s", "child[1]")
+                    }
+                    unnamedSubtypeRule(
+                        "B", """
+                       when {
+                          0 == §alternative -> tuple {
+                              b := child[0]
+                              s := with(child[1]) §self
+                              b2 := child[2]
+                          }
+                          1 == §alternative -> tuple {
+                              c := child[0]
+                              s := with(child[1]) §self
+                              c2 := child[2]
+                          }
+                       }
+                    """.trimIndent().replace("§", "\$")
+                    ) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            unnamedSuperTypeOf("s", false) {
+                                typeRef("String")
+                                typeRef("test.Inner.S1")
+                            }
+                            typeRef("b2", "String", false)
+                        }
+                        tupleType {
+                            typeRef("c", "String", false)
+                            unnamedSuperTypeOf("s", false) {
+                                typeRef("String")
+                                typeRef("test.Inner.S1")
+                            }
+                            typeRef("c2", "String", false)
+                        }
+                    }
+                    leafStringRule("b")
+                    leafStringRule("c")
+                    leafStringRule("d")
+                }
+            }
         }
         test(
             grammarStr = grammarStr,
@@ -6163,9 +6289,32 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "d", sppt = "S { d:'d' }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
-                    element("S") {
+                    string("d")
+                }
+            }
+            define(sentence = "babd", sppt = "S { S1 { B{ b:'b' §Inner§S§embedded1:Inner::S { a : 'a' }  b:'b' } S { d:'d' } } }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S1") {
+                        propertyTuple("b") {
+                            propertyString("b", "b")
+                            propertyString("s", "a")
+                            propertyString("b2", "b")
+                        }
+                        propertyString("s", "d")
+                    }
+                }
+            }
+            define(sentence = "cacd", sppt = "S { S1 { B{ c:'c' §Inner§S§embedded1:Inner::S { a : 'a' }  c:'c' } S { d:'d' } } }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S1") {
+                        propertyTuple("b") {
+                            propertyString("c", "c")
+                            propertyString("s", "a")
+                            propertyString("c2", "c")
+                        }
+                        propertyString("s", "d")
                     }
                 }
             }
@@ -6190,19 +6339,102 @@ class test_AllDefault {
                C = 'c' I::S 'c' ;
             }
         """.trimIndent()
-        val expectedRrs = ruleSet("test.Test") {
-            concatenation("S") { literal("a") }
+        val Inner = ruleSet("test.I") {
+            choiceLongest("S") {
+                ref("A")
+                ref("SA")
+            }
+            concatenation("SA") { ref("S"); ref("A") }
+            concatenation("A") { ref("a") }
+            literal("a","a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedRrs = ruleSet("test.O") {
+            choiceLongest("S") {
+                ref("B")
+                ref("SBC")
+            }
+            concatenation("SBC") { ref("S"); ref("BC") }
+            choiceLongest("BC") {
+                ref("B")
+                ref("C")
+            }
+            concatenation("B") { literal("b"); ref("§I§S§embedded1"); literal("b") }
+            concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
+            embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
+        }
+        val expectedTm = typeModel("O", true) {
+            grammarTypeNamespace("test.I"){
+                dataType("S","S") {
+                    subtypes("A","SA")
+                }
+                dataType("SA","SA") {
+                    supertypes("S")
+                    propertyDataTypeOf("s","S",false,0)
+                    propertyDataTypeOf("a","A",false,1)
+                }
+                dataType("A","A") {
+                    supertypes("S")
+                    propertyPrimitiveType("a","String",false,0)
+                }
+                stringTypeFor("a")
+            }
+            grammarTypeNamespace("test.O", imports = listOf("std","test.I")){
+                dataType("S","S") {
+                    subtypes("B","BC")
+                }
+                dataType("SBC","SBC") {
+                    supertypes("S")
+                    propertyDataTypeOf("s","S",false,0)
+                    propertyDataTypeOf("bc","BC",false,1)
+                }
+                dataType("BC","BC") {
+                    subtypes("B","C")
+                }
+                dataType("B","B") {
+                    supertypes("S","BC")
+                    propertyDataTypeOf("s","test.I.S",false,0)
+                }
+                dataType("C","C") {
+                    supertypes("BC")
+                    propertyDataTypeOf("s","test.I.S",false,0)
+                }
             }
         }
-        val expectedTr = asmGrammarTransform(
-            "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+        val expectedTr = asmTransform(
+            "O",
+            typeModel = typeModel("O",true) {
+                namespace("test.O") {}
+                namespace("test.I") {}
+            },
             true
         ) {
-            createObject("S", "S")
+            namespace("test") {
+                transform("I"){
+                    subtypeRule("S","S")
+                    createObject("SA", "SA") {
+                        assignment("s","child[0]")
+                        assignment("a","child[1]")
+                    }
+                    createObject("A", "A") {
+                        assignment("a","child[0]")
+                    }
+                    leafStringRule("a")
+                }
+                transform("O"){
+                    subtypeRule("S","S")
+                    createObject("SBC","SBC") {
+                        assignment("s","child[0]")
+                        assignment("bc","child[1]")
+                    }
+                    subtypeRule("BC","BC")
+                    createObject("B","B") {
+                        assignment("s","with(child[1]) \$self")
+                    }
+                    createObject("C","C") {
+                        assignment("s","with(child[1]) \$self")
+                    }
+                }
+            }
         }
         test(
             grammarStr = grammarStr,
@@ -6210,9 +6442,12 @@ class test_AllDefault {
             expectedTm = expectedTm,
             expectedTr = expectedTr
         ) {
-            define(sentence = "a", sppt = "S { 'a' }") {
+            define(sentence = "bab", sppt = "S { B { 'b' §I§S§embedded1:I::S { A { a:'a' } } 'b' } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
-                    element("S") {
+                    element("B") {
+                        propertyElementExplicitType("s","test.I.A") {
+                            propertyString("a","a")
+                        }
                     }
                 }
             }

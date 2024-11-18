@@ -113,7 +113,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null,
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
-internal class LanguageProcessorConfigurationDefault(
+internal class LanguageProcessorConfigurationSimple(
     override var targetGrammarName: SimpleName? = null,
     override var defaultGoalRuleName: GrammarRuleName? = null,
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,

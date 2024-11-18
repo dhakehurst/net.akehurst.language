@@ -34,9 +34,11 @@ object GrammarTypeModelTest {
             actual == null -> fail()
             else -> {
                 kotlin.test.assertEquals(expected.namespace.size, actual.namespace.size, "number of namespaces in model is different")
-                for (k in expected.namespace.indices) {
-                    val expEl = expected.namespace[k]
-                    val actEl = actual.namespace[k]
+                val expSorted = expected.namespace.sortedBy { it.qualifiedName.value }
+                val actSorted = expected.namespace.sortedBy { it.qualifiedName.value }
+                for (k in expSorted.indices) {
+                    val expEl = expSorted[k]
+                    val actEl = actSorted[k]
                     when {
                         expEl is GrammarTypeNamespace && actEl is GrammarTypeNamespace -> GrammarTypeModelTest.tmAssertEquals(expEl, actEl, "GrammarTypeNamespace")
                         else -> TypeModelTest.tmAssertEquals(expEl, actEl, "TypeNamespace")

@@ -49,7 +49,7 @@ class test_VistraqQuery_Singles {
                 null -> processor
                 else -> Agl.processorFromStringSimple(
                     GrammarString(grammarStr),
-                    configurationBase = Agl.configuration(Agl.configurationDefault()) {
+                    configurationBase = Agl.configuration(Agl.configurationSimple()) {
                         targetGrammarName(grammarName)
                     }
                 ).let {
@@ -67,7 +67,7 @@ class test_VistraqQuery_Singles {
                 null -> processor
                 else -> Agl.processorFromStringSimple(
                     GrammarString(grammarStr),
-                    configurationBase = Agl.configuration(Agl.configurationDefault()) {
+                    configurationBase = Agl.configuration(Agl.configurationSimple()) {
                         targetGrammarName(grammarName)
                     }
                 ).let {

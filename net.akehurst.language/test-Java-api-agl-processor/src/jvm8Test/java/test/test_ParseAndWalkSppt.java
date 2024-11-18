@@ -41,7 +41,7 @@ public class test_ParseAndWalkSppt {
         LanguageProcessorResult<Asm, ContextAsmSimple> res = Agl.INSTANCE.processorFromStringSimpleJava(
                 grammarStr,
                 null, null, null, null, null,
-                Agl.INSTANCE.configurationDefault(),
+                Agl.INSTANCE.configurationSimple(),
                 null
         );
         System.out.println(res.getIssues());

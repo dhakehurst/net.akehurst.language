@@ -55,7 +55,7 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigDefault() {
-        LanguageProcessorConfiguration<Asm, ContextAsmSimple> config = Agl.INSTANCE.configurationDefault();
+        LanguageProcessorConfiguration<Asm, ContextAsmSimple> config = Agl.INSTANCE.configurationSimple();
 
         LanguageProcessor<Asm, ContextAsmSimple> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 

@@ -17,7 +17,7 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -28,7 +28,7 @@ abstract class test_ExpectedTerminasAtAbstract {
 
     protected data class TestData(val sentence: String, val position: Int, val expected: Set<String>)
 
-    protected fun test(rrs: RuntimeRuleSet, goal: String, data: TestData) {
+    protected fun test(rrs: RuleSet, goal: String, data: TestData) {
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
         val result = parser.expectedTerminalsAt(data.sentence, data.position, ParseOptionsDefault(goal))
 

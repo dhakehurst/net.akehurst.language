@@ -72,7 +72,7 @@ class test_LanguageDefinitionDefault {
             grammarStr = null,
             aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
-            configuration = Agl.configurationDefault()
+            configuration = Agl.configurationSimple()
         )
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)

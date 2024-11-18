@@ -68,7 +68,7 @@ public class test_Processor {
             null,
             null,
             null,
-            Agl.INSTANCE.configurationDefault(),
+            Agl.INSTANCE.configurationSimple(),
             null
     ).getProcessor();
 

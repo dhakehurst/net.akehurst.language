@@ -57,7 +57,6 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    /* made internal so we can test against it */
     abstract override val ruleSet: RuleSet
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
 

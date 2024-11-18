@@ -66,6 +66,7 @@ object TypeModelTest {
             expected is TypeParameterReference && actual is TypeParameterReference -> tmAssertEquals(expected, actual, source)
             expected is TupleTypeInstance && actual is TupleTypeInstance -> tmAssertEquals(expected, actual, source)
             expected is UnnamedSupertypeTypeInstance && actual is UnnamedSupertypeTypeInstance -> tmAssertEquals(expected, actual, source)
+            expected==null || actual==null || expected::class != actual::class -> fail("expected an actual are different types: $source")
             else -> fail("Unsupported subtypes of TypeInstance")
         }
     }
@@ -113,7 +114,7 @@ object TypeModelTest {
         for (i in expected.declaration.subtypes.indices) {
             val exp = expected.declaration.subtypes[i]
             val act = actual.declaration.subtypes[i]
-            tmAssertEquals(exp, act, "Different subtype[$i] for ${source}.${expected}")
+            tmAssertEquals(exp, act, "subtype[$i] for ${source}.${expected}")
         }
     }
 

@@ -533,8 +533,8 @@ internal class Grammar2TransformRuleSet(
 
     private fun trRuleForRuleItemEmbedded(ruleItem: Embedded, forProperty: Boolean): TransformationRule {
         val g2ns = builderForEmbedded(ruleItem)
-        return g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName)?.toNoActionTrRule() //TODO: needs own action
-            ?: error("Should never happen")
+        val t = g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName) ?: error("Internal error: type for '${ruleItem.embeddedGoalName}' not found")
+        return transformationRule(t,RootExpressionSimple.SELF)
     }
 
     private fun trRuleForRuleItemChoice(choice: Choice, forProperty: Boolean): TransformationRule {
