@@ -36,15 +36,15 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    grammarModel: GrammarModel,
-    buildForDefaultGoal: Boolean,
+    argGrammarModel: GrammarModel,
+    argBuildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: LanguageIdentity
     abstract override var grammarStr: GrammarString?
 
-    override var grammarModel: GrammarModel by Delegates.observable(grammarModel) { _, oldValue, newValue ->
+    override var grammarModel: GrammarModel by Delegates.observable(argGrammarModel) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -155,11 +155,16 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     // --- implementation ---
 
-    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>> = cached {
-            val proc = Agl.processorFromGrammar(grammarModel, this.configuration)
-            if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
+    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
+        val g = this.targetGrammar
+        if (null == g) {
+            null //if no targetGrammar, don't provide a processor
+        } else {
+            val proc = Agl.processorFromGrammar(this.grammarModel, this.configuration)
+            if (argBuildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             processorObservers.forEach { it(null, proc) }
             proc
+        }
     }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
 
     //private var _grammar_cache: CachedValue<Grammar?> = cached {

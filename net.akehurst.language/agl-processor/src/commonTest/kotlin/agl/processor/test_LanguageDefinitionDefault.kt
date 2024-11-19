@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
@@ -169,11 +170,12 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "Failed to match {<GOAL>} at: ^xxxxx", setOf("'namespace'"))
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        assertEquals(emptyList(), grammarObserverCalled)
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
@@ -195,7 +197,7 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(34, 35, 1, 2),
+                    InputLocation(26, 27, 1, 4),
                     "Grammar 'XX' not found",
                     null
                 )
@@ -203,7 +205,8 @@ class test_LanguageDefinitionDefault {
         )
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        assertEquals(emptyList(), grammarObserverCalled)
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
@@ -222,11 +225,15 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'", null)
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                    InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'",
+                    null
+                )
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        assertEquals(emptyList(), grammarObserverCalled)
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(emptyList(), processorObserverCalled)
@@ -248,7 +255,7 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
         assertEquals(
-            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("Test"), emptyList()), sut.grammarModel)),
+            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("test"), emptyList()), sut.grammarModel)),
             grammarObserverCalled
         )
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
@@ -275,7 +282,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("Test"), emptyList()))), grammarObserverCalled)
+        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("test"), emptyList()))), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
@@ -320,6 +327,69 @@ class test_LanguageDefinitionDefault {
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
         sut.grammarStr = g2
+
+        assertEquals(g2, sut.grammarStr)
+        assertNotNull(sut.targetGrammar)
+        assertNotNull(sut.processor)
+        assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair<GrammarString?, GrammarString?>(g1, g2)), grammarStrObserverCalled)
+        assertEquals(listOf(Pair(oldGrammar, sut.grammarModel)), grammarObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
+        assertEquals(
+            listOf(
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null),
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)
+            ), processorObserverCalled
+        )
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
+    }
+
+    @Test
+    fun update_grammarStr_change_empty_to_diff_value_and_set_defaultGoalRule() {
+        val g1 = GrammarString("")
+        sut.grammarStr = g1
+        val oldGrammar = sut.grammarModel
+        val oldProc = sut.processor
+        this.reset()
+        val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
+        sut.update(g2,null,null)
+        sut.defaultGoalRule = GrammarRuleName("statement")
+
+        assertEquals(g2, sut.grammarStr)
+        assertNotNull(sut.targetGrammar)
+        assertNotNull(sut.processor)
+        assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair<GrammarString?, GrammarString?>(g1, g2)), grammarStrObserverCalled)
+        assertEquals(listOf(Pair(oldGrammar, sut.grammarModel)), grammarObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
+        assertEquals(emptyList(), crossReferenceModelCalled)
+        assertEquals(
+            listOf(
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null),
+                Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)
+            ), processorObserverCalled
+        )
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
+    }
+
+    @Test
+    fun update_grammarStr_change_value_to_diff_value() {
+        val g1 = GrammarString("namespace ns grammar Test { S = 'b'; }")
+        sut.grammarStr = g1
+        val oldGrammar = sut.grammarModel
+        val oldProc = sut.processor
+        this.reset()
+        val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
+        sut.update(g2,null,null)
 
         assertEquals(g2, sut.grammarStr)
         assertNotNull(sut.targetGrammar)

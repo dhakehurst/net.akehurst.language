@@ -310,7 +310,15 @@ class LeftCornerParser(
             }
             //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, map, rp.stateSet.automatonKind, rp.stateSet, position)
             //nextExpected.second
-            val validFailReasons = map[map.keys.max()]?.filter { it.skipFailure.not() && it.failedAtPosition == position } ?: emptyList()
+            val validFailReasons = map[map.keys.max()]?.flatMap {
+                when(it) {
+                    is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == position }
+                    else -> when {
+                        it.skipFailure.not() && it.failedAtPosition == position -> listOf(it)
+                        else -> emptyList()
+                    }
+                }
+            } ?: emptyList()
             // parse might fail BEFORE the requested 'postion' - so filter to get {} if it does
             val rspines = validFailReasons.map { it.spine }
             return rspines.toSet()

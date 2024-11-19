@@ -29,7 +29,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
-    override val targetRuleSet get() = _runtimeRuleSet[this.targetGrammar!!.qualifiedName.value]!!
+    override val targetRuleSet get() = this.targetGrammar?.let { _runtimeRuleSet[it.qualifiedName.value] }
     override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }
 
     private var _originalRuleMap: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()

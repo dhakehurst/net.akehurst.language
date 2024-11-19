@@ -59,7 +59,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    abstract override val targetRuleSet: RuleSet
+    abstract override val targetRuleSet: RuleSet?
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
 
     abstract override val grammarModel: GrammarModel

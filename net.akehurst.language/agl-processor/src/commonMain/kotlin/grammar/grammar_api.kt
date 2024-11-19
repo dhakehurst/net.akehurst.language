@@ -28,7 +28,7 @@ import kotlin.jvm.JvmInline
 
 interface GrammarModel : Model<GrammarNamespace, Grammar> {
 
-    val primary get() = this.namespace.last().definition.lastOrNull()
+    val primary get() = this.namespace.lastOrNull()?.definition?.lastOrNull()
 }
 
 interface GrammarNamespace : Namespace<Grammar>

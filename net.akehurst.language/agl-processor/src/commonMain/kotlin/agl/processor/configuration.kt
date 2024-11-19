@@ -70,14 +70,14 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
             RegexEngineKind.AGL -> RegexEngineAgl
         }
         val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet.terminals)
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet.terminals)
+            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.terminals ?: emptyList())
+            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.terminals ?: emptyList())
         }
         ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
     },
-    override val parserResolver: ParserResolver<AsmType, ContextType>? = {
+    override val parserResolver: ParserResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
-            LeftCornerParser(it.scanner!!, it.targetRuleSet),
+            p.targetRuleSet?.let{LeftCornerParser(p.scanner!!, it)},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -124,14 +124,14 @@ internal class LanguageProcessorConfigurationSimple(
             RegexEngineKind.AGL -> RegexEngineAgl
         }
         val scanner = when (scannerKind) {
-            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet.terminals)
-            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet.terminals)
+            ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.terminals?: emptyList())
+            ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.terminals?: emptyList())
         }
         ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
     },
-    override val parserResolver: ParserResolver<Asm, ContextAsmSimple>? = {
+    override val parserResolver: ParserResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            LeftCornerParser(it.scanner!!, it.targetRuleSet),
+            p.targetRuleSet?.let{LeftCornerParser(p.scanner!!, it)},
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
