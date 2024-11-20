@@ -21,6 +21,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
@@ -45,6 +46,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationPart)
         super.register(this::infix)
         super.registerFor("object", this::object_)
+        super.register(this::constructorArguments)
         super.register(this::tuple)
         super.register(this::assignmentBlock)
         super.register(this::assignmentList)
@@ -126,15 +128,20 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionSimple(expressions, operators)
     }
 
-    // object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
+    // object = possiblyQualifiedName constructorArguments? assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
-        val typeName = SimpleName(children[0] as String)
-        val args = children[2] as List<Expression>
-        val propertyAssignments = children[4] as List<AssignmentStatement>?
-        val exp = CreateObjectExpressionSimple(typeName, args)
+        val pqn = children[0] as PossiblyQualifiedName
+        val args = (children[1] as List<Expression>?) ?: emptyList()
+        val propertyAssignments = children[2] as List<AssignmentStatement>?
+        val exp = CreateObjectExpressionSimple(pqn, args)
         exp.propertyAssignments = propertyAssignments ?: emptyList()
         return exp
     }
+
+    // constructorArguments = '(' argumentList ')' ;
+    private fun constructorArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> =
+        children[1] as List<Expression> //TODO: maybe should also be assignments ?
+
 
     // tuple = 'tuple' assignmentBlock ;
     private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {

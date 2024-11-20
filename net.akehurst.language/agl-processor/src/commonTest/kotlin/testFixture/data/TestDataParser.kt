@@ -1,10 +1,11 @@
 package testFixture.data
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.sentence.api.InputLocation
-
+//copied from parser
 interface TestDataParserSentence {
     val sentence: String
 }
@@ -18,7 +19,7 @@ data class TestDataParseIssue(
     val nextExpected: Set<String>
 )
 
-class TestDataParserSentencePass(
+open class TestDataParserSentencePass(
     override val sentence: String,
     val expectedNumGSSHeads: Int,
     val expectedSppt: List<String>
@@ -40,4 +41,25 @@ class TestDataParser(
     var goal: String,
     val sentences: List<TestDataParserSentence>
 ) {
+}
+
+// new
+class TestDataProcessor(
+    val description: String,
+    val grammarStr: String,
+    val transformStr: String,
+    val referenceStr: String,
+    var goal: String,
+    val sentences: List<TestDataProcessorSentence>
+) {
+}
+
+interface TestDataProcessorSentence : TestDataParserSentence{
+}
+
+class TestDataProcessorSentencePass(
+    override val sentence: String,
+    val expectedAsm: Asm
+) : TestDataProcessorSentence {
+
 }

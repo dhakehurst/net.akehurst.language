@@ -50,7 +50,7 @@ object AsmTransform {
             ref("modifyRule")
         }
         concatenation("createRule") {
-            ref("possiblyQualifiedTypeName"); opt { ref("statementBlock") }
+            ref("expression")
         }
         concatenation("statementBlock") {
             lit("{"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
@@ -59,11 +59,12 @@ object AsmTransform {
             lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
         }
         concatenation("assignmentStatement") {
-            ref("propertyName"); lit(":="); ebd(AglExpressions.grammar.selfReference, "expression")
+            ref("propertyName"); lit(":="); ref("expression")
         }
         concatenation("propertyName") { ref("IDENTIFIER") }
         concatenation("grammarRuleName") { ref("IDENTIFIER") }
         concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
+        concatenation("expression") { ebd(AglExpressions.grammar.selfReference, "expression") }
     }
 
     const val grammarStr = """
@@ -72,11 +73,10 @@ namespace net.akehurst.language.agl
 grammar Transform : Base {
 
     unit = namespace transform+ ;
-    namespace = 'namespace' possiblyQualifiedName ;
     transform = 'transform' IDENTIFIER '{' transformRule+ '} ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
-    createRule = possiblyQualifiedTypeName statementBlock? ;
+    createRule = expression ;
     statementBlock = '{' statement+ '}' ;
     modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
     statement

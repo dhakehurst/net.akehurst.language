@@ -63,7 +63,8 @@ grammar Expression extends Base {
       | '/' | '*' | '%' | '+' | '-' // arithmetic
       ;
     
-    object = IDENTIFIER '(' argumentList ')' assignmentBlock? ;
+    object = possiblyQualifiedName constructorArguments? assignmentBlock? ;
+    constructorArguments = '(' argumentList ')' ;
 
     tuple = 'tuple' assignmentBlock ;
     assignmentBlock = '{' assignmentList  '}' ;
@@ -144,7 +145,10 @@ grammar Expression extends Base {
             lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
         }
         concatenation("object") {
-            ref("IDENTIFIER"); lit("("); ref("argumentList"); lit(")"); opt { ref("assignmentBlock") }
+            ref("possiblyQualifiedName"); opt { ref("constructorArguments") }; opt { ref("assignmentBlock") }
+        }
+        concatenation("constructorArguments") {
+            lit("("); ref("argumentList"); lit(")");
         }
         concatenation("tuple") {
             lit("tuple"); ref("assignmentBlock")

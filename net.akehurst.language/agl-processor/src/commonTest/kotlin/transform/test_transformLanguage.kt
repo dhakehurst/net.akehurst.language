@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_AsmTransform {
+class test_transformLanguage {
 
     companion object {
         data class TestData(
@@ -69,7 +69,7 @@ class test_AsmTransform {
                 """.trimIndent()
             ),
             TestData(
-                testName = "multiple create rules",
+                testName = "multiple create rules, no args",
                 sentence = """
                     namespace test
                     transform Test {
@@ -113,7 +113,7 @@ class test_AsmTransform {
                 """.trimIndent()
             ),
             TestData(
-                testName = "single create rule with one assignment",
+                testName = "single create rule, no args, with one assignment",
                 sentence = """
                     namespace test
                     transform Test {

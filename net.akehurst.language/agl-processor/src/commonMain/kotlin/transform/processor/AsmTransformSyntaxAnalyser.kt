@@ -32,7 +32,10 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
+import net.akehurst.language.expressions.api.CreateObjectExpression
+import net.akehurst.language.grammar.api.GrammarNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.asm.GrammarNamespaceDefault
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.transform.api.TransformModel
@@ -55,6 +58,7 @@ class AsmTransformSyntaxAnalyser(
 
     override fun registerHandlers() {
         super.register(this::unit)
+        super.register(this::namespace)
         super.register(this::transformList)
         super.register(this::transform)
         super.register(this::transformRuleList)
@@ -64,14 +68,14 @@ class AsmTransformSyntaxAnalyser(
         super.register(this::modifyRule)
         super.register(this::assignmentStatement)
         super.register(this::propertyName)
+        super.register(this::expression)
         super.register(this::grammarRuleName)
         super.register(this::possiblyQualifiedTypeName)
     }
 
     // override unit = namespace transformList ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
-        val namespaceQName = QualifiedName((children[0] as List<String>).joinToString(separator = "."))
-        val namespace = TransformNamespaceDefault(namespaceQName, emptyList())
+        val namespace = children[0] as TransformNamespaceDefault
         val transformBuilders = children[1] as List<(TransformNamespace) -> TransformRuleSet>
         transformBuilders.map {
             val tr = it.invoke(namespace)
@@ -83,6 +87,14 @@ class AsmTransformSyntaxAnalyser(
             null,
             listOf(namespace)
         )
+    }
+
+    // override namespace : 'namespace' possiblyQualifiedName ;
+    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformNamespaceDefault {
+        val pqn = children[1] as PossiblyQualifiedName
+        val nsName = pqn.asQualifiedName(null)
+        val ns = TransformNamespaceDefault(nsName, emptyList())//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return ns
     }
 
     // transformList = transform+ ;
@@ -119,12 +131,11 @@ class AsmTransformSyntaxAnalyser(
 
     // createRule = possiblyQualifiedTypeName optStatementBlock ;
     private fun createRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
-        val typeName = children[0] as PossiblyQualifiedName
-        val statements = children[1]?.let { it as List<AssignmentStatement> } ?: emptyList()
-        val expr = CreateObjectExpressionSimple(typeName, emptyList()).also {
-            it.propertyAssignments = statements
+        val expression = children[0] as Expression
+        val tr = when(expression) {
+            is CreateObjectExpression -> TransformationRuleDefault(expression.possiblyQualifiedTypeName, expression)
+            else -> error("Unsupported")
         }
-        val tr = TransformationRuleDefault(typeName, expr)
         return tr
     }
 
@@ -153,6 +164,10 @@ class AsmTransformSyntaxAnalyser(
     // propertyName = IDENTIFIER ;
     private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
         children[0] as String
+
+    // expression = Expression::expression ;
+    private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[0] as Expression
 
     // grammarRuleName = IDENTIFIER ;
     private fun grammarRuleName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRuleName =

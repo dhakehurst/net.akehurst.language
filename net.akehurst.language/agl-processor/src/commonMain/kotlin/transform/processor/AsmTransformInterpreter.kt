@@ -17,18 +17,17 @@
 
 package net.akehurst.language.transform.processor
 
-import net.akehurst.language.asm.simple.asValueName
-import net.akehurst.language.expressions.processor.EvaluationContext
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.api.PropertyValueName
-import net.akehurst.language.expressions.api.AssignmentStatement
-import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.AssignmentStatement
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.processor.EvaluationContext
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
