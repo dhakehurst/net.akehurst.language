@@ -48,7 +48,7 @@ annotation class AsmSimpleBuilderMarker
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
     defaultNamespace: QualifiedName = SimpleTypeModelStdLib.qualifiedName,
-    crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference"), emptyList()),
+    crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference"),  emptyList(),emptyList()),
     context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,

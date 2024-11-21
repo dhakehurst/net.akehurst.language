@@ -114,12 +114,19 @@ interface Formatable {
     fun asString(indent: Indent = Indent("", "  ")): String
 }
 
+interface Option {
+    val name:String
+    val value:String
+}
+
 /**
  * A group of related namespaces in which the definitions may reference each other
  */
 //TODO: consider using alternative words for this interface - Domain, System, Unit, Module !
 interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
+
+    val options: List<Option>
 
     val namespace: List<NT>
 
@@ -132,6 +139,8 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
 
 interface Namespace<DT : Definition<DT>> : Formatable {
     val qualifiedName: QualifiedName
+
+    val options: List<Option>
 
     /**
      * Things in these namespaces can be referenced non-qualified

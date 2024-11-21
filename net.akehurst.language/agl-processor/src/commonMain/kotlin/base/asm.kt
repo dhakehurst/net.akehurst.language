@@ -19,6 +19,11 @@ package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
 
+data class OptionDefault(
+    override val name: String,
+    override val value: String
+) : Option
+
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>> : Model<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
@@ -116,6 +121,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
 
 class ModelDefault(
     override val name: SimpleName,
+    override val options: List<Option>,
     override val namespace: List<NamespaceDefault>
 ) : ModelAbstract<NamespaceDefault, DefinitionDefault>() {
 
@@ -123,6 +129,7 @@ class ModelDefault(
 
 class NamespaceDefault(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     override val import: List<Import>
 ) : NamespaceAbstract<DefinitionDefault>() {
 

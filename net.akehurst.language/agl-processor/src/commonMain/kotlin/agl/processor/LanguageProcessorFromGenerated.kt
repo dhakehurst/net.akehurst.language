@@ -37,7 +37,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     override val targetRuleSet: RuleSet = generated.ruleSet
     override val grammarModel: GrammarModel = generated.grammar
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
-    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(grammarModel.name, emptyList())
+    override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(grammarModel.name,  emptyList(),emptyList())
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser

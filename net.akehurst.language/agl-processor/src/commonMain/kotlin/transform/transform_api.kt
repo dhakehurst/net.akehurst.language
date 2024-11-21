@@ -19,6 +19,7 @@ package net.akehurst.language.transform.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -38,9 +39,21 @@ interface TransformNamespace : Namespace<TransformRuleSet> {
 
 }
 
+interface TransformRuleSetReference {
+    val localNamespace: TransformNamespace
+    val nameOrQName: PossiblyQualifiedName
+    var resolved: TransformRuleSet?
+
+    fun resolveAs(resolved: TransformRuleSet)
+}
+
 interface TransformRuleSet : Definition<TransformRuleSet> {
 
     override val namespace: TransformNamespace
+
+    val extends: List<TransformRuleSetReference>
+
+    val options: List<Option>
 
     /**
      * map from grammar-rule name to TransformationRule

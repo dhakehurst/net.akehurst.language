@@ -58,7 +58,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglStyleModelDefault(SimpleName("ParsedUnit"), listOf(ns))
+        val su = AglStyleModelDefault(SimpleName("ParsedUnit"),  emptyList(),listOf(ns))
         return su
     }
 
@@ -66,7 +66,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
         val imports = emptyList<Import>()
-        return StyleNamespaceDefault(qualifiedName.asQualifiedName(null), imports)
+        return StyleNamespaceDefault(qualifiedName.asQualifiedName(null), emptyList(),imports)
     }
 
     // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;

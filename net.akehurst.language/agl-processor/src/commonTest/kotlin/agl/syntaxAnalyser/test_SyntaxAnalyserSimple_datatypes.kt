@@ -72,7 +72,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val typeModel by lazy {
             asmTransformModel.typeModel!!
         }
-        val scopeModel = CrossReferenceModelDefault(grammar.primary!!.name, emptyList())
+        val scopeModel = CrossReferenceModelDefault(grammar.primary!!.name)
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
         val processor = Agl.processorFromString<Asm, ContextAsmSimple>(
             grammarStr,

@@ -41,7 +41,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    GrammarModelDefault(SimpleName(identity.last), emptyList()),
+    GrammarModelDefault(SimpleName(identity.last)),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -140,8 +140,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue?.value, aglOptions)
             this._issues.addAll(res.issues)
             this.grammarModel = when {
-                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"), emptyList())
-                else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last), emptyList())
+                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
+                else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

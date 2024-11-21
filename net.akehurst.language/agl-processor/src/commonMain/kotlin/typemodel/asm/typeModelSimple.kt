@@ -26,6 +26,7 @@ import net.akehurst.language.util.cached
 
 class TypeModelSimple(
     override val name: SimpleName,
+    override val options: List<Option> = emptyList()
 ) : TypeModelSimpleAbstract() {
 
     companion object {
@@ -75,7 +76,7 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
         return if (_namespace.value.containsKey(qualifiedName)) {
             _namespace.value[qualifiedName]!!
         } else {
-            val ns = TypeNamespaceSimple(qualifiedName, imports)
+            val ns = TypeNamespaceSimple(qualifiedName, emptyList(), imports)
             addNamespace(ns)
             ns
         }
@@ -466,6 +467,7 @@ class UnnamedSupertypeTypeInstance(
 
 class TypeNamespaceSimple(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     import: List<Import>
 ) : TypeNamespaceAbstract(import) {
 

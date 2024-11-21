@@ -36,8 +36,6 @@ grammar AglGrammar extends Base {
     unit = namespace grammar+ ;
     grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
-    option = '@' IDENTIFIER ':' value ;
-    value = IDENTIFIER | LITERAL ;
     rule = grammarRule | overrideRule | preferenceRule ;
     grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
     overrideRule = 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
@@ -100,13 +98,6 @@ grammar AglGrammar extends Base {
             }
             concatenation("extends") {
                 lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
-            }
-            concatenation("option") {
-                lit("@"); ref("IDENTIFIER"); lit(":"); ref("value")
-            }
-            choice("value") {
-                ref("IDENTIFIER")
-                ref("LITERAL")
             }
             choice("rule") {
                 ref("grammarRule")

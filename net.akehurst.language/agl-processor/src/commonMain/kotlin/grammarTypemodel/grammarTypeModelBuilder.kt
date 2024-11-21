@@ -61,7 +61,7 @@ class GrammarTypeNamespaceBuilder(
     imports: MutableList<Import>,
     resolveImports:Boolean
 ) {
-    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
+    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, emptyList(), imports).also {
         if(resolveImports) {
             it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
         }

@@ -48,11 +48,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             })
             assertNotNull(result.asm)
             assertTrue(result.issues.isEmpty(), result.issues.toString())
-            val grammar = result.asm!!.allDefinitions.first()
+            val grammarMdl = result.asm!!
 
-            val grmrTypeModel = TypeModelSimple(grammar.name)
+            val grmrTypeModel = TypeModelSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            val atfg = TransformModelDefault.fromGrammar(grammar)
+            val atfg = TransformModelDefault.fromGrammarModel(grammarMdl)
             //val actualTr = atfg.build()
 
             assertTrue(atfg.issues.isEmpty(), atfg.issues.toString())

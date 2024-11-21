@@ -174,7 +174,7 @@ class test_LanguageDefinitionDefault {
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")),GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -205,7 +205,7 @@ class test_LanguageDefinitionDefault {
         )
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")),GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -232,7 +232,7 @@ class test_LanguageDefinitionDefault {
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test"), emptyList()),GrammarModelDefault(SimpleName("Error"), emptyList())))
+        val exp1:List<Pair<GrammarModel,GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")),GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -282,7 +282,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("test"), emptyList()))), grammarObserverCalled)
+        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("test")))), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)

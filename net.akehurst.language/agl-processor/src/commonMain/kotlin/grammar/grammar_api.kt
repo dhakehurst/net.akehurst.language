@@ -44,11 +44,6 @@ interface GrammarReference {
     fun resolveAs(resolved: Grammar)
 }
 
-interface GrammarOption {
-    val name: String
-    val value: String
-}
-
 /**
  *
  * The definition of a Grammar. A grammar defines a list of rules and may be defined to extend a number of other Grammars.
@@ -65,7 +60,7 @@ interface Grammar : Definition<Grammar> {
 
     val extendsResolved: List<Grammar>
 
-    val options: List<GrammarOption>
+    val options: List<Option>
 
     val defaultGoalRule: GrammarRule
 
@@ -197,7 +192,7 @@ interface NormalRule : GrammarRule {
 
 enum class OverrideKind {
     REPLACE,
-    APPEND_ALTERNATIVE,
+    APPEND_ALTERNATIVE, // either append this as another option or convert original toa choice and append this option
     SUBSTITUTION
 }
 

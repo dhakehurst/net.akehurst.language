@@ -92,7 +92,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
-            CrossReferenceModelDefault(p.grammarModel!!.name, emptyList()),
+            CrossReferenceModelDefault(p.grammarModel!!.name,  emptyList(),emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -106,7 +106,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList(), emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -167,7 +167,7 @@ internal class LanguageProcessorConfigurationSimple(
     },
     override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList(), emptyList()),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

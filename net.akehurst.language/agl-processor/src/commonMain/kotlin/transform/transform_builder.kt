@@ -71,7 +71,7 @@ class AsmTransformModelBuilder internal constructor(
         namespaces.add(v)
     }
 
-    fun build(): TransformModel = TransformModelDefault(name, typeModel, namespaces)
+    fun build(): TransformModel = TransformModelDefault(name, emptyList(), namespaces).also { it.typeModel = typeModel }
 }
 
 @AsmTransformModelDslMarker
@@ -81,7 +81,7 @@ class AsmTransformNamespaceBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val namespace = TransformNamespaceDefault(qualifiedName, emptyList())
+    private val namespace = TransformNamespaceDefault(qualifiedName, emptyList(), emptyList())
 
     fun transform(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
         val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typeModel, createTypes)
@@ -214,7 +214,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun build(): TransformRuleSet {
-        val rule = TransformRuleSetDefault(namespace, name, _rules)
+        val rule = TransformRuleSetDefault(namespace, name, emptyList(), emptyList(), _rules)
         namespace.addDefinition(rule)
         return rule
     }

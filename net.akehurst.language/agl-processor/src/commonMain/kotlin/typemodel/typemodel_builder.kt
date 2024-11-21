@@ -70,7 +70,7 @@ class TypeNamespaceBuilder(
     imports: List<Import>
 ) {
 
-    private val _namespace = TypeNamespaceSimple(qualifiedName, imports)
+    private val _namespace = TypeNamespaceSimple(qualifiedName, emptyList(), imports)
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     fun primitiveType(typeName: String): PrimitiveType =

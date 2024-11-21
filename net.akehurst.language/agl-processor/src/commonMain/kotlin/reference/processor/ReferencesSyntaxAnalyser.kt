@@ -67,10 +67,11 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
     )
 
-    // override unit = namespace* ;
+    //  Base::unit = options* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceModelDefault {
-        val namespace = children as List<CrossReferenceNamespace>
-        val result = CrossReferenceModelDefault(SimpleName("Unit"), namespace)
+        val options = children[0] as List<Option>
+        val namespace = children[1] as List<CrossReferenceNamespace>
+        val result = CrossReferenceModelDefault(SimpleName("Unit"), options, namespace)
         //namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result
     }
@@ -80,7 +81,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val qualifiedName = children[1] as PossiblyQualifiedName
         val imports = children[2] as List<Import>
         val declarations = children[3] as (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault
-        val ns = CrossReferenceNamespaceDefault(qualifiedName.asQualifiedName(null), imports)
+        val ns = CrossReferenceNamespaceDefault(qualifiedName.asQualifiedName(null),  emptyList(),imports)
         val def = declarations.invoke(ns)
         ns.addDefinition(def)
         return ns

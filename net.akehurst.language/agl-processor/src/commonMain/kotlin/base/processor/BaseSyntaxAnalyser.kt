@@ -32,23 +32,26 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         super.register(this::namespace)
         super.register(this::import)
         super.register(this::definition)
+        super.register(this::option)
         super.register(this::possiblyQualifiedName)
     }
 
-    //unit = namespace* ;
+    // unit = option* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ModelDefault {
-        val namespace = children as List<NamespaceDefault>
-        val result = ModelDefault(SimpleName("Unit"), namespace)
+        val options = children[0] as List<Option>
+        val namespace = children[1] as List<NamespaceDefault>
+        val result = ModelDefault(SimpleName("Unit"), options, namespace)
         return result
     }
 
-    //namespace = 'namespace' possiblyQualifiedName import* definition*;
+    // namespace = 'namespace' possiblyQualifiedName option* import* definition*;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NamespaceDefault {
         val pqn = children[1] as PossiblyQualifiedName
-        val import = children[2] as List<Import>
-        val definition = children[3] as List<(NamespaceDefault) -> DefinitionDefault>
+        val options = children[2] as List<Option>
+        val import = children[3] as List<Import>
+        val definition = children[4] as List<(NamespaceDefault) -> DefinitionDefault>
 
-        val ns = NamespaceDefault(pqn.asQualifiedName(null), import)
+        val ns = NamespaceDefault(pqn.asQualifiedName(null),options, import)
         definition.forEach {
             val def = it.invoke(ns)
             ns.addDefinition(def)
@@ -64,6 +67,13 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
     private fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (NamespaceDefault) -> DefinitionDefault {
         val id = SimpleName(children[1] as String)
         return { ns -> DefinitionDefault(ns,id) }
+    }
+
+    // option = '#' IDENTIFIER ':' IDENTIFIER ;
+    private fun option(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): OptionDefault {
+        val name = children[1] as String
+        val value = children[3] as String
+        return OptionDefault(name,value)
     }
 
     // possiblyQualifiedName = [IDENTIFIER / '.']+ ;

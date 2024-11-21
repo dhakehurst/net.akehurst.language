@@ -146,7 +146,7 @@ object Agl {
                 typeModelResolver { p -> TypeModelSimple.fromString(typeModelStr) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), transformStr) }
+                asmTransformResolver { p -> TransformModelDefault.fromString(ContextFromTypeModel(p.baseTypeModel), transformStr) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
@@ -239,7 +239,7 @@ object Agl {
             ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
         } else {
             val res = Agl.registry.agl.grammar.processor!!.process(sentence, aglOptions)
-            ProcessResultDefault(res.asm ?: GrammarModelDefault(SimpleName("fromString-error"), emptyList()), res.issues)
+            ProcessResultDefault(res.asm ?: GrammarModelDefault(SimpleName("fromString-error")), res.issues)
         }
     }
 }

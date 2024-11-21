@@ -16,17 +16,17 @@
 
 package net.akehurst.language.grammar.asm
 
+import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.base.api.*
-import net.akehurst.language.grammar.api.*
 import net.akehurst.language.collections.*
-
+import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.processor.AglGrammar
 
 class GrammarModelDefault(
     override val name: SimpleName,
-    override val namespace: List<GrammarNamespace>
+    override val options: List<Option> =  emptyList(),
+    override val namespace: List<GrammarNamespace> = emptyList()
 ) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>() {
 
     override fun hashCode(): Int = arrayOf(name, namespace).contentHashCode()
@@ -40,13 +40,11 @@ class GrammarModelDefault(
     override fun toString(): String = "GrammarModel '$name'"
 }
 
-/**
- * The last grammar defined in the last namespace
- */
-fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, listOf(this.namespace as GrammarNamespace))
+fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, emptyList(), listOf(this.namespace as GrammarNamespace))
 
 class GrammarNamespaceDefault(
-    override val qualifiedName: QualifiedName
+    override val qualifiedName: QualifiedName,
+    override val options: List<Option>
 ) : GrammarNamespace, NamespaceAbstract<Grammar>() {
 
     // no support for importing grammars currently, mutable so serialisation works
@@ -59,7 +57,7 @@ class GrammarNamespaceDefault(
 class GrammarDefault(
     namespace: GrammarNamespace,
     name: SimpleName,
-    override val options: List<GrammarOption>
+    override val options: List<Option>
 ) : GrammarAbstract(namespace, name) {
 
     companion object {
@@ -73,11 +71,6 @@ class GrammarDefault(
             ?: this.allResolvedGrammarRule.firstOrNull { it.isSkip.not() }
             ?: error("Could not find default grammar rule or first non skip rule")
 }
-
-data class GrammarOptionDefault(
-    override val name: String,
-    override val value: String
-) : GrammarOption
 
 data class GrammarReferenceDefault(
     override val localNamespace: Namespace<Grammar>,

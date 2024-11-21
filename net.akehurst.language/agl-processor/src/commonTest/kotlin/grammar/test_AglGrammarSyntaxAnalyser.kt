@@ -58,7 +58,7 @@ class test_AglGrammarSyntaxAnalyser {
             val sut = AglGrammarSyntaxAnalyser()
             val res = sut.transform(sppt) { _, _ -> TODO() }
             assertTrue(res.issues.isEmpty(), res.issues.toString())
-            val expectedMdl = GrammarModelDefault(SimpleName("Test"), listOf(expected.namespace as GrammarNamespace))
+            val expectedMdl = GrammarModelDefault(SimpleName("Test"), emptyList(), listOf(expected.namespace as GrammarNamespace))
             assertEquals(expectedMdl.asString(), res.asm!!.asString())
         }
     }

@@ -29,7 +29,8 @@ import net.akehurst.language.reference.api.*
 
 class CrossReferenceModelDefault(
     override val name: SimpleName,
-    override val namespace: List<CrossReferenceNamespace>
+    override val options: List<Option> = emptyList(),
+    override val namespace: List<CrossReferenceNamespace> = emptyList()
 ) : ModelAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(), CrossReferenceModel {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
@@ -122,6 +123,7 @@ class CrossReferenceModelDefault(
 
 class CrossReferenceNamespaceDefault(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     override val import: List<Import>
 ) : NamespaceAbstract<DeclarationsForNamespace>(), CrossReferenceNamespace {
 

@@ -332,7 +332,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 }
 
                 else -> this.findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag)
-                    ?: error("Should not happen")
+                    ?: error("Transform Rule for '${nodeInfo.node.rule.tag}' not found")
             }
         }
     }

@@ -28,7 +28,7 @@ import net.akehurst.language.grammar.asm.*
 annotation class GrammarBuilderMarker
 
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
-    val ns = GrammarNamespaceDefault(QualifiedName(namespace))
+    val ns = GrammarNamespaceDefault(QualifiedName(namespace), emptyList())
     val gr = GrammarDefault(ns, SimpleName(name), emptyList())
     ns.addDefinition(gr)
     val b = GrammarBuilder(gr)

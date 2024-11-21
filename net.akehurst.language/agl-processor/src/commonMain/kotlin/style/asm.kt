@@ -26,6 +26,7 @@ import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(
     override val name: SimpleName,
+    override val options: List<Option>,
     override val namespace: List<StyleNamespace>
 ) : AglStyleModel, ModelAbstract<StyleNamespace, StyleSet>() {
 
@@ -55,6 +56,7 @@ class AglStyleModelDefault(
 
 class StyleNamespaceDefault(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     override val import: List<Import>
 ) : StyleNamespace, NamespaceAbstract<StyleSet>() {
 

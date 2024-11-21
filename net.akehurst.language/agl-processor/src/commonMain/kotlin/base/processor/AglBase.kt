@@ -35,11 +35,12 @@ object AglBase {
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
-    unit = namespace* ;
-    namespace = 'namespace' possiblyQualifiedName import* definition*;
+    unit = option* namespace* ;
+    namespace = 'namespace' possiblyQualifiedName option* import* definition*;
     import = 'import' possiblyQualifiedName ;
     definition = 'definition' IDENTIFIER ;
     possiblyQualifiedName = [IDENTIFIER / '.']+ ;
+    option = '#' IDENTIFIER ':' IDENTIFIER ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
   }"""
 
@@ -52,15 +53,19 @@ object AglBase {
             concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/") }
             concatenation("SINGLE_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("//[^\\n\\r]*") }
 
-            list("unit",0,-1) { ref("namespace") }
+            concatenation("unit") { lst(0, -1) { ref("option") }; lst(0, -1) { ref("namespace") } }
             concatenation("namespace") {
                 lit("namespace"); ref("possiblyQualifiedName")
-                lst(0,-1) {ref("import")}
-                lst(0,-1) {ref("definition")}
+                lst(0, -1) { ref("option") };
+                lst(0, -1) { ref("import") }
+                lst(0, -1) { ref("definition") }
             }
             concatenation("import") { lit("import"); ref("possiblyQualifiedName") }
             concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
             separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
+            concatenation("option") {
+                lit("#"); ref("IDENTIFIER"); lit(":"); ref("IDENTIFIER")
+            }
             concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
         }
     }

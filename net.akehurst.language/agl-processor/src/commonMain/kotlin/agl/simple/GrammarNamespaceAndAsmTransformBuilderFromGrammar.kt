@@ -91,9 +91,10 @@ internal class GrammarModel2TransformModel(
     fun build(): TransformModel {
         val transModel = TransformModelDefault(
             name = grammarModel.allDefinitions.last().name,
-            typeModel = typeModel,
+            emptyList(),
             namespace = emptyList()
         )
+        transModel.typeModel = typeModel
         for (grammar in grammarModel.allDefinitions) {
             val rel = Grammar2Namespaces(issues, typeModel, transModel, grammar, configuration)
             rel.build()
@@ -130,6 +131,7 @@ internal class Grammar2Namespaces(
             ?: let {
                 val ns = GrammarTypeNamespaceSimple(
                     qualifiedName = qualifiedName,
+                    emptyList(),
                     import = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
                 )
                 typeModel.addAllNamespaceAndResolveImports(listOf(SimpleTypeModelStdLib, ns))
@@ -208,7 +210,7 @@ internal class Grammar2TransformRuleSet(
             trRules.add(value)
             (grammarTypeNamespace as GrammarTypeNamespaceSimple).allRuleNameToType[key] = value.resolvedType
         }
-        return TransformRuleSetDefault(transformNamespace, grammar.name, trRules)
+        return TransformRuleSetDefault(transformNamespace, grammar.name, emptyList(), emptyList(), trRules) //TODO: extends & options
     }
 
     private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): TransformationRule {

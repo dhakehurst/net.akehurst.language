@@ -44,10 +44,10 @@ class test_CrossReferences {
         val aglProc = Agl.registry.agl.crossReference.processor!!
 
         fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
-            val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.allDefinitions[0]
-            val grmrTypeModel = TypeModelSimple(grammar.name)
+            val grammarMdl = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
+            val grmrTypeModel = TypeModelSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            TransformModelDefault.fromGrammar(grammar, grmrTypeModel)
+            TransformModelDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
             val ctx = ContextFromTypeModel(tm)

@@ -122,7 +122,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val crossReferenceModel: CrossReferenceModel by lazy {
         val res = configuration.crossReferenceModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: CrossReferenceModelDefault(grammarModel.name, emptyList())
+        res?.asm ?: CrossReferenceModelDefault(grammarModel.name,  emptyList(),emptyList())
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {

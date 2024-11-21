@@ -49,6 +49,7 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.grammar.asm.asGrammarModel
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.style.processor.AglStyle
@@ -69,7 +70,7 @@ interface AglLanguages {
     val base: LanguageDefinition<Any, SentenceContext<String>>
     val expressions: LanguageDefinition<Expression, SentenceContext<String>>
     val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry>
-    val asmTransform: LanguageDefinition<TransformModel, ContextFromGrammar>
+    val asmTransform: LanguageDefinition<TransformModel, ContextFromTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
     val format: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
@@ -93,7 +94,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<Any, SentenceContext<String>>(
                     identity = baseLanguageIdentity,
-                    AglBase.grammar,
+                    AglBase.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglBase.grammar.name.value)
@@ -123,7 +124,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<Expression, SentenceContext<String>>(
                     identity = expressionsLanguageIdentity,
-                    AglExpressions.grammar,
+                    AglExpressions.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglExpressions.grammar.name.value)
@@ -152,7 +153,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = grammarLanguageIdentity,
-                    AglGrammar.grammar,
+                    AglGrammar.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglGrammar.grammar.name.value)
@@ -177,11 +178,11 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val asmTransform: LanguageDefinition<TransformModel, ContextFromGrammar> by lazy {
+        override val asmTransform: LanguageDefinition<TransformModel, ContextFromTypeModel> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = asmTransformLanguageIdentity,
-                    AsmTransform.grammar,
+                    AsmTransform.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AsmTransform.grammar.name.value)
@@ -210,7 +211,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<CrossReferenceModel, ContextFromTypeModel>(
                     identity = crossReferenceLanguageIdentity,
-                    AglCrossReference.grammar,
+                    AglCrossReference.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglCrossReference.grammar.name.value)
@@ -239,7 +240,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<AglFormatterModel, SentenceContext<String>>(
                     identity = formatLanguageIdentity,
-                    AglFormat.grammar,
+                    AglFormat.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglFormat.grammar.name.value)
@@ -273,7 +274,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = styleLanguageIdentity,
-                    AglStyle.grammar,
+                    AglStyle.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglStyle.grammar.name.value)

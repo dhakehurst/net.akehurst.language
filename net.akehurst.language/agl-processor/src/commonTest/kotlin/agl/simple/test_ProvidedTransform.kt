@@ -73,6 +73,7 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent(),
                 transformStr = """
+                    #create-missing-types:true
                     namespace test
                       transform Test {
                         S : XXX { yyy := child[0] }
@@ -84,7 +85,42 @@ class test_ProvidedTransform {
                     TestDataProcessorSentencePass(
                         "a",
                         asmSimple {
-
+                            element("XXX") {
+                                propertyString("yyy","a")
+                            }
+                        }
+                    )
+                )
+            ),
+            TestDataProcessor(
+                "",
+                grammarStr = """
+                    namespace test
+                      grammar Test {
+                        S = A | B ;
+                        A = a a ;
+                        B = 'b' b ;
+                        leaf a = 'a';
+                        leaf b = 'b';
+                      }
+                """.trimIndent(),
+                transformStr = """
+                    #create-missing-types:true
+                    namespace test
+                      transform Test {
+                        #override-default-transform:true
+                        S : XXX { yyy := child[0] }
+                      }
+                """.trimIndent(),
+                "",
+                "S",
+                listOf(
+                    TestDataProcessorSentencePass(
+                        "aa",
+                        asmSimple {
+                            element("XXX") {
+                                propertyString("yyy","a")
+                            }
                         }
                     )
                 )
@@ -94,8 +130,13 @@ class test_ProvidedTransform {
     }
 
     @Test
-    fun t() {
+    fun transform_for_user_goal_one_rule_one_leaf() {
         testPass(testData[0])
+    }
+
+    @Test
+    fun transform_for_user_goal_three_rule_two_leaf() {
+        testPass(testData[1])
     }
 
 }

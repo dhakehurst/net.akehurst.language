@@ -19,6 +19,7 @@ package net.akehurst.language.transform.processor
 
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
 
 object AsmTransform {
@@ -35,13 +36,25 @@ object AsmTransform {
         extendsGrammar(AglBase.grammar.selfReference)
 
         concatenation("unit") {
-            ref("namespace"); lst(1, -1) { ref("transform") }
+            lst(0, -1) { ref("option") }
+            lst(0, -1) { ref("namespace") }
         }
+        concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+            lit("namespace"); ref("possiblyQualifiedName")
+            lst(0, -1) { ref("option") }
+            lst(0, -1) { ref("typeImport") }
+            lst(0, -1) { ref("import") }
+            lst(0, -1) { ref("transform") }
+        }
+        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
         concatenation("transform") {
-            lit("transform");ref("IDENTIFIER");lit("{")
+            lit("transform"); ref("IDENTIFIER"); opt { ref("extends") }
+            lit("{")
+            lst(0, -1) { ref("option") }
             lst(1, -1) { ref("transformRule") }
             lit("}")
         }
+        concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
         concatenation("transformRule") {
             ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
         }
@@ -72,8 +85,11 @@ namespace net.akehurst.language.agl
 
 grammar Transform : Base {
 
-    unit = namespace transform+ ;
-    transform = 'transform' IDENTIFIER '{' transformRule+ '} ;
+    unit = option* namespace* ;
+    override namespace = 'namespace' possiblyQualifiedName option* typeImport* import* transform* ;
+    typeImport = 'import-types' possiblyQualifiedName ;
+    transform = 'transform' IDENTIFIER extends? '{' option* transformRule+ '} ;
+    extends = ':' [possiblyQualifiedName / ',']+ ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
     transformRuleRhs = createRule | modifyRule ;
     createRule = expression ;

@@ -20,6 +20,7 @@ package net.akehurst.language.grammarTypemodel.asm
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.Option
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.DataType
@@ -28,6 +29,7 @@ import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     import: List<Import>
 ) : GrammarTypeNamespaceAbstract(import)
 

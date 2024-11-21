@@ -53,8 +53,6 @@ internal class AglGrammarSyntaxAnalyser(
         this.register(this::unit)
         this.register(this::namespace)
         this.register(this::grammar)
-        this.register(this::option)
-        this.register(this::value)
         this.register(this::extends)
         this.register(this::rules)
         this.register(this::rule)
@@ -101,7 +99,7 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = children[0] as GrammarNamespaceDefault
         val grammarList = children[1] as List<Grammar>
         namespace.addAllDefinition(grammarList)
-        val unit = GrammarModelDefault(SimpleName("ParsedUnit"), listOf(namespace as GrammarNamespace))
+        val unit = GrammarModelDefault(SimpleName("ParsedUnit"), emptyList(), listOf(namespace as GrammarNamespace))
         return unit
     }
 
@@ -109,7 +107,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarNamespace {
         val pqn = children[1] as PossiblyQualifiedName
         val nsName = pqn.asQualifiedName(null)
-        val ns = GrammarNamespaceDefault(nsName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val ns = GrammarNamespaceDefault(nsName, emptyList())//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         _localStore["namespace"] = ns
         return ns
     }
@@ -119,7 +117,7 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = _localStore["namespace"] as GrammarNamespace
         val name = SimpleName(children[1] as String)
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
-        val options = (children[4] as List<GrammarOption>)
+        val options = (children[4] as List<Option>)
         val rules = children[5] as List<Pair<Boolean, (Grammar) -> GrammarItem>>
         val grmRules = rules.filter { it.first }.map { it.second }
         val precRules = rules.filter { it.first.not() }.map { it.second }
@@ -136,20 +134,6 @@ internal class AglGrammarSyntaxAnalyser(
             grmr.preferenceRule.add(item as PreferenceRule)
         }
         return grmr
-    }
-
-    // option = '@' IDENTIFIER ':' value ;
-    private fun option(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarOption {
-        val name = children[1] as String
-        val value = children[3] as String
-        return GrammarOptionDefault(name, value)
-    }
-
-    // value = IDENTIFIER | LITERAL ;
-    private fun value(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String = when (target.alt.option.asIndex) {
-        0 -> children[0] as String
-        1 -> (children[0] as String).let { it.substring(1, it.length - 1) }
-        else -> error("Unsupported choice")
     }
 
     // extends = 'extends' [possiblyQualifiedName / ',']+ ;

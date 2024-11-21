@@ -32,7 +32,6 @@ object AglCrossReference {
 
 grammar CrossReferences extends Expressions {
 
-    override unit = namespace* ;
     override namespace = 'namespace' possiblyQualifiedName import* declarations ;
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
@@ -63,7 +62,6 @@ grammar CrossReferences extends Expressions {
         name = "CrossReferences"
     ) {
         extendsGrammar(AglExpressions.grammar.selfReference)
-        list("unit", 0, -1, overrideKind = OverrideKind.REPLACE) { ref("namespace") }
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("import") }

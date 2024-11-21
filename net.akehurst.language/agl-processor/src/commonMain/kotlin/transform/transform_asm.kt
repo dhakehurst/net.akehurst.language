@@ -29,15 +29,13 @@ import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.api.GrammarNamespace
-import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.transform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -48,12 +46,12 @@ import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
 
 class TransformModelDefault(
     override val name: SimpleName,
-    override val typeModel: TypeModel?,
+    override val options: List<Option>,
     namespace: List<TransformNamespace>
 ) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>() {
 
     companion object {
-        fun fromString(context: ContextFromGrammar, transformStr: TransformString): ProcessResult<TransformModel> {
+        fun fromString(context: ContextFromTypeModel, transformStr: TransformString): ProcessResult<TransformModel> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             return proc.process(
                 sentence = transformStr.value,
@@ -73,16 +71,9 @@ class TransformModelDefault(
             return ProcessResultDefault<TransformModel>(trModel, atfg.issues)
         }
 
-        fun fromGrammar(
-            grammar: Grammar,
-            typeModel: TypeModel = TypeModelSimple(grammar.name),
-            configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
-        ): ProcessResult<TransformModel> {
-            val grammarModel = GrammarModelDefault(grammar.name, listOf(grammar.namespace as GrammarNamespace))
-            return fromGrammarModel(grammarModel, typeModel, configuration)
-        }
-
     }
+
+    override var typeModel: TypeModel? = null
 
     private val _namespace: Map<QualifiedName, TransformNamespace> = linkedMapOf<QualifiedName, TransformNamespace>().also { map ->
         namespace.forEach { map[it.qualifiedName] = it }
@@ -93,7 +84,7 @@ class TransformModelDefault(
         return if (_namespace.containsKey(qualifiedName)) {
             _namespace[qualifiedName]!!
         } else {
-            val ns = TransformNamespaceDefault(qualifiedName,imports)//, imports)
+            val ns = TransformNamespaceDefault(qualifiedName, emptyList(),imports)//, imports)
             addNamespace(ns)
             ns
         }
@@ -114,18 +105,33 @@ class TransformModelDefault(
 
 class TransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
+    override val options: List<Option>,
     override val import: List<Import>
 ) : TransformNamespace, NamespaceAbstract<TransformRuleSet>() {
 
 }
 
+data class TransformRuleSetReferenceDefault(
+    override val localNamespace: TransformNamespace,
+    override val nameOrQName: PossiblyQualifiedName
+) : TransformRuleSetReference {
+    override var resolved: TransformRuleSet? = null
+    override fun resolveAs(resolved: TransformRuleSet) {
+        this.resolved = resolved
+    }
+}
+
 class TransformRuleSetDefault(
     override val namespace: TransformNamespace,
     override val name: SimpleName,
+    argExtends: List<TransformRuleSetReference>,
+    override val options: List<Option>,
     _rules: List<TransformationRule>
 ) : TransformRuleSet {
 
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+
+    override val extends: List<TransformRuleSetReference> = argExtends.toMutableList() //clone the list so it can be modified
 
     override val rules: Map<GrammarRuleName, TransformationRule> = _rules.associateBy(TransformationRule::grammarRuleName).toMutableMap()
 
@@ -134,6 +140,10 @@ class TransformRuleSetDefault(
 
     override fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule? =
         rules[grmRuleName]
+
+    fun addExtends(other:TransformRuleSetReference) {
+        (this.extends as MutableList).add(other)
+    }
 
     fun addRule(tr: TransformationRule) {
         (rules as MutableMap)[tr.grammarRuleName] = tr

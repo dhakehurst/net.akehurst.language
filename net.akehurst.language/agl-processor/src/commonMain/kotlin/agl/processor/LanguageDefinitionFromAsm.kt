@@ -24,15 +24,16 @@ import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.api.processor.LanguageIdentity
 
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.grammar.api.GrammarModel
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    grammar: Grammar,
+    grammarModel: GrammarModel,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    grammar.asGrammarModel(),
+    grammarModel,
     buildForDefaultGoal,
     initialConfiguration
 ) {
