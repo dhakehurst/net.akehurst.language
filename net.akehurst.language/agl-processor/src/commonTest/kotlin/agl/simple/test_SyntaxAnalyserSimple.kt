@@ -28,10 +28,12 @@ import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -306,24 +308,26 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(proc, grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("NAME")
-            // S = type ;
-            dataType("S", "S") {
-                propertyDataTypeOf("type", "Type", false, 0)
-            }
-            // type = NAME typeArgs? ;
-            dataType("type", "Type") {
-                propertyPrimitiveType("name", "String", false, 0)
-                propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
-            }
-            // typeArgs = '<' typeArgList '>' ;
-            dataType("typeArgs", "TypeArgs") {
-                propertyListTypeOf("typeArgList", "Type", false, 1)
-            }
-            // typeArgList = [type / ',']+ ;
-            dataType("typeArgList", "TypeArgList") {
-                propertyListTypeOf("type", "Type", false, 0)
+        checkTypeModel(proc, typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("NAME")
+                // S = type ;
+                dataType("S", "S") {
+                    propertyDataTypeOf("type", "Type", false, 0)
+                }
+                // type = NAME typeArgs? ;
+                dataType("type", "Type") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                    propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
+                }
+                // typeArgs = '<' typeArgList '>' ;
+                dataType("typeArgs", "TypeArgs") {
+                    propertyListTypeOf("typeArgList", "Type", false, 1)
+                }
+                // typeArgList = [type / ',']+ ;
+                dataType("typeArgList", "TypeArgList") {
+                    propertyListTypeOf("type", "Type", false, 0)
+                }
             }
         })
 

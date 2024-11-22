@@ -18,6 +18,7 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.*
 import net.akehurst.language.collections.toSeparatedList
@@ -69,10 +70,10 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
         return { ns -> DefinitionDefault(ns,id) }
     }
 
-    // option = '#' IDENTIFIER ':' IDENTIFIER ;
+    // option = '#' IDENTIFIER (':' IDENTIFIER)? ;
     private fun option(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): OptionDefault {
         val name = children[1] as String
-        val value = children[3] as String
+        val value = (children[2] as List<String>?)?.let { it[1] } ?: "true"
         return OptionDefault(name,value)
     }
 

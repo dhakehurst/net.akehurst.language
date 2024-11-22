@@ -58,7 +58,7 @@ class ReferencesSemanticAnalyser(
         asm: CrossReferenceModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromTypeModel?,
-        options: SemanticAnalysisOptions<CrossReferenceModel, ContextFromTypeModel>
+        options: SemanticAnalysisOptions< ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         _context = context

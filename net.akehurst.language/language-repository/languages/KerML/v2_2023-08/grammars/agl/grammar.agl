@@ -451,7 +451,7 @@ grammar Meta : Containers, Classifiers, Features {
 
 grammar KerML : Meta, Behaviors, Connectors {
 
-    @defaultGoalRule: RootNamespace
+    #defaultGoalRule: RootNamespace
 
     RootNamespace = NamespaceBodyElement* ;
 

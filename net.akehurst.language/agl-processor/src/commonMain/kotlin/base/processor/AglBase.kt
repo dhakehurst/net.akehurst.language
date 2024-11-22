@@ -40,7 +40,7 @@ object AglBase {
     import = 'import' possiblyQualifiedName ;
     definition = 'definition' IDENTIFIER ;
     possiblyQualifiedName = [IDENTIFIER / '.']+ ;
-    option = '#' IDENTIFIER ':' IDENTIFIER ;
+    option = '#' IDENTIFIER (':' IDENTIFIER)? ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
   }"""
 
@@ -64,7 +64,7 @@ object AglBase {
             concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
             separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
             concatenation("option") {
-                lit("#"); ref("IDENTIFIER"); lit(":"); ref("IDENTIFIER")
+                lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("IDENTIFIER") } }
             }
             concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
         }

@@ -64,6 +64,8 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
     val modifyObjectRules: List<ModifyObjectRule>
 
     fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
+
+    fun addRule(rule: TransformationRule)
 }
 
 interface TransformationRule : Formatable {

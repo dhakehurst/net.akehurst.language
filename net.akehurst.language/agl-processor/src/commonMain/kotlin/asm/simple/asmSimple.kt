@@ -17,14 +17,60 @@
 
 package net.akehurst.language.asm.simple
 
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.expressions.processor.TypedObject
+import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
+
+class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
+
+    override fun constructAsm(): Asm  = AsmSimple()
+
+    override fun rootList(asm: Asm): List<AsmValue> {
+        return asm.root
+    }
+
+    override fun addRoot(asm: Asm, root: AsmValue) {
+        (asm as AsmSimple).addRoot(root)
+    }
+
+    override fun removeRoot(asm: Asm, root: AsmValue) {
+        (asm as AsmSimple).removeRoot(root)
+    }
+
+    override fun nothingValue(): AsmValue  = AsmNothingSimple
+    override fun anyValue(value:Any): AsmValue  = AsmAnySimple(value)
+
+    override fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValue {
+       return AsmPrimitiveSimple(qualifiedTypeName, value)
+    }
+
+    override fun listOfValues(elements: List<AsmValue>): AsmValue {
+        return AsmListSimple(elements)
+    }
+
+    override fun listOfSeparatedValues(elements: ListSeparated<AsmValue, AsmValue, AsmValue>): AsmValue {
+        return AsmListSeparatedSimple(elements)
+    }
+    override fun constructStructure(path:AsmPath, qualifiedTypeName: QualifiedName): AsmStructureSimple {
+        return AsmStructureSimple(path, qualifiedTypeName)
+    }
+
+    override fun setProperty(self: AsmStructureSimple, index:Int, name: PropertyValueName, value: AsmValue) {
+       self.setProperty(name, value,index)
+    }
+
+    override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject {
+        return self.toTypedObject(selfType)
+    }
+}
 
 class AsmPathSimple(
     override val value: String
@@ -166,7 +212,7 @@ object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
 
 class AsmAnySimple(
     override val value: Any
-): AsmValueAbstract(), AsmAny {
+) : AsmValueAbstract(), AsmAny {
     companion object {
         fun stdAny(value: Any) = AsmAnySimple(value)
     }
@@ -373,7 +419,7 @@ class AsmStructurePropertySimple(
         val v = this.value
         when {
             v is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
-            v is AsmReference-> v.resolveAs(referredValue)
+            v is AsmReference -> v.resolveAs(referredValue)
             v is AsmPrimitive && v.value is String -> {
                 val ref = AsmReferenceSimple(v.value as String, referredValue)
                 this.value = ref
@@ -419,12 +465,13 @@ class AsmStructurePropertySimple(
             is AsmStructureSimple -> "$name = :${v.typeName}"
             is AsmList -> {
                 val elems = v.elements.joinToString()
-                val elemsStr = when{
-                    elems.length > TO_STRING_MAX_LEN -> elems.substring(0,TO_STRING_MAX_LEN) + "..."
+                val elemsStr = when {
+                    elems.length > TO_STRING_MAX_LEN -> elems.substring(0, TO_STRING_MAX_LEN) + "..."
                     else -> elems
                 }
                 "$name = [$elemsStr]"
             }
+
             is AsmPrimitive -> if (isReference) "$name = &${v}" else "$name = ${v}"
             else -> "$name = ${v}"
         }
@@ -492,7 +539,7 @@ class AsmListSeparatedSimple(
 }
 
 class AsmLambdaSimple(
-    val func: (it:AsmValue) -> AsmValue
+    val func: (it: AsmValue) -> AsmValue
 ) : AsmValueAbstract(), AsmLambda {
 
     override val qualifiedTypeName = SimpleTypeModelStdLib.Lambda.qualifiedTypeName

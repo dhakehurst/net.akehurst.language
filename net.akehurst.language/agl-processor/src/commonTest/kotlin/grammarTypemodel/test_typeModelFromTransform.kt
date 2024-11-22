@@ -22,6 +22,7 @@ import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.TransformString
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -61,9 +62,11 @@ class test_typemodelFromTransform {
             }
         """.trimIndent()
 
-        val expected = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S2") {
-                propertyPrimitiveType("a", "String", false, 0)
+        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S2") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
             }
         }
         test(grammarStr, transformStr, expected)

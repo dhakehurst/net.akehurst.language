@@ -64,7 +64,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
         asm: GrammarModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammarRegistry?,
-        options: SemanticAnalysisOptions<GrammarModel, ContextFromGrammarRegistry>
+        options: SemanticAnalysisOptions< ContextFromGrammarRegistry>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false

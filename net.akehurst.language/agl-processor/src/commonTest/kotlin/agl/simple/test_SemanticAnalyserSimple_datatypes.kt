@@ -59,7 +59,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         """.trimIndent())
         val crossReferenceModelStr = CrossReferenceString("""
-            namespace test.Test {
+            namespace test.Test
                 identify Primitive by id
                 identify Datatype by id
                 identify Collection by id
@@ -69,7 +69,6 @@ class test_SemanticAnalyserSimple_datatypes {
                       property type refers-to Primitive|Datatype|Collection
                     }
                 }
-            }
         """.trimIndent())
         val processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = grammarStr,

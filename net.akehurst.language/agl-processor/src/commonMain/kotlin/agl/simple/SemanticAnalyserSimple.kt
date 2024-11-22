@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.asm.simple.AsmFactorySimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
@@ -47,7 +48,7 @@ class SemanticAnalyserSimple(
         asm: Asm,
         locationMap: Map<Any, InputLocation>?,
         context: ContextAsmSimple?,
-        options: SemanticAnalysisOptions<Asm, ContextAsmSimple>
+        options: SemanticAnalysisOptions<ContextAsmSimple>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 

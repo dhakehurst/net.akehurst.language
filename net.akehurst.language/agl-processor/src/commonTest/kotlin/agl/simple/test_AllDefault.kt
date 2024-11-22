@@ -53,9 +53,9 @@ class test_AllDefault {
          * TrNamespace.name = qualifiedName.front
          * TrRuleSet.name = qualifiedName.last
          */
-        fun asmGrammarTransform(qualifiedName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
-            val qn = QualifiedName(qualifiedName)
-            return asmTransform(qn.last.value, typeModel, createTypes) {
+        fun asmGrammarTransform(domainName: String, namespaceName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
+            val qn = QualifiedName(namespaceName)
+            return asmTransform(domainName, typeModel, createTypes) {
                 namespace(qn.front.value) {
                     transform(qn.last.value, init)
                 }
@@ -166,8 +166,10 @@ class test_AllDefault {
           namespace test.Test
           S -> datatype S
          */
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         /*
@@ -177,8 +179,11 @@ class test_AllDefault {
           }
          */
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -211,13 +216,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -251,15 +261,20 @@ class test_AllDefault {
             literal("a", "a")
 
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("a")
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("a")
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             leafStringRule("a")
@@ -295,13 +310,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { pattern("[a-z]") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -334,15 +354,20 @@ class test_AllDefault {
             concatenation("S") { ref("v") }
             pattern("v", "[a-z]")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("v")
-            dataType("S", "S") {
-                propertyPrimitiveType("v", "String", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("v")
+                dataType("S", "S") {
+                    propertyPrimitiveType("v", "String", false, 0)
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             leafStringRule("v")
@@ -384,19 +409,24 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("a", "A", false, 0)
-                propertyDataTypeOf("b", "B", false, 1)
-                propertyDataTypeOf("c", "C", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("a", "A", false, 0)
+                    propertyDataTypeOf("b", "B", false, 1)
+                    propertyDataTypeOf("c", "C", false, 2)
+                }
+                dataType("A", "A") {}
+                dataType("B", "B") {}
+                dataType("C", "C") {}
             }
-            dataType("A", "A") {}
-            dataType("B", "B") {}
-            dataType("C", "C") {}
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -443,19 +473,24 @@ class test_AllDefault {
             concatenation("B") { literal("b") }
             concatenation("C") { literal("c") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("a", "A", false, 0)
-                propertyDataTypeOf("b", "B", false, 2)
-                propertyDataTypeOf("c", "C", false, 4)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("a", "A", false, 0)
+                    propertyDataTypeOf("b", "B", false, 2)
+                    propertyDataTypeOf("c", "C", false, 4)
+                }
+                dataType("A", "A") {}
+                dataType("B", "B") {}
+                dataType("C", "C") {}
             }
-            dataType("A", "A") {}
-            dataType("B", "B") {}
-            dataType("C", "C") {}
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -501,12 +536,17 @@ class test_AllDefault {
                 literal("c")
             }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("S")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("S")
+            }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             transRule("S", "String", "child[0]")
@@ -554,33 +594,38 @@ class test_AllDefault {
             literal("c", "c")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                subtypes("A", "B", "C")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    subtypes("A", "B", "C")
+                }
+                dataType("A", "A") {
+                    supertypes("S")
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                dataType("B", "B") {
+                    supertypes("S")
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                dataType("C", "C") {
+                    supertypes("S")
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("x")
             }
-            dataType("A", "A") {
-                supertypes("S")
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            dataType("B", "B") {
-                supertypes("S")
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            dataType("C", "C") {
-                supertypes("S")
-                propertyPrimitiveType("c", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("x")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             subtypeRule("S", "S")
@@ -664,37 +709,42 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                tupleType {
-                    typeRef("a", "A", false)
-                    typeRef("b", "B", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    tupleType {
+                        typeRef("a", "A", false)
+                        typeRef("b", "B", false)
+                    }
+                    tupleType {
+                        typeRef("c", "C", false)
+                        typeRef("d", "D", false)
+                    }
                 }
-                tupleType {
-                    typeRef("c", "C", false)
-                    typeRef("d", "D", false)
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
                 }
+                dataType("B", "B") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                }
+                dataType("C", "C") {
+                    propertyPrimitiveType("c", "String", false, 0)
+                }
+                dataType("D", "D") {
+                    propertyPrimitiveType("d", "String", false, 0)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
             }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            dataType("B", "B") {
-                propertyPrimitiveType("b", "String", false, 0)
-            }
-            dataType("C", "C") {
-                propertyPrimitiveType("c", "String", false, 0)
-            }
-            dataType("D", "D") {
-                propertyPrimitiveType("d", "String", false, 0)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -789,14 +839,19 @@ class test_AllDefault {
                 literal("y")
             }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("S")
-            stringTypeFor("L")
-            stringTypeFor("M")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("S")
+                stringTypeFor("L")
+                stringTypeFor("M")
+            }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             child0StringRule("S")
@@ -872,19 +927,24 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("S")
-            stringTypeFor("L")
-            stringTypeFor("M")
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("x")
-            stringTypeFor("y")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("S")
+                stringTypeFor("L")
+                stringTypeFor("M")
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("x")
+                stringTypeFor("y")
+            }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             child0StringRule("S")
@@ -964,37 +1024,42 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                subtypes("A", "B", "C")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    subtypes("A", "B", "C")
+                }
+                dataType("A", "A") {
+                    supertypes("S")
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                dataType("B", "B") {
+                    supertypes("S")
+                    subtypes("C", "D")
+                }
+                dataType("C", "C") {
+                    supertypes("S", "B")
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                dataType("D", "D") {
+                    supertypes("B")
+                    propertyPrimitiveType("d", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                stringTypeFor("a")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("x")
             }
-            dataType("A", "A") {
-                supertypes("S")
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            dataType("B", "B") {
-                supertypes("S")
-                subtypes("C", "D")
-            }
-            dataType("C", "C") {
-                supertypes("S", "B")
-                propertyPrimitiveType("c", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            dataType("D", "D") {
-                supertypes("B")
-                propertyPrimitiveType("d", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
-            }
-            stringTypeFor("a")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("x")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             subtypeRule("S", "S")
@@ -1076,28 +1141,32 @@ class test_AllDefault {
             literal("d", "d")
             literal("x", "x")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
-            unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("x", "String", false, 1)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
+                unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("x", "String", false, 1)
+                }
+                dataType("C", "C") {
+                    propertyPrimitiveType("c", "String", false, 0)
+                }
+                dataType("D", "D") {
+                    propertyPrimitiveType("d", "String", false, 0)
+                }
+                stringTypeFor("a")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("x")
             }
-            dataType("C", "C") {
-                propertyPrimitiveType("c", "String", false, 0)
-            }
-            dataType("D", "D") {
-                propertyPrimitiveType("d", "String", false, 0)
-            }
-            stringTypeFor("a")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("x")
         }
-        expectedTm.resolveImports()
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("A", "A") {
@@ -1194,24 +1263,29 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("BC", "BC") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 1)
-            }
-            unnamedSuperTypeType("S") {
-                typeRef("BC")
-                listType(false) {
-                    ref("String")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("BC", "BC") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
                 }
+                unnamedSuperTypeType("S") {
+                    typeRef("BC")
+                    listType(false) {
+                        ref("String")
+                    }
+                }
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
             }
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -1291,27 +1365,32 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                typeRef("BC")
-                listType(false) {
-                    ref("D")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    typeRef("BC")
+                    listType(false) {
+                        ref("D")
+                    }
                 }
+                dataType("BC", "BC") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                }
+                dataType("D", "D") {
+                    propertyPrimitiveType("d", "String", false, 0)
+                }
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
             }
-            dataType("BC", "BC") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 1)
-            }
-            dataType("D", "D") {
-                propertyPrimitiveType("d", "String", false, 0)
-            }
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -1413,23 +1492,28 @@ class test_AllDefault {
             concatenation("S1") { ref("S"); ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                typeRef("String")
-                typeRef("S1")
-            }
-            dataType("S1", "S1") {
-                propertyUnnamedSuperType("s", false, 0) {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
                     typeRef("String")
                     typeRef("S1")
                 }
-                propertyPrimitiveType("a", "String", false, 1)
+                dataType("S1", "S1") {
+                    propertyUnnamedSuperType("s", false, 0) {
+                        typeRef("String")
+                        typeRef("S1")
+                    }
+                    propertyPrimitiveType("a", "String", false, 1)
+                }
+                stringTypeFor("a")
             }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -1508,13 +1592,18 @@ class test_AllDefault {
             optional("S", "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -1551,15 +1640,20 @@ class test_AllDefault {
             optional("S", "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", true, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", true, 0)
+                }
+                stringTypeFor("a")
             }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1607,17 +1701,22 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("c")
             }
-            stringTypeFor("a")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1670,19 +1769,24 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("b", "String", true, 1)
-                propertyPrimitiveType("c", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", true, 1)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1736,18 +1840,23 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("a", "A", true, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("a", "A", true, 0)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
             }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1801,20 +1910,25 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyDataTypeOf("a", "A", true, 1)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyDataTypeOf("a", "A", true, 1)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
             }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1871,21 +1985,26 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("oA", "OA", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("oA", "OA", false, 0)
+                }
+                dataType("oA", "OA") {
+                    propertyDataTypeOf("a", "A", true, 0)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
             }
-            dataType("oA", "OA") {
-                propertyDataTypeOf("a", "A", true, 0)
-            }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -1941,13 +2060,18 @@ class test_AllDefault {
             multi("S", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -1998,17 +2122,22 @@ class test_AllDefault {
             literal("b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("c")
             }
-            stringTypeFor("a")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2074,15 +2203,20 @@ class test_AllDefault {
             multi("S", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListType("a", false, 0) { ref("String") }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListType("a", false, 0) { ref("String") }
+                }
+                stringTypeFor("a")
             }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2145,19 +2279,24 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyListType("b", false, 1) { ref("String") }
-                propertyPrimitiveType("c", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyListType("b", false, 1) { ref("String") }
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2229,18 +2368,23 @@ class test_AllDefault {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("a", "A", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("a", "A", false, 0)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
             }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2312,22 +2456,27 @@ class test_AllDefault {
             literal("b", "b")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyListTypeOf("a", "A", false, 1)
-                propertyPrimitiveType("c", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyListTypeOf("a", "A", false, 1)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
             }
-            dataType("A", "A") {
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2403,15 +2552,20 @@ class test_AllDefault {
             multi("as", 0, -1, "'a'")
             literal("a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-            }
-            dataType("as", "As") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
+                dataType("as", "As") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2467,19 +2621,24 @@ class test_AllDefault {
             multi("as", 0, -1, "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListType("as", false, 0) { ref("String") }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListType("as", false, 0) { ref("String") }
+                }
+                //listTypeFor("as", StringType)
+                dataType("as", "As") {
+                    propertyListType("a", false, 0) { ref("String") }
+                }
+                stringTypeFor("a")
             }
-            //listTypeFor("as", StringType)
-            dataType("as", "As") {
-                propertyListType("a", false, 0) { ref("String") }
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2545,21 +2704,26 @@ class test_AllDefault {
             optional("ao", "a")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("as", "Ao", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("as", "Ao", false, 0)
+                }
+                dataType("as", "As") {
+                    propertyListTypeOf("ao", "Ao", false, 0)
+                }
+                dataType("ao", "Ao") {
+                    propertyPrimitiveType("a", "String", true, 0)
+                }
+                stringTypeFor("a")
             }
-            dataType("as", "As") {
-                propertyListTypeOf("ao", "Ao", false, 0)
-            }
-            dataType("ao", "Ao") {
-                propertyPrimitiveType("a", "String", true, 0)
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2640,30 +2804,35 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("abs", "AB", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("abs", "AB", false, 0)
+                }
+                dataType("abs", "Abs") {
+                    propertyListTypeOf("ab", "AB", false, 0)
+                }
+                dataType("A", "A") {
+                    supertypes("AB")
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                dataType("B", "B") {
+                    supertypes("AB")
+                    propertyPrimitiveType("b", "String", false, 0)
+                }
+                dataType("AB", "AB") {
+                    subtypes("A", "B")
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
             }
-            dataType("abs", "Abs") {
-                propertyListTypeOf("ab", "AB", false, 0)
-            }
-            dataType("A", "A") {
-                supertypes("AB")
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            dataType("B", "B") {
-                supertypes("AB")
-                propertyPrimitiveType("b", "String", false, 0)
-            }
-            dataType("AB", "AB") {
-                subtypes("A", "B")
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2814,26 +2983,31 @@ class test_AllDefault {
             concatenation("V") { ref("N") }
             pattern("N", "[a-zA-Z]+")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("e", "E", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("e", "E", false, 0)
+                }
+                dataType("E", "E") {
+                    subtypes("V", "A")
+                }
+                dataType("A", "A") {
+                    supertypes("E")
+                    propertyListTypeOf("e", "E", false, 0)
+                }
+                dataType("V", "V") {
+                    supertypes("E")
+                    propertyPrimitiveType("n", "String", false, 0)
+                }
+                stringTypeFor("N")
             }
-            dataType("E", "E") {
-                subtypes("V", "A")
-            }
-            dataType("A", "A") {
-                supertypes("E")
-                propertyListTypeOf("e", "E", false, 0)
-            }
-            dataType("V", "V") {
-                supertypes("E")
-                propertyPrimitiveType("n", "String", false, 0)
-            }
-            stringTypeFor("N")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -2918,15 +3092,20 @@ class test_AllDefault {
             literal("a")
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-            }
-            dataType("as", "As") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
+                dataType("as", "As") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -2990,20 +3169,25 @@ class test_AllDefault {
             literal(",")
             literal("c", "c")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 2)
-            }
-            dataType("bs", "Bs") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 2)
+                }
+                dataType("bs", "Bs") {
 
+                }
+                stringTypeFor("a")
+                stringTypeFor("c")
             }
-            stringTypeFor("a")
-            stringTypeFor("c")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3079,18 +3263,23 @@ class test_AllDefault {
             literal(",")
             literal("a", "a")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("as", "String", false, 0) // of String
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("as", "String", false, 0) // of String
+                }
+                dataType("as", "As") {
+                    propertyListTypeOf("a", "String", false, 0) // of String
+                }
+                stringTypeFor("a")
             }
-            dataType("as", "As") {
-                propertyListTypeOf("a", "String", false, 0) // of String
-            }
-            stringTypeFor("a")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3172,30 +3361,35 @@ class test_AllDefault {
             literal("a", "a")
             literal("b", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("abs", "AB", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("abs", "AB", false, 0)
+                }
+                dataType("abs", "Abs") {
+                    propertyListTypeOf("ab", "AB", false, 0)
+                }
+                dataType("A", "A") {
+                    supertypes("AB")
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                dataType("B", "B") {
+                    supertypes("AB")
+                    propertyPrimitiveType("b", "String", false, 0)
+                }
+                dataType("AB", "AB") {
+                    subtypes("A", "B")
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
             }
-            dataType("abs", "Abs") {
-                propertyListTypeOf("ab", "AB", false, 0)
-            }
-            dataType("A", "A") {
-                supertypes("AB")
-                propertyPrimitiveType("a", "String", false, 0)
-            }
-            dataType("B", "B") {
-                supertypes("AB")
-                propertyPrimitiveType("b", "String", false, 0)
-            }
-            dataType("AB", "AB") {
-                subtypes("A", "B")
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3340,21 +3534,26 @@ class test_AllDefault {
             literal("a")
             literal(".")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                // no property 'a' because it is list of non-leaf literals
-                propertyDataTypeOf("b", "B", true, 1)
-            }
-            dataType("A", "A") {
-                // no properties because rule list contains only literals
-            }
-            dataType("B", "B") {
-                // no properties because rule contains only literals
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    // no property 'a' because it is list of non-leaf literals
+                    propertyDataTypeOf("b", "B", true, 1)
+                }
+                dataType("A", "A") {
+                    // no properties because rule list contains only literals
+                }
+                dataType("B", "B") {
+                    // no properties because rule contains only literals
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3433,20 +3632,25 @@ class test_AllDefault {
             literal("A", "a")
             literal("B", "b")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListType("as", false, 0) { ref("String") }
-                propertyPrimitiveType("b", "String", true, 1)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListType("as", false, 0) { ref("String") }
+                    propertyPrimitiveType("b", "String", true, 1)
+                }
+                dataType("As", "As") {
+                    propertyListType("a", false, 0) { ref("String") }
+                }
+                stringTypeFor("A")
+                stringTypeFor("B")
             }
-            dataType("As", "As") {
-                propertyListType("a", false, 0) { ref("String") }
-            }
-            stringTypeFor("A")
-            stringTypeFor("B")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3534,22 +3738,27 @@ class test_AllDefault {
             concatenation("a") { literal("a") }
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyListTypeOf("ass", "As", false, 0) // of String
-            }
-            dataType("ass", "Ass") {
-                propertyListTypeOf("as", "As", false, 0)
-            }
-            dataType("as", "As") {
-                propertyListTypeOf("a", "A", false, 0)
-            }
-            dataType("a", "A") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyListTypeOf("ass", "As", false, 0) // of String
+                }
+                dataType("ass", "Ass") {
+                    propertyListTypeOf("as", "As", false, 0)
+                }
+                dataType("as", "As") {
+                    propertyListTypeOf("a", "A", false, 0)
+                }
+                dataType("a", "A") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3710,13 +3919,18 @@ class test_AllDefault {
             concatenation("S") { ref("§S§group1") }
             concatenation("§S§group1", isPseudo = true) { literal("b"); literal("c"); literal("d") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3755,21 +3969,26 @@ class test_AllDefault {
             literal("c", "c")
             literal("d", "d")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyTupleType("\$group", false, 0) {
-                    typeRef("b", "String", false)
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyTupleType("\$group", false, 0) {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
+                    }
                 }
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
             }
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3815,17 +4034,22 @@ class test_AllDefault {
             literal("a", "a")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("e", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3874,25 +4098,30 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("b", "String", false)
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -3951,30 +4180,35 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("b", "String", false)
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
+                    }
+                    propertyTupleType("\$group2", false, 2) {
+                        typeRef("b", "String", false)
+                        typeRef("a", "String", false)
+                        typeRef("c", "String", false)
+                    }
+                    propertyPrimitiveType("e", "String", false, 3)
                 }
-                propertyTupleType("\$group2", false, 2) {
-                    typeRef("b", "String", false)
-                    typeRef("a", "String", false)
-                    typeRef("c", "String", false)
-                }
-                propertyPrimitiveType("e", "String", false, 3)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4034,21 +4268,26 @@ class test_AllDefault {
             literal("b", "b")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("b", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("b", "String", false)
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4103,27 +4342,32 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("b", "String", false)
-                    tupleType("\$group", false) {
-                        typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("b", "String", false)
+                        tupleType("\$group", false) {
+                            typeRef("c", "String", false)
+                        }
+                        typeRef("d", "String", false)
                     }
-                    typeRef("d", "String", false)
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4197,21 +4441,26 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyPrimitiveType("\$choice", "String", false, 1)
-                propertyPrimitiveType("e", "String", false, 2)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("\$choice", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4286,27 +4535,32 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", false, 1) {
-                    tupleType {
-                        typeRef("b", "String", false)
-                        typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", false, 1) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
+                        }
+                        typeRef("String")
                     }
-                    typeRef("String")
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4384,31 +4638,36 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", false, 1) {
-                    tupleType {
-                        typeRef("b", "String", false)
-                        typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", false, 1) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
+                        }
+                        tupleType {
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
-                    tupleType {
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
+                    propertyPrimitiveType("f", "String", false, 2)
                 }
-                propertyPrimitiveType("f", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("f")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("f")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4487,31 +4746,36 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", false, 1) {
-                    tupleType {
-                        typeRef("b", "String", false)
-                        typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", false, 1) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
+                        }
+                        tupleType {
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
-                    tupleType {
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
+                    propertyPrimitiveType("f", "String", false, 2)
                 }
-                propertyPrimitiveType("f", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("f")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("f")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4594,31 +4858,36 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", true, 1) {
-                    tupleType {
-                        typeRef("b", "String", false)
-                        typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", true, 1) {
+                        tupleType {
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
+                        }
+                        tupleType {
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
-                    tupleType {
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
+                    propertyPrimitiveType("f", "String", false, 2)
                 }
-                propertyPrimitiveType("f", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("f")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("f")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4703,23 +4972,28 @@ class test_AllDefault {
             literal("c", "c")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("b", "String", true)
-                    typeRef("c", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("b", "String", true)
+                        typeRef("c", "String", false)
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4801,28 +5075,33 @@ class test_AllDefault {
             literal("e", "e")
             literal("f", "f")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyTupleType("\$group", false, 1) {
-                    typeRef("\$choice", "String", false)
-                    tupleType("\$group", false) {
-                        typeRef("d", "String", true)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        typeRef("\$choice", "String", false)
+                        tupleType("\$group", false) {
+                            typeRef("d", "String", true)
+                        }
+                        typeRef("e", "String", false)
                     }
-                    typeRef("e", "String", false)
+                    propertyPrimitiveType("f", "String", false, 2)
                 }
-                propertyPrimitiveType("f", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("f")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("f")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -4942,28 +5221,33 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", false, 1) {
-                    typeRef("BC")
-                    listType { ref("String") }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", false, 1) {
+                        typeRef("BC")
+                        listType { ref("String") }
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                dataType("BC", "BC") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            dataType("BC", "BC") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 1)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -5065,28 +5349,33 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", true, 1) {
-                    typeRef("BC")
-                    listType { ref("String") }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", true, 1) {
+                        typeRef("BC")
+                        listType { ref("String") }
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                dataType("BC", "BC") {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            dataType("BC", "BC") {
-                propertyPrimitiveType("b", "String", false, 0)
-                propertyPrimitiveType("c", "String", false, 1)
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -5192,27 +5481,32 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                tupleType {
-                    typeRef("a", "String", false)
-                    typeRef("b", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    tupleType {
+                        typeRef("a", "String", false)
+                        typeRef("b", "String", false)
+                    }
+                    tupleType {
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
+                        typeRef("e", "String", false)
+                    }
                 }
-                tupleType {
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
-                    typeRef("e", "String", false)
-                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -5291,31 +5585,36 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("a", "String", false)
-                        typeRef("b", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("a", "String", false)
+                            typeRef("b", "String", false)
+                        }
+                    }
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
                 }
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("c", "String", false)
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
-                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -5403,31 +5702,36 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("a", "String", false)
-                        typeRef("b", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("a", "String", false)
+                            typeRef("b", "String", false)
+                        }
+                    }
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
                 }
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("c", "String", false)
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
-                }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule(
@@ -5517,33 +5821,38 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("x", "String", false, 0)
-                propertyUnnamedSuperType("\$choice", false, 1) {
-                    tupleType {
-                        typeRef("a", "String", false)
-                        typeRef("b", "String", false)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("x", "String", false, 0)
+                    propertyUnnamedSuperType("\$choice", false, 1) {
+                        tupleType {
+                            typeRef("a", "String", false)
+                            typeRef("b", "String", false)
+                        }
+                        tupleType {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
                     }
-                    tupleType {
-                        typeRef("c", "String", false)
-                        typeRef("d", "String", false)
-                        typeRef("e", "String", false)
-                    }
+                    propertyPrimitiveType("y", "String", false, 2)
                 }
-                propertyPrimitiveType("y", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("x")
+                stringTypeFor("y")
             }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("x")
-            stringTypeFor("y")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -5626,9 +5935,22 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyUnnamedSuperType("ch", false, 0) {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyUnnamedSuperType("ch", false, 0) {
+                        tupleType {
+                            typeRef("a", "String", false)
+                            typeRef("b", "String", false)
+                        }
+                        tupleType {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
+                    }
+                }
+                unnamedSuperTypeType("CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5639,27 +5961,19 @@ class test_AllDefault {
                         typeRef("e", "String", false)
                     }
                 }
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            unnamedSuperTypeType("CH") {
-                tupleType {
-                    typeRef("a", "String", false)
-                    typeRef("b", "String", false)
-                }
-                tupleType {
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
-                    typeRef("e", "String", false)
-                }
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -5756,10 +6070,24 @@ class test_AllDefault {
             literal("x", "x")
             literal("y", "y")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("x", "String", false, 0)
-                propertyUnnamedSuperType("ch", false, 1) {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("x", "String", false, 0)
+                    propertyUnnamedSuperType("ch", false, 1) {
+                        tupleType {
+                            typeRef("a", "String", false)
+                            typeRef("b", "String", false)
+                        }
+                        tupleType {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                            typeRef("e", "String", false)
+                        }
+                    }
+                    propertyPrimitiveType("y", "String", false, 2)
+                }
+                unnamedSuperTypeType("CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5770,30 +6098,21 @@ class test_AllDefault {
                         typeRef("e", "String", false)
                     }
                 }
-                propertyPrimitiveType("y", "String", false, 2)
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
+                stringTypeFor("x")
+                stringTypeFor("y")
             }
-            unnamedSuperTypeType("CH") {
-                tupleType {
-                    typeRef("a", "String", false)
-                    typeRef("b", "String", false)
-                }
-                tupleType {
-                    typeRef("c", "String", false)
-                    typeRef("d", "String", false)
-                    typeRef("e", "String", false)
-                }
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
-            stringTypeFor("x")
-            stringTypeFor("y")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -5917,10 +6236,44 @@ class test_AllDefault {
             literal("d", "d")
             literal("e", "e")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("a", "String", false, 0)
-                propertyUnnamedSuperType("x", true, 1) {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyUnnamedSuperType("x", true, 1) {
+                        unnamedSuperType {
+                            tupleType {
+                                tupleType("\$group", false) {
+                                    typeRef("b", "String", false)
+                                    typeRef("c", "String", false)
+                                }
+                            }
+                            tupleType {
+                                tupleType("\$group", false) {
+                                    typeRef("c", "String", false)
+                                    typeRef("d", "String", false)
+                                }
+                            }
+                        }
+                        typeRef("String", false)
+                    }
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+                unnamedSuperTypeType("R") {
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("b", "String", false)
+                            typeRef("c", "String", false)
+                        }
+                    }
+                    tupleType {
+                        tupleType("\$group", false) {
+                            typeRef("c", "String", false)
+                            typeRef("d", "String", false)
+                        }
+                    }
+                }
+                unnamedSuperTypeType("X") {
                     unnamedSuperType {
                         tupleType {
                             tupleType("\$group", false) {
@@ -5937,49 +6290,20 @@ class test_AllDefault {
                     }
                     typeRef("String", false)
                 }
-                propertyPrimitiveType("e", "String", false, 2)
+                stringTypeFor("D")
+                stringTypeFor("a")
+                stringTypeFor("b")
+                stringTypeFor("c")
+                stringTypeFor("d")
+                stringTypeFor("e")
             }
-            unnamedSuperTypeType("R") {
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("b", "String", false)
-                        typeRef("c", "String", false)
-                    }
-                }
-                tupleType {
-                    tupleType("\$group", false) {
-                        typeRef("c", "String", false)
-                        typeRef("d", "String", false)
-                    }
-                }
-            }
-            unnamedSuperTypeType("X") {
-                unnamedSuperType {
-                    tupleType {
-                        tupleType("\$group", false) {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                    }
-                    tupleType {
-                        tupleType("\$group", false) {
-                            typeRef("c", "String", false)
-                            typeRef("d", "String", false)
-                        }
-                    }
-                }
-                typeRef("String", false)
-            }
-            stringTypeFor("D")
-            stringTypeFor("a")
-            stringTypeFor("b")
-            stringTypeFor("c")
-            stringTypeFor("d")
-            stringTypeFor("e")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -6134,7 +6458,7 @@ class test_AllDefault {
             literal("d", "d")
             embedded("§Inner§S§embedded1", Inner, "S", isPseudo = true)
         }
-        val expectedTm = typeModel("Outer", true) {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Inner") {
                 unnamedSuperTypeType("S") {
                     typeRef("String")
@@ -6202,8 +6526,8 @@ class test_AllDefault {
             }
         }
         val expectedTr = asmTransform(
-            "Outer",
-            typeModel("Outer", true) {
+            "FromGrammarOuter",
+            typeModel("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.Outer") {} //default adds 'std' namespace
                 namespace("test.Inner") {} //default adds 'std' namespace
             },
@@ -6346,7 +6670,7 @@ class test_AllDefault {
             }
             concatenation("SA") { ref("S"); ref("A") }
             concatenation("A") { ref("a") }
-            literal("a","a")
+            literal("a", "a")
         }
         val expectedRrs = ruleSet("test.O") {
             choiceLongest("S") {
@@ -6362,76 +6686,76 @@ class test_AllDefault {
             concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
             embedded("§I§S§embedded1", Inner, "S", isPseudo = true)
         }
-        val expectedTm = typeModel("O", true) {
-            grammarTypeNamespace("test.I"){
-                dataType("S","S") {
-                    subtypes("A","SA")
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.I") {
+                dataType("S", "S") {
+                    subtypes("A", "SA")
                 }
-                dataType("SA","SA") {
+                dataType("SA", "SA") {
                     supertypes("S")
-                    propertyDataTypeOf("s","S",false,0)
-                    propertyDataTypeOf("a","A",false,1)
+                    propertyDataTypeOf("s", "S", false, 0)
+                    propertyDataTypeOf("a", "A", false, 1)
                 }
-                dataType("A","A") {
+                dataType("A", "A") {
                     supertypes("S")
-                    propertyPrimitiveType("a","String",false,0)
+                    propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
             }
-            grammarTypeNamespace("test.O", imports = listOf("std","test.I")){
-                dataType("S","S") {
-                    subtypes("B","BC")
+            grammarTypeNamespace("test.O", imports = listOf("std", "test.I")) {
+                dataType("S", "S") {
+                    subtypes("B", "BC")
                 }
-                dataType("SBC","SBC") {
+                dataType("SBC", "SBC") {
                     supertypes("S")
-                    propertyDataTypeOf("s","S",false,0)
-                    propertyDataTypeOf("bc","BC",false,1)
+                    propertyDataTypeOf("s", "S", false, 0)
+                    propertyDataTypeOf("bc", "BC", false, 1)
                 }
-                dataType("BC","BC") {
-                    subtypes("B","C")
+                dataType("BC", "BC") {
+                    subtypes("B", "C")
                 }
-                dataType("B","B") {
-                    supertypes("S","BC")
-                    propertyDataTypeOf("s","test.I.S",false,0)
+                dataType("B", "B") {
+                    supertypes("S", "BC")
+                    propertyDataTypeOf("s", "test.I.S", false, 0)
                 }
-                dataType("C","C") {
+                dataType("C", "C") {
                     supertypes("BC")
-                    propertyDataTypeOf("s","test.I.S",false,0)
+                    propertyDataTypeOf("s", "test.I.S", false, 0)
                 }
             }
         }
         val expectedTr = asmTransform(
-            "O",
-            typeModel = typeModel("O",true) {
+            "FromGrammarO",
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
                 namespace("test.O") {}
                 namespace("test.I") {}
             },
             true
         ) {
             namespace("test") {
-                transform("I"){
-                    subtypeRule("S","S")
+                transform("I") {
+                    subtypeRule("S", "S")
                     createObject("SA", "SA") {
-                        assignment("s","child[0]")
-                        assignment("a","child[1]")
+                        assignment("s", "child[0]")
+                        assignment("a", "child[1]")
                     }
                     createObject("A", "A") {
-                        assignment("a","child[0]")
+                        assignment("a", "child[0]")
                     }
                     leafStringRule("a")
                 }
-                transform("O"){
-                    subtypeRule("S","S")
-                    createObject("SBC","SBC") {
-                        assignment("s","child[0]")
-                        assignment("bc","child[1]")
+                transform("O") {
+                    subtypeRule("S", "S")
+                    createObject("SBC", "SBC") {
+                        assignment("s", "child[0]")
+                        assignment("bc", "child[1]")
                     }
-                    subtypeRule("BC","BC")
-                    createObject("B","B") {
-                        assignment("s","with(child[1]) \$self")
+                    subtypeRule("BC", "BC")
+                    createObject("B", "B") {
+                        assignment("s", "with(child[1]) \$self")
                     }
-                    createObject("C","C") {
-                        assignment("s","with(child[1]) \$self")
+                    createObject("C", "C") {
+                        assignment("s", "with(child[1]) \$self")
                     }
                 }
             }
@@ -6445,8 +6769,8 @@ class test_AllDefault {
             define(sentence = "bab", sppt = "S { B { 'b' §I§S§embedded1:I::S { A { a:'a' } } 'b' } }") {
                 asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
                     element("B") {
-                        propertyElementExplicitType("s","test.I.A") {
-                            propertyString("a","a")
+                        propertyElementExplicitType("s", "test.I.A") {
+                            propertyString("a", "a")
                         }
                     }
                 }
@@ -6472,13 +6796,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6518,13 +6847,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6568,30 +6902,35 @@ class test_AllDefault {
             pattern("NAME", "[a-zA-Z][a-zA-Z0-9]*")
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            // S = type ;
-            dataType("S", "S") {
-                propertyDataTypeOf("type", "Type", false, 0)
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                // S = type ;
+                dataType("S", "S") {
+                    propertyDataTypeOf("type", "Type", false, 0)
+                }
+                // type = NAME typeArgs? ;
+                dataType("type", "Type") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                    propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
+                }
+                // typeArgs = '<' typeArgList '>' ;
+                dataType("typeArgs", "TypeArgs") {
+                    propertyListTypeOf("typeArgList", "Type", false, 1)
+                }
+                // typeArgList = [type / ',']+ ;
+                dataType("typeArgList", "TypeArgList") {
+                    propertyListTypeOf("type", "Type", false, 0)
+                }
+                // leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
+                stringTypeFor("NAME")
             }
-            // type = NAME typeArgs? ;
-            dataType("type", "Type") {
-                propertyPrimitiveType("name", "String", false, 0)
-                propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
-            }
-            // typeArgs = '<' typeArgList '>' ;
-            dataType("typeArgs", "TypeArgs") {
-                propertyListTypeOf("typeArgList", "Type", false, 1)
-            }
-            // typeArgList = [type / ',']+ ;
-            dataType("typeArgList", "TypeArgList") {
-                propertyListTypeOf("type", "Type", false, 0)
-            }
-            // leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-            stringTypeFor("NAME")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -6672,13 +7011,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6713,13 +7057,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6758,13 +7107,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6799,13 +7153,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6840,13 +7199,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6880,13 +7244,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6921,13 +7290,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -6971,18 +7345,23 @@ class test_AllDefault {
             pattern("NAME", "[a-zA-Z][a-zA-Z0-9]+")
             pattern("NUMBER", "[0-9]+")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyPrimitiveType("id", "String", false, 0)
-                propertyListType("\$choiceList", false, 1) { ref("String") }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyPrimitiveType("id", "String", false, 0)
+                    propertyListType("\$choiceList", false, 1) { ref("String") }
+                }
+                stringTypeFor("ID")
+                stringTypeFor("NAME")
+                stringTypeFor("NUMBER")
             }
-            stringTypeFor("ID")
-            stringTypeFor("NAME")
-            stringTypeFor("NUMBER")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S") {
@@ -7058,13 +7437,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -7103,13 +7487,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -7150,13 +7539,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -7197,13 +7591,18 @@ class test_AllDefault {
         val expectedRrs = ruleSet("test.Test") {
             concatenation("S") { literal("a") }
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                }
             }
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             createObject("S", "S")
@@ -7252,31 +7651,36 @@ class test_AllDefault {
             pattern("b", "(\\Qb\\E)(\\Qb\\E)")
             literal(",")
         }
-        val expectedTm = grammarTypeModel("test.Test", "Test") {
-            unnamedSuperTypeType("S") {
-                typeRef("As")
-                typeRef("Bs")
-                unnamedSuperType {
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                unnamedSuperTypeType("S") {
+                    typeRef("As")
+                    typeRef("Bs")
+                    unnamedSuperType {
+                        typeRef("String")
+                        tupleType { }
+                    }
+                }
+                dataType("as", "As") {
+                    propertyListType("a", false, 0) { ref("String") }
+                }
+                dataType("bs", "Bs") {
+                    propertyListType("b", false, 0) { ref("String") }
+                }
+                unnamedSuperTypeType("cs") {
                     typeRef("String")
                     tupleType { }
                 }
+                stringTypeFor("a")
+                stringTypeFor("b")
             }
-            dataType("as", "As") {
-                propertyListType("a", false, 0) { ref("String") }
-            }
-            dataType("bs", "Bs") {
-                propertyListType("b", false, 0) { ref("String") }
-            }
-            unnamedSuperTypeType("cs") {
-                typeRef("String")
-                tupleType { }
-            }
-            stringTypeFor("a")
-            stringTypeFor("b")
         }
         val expectedTr = asmGrammarTransform(
+            "FromGrammarTest",
             "test.Test",
-            typeModel = grammarTypeModel("test.Test", "Test") {}.also { it.resolveImports() },
+            typeModel = typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
             true
         ) {
             unnamedSubtypeRule("S", "child[0]") {

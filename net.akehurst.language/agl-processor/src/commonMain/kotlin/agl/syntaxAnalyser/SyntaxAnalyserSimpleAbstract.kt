@@ -16,24 +16,11 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
-import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.*
-import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.parser.api.Rule
-import net.akehurst.language.parser.api.RulePosition
-import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
-import net.akehurst.language.sppt.treedata.locationForNode
-import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 data class NodeTypes(
     val forNode: TypeInstance,
@@ -42,22 +29,19 @@ data class NodeTypes(
     constructor(t: TypeInstance) : this(t, t)
 }
 
+
 data class DownData(
     val path: AsmPath,
     val typeUse: NodeTypes
 )
 
-data class ChildData(
-    val nodeInfo: SpptDataNodeInfo,
-    val value: AsmValue?
-)
 
 /**
  * TypeName <=> RuleName
  *
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
- */
+
 abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
@@ -764,3 +748,4 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     }
 
 }
+*/

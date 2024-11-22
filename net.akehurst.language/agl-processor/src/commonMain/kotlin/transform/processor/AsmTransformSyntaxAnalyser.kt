@@ -76,7 +76,7 @@ class AsmTransformSyntaxAnalyser(
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
         val options = children[0] as List<Option>
         val namespaces = children[1] as List<TransformNamespace>
-        val name = SimpleName("TransformUnit") //TODO: how to specify name, does it matter?
+        val name = SimpleName("ParsedTransformUnit") //TODO: how to specify name, does it matter?
         //val typeModel = TypeModelSimple(name) //TODO: how to specify type model ?
        // typeModel.addNamespace(SimpleTypeModelStdLib)
         return TransformModelDefault(

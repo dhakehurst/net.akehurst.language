@@ -58,7 +58,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglStyleModelDefault(SimpleName("ParsedUnit"),  emptyList(),listOf(ns))
+        val su = AglStyleModelDefault(SimpleName("ParsedStyleUnit"),  emptyList(),listOf(ns))
         return su
     }
 

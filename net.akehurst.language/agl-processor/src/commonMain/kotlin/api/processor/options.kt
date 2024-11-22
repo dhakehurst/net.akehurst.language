@@ -30,7 +30,7 @@ interface SyntaxAnalysisOptions<AsmType : Any> {
 /**
  * Options to configure the semantic analysis of an Abstract Syntax Model (ASM)
  */
-interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
+interface SemanticAnalysisOptions<ContextType : Any> {
     var active: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
@@ -39,7 +39,7 @@ interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     val other: Map<String, Any>
 }
 
-interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {
+interface CompletionProviderOptions<ContextType : Any> {
     var context: ContextType?
     val other: Map<String, Any>
 }
@@ -51,6 +51,6 @@ interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val scan: ScanOptions
     val parse: ParseOptions
     val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
-    val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType>
-    val completionProvider: CompletionProviderOptions<AsmType, ContextType>
+    val semanticAnalysis: SemanticAnalysisOptions<ContextType>
+    val completionProvider: CompletionProviderOptions<ContextType>
 }

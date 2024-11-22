@@ -1211,9 +1211,9 @@ grammar {
               } } }
               '{' WHITESPACE : '⏎  '
               §preferenceRule§multi1 { preferenceOption {
-                nonTerminal { possiblyQualifiedName {
+                spine { nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
-                } }
+                } } }
                 §preferenceOption§opt1 { <EMPTY> }
                 'on' WHITESPACE : ' '
                 terminalList {
@@ -1251,9 +1251,9 @@ grammar {
               } } }
               '{' WHITESPACE : '⏎  '
               §preferenceRule§multi1 { preferenceOption {
-                nonTerminal { possiblyQualifiedName {
+                spine { nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
-                } }
+                } } }
                 §preferenceOption§opt1 { choiceNumber { POSITIVE_INTEGER : '2' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {
@@ -1291,9 +1291,9 @@ grammar {
               } } }
               '{' WHITESPACE : '⏎  '
               §preferenceRule§multi1 { preferenceOption {
-                nonTerminal { possiblyQualifiedName {
+                spine { nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
-                } }
+                } } }
                 §preferenceOption§opt1 { choiceNumber { CHOICE_INDICATOR : 'EMPTY' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {
@@ -1331,9 +1331,9 @@ grammar {
               } } }
               '{' WHITESPACE : '⏎  '
               §preferenceRule§multi1 { preferenceOption {
-                nonTerminal { possiblyQualifiedName {
+                spine { nonTerminal { possiblyQualifiedName {
                   IDENTIFIER : 'x' WHITESPACE : ' '
-                } }
+                } } }
                 §preferenceOption§opt1 { choiceNumber { CHOICE_INDICATOR : 'ITEM' WHITESPACE : ' ' } }
                 'on' WHITESPACE : ' '
                 terminalList {

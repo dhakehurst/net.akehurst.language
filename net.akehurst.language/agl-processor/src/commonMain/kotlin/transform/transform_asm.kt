@@ -26,10 +26,9 @@ import net.akehurst.language.expressions.asm.IndexOperationSimple
 import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.NavigationSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
-import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
@@ -39,10 +38,8 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.transform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
 
 class TransformModelDefault(
     override val name: SimpleName,
@@ -51,14 +48,18 @@ class TransformModelDefault(
 ) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>() {
 
     companion object {
-        fun fromString(context: ContextFromTypeModel, transformStr: TransformString): ProcessResult<TransformModel> {
-            val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
-            return proc.process(
+        fun fromString(context: ContextFromGrammarAndTypeModel, transformStr: TransformString): ProcessResult<TransformModel> {
+            val proc = Agl.registry.agl.transform.processor ?: error("Asm-Transform language not found!")
+            val res = proc.process(
                 sentence = transformStr.value,
                 Agl.options {
                     semanticAnalysis { context(context) }
                 }
             )
+            return when {
+                res.issues.errors.isEmpty() -> res
+                else -> error(res.issues.toString())
+            }
         }
 
         fun fromGrammarModel(
@@ -145,7 +146,7 @@ class TransformRuleSetDefault(
         (this.extends as MutableList).add(other)
     }
 
-    fun addRule(tr: TransformationRule) {
+    override fun addRule(tr: TransformationRule) {
         (rules as MutableMap)[tr.grammarRuleName] = tr
     }
 

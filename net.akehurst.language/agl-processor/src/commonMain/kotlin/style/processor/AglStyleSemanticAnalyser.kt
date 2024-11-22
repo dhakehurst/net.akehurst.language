@@ -55,7 +55,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
         asm: AglStyleModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammar?,
-        options: SemanticAnalysisOptions<AglStyleModel, ContextFromGrammar>
+        options: SemanticAnalysisOptions<ContextFromGrammar>
     ): SemanticAnalysisResult {
         val locMap = locationMap ?: mapOf()
         if (null != context) {

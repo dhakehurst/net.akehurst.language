@@ -19,6 +19,8 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
@@ -30,7 +32,8 @@ import kotlin.reflect.KFunction3
 
 typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, T?>
 
-abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
+abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
+    : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {
         private val EMPTY_LIST_VALUE = object {
@@ -46,7 +49,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<Any>> = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<*>> = mutableStackOf(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
             override fun beginTree() {}
@@ -209,7 +212,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
         }
         // if not found then try extended SyntaxAnalysers
         val handler = selfHandler ?: extendsSyntaxAnalyser.firstNotNullOfOrNull {
-            (it.value as SyntaxAnalyserByMethodRegistrationAbstract<Any>).findBranchHandler(branchName, begin)
+            (it.value as SyntaxAnalyserByMethodRegistrationAbstract<AsmType>).findBranchHandler(branchName, begin)
         }
         return handler
     }

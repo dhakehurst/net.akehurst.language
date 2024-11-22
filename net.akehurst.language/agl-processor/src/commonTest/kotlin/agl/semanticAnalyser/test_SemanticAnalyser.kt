@@ -38,7 +38,7 @@ class test_SemanticAnalyser {
         override fun clear() {
         }
 
-        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?, options: SemanticAnalysisOptions<Any, Any>): SemanticAnalysisResult {
+        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?, options: SemanticAnalysisOptions< Any>): SemanticAnalysisResult {
             val ih = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
             when (asm) {
                 "error" -> ih.error(null, "error")

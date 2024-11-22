@@ -27,9 +27,11 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -85,42 +87,44 @@ class test_SyntaxAnalyserSimple_datatypes {
     }
 
     @Test
-    fun typeModel() {
+    fun checkTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test.Test", "Test") {
-            //unit = declaration* ;
-            dataType("unit", "Unit") {
-                propertyListTypeOf("declaration", "Declaration", false, 0)
+        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                //unit = declaration* ;
+                dataType("unit", "Unit") {
+                    propertyListTypeOf("declaration", "Declaration", false, 0)
+                }
+                // primitive = 'primitive' ID ;
+                dataType("primitive", "Primitive") {
+                    propertyPrimitiveType("id", "String", false, 1)
+                }
+                // datatype = 'datatype' ID '{' property* '}' ;
+                dataType("datatype", "Datatype") {
+                    propertyPrimitiveType("id", "String", false, 1)
+                    propertyListTypeOf("property", "Property", false, 3)
+                }
+                // declaration = datatype | primitive ;
+                dataType("declaration", "Declaration") {
+                    subtypes("Datatype", "Primitive")
+                }
+                // property = ID ':' typeReference ;
+                dataType("property", "Property") {
+                    propertyPrimitiveType("id", "String", false, 0)
+                    propertyDataTypeOf("typeReference", "TypeReference", false, 2)
+                }
+                // typeReference = type typeArguments? ;
+                dataType("typeReference", "TypeReference") {
+                    propertyPrimitiveType("type", "String", false, 0)
+                    propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
+                }
+                // typeArguments = '<' [typeReference / ',']+ '>' ;
+                dataType("typeArguments", "TypeArguments") {
+                    propertyListTypeOf("typeReference", "TypeReference", false, 1)
+                }
+                stringTypeFor("ID")
+                stringTypeFor("type")
             }
-            // primitive = 'primitive' ID ;
-            dataType("primitive", "Primitive") {
-                propertyPrimitiveType("id", "String", false, 1)
-            }
-            // datatype = 'datatype' ID '{' property* '}' ;
-            dataType("datatype", "Datatype") {
-                propertyPrimitiveType("id", "String", false, 1)
-                propertyListTypeOf("property", "Property", false, 3)
-            }
-            // declaration = datatype | primitive ;
-            dataType("declaration", "Declaration") {
-                subtypes("Datatype", "Primitive")
-            }
-            // property = ID ':' typeReference ;
-            dataType("property", "Property") {
-                propertyPrimitiveType("id", "String", false, 0)
-                propertyDataTypeOf("typeReference", "TypeReference", false, 2)
-            }
-            // typeReference = type typeArguments? ;
-            dataType("typeReference", "TypeReference") {
-                propertyPrimitiveType("type", "String", false, 0)
-                propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
-            }
-            // typeArguments = '<' [typeReference / ',']+ '>' ;
-            dataType("typeArguments", "TypeArguments") {
-                propertyListTypeOf("typeReference", "TypeReference", false, 1)
-            }
-            stringTypeFor("ID")
-            stringTypeFor("type")
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)

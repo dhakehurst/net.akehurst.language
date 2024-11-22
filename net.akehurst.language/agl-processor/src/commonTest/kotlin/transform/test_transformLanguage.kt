@@ -124,7 +124,7 @@ class test_transformLanguage {
         )
 
         private fun test_process(data: TestData) {
-            val result = Agl.registry.agl.asmTransform.processor!!.process(data.sentence)
+            val result = Agl.registry.agl.transform.processor!!.process(data.sentence)
             assertNotNull(result.asm, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
             data.expectedAsm.forEachIndexed { idx, it ->
@@ -136,14 +136,14 @@ class test_transformLanguage {
 
     @Test
     fun check_grammar() {
-        val proc = Agl.registry.agl.asmTransform.processor
-        assertTrue(Agl.registry.agl.asmTransform.issues.isEmpty(), Agl.registry.agl.asmTransform.issues.toString())
+        val proc = Agl.registry.agl.transform.processor
+        assertTrue(Agl.registry.agl.transform.issues.isEmpty(), Agl.registry.agl.transform.issues.toString())
         assertNotNull(proc)
     }
 
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.asmTransform.processor!!.typeModel
+        val actual = Agl.registry.agl.transform.processor!!.typeModel
         val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
@@ -159,7 +159,7 @@ class test_transformLanguage {
 
     @Test
     fun parse() {
-        val processor = Agl.registry.agl.asmTransform.processor!!
+        val processor = Agl.registry.agl.transform.processor!!
         for (td in testData) {
             println("Parsing '${td.sentence}'")
             val result = processor.parse(td.sentence)

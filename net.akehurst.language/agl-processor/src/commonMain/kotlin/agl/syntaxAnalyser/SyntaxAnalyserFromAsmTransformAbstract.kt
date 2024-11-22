@@ -16,15 +16,17 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.asm.simple.*
+//import net.akehurst.language.asm.simple.*
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
-import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.EXPRESSION_CHILDREN
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.asm.simple.asValueName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.MutableStack
@@ -61,19 +63,23 @@ data class DownData2(
     val trRule: NodeTrRules
 )
 
+data class ChildData(
+    val nodeInfo: SpptDataNodeInfo,
+    val value: Any?
+)
+
 /**
  * TypeName <=> RuleName
  *
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
-//    val grammarNamespaceQualifiedName: QualifiedName,
+abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
     _typeModel: TypeModel,
     val asmTransformModel: TransformModel,
-    val relevantTrRuleSet: QualifiedName
-    //val scopeModel: CrossReferenceModel
-) : SyntaxAnalyserFromTreeDataAbstract<A>() {
+    val relevantTrRuleSet: QualifiedName,
+    argAsmFactory: AsmFactory<AsmType,*,*>
+) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
@@ -89,8 +95,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
     }
 
-    private var _asm: AsmSimple? = null
-    override val asm: A get() = _asm as A
+    private val asmFactory:AsmFactory<AsmType,Any,Any>  = argAsmFactory as AsmFactory<AsmType,Any,Any>
+    private var _asm: AsmType? = null
+    override val asm: AsmType get() = _asm as AsmType
 
     val relevantRuleSet = asmTransformModel.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
         ?: error("Relevant TransformRuleSet not Found for '$relevantTrRuleSet'")
@@ -106,7 +113,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
     }
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<A>> = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<AsmType>> = mutableStackOf(this)
         val downStack = mutableStackOf<DownData2>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
         val walker = object : SpptWalker {
@@ -115,7 +122,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 // use same asm for all embedded trees
                 // otherwise need to combine and adjust indexes
                 // faster to use same asm in first place
-                syntaxAnalyserStack.peek().setAsm(_asm ?: AsmSimple())
+                syntaxAnalyserStack.peek().setAsm(_asm ?: asmFactory.constructAsm())
                 isRoot = true
             }
 
@@ -135,7 +142,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
             override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
                 val parentDownData = downStack.peekOrNull()
                 val p = when {
-                    downStack.isEmpty -> AsmPathSimple.ROOT + (asm.root.size).toString()
+                    downStack.isEmpty -> AsmPathSimple.ROOT + (asmFactory.rootList(asm).size).toString()
                     null == parentDownData -> AsmPathSimple.ROOT.plus("<error>")  // property unused
                     isRoot -> parentDownData.path
                     else -> syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.trRule.forChildren.resolvedType.declaration, nodeInfo)
@@ -160,9 +167,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val children = stack.pop(numChildren)
                 val adjChildren = children.reversed()
                 val downData = downStack.pop()
-                val value: AsmValue? = when {
+                val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.resolvedType.declaration -> AsmNothingSimple
+                    typeModel.NothingType == downData.trRule.forNode.resolvedType.declaration -> asmFactory.nothingValue()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
@@ -176,7 +183,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserFromAsmTransformAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
-                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<A>)
+                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<AsmType>)
                 val parentDownData = downStack.peek()!!
                 val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.trRule.forChildren.resolvedType.declaration, nodeInfo)
                 val tu = syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(embRuleName)
@@ -189,7 +196,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                 val embSyntaxAnalyser = syntaxAnalyserStack.pop()
                 val embeddedAsm = embSyntaxAnalyser._asm!!
                 downStack.pop()
-                val value = embeddedAsm.root.last()
+                val value = asmFactory.rootList(embeddedAsm).last()
                 removeAsmRoot(value)
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
@@ -207,20 +214,21 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         treeData.traverseTreeDepthFirst(walker, false)
     }
 
-    private fun setAsm(value: AsmSimple) {
+    private fun setAsm(value: AsmType) {
         this._asm = value
     }
 
-    private fun addAsmRoot(value: AsmValue) {
-        this._asm!!.addRoot(value)
+    private fun addAsmRoot(rootValue: Any) {
+        asmFactory.addRoot(_asm!!, rootValue)
     }
 
-    private fun removeAsmRoot(value: Any) {
-        this._asm!!.removeRoot(value)
+    private fun removeAsmRoot(rootValue: Any) {
+        asmFactory.removeRoot(_asm!!, rootValue)
     }
 
-    private fun createAsmElement(path: AsmPath, name: QualifiedName): AsmStructure =
-        this._asm!!.createStructure(path, name)
+    private fun createAsmStructure(path: AsmPath, qualifiedTypeName: QualifiedName): Any {
+        return asmFactory.constructStructure(path, qualifiedTypeName)
+    }
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
@@ -537,45 +545,42 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmValue? = when {
-        target.node.rule.isEmptyTerminal -> AsmNothingSimple // for empty or optional rules
+    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): Any? = when {
+        target.node.rule.isEmptyTerminal -> asmFactory.nothingValue() // for empty or optional rules
         target.node.rule.isEmptyListTerminal -> null  // return null for empty lists
 
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
-            AsmPrimitiveSimple.stdString(v)
+            asmFactory.primitiveValue(SimpleTypeModelStdLib.String.qualifiedTypeName, v)
         }
     }
 
-    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? =
+    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any? =
         createValueFromBranch2(downData, target, children)
 
-    private fun createValueFromBranch2(downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue {
+    private fun createValueFromBranch2(downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any {
         // optional children should have value Nothing, if it is an empty list then it will contain null
         val asmChildren = children.mapNotNull { it.value }
         val childrenAsmList = when {
-            target.node.rule.isListSeparated -> AsmListSeparatedSimple(asmChildren.toSeparatedList())
-            else -> AsmListSimple(asmChildren)
+            target.node.rule.isListSeparated -> asmFactory.listOfSeparatedValues(asmChildren.toSeparatedList())
+            else -> asmFactory.listOfValues(asmChildren)
         }
 
-        val asmPath = AsmAnySimple.stdAny(downData.path)
-        val alternative = AsmPrimitiveSimple.stdInteger(target.alt.option.value)
-        val leaf = when { //FIXME: only sometimes need this!
-            children.isNotEmpty() && null != children[0].value && children[0].value!!.isStdString -> children[0].value!!
-            else -> AsmNothingSimple
-        }
+        val asmPath = asmFactory.anyValue(downData.path)
+        val alternative = asmFactory.primitiveValue(SimpleTypeModelStdLib.Integer.qualifiedTypeName,target.alt.option.value)
         val selfType = when {
             // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
         }.type()
-        val self = AsmStructureSimple(AsmPathSimple(""), selfType.qualifiedTypeName)
-        self.setProperty(AsmTransformInterpreter.PATH.asValueName, asmPath, 0)
-        self.setProperty(AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative, 1)
-        self.setProperty(AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList, 3)
-        self.setProperty(AsmTransformInterpreter.CHILD.asValueName, childrenAsmList, 4)
+        val self = asmFactory.constructStructure(AsmPathSimple(""), selfType.qualifiedTypeName)
+        asmFactory.setProperty(self,0, AsmTransformInterpreter.PATH.asValueName, asmPath)
+        asmFactory.setProperty(self,1,AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative)
+        asmFactory.setProperty(self,2,AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList)
+        asmFactory.setProperty(self,3,AsmTransformInterpreter.CHILD.asValueName, childrenAsmList)
 
-        val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to self.toTypedObject(selfType)))
+        val typedSelf = asmFactory.toTypedObject(self, selfType)
+        val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
         val tr = downData.trRule.forNode
         val asm = _trf.evaluate(evc, downData.path, tr)
         _trf.issues.forEach {
@@ -584,7 +589,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         return asm
     }
 
-    private fun createValueFromBranch1(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): AsmValue? {
+    private fun createValueFromBranch1(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any? {
         val targetType = findTrRuleForGrammarRuleNamedOrNull(target.node.rule.tag)
 
         return when {
@@ -622,6 +627,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                                 null != targetType && targetType.resolvedType.declaration != SimpleTypeModelStdLib.List && targetType.resolvedType.declaration is DataType -> {
                                     val propValue = when {
                                         target.node.rule.isListSeparated -> {
+                                            /*
                                             val alist = createListSimpleValueFromBranch(
                                                 target,
                                                 downData.path,
@@ -629,13 +635,15 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                                                 type
                                             )
                                             val els = alist.elements.toSeparatedList<AsmValue, AsmValue, AsmValue>().items
-                                            AsmListSimple(els)
+                                             */
+                                            val sepList = createListSeparatedItemsValueFromBranch(target,downData.path, children, type)
+                                            sepList
                                         }
 
                                         else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue? }, type)
                                     }
                                     val propDecl = (targetType.resolvedType.declaration as DataType).property.first()
-                                    val el = createAsmElement(downData.path, targetType.resolvedType.declaration.qualifiedName)
+                                    val el = createAsmStructure(downData.path, targetType.resolvedType.declaration.qualifiedName)
                                     setPropertyFromDeclaration(el, propDecl, propValue)
                                     el
                                 }
@@ -649,7 +657,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                                 null != targetType && targetType.resolvedType.declaration != SimpleTypeModelStdLib.ListSeparated && targetType.resolvedType.declaration is DataType -> {
                                     val propValue = createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
                                     val propDecl = (targetType.resolvedType.declaration as DataType).property.first()
-                                    val el = createAsmElement(downData.path, targetType.resolvedType.declaration.qualifiedName)
+                                    val el = createAsmStructure(downData.path, targetType.resolvedType.declaration.qualifiedName)
                                     setPropertyFromDeclaration(el, propDecl, propValue)
                                     el
                                 }
@@ -670,10 +678,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                             if (Debug.CHECK) check(1 == children.size)
                             children[0].value as AsmValue
                         } else {
-                            val el = createAsmElement(downData.path, type.qualifiedName)
+                            val el = createAsmStructure(downData.path, type.qualifiedName)
                             for (propDecl in type.property) {
                                 val propType = propDecl.typeInstance.declaration
-                                val propValue: AsmValue? = when (propType) {
+                                val propValue: Any? = when (propType) {
                                     is PrimitiveType -> {
                                         val childData = children[propDecl.index]
                                         createStringValueFromBranch(sentence, childData.nodeInfo)
@@ -682,16 +690,16 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                                     is CollectionType -> when (propType) {
                                         SimpleTypeModelStdLib.List -> {
                                             when {
-                                                target.node.rule.isListSimple && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> AsmListSimple(emptyList())
+                                                target.node.rule.isListSimple && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> asmFactory.listOfValues(emptyList())
                                                 target.node.rule.isList -> createList(target, children.map { it.value as AsmValue })
                                                 else -> {
                                                     val childData = children[propDecl.index]
                                                     when {
                                                         childData.nodeInfo.node.rule.isList -> when {
-                                                            null == childData.value -> AsmListSimple(emptyList())
+                                                            null == childData.value -> asmFactory.listOfValues(emptyList())
                                                             childData.value is AsmList -> createList(childData.nodeInfo, childData.value.elements)
                                                             childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList
-                                                            else -> AsmListSimple(listOf(childData.value as AsmValue))
+                                                            else -> asmFactory.listOfValues(listOf(childData.value as AsmValue))
                                                         }
 
                                                         else -> error("Internal Error: cannot create a ListSimple from '$childData'")
@@ -703,22 +711,23 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                                         SimpleTypeModelStdLib.ListSeparated -> {
                                             when {
                                                 //childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSeparatedSimple(emptyList())
-                                                target.node.rule.isListSeparated && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> AsmListSeparatedSimple(
+                                                target.node.rule.isListSeparated && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> asmFactory.listOfSeparatedValues(
                                                     emptyListSeparated()
                                                 )
 
-                                                target.node.rule.isList -> AsmListSeparatedSimple(children.map { it.value as AsmValue }
-                                                    .toSeparatedList<AsmValue, AsmValue, AsmValue>())
+                                                target.node.rule.isList -> asmFactory.listOfSeparatedValues(
+                                                    children.map { it.value!! }.toSeparatedList()
+                                                )
 
                                                 else -> {
                                                     val childData = children[propDecl.index]
                                                     when {
                                                         childData.nodeInfo.node.rule.isList -> when {
-                                                            null == childData.value -> AsmListSeparatedSimple(emptyListSeparated())
+                                                            null == childData.value -> asmFactory.listOfSeparatedValues(emptyListSeparated())
                                                             childData.value is AsmListSeparated -> childData.value
-                                                            childData.value is AsmList -> AsmListSeparatedSimple(childData.value.elements.toSeparatedList<AsmValue, AsmValue, AsmValue>())
+                                                            childData.value is AsmList -> asmFactory.listOfSeparatedValues(childData.value.elements.toSeparatedList())
                                                             childData.value is AsmStructure -> childData.value.property.values.first().value as AsmListSeparated
-                                                            else -> AsmListSeparatedSimple(listOf(childData.value as AsmValue).toSeparatedList())
+                                                            else -> asmFactory.listOfSeparatedValues(listOf(childData.value as AsmValue).toSeparatedList())
                                                         }
 
                                                         else -> error("Internal Error: cannot create a ListSeparated from '$childData'")
@@ -779,7 +788,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createValueFor(sentence: Sentence, type: TypeDeclaration, path: AsmPath, childData: ChildData): AsmValue = when (type) {
+    private fun createValueFor(sentence: Sentence, type: TypeDeclaration, path: AsmPath, childData: ChildData): Any = when (type) {
         is PrimitiveType -> createStringValueFromBranch(sentence, childData.nodeInfo)
         is UnnamedSupertypeType -> TODO()
         is CollectionType -> TODO()
@@ -792,22 +801,22 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createStringValueFromBranch(sentence: Sentence, target: SpptDataNodeInfo): AsmValue = when {
-        target.node.startPosition == target.node.nextInputNoSkip -> AsmNothingSimple
+    private fun createStringValueFromBranch(sentence: Sentence, target: SpptDataNodeInfo): Any = when {
+        target.node.startPosition == target.node.nextInputNoSkip -> asmFactory.nothingValue()
         else -> {
             val str = sentence.matchedTextNoSkip(target.node)
-            AsmPrimitiveSimple.stdString(str)
+            asmFactory.primitiveValue(SimpleTypeModelStdLib.String.qualifiedTypeName, str)
         }
     }
 
-    private fun createList(nodeData: SpptDataNodeInfo, list: List<AsmValue>): AsmList {
+    private fun createList(nodeData: SpptDataNodeInfo, list: List<AsmValue>): Any {
         return when {
-            nodeData.node.rule.isListSimple -> AsmListSimple(list)
+            nodeData.node.rule.isListSimple -> asmFactory.listOfValues(list)
             nodeData.node.rule.isListSeparated -> {
                 val rhs = (nodeData.node.rule as RuntimeRule).rhs as RuntimeRuleRhsListSeparated
                 when {
-                    rhs.separatorRhsItem.isTerminal -> AsmListSimple(list.toSeparatedList<AsmValue, AsmValue, AsmValue>().items)
-                    else -> AsmListSimple(list.toSeparatedList<AsmValue, AsmValue, AsmValue>().separators)
+                    rhs.separatorRhsItem.isTerminal -> asmFactory.listOfValues(list.toSeparatedList<AsmValue, AsmValue, AsmValue>().items)
+                    else -> asmFactory.listOfValues(list.toSeparatedList<AsmValue, AsmValue, AsmValue>().separators)
                 }
             }
 
@@ -815,32 +824,46 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun createListSimpleValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<AsmValue?>, type: TypeDeclaration): AsmList {
+    private fun createListSimpleValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<AsmValue?>, type: TypeDeclaration): Any {
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.List)
         return when {
-            target.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
-            target.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
-            target.node.rule.isList -> AsmListSimple(children.filterNotNull())
+            target.node.rule.isEmptyTerminal -> asmFactory.listOfValues(emptyList())
+            target.node.rule.isEmptyListTerminal -> asmFactory.listOfValues(emptyList())
+            target.node.rule.isListSimple -> asmFactory.listOfValues(children.filterNotNull())
             else -> error("Internal Error: cannot create a List from '$target'")
         }
     }
 
-    private fun createListSeparatedValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDeclaration): AsmListSeparated {
+    private fun createListSeparatedValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDeclaration): Any {
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
         return when {
-            target.node.rule.isEmptyTerminal -> AsmListSeparatedSimple(emptyListSeparated())
-            target.node.rule.isEmptyListTerminal -> AsmListSeparatedSimple(emptyListSeparated())
-            target.node.rule.isList -> {
-                val sList = (children as List<AsmValue>).toSeparatedList<AsmValue, AsmValue, AsmValue>()
-                AsmListSeparatedSimple(sList)
+            target.node.rule.isEmptyTerminal -> asmFactory.listOfSeparatedValues(emptyListSeparated())
+            target.node.rule.isEmptyListTerminal -> asmFactory.listOfSeparatedValues(emptyListSeparated())
+            target.node.rule.isListSeparated -> {
+                val sList = (children as List<Any>).toSeparatedList<Any, Any, Any>()
+                asmFactory.listOfSeparatedValues(sList)
             }
 
-            else -> error("Internal Error: cannot create a List from '$target'")
+            else -> error("Internal Error: cannot create a List(Separated) from '$target'")
         }
     }
 
-    private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, children: List<ChildData>): AsmStructure {
-        val el = createAsmElement(path, type.qualifiedName) // TODO: should have a createTuple method
+    private fun createListSeparatedItemsValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDeclaration): Any {
+        if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
+        return when {
+            target.node.rule.isEmptyTerminal -> asmFactory.listOfValues(emptyList())
+            target.node.rule.isEmptyListTerminal -> asmFactory.listOfValues(emptyList())
+            target.node.rule.isListSeparated -> {
+                val sList = (children as List<Any>).toSeparatedList<Any, Any, Any>()
+                asmFactory.listOfValues(sList.items)
+            }
+
+            else -> error("Internal Error: cannot create a List(Separated) from '$target'")
+        }
+    }
+
+    private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, children: List<ChildData>): Any {
+        val el = createAsmStructure(path, type.qualifiedName) // TODO: should have a createTuple method
 
         for (propDecl in type.property) {
             val propChildData = children[propDecl.index]
@@ -850,17 +873,17 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         return el
     }
 
-    private fun createElementFrom(sentence: Sentence, type: DataType, path: AsmPath, children: List<ChildData>): AsmStructure {
+    private fun createElementFrom(sentence: Sentence, type: DataType, path: AsmPath, children: List<ChildData>): Any {
         return if (type.subtypes.isNotEmpty()) {
             if (Debug.CHECK) check(1 == children.size)
             children[0].value as AsmStructure
         } else {
-            val el = createAsmElement(path, type.qualifiedName)
+            val el = createAsmStructure(path, type.qualifiedName)
             for (propDecl in type.property) {
                 val propPath = path + propDecl.name.value
                 val propType = propDecl.typeInstance.declaration
                 val childData = children[propDecl.index]
-                val propValue: AsmValue? = when (propType) {
+                val propValue = when (propType) {
                     is PrimitiveType -> {
                         createStringValueFromBranch(sentence, childData.nodeInfo)
                     }
@@ -868,8 +891,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
                     is CollectionType -> when (propType) {
                         SimpleTypeModelStdLib.List -> {
                             when {
-                                childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
-                                childData.nodeInfo.node.rule.isEmptyListTerminal -> AsmListSimple(emptyList())
+                                childData.nodeInfo.node.rule.isEmptyTerminal -> asmFactory.listOfValues(emptyList())
+                                childData.nodeInfo.node.rule.isEmptyListTerminal -> asmFactory.listOfValues(emptyList())
                                 childData.nodeInfo.node.rule.isList -> when {
                                     childData.value is AsmList -> childData.value
                                     childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList
@@ -911,10 +934,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<A : Asm>(
         }
     }
 
-    private fun setPropertyFromDeclaration(el: AsmStructure, declaration: PropertyDeclaration, value: AsmValue?) {
+    private fun setPropertyFromDeclaration(el: Any, declaration: PropertyDeclaration, value: Any?) {
         // whether it is a reference or not is handled later in Semantic Analysis
-        val v = value ?: AsmNothingSimple
-        el.setProperty(declaration.name.asValueName, v, declaration.index)
+        val v = value ?: asmFactory.nothingValue()
+        asmFactory.setProperty(el,declaration.index, declaration.name.asValueName, v)
     }
 
 }

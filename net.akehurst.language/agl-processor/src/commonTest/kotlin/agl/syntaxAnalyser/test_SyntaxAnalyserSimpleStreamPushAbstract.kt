@@ -140,7 +140,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 asm: String,
                 locationMap: Map<Any, InputLocation>?,
                 context: ContextAsmSimple?,
-                options: SemanticAnalysisOptions<String, ContextAsmSimple>
+                options: SemanticAnalysisOptions<ContextAsmSimple>
             ): SemanticAnalysisResult {
                 return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
             }

@@ -20,14 +20,15 @@ import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
-internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
+internal class LanguageProcessorDefault<AsmType:Any, ContextType : Any>(
     override val grammarModel: GrammarModel,
-    override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
-) : LanguageProcessorAbstract<AsmType, ContextType>() {
+    override val configuration: LanguageProcessorConfiguration<AsmType,  ContextType>,
+) : LanguageProcessorAbstract<AsmType,  ContextType>() {
 
     override val targetRuleSet get() = this.targetGrammar?.let { _runtimeRuleSet[it.qualifiedName.value] }
     override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }

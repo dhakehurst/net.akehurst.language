@@ -37,8 +37,8 @@ grammar Expression extends Base {
       | literal
       | navigation
       | infix
-      | tuple
       | object
+      | tuple
       | with
       | when
       ;
@@ -63,7 +63,7 @@ grammar Expression extends Base {
       | '/' | '*' | '%' | '+' | '-' // arithmetic
       ;
     
-    object = possiblyQualifiedName constructorArguments? assignmentBlock? ;
+    object = possiblyQualifiedName constructorArgument assignmentBlock? ;
     constructorArguments = '(' argumentList ')' ;
 
     tuple = 'tuple' assignmentBlock ;
@@ -145,7 +145,7 @@ grammar Expression extends Base {
             lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
         }
         concatenation("object") {
-            ref("possiblyQualifiedName"); opt { ref("constructorArguments") }; opt { ref("assignmentBlock") }
+            ref("possiblyQualifiedName"); ref("constructorArguments"); opt { ref("assignmentBlock") }
         }
         concatenation("constructorArguments") {
             lit("("); ref("argumentList"); lit(")");

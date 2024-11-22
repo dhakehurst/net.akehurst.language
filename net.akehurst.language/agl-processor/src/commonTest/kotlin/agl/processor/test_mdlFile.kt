@@ -19,6 +19,8 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -76,73 +78,74 @@ grammar Mdl {
     @Test
     fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test.Mdl", "Mdl") {
-            //file = section+ ;
-            dataType("file", "File") {
-                propertyListTypeOf("section", "Section", false, 0)
-            }
-            //section = IDENTIFIER '{' content* '}' ;
-            dataType("section", "Section") {
-                supertypes("Content")
-                propertyPrimitiveType("identifier", "String", false, 0)
-                propertyListTypeOf("content", "Content", false, 2)
-            }
-            //content = section | parameter ;
-            dataType("content", "Content") {
-                subtypes("Section", "Parameter")
-            }
-            //parameter = IDENTIFIER value ;
-            dataType("parameter", "Parameter") {
-                supertypes("Content")
-                propertyPrimitiveType("identifier", "String", false, 0)
-                propertyUnnamedSuperType("value", false, 1) {
+        val expected = typeModel("FromGrammarParsedGrammarUnit",true) {
+            grammarTypeNamespace("test.Mdl") {
+                //file = section+ ;
+                dataType("file", "File") {
+                    propertyListTypeOf("section", "Section", false, 0)
+                }
+                //section = IDENTIFIER '{' content* '}' ;
+                dataType("section", "Section") {
+                    supertypes("Content")
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                    propertyListTypeOf("content", "Content", false, 2)
+                }
+                //content = section | parameter ;
+                dataType("content", "Content") {
+                    subtypes("Section", "Parameter")
+                }
+                //parameter = IDENTIFIER value ;
+                dataType("parameter", "Parameter") {
+                    supertypes("Content")
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                    propertyUnnamedSuperType("value", false, 1) {
+                        typeRef("StringList")
+                        typeRef("Matrix")
+                        typeRef("Identifier")
+                        typeRef("String")
+                    }
+                }
+                //value = stringList | matrix | identifier | literal ;
+                unnamedSuperTypeType("value") {
                     typeRef("StringList")
                     typeRef("Matrix")
                     typeRef("Identifier")
                     typeRef("String")
                 }
-            }
-            //value = stringList | matrix | identifier | literal ;
-            unnamedSuperTypeType("value") {
-                typeRef("StringList")
-                typeRef("Matrix")
-                typeRef("Identifier")
-                typeRef("String")
-            }
-            //identifier = IDENTIFIER ;
-            dataType("identifier", "Identifier") {
-                propertyPrimitiveType("identifier", "String", false, 0)
-            }
-            //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-            dataType("matrix", "Matrix") {
-                propertyListType("row", false, 1) {
-                    unnamedSuperTypeOf() {
-                        listSeparatedType(false) { ref("String");ref("String") }
-                        listType(false) { ref("String") }
+                //identifier = IDENTIFIER ;
+                dataType("identifier", "Identifier") {
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                }
+                //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+                dataType("matrix", "Matrix") {
+                    propertyListType("row", false, 1) {
+                        unnamedSuperTypeOf() {
+                            listSeparatedType(false) { ref("String");ref("String") }
+                            listType(false) { ref("String") }
+                        }
                     }
                 }
-            }
-            //row = [literal / ',']+ | literal+ ;
-            unnamedSuperTypeType("row") {
-                listSeparatedType(false) { ref("String");ref("String") }
-                listType(false) { ref("String") }
-            }
+                //row = [literal / ',']+ | literal+ ;
+                unnamedSuperTypeType("row") {
+                    listSeparatedType(false) { ref("String");ref("String") }
+                    listType(false) { ref("String") }
+                }
 
-            //stringList = DOUBLE_QUOTE_STRING+ ;
-            dataType("stringList", "StringList") {
-                propertyListType("double_quote_string", false, 0) { ref("String") }
+                //stringList = DOUBLE_QUOTE_STRING+ ;
+                dataType("stringList", "StringList") {
+                    propertyListType("double_quote_string", false, 0) { ref("String") }
+                }
+
+                // literal = BOOLEAN < INTEGER < REAL < DOUBLE_QUOTE_STRING  ;
+                stringTypeFor("literal")
+
+                stringTypeFor("IDENTIFIER")
+                stringTypeFor("BOOLEAN")
+                stringTypeFor("INTEGER")
+                stringTypeFor("REAL")
+                stringTypeFor("DOUBLE_QUOTE_STRING")
             }
-
-            // literal = BOOLEAN < INTEGER < REAL < DOUBLE_QUOTE_STRING  ;
-            stringTypeFor("literal")
-
-            stringTypeFor("IDENTIFIER")
-            stringTypeFor("BOOLEAN")
-            stringTypeFor("INTEGER")
-            stringTypeFor("REAL")
-            stringTypeFor("DOUBLE_QUOTE_STRING")
         }
-
         GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 

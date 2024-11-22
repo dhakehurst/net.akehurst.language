@@ -75,7 +75,7 @@ class test_AglGrammarSemanticAnalyser {
 
         fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarModel> {
             val sut = AglGrammarSyntaxAnalyser()
-            val res = sut.transform(sppt) { _, _ -> TODO() }
+            val res = sut.transform(sppt, { _, _ -> TODO() })
             return res
         }
 

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
@@ -44,7 +45,7 @@ data class ChildDataAny(
     val value: Any?
 )
 
-abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
+abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     val grammarNamespaceQualifiedName: QualifiedName,
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel

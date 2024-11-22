@@ -39,6 +39,6 @@ interface Spine {
     val nextChildNumber: Int
 }
 
-interface CompletionProvider<in AsmType, in ContextType> {
+interface CompletionProvider<AsmType:Any, in ContextType> {
     fun provide(nextExpected: Set<Spine>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
 }

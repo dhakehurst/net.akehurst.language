@@ -28,24 +28,24 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
-    override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault(),
-    override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
+    override val semanticAnalysis: SemanticAnalysisOptions< ContextType> = SemanticAnalysisOptionsDefault(),
+    override val completionProvider: CompletionProviderOptions< ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType>
 
-class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
+class SemanticAnalysisOptionsDefault< ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
     override var checkReferences: Boolean = true,
     override var resolveReferences: Boolean = true,
     override val other: Map<String, Any> = mutableMapOf()
-) : SemanticAnalysisOptions<AsmType, ContextType>
+) : SemanticAnalysisOptions< ContextType>
 
-class CompletionProviderOptionsDefault<AsmType : Any, ContextType : Any>(
+class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
     override val other: Map<String, Any> = mutableMapOf()
-) : CompletionProviderOptions<AsmType, ContextType>
+) : CompletionProviderOptions< ContextType>

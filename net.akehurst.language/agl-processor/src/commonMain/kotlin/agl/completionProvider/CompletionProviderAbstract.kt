@@ -49,7 +49,7 @@ internal class SpineDefault(
     override fun toString(): String = "Spine [$nextChildNumber]->${elements.joinToString(separator = "->") { it.toString() }}"
 }
 
-abstract class CompletionProviderAbstract<in AsmType, in ContextType> : CompletionProvider<AsmType, ContextType> {
+abstract class CompletionProviderAbstract<AsmType:Any, in ContextType> : CompletionProvider<AsmType, ContextType> {
 
     protected fun provideTerminalsForSpine(spine: Spine): List<CompletionItem> {
         return spine.expectedNextItems.flatMap { ri ->

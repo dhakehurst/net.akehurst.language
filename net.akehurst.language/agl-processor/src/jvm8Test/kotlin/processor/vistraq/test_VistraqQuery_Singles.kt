@@ -25,6 +25,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import testFixture.utils.parseError
 import kotlin.test.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -106,7 +107,7 @@ class test_VistraqQuery_Singles {
         val grammarName = "Expressions"
         val goal = "REAL"
         val expected =  setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("REAL"))
+            parseError(InputLocation(0, 1, 1, 1),sentence, setOf(), setOf("REAL"))
         )
         test_process_fail(sentence, goal, grammarName, expected)
     }

@@ -27,11 +27,12 @@ import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
-abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : Any> {
+abstract class GeneratedLanguageProcessorAbstract<AsmType:Any, ContextType : Any> {
 
     companion object {
         const val GOAL_RULE = RuntimeRuleSet.GOAL_RULE_NUMBER

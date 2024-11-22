@@ -21,6 +21,7 @@ import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -33,7 +34,7 @@ import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import net.akehurst.language.sppt.treedata.locationForNode
 
 
-abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
+abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType:Any> : SyntaxAnalyser<AsmType> {
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -66,7 +67,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     /**
      * convenience function for use from typescript
      */
-    fun locationForNode(sentence:Sentence, node: SpptDataNode): InputLocation {
+    fun locationForNode(sentence: Sentence, node: SpptDataNode): InputLocation {
         return sentence.locationForNode(node)
     }
 }

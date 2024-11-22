@@ -37,6 +37,7 @@ import net.akehurst.language.reference.processor.ReferencesCompletionProvider
 import net.akehurst.language.reference.processor.ReferencesSemanticAnalyser
 import net.akehurst.language.reference.processor.ReferencesSyntaxAnalyser
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.Grammar
@@ -44,10 +45,12 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.formatter.api.AglFormatterModel
 import net.akehurst.language.grammar.asm.asGrammarModel
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -68,9 +71,9 @@ interface AglLanguages {
     val formatLanguageIdentity: LanguageIdentity
 
     val base: LanguageDefinition<Any, SentenceContext<String>>
-    val expressions: LanguageDefinition<Expression, SentenceContext<String>>
+    val expressions: LanguageDefinition<Expression,  SentenceContext<String>>
     val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry>
-    val asmTransform: LanguageDefinition<TransformModel, ContextFromTypeModel>
+    val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
     val format: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
@@ -92,7 +95,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
         override val base: LanguageDefinition<Any, SentenceContext<String>> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm<Any, SentenceContext<String>>(
+                LanguageDefinitionFromAsm(
                     identity = baseLanguageIdentity,
                     AglBase.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
@@ -104,7 +107,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //asmTransformResolver { AsmTransformModelSimple.fromGrammar(it.grammar!!, it.typeModel) }
                         //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(ExpressionsSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        syntaxAnalyserResolver { ProcessResultDefault(BaseSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //semanticAnalyserResolver { ProcessResultDefault(ExpressionsSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                         styleResolver {
@@ -178,7 +181,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val asmTransform: LanguageDefinition<TransformModel, ContextFromTypeModel> by lazy {
+        override val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = asmTransformLanguageIdentity,
@@ -300,7 +303,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
     }
 
-    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
+    fun <AsmType:Any,  ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
         return if (this._registry.containsKey(definition.identity)) {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
@@ -329,14 +332,14 @@ class LanguageRegistryDefault : LanguageRegistry {
         this._registry.remove(identity)
     }
 
-    override fun <AsmType : Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>? {
+    override fun <AsmType:Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>? {
         // the agl languages are not registered until they are first accessed
         // thus need to check for them explicitly
         return when(identity) {
             agl.baseLanguageIdentity -> agl.base
             agl.expressionsLanguageIdentity -> agl.expressions
             agl.grammarLanguageIdentity -> agl.grammar
-            agl.asmTransformLanguageIdentity -> agl.asmTransform
+            agl.asmTransformLanguageIdentity -> agl.transform
             agl.styleLanguageIdentity -> agl.style
             agl.formatLanguageIdentity -> agl.format
             agl.crossReferenceLanguageIdentity -> agl.crossReference
@@ -347,11 +350,11 @@ class LanguageRegistryDefault : LanguageRegistry {
     /**
      * try to find localNamespace.nameOrQName or if not found try to find nameOrQName
      */
-    fun <AsmType : Any, ContextType : Any> findWithNamespaceOrNull(localNamespace: String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
+    fun <AsmType:Any,ContextType : Any> findWithNamespaceOrNull(localNamespace: String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
         return findOrNull(LanguageIdentity("$localNamespace.$nameOrQName")) ?: findOrNull(LanguageIdentity(nameOrQName))
     }
 
-    override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
+    override fun <AsmType:Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?

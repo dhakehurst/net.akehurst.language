@@ -49,7 +49,7 @@ class ExpressionsSemanticAnalyser(
         asm: Expression,
         locationMap: Map<Any, InputLocation>?,
         context: SentenceContext<String>?,
-        options: SemanticAnalysisOptions<Expression, SentenceContext<String>>
+        options: SemanticAnalysisOptions< SentenceContext<String>>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(issues)
     }

@@ -44,7 +44,7 @@ namespace net.akehurst.language.example
 
 grammar BasicTutorial {
 
-    @defaultGoalRule: document
+    #defaultGoalRule: document
     skip leaf WS = "\s+";
     skip leaf COMMENT = "//[^\r\n]*" ;
     document = targetDefList* greeting+ ;
@@ -89,7 +89,7 @@ namespace net.akehurst.language.example.BasicTutorial
         fun testFail(sentence: String, expectedIssues: Set<LanguageIssue>) {
             val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
             assertTrue(_processor.issues.errors.isEmpty(), _processor.issues.toString())
-            assertEquals(result.issues.all, expectedIssues)
+            assertEquals(expectedIssues,result.issues.all)
             assertNull(result.asm)
         }
     }

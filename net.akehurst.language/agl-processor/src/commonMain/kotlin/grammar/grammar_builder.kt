@@ -205,11 +205,11 @@ open class SimpleItemsBuilder(
     }
 
     /** a grouped concatenation **/
-    fun grp(init: GroupConcatBuilder.() -> Unit) {
-        val gb = GroupConcatBuilder()
+    fun grp(init: ConcatenationItemBuilder.() -> Unit) {
+        val gb = ConcatenationItemBuilder(localNamespace)
         gb.init()
-        val groupedContent = gb.build()
-        addItem(GroupDefault(groupedContent))
+        val items = gb.build()
+        addItem(GroupDefault(ConcatenationDefault(items)))
     }
 
     /** a grouped choice **/
@@ -292,17 +292,6 @@ class ConcatenationItemBuilder(localNamespace: Namespace<Grammar>) : SimpleItems
 
     override fun build(): List<RuleItem> {
         return items
-    }
-}
-
-@GrammarBuilderMarker
-class GroupConcatBuilder() {
-
-    val items = mutableListOf<RuleItem>()
-
-
-    fun build(): Concatenation {
-        return ConcatenationDefault(items)
     }
 }
 

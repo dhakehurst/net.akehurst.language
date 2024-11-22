@@ -77,8 +77,8 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
     private var _scan: ScanOptions = base.scan
     private var _parse: ParseOptions = base.parse
     private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = base.syntaxAnalysis
-    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = base.semanticAnalysis
-    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = base.completionProvider
+    private var _semanticAnalyser: SemanticAnalysisOptions< ContextType> = base.semanticAnalysis
+    private var _completionProvider: CompletionProviderOptions< ContextType> = base.completionProvider
 
     fun scan(base: ScanOptions = ScanOptionsDefault(), init: ScanOptionsBuilder.() -> Unit) {
         val b = ScanOptionsBuilder(base)
@@ -166,8 +166,8 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _options[key] = value
     }
 
-    fun build(): SemanticAnalysisOptions<AsmType, ContextType> {
-        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(
+    fun build(): SemanticAnalysisOptions< ContextType> {
+        return SemanticAnalysisOptionsDefault< ContextType>(
             _active,
             _locationMap,
             _context,
@@ -192,7 +192,7 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _options[key] = value
     }
 
-    fun build(): CompletionProviderOptions<AsmType, ContextType> {
-        return CompletionProviderOptionsDefault<AsmType, ContextType>(_context, _options)
+    fun build(): CompletionProviderOptions<ContextType> {
+        return CompletionProviderOptionsDefault< ContextType>(_context, _options)
     }
 }

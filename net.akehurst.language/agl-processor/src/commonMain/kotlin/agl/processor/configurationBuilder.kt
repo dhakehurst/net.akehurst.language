@@ -22,6 +22,7 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -47,6 +48,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _parserResolver: ParserResolver<AsmType, ContextType>? = base.parserResolver
     private var _asmTransformResolver: AsmTransformModelResolver<AsmType, ContextType>? = base.asmTransformModelResolver
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = base.typeModelResolver
+//    private var _asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = base.asmFactoryResolver
     private var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = base.crossReferenceModelResolver
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = base.syntaxAnalyserResolver
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = base.semanticAnalyserResolver
@@ -92,6 +94,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         this._typeModelResolver = func
     }
 
+//    fun asmFactoryResolver(func: AsmFactoryResolver<AsmFactory<AsmType,*,*>>) {
+//        this._asmFactoryResolver = func
+//   }
+
     fun crossReferenceModelResolver(func: CrossReferenceModelResolver<AsmType, ContextType>?) {
         _crossReferenceModelResolver = func
     }
@@ -134,6 +140,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
             _parserResolver,
             _asmTransformResolver,
             _typeModelResolver,
+    //        _asmFactoryResolver,
             _crossReferenceModelResolver,
             _syntaxAnalyserResolver,
             _semanticAnalyserResolver,

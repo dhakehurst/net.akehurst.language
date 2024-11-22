@@ -30,6 +30,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformNamespace
+import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.transform.asm.TransformationRuleDefault
@@ -67,7 +68,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         asm: TransformModel,
         locationMap: Map<Any, InputLocation>?,
         context: ContextFromGrammarAndTypeModel?,
-        options: SemanticAnalysisOptions<TransformModel, ContextFromGrammarAndTypeModel>
+        options: SemanticAnalysisOptions<ContextFromGrammarAndTypeModel>
     ): SemanticAnalysisResult {
         _context = context
         __asm = asm
@@ -80,14 +81,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
 
                     val opt = trs.options.lastOrNull { it.name == OPTION_OVERRIDE_DEFAULT }
                     if (null != opt && opt.value=="true") {
-                        val grmRs = transformFromGrammar.asm!!.findNamespaceOrNull(trns.qualifiedName)?.findDefinitionOrNull(trs.name)
-                        if (null!=grmRs) {
-                            copy rules to this rulsset if not already existing
-                        }
+                        overrideDefaultRuleSet(trs)
                     }
 
                     for ((grn, trr) in trs.rules) {
-                        val ti = typeFor(trns,trr)
+                        val ti = typeFor(trs,trr)
                         (trr as TransformationRuleDefault).resolveTypeAs(ti)
                     }
                 }
@@ -106,12 +104,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         }
     }
 
-    private fun typeFor(namespace:TransformNamespace, trr: TransformationRule): TypeInstance {
+    private fun typeFor(trs:TransformRuleSet, trr: TransformationRule): TypeInstance {
         val existingDecl = _typeModel.findFirstByPossiblyQualifiedOrNull(trr.possiblyQualifiedTypeName)
         return when(existingDecl) {
             null -> when {
                 trr.optionCreateTypes -> {
-                    val tns = _typeModel.findOrCreateNamespace(namespace.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
+                    val tns = _typeModel.findOrCreateNamespace(trs.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
                     val decl = tns.findOwnedOrCreateDataTypeNamed(trr.possiblyQualifiedTypeName.simpleName)
                     decl.type()
                 }
@@ -121,6 +119,23 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                 }
             }
             else -> existingDecl.type()
+        }
+    }
+
+    private fun overrideDefaultRuleSet(overridingRuleSet: TransformRuleSet) {
+        val grmRs = transformFromGrammar.asm!!.findNamespaceOrNull(overridingRuleSet.namespace.qualifiedName)?.findDefinitionOrNull(overridingRuleSet.name)
+        when (grmRs) {
+            null -> _issues.warn(null, "No default ruleset with name '${overridingRuleSet.qualifiedName}' found")
+            else -> {
+                for(grmRl in grmRs.rules.values) {
+                    when {
+                        overridingRuleSet.rules.containsKey(grmRl.grammarRuleName) -> Unit // overriden, do not copy
+                        else -> {
+                            overridingRuleSet.addRule(grmRl)
+                        }
+                    }
+                }
+            }
         }
     }
 }

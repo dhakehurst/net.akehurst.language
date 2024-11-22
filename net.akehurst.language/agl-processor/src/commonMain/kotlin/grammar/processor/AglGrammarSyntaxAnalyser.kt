@@ -99,7 +99,7 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = children[0] as GrammarNamespaceDefault
         val grammarList = children[1] as List<Grammar>
         namespace.addAllDefinition(grammarList)
-        val unit = GrammarModelDefault(SimpleName("ParsedUnit"), emptyList(), listOf(namespace as GrammarNamespace))
+        val unit = GrammarModelDefault(SimpleName("ParsedGrammarUnit"), emptyList(), listOf(namespace as GrammarNamespace))
         return unit
     }
 

@@ -16,11 +16,40 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.AsmPath
+import net.akehurst.language.asm.api.AsmValue
+import net.akehurst.language.asm.api.PropertyValueName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.expressions.processor.TypedObject
+import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeInstance
+
+/**
+ * stateless set of functions that construct elements of an ASM
+ */
+interface AsmFactory<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType> {
+
+    fun constructAsm(): AsmType
+    fun rootList(asm:AsmType): List<AsmValue>
+    fun addRoot(asm: AsmType, root: AsmValueType)
+    fun removeRoot(asm: AsmType, root: AsmValueType)
+
+    fun toTypedObject(self: AsmValueType, selfType: TypeInstance):TypedObject
+    fun nothingValue(): AsmValueType
+    fun anyValue(value: Any): AsmValueType
+    fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
+    fun listOfValues(elements: List<AsmValueType>): AsmValueType
+    fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
+
+    fun constructStructure(path: AsmPath, qualifiedTypeName: QualifiedName): AsmStructureType
+    fun setProperty(self: AsmStructureType, index: Int, name: PropertyValueName, value: AsmValueType)
+
+}
 
 /**
  *
@@ -29,7 +58,7 @@ import net.akehurst.language.sentence.api.InputLocation
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<AsmType:Any> { //TODO: make transform type argument here maybe!
 
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called

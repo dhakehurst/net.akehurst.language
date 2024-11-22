@@ -191,7 +191,7 @@ grammar KerML {
 
 grammar SysMLv2_0 : KerML {
 
-    @defaultGoalRule: RootNamespace
+    #defaultGoalRule: RootNamespace
 
     // 8.2.2.1.2 Lexical Structure
     // The lexical structure of the SysML textual notation is identical to that of the KerML textual notation [KerML],

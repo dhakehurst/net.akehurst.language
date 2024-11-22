@@ -108,7 +108,8 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
     fun formatValueType(indent: Indent, context: TypeNamespace, type: ValueType): String {
         val sb = StringBuilder()
         val tn = type.name
-        sb.append("${indent}valueType(\"$tn\") {\n")
+        sb.append("${indent}
+        valueType(\"$tn\") {\n")
         sb.append(formatSupertypes(indent.inc, context, type.supertypes))
         sb.append(formatConstructors(indent.inc, context, type.constructors))
         sb.append(formatTypeMembers(indent.inc, context, type))

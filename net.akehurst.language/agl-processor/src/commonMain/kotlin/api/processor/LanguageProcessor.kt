@@ -22,6 +22,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -45,7 +46,7 @@ import net.akehurst.language.typemodel.api.TypeModel
  *   - syntaxAnalysis: produce an abstract syntax tree
  *   - semanticAnalysis: produce a list of SemanticAnalyserIssue to indicate errors and warnings about the semantics of the sentence
  */
-interface LanguageProcessor<AsmType : Any, ContextType : Any> {
+interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val issues: IssueCollection<LanguageIssue>
 
@@ -114,7 +115,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * get the default options for this language processor
      */
-    fun optionsDefault(): ProcessOptions<AsmType, ContextType>
+    fun optionsDefault(): ProcessOptions<AsmType,ContextType>
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.

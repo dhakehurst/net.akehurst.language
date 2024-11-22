@@ -90,7 +90,7 @@ internal class GrammarModel2TransformModel(
 
     fun build(): TransformModel {
         val transModel = TransformModelDefault(
-            name = grammarModel.allDefinitions.last().name,
+            name = SimpleName("FromGrammar"+grammarModel.allDefinitions.last().name.value),
             emptyList(),
             namespace = emptyList()
         )

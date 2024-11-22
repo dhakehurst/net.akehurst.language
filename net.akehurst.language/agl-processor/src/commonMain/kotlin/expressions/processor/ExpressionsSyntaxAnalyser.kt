@@ -17,6 +17,7 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -128,10 +129,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionSimple(expressions, operators)
     }
 
-    // object = possiblyQualifiedName constructorArguments? assignmentBlock? ;
+    // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val pqn = children[0] as PossiblyQualifiedName
-        val args = (children[1] as List<Expression>?) ?: emptyList()
+        val args = children[1] as List<Expression>
         val propertyAssignments = children[2] as List<AssignmentStatement>?
         val exp = CreateObjectExpressionSimple(pqn, args)
         exp.propertyAssignments = propertyAssignments ?: emptyList()

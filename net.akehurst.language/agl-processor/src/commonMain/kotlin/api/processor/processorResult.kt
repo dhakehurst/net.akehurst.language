@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sentence.api.InputLocation
@@ -31,7 +32,7 @@ interface SemanticAnalysisResult {
     val issues: IssueCollection<LanguageIssue>
 }
 
-interface ProcessResult<out AsmType : Any> {
+interface ProcessResult<out AsmType:Any> {
     val asm: AsmType?
     val issues: IssueCollection<LanguageIssue>
 }

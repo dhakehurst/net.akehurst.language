@@ -26,12 +26,13 @@ import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.CrossReferenceNamespace
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
-class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceModelDefault>() {
+class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceModel>() {
 
     override fun registerHandlers() {
         super.register(this::unit)

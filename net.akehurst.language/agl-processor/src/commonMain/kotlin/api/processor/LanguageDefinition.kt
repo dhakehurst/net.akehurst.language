@@ -27,6 +27,7 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
@@ -44,8 +45,8 @@ interface GrammarRegistry {
 }
 
 @JvmInline
-value class LanguageIdentity(override val value:String): PublicValueType {
-    val last:String get() = value.split(".").last()
+value class LanguageIdentity(override val value: String) : PublicValueType {
+    val last: String get() = value.split(".").last()
 }
 
 interface LanguageRegistry : GrammarRegistry {

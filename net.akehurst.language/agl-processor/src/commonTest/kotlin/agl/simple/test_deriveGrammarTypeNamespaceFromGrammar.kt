@@ -22,6 +22,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.transform.api.TransformModel
@@ -29,6 +30,7 @@ import net.akehurst.language.transform.asm.TransformModelDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -84,23 +86,25 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
-        val expected = grammarTypeModel("test.Test", "Test") {
-            stringTypeFor("ID")
-            stringTypeFor("NAME")
-            stringTypeFor("NUMBER")
-            dataType("S", "S") {
-                propertyPrimitiveType("id", "String", false, 0)
-                propertyListType("\$choiceList", false, 1) {
-                    unnamedSuperTypeOf("A", "B")
+        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                stringTypeFor("ID")
+                stringTypeFor("NAME")
+                stringTypeFor("NUMBER")
+                dataType("S", "S") {
+                    propertyPrimitiveType("id", "String", false, 0)
+                    propertyListType("\$choiceList", false, 1) {
+                        unnamedSuperTypeOf("A", "B")
+                    }
                 }
-            }
-            dataType("A", "A") {
-                propertyPrimitiveType("name", "String", false, 0)
-                propertyPrimitiveType("number", "String", false, 1)
-            }
-            dataType("B", "B") {
-                propertyPrimitiveType("name", "String", false, 0)
-                propertyPrimitiveType("name2", "String", false, 1)
+                dataType("A", "A") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                    propertyPrimitiveType("number", "String", false, 1)
+                }
+                dataType("B", "B") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                    propertyPrimitiveType("name2", "String", false, 1)
+                }
             }
         }
 
@@ -248,35 +252,37 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
-        val expected = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("exprList", "ExprList", false, 0)
-            }
-            dataType("exprList", "ExprList") {
-                propertyDataTypeOf("expr", "Expr", false, 0)
-                propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    typeRef("expr", "Expr", false)
+        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("exprList", "ExprList", false, 0)
                 }
-            }
-            dataType("expr", "Expr") {
-                subtypes("Root", "Mul", "Add")
-            }
-            dataType("root", "Root") {
-                subtypes("Var", "Literal")
-            }
-            dataType("var", "Var") {
-                propertyPrimitiveType("name", "String", false, 0)
-            }
-            dataType("literal", "Literal") {
-                propertyPrimitiveType("number", "String", false, 0)
-            }
-            dataType("mul", "Mul") {
-                propertyDataTypeOf("expr", "Expr", false, 0)
-                propertyDataTypeOf("expr2", "Expr", false, 2)
-            }
-            dataType("add", "Add") {
-                propertyDataTypeOf("expr", "Expr", false, 0)
-                propertyDataTypeOf("expr2", "Expr", false, 2)
+                dataType("exprList", "ExprList") {
+                    propertyDataTypeOf("expr", "Expr", false, 0)
+                    propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
+                        typeRef("expr", "Expr", false)
+                    }
+                }
+                dataType("expr", "Expr") {
+                    subtypes("Root", "Mul", "Add")
+                }
+                dataType("root", "Root") {
+                    subtypes("Var", "Literal")
+                }
+                dataType("var", "Var") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                }
+                dataType("literal", "Literal") {
+                    propertyPrimitiveType("number", "String", false, 0)
+                }
+                dataType("mul", "Mul") {
+                    propertyDataTypeOf("expr", "Expr", false, 0)
+                    propertyDataTypeOf("expr2", "Expr", false, 2)
+                }
+                dataType("add", "Add") {
+                    propertyDataTypeOf("expr", "Expr", false, 0)
+                    propertyDataTypeOf("expr2", "Expr", false, 2)
+                }
             }
         }
 
@@ -307,34 +313,36 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
-        val expected = grammarTypeModel("test.Test", "Test") {
-            dataType("S", "S") {
-                propertyDataTypeOf("exprList", "ExprList", false, 0)
-            }
-            dataType("exprList", "ExprList") {
-                propertyDataTypeOf("expr", "Expr", false, 0)
-                propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
-                    typeRef("expr", "Expr", false)
+        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Test") {
+                dataType("S", "S") {
+                    propertyDataTypeOf("exprList", "ExprList", false, 0)
                 }
-            }
-            dataType("expr", "Expr") {
-                subtypes("Root", "Mul", "Add")
-            }
-            dataType("root", "Root") {
-                subtypes("Var", "Literal")
-            }
-            dataType("var", "Var") {
-                propertyPrimitiveType("name", "String", false, 0)
-            }
-            dataType("literal", "Literal") {
-                propertyPrimitiveType("number", "String", false, 0)
-            }
-            dataType("mul", "Mul") {
-                propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
-            }
-            //listTypeOf("add", "Expr")
-            dataType("add", "Add") {
-                propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
+                dataType("exprList", "ExprList") {
+                    propertyDataTypeOf("expr", "Expr", false, 0)
+                    propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
+                        typeRef("expr", "Expr", false)
+                    }
+                }
+                dataType("expr", "Expr") {
+                    subtypes("Root", "Mul", "Add")
+                }
+                dataType("root", "Root") {
+                    subtypes("Var", "Literal")
+                }
+                dataType("var", "Var") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                }
+                dataType("literal", "Literal") {
+                    propertyPrimitiveType("number", "String", false, 0)
+                }
+                dataType("mul", "Mul") {
+                    propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
+                }
+                //listTypeOf("add", "Expr")
+                dataType("add", "Add") {
+                    propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
+                }
             }
         }
 

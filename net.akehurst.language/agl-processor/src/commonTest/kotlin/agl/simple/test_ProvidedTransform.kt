@@ -73,10 +73,10 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent(),
                 transformStr = """
-                    #create-missing-types:true
+                    #create-missing-types
                     namespace test
                       transform Test {
-                        S : XXX { yyy := child[0] }
+                        S : XXX() { yyy := child[0] }
                       }
                 """.trimIndent(),
                 "",
@@ -105,11 +105,11 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent(),
                 transformStr = """
-                    #create-missing-types:true
+                    #create-missing-types
                     namespace test
                       transform Test {
-                        #override-default-transform:true
-                        S : XXX { yyy := child[0] }
+                        #override-default-transform
+                        S : XXX() { yyy := child[0] }
                       }
                 """.trimIndent(),
                 "",
@@ -119,7 +119,20 @@ class test_ProvidedTransform {
                         "aa",
                         asmSimple {
                             element("XXX") {
-                                propertyString("yyy","a")
+                                propertyElementExplicitType("yyy","A") {
+                                    propertyString("a","a")
+                                    propertyString("a2","a")
+                                }
+                            }
+                        }
+                    ),
+                    TestDataProcessorSentencePass(
+                        "bb",
+                        asmSimple {
+                            element("XXX") {
+                                propertyElementExplicitType("yyy","B") {
+                                    propertyString("b","b")
+                                }
                             }
                         }
                     )
