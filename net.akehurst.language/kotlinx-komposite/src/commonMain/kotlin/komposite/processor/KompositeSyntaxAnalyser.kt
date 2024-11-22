@@ -75,7 +75,7 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
         val declaration = children[2] as List<((namespace: TypeNamespace) -> TypeDeclaration)>
         val qn = QualifiedName(qualifiedName.joinToString(separator = "."))
 
-        val ns = TypeNamespaceSimple(qn, emptyList())
+        val ns = TypeNamespaceSimple(qn)
         declaration.forEach {
             val dec = it.invoke(ns)
             ns.addDeclaration(dec)

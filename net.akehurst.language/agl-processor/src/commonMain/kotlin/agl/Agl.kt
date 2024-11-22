@@ -19,23 +19,19 @@ package net.akehurst.language.agl
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.asm.asGrammarModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
-import net.akehurst.language.asm.simple.AsmFactorySimple
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -148,7 +144,7 @@ object Agl {
                 typeModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TypeModelSimple.fromString(typeModelStr) }
             }
             if (null != transformStr) {
-                asmTransformResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TransformModelDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!,p.baseTypeModel), transformStr) }
+                asmTransformResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!,p.baseTypeModel), transformStr) }
             }
             if (null != crossReferenceModelStr) {
                 crossReferenceModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }

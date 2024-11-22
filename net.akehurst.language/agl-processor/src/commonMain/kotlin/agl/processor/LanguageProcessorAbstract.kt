@@ -17,12 +17,10 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.completionProvider.SpineDefault
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.base.api.SimpleName
@@ -51,7 +49,7 @@ import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -90,7 +88,7 @@ internal abstract class LanguageProcessorAbstract<AsmType:Any,  ContextType : An
 
     protected val defaultGoalRuleName: GrammarRuleName? by lazy {
         configuration.defaultGoalRuleName
-            ?: targetGrammar?.options?.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.value?.let { GrammarRuleName(it) }
+            ?: targetGrammar?.options?.get(AglGrammar.OPTION_defaultGoalRule)?.let { GrammarRuleName(it) }
             ?: targetGrammar?.grammarRule?.firstOrNull { it.isSkip.not() }?.name
     }
 
@@ -111,7 +109,7 @@ internal abstract class LanguageProcessorAbstract<AsmType:Any,  ContextType : An
         val res = configuration.asmTransformModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
-            ?: TransformModelDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
+            ?: TransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
             ?: error("should not happen")
     }
 
@@ -123,7 +121,7 @@ internal abstract class LanguageProcessorAbstract<AsmType:Any,  ContextType : An
     override val crossReferenceModel: CrossReferenceModel by lazy {
         val res = configuration.crossReferenceModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar"+grammarModel.name.value),  emptyList(),emptyList())
+        res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar"+grammarModel.name.value))
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {

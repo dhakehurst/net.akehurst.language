@@ -20,16 +20,18 @@ import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib.import
 
 
 class GrammarModelDefault(
     override val name: SimpleName,
-    override val options: List<Option> =  emptyList(),
-    override val namespace: List<GrammarNamespace> = emptyList()
-) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>() {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    namespace: List<GrammarNamespace> = emptyList()
+) : GrammarModel, ModelAbstract<GrammarNamespace, Grammar>(namespace,options) {
 
     override fun hashCode(): Int = arrayOf(name, namespace).contentHashCode()
     override fun equals(other: Any?): Boolean = when {
@@ -42,15 +44,15 @@ class GrammarModelDefault(
     override fun toString(): String = "GrammarModel '$name'"
 }
 
-fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, emptyList(), listOf(this.namespace as GrammarNamespace))
+@Deprecated("Just use a GrammarModel", ReplaceWith("Just use a GrammarModel"))
+fun Grammar.asGrammarModel(): GrammarModel = GrammarModelDefault(this.name, OptionHolderDefault(null, emptyMap()), listOf(this.namespace as GrammarNamespace))
 
 class GrammarNamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>
-) : GrammarNamespace, NamespaceAbstract<Grammar>() {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = emptyList()
+) : GrammarNamespace, NamespaceAbstract<Grammar>(options, import) {
 
-    // no support for importing grammars currently, mutable so serialisation works
-    override val import: List<Import> = mutableListOf()
 }
 
 /**
@@ -59,7 +61,7 @@ class GrammarNamespaceDefault(
 class GrammarDefault(
     namespace: GrammarNamespace,
     name: SimpleName,
-    override val options: List<Option>
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
 ) : GrammarAbstract(namespace, name) {
 
     companion object {
@@ -69,7 +71,7 @@ class GrammarDefault(
     }
 
     override val defaultGoalRule: GrammarRule
-        get() = options.firstOrNull { it.name == AglGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(GrammarRuleName(it.value)) }
+        get() = options[AglGrammar.OPTION_defaultGoalRule]?.let { findAllResolvedGrammarRule(GrammarRuleName(it)) }
             ?: this.allResolvedGrammarRule.firstOrNull { it.isSkip.not() }
             ?: error("Could not find default grammar rule or first non skip rule")
 }

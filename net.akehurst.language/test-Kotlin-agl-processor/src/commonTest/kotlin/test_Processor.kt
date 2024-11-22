@@ -87,7 +87,7 @@ class test_Processor {
             // literal = BOOLEAN | INTEGER | REAL | STRING ;
             private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralValue {
                 val valueStr = children[0] as String
-                return when (nodeInfo.alt.option) {
+                return when (nodeInfo.alt.option.value) {
                     0 -> LiteralValue(valueStr, "Boolean")
                     1 -> LiteralValue(valueStr, "Integer")
                     2 -> LiteralValue(valueStr, "Real")
@@ -106,7 +106,7 @@ class test_Processor {
 
             override fun clear() { }
 
-            override fun analyse(asm: Value, locationMap: Map<Any, InputLocation>?, context: MyContext?, options: SemanticAnalysisOptions<Value, MyContext>): SemanticAnalysisResult {
+            override fun analyse(asm: Value, locationMap: Map<Any, InputLocation>?, context: MyContext?, options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
                 analyseValue(asm, context)
                 return SemanticAnalysisResultDefault(issues)
             }

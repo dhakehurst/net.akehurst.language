@@ -18,21 +18,18 @@
 package net.akehurst.language.transform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.base.api.Option
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.transform.api.TransformationRule
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.transform.asm.TransformationRuleDefault
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -52,10 +49,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     private val _asm: TransformModel get() = __asm!!
     private val _typeModel: TypeModel get() = _context!!.typeModel
     private val _grammarModel: GrammarModel get() = _context!!.grammarModel
-    private val _options = mutableMapOf<String, Option>()
 
     private val transformFromGrammar by lazy {
-        TransformModelDefault.fromGrammarModel(_grammarModel)
+        TransformDomainDefault.fromGrammarModel(_grammarModel)
     }
 
     override fun clear() {
@@ -75,12 +71,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         if (null == context) {
             _issues.warn(null, "No context, semantic analysis cannot be performed")
         } else {
-            (asm as TransformModelDefault).typeModel = context.typeModel
+            (asm as TransformDomainDefault).typeModel = context.typeModel
             for (trns in asm.namespace) {
                 for (trs in trns.definition) {
 
-                    val opt = trs.options.lastOrNull { it.name == OPTION_OVERRIDE_DEFAULT }
-                    if (null != opt && opt.value=="true") {
+                    val opt = trs.options[OPTION_OVERRIDE_DEFAULT]
+                    if (null != opt && opt=="true") {
                         overrideDefaultRuleSet(trs)
                     }
 
@@ -96,11 +92,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         return SemanticAnalysisResultDefault(_issues)
     }
 
-    private val TransformationRule.optionCreateTypes: Boolean get() {
-        val opt = _asm.options.lastOrNull { it.name == OPTION_CREATE_TYPES }
+    private val TransformRuleSet.optionCreateTypes: Boolean get() {
+        val opt = this.options[OPTION_CREATE_TYPES]
         return when {
             null == opt -> false
-            else -> opt.value == "true"
+            else -> opt == "true"
         }
     }
 
@@ -108,7 +104,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         val existingDecl = _typeModel.findFirstByPossiblyQualifiedOrNull(trr.possiblyQualifiedTypeName)
         return when(existingDecl) {
             null -> when {
-                trr.optionCreateTypes -> {
+                trs.optionCreateTypes -> {
                     val tns = _typeModel.findOrCreateNamespace(trs.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
                     val decl = tns.findOwnedOrCreateDataTypeNamed(trr.possiblyQualifiedTypeName.simpleName)
                     decl.type()

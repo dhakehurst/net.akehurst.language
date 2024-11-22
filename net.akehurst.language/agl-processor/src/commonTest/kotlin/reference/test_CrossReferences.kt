@@ -19,7 +19,7 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -47,7 +47,7 @@ class test_CrossReferences {
             val grammarMdl = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            TransformModelDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
+            TransformDomainDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
             val ctx = ContextFromTypeModel(tm)
@@ -149,7 +149,7 @@ class test_CrossReferences {
 
         val result = aglProc.process(text)
 
-        val expected = CrossReferenceModelDefault(SimpleName(""), emptyList())
+        val expected = CrossReferenceModelDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -167,7 +167,7 @@ class test_CrossReferences {
 
         val result = aglProc.process(text)
 
-        val expected = CrossReferenceModelDefault(SimpleName(""), emptyList())
+        val expected = CrossReferenceModelDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())

@@ -20,6 +20,7 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.sentence.api.Sentence
@@ -58,7 +59,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglStyleModelDefault(SimpleName("ParsedStyleUnit"),  emptyList(),listOf(ns))
+        val su = AglStyleModelDefault(name = SimpleName("ParsedStyleUnit"),  namespace = listOf(ns))
         return su
     }
 
@@ -66,7 +67,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): StyleNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
         val imports = emptyList<Import>()
-        return StyleNamespaceDefault(qualifiedName.asQualifiedName(null), emptyList(),imports)
+        return StyleNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
     }
 
     // styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
@@ -82,7 +83,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // extends = ':' [possiblyQualifiedName / ',']+ ;
-    fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<StyleSetReference>  {
+    fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<StyleSetReference> {
         val localNamespace = _localStore["namespace"] as StyleNamespace
         val extendNameList = children[1] as List<PossiblyQualifiedName>
         val sl = extendNameList.toSeparatedList<Any, PossiblyQualifiedName, String>()
@@ -95,7 +96,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     //  rule = metaRule | styleRule ;
     fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule =
-     children[0] as AglStyleRule
+        children[0] as AglStyleRule
 
     // metaRule = '$$' PATTERN '{' styleList '}' ;
     fun metaRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleMetaRule {

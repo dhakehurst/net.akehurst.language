@@ -20,16 +20,13 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.simple.*
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
-import net.akehurst.language.asm.simple.AsmFactorySimple
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -92,11 +89,11 @@ internal class LanguageProcessorConfigurationBase<AsmType:Any, ContextType : Any
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var asmTransformModelResolver: AsmTransformModelResolver<AsmType,  ContextType>? = { p ->
-        TransformModelDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
+        TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType,  ContextType>? = { p ->
         ProcessResultDefault(
-            CrossReferenceModelDefault(SimpleName("FromGrammar"+p.grammarModel!!.name.value),  emptyList(),emptyList()),
+            CrossReferenceModelDefault(SimpleName("FromGrammar"+p.grammarModel!!.name.value)),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -110,7 +107,7 @@ internal class LanguageProcessorConfigurationBase<AsmType:Any, ContextType : Any
     },
     override var styleResolver: StyleResolver<AsmType,  ContextType>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList(), emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles")),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
@@ -147,7 +144,7 @@ internal class LanguageProcessorConfigurationSimple(
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val asmTransformModelResolver: AsmTransformModelResolver<Asm,  ContextAsmSimple>? = { p ->
-        TransformModelDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
+        TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceModelResolver: CrossReferenceModelResolver<Asm,  ContextAsmSimple>? = { p ->
         CrossReferenceModelDefault.fromString(
@@ -172,7 +169,7 @@ internal class LanguageProcessorConfigurationSimple(
     },
     override var styleResolver: StyleResolver<Asm,  ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            AglStyleModelDefault(SimpleName("DefaultStyles"), emptyList(), emptyList()),
+            AglStyleModelDefault(SimpleName("DefaultStyles")),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

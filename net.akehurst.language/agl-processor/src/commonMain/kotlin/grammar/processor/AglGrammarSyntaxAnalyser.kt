@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.grammar.api.*
@@ -99,7 +100,7 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = children[0] as GrammarNamespaceDefault
         val grammarList = children[1] as List<Grammar>
         namespace.addAllDefinition(grammarList)
-        val unit = GrammarModelDefault(SimpleName("ParsedGrammarUnit"), emptyList(), listOf(namespace as GrammarNamespace))
+        val unit = GrammarModelDefault(name = SimpleName("ParsedGrammarUnit"), namespace = listOf(namespace as GrammarNamespace))
         return unit
     }
 
@@ -107,7 +108,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarNamespace {
         val pqn = children[1] as PossiblyQualifiedName
         val nsName = pqn.asQualifiedName(null)
-        val ns = GrammarNamespaceDefault(nsName, emptyList())//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val ns = GrammarNamespaceDefault(nsName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         _localStore["namespace"] = ns
         return ns
     }
@@ -117,11 +118,13 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = _localStore["namespace"] as GrammarNamespace
         val name = SimpleName(children[1] as String)
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
-        val options = (children[4] as List<Option>)
+        val options = (children[4] as List<Pair<String,String>>)
         val rules = children[5] as List<Pair<Boolean, (Grammar) -> GrammarItem>>
+
+        val optHolder = OptionHolderDefault(null,options.associate{it})
         val grmRules = rules.filter { it.first }.map { it.second }
         val precRules = rules.filter { it.first.not() }.map { it.second }
-        val grmr = GrammarDefault(namespace, name, options)
+        val grmr = GrammarDefault(namespace, name, optHolder)
         grmr.extends.addAll(extends)
         _localStore["grammar"] = grmr
         grmRules.forEach { f ->

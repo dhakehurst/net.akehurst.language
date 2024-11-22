@@ -38,7 +38,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -109,13 +109,13 @@ class test_Vistraq_References {
 
     @Test
     fun typeModel() {
-        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = TransformDomainDefault.fromGrammarModel(grammarList).asm?.typeModel!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = TransformModelDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = TransformDomainDefault.fromGrammarModel(grammarList).asm?.typeModel!!
         val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr.value,
             Agl.options {

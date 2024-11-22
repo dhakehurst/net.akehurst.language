@@ -27,13 +27,14 @@ import net.akehurst.language.expressions.asm.LiteralExpressionSimple
 import net.akehurst.language.expressions.asm.NavigationSimple
 import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.transform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
@@ -41,11 +42,11 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
-class TransformModelDefault(
+class TransformDomainDefault(
     override val name: SimpleName,
-    override val options: List<Option>,
-    namespace: List<TransformNamespace>
-) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>() {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    namespace: List<TransformNamespace> = emptyList()
+) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>(namespace,options) {
 
     companion object {
         fun fromString(context: ContextFromGrammarAndTypeModel, transformStr: TransformString): ProcessResult<TransformModel> {
@@ -76,39 +77,25 @@ class TransformModelDefault(
 
     override var typeModel: TypeModel? = null
 
-    private val _namespace: Map<QualifiedName, TransformNamespace> = linkedMapOf<QualifiedName, TransformNamespace>().also { map ->
-        namespace.forEach { map[it.qualifiedName] = it }
-    }
-    override val namespace: List<TransformNamespace> get() = _namespace.values.toList()
-
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace {
-        return if (_namespace.containsKey(qualifiedName)) {
-            _namespace[qualifiedName]!!
-        } else {
-            val ns = TransformNamespaceDefault(qualifiedName, emptyList(),imports)//, imports)
-            addNamespace(ns)
-            ns
+        val existing = findNamespaceOrNull(qualifiedName)
+        return when(existing) {
+            null -> {
+                val ns = TransformNamespaceDefault(qualifiedName = qualifiedName, import = imports)//, imports)
+                addNamespace(ns)
+                ns
+            }
+            else -> existing as TransformNamespace
         }
     }
 
-    fun addNamespace(ns: TransformNamespace) {
-        if (_namespace.containsKey(ns.qualifiedName)) {
-            if (_namespace[ns.qualifiedName] === ns) {
-                //same object, no need to add it
-            } else {
-                error("TypeModel '${this.name}' already contains a namespace '${ns.qualifiedName}'")
-            }
-        } else {
-            (_namespace as MutableMap)[ns.qualifiedName] = ns
-        }
-    }
 }
 
 class TransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>,
-    override val import: List<Import>
-) : TransformNamespace, NamespaceAbstract<TransformRuleSet>() {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = mutableListOf()
+) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(options,import) {
 
 }
 
@@ -125,12 +112,10 @@ data class TransformRuleSetReferenceDefault(
 class TransformRuleSetDefault(
     override val namespace: TransformNamespace,
     override val name: SimpleName,
-    argExtends: List<TransformRuleSetReference>,
-    override val options: List<Option>,
+    argExtends: List<TransformRuleSetReference> = emptyList(),
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     _rules: List<TransformationRule>
-) : TransformRuleSet {
-
-    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+) : TransformRuleSet, DefinitionAbstract<TransformRuleSet>() {
 
     override val extends: List<TransformRuleSetReference> = argExtends.toMutableList() //clone the list so it can be modified
 

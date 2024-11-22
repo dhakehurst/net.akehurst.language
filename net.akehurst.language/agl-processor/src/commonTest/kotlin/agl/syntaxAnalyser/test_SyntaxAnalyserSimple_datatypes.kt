@@ -19,8 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
@@ -66,7 +65,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            val tr = TransformModelDefault.fromGrammarModel(result.asm!!)
+            val tr = TransformDomainDefault.fromGrammarModel(result.asm!!)
             assertNotNull(tr.asm)
             assertTrue(tr.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             tr.asm!!

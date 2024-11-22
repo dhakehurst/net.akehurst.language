@@ -23,7 +23,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationPart
-import net.akehurst.language.expressions.api.WithExpression
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
@@ -89,9 +88,8 @@ internal class GrammarModel2TransformModel(
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     fun build(): TransformModel {
-        val transModel = TransformModelDefault(
+        val transModel = TransformDomainDefault(
             name = SimpleName("FromGrammar"+grammarModel.allDefinitions.last().name.value),
-            emptyList(),
             namespace = emptyList()
         )
         transModel.typeModel = typeModel
@@ -131,7 +129,6 @@ internal class Grammar2Namespaces(
             ?: let {
                 val ns = GrammarTypeNamespaceSimple(
                     qualifiedName = qualifiedName,
-                    emptyList(),
                     import = mutableListOf(Import(SimpleTypeModelStdLib.qualifiedName.value))
                 )
                 typeModel.addAllNamespaceAndResolveImports(listOf(SimpleTypeModelStdLib, ns))
@@ -210,7 +207,7 @@ internal class Grammar2TransformRuleSet(
             trRules.add(value)
             (grammarTypeNamespace as GrammarTypeNamespaceSimple).allRuleNameToType[key] = value.resolvedType
         }
-        return TransformRuleSetDefault(transformNamespace, grammar.name, emptyList(), emptyList(), trRules) //TODO: extends & options
+        return TransformRuleSetDefault(transformNamespace, grammar.name,  _rules = trRules) //TODO: extends & options
     }
 
     private fun <TP : DataType, TR : TransformationRuleAbstract> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): TransformationRule {

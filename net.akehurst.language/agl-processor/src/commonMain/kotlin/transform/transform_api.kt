@@ -53,8 +53,6 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
 
     val extends: List<TransformRuleSetReference>
 
-    val options: List<Option>
-
     /**
      * map from grammar-rule name to TransformationRule
      */

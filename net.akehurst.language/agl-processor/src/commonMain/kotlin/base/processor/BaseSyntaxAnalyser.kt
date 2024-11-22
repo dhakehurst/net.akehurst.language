@@ -39,20 +39,23 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
 
     // unit = option* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ModelDefault {
-        val options = children[0] as List<Option>
+        val options = children[0] as List<Pair<String,String>>
         val namespace = children[1] as List<NamespaceDefault>
-        val result = ModelDefault(SimpleName("Unit"), options, namespace)
+        val optHolder = OptionHolderDefault(null,options.associate{it})
+        namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
+        val result = ModelDefault(SimpleName("Unit"), optHolder, namespace)
         return result
     }
 
     // namespace = 'namespace' possiblyQualifiedName option* import* definition*;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NamespaceDefault {
         val pqn = children[1] as PossiblyQualifiedName
-        val options = children[2] as List<Option>
+        val options = children[2] as List<Pair<String,String>>
         val import = children[3] as List<Import>
         val definition = children[4] as List<(NamespaceDefault) -> DefinitionDefault>
 
-        val ns = NamespaceDefault(pqn.asQualifiedName(null),options, import)
+        val optHolder = OptionHolderDefault(null,options.associate{it})
+        val ns = NamespaceDefault(pqn.asQualifiedName(null),optHolder, import)
         definition.forEach {
             val def = it.invoke(ns)
             ns.addDefinition(def)
@@ -71,10 +74,10 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
     }
 
     // option = '#' IDENTIFIER (':' IDENTIFIER)? ;
-    private fun option(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): OptionDefault {
+    private fun option(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<String,String> {
         val name = children[1] as String
         val value = (children[2] as List<String>?)?.let { it[1] } ?: "true"
-        return OptionDefault(name,value)
+        return Pair(name,value)
     }
 
     // possiblyQualifiedName = [IDENTIFIER / '.']+ ;

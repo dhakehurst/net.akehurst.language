@@ -25,6 +25,7 @@ import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.CrossReferenceNamespace
@@ -70,9 +71,11 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     //  Base::unit = options* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceModelDefault {
-        val options = children[0] as List<Option>
+        val options = children[0] as List<Pair<String, String>>
         val namespace = children[1] as List<CrossReferenceNamespace>
-        val result = CrossReferenceModelDefault(SimpleName("Unit"), options, namespace)
+
+        val optHolder = OptionHolderDefault(null, options.associate { it.first to it.second })
+        val result = CrossReferenceModelDefault(SimpleName("Unit"), optHolder, namespace)
         //namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result
     }
@@ -80,9 +83,11 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     // override namespace = namespace = 'namespace' possiblyQualified import* declarations  ;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceNamespace {
         val qualifiedName = children[1] as PossiblyQualifiedName
+        //TODO: parse options
         val imports = children[2] as List<Import>
         val declarations = children[3] as (CrossReferenceNamespace) -> DeclarationsForNamespaceDefault
-        val ns = CrossReferenceNamespaceDefault(qualifiedName.asQualifiedName(null),  emptyList(),imports)
+
+        val ns = CrossReferenceNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
         val def = declarations.invoke(ns)
         ns.addDefinition(def)
         return ns

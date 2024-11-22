@@ -114,9 +114,9 @@ interface Formatable {
     fun asString(indent: Indent = Indent("", "  ")): String
 }
 
-interface Option {
-    val name:String
-    val value:String
+interface OptionHolder {
+    var parent:OptionHolder?
+    operator fun get(name:String):String?
 }
 
 /**
@@ -126,7 +126,7 @@ interface Option {
 interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
 
-    val options: List<Option>
+    val options: OptionHolder
 
     val namespace: List<NT>
 
@@ -140,7 +140,7 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
 interface Namespace<DT : Definition<DT>> : Formatable {
     val qualifiedName: QualifiedName
 
-    val options: List<Option>
+    val options: OptionHolder
 
     /**
      * Things in these namespaces can be referenced non-qualified
@@ -165,4 +165,6 @@ interface Definition<DT : Definition<DT>> : Formatable {
     val namespace: Namespace<DT>
     val name: SimpleName
     val qualifiedName: QualifiedName
+
+    val options: OptionHolder
 }

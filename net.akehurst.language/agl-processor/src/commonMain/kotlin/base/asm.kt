@@ -18,20 +18,54 @@
 package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
+import net.akehurst.language.reference.api.CrossReferenceNamespace
+import net.akehurst.language.transform.api.TransformNamespace
 
-data class OptionDefault(
-    override val name: String,
-    override val value: String
-) : Option
+class OptionHolderDefault(
+    override var parent: OptionHolder?,
+    val options: Map<String,String>
+) :OptionHolder {
+    override operator fun get(name:String):String? {
+        return this.options[name] ?: this.parent?.get(name)
+    }
+}
 
-abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>> : Model<NT, DT> {
+abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
+    namespace: List<NT>,
+    override val options: OptionHolder
+) : Model<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
 
     override val isEmpty: Boolean get() = allDefinitions.isEmpty()
 
-    override fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>? {
-        return namespace.firstOrNull { it.qualifiedName == qualifiedName }
+    override val namespace: List<NT>  get() = _namespace.values.toList()
+
+    private val _namespace: Map<QualifiedName, NT> = mutableMapOf<QualifiedName, NT>().also { map ->
+        namespace.forEach { map[it.qualifiedName] = it }
+    }
+
+    init {
+        connectionNamespaceOptionHolderParentsToThis()
+    }
+
+    override fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>? = _namespace[qualifiedName]
+
+    fun connectionNamespaceOptionHolderParentsToThis() {
+        this.namespace.forEach { it.options.parent = this.options }
+    }
+
+    fun addNamespace(value:NT) {
+        if (_namespace.containsKey(value.qualifiedName)) {
+            if (_namespace[value.qualifiedName] === value) {
+                //same object, no need to add it
+            } else {
+                error("TypeModel '${this.name}' already contains a namespace '${value.qualifiedName}'")
+            }
+        } else {
+            (_namespace as MutableMap)[value.qualifiedName] = value
+            value.options.parent = this.options //FIXME: could case wrong parent if namespace in multiple Domains!
+        }
     }
 
     // --- Formatable ---
@@ -53,11 +87,21 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>> : Model<NT
     override fun toString(): String = "Domain '$name'"
 }
 
-abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
+abstract class NamespaceAbstract<DT : Definition<DT>>(
+    override val options: OptionHolder,
+    override val import: List<Import>
+) : Namespace<DT> {
 
     override val definition: List<DT> get() = _definition.values.toList()
 
     override val definitionByName: Map<SimpleName, DT> get() = _definition
+
+    protected val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
+    protected val _definition = linkedMapOf<SimpleName, DT>() //order is important
+
+    init {
+        connectionDefinitionOptionHolderParentsToThis()
+    }
 
     override fun resolveImports(model: Model<Namespace<DT>, DT>) {
         // check explicit imports
@@ -77,6 +121,10 @@ abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
             }
 
     override fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT? = _definition[simpleName]
+
+    fun connectionDefinitionOptionHolderParentsToThis() {
+        this.definition.forEach { it.options.parent = this.options }
+    }
 
     // --- Formatable ---
     override fun asString(indent: Indent): String {
@@ -105,45 +153,45 @@ abstract class NamespaceAbstract<DT : Definition<DT>>() : Namespace<DT> {
     override fun toString(): String = "namespace $qualifiedName"
 
     // --- Implementation ---
-    protected val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
-    protected val _definition = linkedMapOf<SimpleName, DT>() //order is important
 
     fun addDefinition(value: DT) {
         _definition[value.name] = value
+        value.options.parent = this.options
     }
 
     fun addAllDefinition(value: Iterable<DT>) {
-        value.forEach {
-            _definition[it.name] = it
-        }
+        value.forEach { addDefinition(it) }
+    }
+}
+
+abstract class DefinitionAbstract<DT : Definition<DT>> : Definition<DT> {
+    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
+
+    override fun asString(indent: Indent): String {
+        TODO("not implemented")
     }
 }
 
 class ModelDefault(
     override val name: SimpleName,
-    override val options: List<Option>,
-    override val namespace: List<NamespaceDefault>
-) : ModelAbstract<NamespaceDefault, DefinitionDefault>() {
+    options: OptionHolder,
+    namespace: List<NamespaceDefault> =  emptyList()
+) : ModelAbstract<NamespaceDefault, DefinitionDefault>(namespace,options) {
 
 }
 
 class NamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>,
-    override val import: List<Import>
-) : NamespaceAbstract<DefinitionDefault>() {
+    options: OptionHolder,
+    import: List<Import>
+) : NamespaceAbstract<DefinitionDefault>(options,import) {
 
 }
 
 class DefinitionDefault(
     override val namespace: Namespace<DefinitionDefault>,
     override val name: SimpleName,
-) : Definition<DefinitionDefault> {
-
-    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(this.name)
-
-    override fun asString(indent: Indent): String {
-        TODO("not implemented")
-    }
+    override val options: OptionHolder = OptionHolderDefault(null,emptyMap()),
+) : DefinitionAbstract<DefinitionDefault>() {
 
 }

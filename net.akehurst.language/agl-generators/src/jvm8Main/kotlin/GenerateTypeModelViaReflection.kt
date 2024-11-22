@@ -133,7 +133,7 @@ class GenerateTypeModelViaReflection(
     }
 
     fun addPackage(packageName: String, initialImports: List<Import> = emptyList()) {
-        val ns = TypeNamespaceSimple(QualifiedName(packageName), initialImports)
+        val ns = TypeNamespaceSimple(QualifiedName(packageName), import =  initialImports)
 
         val kclasses = findClasses(packageName)
 

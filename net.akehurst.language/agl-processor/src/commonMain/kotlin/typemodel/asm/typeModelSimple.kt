@@ -21,12 +21,13 @@ import net.akehurst.language.agl.TypeModelString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.util.cached
 
 class TypeModelSimple(
     override val name: SimpleName,
-    override val options: List<Option> = emptyList()
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
 ) : TypeModelSimpleAbstract() {
 
     companion object {
@@ -76,7 +77,7 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
         return if (_namespace.value.containsKey(qualifiedName)) {
             _namespace.value[qualifiedName]!!
         } else {
-            val ns = TypeNamespaceSimple(qualifiedName, emptyList(), imports)
+            val ns = TypeNamespaceSimple(qualifiedName = qualifiedName, import = imports)
             addNamespace(ns)
             ns
         }
@@ -467,15 +468,16 @@ class UnnamedSupertypeTypeInstance(
 
 class TypeNamespaceSimple(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>,
-    import: List<Import>
-) : TypeNamespaceAbstract(import) {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = emptyList()
+) : TypeNamespaceAbstract(options,import) {
 
 }
 
 abstract class TypeNamespaceAbstract(
+    options: OptionHolder,
     import: List<Import>
-) : TypeNamespace, NamespaceAbstract<TypeDeclaration>() {
+) : TypeNamespace, NamespaceAbstract<TypeDeclaration>(options, import) {
 
     private var _nextUnnamedSuperTypeTypeId = 0
     private val _unnamedSuperTypes = hashMapOf<List<TypeInstance>, UnnamedSupertypeType>()
@@ -764,7 +766,9 @@ object TypeParameterMultiple : TypeParameter {
     override val name = SimpleName("...")
 }
 
-abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
+abstract class TypeDeclarationSimpleAbstract(
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+) : TypeDeclaration {
     companion object {
         const val maxDepth = 10
     }

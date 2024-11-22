@@ -17,18 +17,17 @@ package net.akehurst.language.style.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.StyleString
-import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.*
 import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(
     override val name: SimpleName,
-    override val options: List<Option>,
-    override val namespace: List<StyleNamespace>
-) : AglStyleModel, ModelAbstract<StyleNamespace, StyleSet>() {
+    options: OptionHolder = OptionHolderDefault(null,emptyMap()),
+    namespace: List<StyleNamespace> = emptyList()
+) : AglStyleModel, ModelAbstract<StyleNamespace, StyleSet>(namespace,options) {
 
     companion object {
         //not sure if this should be here or in grammar object
@@ -56,9 +55,9 @@ class AglStyleModelDefault(
 
 class StyleNamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>,
-    override val import: List<Import>
-) : StyleNamespace, NamespaceAbstract<StyleSet>() {
+    options: OptionHolder = OptionHolderDefault(null,emptyMap()),
+    import: List<Import>
+) : StyleNamespace, NamespaceAbstract<StyleSet>(options, import) {
 
     override val styleSet: List<StyleSet>  get() = super.definition
 
@@ -67,10 +66,9 @@ class StyleNamespaceDefault(
 class AglStyleSetDefault(
     override val namespace: StyleNamespace,
     override val name: SimpleName,
-    override val extends: List<StyleSetReference>
-) : StyleSet {
-
-    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
+    override val extends: List<StyleSetReference>,
+    override val options: OptionHolder = OptionHolderDefault(null,emptyMap())
+) : StyleSet, DefinitionAbstract<StyleSet>() {
 
     override val rules: List<AglStyleRule> = mutableListOf()
 

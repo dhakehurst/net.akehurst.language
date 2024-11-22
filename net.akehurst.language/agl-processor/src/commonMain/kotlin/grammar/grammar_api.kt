@@ -60,8 +60,6 @@ interface Grammar : Definition<Grammar> {
 
     val extendsResolved: List<Grammar>
 
-    val options: List<Option>
-
     val defaultGoalRule: GrammarRule
 
     val grammarRule: List<GrammarRule>

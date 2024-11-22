@@ -255,7 +255,7 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
         assertEquals(
-            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("test"), emptyList()), sut.grammarModel)),
+            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("test")), sut.grammarModel)),
             grammarObserverCalled
         )
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)

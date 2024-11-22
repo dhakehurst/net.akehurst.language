@@ -21,17 +21,19 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.reference.api.*
 
 class CrossReferenceModelDefault(
     override val name: SimpleName,
-    override val options: List<Option> = emptyList(),
-    override val namespace: List<CrossReferenceNamespace> = emptyList()
-) : ModelAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(), CrossReferenceModel {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    namespace: List<CrossReferenceNamespace> = emptyList()
+) : ModelAbstract<CrossReferenceNamespace, DeclarationsForNamespace>(namespace,options), CrossReferenceModel {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = QualifiedName("§root")
         val IDENTIFY_BY_NOTHING = "§nothing"
@@ -123,19 +125,19 @@ class CrossReferenceModelDefault(
 
 class CrossReferenceNamespaceDefault(
     override val qualifiedName: QualifiedName,
-    override val options: List<Option>,
-    override val import: List<Import>
-) : NamespaceAbstract<DeclarationsForNamespace>(), CrossReferenceNamespace {
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = emptyList()
+) : NamespaceAbstract<DeclarationsForNamespace>(options, import), CrossReferenceNamespace {
 
     override val declarationsForNamespace get() = this.definition.first()
 }
 
 data class DeclarationsForNamespaceDefault(
-    override val namespace: CrossReferenceNamespace
-) : DeclarationsForNamespace {
+    override val namespace: CrossReferenceNamespace,
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+) : DeclarationsForNamespace, DefinitionAbstract<DeclarationsForNamespace>() {
 
     override val name = SimpleName("Declarations")
-    override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
 
     override val importedNamespaces: List<Import> get() = namespace.import
 

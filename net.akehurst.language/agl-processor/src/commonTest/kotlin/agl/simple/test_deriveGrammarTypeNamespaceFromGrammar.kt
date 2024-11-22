@@ -26,7 +26,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.asm.TransformModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.TypeModelSimple
@@ -54,7 +54,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            val atfg = TransformModelDefault.fromGrammarModel(grammarMdl)
+            val atfg = TransformDomainDefault.fromGrammarModel(grammarMdl)
             //val actualTr = atfg.build()
 
             assertTrue(atfg.issues.isEmpty(), atfg.issues.toString())
@@ -85,7 +85,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
+        val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("ID")
@@ -135,7 +135,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
+        val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val tmI = grammarTypeModel("test.I", "Inner") {
             stringTypeFor("a")
             dataType("S", "S") {
@@ -204,7 +204,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
+        val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = grammarTypeModel("test.O", "O") {
             unnamedSuperTypeType("S") {
                 typeRef("B")
@@ -251,7 +251,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
+        val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
@@ -312,7 +312,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = TransformModelDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
+        val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
