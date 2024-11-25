@@ -17,12 +17,13 @@
 
 package net.akehurst.language.expressions.api
 
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 
 interface Expression {
-    fun asString(indent: Indent): String
+    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
 }
 
 interface RootExpression : Expression {
@@ -79,7 +80,7 @@ interface AssignmentStatement {
     val lhsPropertyName: String
     val rhs: Expression
 
-    fun asString(indent: Indent): String
+    fun asString(indent: Indent, imports: List<Import> = emptyList()): String
 }
 
 interface WithExpression : Expression {
@@ -99,4 +100,13 @@ interface WhenOption {
 interface InfixExpression : Expression {
     val expressions: List<Expression>
     val operators: List<String>
+}
+
+interface CastExpression  : Expression {
+    val expression: Expression
+    val targetTypeName:PossiblyQualifiedName
+}
+
+interface GroupExpression : Expression {
+    val expression: Expression
 }

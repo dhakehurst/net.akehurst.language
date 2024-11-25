@@ -209,7 +209,7 @@ data class IdentifiableDefault(
     override val identifiedBy: Expression
 ) : Identifiable {
     override fun asString(indent: Indent): String {
-        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent)}"
+        return "${indent}identify ${typeName.value} by ${identifiedBy.asString(indent, emptyList())}"
     }
 }
 
@@ -242,11 +242,11 @@ data class ReferenceExpressionPropertyDefault(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        val rp = referringPropertyNavigation.asString(indent)
+        val rp = referringPropertyNavigation.asString(indent, emptyList())
         val rt = refersToTypeName.joinToString(separator = " | ") { it.value }
         val fr = when (fromNavigation) {
             null -> ""
-            else -> " " + fromNavigation.asString(indent)
+            else -> " " + fromNavigation.asString(indent, emptyList())
         }
         sb.append("${indent}property $rp refers-to $rt$fr")
         return sb.toString()
@@ -270,7 +270,7 @@ data class ReferenceExpressionCollectionDefault(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        val ex = expression.asString(indent)
+        val ex = expression.asString(indent, emptyList())
         val ot = when (ofType) {
             null -> ""
             else -> " of-type" + ofType.value

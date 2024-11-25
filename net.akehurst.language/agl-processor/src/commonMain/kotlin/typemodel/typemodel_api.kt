@@ -65,8 +65,6 @@ interface TypeNamespace : Namespace<TypeDeclaration> {
 
     val dataType: Set<DataType>
 
-    fun addImport(value: Import)
-
     //fun resolveImports(model: TypeModel)
 
     fun isImported(qualifiedNamespaceName: QualifiedName): Boolean

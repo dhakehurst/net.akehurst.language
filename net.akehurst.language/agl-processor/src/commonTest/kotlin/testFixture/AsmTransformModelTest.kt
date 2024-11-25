@@ -73,7 +73,6 @@ object AsmTransformModelTest {
 
     private fun trAssertEquals(expected: TransformationRule, actual: TransformationRule, message: String) {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
-        assertEquals(expected.possiblyQualifiedTypeName, actual.possiblyQualifiedTypeName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
         ExpressionsTest.exAssertEquals(expected.expression, actual.expression)
     }

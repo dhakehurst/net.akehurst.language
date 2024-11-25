@@ -73,6 +73,10 @@ class TypeNamespaceBuilder(
     private val _namespace = TypeNamespaceSimple(qualifiedName, import = imports)
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
+    fun imports(vararg imports: String) {
+        imports.forEach { _namespace.addImport(Import(it)) }
+    }
+
     fun primitiveType(typeName: String): PrimitiveType =
         _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
 
@@ -251,12 +255,10 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        //val t = if (elementTypeName.isQualifiedName) {
-        //    _namespace.findTypeNamed(QualifiedName(elementTypeName)) ?: error("Type named '$elementTypeName' not found")
-        //} else {
-       //     _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(elementTypeName))
-        //}
-        val ti = _namespace.createTypeInstance(null, elementTypeName.asPossiblyQualifiedName, emptyList(),isNullable)
+        val pqn = elementTypeName.asPossiblyQualifiedName
+        val t = _namespace.findTypeNamed(pqn)
+            ?: _namespace.findOwnedOrCreateDataTypeNamed(pqn.simpleName)
+        val ti = t.type(nullable = isNullable)  //_namespace.createTypeInstance(null, elementTypeName.asPossiblyQualifiedName, emptyList(), isNullable)
         return property(propertyName, ti, childIndex)
     }
 
@@ -496,7 +498,7 @@ class TypeInstanceArgNamedBuilder(
     private val _args = mutableListOf<TypeArgumentNamed>()
 
     fun typeRef(name: String, typeName: String, isNullable: Boolean) {
-        val t =_namespace.findTypeNamed(typeName.asPossiblyQualifiedName)?.type(emptyList(), isNullable)
+        val t = _namespace.findTypeNamed(typeName.asPossiblyQualifiedName)?.type(emptyList(), isNullable)
             ?: _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
         val ta = TypeArgumentNamedSimple(PropertyName(name), t)
         _args.add(ta)

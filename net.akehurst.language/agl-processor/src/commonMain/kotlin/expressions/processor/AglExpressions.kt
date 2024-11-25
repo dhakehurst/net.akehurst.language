@@ -33,22 +33,24 @@ namespace net.akehurst.language
 grammar Expression extends Base {
 
     expression
-      = root
-      | literal
-      | navigation
-      | infix
+      = rootExpression
+      | literalExpression
+      | navigationExpression
+      | infixExpression
       | object
       | tuple
       | with
       | when
+      | cast
+      | group
       ;
-    root = propertyReference ;
-    literal = BOOLEAN | INTEGER | REAL | STRING ;
+    rootExpression = propertyReference ;
+    literalExpression = literal ;
     
-    navigation = navigationRoot navigationPart+ ;
+    navigationExpression = navigationRoot navigationPart+ ;
     navigationRoot 
-     = root
-     | literal
+     = rootExpression
+     | literalExpression
     ;
     navigationPart
      = propertyCall
@@ -56,7 +58,7 @@ grammar Expression extends Base {
      | indexOperation
     ;
     
-    infix = [expression / INFIX_OPERATOR]2+ ;
+    infixExpression = [expression / INFIX_OPERATOR]2+ ;
     leaf INFIX_OPERATOR
       = 'or' | 'and' | 'xor'  // logical 
       | '==' | '!=' | '<=' | '>=' | '<' | '>'  // comparison
@@ -78,6 +80,10 @@ grammar Expression extends Base {
     whenOptionList = whenOption+ ;
     whenOption = expression '->' expression ;
     
+    case = expression 'as' possiblyQualifiedName
+    
+    group = '(' expression ')' ;
+    
     propertyCall = '.' propertyReference ;
     methodCall = '.' methodReference '(' argumentList ')' lambda? ;
     argumentList = [expression / ',']* ;
@@ -89,6 +95,8 @@ grammar Expression extends Base {
     indexOperation = '[' indexList ']' ;
     indexList = [expression / ',']+ ;
     
+    literal = BOOLEAN | INTEGER | REAL | STRING ;
+
     leaf SPECIAL = '${"$"}' IDENTIFIER ;
     leaf BOOLEAN = "true|false" ;
     leaf INTEGER = "[0-9]+" ;
@@ -103,37 +111,40 @@ grammar Expression extends Base {
     ) {
         extendsGrammar(AglBase.grammar.selfReference)
         choice("expression") {
-            ref("root")
-            ref("literal")
-            ref("navigation")
-            ref("infix")
+            ref("rootExpression")
+            ref("literalExpression")
+            ref("navigationExpression")
+            ref("infixExpression")
             ref("tuple")
             ref("object")
             ref("with")
             ref("when")
+            ref("cast")
+            ref("group")
         }
-        concatenation("root") {
+        concatenation("rootExpression") {
             ref("propertyReference")
         }
+        concatenation("literalExpression") { ref("literal")}
         choice("literal") {
             ref("BOOLEAN")
             ref("INTEGER")
             ref("REAL")
             ref("STRING")
         }
-        concatenation("navigation") {
+        concatenation("navigationExpression") {
             ref("navigationRoot"); lst(1, -1) { ref("navigationPart") }
         }
         choice("navigationRoot") {
-            ref("root")
-            ref("literal")
+            ref("rootExpression")
+            ref("literalExpression")
         }
         choice("navigationPart") {
             ref("propertyCall")
             ref("methodCall")
             ref("indexOperation")
         }
-        separatedList("infix", 2, -1) {
+        separatedList("infixExpression", 2, -1) {
             ref("expression"); ref("INFIX_OPERATOR")
         }
         choice("INFIX_OPERATOR", isLeaf = true) {
@@ -178,6 +189,8 @@ grammar Expression extends Base {
         concatenation("whenOption") {
             ref("expression"); lit("->"); ref("expression")
         }
+        concatenation("cast") { ref("expression"); lit("as"); ref("possiblyQualifiedName") }
+        concatenation("group") { lit("("); ref("expression"); lit(")") }
         concatenation("propertyCall") {
             lit("."); ref("propertyReference")
         }
@@ -212,9 +225,9 @@ grammar Expression extends Base {
         // ideally graft it into a 'whenOption'
         // next best thing is to graft into an infix an end it if lh=='->'
         preference("expression") {
-            optionRight(listOf("infix"), ChoiceIndicator.ITEM,-1, listOf("INFIX_OPERATOR"))
+            optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM,-1, listOf("INFIX_OPERATOR"))
             // really want to match the 'ER' position ??
-            optionRight(listOf("infix"), ChoiceIndicator.ITEM,-1, listOf("->"))
+            optionRight(listOf("infixExpression"), ChoiceIndicator.ITEM,-1, listOf("->"))
             optionRight(listOf("whenOption"), ChoiceIndicator.NONE,-1, listOf("->"))
         }
     }

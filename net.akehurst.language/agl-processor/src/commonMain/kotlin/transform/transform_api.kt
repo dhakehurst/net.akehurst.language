@@ -19,7 +19,6 @@ package net.akehurst.language.transform.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -39,12 +38,14 @@ interface TransformNamespace : Namespace<TransformRuleSet> {
 
 }
 
-interface TransformRuleSetReference {
-    val localNamespace: TransformNamespace
-    val nameOrQName: PossiblyQualifiedName
-    var resolved: TransformRuleSet?
+interface TransformRuleSetReference : DefinitionReference<TransformRuleSet> {
+   // val localNamespace: TransformNamespace
+  //  val nameOrQName: PossiblyQualifiedName
+   // var resolved: TransformRuleSet?
 
-    fun resolveAs(resolved: TransformRuleSet)
+   // fun resolveAs(resolved: TransformRuleSet)
+
+   fun cloneTo(ns: TransformNamespace): TransformRuleSetReference
 }
 
 interface TransformRuleSet : Definition<TransformRuleSet> {
@@ -54,6 +55,12 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
     val extends: List<TransformRuleSetReference>
 
     /**
+     * Types in these namespaces can be referenced non-qualified
+     * ordered so that 'first' imported name takes priority
+     */
+    val importTypes: List<Import>
+
+    /**
      * map from grammar-rule name to TransformationRule
      */
     val rules: Map<GrammarRuleName, TransformationRule>
@@ -61,20 +68,24 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
     val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
 
-    fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
+    fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
+    fun findAllTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
+
+    fun addImportType(value:Import)
 
     fun addRule(rule: TransformationRule)
+
+    fun cloneTo(ns: TransformNamespace): TransformRuleSet
 }
 
-interface TransformationRule : Formatable {
-    val grammarRuleName: GrammarRuleName
-    val possiblyQualifiedTypeName: PossiblyQualifiedName
-
+interface TransformationRule {
+    var grammarRuleName: GrammarRuleName
+    val expression: Expression
+    val isResolved: Boolean
     val resolvedType: TypeInstance
 
-    val expression: Expression
-    // val modifyStatements: List<AssignmentStatement>
-
+    fun resolveTypeAs(type: TypeInstance)
+    fun asString(indent: Indent, imports: List<Import>): String
 }
 
 interface CreateObjectRule : TransformationRule {

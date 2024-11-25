@@ -39,13 +39,13 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     override fun registerHandlers() {
         super.register(this::expression)
-        super.register(this::root)
-        super.register(this::literal)
-        super.register(this::navigation)
+        super.register(this::rootExpression)
+        super.register(this::literalExpression)
+        super.register(this::navigationExpression)
         super.register(this::navigationRoot)
         super.register(this::navigationPartList)
         super.register(this::navigationPart)
-        super.register(this::infix)
+        super.register(this::infixExpression)
         super.registerFor("object", this::object_)
         super.register(this::constructorArguments)
         super.register(this::tuple)
@@ -57,6 +57,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.registerFor("when", this::when_)
         super.register(this::whenOptionList)
         super.register(this::whenOption)
+        super.register(this::cast)
+        super.register(this::group)
         super.register(this::propertyCall)
         super.register(this::methodCall)
         super.register(this::argumentList)
@@ -65,6 +67,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::indexList)
         super.register(this::propertyReference)
         super.register(this::methodReference)
+        super.register(this::literal)
     }
 
     data class PropertyValue(
@@ -72,12 +75,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val value: String
     )
 
-    // expression = root | literal | navigation | tuple  | object | with | when
+    // expression = root | literal | navigation | tuple  | object | with | when | cast | group
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
     // root = propertyReference ;
-    private fun root(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
+    private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression {
         val v = children[0] as String
         return when {
             v.startsWith("\$") -> when (v) {
@@ -90,17 +93,21 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         }
     }
 
+    // literalExpression = literal ;
+    private fun literalExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression =
+        children[0] as LiteralExpression
+
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option.asIndex) {
         0 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
         1 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, (children[0] as String).toInt())
         2 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, (children[0] as String).toDouble())
-        3 -> LiteralExpressionSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, (children[0] as String))
+        3 -> LiteralExpressionSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, (children[0] as String).trim('\''))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
     // navigation = navigationRoot navigationPartList ;
-    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationSimple {
+    private fun navigationExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationSimple {
         val navigationRoot = children[0] as Expression
         val parts = children[1] as List<NavigationPart>
         return NavigationSimple(navigationRoot, parts)
@@ -123,7 +130,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // infix = expression INFIX_OPERATOR expression ;
     // infix = [expression / INFIX_OPERATOR]2+ ;
-    private fun infix(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
+    private fun infixExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
         val expressions = children.filterIsInstance<Expression>()
         val operators = children.filterIsInstance<String>()
         return InfixExpressionSimple(expressions, operators)
@@ -191,6 +198,19 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val condition = children[0] as Expression
         val expression = children[2] as Expression
         return WhenOptionSimple(condition, expression)
+    }
+
+    // cast = expression 'as' possiblyQualifiedName ;
+    private fun cast(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CastExpression {
+        val expression = children[0] as Expression
+        val pqn = children[2] as PossiblyQualifiedName
+        return CastExpressionSimple( expression,pqn)
+    }
+
+    // cast = '(' expression ')' ;
+    private fun group(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GroupExpression {
+        val expression = children[1] as Expression
+        return GroupExpressionSimple( expression)
     }
 
     // propertyCall = '.' propertyReference ;

@@ -137,6 +137,50 @@ class test_ProvidedTransform {
                         }
                     )
                 )
+            ),
+            TestDataProcessor(
+                "",
+                grammarStr = """
+                    namespace test
+                      grammar Test {
+                        S = A | B ;
+                        A = a a ;
+                        B = 'b' b ;
+                        leaf a = 'a';
+                        leaf b = 'b';
+                      }
+                """.trimIndent(),
+                transformStr = """
+                    #create-missing-types
+                    namespace test
+                      transform Test {
+                        #override-default-transform
+                        S : XXX() { yyy := child[0] }
+                        A : child[0] as String
+                      }
+                """.trimIndent(),
+                "",
+                "S",
+                listOf(
+                    TestDataProcessorSentencePass(
+                        "aa",
+                        asmSimple {
+                            element("XXX") {
+                                propertyString("yyy","a")
+                            }
+                        }
+                    ),
+                    TestDataProcessorSentencePass(
+                        "bb",
+                        asmSimple {
+                            element("XXX") {
+                                propertyElementExplicitType("yyy","B") {
+                                    propertyString("b","b")
+                                }
+                            }
+                        }
+                    )
+                )
             )
         )
 
@@ -150,6 +194,11 @@ class test_ProvidedTransform {
     @Test
     fun transform_for_user_goal_three_rule_two_leaf() {
         testPass(testData[1])
+    }
+
+    @Test
+    fun t3() {
+        testPass(testData[2])
     }
 
 }

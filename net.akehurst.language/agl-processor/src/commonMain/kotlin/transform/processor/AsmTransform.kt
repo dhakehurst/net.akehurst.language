@@ -42,31 +42,28 @@ object AsmTransform {
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("option") }
-            lst(0, -1) { ref("typeImport") }
             lst(0, -1) { ref("import") }
             lst(0, -1) { ref("transform") }
         }
-        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
         concatenation("transform") {
             lit("transform"); ref("IDENTIFIER"); opt { ref("extends") }
             lit("{")
             lst(0, -1) { ref("option") }
+            lst(0, -1) { ref("typeImport") }
             lst(1, -1) { ref("transformRule") }
             lit("}")
         }
+        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
         concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
         concatenation("transformRule") {
             ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
         }
         choice("transformRuleRhs") {
-            ref("createRule")
+            ref("expressionRule")
             ref("modifyRule")
         }
-        concatenation("createRule") {
+        concatenation("expressionRule") {
             ref("expression")
-        }
-        concatenation("statementBlock") {
-            lit("{"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
         }
         concatenation("modifyRule") {
             lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
@@ -86,14 +83,13 @@ namespace net.akehurst.language.agl
 grammar Transform : Base {
 
     unit = option* namespace* ;
-    override namespace = 'namespace' possiblyQualifiedName option* typeImport* import* transform* ;
+    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
+    transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule+ '} ;
     typeImport = 'import-types' possiblyQualifiedName ;
-    transform = 'transform' IDENTIFIER extends? '{' option* transformRule+ '} ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
-    transformRuleRhs = createRule | modifyRule ;
-    createRule = expression ;
-    statementBlock = '{' statement+ '}' ;
+    transformRuleRhs = expressionRule | modifyRule ;
+    expressionRule = expression ;
     modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
     statement
       = assignmentStatement

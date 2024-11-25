@@ -51,6 +51,23 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
 
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>? = _namespace[qualifiedName]
 
+    override fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName) =
+        _namespace[qualifiedName.front]?.findOwnedDefinitionOrNull(qualifiedName.last)
+
+    override fun resolveReference(reference: DefinitionReference<DT>): DT? {
+        val res = when (reference.nameOrQName) {
+            is QualifiedName -> findDefinitionOrNullByQualifiedName(reference.nameOrQName as QualifiedName)
+            is SimpleName -> findDefinitionOrNullByQualifiedName(reference.nameOrQName.asQualifiedName(reference.localNamespace.qualifiedName))
+            else -> error("Unsupported")
+        }
+        return if (null!=res) {
+            reference.resolveAs(res)
+            res
+        } else {
+            null
+        }
+    }
+
     fun connectionNamespaceOptionHolderParentsToThis() {
         this.namespace.forEach { it.options.parent = this.options }
     }
@@ -89,7 +106,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
 
 abstract class NamespaceAbstract<DT : Definition<DT>>(
     override val options: OptionHolder,
-    override val import: List<Import>
+    argImport: List<Import>
 ) : Namespace<DT> {
 
     override val definition: List<DT> get() = _definition.values.toList()
@@ -98,6 +115,8 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     protected val _importedNamespaces = mutableMapOf<QualifiedName, Namespace<DT>?>()
     protected val _definition = linkedMapOf<SimpleName, DT>() //order is important
+
+    override val import: List<Import> = argImport.toMutableList()
 
     init {
         connectionDefinitionOptionHolderParentsToThis()
@@ -124,6 +143,10 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     fun connectionDefinitionOptionHolderParentsToThis() {
         this.definition.forEach { it.options.parent = this.options }
+    }
+
+    override fun addImport(import: Import) {
+        (this.import as MutableList).add(import)
     }
 
     // --- Formatable ---

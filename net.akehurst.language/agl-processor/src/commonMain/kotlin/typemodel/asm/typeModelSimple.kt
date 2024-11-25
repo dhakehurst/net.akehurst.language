@@ -119,6 +119,14 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
 
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace? = _namespace.value[qualifiedName]
 
+    override fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName): TypeDeclaration? {
+        TODO("not implemented")
+    }
+
+    override fun resolveReference(reference: DefinitionReference<TypeDeclaration>): TypeDeclaration? {
+        TODO("not implemented")
+    }
+
     // -- Formatable ---
     override fun asString(indent: Indent): String {
         val ns = this.namespace
@@ -731,12 +739,10 @@ abstract class TypeNamespaceAbstract(
         val types = this.ownedTypesByName.entries.sortedBy { it.key.value }
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}.*" }
-        val s = """
-namespace '$qualifiedName' {
+        val s = """namespace '$qualifiedName' {
 $importstr
 $types
-}
-    """.trimIndent()
+}""".trimIndent()
         return s
     }
 

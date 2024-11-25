@@ -17,7 +17,6 @@
 
 package net.akehurst.language.typemodel.asm
 
-import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault

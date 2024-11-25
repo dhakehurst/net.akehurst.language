@@ -45,11 +45,11 @@ grammar CrossReferences extends Expressions {
     referenceDefinition = 'in' simpleTypeName '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
     propertyReferenceExpression = 'property' rootOrNavigation 'refers-to' typeReferences from? ;
-    from = 'from' navigation ;
+    from = 'from' navigationExpression ;
     collectionReferenceExpression = 'forall' rootOrNavigation ofType? '{' referenceExpressionList '}' ;
     ofType = 'of-type' possiblyQualifiedTypeReference ;
     
-    rootOrNavigation = root | navigation ;
+    rootOrNavigation = rootExpression | navigationExpression ;
     
     typeReferences = [possiblyQualifiedTypeReference / '|']+ ;
     possiblyQualifiedTypeReference = possiblyQualifiedName ;
@@ -94,14 +94,14 @@ grammar CrossReferences extends Expressions {
         concatenation("propertyReferenceExpression") {
             lit("property"); ref("rootOrNavigation"); lit("refers-to"); ref("typeReferences"); opt { ref("from") }
         }
-        concatenation("from") { lit("from"); ref("navigation") }
+        concatenation("from") { lit("from"); ref("navigationExpression") }
         concatenation("collectionReferenceExpression") {
             lit("forall"); ref("rootOrNavigation"); opt { ref("ofType") }; lit("{"); ref("referenceExpressionList"); lit("}")
         }
         concatenation("ofType") { lit("of-type"); ref("possiblyQualifiedTypeReference") }
         choice("rootOrNavigation") {
-            ref("root")
-            ref("navigation")
+            ref("rootExpression")
+            ref("navigationExpression")
         }
         separatedList("typeReferences", 1, -1) { ref("possiblyQualifiedTypeReference"); lit("|") }
         concatenation("possiblyQualifiedTypeReference") { ref("possiblyQualifiedName") }

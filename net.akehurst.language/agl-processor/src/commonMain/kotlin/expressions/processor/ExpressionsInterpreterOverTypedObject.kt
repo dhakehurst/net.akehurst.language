@@ -154,13 +154,16 @@ class ExpressionsInterpreterOverTypedObject(
     fun evaluateExpression(evc: EvaluationContext, expression: Expression): TypedObject = when (expression) {
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
-        is NavigationExpression -> this.evaluateNavigation(evc, expression)
-        is InfixExpression -> this.evaluateInfix(evc, expression)
-        is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
+        is CreateTupleExpression -> this.evaluateCreateTuple(evc, expression)
+        is OnExpression -> TODO()
+        is NavigationExpression -> this.evaluateNavigation(evc, expression)
+        is LambdaExpression -> this.evaluateLambda(evc, expression)
         is WithExpression -> this.evaluateWith(evc, expression)
         is WhenExpression -> this.evaluateWhen(evc, expression)
-        is LambdaExpression -> this.evaluateLambda(evc, expression)
+        is InfixExpression -> this.evaluateInfix(evc, expression)
+        is CastExpression -> this.evaluateCast(evc, expression)
+        is GroupExpression -> this.evaluateGroup(evc, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
 
@@ -441,6 +444,15 @@ class ExpressionsInterpreterOverTypedObject(
             val newEvc = evc.child(mapOf("it" to it.toTypedObject(SimpleTypeModelStdLib.AnyType)))
             evaluateExpression(newEvc, expression.expression).asmValue
         }).toTypedObject(lambdaType)
+    }
+
+    private fun evaluateCast(evc: EvaluationContext, expression:CastExpression):TypedObject {
+        //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
+        return evaluateExpression(evc, expression.expression)
+    }
+
+    private fun evaluateGroup(evc: EvaluationContext, expression:GroupExpression):TypedObject {
+        return evaluateExpression(evc, expression.expression)
     }
 
 }

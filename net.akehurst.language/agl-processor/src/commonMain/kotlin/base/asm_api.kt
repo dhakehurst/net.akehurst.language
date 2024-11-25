@@ -17,11 +17,15 @@
 
 package net.akehurst.language.base.api
 
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.transform.api.TransformNamespace
+import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.transform.api.TransformRuleSetReference
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
 // [https://youtrack.jetbrains.com/issue/IDEA-359261/value-class-extension-methods-not-working-when-defined-in-companion-object]
-val String.asPossiblyQualifiedName:PossiblyQualifiedName
+val String.asPossiblyQualifiedName: PossiblyQualifiedName
     get() = when {
         this.isQualifiedName -> QualifiedName(this)
         else -> SimpleName(this)
@@ -37,8 +41,9 @@ interface PossiblyQualifiedName {
     val value: String
     val simpleName: SimpleName
 
-    /** if this is a SimpleName, append it to the given qualifiedName (or just the simple name if namespace is null),
-     *  else return the QualifiedName
+    /**
+     * if this is a SimpleName, append it to the given qualifiedName (or just the simple name if namespace is null),
+     * if already a QualifiedName return it with no modification
      **/
     fun asQualifiedName(namespace: QualifiedName?): QualifiedName
 }
@@ -47,7 +52,7 @@ interface PossiblyQualifiedName {
  * A qualified name, separator assumed to be '.'
  */
 @JvmInline
-value class QualifiedName(override val value: String) : PossiblyQualifiedName,PublicValueType {
+value class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
 
     constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
 
@@ -74,7 +79,7 @@ val String.isSimpleName: Boolean get() = this.contains(".").not()
 val String.asSimpleName: SimpleName get() = SimpleName(this)
 
 @JvmInline
-value class SimpleName(override val value: String) : PossiblyQualifiedName,PublicValueType {
+value class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
     companion object {
         //FIXME: from here - see above
     }
@@ -91,7 +96,7 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName,Publi
 // This is added so that any value class will correctly
 // make its 'value' public in JS
 interface PublicValueType {
-    val value:Any
+    val value: Any
 }
 
 /**
@@ -100,7 +105,7 @@ interface PublicValueType {
  * Separator assumed to be '.'
  */
 @JvmInline
-value class Import(override val value: String) :PublicValueType {
+value class Import(override val value: String) : PublicValueType {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
     override fun toString() = value
 }
@@ -115,8 +120,8 @@ interface Formatable {
 }
 
 interface OptionHolder {
-    var parent:OptionHolder?
-    operator fun get(name:String):String?
+    var parent: OptionHolder?
+    operator fun get(name: String): String?
 }
 
 /**
@@ -135,6 +140,11 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val isEmpty: Boolean
 
     fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>?
+
+    fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName): DT?
+
+    fun resolveReference(reference:DefinitionReference<DT>): DT?
+
 }
 
 interface Namespace<DT : Definition<DT>> : Formatable {
@@ -159,6 +169,18 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 
     /** find owned definition (not imported) **/
     fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT?
+
+    fun addImport(import: Import)
+}
+
+interface DefinitionReference<DT : Definition<DT>> {
+    val localNamespace: Namespace<DT>
+    val nameOrQName: PossiblyQualifiedName
+    var resolved: TransformRuleSet?
+
+    fun resolveAs(resolved: DT)
+
+    //fun cloneTo(ns: Namespace<DT>): DefinitionReference<DT>
 }
 
 interface Definition<DT : Definition<DT>> : Formatable {

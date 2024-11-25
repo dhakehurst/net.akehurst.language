@@ -39,6 +39,7 @@ import net.akehurst.language.transform.builder.AsmTransformRuleSetBuilder
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.transform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -57,7 +58,10 @@ class test_AllDefault {
             val qn = QualifiedName(namespaceName)
             return asmTransform(domainName, typeModel, createTypes) {
                 namespace(qn.front.value) {
-                    transform(qn.last.value, init)
+                    transform(qn.last.value) {
+                        importTypes(namespaceName)
+                        this.init()
+                    }
                 }
             }
         }
@@ -6474,6 +6478,7 @@ class test_AllDefault {
                 stringTypeFor("a")
             }
             grammarTypeNamespace("test.Outer") {
+                imports("test.Inner")
                 unnamedSuperTypeType("S") {
                     typeRef("S1")
                     typeRef("String")
@@ -6535,6 +6540,7 @@ class test_AllDefault {
         ) {
             namespace("test") {
                 transform("Inner") {
+                    importTypes("test.Inner")
                     unnamedSubtypeRule(
                         "S", """
                        when {
@@ -6553,6 +6559,7 @@ class test_AllDefault {
                     leafStringRule("a")
                 }
                 transform("Outer") {
+                    importTypes("test.Outer")
                     unnamedSubtypeRule(
                         "S", """
                        when {
@@ -6734,6 +6741,7 @@ class test_AllDefault {
         ) {
             namespace("test") {
                 transform("I") {
+                    importTypes("test.I")
                     subtypeRule("S", "S")
                     createObject("SA", "SA") {
                         assignment("s", "child[0]")
@@ -6745,6 +6753,7 @@ class test_AllDefault {
                     leafStringRule("a")
                 }
                 transform("O") {
+                    importTypes("test.O")
                     subtypeRule("S", "S")
                     createObject("SBC", "SBC") {
                         assignment("s", "child[0]")
@@ -7718,4 +7727,153 @@ class test_AllDefault {
             }
         }
     }
+
+    @Test // Base { a = 'a' } Test : Base { S = A }
+    fun _930_extends_leaf_in_base() {
+        val grammarStr = """
+            namespace test
+            grammar Base {
+                leaf a = 'a' ;
+            }
+            grammar Test : Base {
+                S = A ;
+                A = a ;
+            }
+        """.trimIndent()
+        val expectedRrs = ruleSet("test.Test") {
+            concatenation("S") { ref("A") }
+            concatenation("A") { ref("a") }
+            literal("a", "a")
+        }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Base") {
+                stringTypeFor("a")
+            }
+            grammarTypeNamespace("test.Test", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value, "test.Base")) {
+                dataType("S", "S") {
+                    propertyDataTypeOf("a", "A", false, 0)
+                }
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+            }
+        }
+        val expectedTr = asmTransform(
+            "FromGrammarTest",
+            typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Base") {}
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
+            true
+        ) {
+            namespace("test") {
+                transform("Base") {
+                    importTypes("test.Base")
+                    leafStringRule("a")
+                }
+                transform("Test") {
+                    extends("Base")
+                    importTypes("test.Base","test.Test")
+                    createObject("S","S") {
+                        assignment("a","child[0]")
+                    }
+                    createObject("A","A") {
+                        assignment("a","child[0]")
+                    }
+                }
+            }
+        }
+
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "a", sppt = "S { A { a:'a'} }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S") {
+                        propertyElementExplicitType("a", "A") {
+                            propertyString("a","a")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test // Base { A = a; a = 'a' } Test : Base { S = A }
+    fun _931_extends_nonTerm_in_base() {
+        val grammarStr = """
+            namespace test
+            grammar Base {
+                A = a ;
+                leaf a = 'a' ;
+            }
+            grammar Test : Base {
+                S = A ;
+            }
+        """.trimIndent()
+        val expectedRrs = ruleSet("test.Test") {
+            concatenation("S") { ref("A") }
+            concatenation("A") { ref("a") }
+            literal("a", "a")
+        }
+        val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
+            grammarTypeNamespace("test.Base") {
+                dataType("A", "A") {
+                    propertyPrimitiveType("a", "String", false, 0)
+                }
+                stringTypeFor("a")
+            }
+            grammarTypeNamespace("test.Test", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value, "test.Base"), true) {
+                dataType("S", "S") {
+                    propertyDataTypeOf("a", "A", false, 0)
+                }
+            }
+        }
+        val expectedTr = asmTransform(
+            "FromGrammarTest",
+            typeModel("FromGrammarParsedGrammarUnit", true) {
+                grammarTypeNamespace("test.Base") {}
+                grammarTypeNamespace("test.Test") {}
+            }.also { it.resolveImports() },
+            true
+        ) {
+            namespace("test") {
+                transform("Base") {
+                    importTypes("test.Base")
+                    createObject("A","A") {
+                        assignment("a","child[0]")
+                    }
+                    leafStringRule("a")
+                }
+                transform("Test") {
+                    extends("Base")
+                    importTypes("test.Base", "test.Test")
+                    createObject("S","S") {
+                        assignment("a","child[0]")
+                    }
+                }
+            }
+        }
+
+        test(
+            grammarStr = grammarStr,
+            expectedRrs = expectedRrs,
+            expectedTm = expectedTm,
+            expectedTr = expectedTr
+        ) {
+            define(sentence = "a", sppt = "S { A { a:'a'} }") {
+                asmSimple(typeModel = expectedTm, defaultNamespace = QualifiedName("test.Test")) {
+                    element("S") {
+                        propertyElementExplicitType("a", "A") {
+                            propertyString("a","a")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }

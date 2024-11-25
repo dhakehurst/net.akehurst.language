@@ -16,6 +16,7 @@
 
 package net.akehurst.language.expressions.asm
 
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -26,18 +27,18 @@ abstract class ExpressionAbstract : Expression {
     /**
      * defaults to 'toString' if not overriden in subclass
      */
-    override fun asString(indent: Indent): String = toString()
+    override fun asString(indent: Indent, imports: List<Import>): String = toString()
 }
 
 data class CreateTupleExpressionSimple(
     override val propertyAssignments: List<AssignmentStatement>
 ) : ExpressionAbstract(), CreateTupleExpression {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("tuple {\n")
         val ni = indent.inc
-        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni)}" }
+        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
         sb.append("${props}\n")
         sb.append("${indent}}")
         return sb.toString()
@@ -53,11 +54,15 @@ data class CreateObjectExpressionSimple(
 
     override var propertyAssignments: List<AssignmentStatement> = emptyList()
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("$possiblyQualifiedTypeName {\n")
+        val pqn = when {
+            imports.any { it.value == possiblyQualifiedTypeName.asQualifiedName(null).front.value } -> possiblyQualifiedTypeName.simpleName.value
+            else -> possiblyQualifiedTypeName.value
+        }
+        sb.append("$pqn {\n")
         val ni = indent.inc
-        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni)}" }
+        val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
         sb.append("${props}\n")
         sb.append("${indent}}")
         return sb.toString()
@@ -71,11 +76,11 @@ class WithExpressionSimple(
     override val expression: Expression
 ) : ExpressionAbstract(), WithExpression {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
-        sb.append("with(${withContext.asString(indent)}) ")
+        sb.append("with(${withContext.asString(indent, imports)}) ")
         val ni = indent.inc
-        sb.append(expression.asString(ni))
+        sb.append(expression.asString(ni,imports))
         return sb.toString()
     }
 
@@ -86,11 +91,11 @@ class WhenExpressionSimple(
     override val options: List<WhenOption>
 ) : ExpressionAbstract(), WhenExpression {
 
-    override fun asString(indent: Indent): String {
+    override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         sb.append("when {\n")
         val ni = indent.inc
-        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni)} -> ${it.expression.asString(ni.inc)}" }
+        val opts = options.joinToString(separator = "\n") { "${it.condition.asString(ni, imports)} -> ${it.expression.asString(ni.inc, imports)}" }
         sb.append("${opts}\n")
         sb.append("${indent}}")
         return sb.toString()
@@ -166,8 +171,8 @@ data class LambdaExpressionSimple(
     override val expression: Expression
 ) : LambdaExpression {
 
-    override fun asString(indent: Indent): String {
-        return "{ $expression }"
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        return "{ ${expression.asString(indent, imports)}} }"
     }
 
     override fun toString(): String = "{ $expression }"
@@ -186,15 +191,7 @@ class AssignmentStatementSimple(
     override val rhs: Expression
 ) : AssignmentStatement {
 
-    //val resolvedLhs get() = _resolvedLhs
-
-    //private lateinit var _resolvedLhs: PropertyDeclaration
-
-   // fun resolveLhsAs(propertyDeclaration: PropertyDeclaration) {
-    //    _resolvedLhs = propertyDeclaration
-   // }
-
-    override fun asString(indent: Indent): String = "$lhsPropertyName := ${rhs.asString(indent)}"
+    override fun asString(indent: Indent, imports: List<Import>): String  = "$lhsPropertyName := ${rhs.asString(indent, imports)}"
 
     override fun toString(): String = "$lhsPropertyName := $rhs"
 
@@ -204,7 +201,26 @@ class InfixExpressionSimple(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
-    override fun asString(indent: Indent): String = "$indent$this"
+    override fun asString(indent: Indent, imports: List<Import>): String = "$indent$this"
 
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
+}
+
+class CastExpressionSimple(
+    override val expression: Expression,
+    override val targetTypeName: PossiblyQualifiedName
+) : CastExpression {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val ttn = when {
+            imports.any { it.asQualifiedName.value == targetTypeName.value } -> targetTypeName.simpleName.value
+            else -> targetTypeName.value
+        }
+      return  "${expression.asString(indent, imports)} as $ttn"
+    }
+}
+
+class GroupExpressionSimple(
+    override val expression: Expression
+) : GroupExpression {
+    override fun asString(indent: Indent, imports: List<Import>): String  = "(${expression.asString(indent, imports)})"
 }

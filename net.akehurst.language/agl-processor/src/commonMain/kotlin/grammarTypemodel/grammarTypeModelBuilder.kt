@@ -29,9 +29,10 @@ import net.akehurst.language.typemodel.builder.*
 fun TypeModelBuilder.grammarTypeNamespace(
     namespaceQualifiedName: String,
     imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName.value),
+    resolveImports: Boolean = false,
     init: GrammarTypeNamespaceBuilder.() -> Unit
 ) {
-    val b = GrammarTypeNamespaceBuilder(_model, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), false)
+    val b = GrammarTypeNamespaceBuilder(_model, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), resolveImports)
     b.init()
     val ns = b.build()
     _model.addNamespace(ns)
@@ -69,6 +70,10 @@ class GrammarTypeNamespaceBuilder(
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.declaration as PrimitiveType
+
+    fun imports(vararg imports:String) {
+        imports.forEach { _namespace.addImport(Import(it)) }
+    }
 
     fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)

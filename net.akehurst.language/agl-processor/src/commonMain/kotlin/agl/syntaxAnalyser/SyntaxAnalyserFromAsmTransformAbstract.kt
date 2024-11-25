@@ -104,7 +104,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
     val _trf = AsmTransformInterpreter(typeModel)
 
     private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
-        return relevantRuleSet.findTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
+        return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
     override fun clear() {

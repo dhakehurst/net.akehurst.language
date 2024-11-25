@@ -23,15 +23,18 @@ class ExpressionTypeResolver(
     }
 
     fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when (this) {
-        is LiteralExpression -> this.typeOfLiteralExpressionFor(self)
         is RootExpression -> this.typeOfRootExpressionFor(self)
-        is NavigationExpression -> this.typeOfNavigationExpressionFor(self)
-        is WithExpression -> this.typeOfWithExpressionFor(self)
-        is WhenExpression -> this.typeOfWhenExpressionFor(self)
-        is InfixExpression -> this.typeOfInfixExpressionFor(self)
+        is LiteralExpression -> this.typeOfLiteralExpressionFor(self)
         is CreateObjectExpression -> this.typeOfCreateObjectExpressionFor(self)
         is CreateTupleExpression -> this.typeOfCreateTupleExpressionFor(self)
         is OnExpression -> this.typeOfOnExpressionFor(self)
+        is NavigationExpression -> this.typeOfNavigationExpressionFor(self)
+        is LambdaExpression -> this.typeOfLambdaExpressionFor(self)
+        is WithExpression -> this.typeOfWithExpressionFor(self)
+        is WhenExpression -> this.typeOfWhenExpressionFor(self)
+        is InfixExpression -> this.typeOfInfixExpressionFor(self)
+        is CastExpression -> this.typeOfCastExpressionFor(self)
+        is GroupExpression -> this.typeOfGroupExpressionFor(self)
         else -> error("Subtype of Expression not handled in 'typeOfExpressionFor' : '${this::class.simpleName}'")
 
     }
@@ -135,7 +138,6 @@ class ExpressionTypeResolver(
     fun CreateObjectExpression.typeOfCreateObjectExpressionFor(self: TypeInstance): TypeInstance =
         typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.NothingType
 
-
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {
             val t = typeFor(it.rhs, self)
@@ -148,6 +150,16 @@ class ExpressionTypeResolver(
     fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance {
         TODO()
     }
+
+    fun LambdaExpression.typeOfLambdaExpressionFor(self: TypeInstance): TypeInstance {
+        TODO()
+    }
+
+    fun CastExpression.typeOfCastExpressionFor(self: TypeInstance): TypeInstance =
+        typeModel.findFirstByPossiblyQualifiedOrNull(this.targetTypeName)?.type() ?: SimpleTypeModelStdLib.NothingType
+
+    fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
+        this.expression.typeOfExpressionFor(self)
 
 
     fun commonSuperTypeOf(types: List<TypeInstance>): TypeInstance {

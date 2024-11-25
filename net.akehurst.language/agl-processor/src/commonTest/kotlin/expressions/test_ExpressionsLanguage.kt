@@ -86,7 +86,15 @@ class test_ExpressionsLanguage {
             "when { true -> 1 }",
             "when{1+1->2}",
             "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] }",
-            "when { a+b-c -> 2 }"
+            "when { a+b-c -> 2 }",
+            // cast
+            "a as B",
+            "a.b.c as D",
+            //group
+            "(a)",
+            "(a+b)-c",
+            "(a+b)-(c.fun(d))",
+            "(a+b) as C"
         )
     }
 
