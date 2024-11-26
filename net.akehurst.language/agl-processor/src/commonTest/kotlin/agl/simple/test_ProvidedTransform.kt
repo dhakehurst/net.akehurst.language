@@ -64,7 +64,7 @@ class test_ProvidedTransform {
 
         val testData = listOf(
             TestDataProcessor(
-                "",
+                "One Grammar, rewrite root rule",
                 grammarStr = """
                     namespace test
                       grammar Test {
@@ -93,7 +93,7 @@ class test_ProvidedTransform {
                 )
             ),
             TestDataProcessor(
-                "",
+                "Rewrite root only",
                 grammarStr = """
                     namespace test
                       grammar Test {
@@ -139,7 +139,7 @@ class test_ProvidedTransform {
                 )
             ),
             TestDataProcessor(
-                "",
+                "override in transform. Rewrite Root and one choice",
                 grammarStr = """
                     namespace test
                       grammar Test {
@@ -155,6 +155,50 @@ class test_ProvidedTransform {
                     namespace test
                       transform Test {
                         #override-default-transform
+                        S : XXX() { yyy := child[0] }
+                        A : child[0] as String
+                      }
+                """.trimIndent(),
+                "",
+                "S",
+                listOf(
+                    TestDataProcessorSentencePass(
+                        "aa",
+                        asmSimple {
+                            element("XXX") {
+                                propertyString("yyy","a")
+                            }
+                        }
+                    ),
+                    TestDataProcessorSentencePass(
+                        "bb",
+                        asmSimple {
+                            element("XXX") {
+                                propertyElementExplicitType("yyy","B") {
+                                    propertyString("b","b")
+                                }
+                            }
+                        }
+                    )
+                )
+            ),
+            TestDataProcessor(
+                "override in unit. Rewrite Root and one choice",
+                grammarStr = """
+                    namespace test
+                      grammar Test {
+                        S = A | B ;
+                        A = a a ;
+                        B = 'b' b ;
+                        leaf a = 'a';
+                        leaf b = 'b';
+                      }
+                """.trimIndent(),
+                transformStr = """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      transform Test {
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
                       }
@@ -199,6 +243,11 @@ class test_ProvidedTransform {
     @Test
     fun t3() {
         testPass(testData[2])
+    }
+
+    @Test
+    fun t4() {
+        testPass(testData[3])
     }
 
 }

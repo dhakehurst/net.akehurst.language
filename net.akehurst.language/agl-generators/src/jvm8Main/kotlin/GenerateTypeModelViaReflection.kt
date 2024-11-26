@@ -99,7 +99,7 @@ class GenerateTypeModelViaReflection(
 
         fun KClass<*>.isKomposite(propertyName: String, komposite: TypeModel): Boolean =
             komposite.findByQualifiedNameOrNull(this.qualifiedName!!.asQualifiedName)
-                ?.findPropertyOrNull(PropertyName(propertyName))
+                ?.findAllPropertyOrNull(PropertyName(propertyName))
                 ?.isComposite
                 ?: false
 
@@ -196,7 +196,7 @@ class GenerateTypeModelViaReflection(
         return _typeModel
     }
 
-    private fun addSuperTypes(type: TypeDeclaration, kclass: KClass<*>) {
+    private fun addSuperTypes(type: TypeDefinition, kclass: KClass<*>) {
         val imports = mutableListOf<Import>()
         val superTypes = kclass.supertypes.map {
             toTypeInstance(type, it)
@@ -208,7 +208,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    fun toTypeInstance(context:TypeDeclaration,kType: KType): TypeInstance {
+    fun toTypeInstance(context:TypeDefinition, kType: KType): TypeInstance {
         val targetNamespace = context.namespace
         val targetNamespaceName = targetNamespace.qualifiedName
         val imports = mutableListOf<Import>()
@@ -294,7 +294,7 @@ class GenerateTypeModelViaReflection(
         addPropertiesAndImports(ns, type, kclass)
     }
 
-    private fun addTypeParameters(ns: TypeNamespaceSimple, type: TypeDeclaration, kclass: KClass<*>) {
+    private fun addTypeParameters(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         when {
             kclass.typeParameters.isEmpty() -> Unit
             else -> {
@@ -305,7 +305,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private fun addConstructors(ns: TypeNamespaceSimple, type: TypeDeclaration, kclass: KClass<*>) {
+    private fun addConstructors(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         // must be declared in correct order
         kclass.primaryConstructor?.let { c ->
             c.name
@@ -324,7 +324,7 @@ class GenerateTypeModelViaReflection(
         //TODO: other constructors
     }
 
-    private fun addPropertiesAndImports(ns: TypeNamespaceSimple, type: TypeDeclaration, kclass: KClass<*>) {
+    private fun addPropertiesAndImports(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         //TODO: what about extension properties !
         val props = when {
             kclass.isInterface -> kclass.declaredMemberProperties
@@ -361,7 +361,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private fun addStoredProperty(ns: TypeNamespaceSimple, type: TypeDeclaration, mp: KProperty1<*, *>, comp_ref: PropertyCharacteristic) {
+    private fun addStoredProperty(ns: TypeNamespaceSimple, type: TypeDefinition, mp: KProperty1<*, *>, comp_ref: PropertyCharacteristic) {
         when (type) {
             is StructuredType -> {
                 val pn = PropertyName(mp.name)

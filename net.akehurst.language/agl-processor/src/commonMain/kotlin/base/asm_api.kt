@@ -122,6 +122,8 @@ interface Formatable {
 interface OptionHolder {
     var parent: OptionHolder?
     operator fun get(name: String): String?
+
+    fun clone(parent:OptionHolder?): OptionHolder
 }
 
 /**
@@ -145,6 +147,7 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
 
     fun resolveReference(reference:DefinitionReference<DT>): DT?
 
+    fun addNamespace(value: NT)
 }
 
 interface Namespace<DT : Definition<DT>> : Formatable {
@@ -171,6 +174,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
     fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT?
 
     fun addImport(import: Import)
+    fun addDefinition(definition: DT)
 }
 
 interface DefinitionReference<DT : Definition<DT>> {

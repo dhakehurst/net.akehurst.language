@@ -18,7 +18,7 @@ data class TypeRefInfo(
     val args:List<TypeRefInfo>,
     val isNullable:Boolean
 ) {
-    fun toTypeInstance(contextType:TypeDeclaration):TypeInstance {
+    fun toTypeInstance(contextType:TypeDefinition):TypeInstance {
         val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
         return contextType.namespace.createTypeInstance(contextType, name, targs, isNullable)
     }
@@ -64,8 +64,8 @@ class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeM
         children[1] as List<String>
 
     // declaration = primitive | enum | collection | datatype ;
-    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDeclaration =
-        children[0] as (namespace: TypeNamespace) -> TypeDeclaration
+    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDefinition =
+        children[0] as (namespace: TypeNamespace) -> TypeDefinition
 
     // primitive = 'primitive' NAME ;
     private fun primitive(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> PrimitiveType {

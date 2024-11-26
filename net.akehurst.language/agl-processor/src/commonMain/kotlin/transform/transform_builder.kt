@@ -26,9 +26,8 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.transform.api.*
 import net.akehurst.language.transform.asm.*
-import net.akehurst.language.typemodel.api.TypeDeclaration
+import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.builder.SubtypeListBuilder
 
@@ -101,7 +100,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     private val _rules = mutableListOf<TransformationRule>()
     private val defaultTypeNamespaceQualifiedName = namespace.qualifiedName.append(name)
 
-    private fun resolveType(grName: GrammarRuleName, typeName: String): TypeDeclaration {
+    private fun resolveType(grName: GrammarRuleName, typeName: String): TypeDefinition {
         val pqt = typeName.asPossiblyQualifiedName
         return if (createTypes) {
             when (pqt) {
@@ -202,7 +201,7 @@ class AsmTransformRuleSetBuilder internal constructor(
         val expr = expression(expressionStr)
         val tr = TransformationRuleDefault(expr)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
-        val t = ns.createUnnamedSupertypeType(subtypes)
+        val t = ns.findOwnedOrCreateUnnamedSupertypeType(subtypes)
         tr.resolveTypeAs(t.type())
         _rules.add(tr)
     }

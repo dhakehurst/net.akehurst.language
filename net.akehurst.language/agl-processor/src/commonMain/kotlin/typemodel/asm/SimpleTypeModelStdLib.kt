@@ -20,10 +20,7 @@ package net.akehurst.language.typemodel.asm
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PropertyCharacteristic
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.typemodel.api.*
 
 object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
@@ -59,9 +56,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, e
     val Lambda = super.findOrCreateSpecialTypeNamed(LambdaType_typeName).type()
 
     private val TupleType_typeName = SimpleName("TupleType")
-    val TupleType = TupleTypeSimple(this, TupleType_typeName).also { typeDecl ->
-        this.addDeclaration(typeDecl)
-    }
+    val TupleType = TupleTypeSimple(this, TupleType_typeName)
 
     private val Collection_typeName = SimpleName("Collection")
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
@@ -73,6 +68,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, e
             "A list created by mapping each element using the given lambda expression."
         )
     }
+
     private val List_typeName = SimpleName("List")
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
@@ -98,6 +94,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, e
             "The element at the given index."
         )
     }
+
     val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed(SimpleName("ListSeparated")).also { typeDecl ->
         typeDecl.addSupertype(List.type(listOf(AnyType.asTypeArgument)))
         (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("E")), TypeParameterSimple(SimpleName("I"))))
@@ -113,16 +110,19 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, e
         typeDecl.appendPropertyPrimitive(PropertyName("items"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("separators"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
     }
+
     private val Set_typeName = SimpleName("Set")
     val Set = super.findOwnedOrCreateCollectionTypeNamed(Set_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
+
     private val OrderedSet_typeName = SimpleName("OrderedSet")
     val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed(OrderedSet_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
     }
+
     private val Map_typeName = SimpleName("Map")
     val Map = super.findOwnedOrCreateCollectionTypeNamed(Map_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).addAll(listOf(TypeParameterSimple(SimpleName("K")), TypeParameterSimple(SimpleName("V"))))
@@ -139,6 +139,8 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, e
             )
         )
     }
+
+    override fun cloneTo(other: TypeModel): TypeNamespace = this
 
 }
 

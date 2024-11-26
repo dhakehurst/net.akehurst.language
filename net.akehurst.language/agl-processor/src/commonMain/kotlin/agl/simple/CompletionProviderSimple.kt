@@ -27,7 +27,6 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.Spine
-import net.akehurst.language.asm.simple.AsmFactorySimple
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
@@ -69,7 +68,7 @@ class CompletionProviderSimple(
     }
 
     private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextAsmSimple): List<CompletionItem> {
-        val prop = type.declaration.getPropertyByIndexOrNull(nextChildNumber)
+        val prop = type.declaration.getOwnedPropertyByIndexOrNull(nextChildNumber)
         val expectedPropName = expectedNextItems.map {
             val ri = when {
                 it.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), it.owningRule.name)

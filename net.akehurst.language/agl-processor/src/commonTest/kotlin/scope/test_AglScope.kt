@@ -38,7 +38,7 @@ class test_AglScope {
         val td = AglScope.typeModel.findFirstByNameOrNull(SimpleName("Scope"))
         assertNotNull(td)
         assertEquals("Scope", td.name.value)
-        val itemsProp = td.findPropertyOrNull(PropertyName("items"))
+        val itemsProp = td.findAllPropertyOrNull(PropertyName("items"))
         assertNotNull(itemsProp)
         assertEquals("Map", itemsProp.typeInstance.typeName.value)
         assertEquals(2, itemsProp.typeInstance.typeArguments.size)

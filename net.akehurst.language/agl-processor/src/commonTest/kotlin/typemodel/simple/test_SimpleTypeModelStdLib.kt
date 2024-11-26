@@ -18,7 +18,6 @@
 package net.akehurst.language.typemodel.asm
 
 import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.api.TypeArgumentNamed
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -88,8 +87,8 @@ class test_SimpleTypeModelStdLib {
     @Test
     fun collection_List() {
         assertEquals("std.List", SimpleTypeModelStdLib.List.qualifiedName.value)
-        assertEquals("size", SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!!.name.value)
-        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!!.typeInstance.qualifiedTypeName.value)
+        assertEquals("size", SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("size"))!!.name.value)
+        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("size"))!!.typeInstance.qualifiedTypeName.value)
 
 
     }

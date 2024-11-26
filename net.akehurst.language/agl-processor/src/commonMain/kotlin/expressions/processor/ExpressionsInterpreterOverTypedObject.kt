@@ -220,7 +220,7 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
         val type = obj.type
-        val pd = type.declaration.findPropertyOrNull(propertyName)
+        val pd = type.declaration.findAllPropertyOrNull(propertyName)
         return when (pd) {
             null -> when {
                 obj.asmValue is AsmStructure -> {
@@ -253,7 +253,7 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args:List<Expression>) : TypedObject{
         val type = obj.type
-        val md = type.declaration.findMethodOrNull(methodName)
+        val md = type.declaration.findAllMethodOrNull(methodName)
         return when(md) {
             null -> {
                 issues.error(null, "Method '$methodName' not found on type '${obj.type.typeName}'")
@@ -459,48 +459,48 @@ class ExpressionsInterpreterOverTypedObject(
 
 object StdLibPrimitiveExecutions {
 
-    val property = mapOf<TypeDeclaration, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
+    val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
         SimpleTypeModelStdLib.List to mapOf(
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("size"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmPrimitiveSimple.stdInteger(self.elements.size)
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("first"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.elements.first()
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("last"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("last"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.elements.last()
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("back"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("back"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.drop(1))
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("front"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("front"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.dropLast(1))
             },
-            SimpleTypeModelStdLib.List.findPropertyOrNull(PropertyName("join"))!! to { self, prop ->
+            SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("join"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
             }
         ),
         SimpleTypeModelStdLib.ListSeparated to mapOf(
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull(PropertyName("items"))!! to { self, prop ->
+            SimpleTypeModelStdLib.ListSeparated.findAllPropertyOrNull(PropertyName("items"))!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.items)
             },
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull(PropertyName("separators"))!! to { self, prop ->
+            SimpleTypeModelStdLib.ListSeparated.findAllPropertyOrNull(PropertyName("separators"))!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.separators)
             },
         )
     )
 
-    val method = mapOf<TypeDeclaration, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<TypedObject>) -> AsmValue)>>(
+    val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<TypedObject>) -> AsmValue)>>(
         SimpleTypeModelStdLib.List to mapOf(
-            SimpleTypeModelStdLib.List.findMethodOrNull(MethodName("get"))!! to { self, meth, args ->
+            SimpleTypeModelStdLib.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1==args.size)  { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
                 check(args[0] .asmValue is AsmPrimitive) {"Method '${meth.name}' takes an ${SimpleTypeModelStdLib.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
@@ -509,7 +509,7 @@ object StdLibPrimitiveExecutions {
                 val idx = arg1.value as Int
                 self.elements.get(idx)
             },
-            SimpleTypeModelStdLib.Collection.findMethodOrNull(MethodName("map"))!! to { self, meth, args ->
+            SimpleTypeModelStdLib.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) {"Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
                 check(args[0].asmValue is AsmLambda) {"Method '${meth.name}' first argument must be a lambda, got '${args[0].asmValue::class.simpleName}'." }

@@ -1,6 +1,5 @@
 package net.akehurst.language.agl.generators
 
-import net.akehurst.language.agl.generators.FormatTypeModelAsKotlinTypeModelBuilder.Companion.appendWithEol
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -65,7 +64,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         return sb.toString()
     }
 
-    fun formatTypeMembers(indent: Indent, context: TypeNamespace, type: TypeDeclaration): String {
+    fun formatTypeMembers(indent: Indent, context: TypeNamespace, type: TypeDefinition): String {
         val sb = StringBuilder()
         sb.appendWithEol(type.property.filter { it.isStored }) { formatProperty(indent, context, it) }
         if (configuration.properties.includeDerived) {

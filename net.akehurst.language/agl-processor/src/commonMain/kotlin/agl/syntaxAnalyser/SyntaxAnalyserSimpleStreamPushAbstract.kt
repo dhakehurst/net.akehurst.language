@@ -21,7 +21,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
@@ -209,13 +208,13 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         treeData.traverseTreeDepthFirst(walker, false)
     }
 
-    private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {
+    private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
             is PrimitiveType -> parentPath
             is UnnamedSupertypeType -> parentPath
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
-                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
             }
 
@@ -223,7 +222,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 when {
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
-                        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                        val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                         prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
                     }
                 }
@@ -278,7 +277,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         val type = parentTypeUsage.declaration
         return when (type) {
             is DataType -> {
-                val prop = type.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = type.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.typeInstance ?: typeModel.NothingType.type()
             }
 
@@ -310,7 +309,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     }
 
     private fun typeForParentTuple(parentType: TupleType, nodeInfo: SpptDataNodeInfo): TypeInstance {
-        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+        val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
         return typeForProperty(prop, nodeInfo)
     }
 
@@ -322,7 +321,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
             }
 
             else -> {
-                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 typeForProperty(prop, nodeInfo)
             }
         }
@@ -586,7 +585,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         }
     }
 
-    private fun createValueFor(sentence: Sentence, type: TypeDeclaration, path: AsmPath, childData: ChildDataAny): Any? = when (type) {
+    private fun createValueFor(sentence: Sentence, type: TypeDefinition, path: AsmPath, childData: ChildDataAny): Any? = when (type) {
         is PrimitiveType -> createPrimitiveValue(sentence, SimpleTypeModelStdLib.String.declaration as PrimitiveType, childData.nodeInfo)
         is UnnamedSupertypeType -> TODO()
         is CollectionType -> TODO()

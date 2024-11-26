@@ -20,7 +20,6 @@ import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertSame
 import kotlin.test.fail
 
 object TypeModelTest {
@@ -118,7 +117,7 @@ object TypeModelTest {
         }
     }
 
-    fun tmAssertEquals(expected: TypeDeclaration?, actual: TypeDeclaration?, source: String) {
+    fun tmAssertEquals(expected: TypeDefinition?, actual: TypeDefinition?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is SpecialTypeSimple && actual is SpecialTypeSimple -> tmAssertEquals(expected, actual)

@@ -23,24 +23,28 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import>
-) : GrammarTypeNamespaceAbstract(options,import)
+) : GrammarTypeNamespaceAbstract(options, import) {
+    override fun cloneTo(other: TypeModel): TypeNamespace =
+        other.findNamespaceOrNull(this.qualifiedName)
+            ?: GrammarTypeNamespaceSimple(this.qualifiedName, this.options, this.import)
+
+}
 
 abstract class GrammarTypeNamespaceAbstract(
     options: OptionHolder,
     import: List<Import>
-) : TypeNamespaceAbstract(options,import), GrammarTypeNamespace {
+) : TypeNamespaceAbstract(options, import), GrammarTypeNamespace {
 
     fun addTypeFor(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
-        if (typeUse.declaration is DataType) {
-            addDefinition(typeUse.declaration)
-        }
     }
 
     override var allRuleNameToType = mutableMapOf<GrammarRuleName, TypeInstance>()

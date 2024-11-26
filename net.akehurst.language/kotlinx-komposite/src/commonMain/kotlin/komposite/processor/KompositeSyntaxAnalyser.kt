@@ -31,7 +31,7 @@ data class TypeRefInfo(
     val args:List<TypeRefInfo>,
     val isNullable:Boolean
 ) {
-    fun toTypeInstance(contextType:TypeDeclaration):TypeInstance {
+    fun toTypeInstance(contextType:TypeDefinition):TypeInstance {
         val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
         return contextType.namespace.createTypeInstance(contextType, name, targs, isNullable)
     }
@@ -72,13 +72,13 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
     // namespace = 'namespace' qualifiedName declaration+;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeNamespace {
         val qualifiedName = children[1] as List<String?>
-        val declaration = children[2] as List<((namespace: TypeNamespace) -> TypeDeclaration)>
+        val declaration = children[2] as List<((namespace: TypeNamespace) -> TypeDefinition)>
         val qn = QualifiedName(qualifiedName.joinToString(separator = "."))
 
         val ns = TypeNamespaceSimple(qn)
         declaration.forEach {
             val dec = it.invoke(ns)
-            ns.addDeclaration(dec)
+            ns.addDefinition(dec)
         }
 
         return ns
@@ -90,7 +90,7 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
     }
 
     // declaration = declKind NAME '{' property* '}' ;
-    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDeclaration {
+    private fun declaration(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDefinition {
         val name = SimpleName(children[1] as String)
         val properties = children[3] as List<(StructuredType) -> PropertyDeclaration>
         val result = { namespace: TypeNamespace ->

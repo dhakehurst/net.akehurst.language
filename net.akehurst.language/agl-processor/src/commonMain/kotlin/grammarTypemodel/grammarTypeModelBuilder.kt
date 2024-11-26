@@ -64,7 +64,7 @@ class GrammarTypeNamespaceBuilder(
 ) {
     private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, import =  imports).also {
         if(resolveImports) {
-            it.resolveImports(typeModel as Model<Namespace<TypeDeclaration>, TypeDeclaration>)
+            it.resolveImports(typeModel as Model<Namespace<TypeDefinition>, TypeDefinition>)
         }
     }
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
@@ -79,7 +79,7 @@ class GrammarTypeNamespaceBuilder(
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
-    fun listTypeFor(grammarRuleName: String, elementType: TypeDeclaration): TypeInstance {
+    fun listTypeFor(grammarRuleName: String, elementType: TypeDefinition): TypeInstance {
         val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type().asTypeArgument))
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
         return t
@@ -95,10 +95,10 @@ class GrammarTypeNamespaceBuilder(
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t)
     }
 
-    fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
+    fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeDefinition, separatorType: TypeDefinition) =
         listSeparatedTypeFor(grammarRuleName, itemType.type(), separatorType.type())
 
-    fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorType: TypeDeclaration) {
+    fun listSeparatedTypeOf(grammarRuleName: String, itemTypeName: String, separatorType: TypeDefinition) {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))!!
         listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
@@ -121,11 +121,11 @@ class GrammarTypeNamespaceBuilder(
         val sts = subtypes.map {
             when (it) {
                 is String -> _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!!
-                is TypeDeclaration -> it
+                is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(sts.map { it.type() })
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t.type())
         return t
     }
@@ -134,7 +134,7 @@ class GrammarTypeNamespaceBuilder(
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSupertypeType(stu)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(stu)
         _namespace.addTypeFor(GrammarRuleName(grammarRuleName), t.type())
         return t
     }

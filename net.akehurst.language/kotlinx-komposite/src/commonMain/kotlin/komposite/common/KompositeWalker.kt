@@ -434,7 +434,7 @@ class KompositeWalker<P : Any?, A : Any?>(
         return this.nullValue(path, info, type)
     }
 
-    protected fun runtimeTypeFor(data: Any, targetType: TypeInstance): TypeDeclaration {
+    protected fun runtimeTypeFor(data: Any, targetType: TypeInstance): TypeDefinition {
         val dt = targetType.declarationOrNull
         return when (dt) {
             is CollectionType -> dt // can't get runtime-type of kotlin collection types

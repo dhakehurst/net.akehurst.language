@@ -15,7 +15,7 @@ class ExpressionTypeResolver(
     fun typeFor(expression: Expression, self: TypeInstance): TypeInstance =
         expression.typeOfExpressionFor(self)
 
-    fun typeOfExpressionStr(expression: String, self: TypeDeclaration): TypeInstance {
+    fun typeOfExpressionStr(expression: String, self: TypeDefinition): TypeInstance {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
         check(result.issues.errors.isEmpty()) { result.issues.toString() }
         val asm = result.asm!!

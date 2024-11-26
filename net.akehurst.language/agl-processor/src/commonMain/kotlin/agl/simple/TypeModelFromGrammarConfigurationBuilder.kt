@@ -23,7 +23,7 @@ import net.akehurst.language.typemodel.api.*
 
 interface Grammar2TypeModelMapping {
     fun typeNameFor(rule: GrammarRule): SimpleName
-    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): PropertyName
+    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName
 }
 
 fun String.lower() = when {
@@ -33,7 +33,7 @@ fun String.lower() = when {
 
 class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
     override fun typeNameFor(rule: GrammarRule): SimpleName = SimpleName(rule.name.value.replaceFirstChar { it.titlecase() })
-    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): PropertyName {
+    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
 //        val prefix = when (context) {
 //            ruleItem.owningRule.grammar -> ""
 //            else -> "${ruleItem.owningRule.grammar.name.lower()}_"

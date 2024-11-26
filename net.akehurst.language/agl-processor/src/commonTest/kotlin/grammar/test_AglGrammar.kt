@@ -1,7 +1,6 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,11 +18,11 @@ class test_AglGrammar {
         val grm = actual.findFirstByNameOrNull(SimpleName("GrammarDefault"))
         assertNotNull(grm)
 
-        val grm_name = grm.findPropertyOrNull(PropertyName("name"))
+        val grm_name = grm.findAllPropertyOrNull(PropertyName("name"))
         assertNotNull(grm_name)
         assertEquals("SimpleName",grm_name.typeInstance.declaration.name.value)
 
-        val grm_extends = grm.findPropertyOrNull(PropertyName("extends"))
+        val grm_extends = grm.findAllPropertyOrNull(PropertyName("extends"))
         assertNotNull(grm_extends)
         assertTrue(grm_extends.isReadWrite)
 

@@ -230,13 +230,13 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         return asmFactory.constructStructure(path, qualifiedTypeName)
     }
 
-    private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {
+    private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
             is PrimitiveType -> parentPath
             is UnnamedSupertypeType -> parentPath
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
-                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
             }
 
@@ -244,7 +244,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
                 when {
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
-                        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                        val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                         prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
                     }
                 }
@@ -302,7 +302,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
                     //must be group or choice
                     when (parentTypeDecl) {
                         is StructuredType -> {
-                            val propType = parentTypeDecl.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
+                            val propType = parentTypeDecl.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)?.typeInstance
                             when (propType) {
                                 null -> transformationRule(SimpleTypeModelStdLib.NothingType, RootExpressionSimple.NOTHING) // no property when non-term is a literal
                                 else -> transformationRule(propType, RootExpressionSimple.SELF)
@@ -387,7 +387,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         val type = parentTypeUsage.declaration
         return when (type) {
             is DataType -> {
-                val prop = type.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = type.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.typeInstance ?: typeModel.NothingType.type()
             }
 
@@ -419,7 +419,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
     }
 
     private fun typeForParentTuple(parentType: TupleType, nodeInfo: SpptDataNodeInfo): TypeInstance {
-        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+        val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
         return typeForProperty(prop, nodeInfo)
     }
 
@@ -431,7 +431,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
             }
 
             else -> {
-                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
+                val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 typeForProperty(prop, nodeInfo)
             }
         }
@@ -788,7 +788,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         }
     }
 
-    private fun createValueFor(sentence: Sentence, type: TypeDeclaration, path: AsmPath, childData: ChildData): Any = when (type) {
+    private fun createValueFor(sentence: Sentence, type: TypeDefinition, path: AsmPath, childData: ChildData): Any = when (type) {
         is PrimitiveType -> createStringValueFromBranch(sentence, childData.nodeInfo)
         is UnnamedSupertypeType -> TODO()
         is CollectionType -> TODO()
@@ -824,7 +824,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         }
     }
 
-    private fun createListSimpleValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<AsmValue?>, type: TypeDeclaration): Any {
+    private fun createListSimpleValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<AsmValue?>, type: TypeDefinition): Any {
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.List)
         return when {
             target.node.rule.isEmptyTerminal -> asmFactory.listOfValues(emptyList())
@@ -834,7 +834,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         }
     }
 
-    private fun createListSeparatedValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDeclaration): Any {
+    private fun createListSeparatedValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDefinition): Any {
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
         return when {
             target.node.rule.isEmptyTerminal -> asmFactory.listOfSeparatedValues(emptyListSeparated())
@@ -848,7 +848,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType:Any>(
         }
     }
 
-    private fun createListSeparatedItemsValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDeclaration): Any {
+    private fun createListSeparatedItemsValueFromBranch(target: SpptDataNodeInfo, path: AsmPath, children: List<Any?>, type: TypeDefinition): Any {
         if (Debug.CHECK) check(type == SimpleTypeModelStdLib.ListSeparated)
         return when {
             target.node.rule.isEmptyTerminal -> asmFactory.listOfValues(emptyList())

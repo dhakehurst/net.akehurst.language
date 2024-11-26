@@ -157,7 +157,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         }
     }
 
-    fun findTypeDeclarationByKClass(cls: KClass<*>): TypeDeclaration? {
+    fun findTypeDeclarationByKClass(cls: KClass<*>): TypeDefinition? {
         //TODO: use qualified name when possible (i.e. when JS reflection supports qualified names)
         //val qname = cls.qualifiedName ?: error("class does not have a qualifiedName!")
         //return this.findByQualifiedNameOrNull(QualifiedName( qname))

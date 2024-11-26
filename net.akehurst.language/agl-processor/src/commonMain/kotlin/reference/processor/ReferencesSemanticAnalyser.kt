@@ -170,7 +170,7 @@ class ReferencesSemanticAnalyser(
 
     private fun checkReferenceExpression(
         crossReferenceModel: CrossReferenceModel,
-        contextType: TypeDeclaration,
+        contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpression,
         importedNamespaces: List<TypeNamespace>
@@ -183,7 +183,7 @@ class ReferencesSemanticAnalyser(
 
     private fun checkCollectionReferenceExpression(
         crossReferenceModel: CrossReferenceModel,
-        contextType: TypeDeclaration,
+        contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpressionCollectionDefault,
         importedNamespaces: List<TypeNamespace>
@@ -227,7 +227,7 @@ class ReferencesSemanticAnalyser(
 
     private fun checkPropertyReferenceExpression(
         crossReferenceModel: CrossReferenceModel,
-        contextType: TypeDeclaration,
+        contextType: TypeDefinition,
         ref: ReferenceDefinitionDefault,
         refExpr: ReferenceExpressionPropertyDefault,
         importedNamespaces: List<TypeNamespace>
@@ -259,7 +259,7 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
+    private fun findReferredToType(name: PossiblyQualifiedName, importedNamespaces: List<TypeNamespace>): TypeDefinition? {
         return _grammarNamespace?.findTypeNamed(name)
             ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name as SimpleName) }
     }

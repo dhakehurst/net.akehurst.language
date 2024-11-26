@@ -23,11 +23,13 @@ import net.akehurst.language.transform.api.TransformNamespace
 
 class OptionHolderDefault(
     override var parent: OptionHolder?,
-    val options: Map<String,String>
-) :OptionHolder {
-    override operator fun get(name:String):String? {
+    val options: Map<String, String>
+) : OptionHolder {
+    override operator fun get(name: String): String? {
         return this.options[name] ?: this.parent?.get(name)
     }
+
+    override fun clone(parent: OptionHolder?): OptionHolder = OptionHolderDefault(parent, this.options)
 }
 
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
@@ -39,7 +41,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
 
     override val isEmpty: Boolean get() = allDefinitions.isEmpty()
 
-    override val namespace: List<NT>  get() = _namespace.values.toList()
+    override val namespace: List<NT> get() = _namespace.values.toList()
 
     private val _namespace: Map<QualifiedName, NT> = mutableMapOf<QualifiedName, NT>().also { map ->
         namespace.forEach { map[it.qualifiedName] = it }
@@ -60,7 +62,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
             is SimpleName -> findDefinitionOrNullByQualifiedName(reference.nameOrQName.asQualifiedName(reference.localNamespace.qualifiedName))
             else -> error("Unsupported")
         }
-        return if (null!=res) {
+        return if (null != res) {
             reference.resolveAs(res)
             res
         } else {
@@ -72,7 +74,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         this.namespace.forEach { it.options.parent = this.options }
     }
 
-    fun addNamespace(value:NT) {
+    override fun addNamespace(value: NT) {
         if (_namespace.containsKey(value.qualifiedName)) {
             if (_namespace[value.qualifiedName] === value) {
                 //same object, no need to add it
@@ -101,6 +103,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         this.namespace != other.namespace -> false
         else -> true
     }
+
     override fun toString(): String = "Domain '$name'"
 }
 
@@ -149,6 +152,12 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         (this.import as MutableList).add(import)
     }
 
+    override fun addDefinition(value: DT) {
+        check(_definition.containsKey(value.name).not()) { "namespace '$qualifiedName' already contains a declaration named '${value.name}', cannot add another" }
+        _definition[value.name] = value
+        value.options.parent = this.options
+    }
+
     // --- Formatable ---
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
@@ -177,11 +186,6 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
 
     // --- Implementation ---
 
-    fun addDefinition(value: DT) {
-        _definition[value.name] = value
-        value.options.parent = this.options
-    }
-
     fun addAllDefinition(value: Iterable<DT>) {
         value.forEach { addDefinition(it) }
     }
@@ -198,8 +202,8 @@ abstract class DefinitionAbstract<DT : Definition<DT>> : Definition<DT> {
 class ModelDefault(
     override val name: SimpleName,
     options: OptionHolder,
-    namespace: List<NamespaceDefault> =  emptyList()
-) : ModelAbstract<NamespaceDefault, DefinitionDefault>(namespace,options) {
+    namespace: List<NamespaceDefault> = emptyList()
+) : ModelAbstract<NamespaceDefault, DefinitionDefault>(namespace, options) {
 
 }
 
@@ -207,14 +211,14 @@ class NamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder,
     import: List<Import>
-) : NamespaceAbstract<DefinitionDefault>(options,import) {
+) : NamespaceAbstract<DefinitionDefault>(options, import) {
 
 }
 
 class DefinitionDefault(
     override val namespace: Namespace<DefinitionDefault>,
     override val name: SimpleName,
-    override val options: OptionHolder = OptionHolderDefault(null,emptyMap()),
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
 ) : DefinitionAbstract<DefinitionDefault>() {
 
 }

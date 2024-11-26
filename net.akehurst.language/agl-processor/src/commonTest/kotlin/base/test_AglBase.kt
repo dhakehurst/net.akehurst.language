@@ -20,7 +20,7 @@ class test_AglBase {
         val ns = actual.findFirstByNameOrNull(SimpleName("NamespaceDefault"))
         assertNotNull(ns)
         assertEquals("net.akehurst.language.base.asm.NamespaceDefault",ns.qualifiedName.value)
-        val ns__def = ns.findPropertyOrNull(PropertyName("_definition"))
+        val ns__def = ns.findAllPropertyOrNull(PropertyName("_definition"))
         assertNotNull(ns__def)
 
         val tm = typeModel("Test",true,actual.namespace) {

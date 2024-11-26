@@ -23,6 +23,7 @@ import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.expressions.api.CastExpression
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.CreateTupleExpression
@@ -57,7 +58,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     private val _exprTypeResolver get() = ExpressionTypeResolver(_typeModel, _issues)
 
     private val transformFromGrammar by lazy {
-        TransformDomainDefault.fromGrammarModel(_grammarModel)
+        val res = TransformDomainDefault.fromGrammarModel(_grammarModel)
+        _issues.addAll(res.issues)
+        res.asm!!
     }
 
     override fun clear() {
@@ -103,14 +106,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         return SemanticAnalysisResultDefault(_issues)
     }
 
-    private val TransformRuleSet.optionCreateTypes: Boolean
-        get() {
-            val opt = this.options[OPTION_CREATE_TYPES]
-            return when {
-                null == opt -> false
-                else -> opt == "true"
-            }
-        }
+    private val OptionHolder.createTypes get() = this[OPTION_CREATE_TYPES] == "true"
+    private val OptionHolder.overrideDefault get() = this[OPTION_OVERRIDE_DEFAULT] == "true"
+
 
     private fun typeFor(trs: TransformRuleSet, trr: TransformationRule): TypeInstance {
         // A TrRule needs to know the target type because this type is used
@@ -128,10 +126,21 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         val existingDecl = _typeModel.findFirstByPossiblyQualifiedOrNull(exprPqn)
         return when (existingDecl) {
             null -> when {
-                trs.optionCreateTypes -> {
-                    val tns = _typeModel.findOrCreateNamespace(trs.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
-                    val decl = tns.findOwnedOrCreateDataTypeNamed(exprPqn.simpleName)
-                    decl.type()
+                trs.options.createTypes -> when {
+                    trs.options.overrideDefault -> {
+                        // use default type if it exists, else create one
+                        val grmDecl = transformFromGrammar.typeModel?.findFirstByPossiblyQualifiedOrNull(exprPqn)
+                        val clonedTypeDeclOrCreated = grmDecl?.cloneTo(_typeModel) ?: let {
+                            val tns = _typeModel.findOrCreateNamespace(trs.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
+                            tns.findOwnedOrCreateDataTypeNamed(exprPqn.simpleName)
+                        }
+                        clonedTypeDeclOrCreated.type()
+                    }
+                    else -> {
+                        val tns = _typeModel.findOrCreateNamespace(trs.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName.asImport))
+                        val decl = tns.findOwnedOrCreateDataTypeNamed(exprPqn.simpleName)
+                        decl.type()
+                    }
                 }
 
                 else -> {
@@ -147,7 +156,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     private fun overrideDefaultNamespace(ns: TransformNamespace) {
         val nsOpt = ns.options[OPTION_OVERRIDE_DEFAULT]
         if (null != nsOpt && nsOpt == "true") {
-            val grmNs = transformFromGrammar.asm!!.findNamespaceOrNull(ns.qualifiedName)
+            val grmNs = transformFromGrammar.findNamespaceOrNull(ns.qualifiedName)
             when (grmNs) {
                 null -> _issues.warn(null, "No default namespace with name '${ns.qualifiedName}' found")
                 else -> {
@@ -165,14 +174,14 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     private fun overrideDefaultRuleSet(trs: TransformRuleSet) {
         val opt = trs.options[OPTION_OVERRIDE_DEFAULT]
         if (null != opt && opt == "true") {
-            val grmRs = transformFromGrammar.asm!!.findNamespaceOrNull(trs.namespace.qualifiedName)?.findDefinitionOrNull(trs.name)
+            val grmRs = transformFromGrammar.findNamespaceOrNull(trs.namespace.qualifiedName)?.findDefinitionOrNull(trs.name)
             when (grmRs) {
                 null -> _issues.warn(null, "No default ruleset with name '${trs.qualifiedName}' found")
                 else -> {
                     for (grmRl in grmRs.rules.values) {
                         when {
-                            trs.rules.containsKey(grmRl.grammarRuleName) -> Unit // overriden, do not copy default
-                            else -> trs.addRule(grmRl)
+                            trs.rules.containsKey(grmRl.grammarRuleName) -> Unit // overridden, do not copy default
+                            else ->  trs.addRule(grmRl)
                         }
                     }
                 }

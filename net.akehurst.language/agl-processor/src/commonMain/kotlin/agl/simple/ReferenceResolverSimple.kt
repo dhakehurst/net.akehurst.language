@@ -38,7 +38,7 @@ import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.api.TypeDeclaration
+import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
@@ -298,7 +298,7 @@ class ReferenceResolverSimple(
         return selfType.conformsTo(type)
     }
 
-    private fun TypeModel.typeOf(self: AsmValue): TypeDeclaration =
+    private fun TypeModel.typeOf(self: AsmValue): TypeDefinition =
         typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)
             ?: error("Type '${self.qualifiedTypeName}' not found in type model '${this.name}'")
 
@@ -324,7 +324,7 @@ class ReferenceResolverSimple(
                 val front = listOf(this.start) + this.parts.dropLast(1)
                 var v = root
                 for (pn in front) {
-                    val pd = typeModel.typeOf(v).findPropertyOrNull(PropertyName((pn as PropertyCall).propertyName))
+                    val pd = typeModel.typeOf(v).findAllPropertyOrNull(PropertyName((pn as PropertyCall).propertyName))
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> {

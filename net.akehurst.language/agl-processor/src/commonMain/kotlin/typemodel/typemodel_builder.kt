@@ -133,11 +133,11 @@ class TypeNamespaceBuilder(
         val sts = subtypes.map {
             when (it) {
                 is String -> _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!!
-                is TypeDeclaration -> it
+                is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(sts.map { it.type() })
         return t
     }
 
@@ -250,7 +250,7 @@ abstract class StructuredTypeBuilder(
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSupertypeType(stu)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(stu)
         return property(propertyName, t.type(emptyList(), isNullable), childIndex)
     }
 
@@ -426,7 +426,7 @@ class DataTypeBuilder(
 @TypeModelDslMarker
 class ConstructorBuilder(
     val _namespace: TypeNamespace,
-    private val _type: TypeDeclaration,
+    private val _type: TypeDefinition,
     private val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
 
@@ -442,7 +442,7 @@ class ConstructorBuilder(
 
 @TypeModelDslMarker
 class TypeInstanceArgBuilder(
-    val context: TypeDeclaration?,
+    val context: TypeDefinition?,
     val _namespace: TypeNamespace,
     val possiblyQualifiedName: PossiblyQualifiedName,
     val nullable: Boolean,
@@ -469,7 +469,7 @@ class TypeInstanceArgBuilder(
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
         val subtypes = subtypeNames.map { _namespace.createTypeInstance(context, it.asPossiblyQualifiedName, emptyList(), false) }
-        val t = _namespace.createUnnamedSupertypeType(subtypes)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(subtypes)
         _args.add(t.type(emptyList(), nullable).asTypeArgument)
     }
 
@@ -477,7 +477,7 @@ class TypeInstanceArgBuilder(
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSupertypeType(stu)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(stu)
         _args.add(t.type(emptyList(), nullable).asTypeArgument)
     }
 
@@ -489,9 +489,9 @@ class TypeInstanceArgBuilder(
 
 @TypeModelDslMarker
 class TypeInstanceArgNamedBuilder(
-    val context: TypeDeclaration?,
+    val context: TypeDefinition?,
     val _namespace: TypeNamespace,
-    val type: TypeDeclaration,
+    val type: TypeDefinition,
     val instanceIsNullable: Boolean,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
@@ -508,7 +508,7 @@ class TypeInstanceArgNamedBuilder(
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSupertypeType(stu).type(emptyList(), isNullable)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(stu).type(emptyList(), isNullable)
         val ta = TypeArgumentNamedSimple(PropertyName(name), t)
         _args.add(ta)
     }
@@ -529,7 +529,7 @@ class TypeInstanceArgNamedBuilder(
 
 @TypeModelDslMarker
 class TypeArgumentBuilder(
-    private val _context: TypeDeclaration?,
+    private val _context: TypeDefinition?,
     private val _namespace: TypeNamespace
 ) {
     private val list = mutableListOf<TypeArgument>()
@@ -603,7 +603,7 @@ class SubtypeListBuilder(
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
         val sts = subtypeNames.map { _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(it))!! }
-        val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(sts.map { it.type() })
         _subtypeList.add(t.type())
     }
 
@@ -611,7 +611,7 @@ class SubtypeListBuilder(
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSupertypeType(stu)
+        val t = _namespace.findOwnedOrCreateUnnamedSupertypeType(stu)
         _subtypeList.add(t.type(emptyList(), isNullable))
     }
 

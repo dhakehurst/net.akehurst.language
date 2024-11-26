@@ -22,7 +22,7 @@ import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.typemodel.api.*
 import kotlin.reflect.KClass
 
-val TypeDeclaration.clazz: KClass<*> get() = KotlinxReflect.classForName(qualifiedName.value)
+val TypeDefinition.clazz: KClass<*> get() = KotlinxReflect.classForName(qualifiedName.value)
 
 fun SingletonType.objectInstance(): Any {
     try {

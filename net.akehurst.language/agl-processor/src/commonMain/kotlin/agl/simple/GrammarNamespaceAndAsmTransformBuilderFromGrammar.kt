@@ -20,8 +20,6 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.plus
-import net.akehurst.language.collections.toOrderedSet
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationPart
@@ -39,6 +37,7 @@ import net.akehurst.language.transform.asm.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.DataTypeSimple
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StructuredTypeSimpleAbstract
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import kotlin.reflect.KClass
 
@@ -225,7 +224,7 @@ internal class Grammar2TransformRuleSet(
 
         val EXPRESSION_CHILDREN = RootExpressionSimple("children")
 
-        private fun List<TransformationRule>.allOfType(typeDecl: TypeDeclaration) = this.all { it.resolvedType.declaration == typeDecl }
+        private fun List<TransformationRule>.allOfType(typeDecl: TypeDefinition) = this.all { it.resolvedType.declaration == typeDecl }
         private fun List<TransformationRule>.allOfTypeIs(klass: KClass<*>) = this.all { klass.isInstance(it.resolvedType.declaration) }
         private fun List<TransformationRule>.allTupleTypesMatch() =
             1 == this.map { tr -> (tr.resolvedType as TupleTypeInstance).typeArguments.toSet() }.toSet().size
@@ -287,8 +286,11 @@ internal class Grammar2TransformRuleSet(
 
     private fun builderForEmbedded(ruleItem: Embedded): Grammar2Namespaces {
         val embGrammar = ruleItem.embeddedGrammarReference.resolved!!
-        val g2ns = Grammar2Namespaces(issues, typeModel, transModel, embGrammar, grm2Ns, this.configuration)
-        g2ns.build()
+        val g2ns:Grammar2Namespaces = grm2Ns[embGrammar.qualifiedName] ?: let {
+            val x = Grammar2Namespaces(issues, typeModel, transModel, embGrammar, grm2Ns, this.configuration)
+            x.build()
+            x
+        }
         grammarTypeNamespace.addImport(Import(g2ns.tpNs!!.qualifiedName.value))
         return g2ns
     }
@@ -415,7 +417,7 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         else -> {
-                            val subType = grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+                            val subType = grammarTypeNamespace.findOwnedOrCreateUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                             val options = subtypeTransforms.mapIndexed { idx, it ->
                                 WhenOptionSimple(
                                     condition = InfixExpressionSimple(
@@ -433,7 +435,7 @@ internal class Grammar2TransformRuleSet(
                     }
 
                     else -> {
-                        val subType = grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+                        val subType = grammarTypeNamespace.findOwnedOrCreateUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                         val options = subtypeTransforms.mapIndexed { idx, it ->
                             WhenOptionSimple(
                                 condition = InfixExpressionSimple(
@@ -617,7 +619,7 @@ internal class Grammar2TransformRuleSet(
                 EXPRESSION_CHILD(0)
             )
 
-            subtypeTransforms.allOfTypeIs(DataType::class) -> grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+            subtypeTransforms.allOfTypeIs(DataType::class) -> grammarTypeNamespace.findOwnedOrCreateUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 .toSubtypeTrRule()
 
             subtypeTransforms.allOfType(SimpleTypeModelStdLib.List) -> { //=== PrimitiveType.LIST } -> {
@@ -636,7 +638,7 @@ internal class Grammar2TransformRuleSet(
             }
 
             else -> {
-                val subType = grammarTypeNamespace.createUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
+                val subType = grammarTypeNamespace.findOwnedOrCreateUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                 val options = subtypeTransforms.mapIndexed { idx, it ->
                     WhenOptionSimple(
                         condition = InfixExpressionSimple(
@@ -664,14 +666,27 @@ internal class Grammar2TransformRuleSet(
         this._grRuleItemToTrRule[ruleItem] = tr
 
         //create dummy DataType to hold property defs
-        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
+        val ttSub = object: StructuredTypeSimpleAbstract(){
+            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
+
+            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+                TODO("not implemented")
+            }
+            override fun cloneTo(other: TypeModel): StructuredType {
+                TODO("not implemented")
+            }
+        }
+        //val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
         val asses = items.mapIndexedNotNull { idx, it -> createPropertyDeclarationAndAssignment(ttSub, it, idx) }
+        val props = ttSub.property
+        //grammarTypeNamespace.removeDefinition(ttSub)
 
         assignments.addAll(asses)
-        typeArgs.addAll(ttSub.property.map { TypeArgumentNamedSimple(it.name, it.typeInstance) })
+        typeArgs.addAll(props.map { TypeArgumentNamedSimple(it.name, it.typeInstance) })
 
         return when {
-            ttSub.allProperty.isEmpty() -> {
+            props.isEmpty() -> {
                 val trn = SimpleTypeModelStdLib.NothingType.toNoActionTrRule()
                 this._grRuleItemToTrRule[ruleItem] = tr
                 trn
@@ -818,7 +833,18 @@ internal class Grammar2TransformRuleSet(
         */
 
     private fun trRuleForGroupContentOptional(optItem: OptionalItem): TransformationRule {
-        val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
+        val ttSub = object: StructuredTypeSimpleAbstract(){
+            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
+
+            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+                TODO("not implemented")
+            }
+            override fun cloneTo(other: TypeModel): StructuredType {
+                TODO("not implemented")
+            }
+        }
+       //val ttSub = DataTypeSimple(grammarTypeNamespace, SimpleName("TupleTypeSubstitute-${tupleCount++}"))
         val assignment = createPropertyDeclarationAndAssignment(ttSub, optItem.item, 0)
         return if (null == assignment) {
             grammarTypeNamespace.createTupleTypeInstance(emptyList(), false).toNoActionTrRule()
@@ -1093,7 +1119,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun propertyNameFor(et: StructuredType, ruleItem: RuleItem, ruleItemType: TypeDeclaration): PropertyName {
+    private fun propertyNameFor(et: StructuredType, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
         return when (configuration) {
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
