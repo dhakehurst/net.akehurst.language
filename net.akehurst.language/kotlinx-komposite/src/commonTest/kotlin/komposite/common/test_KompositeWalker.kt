@@ -17,7 +17,7 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
@@ -72,7 +72,7 @@ class test_KompositeWalker {
         }
 
         val data = null
-        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(nullable = false)
+        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(isNullable = false)
         sut.walk(WalkInfo(null, ""), data, type)
 
         val expected = "null:Nothing"
@@ -99,7 +99,7 @@ class test_KompositeWalker {
         }
 
         val data = null
-        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(nullable = true)
+        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(isNullable = true)
         sut.walk(WalkInfo(null, ""), data, type)
 
         val expected = "null:String"
@@ -325,7 +325,7 @@ class test_KompositeWalker {
             "b" to 2,
             "c" to 3
         )
-        val type = SimpleTypeModelStdLib.Map.type(typeArguments = listOf(SimpleTypeModelStdLib.String.asTypeArgument, SimpleTypeModelStdLib.Integer.asTypeArgument))
+        val type = StdLibDefault.Map.type(typeArguments = listOf(StdLibDefault.String.asTypeArgument, StdLibDefault.Integer.asTypeArgument))
         sut.walk(WalkInfo("", ""), data, type)
         val expected = "Map<String,Integer> { ['a':String] = 1:Integer, ['b':String] = 2:Integer, ['c':String] = 3:Integer }"
         assertEquals(expected, result)
@@ -335,7 +335,7 @@ class test_KompositeWalker {
     fun walk_object_primitive_property_no_type() {
         val reg = DatatypeRegistry()
         val tm = typeModel("Test",true) {
-            namespace("net.akehurst.language.komposite.common", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value)) {
+            namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
                 dataType("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
@@ -376,7 +376,7 @@ class test_KompositeWalker {
     fun walk_object_primitive_property_with_type() {
         val reg = DatatypeRegistry()
         val tm = typeModel("Test",true) {
-            namespace("net.akehurst.language.komposite.common", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value)) {
+            namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
                 dataType("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }

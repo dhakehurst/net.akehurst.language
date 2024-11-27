@@ -18,7 +18,6 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
@@ -98,15 +97,10 @@ grammar Mdl {
                 dataType("parameter", "Parameter") {
                     supertypes("Content")
                     propertyPrimitiveType("identifier", "String", false, 0)
-                    propertyUnnamedSuperType("value", false, 1) {
-                        typeRef("StringList")
-                        typeRef("Matrix")
-                        typeRef("Identifier")
-                        typeRef("String")
-                    }
+                    propertyUnionTypeOf("value", "Value",false, 1)
                 }
                 //value = stringList | matrix | identifier | literal ;
-                unnamedSuperTypeType("value") {
+                unionType("value","Value") {
                     typeRef("StringList")
                     typeRef("Matrix")
                     typeRef("Identifier")
@@ -119,14 +113,11 @@ grammar Mdl {
                 //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 dataType("matrix", "Matrix") {
                     propertyListType("row", false, 1) {
-                        unnamedSuperTypeOf() {
-                            listSeparatedType(false) { ref("String");ref("String") }
-                            listType(false) { ref("String") }
-                        }
+                        ref("Row")
                     }
                 }
                 //row = [literal / ',']+ | literal+ ;
-                unnamedSuperTypeType("row") {
+                unionType("row","Row") {
                     listSeparatedType(false) { ref("String");ref("String") }
                     listType(false) { ref("String") }
                 }

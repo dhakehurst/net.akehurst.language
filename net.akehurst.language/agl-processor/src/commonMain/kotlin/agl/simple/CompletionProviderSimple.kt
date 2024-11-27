@@ -29,7 +29,7 @@ import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class CompletionProviderSimple(
     val targetGrammar: Grammar,
@@ -76,7 +76,7 @@ class CompletionProviderSimple(
                 else -> TODO()
             }
             //val tiType = targetNamespace.findTypeUsageForRule()
-            val tiType = SimpleTypeModelStdLib.String.declaration
+            val tiType = StdLibDefault.String.declaration
             grammar2TypeModel.propertyNameFor(targetGrammar, ri, tiType)
         }
         return when (prop) {
@@ -88,7 +88,7 @@ class CompletionProviderSimple(
                 val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                 val items = refTypes.flatMap { refType ->
                     context.rootScope.findItemsConformingTo {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
                         itemType.conformsTo(refType)
                     }
                 }

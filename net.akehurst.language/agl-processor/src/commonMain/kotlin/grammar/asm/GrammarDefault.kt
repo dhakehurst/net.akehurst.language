@@ -16,7 +16,6 @@
 
 package net.akehurst.language.grammar.asm
 
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
@@ -24,7 +23,6 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib.import
 
 
 class GrammarModelDefault(

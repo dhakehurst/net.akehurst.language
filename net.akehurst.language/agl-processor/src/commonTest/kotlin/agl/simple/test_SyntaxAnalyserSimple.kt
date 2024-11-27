@@ -20,7 +20,6 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches

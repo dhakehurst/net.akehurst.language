@@ -90,6 +90,9 @@ class test_ExpressionsLanguage {
             // cast
             "a as B",
             "a.b.c as D",
+            "a.b.c as D<A>",
+            "a.b.c as D<A,B,C>",
+            "a.b.c as D<A,B<F>,C<H,H>>",
             //group
             "(a)",
             "(a+b)-c",

@@ -20,7 +20,7 @@ package net.akehurst.language.base.processor
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglBase {
@@ -103,7 +103,7 @@ namespace net.akehurst.language.base.asm
     /** implemented as kotlin classes **/
     val typeModel: TypeModel by lazy {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
-        typeModel("Base", true, listOf(SimpleTypeModelStdLib)) {
+        typeModel("Base", true, listOf(StdLibDefault)) {
             namespace("net.akehurst.language.base.api", listOf("std")) {
                 interfaceType("PublicValueType") {}
                 valueType("SimpleName") {

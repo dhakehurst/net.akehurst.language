@@ -30,6 +30,10 @@ class OptionHolderDefault(
     }
 
     override fun clone(parent: OptionHolder?): OptionHolder = OptionHolderDefault(parent, this.options)
+
+    override fun toString(): String {
+        return options.entries.joinToString { (k,v) -> "${k}: ${v}" }
+    }
 }
 
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(

@@ -179,8 +179,8 @@ class TransformRuleSetDefault(
         (this.extends as MutableList).add(other)
     }
 
-    override fun addRule(tr: TransformationRule) {
-        (rules as MutableMap)[tr.grammarRuleName] = tr
+    override fun setRule(rule: TransformationRule) {
+        (rules as MutableMap)[rule.grammarRuleName] = rule
     }
 
     override fun asString(indent: Indent): String {

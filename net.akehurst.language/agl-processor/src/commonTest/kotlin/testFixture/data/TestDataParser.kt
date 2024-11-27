@@ -2,12 +2,15 @@ package testFixture.data
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.builder.AsmSimpleBuilder
+import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.sentence.api.InputLocation
 //copied from parser
 interface TestDataParserSentence {
     val sentence: String
+    val goal:String
 }
 
 fun parseError(pos:Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
@@ -21,12 +24,14 @@ data class TestDataParseIssue(
 
 open class TestDataParserSentencePass(
     override val sentence: String,
+    override val goal: String,
     val expectedNumGSSHeads: Int,
     val expectedSppt: List<String>
 ) : TestDataParserSentence
 
 class TestDataParserSentenceFail(
     override val sentence: String,
+    override val goal: String,
     val expectedIssues: Set<TestDataParseIssue>
 ) : TestDataParserSentence {
     val expected: Set<LanguageIssue> = expectedIssues.map {
@@ -43,13 +48,18 @@ class TestDataParser(
 ) {
 }
 
+class TestSuit(
+    val testData:List<TestDataProcessor>
+) {
+    operator fun get(index:String) = testData.first { it.description == index }
+}
+
 // new
 class TestDataProcessor(
     val description: String,
     val grammarStr: String,
-    val transformStr: String,
-    val referenceStr: String,
-    var goal: String,
+    val transformStr: String?,
+    val referenceStr: String?,
     val sentences: List<TestDataProcessorSentence>
 ) {
 }
@@ -59,7 +69,103 @@ interface TestDataProcessorSentence : TestDataParserSentence{
 
 class TestDataProcessorSentencePass(
     override val sentence: String,
+    override val goal: String,
     val expectedAsm: Asm
 ) : TestDataProcessorSentence {
 
+}
+
+class TestDataProcessorSentenceFail(
+    override val sentence: String,
+    override val goal: String,
+    val expected: List<LanguageIssue>
+) : TestDataProcessorSentence {
+
+}
+
+fun testSuit(init:TestSuitBuilder.()->Unit):TestSuit {
+    val b = TestSuitBuilder()
+    b.init()
+    return b.build()
+}
+
+@DslMarker
+annotation class AsmTestDataBuilderMarker
+
+@AsmTestDataBuilderMarker
+class TestSuitBuilder() {
+    private val _testData = mutableListOf<TestDataProcessor>()
+
+    fun testData(description:String, init:TestDataBuilder.()->Unit) {
+        val b = TestDataBuilder(description)
+        b.init()
+        val td =  b.build()
+        _testData.add(td)
+    }
+
+    fun build():TestSuit = TestSuit(_testData)
+}
+
+@AsmTestDataBuilderMarker
+class TestDataBuilder(
+   private val _description: String
+) {
+    private lateinit var _grammarStr:String
+    private  var _transformStr:String? = null
+    private  var _referenceStr:String? = null
+    private val _sentences = mutableListOf<TestDataProcessorSentence>()
+
+    fun grammarStr(value:String) {
+        _grammarStr = value
+    }
+
+    fun transformStr(value:String) {
+        _transformStr = value
+    }
+
+    fun referenceStr(value:String) {
+        _referenceStr = value
+    }
+
+    fun sentencePass(sentence:String, goal:String, init:TestDataSentenceBuilder.()->Unit) {
+        val b = TestDataSentenceBuilder(true,sentence,goal)
+        b.init()
+        val td =  b.build()
+        _sentences.add(td)
+    }
+
+    fun build() = TestDataProcessor(
+        _description,
+        _grammarStr,
+        _transformStr,
+        _referenceStr,
+        _sentences
+    )
+}
+
+@AsmTestDataBuilderMarker
+class TestDataSentenceBuilder(
+    val pass:Boolean,
+    val sentence: String,
+    val goal:String
+)  {
+    private var _expectedAsm:Asm = asmSimple {  }
+    private val _expectedIssues = mutableListOf<LanguageIssue>()
+
+    fun expectedAsm(value:Asm) {
+        _expectedAsm = value
+    }
+
+    fun build() = when(pass) {
+        true -> TestDataProcessorSentencePass(
+            sentence,
+            goal,
+            _expectedAsm
+        )
+        false -> TestDataProcessorSentenceFail(
+            sentence,
+            goal,
+            _expectedIssues
+        )
+    }
 }

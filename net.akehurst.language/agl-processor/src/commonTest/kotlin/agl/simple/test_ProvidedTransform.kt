@@ -11,6 +11,7 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import testFixture.data.TestDataParserSentence
 import testFixture.data.TestDataProcessor
 import testFixture.data.TestDataProcessorSentencePass
+import testFixture.data.testSuit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,9 +19,9 @@ import kotlin.test.assertTrue
 class test_ProvidedTransform {
 
     companion object {
-        fun processor(grammarStr: String, transformStr: String) = Agl.processorFromStringSimple(
+        fun processor(grammarStr: String, transformStr: String?) = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr),
-            transformStr = TransformString(transformStr),
+            transformStr = transformStr?.let{TransformString(it)},
             grammarAglOptions = Agl.options {
                 semanticAnalysis {
                     context(ContextFromGrammarRegistry(Agl.registry))
@@ -31,11 +32,11 @@ class test_ProvidedTransform {
 
         fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
             println("'${sd.sentence}'")
-            val res = proc.process(sd.sentence)
-
             when (sd) {
                 is TestDataProcessorSentencePass -> {
-                    val asmRes = proc.process(sd.sentence)
+                    val asmRes = proc.process(sd.sentence, Agl.options {
+                        this.parse { goalRuleName(sd.goal) }
+                    })
                     assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
                     val actual = asmRes.asm!!
                     assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
@@ -47,10 +48,15 @@ class test_ProvidedTransform {
 
         }
 
-        fun testPass(testData: TestDataProcessor, sentenceIndex: Int? = null) {
+        fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
             val procRes = processor(testData.grammarStr, testData.transformStr)
             assertTrue(procRes.issues.isEmpty(), procRes.issues.toString())
             val proc = procRes.processor!!
+
+            println("--- TypeDomain ---")
+            println(proc.typeModel.asString())
+            println("--- Asm Transform ---")
+            println(proc.asmTransformModel.asString())
 
             if (null == sentenceIndex) {
                 for (sd in testData.sentences) {
@@ -62,39 +68,32 @@ class test_ProvidedTransform {
             }
         }
 
-        val testData = listOf(
-            TestDataProcessor(
-                "One Grammar, rewrite root rule",
-                grammarStr = """
+        val testData  = testSuit {
+            testData("One Grammar, rewrite root rule") {
+                grammarStr("""
                     namespace test
                       grammar Test {
                         S = a ;
                         leaf a = 'a';
                       }
-                """.trimIndent(),
-                transformStr = """
+                """.trimIndent())
+                transformStr( """
                     #create-missing-types
                     namespace test
                       transform Test {
                         S : XXX() { yyy := child[0] }
                       }
-                """.trimIndent(),
-                "",
-                "S",
-                listOf(
-                    TestDataProcessorSentencePass(
-                        "a",
-                        asmSimple {
-                            element("XXX") {
-                                propertyString("yyy","a")
-                            }
+                """.trimIndent())
+                sentencePass("a", "S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyString("yyy", "a")
                         }
-                    )
-                )
-            ),
-            TestDataProcessor(
-                "Rewrite root only",
-                grammarStr = """
+                    })
+                }
+            }
+            testData("Rewrite root only") {
+                grammarStr("""
                     namespace test
                       grammar Test {
                         S = A | B ;
@@ -103,44 +102,65 @@ class test_ProvidedTransform {
                         leaf a = 'a';
                         leaf b = 'b';
                       }
-                """.trimIndent(),
-                transformStr = """
+                """.trimIndent())
+                transformStr( """
                     #create-missing-types
                     namespace test
                       transform Test {
                         #override-default-transform
                         S : XXX() { yyy := child[0] }
                       }
-                """.trimIndent(),
-                "",
-                "S",
-                listOf(
-                    TestDataProcessorSentencePass(
-                        "aa",
-                        asmSimple {
-                            element("XXX") {
-                                propertyElementExplicitType("yyy","A") {
-                                    propertyString("a","a")
-                                    propertyString("a2","a")
-                                }
+                """.trimIndent())
+                sentencePass("aa","S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyElementExplicitType("yyy", "A") {
+                                propertyString("a", "a")
+                                propertyString("a2", "a")
                             }
                         }
-                    ),
-                    TestDataProcessorSentencePass(
-                        "bb",
-                        asmSimple {
-                            element("XXX") {
-                                propertyElementExplicitType("yyy","B") {
-                                    propertyString("b","b")
-                                }
+                    })
+                }
+                sentencePass("bb","S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyElementExplicitType("yyy", "B") {
+                                propertyString("b", "b")
                             }
                         }
-                    )
+                    })
+                }
+            }
+            testData("override default, change type name of root rule") {
+                grammarStr(
+                    """
+                    namespace test
+                      grammar Test {
+                        S = a ;
+                        leaf a = 'a';
+                      }
+                """.trimIndent()
                 )
-            ),
-            TestDataProcessor(
-                "override in transform. Rewrite Root and one choice",
-                grammarStr = """
+                transformStr(
+                    """
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                      transform Test {
+                        S : XXX
+                      }
+                """.trimIndent()
+                )
+                sentencePass("a", "S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyString("a", "a")
+                        }
+                    })
+                }
+            }
+            testData("override in transform. Rewrite Root and one choice") {
+                grammarStr("""
                     namespace test
                       grammar Test {
                         S = A | B ;
@@ -149,8 +169,8 @@ class test_ProvidedTransform {
                         leaf a = 'a';
                         leaf b = 'b';
                       }
-                """.trimIndent(),
-                transformStr = """
+                """.trimIndent())
+                transformStr("""
                     #create-missing-types
                     namespace test
                       transform Test {
@@ -158,33 +178,26 @@ class test_ProvidedTransform {
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
                       }
-                """.trimIndent(),
-                "",
-                "S",
-                listOf(
-                    TestDataProcessorSentencePass(
-                        "aa",
-                        asmSimple {
-                            element("XXX") {
-                                propertyString("yyy","a")
+                """.trimIndent())
+                sentencePass("aa","S") {
+                    expectedAsm( asmSimple {
+                        element("XXX") {
+                            propertyString("yyy", "a")
+                        }
+                    })
+                }
+                sentencePass("bb","S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyElementExplicitType("yyy", "B") {
+                                propertyString("b", "b")
                             }
                         }
-                    ),
-                    TestDataProcessorSentencePass(
-                        "bb",
-                        asmSimple {
-                            element("XXX") {
-                                propertyElementExplicitType("yyy","B") {
-                                    propertyString("b","b")
-                                }
-                            }
-                        }
-                    )
-                )
-            ),
-            TestDataProcessor(
-                "override in unit. Rewrite Root and one choice",
-                grammarStr = """
+                    })
+                }
+            }
+            testData("override in unit. Rewrite Root and one choice") {
+                grammarStr("""
                     namespace test
                       grammar Test {
                         S = A | B ;
@@ -193,8 +206,8 @@ class test_ProvidedTransform {
                         leaf a = 'a';
                         leaf b = 'b';
                       }
-                """.trimIndent(),
-                transformStr = """
+                """.trimIndent())
+                transformStr("""
                     #create-missing-types
                     #override-default-transform
                     namespace test
@@ -202,52 +215,41 @@ class test_ProvidedTransform {
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
                       }
-                """.trimIndent(),
-                "",
-                "S",
-                listOf(
-                    TestDataProcessorSentencePass(
-                        "aa",
-                        asmSimple {
-                            element("XXX") {
-                                propertyString("yyy","a")
+                """.trimIndent())
+                sentencePass("aa","S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyString("yyy", "a")
+                        }
+                    })
+                }
+                sentencePass("bb","S") {
+                    expectedAsm(asmSimple {
+                        element("XXX") {
+                            propertyElementExplicitType("yyy", "B") {
+                                propertyString("b", "b")
                             }
                         }
-                    ),
-                    TestDataProcessorSentencePass(
-                        "bb",
-                        asmSimple {
-                            element("XXX") {
-                                propertyElementExplicitType("yyy","B") {
-                                    propertyString("b","b")
-                                }
-                            }
-                        }
-                    )
-                )
-            )
-        )
+                    })
+                }
+            }
+        }
+
 
     }
 
     @Test
-    fun transform_for_user_goal_one_rule_one_leaf() {
-        testPass(testData[0])
+    fun testAll() {
+        testData.testData.forEach {
+            println("=== ${it.description} ===")
+            doTest(it)
+        }
     }
 
     @Test
-    fun transform_for_user_goal_three_rule_two_leaf() {
-        testPass(testData[1])
+    fun single() {
+        doTest(testData["One Grammar, rewrite root rule"])
     }
 
-    @Test
-    fun t3() {
-        testPass(testData[2])
-    }
-
-    @Test
-    fun t4() {
-        testPass(testData[3])
-    }
 
 }

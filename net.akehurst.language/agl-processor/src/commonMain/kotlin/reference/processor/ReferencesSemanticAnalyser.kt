@@ -34,7 +34,7 @@ import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
@@ -138,7 +138,7 @@ class ReferencesSemanticAnalyser(
                 else -> {
                     val identifyingProperty = _typeResolver!!.typeFor(identifiedBy, identifiedType.type())
                     when (identifyingProperty) {
-                        SimpleTypeModelStdLib.NothingType -> {
+                        StdLibDefault.NothingType -> {
                             raiseError(
                                 ReferencesSyntaxAnalyser.PropertyValue(identifiable, "expression"),
                                 "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
@@ -196,7 +196,7 @@ class ReferencesSemanticAnalyser(
         }
         val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
         when (collTypeInstance.declaration) {
-            SimpleTypeModelStdLib.NothingType -> {
+            StdLibDefault.NothingType -> {
                 TODO()
             }
 
@@ -208,7 +208,7 @@ class ReferencesSemanticAnalyser(
                         null == ofType -> error("Should not happen, checked above.")
                         //TODO: needs a conforms to to check transitive closure of supertypes
                         loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.declaration == loopVarType } -> ofType //no error
-                        loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.declaration == ofType } -> ofType
+                        loopVarType is UnionType && loopVarType.alternatives.any { it.declaration == ofType } -> ofType
                         else -> {
                             raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
                             null

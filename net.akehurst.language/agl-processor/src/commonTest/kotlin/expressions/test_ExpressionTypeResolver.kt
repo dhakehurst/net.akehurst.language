@@ -21,7 +21,7 @@ import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,7 +49,7 @@ class test_ExpressionTypeResolver {
         val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
-        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
+        assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
     }
 
     @Test
@@ -72,7 +72,7 @@ class test_ExpressionTypeResolver {
         val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
-        assertEquals(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String.asTypeArgument)), actual)
+        assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
     }
 
     @Test
@@ -95,7 +95,30 @@ class test_ExpressionTypeResolver {
         val typeResolver = ExpressionTypeResolver(tm,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
-        assertEquals(SimpleTypeModelStdLib.String, actual)
+        assertEquals(StdLibDefault.String, actual)
+    }
+
+    @Test
+    fun typeOfExpressionStr__list_join_as_String() {
+
+        val tm = typeModel("Test", true) {
+            namespace("test") {
+                dataType("Test") {
+                    propertyListType("list", false, 0) {
+                        this.ref("String")
+                    }
+                }
+            }
+        }
+        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
+
+        val expression = "list.join as String"
+
+        val issues = IssueHolder(LanguageProcessorPhase.ALL)
+        val typeResolver = ExpressionTypeResolver(tm,issues)
+        val actual = typeResolver.typeOfExpressionStr(expression,dt)
+
+        assertEquals(StdLibDefault.String, actual)
     }
 
 }

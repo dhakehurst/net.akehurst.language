@@ -25,7 +25,6 @@ import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
@@ -33,7 +32,7 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 typealias CreateReferableFunction = (ref: String, AsmStructure) -> Unit?
 
@@ -211,13 +210,13 @@ class ScopeCreator(
     }
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
-        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
 
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
-        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
 

@@ -25,7 +25,7 @@ import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
 
@@ -194,7 +194,7 @@ abstract class AsmValueAbstract() : AsmValue {
 }
 
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
-    override val qualifiedTypeName: QualifiedName get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+    override val qualifiedTypeName: QualifiedName get() = StdLibDefault.NothingType.qualifiedTypeName
     override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmNothing -> false
@@ -217,7 +217,7 @@ class AsmAnySimple(
         fun stdAny(value: Any) = AsmAnySimple(value)
     }
 
-    override val qualifiedTypeName: QualifiedName get() = SimpleTypeModelStdLib.AnyType.qualifiedTypeName
+    override val qualifiedTypeName: QualifiedName get() = StdLibDefault.AnyType.qualifiedTypeName
 
     override fun asString(currentIndent: String, indentIncrement: String): String = "AsmAny($value)"
     override fun equalTo(other: AsmValue): Boolean = when {
@@ -242,10 +242,10 @@ class AsmPrimitiveSimple(
 ) : AsmValueAbstract(), AsmPrimitive {
 
     companion object {
-        fun stdString(value: String) = AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, value)
-        fun stdBoolean(value: Boolean) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, value)
-        fun stdInteger(value: Int) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, value)
-        fun stdReal(value: Double) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, value)
+        fun stdString(value: String) = AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, value)
+        fun stdBoolean(value: Boolean) = AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, value)
+        fun stdInteger(value: Int) = AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, value)
+        fun stdReal(value: Double) = AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, value)
     }
 
     override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
@@ -266,8 +266,8 @@ class AsmPrimitiveSimple(
     override fun toString(): String = "$qualifiedTypeName($value)"
 }
 
-val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.String.qualifiedTypeName
-val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == SimpleTypeModelStdLib.Integer.qualifiedTypeName
+val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName == StdLibDefault.String.qualifiedTypeName
+val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == StdLibDefault.Integer.qualifiedTypeName
 val AsmValue.isNothing get() = this is AsmNothing
 
 class AsmReferenceSimple(
@@ -277,7 +277,7 @@ class AsmReferenceSimple(
 
     override val qualifiedTypeName: QualifiedName
         get() = when (value) {
-            null -> SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+            null -> StdLibDefault.NothingType.qualifiedTypeName
             else -> value!!.qualifiedTypeName
         }
 
@@ -481,7 +481,7 @@ class AsmStructurePropertySimple(
 class AsmListSimple(
     override val elements: List<AsmValue>
 ) : AsmValueAbstract(), AsmList {
-    override val qualifiedTypeName get() = SimpleTypeModelStdLib.List.qualifiedName
+    override val qualifiedTypeName get() = StdLibDefault.List.qualifiedName
 
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
@@ -511,7 +511,7 @@ class AsmListSimple(
 class AsmListSeparatedSimple(
     override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 ) : AsmValueAbstract(), AsmListSeparated {
-    override val qualifiedTypeName get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
+    override val qualifiedTypeName get() = StdLibDefault.ListSeparated.qualifiedName
 
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
@@ -542,7 +542,7 @@ class AsmLambdaSimple(
     val func: (it: AsmValue) -> AsmValue
 ) : AsmValueAbstract(), AsmLambda {
 
-    override val qualifiedTypeName = SimpleTypeModelStdLib.Lambda.qualifiedTypeName
+    override val qualifiedTypeName = StdLibDefault.Lambda.qualifiedTypeName
 
     override fun invoke(args: Map<String, AsmValue>): AsmValue {
         val it = args["it"]!!

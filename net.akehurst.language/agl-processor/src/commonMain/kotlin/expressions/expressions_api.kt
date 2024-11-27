@@ -17,10 +17,7 @@
 
 package net.akehurst.language.expressions.api
 
-import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
-import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.*
 
 interface Expression {
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String
@@ -104,7 +101,15 @@ interface InfixExpression : Expression {
 
 interface CastExpression  : Expression {
     val expression: Expression
-    val targetTypeName:PossiblyQualifiedName
+    val targetType:TypeReference
+}
+
+interface TypeReference {
+    val possiblyQualifiedName:PossiblyQualifiedName
+    val typeArguments:List<TypeReference>
+    val isNullable:Boolean
+
+    fun asString(indent: Indent, imports: List<Import>): String
 }
 
 interface GroupExpression : Expression {

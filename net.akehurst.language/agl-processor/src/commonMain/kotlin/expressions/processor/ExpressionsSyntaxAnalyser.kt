@@ -17,11 +17,9 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
@@ -29,7 +27,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 
@@ -63,10 +61,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::methodCall)
         super.register(this::argumentList)
         super.register(this::lambda)
-        super.register(this::indexOperation)
-        super.register(this::indexList)
         super.register(this::propertyReference)
         super.register(this::methodReference)
+        super.register(this::indexOperation)
+        super.register(this::indexList)
+        super.register(this::typeReference)
+        super.register(this::typeArgumentList)
         super.register(this::literal)
     }
 
@@ -99,10 +99,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option.asIndex) {
-        0 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
-        1 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, (children[0] as String).toInt())
-        2 -> LiteralExpressionSimple(SimpleTypeModelStdLib.Real.qualifiedTypeName, (children[0] as String).toDouble())
-        3 -> LiteralExpressionSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, (children[0] as String).trim('\''))
+        0 -> LiteralExpressionSimple(StdLibDefault.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
+        1 -> LiteralExpressionSimple(StdLibDefault.Integer.qualifiedTypeName, (children[0] as String).toInt())
+        2 -> LiteralExpressionSimple(StdLibDefault.Real.qualifiedTypeName, (children[0] as String).toDouble())
+        3 -> LiteralExpressionSimple(StdLibDefault.String.qualifiedTypeName, (children[0] as String).trim('\''))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
@@ -200,10 +200,10 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return WhenOptionSimple(condition, expression)
     }
 
-    // cast = expression 'as' possiblyQualifiedName ;
+    // cast = expression 'as' typeReference ;
     private fun cast(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CastExpression {
         val expression = children[0] as Expression
-        val pqn = children[2] as PossiblyQualifiedName
+        val pqn = children[2] as TypeReference
         return CastExpressionSimple( expression,pqn)
     }
 
@@ -256,5 +256,20 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     //methodReference = IDENTIFIER ;
     private fun methodReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0] as String
+
+    // typeReference = possiblyQualifiedName typeArgumentList? '?'?;
+    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) : TypeReference {
+        val pqn = children[0] as PossiblyQualifiedName
+        val targs = (children[1] as List<TypeReference>?) ?: emptyList()
+        val isNullable = children[2] != null
+        return TypeReferenceSimple(pqn, targs, isNullable)
+    }
+
+    // typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+    private fun typeArgumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) : List<TypeReference> {
+        val list = children[1] as List<Any>
+        val slist = list.toSeparatedList<Any,TypeReference,String>()
+        return slist.items
+    }
 
 }

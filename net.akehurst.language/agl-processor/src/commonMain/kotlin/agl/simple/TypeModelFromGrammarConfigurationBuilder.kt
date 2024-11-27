@@ -55,7 +55,7 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
         }.replaceFirstChar { it.lowercase() }
         val name = when (ruleItemType) {
             is PrimitiveType -> baseName
-            is UnnamedSupertypeType -> baseName
+            is UnionType -> baseName
             is CollectionType -> when (ruleItem) {
                 is NonTerminal -> ruleItem.ruleReference.value.lower()
                 is Terminal -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value

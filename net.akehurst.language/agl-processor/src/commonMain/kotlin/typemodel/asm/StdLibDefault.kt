@@ -22,7 +22,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.typemodel.api.*
 
-object SimpleTypeModelStdLib : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
+object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
     override val qualifiedName: QualifiedName = QualifiedName("std")
 

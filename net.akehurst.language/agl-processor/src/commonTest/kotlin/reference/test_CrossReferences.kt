@@ -32,7 +32,7 @@ import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,7 +46,7 @@ class test_CrossReferences {
         fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
             val grammarMdl = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
-            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+            grmrTypeModel.addNamespace(StdLibDefault)
             TransformDomainDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }

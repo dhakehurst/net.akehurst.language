@@ -17,7 +17,6 @@
 
 package net.akehurst.language.transform.processor
 
-import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.expressions.asm.AssignmentStatementSimple
@@ -38,7 +37,6 @@ import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.transform.asm.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class AsmTransformSyntaxAnalyser(
 ) : SyntaxAnalyserByMethodRegistrationAbstract<TransformModel>() {
@@ -119,7 +117,7 @@ class AsmTransformSyntaxAnalyser(
             val extendRefs = extends.map { TransformRuleSetReferenceDefault(namespace, it) }
             val asm = TransformRuleSetDefault(namespace, name, extendRefs, optHolder, rules)
             typeImports.forEach { asm.addImportType(it) }
-            rules.forEach { asm.addRule(it) }
+            rules.forEach { asm.setRule(it) }
             asm
         }
     }

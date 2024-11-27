@@ -17,7 +17,6 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -28,8 +27,6 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 
 class ExpressionsSemanticAnalyser(
 ) : SemanticAnalyser<Expression, SentenceContext<String>> {

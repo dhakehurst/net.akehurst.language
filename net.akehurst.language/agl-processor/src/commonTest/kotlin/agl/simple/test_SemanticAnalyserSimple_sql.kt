@@ -97,7 +97,7 @@ grammar SQL {
 }
         """.trimIndent())
         val crossReferenceModelStr = CrossReferenceString("""
-            namespace net.akehurst.language.SQL {
+            namespace net.akehurst.language.SQL
                 identify TableDefinition by table-id
                 scope TableDefinition {
                     identify ColumnDefinition by column-id
@@ -122,7 +122,6 @@ grammar SQL {
                         }
                     }
                 }
-            }
         """.trimIndent())
         val processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = (grammarStr),

@@ -31,5 +31,5 @@ interface GrammarTypeNamespace : TypeNamespace {
 
     fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance?
 
-    //fun asString(): String
+    fun setTypeForGrammarRule(grammarRuleName: GrammarRuleName, typeUse: TypeInstance)
 }

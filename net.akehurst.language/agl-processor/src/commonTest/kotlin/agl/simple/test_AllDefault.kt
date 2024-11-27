@@ -20,7 +20,6 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.agl.processor.LanguageProcessorAbstract
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
@@ -39,7 +38,7 @@ import net.akehurst.language.transform.builder.AsmTransformRuleSetBuilder
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.transform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -715,7 +714,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     tupleType {
                         typeRef("a", "A", false)
                         typeRef("b", "B", false)
@@ -751,8 +750,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S","S", """
                 when {
                   0==§alternative -> tuple { a:=child[0] b:=child[1] }
                   1==§alternative -> tuple { c:=child[0] d:=child[1] }
@@ -1147,8 +1146,15 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
-                unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
+                unionType("B", "B"){
+                    typeRef("String",false)
+                    typeRef("D")
+                }
+                unionType("S", "S") {
+                    typeRef("A",false)
+                    typeRef("B",false)
+                    typeRef("C",false)
+                }
                 dataType("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
@@ -1187,8 +1193,8 @@ class test_AllDefault {
             leafStringRule("c")
             leafStringRule("d")
             leafStringRule("x")
-            unnamedSubtypeRule(
-                "B", """
+            unionRule(
+                "B", "B", """
                 when {
                   0 == §alternative -> with(child[0]) §self
                   1 == §alternative -> with(child[0]) §self
@@ -1197,8 +1203,8 @@ class test_AllDefault {
                 typeRef("String")
                 typeRef("D")
             }
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S", """
                 when {
                   0 == §alternative -> with(child[0]) §self
                   1 == §alternative -> with(child[0]) §self
@@ -1206,10 +1212,7 @@ class test_AllDefault {
                 }""".replace("§", "$")
             ) {
                 typeRef("A")
-                unnamedSuperType {
-                    typeRef("String")
-                    typeRef("D")
-                }
+                typeRef("B")
                 typeRef("C")
             }
         }
@@ -1273,7 +1276,7 @@ class test_AllDefault {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 1)
                 }
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     typeRef("BC")
                     listType(false) {
                         ref("String")
@@ -1292,8 +1295,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S","""
                 when {
                   0 == §alternative -> with(child[0]) §self
                   1 == §alternative -> with(child[0]) children
@@ -1371,7 +1374,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     typeRef("BC")
                     listType(false) {
                         ref("D")
@@ -1397,8 +1400,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S","""
                 when {
                   0 == §alternative -> with(child[0]) §self
                   1 == §alternative -> with(child[0]) children
@@ -1498,15 +1501,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     typeRef("String")
                     typeRef("S1")
                 }
                 dataType("S1", "S1") {
-                    propertyUnnamedSuperType("s", false, 0) {
-                        typeRef("String")
-                        typeRef("S1")
-                    }
+                    propertyDataTypeOf("s", "S",false, 0)
                     propertyPrimitiveType("a", "String", false, 1)
                 }
                 stringTypeFor("a")
@@ -1520,8 +1520,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S","S", """
                 when {
                   0 == §alternative -> with(child[0]) §self
                   1 == §alternative -> with(child[0]) §self
@@ -4543,14 +4543,15 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", false, 1) {
-                        tupleType {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                        typeRef("String")
-                    }
+                    propertyUnionTypeOf("\$choice", "S\$1",false, 1)
                     propertyPrimitiveType("e", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    tupleType {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                    }
+                    typeRef("String")
                 }
                 stringTypeFor("a")
                 stringTypeFor("b")
@@ -4646,17 +4647,18 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", false, 1) {
-                        tupleType {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                        tupleType {
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1", false, 1)
                     propertyPrimitiveType("f", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    tupleType {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                    }
+                    tupleType {
+                        typeRef("d", "String", false)
+                        typeRef("e", "String", false)
+                    }
                 }
                 stringTypeFor("a")
                 stringTypeFor("b")
@@ -4754,17 +4756,18 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", false, 1) {
-                        tupleType {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                        tupleType {
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("f", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    tupleType {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                    }
+                    tupleType {
+                        typeRef("d", "String", false)
+                        typeRef("e", "String", false)
+                    }
                 }
                 stringTypeFor("a")
                 stringTypeFor("b")
@@ -4866,17 +4869,18 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", true, 1) {
-                        tupleType {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                        tupleType {
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1",true, 1)
                     propertyPrimitiveType("f", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    tupleType {
+                        typeRef("b", "String", false)
+                        typeRef("c", "String", false)
+                    }
+                    tupleType {
+                        typeRef("d", "String", false)
+                        typeRef("e", "String", false)
+                    }
                 }
                 stringTypeFor("a")
                 stringTypeFor("b")
@@ -5229,11 +5233,12 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", false, 1) {
-                        typeRef("BC")
-                        listType { ref("String") }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("e", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    typeRef("BC")
+                    listType { ref("String") }
                 }
                 dataType("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -5357,11 +5362,12 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", true, 1) {
-                        typeRef("BC")
-                        listType { ref("String") }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1",true, 1)
                     propertyPrimitiveType("e", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    typeRef("BC")
+                    listType { ref("String") }
                 }
                 dataType("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
@@ -5487,7 +5493,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5513,8 +5519,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S","""
                     when {
                         0 == §alternative -> tuple { a := child[0] b:= child[1] }
                         1 == §alternative -> tuple { c := child[0] d:= child[1] e := child[2] }
@@ -5591,7 +5597,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("a", "String", false)
@@ -5621,8 +5627,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S","""
                     when {
                         0 == §alternative -> tuple { §group := with(child[0]) tuple { a := child[0] b:= child[1] } }
                         1 == §alternative -> tuple { §group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
@@ -5708,7 +5714,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("a", "String", false)
@@ -5738,8 +5744,8 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule(
-                "S", """
+            unionRule(
+                "S", "S","""
                     when {
                         0 == §alternative -> tuple { §group := with(child[0]) tuple { a := child[0] b:= child[1] } }
                         1 == §alternative -> tuple { §group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
@@ -5829,18 +5835,19 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
-                    propertyUnnamedSuperType("\$choice", false, 1) {
-                        tupleType {
-                            typeRef("a", "String", false)
-                            typeRef("b", "String", false)
-                        }
-                        tupleType {
-                            typeRef("c", "String", false)
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("y", "String", false, 2)
+                }
+                unionTypeNotMapped("S$1") {
+                    tupleType {
+                        typeRef("a", "String", false)
+                        typeRef("b", "String", false)
+                    }
+                    tupleType {
+                        typeRef("c", "String", false)
+                        typeRef("d", "String", false)
+                        typeRef("e", "String", false)
+                    }
                 }
                 stringTypeFor("a")
                 stringTypeFor("b")
@@ -5942,19 +5949,9 @@ class test_AllDefault {
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
-                    propertyUnnamedSuperType("ch", false, 0) {
-                        tupleType {
-                            typeRef("a", "String", false)
-                            typeRef("b", "String", false)
-                        }
-                        tupleType {
-                            typeRef("c", "String", false)
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("ch", "CH", false, 0)
                 }
-                unnamedSuperTypeType("CH") {
+                unionType("CH","CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5983,8 +5980,8 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("ch", "child[0]")
             }
-            unnamedSubtypeRule(
-                "CH", """
+            unionRule(
+                "CH", "CH","""
                 when {
                   0 == §alternative -> tuple {
                       a := child[0]
@@ -6045,7 +6042,7 @@ class test_AllDefault {
     }
 
     @Test // S = x CH y ; CH = a b | c d e
-    fun _7_47_rhs_choice_concat_nonTerm() {
+    fun _747_rhs_choice_concat_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -6078,20 +6075,10 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
-                    propertyUnnamedSuperType("ch", false, 1) {
-                        tupleType {
-                            typeRef("a", "String", false)
-                            typeRef("b", "String", false)
-                        }
-                        tupleType {
-                            typeRef("c", "String", false)
-                            typeRef("d", "String", false)
-                            typeRef("e", "String", false)
-                        }
-                    }
+                    propertyUnionTypeOf("ch", "CH",false, 1)
                     propertyPrimitiveType("y", "String", false, 2)
                 }
-                unnamedSuperTypeType("CH") {
+                unionType("CH","CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -6124,8 +6111,8 @@ class test_AllDefault {
                 assignment("ch", "child[1]")
                 assignment("y", "child[2]")
             }
-            unnamedSubtypeRule(
-                "CH", """
+            unionRule(
+                "CH", "CH","""
                 when {
                   0 == §alternative -> tuple {
                       a := child[0]
@@ -6244,26 +6231,10 @@ class test_AllDefault {
             grammarTypeNamespace("test.Test") {
                 dataType("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
-                    propertyUnnamedSuperType("x", true, 1) {
-                        unnamedSuperType {
-                            tupleType {
-                                tupleType("\$group", false) {
-                                    typeRef("b", "String", false)
-                                    typeRef("c", "String", false)
-                                }
-                            }
-                            tupleType {
-                                tupleType("\$group", false) {
-                                    typeRef("c", "String", false)
-                                    typeRef("d", "String", false)
-                                }
-                            }
-                        }
-                        typeRef("String", false)
-                    }
+                    propertyUnionTypeOf("x",  "X",true, 1)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
-                unnamedSuperTypeType("R") {
+                unionType("R", "R") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("b", "String", false)
@@ -6277,21 +6248,8 @@ class test_AllDefault {
                         }
                     }
                 }
-                unnamedSuperTypeType("X") {
-                    unnamedSuperType {
-                        tupleType {
-                            tupleType("\$group", false) {
-                                typeRef("b", "String", false)
-                                typeRef("c", "String", false)
-                            }
-                        }
-                        tupleType {
-                            tupleType("\$group", false) {
-                                typeRef("c", "String", false)
-                                typeRef("d", "String", false)
-                            }
-                        }
-                    }
+                unionType("X", "X") {
+                    typeRef("R", false)
                     typeRef("String", false)
                 }
                 stringTypeFor("D")
@@ -6315,8 +6273,8 @@ class test_AllDefault {
                 assignment("x", "with(child[1]) with(child[0]) \$self")
                 assignment("e", "child[2]")
             }
-            unnamedSubtypeRule(
-                "R", """
+            unionRule(
+                "R", "R","""
                 when {
                   0 == §alternative -> tuple {
                       §group := with(child[0]) tuple {
@@ -6346,27 +6304,14 @@ class test_AllDefault {
                     }
                 }
             }
-            unnamedSubtypeRule(
-                "X", """
+            unionRule(
+                "X", "X","""
                 when {
                     0 == §alternative -> with(child[0]) §self
                     1 == §alternative -> with(child[0]) §self
                 }""".replace("§", "$")
             ) {
-                unnamedSuperType {
-                    tupleType {
-                        tupleType("\$group", false) {
-                            typeRef("b", "String", false)
-                            typeRef("c", "String", false)
-                        }
-                    }
-                    tupleType {
-                        tupleType("\$group", false) {
-                            typeRef("c", "String", false)
-                            typeRef("d", "String", false)
-                        }
-                    }
-                }
+                typeRef("R", false)
                 typeRef("String", false)
             }
             transRule("D", "String", "child[0]")
@@ -6419,7 +6364,7 @@ class test_AllDefault {
 
     // Embedded
     @Test
-    fun _8_e() {
+    fun _800_e() {
         //  S = <e> | S a
         // S = d | B S
         // B = b I::S b | c I::S c
@@ -6464,64 +6409,35 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Inner") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     typeRef("String")
                     typeRef("S1")
                 }
                 dataType("S1", "S1") {
-                    propertyUnnamedSuperType("s", false, 0) {
-                        typeRef("String")
-                        typeRef("S1")
-                    }
+                    propertyUnionTypeOf("s", "S",false, 0)
                     propertyPrimitiveType("a", "String", false, 1)
                 }
                 stringTypeFor("a")
             }
             grammarTypeNamespace("test.Outer") {
                 imports("test.Inner")
-                unnamedSuperTypeType("S") {
-                    typeRef("S1")
+                unionType("S","S") {
                     typeRef("String")
+                    typeRef("S1")
                 }
                 dataType("S1", "S1") {
-                    propertyUnnamedSuperType("b", false, 0) {
-                        tupleType {
-                            typeRef("b", "String", false)
-                            unnamedSuperTypeOf("s", false) {
-                                typeRef("S1")
-                                typeRef("String")
-                            }
-                            typeRef("b2", "String", false)
-                        }
-                        tupleType {
-                            typeRef("c", "String", false)
-                            unnamedSuperTypeOf("s", false) {
-                                typeRef("S1")
-                                typeRef("String")
-                            }
-                            typeRef("c2", "String", false)
-                        }
-                    }
-                    propertyUnnamedSuperType("s", false, 1) {
-                        typeRef("S1")
-                        typeRef("String")
-                    }
+                    propertyUnionTypeOf("b", "B",false, 0)
+                    propertyUnionTypeOf("s", "S",false, 1)
                 }
-                unnamedSuperTypeType("B") {
+                unionType("B","B") {
                     tupleType {
                         typeRef("b", "String", false)
-                        unnamedSuperTypeOf("s", false) {
-                            typeRef("test.Inner.S1") //TODO: wrong way around ?
-                            typeRef("String")
-                        }
+                        typeRef("s","test.Inner.S",false)
                         typeRef("b2", "String", false)
                     }
                     tupleType {
                         typeRef("c", "String", false)
-                        unnamedSuperTypeOf("s", false) {
-                            typeRef("test.Inner.S1")
-                            typeRef("String")
-                        }
+                        typeRef("s","test.Inner.S",false)
                         typeRef("c2", "String", false)
                     }
                 }
@@ -6541,8 +6457,8 @@ class test_AllDefault {
             namespace("test") {
                 transform("Inner") {
                     importTypes("test.Inner")
-                    unnamedSubtypeRule(
-                        "S", """
+                    unionRule(
+                        "S", "S","""
                        when {
                           0 == §alternative -> with(child[0]) §self
                           1 == §alternative -> with(child[0]) §self
@@ -6560,8 +6476,8 @@ class test_AllDefault {
                 }
                 transform("Outer") {
                     importTypes("test.Outer")
-                    unnamedSubtypeRule(
-                        "S", """
+                    unionRule(
+                        "S", "S","""
                        when {
                           0 == §alternative -> with(child[0]) §self
                           1 == §alternative -> with(child[0]) §self
@@ -6575,8 +6491,8 @@ class test_AllDefault {
                         assignment("b", "child[0]")
                         assignment("s", "child[1]")
                     }
-                    unnamedSubtypeRule(
-                        "B", """
+                    unionRule(
+                        "B", "B","""
                        when {
                           0 == §alternative -> tuple {
                               b := child[0]
@@ -6593,18 +6509,12 @@ class test_AllDefault {
                     ) {
                         tupleType {
                             typeRef("b", "String", false)
-                            unnamedSuperTypeOf("s", false) {
-                                typeRef("String")
-                                typeRef("test.Inner.S1")
-                            }
+                            typeRef("s", "?", false)
                             typeRef("b2", "String", false)
                         }
                         tupleType {
                             typeRef("c", "String", false)
-                            unnamedSuperTypeOf("s", false) {
-                                typeRef("String")
-                                typeRef("test.Inner.S1")
-                            }
+                            typeRef("s", "?", false)
                             typeRef("c2", "String", false)
                         }
                     }
@@ -6653,7 +6563,7 @@ class test_AllDefault {
     }
 
     @Test
-    fun _8_e_2() {
+    fun _800_e_2() {
         val grammarStr = """
             namespace test
             grammar I {
@@ -6788,7 +6698,7 @@ class test_AllDefault {
     }
 
     @Test
-    fun _8_e_3() {
+    fun _800_e_3() {
         // S = 'a' | S 'a' ;
         // S = B | S B;
         // B = 'b' Inner::S 'b' | 'c' Inner::S 'c' ;
@@ -6837,7 +6747,7 @@ class test_AllDefault {
     }
 
     @Test
-    fun _8_e_4() {
+    fun _800_e_4() {
         val grammarStr = """
             namespace test
             grammar I {
@@ -7662,13 +7572,10 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unnamedSuperTypeType("S") {
+                unionType("S","S") {
                     typeRef("As")
                     typeRef("Bs")
-                    unnamedSuperType {
-                        typeRef("String")
-                        tupleType { }
-                    }
+
                 }
                 dataType("as", "As") {
                     propertyListType("a", false, 0) { ref("String") }
@@ -7676,7 +7583,7 @@ class test_AllDefault {
                 dataType("bs", "Bs") {
                     propertyListType("b", false, 0) { ref("String") }
                 }
-                unnamedSuperTypeType("cs") {
+                unionType("cs","?") {
                     typeRef("String")
                     tupleType { }
                 }
@@ -7692,13 +7599,10 @@ class test_AllDefault {
             }.also { it.resolveImports() },
             true
         ) {
-            unnamedSubtypeRule("S", "child[0]") {
+            unionRule("S", "S","child[0]") {
                 typeRef("As")
                 typeRef("Bs")
-                unnamedSuperType {
-                    typeRef("String")
-                    tupleType { }
-                }
+
             }
             createObject("as", "As") {
                 assignment("a", "children")
@@ -7706,7 +7610,7 @@ class test_AllDefault {
             createObject("bs", "Bs") {
                 assignment("b", "children.items")
             }
-            unnamedSubtypeRule("cs", "child[0]") {
+            unionRule("cs", "CS","child[0]") {
                 typeRef("String")
                 tupleType { }
             }
@@ -7749,7 +7653,7 @@ class test_AllDefault {
             grammarTypeNamespace("test.Base") {
                 stringTypeFor("a")
             }
-            grammarTypeNamespace("test.Test", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value, "test.Base")) {
+            grammarTypeNamespace("test.Test", imports = listOf(StdLibDefault.qualifiedName.value, "test.Base")) {
                 dataType("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                 }
@@ -7826,7 +7730,7 @@ class test_AllDefault {
                 }
                 stringTypeFor("a")
             }
-            grammarTypeNamespace("test.Test", imports = listOf(SimpleTypeModelStdLib.qualifiedName.value, "test.Base"), true) {
+            grammarTypeNamespace("test.Test", imports = listOf(StdLibDefault.qualifiedName.value, "test.Base"), true) {
                 dataType("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                 }

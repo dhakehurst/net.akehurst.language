@@ -40,7 +40,7 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 typealias ResolveFunction = (ref: AsmPath) -> AsmStructure?
 
@@ -134,7 +134,7 @@ class ReferenceResolverSimple(
             null -> scopeStack.peek()
             else -> {
                 //scope for result of navigation
-                val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                 val fromEl = _interpreter.evaluateExpression(
                     EvaluationContext.ofSelf(context.element.toTypedObject(elType)), refExpr.fromNavigation
                 )
@@ -150,7 +150,7 @@ class ReferenceResolverSimple(
                 }
             }
         }
-        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.referringPropertyNavigation).asmValue
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
@@ -161,7 +161,7 @@ class ReferenceResolverSimple(
                 val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.findItemsNamedConformingTo(referringStr) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -216,7 +216,7 @@ class ReferenceResolverSimple(
                 val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.rootScope.findItemsByQualifiedNameConformingTo(list) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -271,7 +271,7 @@ class ReferenceResolverSimple(
     }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext, self: AsmValue) {
-        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
             when (coll.asmValue) {
@@ -293,7 +293,7 @@ class ReferenceResolverSimple(
     }
 
     private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
-        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.declaration
+        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: StdLibDefault.NothingType.declaration
         val selfType = typeModel.typeOf(this)
         return selfType.conformsTo(type)
     }
@@ -328,7 +328,7 @@ class ReferenceResolverSimple(
                     v = when (pd) {
                         null -> error("Cannot navigate '$pn' from null value")
                         else -> {
-                            val elType = typeModel.findByQualifiedNameOrNull(v.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+                            val elType = typeModel.findByQualifiedNameOrNull(v.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                             v.toTypedObject(elType).getPropertyValue(pd).asmValue
                         }
                     }

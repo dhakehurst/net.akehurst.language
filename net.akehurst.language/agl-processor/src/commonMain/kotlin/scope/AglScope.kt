@@ -19,7 +19,6 @@ package net.akehurst.language.scope.processor
 
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglScope {

@@ -106,7 +106,7 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
         val characteristics: List<PropertyCharacteristic> = children[0] as List<PropertyCharacteristic>
         val name = PropertyName(children[1] as String)
         val result = { owner: StructuredType ->
-            val typeInstance = SimpleTypeModelStdLib.AnyType
+            val typeInstance = StdLibDefault.AnyType
             owner.appendPropertyStored(name, typeInstance, characteristics.toSet())
         }
         return result

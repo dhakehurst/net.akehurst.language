@@ -2,7 +2,7 @@ namespace com.yakindu.modelviewer.parser
 
 grammar MScript {
 
-    @defaultGoal : script
+    #defaultGoal : script
 
     // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
     skip leaf WHITESPACE = "[ \t\x0B\f]+" ;

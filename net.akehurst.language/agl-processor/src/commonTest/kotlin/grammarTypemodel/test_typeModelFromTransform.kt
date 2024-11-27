@@ -25,7 +25,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -97,7 +97,7 @@ class test_typemodelFromTransform {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(StdLibDefault, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -137,7 +137,7 @@ class test_typemodelFromTransform {
                 }
             }
         }
-        val expected = grammarTypeModel("test", "Test", imports = listOf(SimpleTypeModelStdLib, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
+        val expected = grammarTypeModel("test", "Test", imports = listOf(StdLibDefault, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
             dataType("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }

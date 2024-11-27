@@ -80,7 +80,7 @@ class WithExpressionSimple(
         val sb = StringBuilder()
         sb.append("with(${withContext.asString(indent, imports)}) ")
         val ni = indent.inc
-        sb.append(expression.asString(ni,imports))
+        sb.append(expression.asString(ni, imports))
         return sb.toString()
     }
 
@@ -191,7 +191,7 @@ class AssignmentStatementSimple(
     override val rhs: Expression
 ) : AssignmentStatement {
 
-    override fun asString(indent: Indent, imports: List<Import>): String  = "$lhsPropertyName := ${rhs.asString(indent, imports)}"
+    override fun asString(indent: Indent, imports: List<Import>): String = "$lhsPropertyName := ${rhs.asString(indent, imports)}"
 
     override fun toString(): String = "$lhsPropertyName := $rhs"
 
@@ -208,19 +208,34 @@ class InfixExpressionSimple(
 
 class CastExpressionSimple(
     override val expression: Expression,
-    override val targetTypeName: PossiblyQualifiedName
+    override val targetType: TypeReference
 ) : CastExpression {
     override fun asString(indent: Indent, imports: List<Import>): String {
-        val ttn = when {
-            imports.any { it.asQualifiedName.value == targetTypeName.value } -> targetTypeName.simpleName.value
-            else -> targetTypeName.value
+        val ttn = targetType.asString(indent, imports)
+        return "${expression.asString(indent, imports)} as $ttn"
+    }
+}
+
+data class TypeReferenceSimple(
+    override val possiblyQualifiedName: PossiblyQualifiedName,
+    override val typeArguments: List<TypeReference>,
+    override val isNullable: Boolean
+) : TypeReference {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val tn = when {
+            imports.any { it.asQualifiedName.value == possiblyQualifiedName.value } -> possiblyQualifiedName.simpleName.value
+            else -> possiblyQualifiedName.value
         }
-      return  "${expression.asString(indent, imports)} as $ttn"
+        val targs = when {
+            typeArguments.isEmpty() -> ""
+            else -> "<${typeArguments.joinToString { it.asString(indent,imports) }}>"
+        }
+        return "$tn$targs"
     }
 }
 
 class GroupExpressionSimple(
     override val expression: Expression
 ) : GroupExpression {
-    override fun asString(indent: Indent, imports: List<Import>): String  = "(${expression.asString(indent, imports)})"
+    override fun asString(indent: Indent, imports: List<Import>): String = "(${expression.asString(indent, imports)})"
 }

@@ -4,7 +4,7 @@ import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeParameterReference
 
 data class TypeModelFormatConfiguration(
@@ -153,7 +153,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
             supertypes.isEmpty() -> ""
             else -> {
                 supertypes
-                    .filterNot { it == SimpleTypeModelStdLib.AnyType }
+                    .filterNot { it == StdLibDefault.AnyType }
                     .joinToString(separator = "\n", postfix = "\n") { st ->
                         val pqn = when {
                             st.declaration.namespace == context -> st.typeName.value

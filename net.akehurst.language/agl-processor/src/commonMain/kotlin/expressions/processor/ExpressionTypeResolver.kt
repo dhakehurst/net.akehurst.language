@@ -4,7 +4,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 
 class ExpressionTypeResolver(
@@ -40,23 +40,23 @@ class ExpressionTypeResolver(
     }
 
     fun LiteralExpression.typeOfLiteralExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findByQualifiedNameOrNull(this.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.NothingType
+        typeModel.findByQualifiedNameOrNull(this.qualifiedTypeName)?.type() ?: StdLibDefault.NothingType
 
     fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = when {
-        this.isNothing -> SimpleTypeModelStdLib.NothingType
+        this.isNothing -> StdLibDefault.NothingType
         this.isSelf -> self
         else -> {
             when (self.declaration) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
                         issues.error(null,"'$self' has no property named '${this.name}'")
-                        SimpleTypeModelStdLib.NothingType
+                        StdLibDefault.NothingType
                     }
                 }
 
                 else -> {
                     issues.error(null,"'$self' is not a StructuredType cannot access property named '${this.name}'")
-                    SimpleTypeModelStdLib.NothingType
+                    StdLibDefault.NothingType
                 }
             }
         }
@@ -67,7 +67,7 @@ class ExpressionTypeResolver(
         val start = when (st) {
             is LiteralExpression -> TODO()
             is RootExpression -> when {
-                st.isNothing -> SimpleTypeModelStdLib.NothingType
+                st.isNothing -> StdLibDefault.NothingType
                 st.isSelf -> self
                 else -> {
                     self.allResolvedProperty[PropertyName(st.name)]?.typeInstance
@@ -78,11 +78,11 @@ class ExpressionTypeResolver(
         }
         val r = this.parts.fold(start) { acc, it ->
             when (acc) {
-                null -> SimpleTypeModelStdLib.NothingType
+                null -> StdLibDefault.NothingType
                 else -> it.typeOfNavigationPartFor(acc)
             }
         }
-        return r ?: SimpleTypeModelStdLib.NothingType
+        return r ?: StdLibDefault.NothingType
     }
 
     fun NavigationPart.typeOfNavigationPartFor(self: TypeInstance): TypeInstance = when (this) {
@@ -117,7 +117,7 @@ class ExpressionTypeResolver(
     }
 
     fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =
-        self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: SimpleTypeModelStdLib.NothingType
+        self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
 
     fun WithExpression.typeOfWithExpressionFor(self: TypeInstance): TypeInstance {
         val ctxType = this.withContext.typeOfExpressionFor(self)
@@ -136,7 +136,7 @@ class ExpressionTypeResolver(
     }
 
     fun CreateObjectExpression.typeOfCreateObjectExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.NothingType
+        typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedTypeName)?.type() ?: StdLibDefault.NothingType
 
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {
@@ -144,7 +144,7 @@ class ExpressionTypeResolver(
             val n = PropertyName(it.lhsPropertyName)
             TypeArgumentNamedSimple(n, t)
         }
-        return SimpleTypeModelStdLib.TupleType.typeTuple(args)
+        return StdLibDefault.TupleType.typeTuple(args)
     }
 
     fun OnExpression.typeOfOnExpressionFor(self: TypeInstance): TypeInstance {
@@ -156,11 +156,18 @@ class ExpressionTypeResolver(
     }
 
     fun CastExpression.typeOfCastExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findFirstByPossiblyQualifiedOrNull(this.targetTypeName)?.type() ?: SimpleTypeModelStdLib.NothingType
+        this.targetType.typeOfTypeReference()
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
 
+    fun TypeReference.typeOfTypeReference():TypeInstance {
+        val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.declaration
+        val targs = this.typeArguments.map {
+            it.typeOfTypeReference().asTypeArgument
+        }
+        return td.type(typeArguments = targs, isNullable = this.isNullable)
+    }
 
     fun commonSuperTypeOf(types: List<TypeInstance>): TypeInstance {
         TODO()

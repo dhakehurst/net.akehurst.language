@@ -117,7 +117,7 @@ class test_transformLanguage {
                 sentence = """
                     namespace test
                     transform Test {
-                        rule1 : Type { prop1 := nonTerminal }
+                        rule1 : Type() { prop1 := nonTerminal }
                     }
                 """.trimIndent()
             ),

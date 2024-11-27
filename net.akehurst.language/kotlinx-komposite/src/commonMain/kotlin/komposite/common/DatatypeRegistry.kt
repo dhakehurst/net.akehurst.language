@@ -24,7 +24,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimpleAbstract
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.reflect.KClass
@@ -106,25 +106,25 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         """.trimIndent()
 
         val KOTLIN_TO_AGL = mapOf(
-            "kotlin.Any" to SimpleTypeModelStdLib.AnyType.qualifiedTypeName.value,
-            "kotlin.Boolean" to SimpleTypeModelStdLib.Boolean.qualifiedTypeName.value,
-            "kotlin.String" to SimpleTypeModelStdLib.String.qualifiedTypeName.value,
-            "kotlin.Int" to SimpleTypeModelStdLib.Integer.qualifiedTypeName.value,
-            "kotlin.Double" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
-            "kotlin.Float" to SimpleTypeModelStdLib.Real.qualifiedTypeName.value,
-            "kotlin.Pair" to SimpleTypeModelStdLib.Pair.qualifiedName.value,
-            "kotlin.collections.Collection" to SimpleTypeModelStdLib.Collection.qualifiedName.value,
-            "kotlin.collections.List" to SimpleTypeModelStdLib.List.qualifiedName.value,
-            "kotlin.collections.Set" to SimpleTypeModelStdLib.Set.qualifiedName.value,
-            "java.util.HashSet" to SimpleTypeModelStdLib.Set.qualifiedName.value,
-            "java.util.LinkedHashSet" to SimpleTypeModelStdLib.Set.qualifiedName.value,
-            "net.akehurst.language.collections.OrderedSet" to SimpleTypeModelStdLib.OrderedSet.qualifiedName.value,
-            "kotlin.collections.Map" to SimpleTypeModelStdLib.Map.qualifiedName.value,
-            "java.util.HashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
-            "java.util.LinkedHashMap" to SimpleTypeModelStdLib.Map.qualifiedName.value,
-            "java.lang.Exception" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
-            "java.lang.RuntimeException" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
-            "kotlin.Throwable" to SimpleTypeModelStdLib.Exception.qualifiedTypeName.value,
+            "kotlin.Any" to StdLibDefault.AnyType.qualifiedTypeName.value,
+            "kotlin.Boolean" to StdLibDefault.Boolean.qualifiedTypeName.value,
+            "kotlin.String" to StdLibDefault.String.qualifiedTypeName.value,
+            "kotlin.Int" to StdLibDefault.Integer.qualifiedTypeName.value,
+            "kotlin.Double" to StdLibDefault.Real.qualifiedTypeName.value,
+            "kotlin.Float" to StdLibDefault.Real.qualifiedTypeName.value,
+            "kotlin.Pair" to StdLibDefault.Pair.qualifiedName.value,
+            "kotlin.collections.Collection" to StdLibDefault.Collection.qualifiedName.value,
+            "kotlin.collections.List" to StdLibDefault.List.qualifiedName.value,
+            "kotlin.collections.Set" to StdLibDefault.Set.qualifiedName.value,
+            "java.util.HashSet" to StdLibDefault.Set.qualifiedName.value,
+            "java.util.LinkedHashSet" to StdLibDefault.Set.qualifiedName.value,
+            "net.akehurst.language.collections.OrderedSet" to StdLibDefault.OrderedSet.qualifiedName.value,
+            "kotlin.collections.Map" to StdLibDefault.Map.qualifiedName.value,
+            "java.util.HashMap" to StdLibDefault.Map.qualifiedName.value,
+            "java.util.LinkedHashMap" to StdLibDefault.Map.qualifiedName.value,
+            "java.lang.Exception" to StdLibDefault.Exception.qualifiedTypeName.value,
+            "java.lang.RuntimeException" to StdLibDefault.Exception.qualifiedTypeName.value,
+            "kotlin.Throwable" to StdLibDefault.Exception.qualifiedTypeName.value,
         )
     }
 

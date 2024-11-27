@@ -408,7 +408,7 @@ class GenerateTypeModelViaReflection(
             ValueType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE
             EnumType::class.isSuperclassOf(kind) -> PropertyCharacteristic.REFERENCE
             TupleType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
-            UnnamedSupertypeType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
+            UnionType::class.isSuperclassOf(kind) -> PropertyCharacteristic.COMPOSITE // Think this can't happen anyhow
             CollectionType::class.isSuperclassOf(kind) -> {
                 val arg = type.arguments.last()
                 arg.type?.let { autoDetectKompOrRefFor(it) }
@@ -424,7 +424,7 @@ class GenerateTypeModelViaReflection(
         return when (subName) {
             is SimpleName -> null
             is QualifiedName -> {
-                val foundType = SimpleTypeModelStdLib.findOwnedTypeNamed(subName.last)
+                val foundType = StdLibDefault.findOwnedTypeNamed(subName.last)
                 when (foundType) {
                     null -> {
                         val kclass = Class.forName(subName.value).kotlin

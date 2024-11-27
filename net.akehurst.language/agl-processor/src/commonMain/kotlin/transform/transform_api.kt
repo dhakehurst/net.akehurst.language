@@ -73,7 +73,10 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
 
     fun addImportType(value:Import)
 
-    fun addRule(rule: TransformationRule)
+    /**
+     * set the rule for its GrammarRuleName (rules[rule.grammarRuleName] = rule)
+     */
+    fun setRule(rule: TransformationRule)
 
     fun cloneTo(ns: TransformNamespace): TransformRuleSet
 }

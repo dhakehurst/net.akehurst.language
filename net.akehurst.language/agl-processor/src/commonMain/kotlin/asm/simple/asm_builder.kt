@@ -38,8 +38,7 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
-import net.akehurst.language.typemodel.api.UnnamedSupertypeType
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
 @DslMarker
@@ -47,7 +46,7 @@ annotation class AsmSimpleBuilderMarker
 
 fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
-    defaultNamespace: QualifiedName = SimpleTypeModelStdLib.qualifiedName,
+    defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference")),
     context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
@@ -55,7 +54,7 @@ fun asmSimple(
     failIfIssues: Boolean = true,
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
-    val defNs = typeModel.findNamespaceOrNull(defaultNamespace) ?: SimpleTypeModelStdLib
+    val defNs = typeModel.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
     val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, context, resolveReferences, failIfIssues)
     b.init()
     return b.build()
@@ -86,7 +85,7 @@ class AsmSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
-        element(SimpleTypeModelStdLib.TupleType.qualifiedName.value, init)
+        element(StdLibDefault.TupleType.qualifiedName.value, init)
 
     fun listOfString(vararg items: String): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
@@ -150,8 +149,8 @@ class AsmElementSimpleBuilder(
 
             is SimpleName -> {
                 when (qtn) {
-                    SimpleTypeModelStdLib.TupleType.name -> SimpleTypeModelStdLib.TupleType.qualifiedName
-                    UnnamedSupertypeType.NAME -> UnnamedSupertypeType.NAME
+                    StdLibDefault.TupleType.name -> StdLibDefault.TupleType.qualifiedName
+                    //UnionType.NAME -> UnionType.NAME
                     else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName
                         ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))
                 }
@@ -185,7 +184,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this)
         return when (v) {
             is AsmNothing -> null
@@ -195,7 +194,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+        val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val res = _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this)
         return when (res) {
             is AsmNothing -> null
@@ -262,7 +261,7 @@ class AsmElementSimpleBuilder(
         } else {
             val scopeFor = es.forTypeName.last
             val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName)
-            val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: SimpleTypeModelStdLib.AnyType
+            val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(EvaluationContext.ofSelf(_element.toTypedObject(elType)), it) }
 
             val referableName = when (res) {
@@ -315,7 +314,7 @@ class ListAsmElementSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
-        val tt = SimpleTypeModelStdLib.TupleType
+        val tt = StdLibDefault.TupleType
         return element(tt.qualifiedName.value, init)
     }
 

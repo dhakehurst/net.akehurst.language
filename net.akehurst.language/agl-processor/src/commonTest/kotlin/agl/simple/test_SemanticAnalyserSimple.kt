@@ -103,8 +103,7 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
-            }
+            namespace test.Test 
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -129,8 +128,7 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
-            }
+            namespace test.Test 
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -161,8 +159,7 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
-            }
+            namespace test.Test
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -218,8 +215,7 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
-            }
+            namespace test.Test 
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -248,9 +244,8 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test 
                 identify C by a
-            }
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -277,9 +272,8 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test 
                 identify S by b
-            }
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -307,9 +301,8 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test 
                 identify S by a
-            }
         """
         val sentence = "a"
         val context = ContextAsmSimple()
@@ -343,9 +336,8 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test
                 identify S by as
-            }
         """
         val sentence = "a.a.a"
         val context = ContextAsmSimple()
@@ -378,12 +370,11 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test
                 identify S by as
                 scope S {
                 
                 }
-            }
         """
         val sentence = "a.a.a"
         val context = ContextAsmSimple()
@@ -416,12 +407,11 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test 
                 identify S by as
                 scope S {
                     identify S by b
                 }
-            }
         """
         val sentence = "a.a.a"
         val context = ContextAsmSimple()
@@ -454,12 +444,11 @@ class test_SemanticAnalyserSimple {
             }
         """
         val referenceModelStr = """
-            namespace test.Test {
+            namespace test.Test
                 identify S by as
                 scope S {
                     identify S by as
                 }
-            }
         """
         val sentence = "a.a.a"
         val context = ContextAsmSimple()

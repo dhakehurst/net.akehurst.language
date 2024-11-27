@@ -25,70 +25,70 @@ class test_SimpleTypeModelStdLib {
 
     @Test
     fun primitive_AnyType() {
-        assertEquals("std.Any", SimpleTypeModelStdLib.AnyType.qualifiedTypeName.value)
+        assertEquals("std.Any", StdLibDefault.AnyType.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_NothingType() {
-        assertEquals("std.Nothing", SimpleTypeModelStdLib.NothingType.qualifiedTypeName.value)
+        assertEquals("std.Nothing", StdLibDefault.NothingType.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_String() {
-        assertEquals("std.String", SimpleTypeModelStdLib.String.qualifiedTypeName.value)
+        assertEquals("std.String", StdLibDefault.String.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Boolean() {
-        assertEquals("std.Boolean", SimpleTypeModelStdLib.Boolean.qualifiedTypeName.value)
+        assertEquals("std.Boolean", StdLibDefault.Boolean.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Integer() {
-        assertEquals("std.Integer", SimpleTypeModelStdLib.Integer.qualifiedTypeName.value)
+        assertEquals("std.Integer", StdLibDefault.Integer.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Real() {
-        assertEquals("std.Real", SimpleTypeModelStdLib.Real.qualifiedTypeName.value)
+        assertEquals("std.Real", StdLibDefault.Real.qualifiedTypeName.value)
 
     }
 
     @Test
     fun primitive_Timestamp() {
-        assertEquals("std.Timestamp", SimpleTypeModelStdLib.Timestamp.qualifiedTypeName.value)
+        assertEquals("std.Timestamp", StdLibDefault.Timestamp.qualifiedTypeName.value)
 
     }
 
     @Test
     fun tupleType() {
-        val actual = SimpleTypeModelStdLib.TupleType
+        val actual = StdLibDefault.TupleType
         assertEquals("std.TupleType",actual.qualifiedName.value)
     }
 
     @Test
     fun tupleType_instance() {
         val args = listOf(
-            TypeArgumentNamedSimple(PropertyName("prop1"),SimpleTypeModelStdLib.Integer),
-            TypeArgumentNamedSimple(PropertyName("prop2"),SimpleTypeModelStdLib.String),
-            TypeArgumentNamedSimple(PropertyName("prop3"),SimpleTypeModelStdLib.Boolean),
+            TypeArgumentNamedSimple(PropertyName("prop1"),StdLibDefault.Integer),
+            TypeArgumentNamedSimple(PropertyName("prop2"),StdLibDefault.String),
+            TypeArgumentNamedSimple(PropertyName("prop3"),StdLibDefault.Boolean),
         )
-        val actual = SimpleTypeModelStdLib.TupleType.typeTuple(args)
-        assertEquals(SimpleTypeModelStdLib.TupleType,actual.declaration)
+        val actual = StdLibDefault.TupleType.typeTuple(args)
+        assertEquals(StdLibDefault.TupleType,actual.declaration)
         assertEquals("std.TupleType",actual.declaration.qualifiedName.value)
         assertEquals("std.TupleType",actual.qualifiedTypeName.value)
     }
 
     @Test
     fun collection_List() {
-        assertEquals("std.List", SimpleTypeModelStdLib.List.qualifiedName.value)
-        assertEquals("size", SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("size"))!!.name.value)
-        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findAllPropertyOrNull(PropertyName("size"))!!.typeInstance.qualifiedTypeName.value)
+        assertEquals("std.List", StdLibDefault.List.qualifiedName.value)
+        assertEquals("size", StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!!.name.value)
+        assertEquals("std.Integer", StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!!.typeInstance.qualifiedTypeName.value)
 
 
     }

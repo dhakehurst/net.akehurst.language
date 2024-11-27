@@ -28,7 +28,7 @@ import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
@@ -53,7 +53,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             val grammarMdl = result.asm!!
 
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
-            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+            grmrTypeModel.addNamespace(StdLibDefault)
             val atfg = TransformDomainDefault.fromGrammarModel(grammarMdl)
             //val actualTr = atfg.build()
 
@@ -86,7 +86,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
-        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expected = typeModel("Test", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("ID")
                 stringTypeFor("NAME")
@@ -94,8 +94,12 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 dataType("S", "S") {
                     propertyPrimitiveType("id", "String", false, 0)
                     propertyListType("\$choiceList", false, 1) {
-                        unnamedSuperTypeOf("A", "B")
+                        ref("S$1")
                     }
+                }
+                unionTypeNotMapped("S$1") {
+                    typeRef("A",false)
+                    typeRef("B",false)
                 }
                 dataType("A", "A") {
                     propertyPrimitiveType("name", "String", false, 0)
@@ -153,7 +157,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         }
         val expected = grammarTypeModel(
             "test.O", "O", listOf(
-                SimpleTypeModelStdLib,
+                StdLibDefault,
                 tmI.namespace[1]
             )
         ) {
@@ -206,7 +210,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = grammarTypeModel("test.O", "O") {
-            unnamedSuperTypeType("S") {
+            unionType("S","S") {
                 typeRef("B")
                 tupleType {
                     typeRef("s", "S", false)

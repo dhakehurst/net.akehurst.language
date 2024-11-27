@@ -80,7 +80,7 @@ grammar Expression extends Base {
     whenOptionList = whenOption+ ;
     whenOption = expression '->' expression ;
     
-    case = expression 'as' possiblyQualifiedName
+    cast = expression 'as' typeReference
     
     group = '(' expression ')' ;
     
@@ -94,6 +94,9 @@ grammar Expression extends Base {
     methodReference = IDENTIFIER ;
     indexOperation = '[' indexList ']' ;
     indexList = [expression / ',']+ ;
+    
+    typeReference = possiblyQualifiedName typeArgumentList? '?'?;
+    typeArgumentList = '<' [ typeReference / ',']+ '>' ;
     
     literal = BOOLEAN | INTEGER | REAL | STRING ;
 
@@ -126,12 +129,6 @@ grammar Expression extends Base {
             ref("propertyReference")
         }
         concatenation("literalExpression") { ref("literal")}
-        choice("literal") {
-            ref("BOOLEAN")
-            ref("INTEGER")
-            ref("REAL")
-            ref("STRING")
-        }
         concatenation("navigationExpression") {
             ref("navigationRoot"); lst(1, -1) { ref("navigationPart") }
         }
@@ -189,7 +186,7 @@ grammar Expression extends Base {
         concatenation("whenOption") {
             ref("expression"); lit("->"); ref("expression")
         }
-        concatenation("cast") { ref("expression"); lit("as"); ref("possiblyQualifiedName") }
+        concatenation("cast") { ref("expression"); lit("as"); ref("typeReference") }
         concatenation("group") { lit("("); ref("expression"); lit(")") }
         concatenation("propertyCall") {
             lit("."); ref("propertyReference")
@@ -214,7 +211,17 @@ grammar Expression extends Base {
         separatedList("indexList", 1, -1) {
             ref("expression"); lit(",")
         }
+        concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt{lit("?")} }
+        concatenation("typeArgumentList") {
+            lit("<"); spLst(1,-1){ ref("typeReference"); lit(",")}; lit(">")
+        }
 
+        choice("literal") {
+            ref("BOOLEAN")
+            ref("INTEGER")
+            ref("REAL")
+            ref("STRING")
+        }
         concatenation("SPECIAL", isLeaf = true) { lit("$"); ref("IDENTIFIER") }
         concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
         concatenation("INTEGER", isLeaf = true) { pat("[0-9]+") }

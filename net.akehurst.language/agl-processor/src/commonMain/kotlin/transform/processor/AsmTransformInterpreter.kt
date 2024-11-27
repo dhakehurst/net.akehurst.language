@@ -32,7 +32,7 @@ import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
 class AsmTransformInterpreter(
@@ -46,20 +46,20 @@ class AsmTransformInterpreter(
         val LEAF = PropertyName("leaf")
         val CHILD = PropertyName("child")
         val CHILDREN = PropertyName("children")
-        val LIST_OF_ANY = SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.AnyType.nullable().asTypeArgument))
-        val SLIST_OF_ANY = SimpleTypeModelStdLib.ListSeparated.type(listOf(SimpleTypeModelStdLib.AnyType.asTypeArgument))
+        val LIST_OF_ANY = StdLibDefault.List.type(listOf(StdLibDefault.AnyType.nullable().asTypeArgument))
+        val SLIST_OF_ANY = StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
         val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)
 
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
                 dataType("Node") {
                     subtypes("Branch", "Leaf")
-                    property("path", SimpleTypeModelStdLib.AnyType, 0)
-                    property("alternative", SimpleTypeModelStdLib.Integer, 1)
+                    property("path", StdLibDefault.AnyType, 0)
+                    property("alternative", StdLibDefault.Integer, 1)
                 }
                 dataType("Leaf") {
                     subtypes("Node")
-                    property("value", SimpleTypeModelStdLib.String, 0)
+                    property("value", StdLibDefault.String, 0)
                 }
                 dataType("Branch") {
                     subtypes("Node")

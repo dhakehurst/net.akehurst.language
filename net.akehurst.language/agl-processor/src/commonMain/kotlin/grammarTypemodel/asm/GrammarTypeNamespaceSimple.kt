@@ -27,6 +27,7 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
@@ -34,6 +35,20 @@ class GrammarTypeNamespaceSimple(
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import>
 ) : GrammarTypeNamespaceAbstract(options, import) {
+    companion object {
+        fun findOrCreateGrammarNamespace(typeModel:TypeModel, qualifiedName: QualifiedName) =
+            typeModel.findNamespaceOrNull(qualifiedName) as GrammarTypeNamespaceSimple?
+                ?: let {
+                    val imports = listOf(Import(StdLibDefault.qualifiedName.value))
+                    val ns = GrammarTypeNamespaceSimple(
+                        qualifiedName = qualifiedName,
+                        import = imports
+                    )
+                    typeModel.addAllNamespaceAndResolveImports(listOf(StdLibDefault, ns))
+                    ns
+                }
+    }
+
     override fun cloneTo(other: TypeModel): TypeNamespace =
         other.findNamespaceOrNull(this.qualifiedName)
             ?: GrammarTypeNamespaceSimple(
@@ -49,7 +64,7 @@ abstract class GrammarTypeNamespaceAbstract(
     import: List<Import>
 ) : TypeNamespaceAbstract(options, import), GrammarTypeNamespace {
 
-    fun addTypeFor(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
+    override fun setTypeForGrammarRule(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
     }
 

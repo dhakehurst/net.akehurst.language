@@ -20,7 +20,7 @@ import net.akehurst.kotlinx.komposite.api.KompositeException
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 inline fun <P : Any?, A : Any?> kompositeWalker(registry: DatatypeRegistry, init: KompositeWalker.Builder<P, A>.() -> Unit): KompositeWalker<P, A> {
     val builder = KompositeWalker.Builder<P, A>()
@@ -176,7 +176,7 @@ class KompositeWalker<P : Any?, A : Any?>(
     protected fun walkValue(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any?, targetType: TypeInstance?): WalkInfo<P, A> {
         return when {
             null == data -> when {
-                null == targetType -> walkNull(path, info, SimpleTypeModelStdLib.NothingType)
+                null == targetType -> walkNull(path, info, StdLibDefault.NothingType)
                 else -> when {
                     targetType.isNullable -> walkNull(path, info, targetType)
                     else -> throw KompositeException("data is null but targetType is not nullable: ${targetType.signature(null, 0)}")
@@ -185,35 +185,35 @@ class KompositeWalker<P : Any?, A : Any?>(
 
             null == targetType -> when {
                 data is Array<*> -> {
-                    val et = SimpleTypeModelStdLib.AnyType
-                    val dt = SimpleTypeModelStdLib.List
+                    val et = StdLibDefault.AnyType
+                    val dt = StdLibDefault.List
                     val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is List<*> -> {
-                    val et = SimpleTypeModelStdLib.AnyType
-                    val dt = SimpleTypeModelStdLib.List
+                    val et = StdLibDefault.AnyType
+                    val dt = StdLibDefault.List
                     val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is Set<*> -> {
-                    val et = SimpleTypeModelStdLib.AnyType
-                    val dt = SimpleTypeModelStdLib.Set
+                    val et = StdLibDefault.AnyType
+                    val dt = StdLibDefault.Set
                     val ti = dt.type(typeArguments = listOf(et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 data is Map<*, *> -> {
-                    val et = SimpleTypeModelStdLib.AnyType
-                    val dt = SimpleTypeModelStdLib.Map
+                    val et = StdLibDefault.AnyType
+                    val dt = StdLibDefault.Map
                     val ti = dt.type(typeArguments = listOf(et.asTypeArgument, et.asTypeArgument))
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
 
                 else -> {
-                    val rdt = runtimeTypeFor(data, SimpleTypeModelStdLib.AnyType)
+                    val rdt = runtimeTypeFor(data, StdLibDefault.AnyType)
                     val ti = rdt.type() //TODO: targs?
                     walkValueWithType(owningProperty, path, info, data, ti)
                 }
@@ -226,7 +226,7 @@ class KompositeWalker<P : Any?, A : Any?>(
     protected fun walkValueWithType(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Any, targetType: TypeInstance): WalkInfo<P, A> {
         val rdt = runtimeTypeFor(data, targetType)
         return when {
-            targetType == SimpleTypeModelStdLib.AnyType -> walkValue(owningProperty, path, info, data, null) // figure out type from data
+            targetType == StdLibDefault.AnyType -> walkValue(owningProperty, path, info, data, null) // figure out type from data
             else -> when (rdt) {
                 is SingletonType -> walkSingleton(path, info, data, rdt)
                 is PrimitiveType -> walkPrimitive(path, info, data, rdt)
@@ -332,7 +332,7 @@ class KompositeWalker<P : Any?, A : Any?>(
 
     protected fun walkColl(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, coll: Collection<*>, targetType: TypeInstance): WalkInfo<P, A> {
         val rdt = runtimeTypeFor(coll, targetType) as CollectionType
-        val elementType = targetType.typeArguments.getOrNull(0)?.type ?: SimpleTypeModelStdLib.AnyType
+        val elementType = targetType.typeArguments.getOrNull(0)?.type ?: StdLibDefault.AnyType
         val infolb = this.collBegin(path, info, coll, rdt, elementType)
         var acc = infolb.acc
         val path_elements = path + this.configuration.ELEMENTS

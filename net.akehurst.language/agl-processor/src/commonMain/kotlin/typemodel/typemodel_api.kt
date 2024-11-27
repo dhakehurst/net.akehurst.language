@@ -78,7 +78,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
      * find type in this namespace OR imports with given name
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDefinition?
-    fun findOwnedUnnamedSupertypeTypeOrNull(subtypes: List<TypeInstance>): UnnamedSupertypeType?
+    fun findOwnedUnnamedSupertypeTypeOrNull(subtypes: List<TypeInstance>): UnionType?
 
     @Deprecated("No longer needed")
     fun findTupleTypeWithIdOrNull(id: Int): TupleType?
@@ -90,14 +90,14 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
-    fun findOwnedOrCreateUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
+    fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate:(UnionType)->Unit): UnionType
 
     fun createTypeInstance(
         context: TypeDefinition?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
     fun createTupleTypeInstance(typeArguments: List<TypeArgumentNamed>, nullable: Boolean): TupleTypeInstance
-    fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeArgument>, nullable: Boolean): TypeInstance
+    //fun createUnnamedSupertypeTypeInstance(declaration: UnionType, typeArguments: List<TypeArgument>, nullable: Boolean): TypeInstance
 
     fun createTupleType(): TupleType
 
@@ -211,7 +211,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
 
     fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
 
-    fun type(typeArguments: List<TypeArgument> = emptyList(), nullable: Boolean = false): TypeInstance
+    fun type(typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false): TypeInstance
 
     fun conformsTo(other: TypeDefinition): Boolean
 
@@ -271,7 +271,7 @@ interface TupleType : TypeDefinition {
 
     //override val typeParameters: List<NamedTypeParameter>
 
-    override fun type(typeArguments: List<TypeArgument>, nullable: Boolean): TupleTypeInstance
+    override fun type(typeArguments: List<TypeArgument>, isNullable: Boolean): TupleTypeInstance
 
     fun typeTuple(typeArguments: List<TypeArgumentNamed>, nullable: Boolean = false): TupleTypeInstance
 
@@ -312,18 +312,14 @@ interface DataType : StructuredType {
     fun addConstructor(parameters: List<ParameterDeclaration>)
 }
 
-interface UnnamedSupertypeType : TypeDefinition {
-    companion object {
-        val NAME = QualifiedName("\$UnnamedSupertypeType")
-    }
-
-    // identifier, needs a number else can't implement equals without a recursive loop
-    val id: Int
+interface UnionType : TypeDefinition {
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: List<TypeInstance>
+    val alternatives: List<TypeInstance>
 
-    override fun cloneTo(other: TypeModel): UnnamedSupertypeType
+    fun addAlternative(value:TypeInstance)
+
+    override fun cloneTo(other: TypeModel): UnionType
 }
 
 interface CollectionType : StructuredType {

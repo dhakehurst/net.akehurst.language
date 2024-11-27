@@ -11,7 +11,7 @@ import net.akehurst.language.reference.processor.AglCrossReference
 import net.akehurst.language.scope.processor.AglScope
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.processor.AglTypemodel
 import kotlin.test.Test
 
@@ -30,7 +30,7 @@ class test_GenerateTypeModelViaReflection {
     private fun gen_base(): Pair<TypeModel,List<QualifiedName>> {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Base"),
-            listOf(SimpleTypeModelStdLib),
+            listOf(StdLibDefault),
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
             listOf(AglBase.komposite)
         )
@@ -43,7 +43,7 @@ class test_GenerateTypeModelViaReflection {
     @Test
     fun test_format_base() {
         val (tm,added) = gen_base()
-        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(listOf(SimpleTypeModelStdLib.qualifiedName)))
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(listOf(StdLibDefault.qualifiedName)))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
     }
 
@@ -208,7 +208,7 @@ class test_GenerateTypeModelViaReflection {
     fun gen_runtime(): TypeModel {
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Test"),
-            listOf(SimpleTypeModelStdLib),
+            listOf(StdLibDefault),
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
             emptyList()
         )
@@ -219,7 +219,7 @@ class test_GenerateTypeModelViaReflection {
     @Test
     fun test_format_runtime() {
         val tm = gen_runtime()
-        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(listOf(SimpleTypeModelStdLib.qualifiedName)))
+        val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(listOf(StdLibDefault.qualifiedName)))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf()))
     }
 

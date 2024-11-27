@@ -37,7 +37,7 @@ import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 data class ChildDataAny(
     val nodeInfo: SpptDataNodeInfo,
@@ -104,7 +104,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
             }
 
             override fun leaf(nodeInfo: SpptDataNodeInfo) {
-                val type = SimpleTypeModelStdLib.String.declaration as PrimitiveType
+                val type = StdLibDefault.String.declaration as PrimitiveType
                 syntaxAnalyserStack.peek().createPrimitiveValue(sentence, type, nodeInfo)
                 stack.push(ChildDataAny(nodeInfo, null))
             }
@@ -133,10 +133,10 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 downStack.push(dd)
                 when (tuc.forNode.declaration) {
                     is PrimitiveType -> Unit
-                    is UnnamedSupertypeType -> Unit
+                    is UnionType -> Unit
                     is CollectionType -> when (tuc.forNode.declaration) {
-                        SimpleTypeModelStdLib.List -> startList()
-                        SimpleTypeModelStdLib.ListSeparated -> startListSeparated()
+                        StdLibDefault.List -> startList()
+                        StdLibDefault.ListSeparated -> startListSeparated()
                         else -> error("Should not happen")
                     }
 
@@ -211,7 +211,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
             is PrimitiveType -> parentPath
-            is UnnamedSupertypeType -> parentPath
+            is UnionType -> parentPath
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
                 val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
@@ -245,10 +245,10 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 val parentType = parentTypeUsage.declaration
                 when (parentType) {
                     is PrimitiveType -> parentTypeUsage
-                    is UnnamedSupertypeType -> typeForParentUnnamedSuperType(parentTypeUsage, nodeInfo)
+                    is UnionType -> typeForParentUnnamedSuperType(parentTypeUsage, nodeInfo)
                     is CollectionType -> when (parentType) {
-                        SimpleTypeModelStdLib.List -> typeForParentListSimple(parentTypeUsage, nodeInfo)
-                        SimpleTypeModelStdLib.ListSeparated -> typeForParentListSeparated(parentTypeUsage, nodeInfo)
+                        StdLibDefault.List -> typeForParentListSimple(parentTypeUsage, nodeInfo)
+                        StdLibDefault.ListSeparated -> typeForParentListSeparated(parentTypeUsage, nodeInfo)
                         else -> error("Should not happen")
                     }
 
@@ -288,7 +288,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     private fun typeForParentListSimple(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // nodes map to runtime-rules, not user-rules
         // if user-rule only had one list item, then runtime-rule is 'compressed, i.e. no pseudo rule for the list
-        if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.List)
+        if (Debug.CHECK) check(parentTypeUsage.declaration == StdLibDefault.List)
         val itemTypeUse = parentTypeUsage.typeArguments[0]
         return itemTypeUse as TypeInstance
     }
@@ -296,7 +296,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     private fun typeForParentListSeparated(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         // nodes map to runtime-rules, not user-rules
         // if user-rule only had one slist item, then runtime-rule is 'compressed, i.e. no pseudo rule for the slist
-        if (Debug.CHECK) check(parentTypeUsage.declaration == SimpleTypeModelStdLib.ListSeparated)
+        if (Debug.CHECK) check(parentTypeUsage.declaration == StdLibDefault.ListSeparated)
         val index = nodeInfo.child.index % 2
         val childTypeUse = parentTypeUsage.typeArguments[index]
         return childTypeUse as TypeInstance
@@ -304,7 +304,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
 
     private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         if (Debug.CHECK) check(parentTypeUsage.isNullable)
-        val tu = (parentTypeUsage.declaration as UnnamedSupertypeType).subtypes[nodeInfo.parentAlt.option.asIndex]
+        val tu = (parentTypeUsage.declaration as UnionType).alternatives[nodeInfo.parentAlt.option.asIndex]
         return tu
     }
 
@@ -347,7 +347,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 val propType = prop.typeInstance.declaration
                 when (propType) {
                     is PrimitiveType -> (prop.typeInstance)
-                    is UnnamedSupertypeType -> {
+                    is UnionType -> {
                         val tu = resolveUnnamedSuperTypeSubtype(prop.typeInstance, nodeInfo)
                         when (tu.declaration) {
                             is TupleType -> (tu)
@@ -374,7 +374,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         val type = typeUsage.declaration
         return when {
             type is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
-                NodeTypes(typeUsage, SimpleTypeModelStdLib.String)
+                NodeTypes(typeUsage, StdLibDefault.String)
             }
 
             type is DataType && type.property.size == 1 -> {
@@ -387,10 +387,10 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 }
             }
 
-            type is UnnamedSupertypeType -> when {
+            type is UnionType -> when {
                 // special cases where PT is compressed for choice of concats
                 nodeInfo.node.rule.isChoice -> when {
-                    type.subtypes[nodeInfo.alt.option.asIndex].declaration is TupleType -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option.asIndex])
+                    type.alternatives[nodeInfo.alt.option.asIndex].declaration is TupleType -> NodeTypes(typeUsage, type.alternatives[nodeInfo.alt.option.asIndex])
                     else -> NodeTypes(typeUsage)
                 }
 
@@ -404,9 +404,9 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     private fun resolveUnnamedSuperTypeSubtype(typeUse: TypeInstance, nodeInfo: SpptDataNodeInfo): TypeInstance {
         val type = typeUse.declaration
         return when {
-            type is UnnamedSupertypeType -> when {
-                nodeInfo.node.rule.isChoice && type.subtypes.isNotEmpty() -> {
-                    val t = type.subtypes[nodeInfo.alt.option.asIndex]
+            type is UnionType -> when {
+                nodeInfo.node.rule.isChoice && type.alternatives.isNotEmpty() -> {
+                    val t = type.alternatives[nodeInfo.alt.option.asIndex]
                     t
                 }
 
@@ -437,11 +437,11 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 val type = downData.typeUse.forNode.declaration
                 when (type) {
                     is PrimitiveType -> {
-                        createPrimitiveValue(sentence, SimpleTypeModelStdLib.String.declaration as PrimitiveType, target)
+                        createPrimitiveValue(sentence, StdLibDefault.String.declaration as PrimitiveType, target)
                     }
 
-                    is UnnamedSupertypeType -> {
-                        val actualType = type.subtypes[target.alt.option.asIndex].declaration
+                    is UnionType -> {
+                        val actualType = type.alternatives[target.alt.option.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType, downData.path, children)
                             else -> children[0].value
@@ -450,9 +450,9 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     }
 
                     is CollectionType -> when (type) {
-                        SimpleTypeModelStdLib.List -> {
+                        StdLibDefault.List -> {
                             when {
-                                null != targetType && targetType.declaration != SimpleTypeModelStdLib.List && targetType.declaration is DataType -> {
+                                null != targetType && targetType.declaration != StdLibDefault.List && targetType.declaration is DataType -> {
                                     finishList()
                                     val elType = targetType.declaration as DataType
                                     val propDecl = elType.property.first()
@@ -464,9 +464,9 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                             }
                         }
 
-                        SimpleTypeModelStdLib.ListSeparated -> {
+                        StdLibDefault.ListSeparated -> {
                             when {
-                                null != targetType && targetType.declaration != SimpleTypeModelStdLib.ListSeparated && targetType.declaration is DataType -> {
+                                null != targetType && targetType.declaration != StdLibDefault.ListSeparated && targetType.declaration is DataType -> {
                                     finishListSeparated()
                                     val elType = targetType.declaration as DataType
                                     val propDecl = elType.property.first()
@@ -494,11 +494,11 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                                 when (propType) {
                                     is PrimitiveType -> {
                                         val childData = children[propDecl.index]
-                                        createPrimitiveValue(sentence, SimpleTypeModelStdLib.String.declaration as PrimitiveType, childData.nodeInfo)
+                                        createPrimitiveValue(sentence, StdLibDefault.String.declaration as PrimitiveType, childData.nodeInfo)
                                     }
 
                                     is CollectionType -> when (propType) {
-                                        SimpleTypeModelStdLib.List -> {
+                                        StdLibDefault.List -> {
                                             when {
                                                 target.node.rule.isListSimple && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> emptyList<Any>()
                                                 target.node.rule.isList -> createList(target, children.map { it.value })
@@ -518,7 +518,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                                             }
                                         }
 
-                                        SimpleTypeModelStdLib.ListSeparated -> {
+                                        StdLibDefault.ListSeparated -> {
                                             val childData = children[propDecl.index]
                                             when {
                                                 childData.nodeInfo.node.rule.isEmptyTerminal -> emptyList<Any>()
@@ -586,8 +586,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     }
 
     private fun createValueFor(sentence: Sentence, type: TypeDefinition, path: AsmPath, childData: ChildDataAny): Any? = when (type) {
-        is PrimitiveType -> createPrimitiveValue(sentence, SimpleTypeModelStdLib.String.declaration as PrimitiveType, childData.nodeInfo)
-        is UnnamedSupertypeType -> TODO()
+        is PrimitiveType -> createPrimitiveValue(sentence, StdLibDefault.String.declaration as PrimitiveType, childData.nodeInfo)
+        is UnionType -> TODO()
         is CollectionType -> TODO()
         is TupleType -> createTupleFrom(sentence, type, path, childData.value as List<ChildDataAny>)
         is DataType -> createElementFrom(sentence, type, path, childData.value as List<ChildDataAny>)
@@ -653,8 +653,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
 
                     is TupleType -> createTupleFrom(sentence, propType, path, childData.value as List<ChildDataAny>)
 
-                    is UnnamedSupertypeType -> {
-                        val actualType = propType.subtypes[childData.nodeInfo.parentAlt.option.asIndex].declaration
+                    is UnionType -> {
+                        val actualType = propType.alternatives[childData.nodeInfo.parentAlt.option.asIndex].declaration
                         when (actualType) {
                             is TupleType -> createTupleFrom(sentence, actualType, path, childData.value as List<ChildDataAny>)
                             else -> {

@@ -64,7 +64,7 @@ object TypeModelTest {
             expected is TypeInstanceSimple && actual is TypeInstanceSimple -> tmAssertEquals(expected, actual, source)
             expected is TypeParameterReference && actual is TypeParameterReference -> tmAssertEquals(expected, actual, source)
             expected is TupleTypeInstance && actual is TupleTypeInstance -> tmAssertEquals(expected, actual, source)
-            expected is UnnamedSupertypeTypeInstance && actual is UnnamedSupertypeTypeInstance -> tmAssertEquals(expected, actual, source)
+           //expected is UnnamedSupertypeTypeInstance && actual is UnnamedSupertypeTypeInstance -> tmAssertEquals(expected, actual, source)
             expected==null || actual==null || expected::class != actual::class -> fail("expected an actual are different types: $source")
             else -> fail("Unsupported subtypes of TypeInstance")
         }
@@ -100,7 +100,7 @@ object TypeModelTest {
         }
         tmAssertEquals(expected.declaration, actual.declaration, source)
     }
-
+/*
     fun tmAssertEquals(expected: UnnamedSupertypeTypeInstance, actual: UnnamedSupertypeTypeInstance, source: String) {
         assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
         assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
@@ -109,21 +109,21 @@ object TypeModelTest {
             val act = actual.typeArguments[i]
             tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
         }
-        assertEquals(expected.declaration.subtypes.size, actual.declaration.subtypes.size, "Different number of subtypes for ${source}.${expected}")
-        for (i in expected.declaration.subtypes.indices) {
-            val exp = expected.declaration.subtypes[i]
-            val act = actual.declaration.subtypes[i]
+        assertEquals(expected.declaration.alternatives.size, actual.declaration.alternatives.size, "Different number of subtypes for ${source}.${expected}")
+        for (i in expected.declaration.alternatives.indices) {
+            val exp = expected.declaration.alternatives[i]
+            val act = actual.declaration.alternatives[i]
             tmAssertEquals(exp, act, "subtype[$i] for ${source}.${expected}")
         }
     }
-
+*/
     fun tmAssertEquals(expected: TypeDefinition?, actual: TypeDefinition?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is SpecialTypeSimple && actual is SpecialTypeSimple -> tmAssertEquals(expected, actual)
             expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)
             expected is EnumType && actual is EnumType -> tmAssertEquals(expected, actual)
-            expected is UnnamedSupertypeType && actual is UnnamedSupertypeType -> tmAssertEquals(expected, actual)
+            expected is UnionType && actual is UnionType -> tmAssertEquals(expected, actual)
             expected is DataType && actual is DataType -> tmAssertEquals(expected, actual)
             expected is CollectionType && actual is CollectionType -> tmAssertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
@@ -145,12 +145,12 @@ object TypeModelTest {
         TODO("literals")
     }
 
-    private fun tmAssertEquals(expected: UnnamedSupertypeType, actual: UnnamedSupertypeType) {
-        assertEquals(expected.subtypes.size, actual.subtypes.size, "Number of subTypes do not match for '${expected.name}'")
-        for (i in 0 until expected.subtypes.size) {
-            val exp = expected.subtypes[i]
-            val act = actual.subtypes[i]
-            tmAssertEquals(exp, act, "subtypes do not match")
+    private fun tmAssertEquals(expected: UnionType, actual: UnionType) {
+        assertEquals(expected.alternatives.size, actual.alternatives.size, "Number of alternatives do not match for '${expected.name}'")
+        for (i in 0 until expected.alternatives.size) {
+            val exp = expected.alternatives[i]
+            val act = actual.alternatives[i]
+            tmAssertEquals(exp, act, "alternatives do not match")
         }
     }
 
