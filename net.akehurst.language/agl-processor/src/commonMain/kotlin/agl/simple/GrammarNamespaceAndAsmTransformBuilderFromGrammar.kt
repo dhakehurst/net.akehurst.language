@@ -39,6 +39,7 @@ import net.akehurst.language.typemodel.asm.DataTypeSimple
 import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.asm.StructuredTypeSimpleAbstract
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import std.extensions.capitalise
 import kotlin.reflect.KClass
 
 
@@ -417,6 +418,8 @@ internal class Grammar2TransformRuleSet(
                         }
 
                         else -> {
+                            val name = propertyNameFor(choice,SimpleTypeModelStdLib.NothingType.declaration).value.capitalise
+
                             val subType = grammarTypeNamespace.findOwnedOrCreateUnnamedSupertypeType(subtypeTransforms.map { it.resolvedType }).type()
                             val options = subtypeTransforms.mapIndexed { idx, it ->
                                 WhenOptionSimple(
@@ -472,7 +475,7 @@ internal class Grammar2TransformRuleSet(
                         t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                         else -> {
                             val childIndex = 0 //always first and only child
-                            val pName = propertyNameFor(et, optItem.item, t.resolvedType.declaration)
+                            val pName = propertyNameFor(optItem.item, t.resolvedType.declaration)
                             val rhs = EXPRESSION_CHILD(childIndex)
                             createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, rhs)
                         }
@@ -500,7 +503,7 @@ internal class Grammar2TransformRuleSet(
                         t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                         else -> {
                             val childIndex = 0 //always first and only child
-                            val pName = propertyNameFor(et, listItem.item, t.resolvedType.declaration)
+                            val pName = propertyNameFor(listItem.item, t.resolvedType.declaration)
                             val rhs = EXPRESSION_CHILDREN
                             createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, rhs)
                         }
@@ -528,7 +531,7 @@ internal class Grammar2TransformRuleSet(
                         t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                         else -> {
                             val childIndex = 0 //always first and only child
-                            val pName = propertyNameFor(et, listItem.item, t.resolvedType.declaration)
+                            val pName = propertyNameFor( listItem.item, t.resolvedType.declaration)
                             val rhs = t.expression
                             createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, rhs)
                         }
@@ -881,9 +884,9 @@ internal class Grammar2TransformRuleSet(
                     )
                 }
                 val n = when (ruleItem) {
-                    is OptionalItem -> propertyNameFor(et, ruleItem.item, tr.resolvedType.declaration)
-                    is ListOfItems -> propertyNameFor(et, ruleItem.item, tr.resolvedType.declaration)
-                    else -> propertyNameFor(et, ruleItem, tr.resolvedType.declaration)
+                    is OptionalItem -> propertyNameFor( ruleItem.item, tr.resolvedType.declaration)
+                    is ListOfItems -> propertyNameFor(ruleItem.item, tr.resolvedType.declaration)
+                    else -> propertyNameFor(ruleItem, tr.resolvedType.declaration)
                 }
                 val ass = when (tr.resolvedType.declaration) {
                     SimpleTypeModelStdLib.NothingType.declaration -> null
@@ -912,7 +915,7 @@ internal class Grammar2TransformRuleSet(
                 when (tr.resolvedType.declaration) {
                     SimpleTypeModelStdLib.NothingType.declaration -> null
                     else -> {
-                        val n = propertyNameFor(et, ruleItem, tr.resolvedType.declaration)
+                        val n = propertyNameFor( ruleItem, tr.resolvedType.declaration)
                         val rhs = tr.expression
                         createUniquePropertyDeclarationAndAssignment(et, n, tr.resolvedType, childIndex, rhs)
                     }
@@ -924,7 +927,7 @@ internal class Grammar2TransformRuleSet(
                 when {
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                     else -> {
-                        val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
+                        val pName = propertyNameFor( ruleItem.item, t.resolvedType.declaration)
                         val exp = when (ruleItem.item) {
                             // is EmptyRule, is Terminal, is NonTerminal -> t.expression
                             else -> WithExpressionSimple(withContext = EXPRESSION_CHILD(childIndex), expression = t.expression)
@@ -939,7 +942,7 @@ internal class Grammar2TransformRuleSet(
                 when {
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                     else -> {
-                        val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
+                        val pName = propertyNameFor(ruleItem.item, t.resolvedType.declaration)
                         val rhs = when {
                             else -> WithExpressionSimple(
                                 EXPRESSION_CHILD(childIndex),
@@ -957,7 +960,7 @@ internal class Grammar2TransformRuleSet(
                 when {
                     t.resolvedType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> null
                     else -> {
-                        val pName = propertyNameFor(et, ruleItem.item, t.resolvedType.declaration)
+                        val pName = propertyNameFor(ruleItem.item, t.resolvedType.declaration)
                         createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, EXPRESSION_CHILDREN)
                     }
                 }
@@ -970,8 +973,8 @@ internal class Grammar2TransformRuleSet(
                     else -> {
                         val content = ruleItem.groupedContent
                         val pName = when (content) {
-                            is Choice -> propertyNameFor(et, content, gt.resolvedType.declaration)
-                            else -> propertyNameFor(et, ruleItem, gt.resolvedType.declaration)
+                            is Choice -> propertyNameFor(content, gt.resolvedType.declaration)
+                            else -> propertyNameFor( ruleItem, gt.resolvedType.declaration)
                         }
                         val rhs = WithExpressionSimple(
                             withContext = EXPRESSION_CHILD(childIndex),
@@ -1033,13 +1036,13 @@ internal class Grammar2TransformRuleSet(
                     null
                 } else {
                     val propTr = trRuleForRuleItem(rhs, true) //to get list type
-                    val pName = propertyNameFor(et, ruleItem, propTr.resolvedType.declaration)
+                    val pName = propertyNameFor(ruleItem, propTr.resolvedType.declaration)
                     val colItem = when (rhs) {
                         is SimpleList -> rhs.item
                         is SeparatedList -> rhs.item
                         else -> error("Internal Error: not handled ${rhs::class.simpleName}")
                     }
-                    val colPName = propertyNameFor(et, colItem, propTr.resolvedType.declaration)
+                    val colPName = propertyNameFor(colItem, propTr.resolvedType.declaration)
                     val expr = WithExpressionSimple(
                         withContext = EXPRESSION_CHILD_i_prop(childIndex, colPName),
                         expression = propTr.expression
@@ -1058,7 +1061,7 @@ internal class Grammar2TransformRuleSet(
 
             else -> {
                 val propType = trRuleForRuleItem(ruleItem, true)
-                val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
+                val pName = propertyNameFor(ruleItem, propType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
         }
@@ -1072,13 +1075,13 @@ internal class Grammar2TransformRuleSet(
         val rhs = refRule.rhs
         return when (rhs) {
             is Terminal -> {
-                val pName = propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration)
+                val pName = propertyNameFor(ruleItem, SimpleTypeModelStdLib.String.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, SimpleTypeModelStdLib.String, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             is Concatenation -> {
                 val t = g2rs.trRuleForRuleItem(ruleItem, true)
-                val pName = propertyNameFor(et, ruleItem, t.resolvedType.declaration)
+                val pName = propertyNameFor(ruleItem, t.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, t.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
@@ -1100,26 +1103,26 @@ internal class Grammar2TransformRuleSet(
                     null
                 } else {
                     val propType = g2rs.trRuleForRuleItem(rhs, true) //to get list type
-                    val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
+                    val pName = propertyNameFor(ruleItem, propType.resolvedType.declaration)
                     createUniquePropertyDeclarationAndAssignment(et, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
                 }
             }
 
             is Choice -> {
                 val choiceType = g2rs.trRuleForRhsChoice(rhs, refRule) //pName, rhs.alternative)
-                val pName = propertyNameFor(et, ruleItem, choiceType.resolvedType.declaration)
+                val pName = propertyNameFor(ruleItem, choiceType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, choiceType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
 
             else -> {
                 val propType = g2rs.trRuleForRuleItem(ruleItem, true)
-                val pName = propertyNameFor(et, ruleItem, propType.resolvedType.declaration)
+                val pName = propertyNameFor( ruleItem, propType.resolvedType.declaration)
                 createUniquePropertyDeclarationAndAssignment(et, pName, propType.resolvedType, childIndex, EXPRESSION_CHILD(childIndex))
             }
         }
     }
 
-    private fun propertyNameFor(et: StructuredType, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
+    private fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
         return when (configuration) {
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")

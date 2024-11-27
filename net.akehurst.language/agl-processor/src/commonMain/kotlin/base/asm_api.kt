@@ -173,8 +173,8 @@ interface Namespace<DT : Definition<DT>> : Formatable {
     /** find owned definition (not imported) **/
     fun findOwnedDefinitionOrNull(simpleName: SimpleName): DT?
 
-    fun addImport(import: Import)
-    fun addDefinition(definition: DT)
+    fun addImport(value: Import)
+    fun addDefinition(value: DT)
 }
 
 interface DefinitionReference<DT : Definition<DT>> {

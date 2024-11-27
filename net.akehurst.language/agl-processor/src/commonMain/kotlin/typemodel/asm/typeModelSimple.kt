@@ -569,14 +569,6 @@ abstract class TypeNamespaceAbstract(
 
     override fun isImported(qualifiedNamespaceName: QualifiedName): Boolean = import.contains(Import(qualifiedNamespaceName.value))
 
-    override fun addImport(value: Import) {
-        if (this.import.contains(value)) {
-            // do not repeat imports
-        } else {
-            (this.import as MutableList).add(value)
-        }
-    }
-
     /*
         override fun addDefinition(decl: TypeDefinition) {
             if (ownedTypesByName.containsKey(decl.name)) {
@@ -643,6 +635,9 @@ abstract class TypeNamespaceAbstract(
         }
     }
 
+    override fun findOwnedUnnamedSupertypeTypeOrNull(subtypes: List<TypeInstance>): UnnamedSupertypeType? = _unnamedSuperTypes[subtypes]
+
+    @Deprecated("No longer needed")
     override fun findTupleTypeWithIdOrNull(id: Int): TupleType? = ownedTupleTypes.getOrNull(id)
 
     fun findOrCreateSpecialTypeNamed(typeName: SimpleName): SpecialTypeSimple {
@@ -1120,9 +1115,9 @@ class UnnamedSupertypeTypeSimple(
     }
 
     override fun cloneTo(other: TypeModel): UnnamedSupertypeType =
-        this.namespace.cloneTo(other).findOwnedOrCreateUnnamedSupertypeType(
-            this.subtypes.map { it.cloneTo(other) }
-        ).also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+        this.namespace.cloneTo(other).findOwnedUnnamedSupertypeTypeOrNull(this.subtypes)
+            ?: this.namespace.cloneTo(other).findOwnedOrCreateUnnamedSupertypeType(this.subtypes.map { it.cloneTo(other) }) //TODO: only need to create not find!
+                .also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
 
 
     override fun asStringInContext(context: TypeNamespace): String = "unnamed ${signature(context)}"

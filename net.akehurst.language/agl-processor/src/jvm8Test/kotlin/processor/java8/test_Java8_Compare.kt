@@ -25,6 +25,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import std.extensions.capitalise
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -144,7 +145,7 @@ class test_Java8_Compare(val data: Data) {
 
     private fun testParse(proc: LanguageProcessor<Asm, ContextAsmSimple>, toUpper: Boolean = false) {
         val queryStr = this.data.sentence
-        val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
+        val grammarRule = if (toUpper) this.data.grammarRule.capitalise else this.data.grammarRule
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)

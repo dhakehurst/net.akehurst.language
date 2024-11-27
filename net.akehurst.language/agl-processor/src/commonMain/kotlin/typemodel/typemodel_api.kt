@@ -78,7 +78,9 @@ interface TypeNamespace : Namespace<TypeDefinition> {
      * find type in this namespace OR imports with given name
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: PossiblyQualifiedName): TypeDefinition?
+    fun findOwnedUnnamedSupertypeTypeOrNull(subtypes: List<TypeInstance>): UnnamedSupertypeType?
 
+    @Deprecated("No longer needed")
     fun findTupleTypeWithIdOrNull(id: Int): TupleType?
 
     fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType

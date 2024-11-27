@@ -17,11 +17,13 @@
 
 package net.akehurst.language.grammarTypemodel.asm
 
-import net.akehurst.language.base.api.*
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.OptionHolder
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.typemodel.api.DataType
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
@@ -34,7 +36,11 @@ class GrammarTypeNamespaceSimple(
 ) : GrammarTypeNamespaceAbstract(options, import) {
     override fun cloneTo(other: TypeModel): TypeNamespace =
         other.findNamespaceOrNull(this.qualifiedName)
-            ?: GrammarTypeNamespaceSimple(this.qualifiedName, this.options, this.import)
+            ?: GrammarTypeNamespaceSimple(
+                this.qualifiedName,
+                this.options,
+                this.import
+            ).also { other.addNamespace(it) }
 
 }
 

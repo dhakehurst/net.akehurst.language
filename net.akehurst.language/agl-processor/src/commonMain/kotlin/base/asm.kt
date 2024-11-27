@@ -148,8 +148,12 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         this.definition.forEach { it.options.parent = this.options }
     }
 
-    override fun addImport(import: Import) {
-        (this.import as MutableList).add(import)
+    override fun addImport(value: Import) {
+        if (this.import.contains(value)) {
+            // do not repeat imports
+        } else {
+            (this.import as MutableList).add(value)
+        }
     }
 
     override fun addDefinition(value: DT) {
