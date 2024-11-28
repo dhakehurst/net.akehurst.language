@@ -156,7 +156,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
                     .filterNot { it == StdLibDefault.AnyType }
                     .joinToString(separator = "\n", postfix = "\n") { st ->
                         val pqn = when {
-                            st.declaration.namespace == context -> st.typeName.value
+                            st.resolvedDeclaration.namespace == context -> st.typeName.value
                             context.import.contains(st.qualifiedTypeName.front.asImport) -> st.typeName.value
                             else -> st.qualifiedTypeName.value // TODO: add import if not name clash
                         }

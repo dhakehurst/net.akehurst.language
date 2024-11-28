@@ -92,11 +92,7 @@ class AsmTransformSyntaxAnalyser(
 
         val optHolder = OptionHolderDefault(null, options.associate { it })
         val namespace = TransformNamespaceDefault(nsName,optHolder,imports)
-        transformBuilders.map {
-            val tr = it.invoke(namespace)
-            namespace.addDefinition(tr)
-            tr
-        }
+        transformBuilders.map { it.invoke(namespace) }
         return namespace
     }
 

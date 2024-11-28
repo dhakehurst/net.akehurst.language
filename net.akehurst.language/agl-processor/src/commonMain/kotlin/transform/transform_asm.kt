@@ -92,6 +92,14 @@ class TransformNamespaceDefault(
     import: List<Import> = mutableListOf()
 ) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(options,import) {
 
+    override fun createOwnedTransformRuleSet(name: SimpleName, extends: List<TransformRuleSetReference>, options: OptionHolder): TransformRuleSet = TransformRuleSetDefault(
+        namespace = this,
+        name = name,
+        argExtends = extends,
+        options = options,
+        _rules = emptyList()
+    )
+
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
         sb.append("namespace $qualifiedName\n")
@@ -140,16 +148,20 @@ class TransformRuleSetDefault(
 
     override val importTypes: List<Import> = mutableListOf()
 
+    override val rules: Map<GrammarRuleName, TransformationRule> = _rules.associateBy(TransformationRule::grammarRuleName).toMutableMap()
+
+    override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
+    override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
+
+    init {
+        namespace.addDefinition(this)
+    }
+
     override fun addImportType(value:Import) {
         if (this.importTypes.contains(value).not()) {
             (this.importTypes as MutableList).add(value)
         }
     }
-
-    override val rules: Map<GrammarRuleName, TransformationRule> = _rules.associateBy(TransformationRule::grammarRuleName).toMutableMap()
-
-    override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
-    override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
 
     override fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule? =
         rules[grmRuleName]
@@ -171,7 +183,6 @@ class TransformRuleSetDefault(
             _rules = this.rules.values.toMutableList()//should clone content, rules should be ok to share, they do not ref the RuleSet and are immutable
         )
         this.importTypes.forEach { rrs.addImportType(it) }
-        (ns as NamespaceAbstract<TransformRuleSet>).addDefinition(rrs)
         return rrs
     }
 
@@ -238,7 +249,7 @@ class TransformationRuleDefault(
         return "$indent${grammarRuleName}: ${expression.asString(indent, imports)}"
     }
 
-    override fun toString(): String  = "${expression}"
+    override fun toString(): String  = "${grammarRuleName.value}: ${expression}"
 }
 
 internal fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {

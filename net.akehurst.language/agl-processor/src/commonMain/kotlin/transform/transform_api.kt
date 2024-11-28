@@ -35,7 +35,7 @@ interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
 }
 
 interface TransformNamespace : Namespace<TransformRuleSet> {
-
+    fun createOwnedTransformRuleSet(name: SimpleName, extends: List<TransformRuleSetReference>, options: OptionHolder): TransformRuleSet
 }
 
 interface TransformRuleSetReference : DefinitionReference<TransformRuleSet> {

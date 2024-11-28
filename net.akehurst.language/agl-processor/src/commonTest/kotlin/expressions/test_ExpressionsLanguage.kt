@@ -97,7 +97,8 @@ class test_ExpressionsLanguage {
             "(a)",
             "(a+b)-c",
             "(a+b)-(c.fun(d))",
-            "(a+b) as C"
+            "(a+b) as C",
+            "(a as C).f"
         )
     }
 

@@ -100,9 +100,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     }
 
     private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
-        val scopeItems = context.rootScope.findItemsConformingTo { it == grammarRule.declaration.qualifiedName }
+        val scopeItems = context.rootScope.findItemsConformingTo { it == grammarRule.resolvedDeclaration.qualifiedName }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, it.referableName, grammarRule.declaration.name.value)
+            CompletionItem(CompletionItemKind.LITERAL, it.referableName, grammarRule.resolvedDeclaration.name.value)
         }
     }
 

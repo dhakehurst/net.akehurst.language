@@ -113,12 +113,9 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return NavigationSimple(navigationRoot, parts)
     }
 
-    // navigationRoot = root | literal ;
-    private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression = when (nodeInfo.alt.option.asIndex) {
-        0 -> children[0] as Expression
-        1 -> children[0] as Expression
-        else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'navigationRoot'")
-    }
+    // navigationRoot = root | literal | group;
+    private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+         children[0] as Expression
 
     // navigationPartList = navigationPart+ ;
     private fun navigationPartList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<NavigationPart> =

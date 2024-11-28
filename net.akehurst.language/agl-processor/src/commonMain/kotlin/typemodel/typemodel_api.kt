@@ -143,9 +143,9 @@ interface TypeInstance {
     /**
      * {derived} type is resolved via the namespace
      */
-    val declaration: TypeDefinition
+    val resolvedDeclaration: TypeDefinition
 
-    val declarationOrNull: TypeDefinition?
+    val resolvedDeclarationOrNull: TypeDefinition?
 
     /**
      * properties from this type, and all supertypes, with type parameters resolved
@@ -234,7 +234,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun appendMethodPrimitive(
         name: MethodName,
         parameters: List<ParameterDeclaration>,
-        typeInstance: TypeInstance,
+        returnType: TypeInstance,
         description: String
     ):MethodDeclarationPrimitive
 

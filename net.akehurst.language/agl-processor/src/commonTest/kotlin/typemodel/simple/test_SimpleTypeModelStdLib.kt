@@ -79,8 +79,8 @@ class test_SimpleTypeModelStdLib {
             TypeArgumentNamedSimple(PropertyName("prop3"),StdLibDefault.Boolean),
         )
         val actual = StdLibDefault.TupleType.typeTuple(args)
-        assertEquals(StdLibDefault.TupleType,actual.declaration)
-        assertEquals("std.TupleType",actual.declaration.qualifiedName.value)
+        assertEquals(StdLibDefault.TupleType,actual.resolvedDeclaration)
+        assertEquals("std.TupleType",actual.resolvedDeclaration.qualifiedName.value)
         assertEquals("std.TupleType",actual.qualifiedTypeName.value)
     }
 

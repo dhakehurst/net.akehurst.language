@@ -374,7 +374,7 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun walkMap(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Map<*, *>, typeInstance: TypeInstance): WalkInfo<P, A> {
-        val dt = typeInstance.declaration as CollectionType
+        val dt = typeInstance.resolvedDeclaration as CollectionType
         val entryKeyType = typeInstance.typeArguments[0]
         val entryValType = typeInstance.typeArguments[1]
         val infolb = this.mapBegin(path, info, data, dt, entryKeyType.type, entryValType.type)
@@ -435,7 +435,7 @@ class KompositeWalker<P : Any?, A : Any?>(
     }
 
     protected fun runtimeTypeFor(data: Any, targetType: TypeInstance): TypeDefinition {
-        val dt = targetType.declarationOrNull
+        val dt = targetType.resolvedDeclarationOrNull
         return when (dt) {
             is CollectionType -> dt // can't get runtime-type of kotlin collection types
             else -> {

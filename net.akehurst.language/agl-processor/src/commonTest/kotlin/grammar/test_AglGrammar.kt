@@ -20,7 +20,7 @@ class test_AglGrammar {
 
         val grm_name = grm.findAllPropertyOrNull(PropertyName("name"))
         assertNotNull(grm_name)
-        assertEquals("SimpleName",grm_name.typeInstance.declaration.name.value)
+        assertEquals("SimpleName",grm_name.typeInstance.resolvedDeclaration.name.value)
 
         val grm_extends = grm.findAllPropertyOrNull(PropertyName("extends"))
         assertNotNull(grm_extends)

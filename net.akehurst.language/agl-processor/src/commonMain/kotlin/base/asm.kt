@@ -18,12 +18,10 @@
 package net.akehurst.language.base.asm
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.reference.api.CrossReferenceNamespace
-import net.akehurst.language.transform.api.TransformNamespace
 
 class OptionHolderDefault(
-    override var parent: OptionHolder?,
-    val options: Map<String, String>
+    override var parent: OptionHolder? = null,
+    val options: Map<String, String> = emptyMap()
 ) : OptionHolder {
     override operator fun get(name: String): String? {
         return this.options[name] ?: this.parent?.get(name)

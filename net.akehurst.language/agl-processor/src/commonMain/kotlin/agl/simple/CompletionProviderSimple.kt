@@ -68,7 +68,7 @@ class CompletionProviderSimple(
     }
 
     private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextAsmSimple): List<CompletionItem> {
-        val prop = type.declaration.getOwnedPropertyByIndexOrNull(nextChildNumber)
+        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(nextChildNumber)
         val expectedPropName = expectedNextItems.map {
             val ri = when {
                 it.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), it.owningRule.name)
@@ -76,7 +76,7 @@ class CompletionProviderSimple(
                 else -> TODO()
             }
             //val tiType = targetNamespace.findTypeUsageForRule()
-            val tiType = StdLibDefault.String.declaration
+            val tiType = StdLibDefault.String.resolvedDeclaration
             grammar2TypeModel.propertyNameFor(targetGrammar, ri, tiType)
         }
         return when (prop) {
@@ -88,7 +88,7 @@ class CompletionProviderSimple(
                 val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                 val items = refTypes.flatMap { refType ->
                     context.rootScope.findItemsConformingTo {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                         itemType.conformsTo(refType)
                     }
                 }

@@ -161,7 +161,7 @@ class ReferenceResolverSimple(
                 val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.findItemsNamedConformingTo(referringStr) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -216,7 +216,7 @@ class ReferenceResolverSimple(
                 val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.rootScope.findItemsByQualifiedNameConformingTo(list) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.declaration
+                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -293,7 +293,7 @@ class ReferenceResolverSimple(
     }
 
     private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
-        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: StdLibDefault.NothingType.declaration
+        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
         val selfType = typeModel.typeOf(this)
         return selfType.conformsTo(type)
     }

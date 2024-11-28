@@ -32,7 +32,6 @@ import net.akehurst.language.style.api.AglStyleMetaRule
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.api.AglStyleSelectorKind
 import net.akehurst.language.style.api.AglStyleTagRule
-import net.akehurst.language.style.asm.AglStyleModelDefault
 
 class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGrammar> {
 
@@ -93,7 +92,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                 }
 
                 AglStyleSelectorKind.RULE_NAME -> {
-                    if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
+                    if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.resolvedDeclaration.qualifiedName }.isEmpty()) {
                         issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                     }
                 }

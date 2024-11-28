@@ -98,7 +98,7 @@ object TypeModelTest {
             val act = actual.typeArguments[i]
             tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
         }
-        tmAssertEquals(expected.declaration, actual.declaration, source)
+        tmAssertEquals(expected.resolvedDeclaration, actual.resolvedDeclaration, source)
     }
 /*
     fun tmAssertEquals(expected: UnnamedSupertypeTypeInstance, actual: UnnamedSupertypeTypeInstance, source: String) {
@@ -157,7 +157,7 @@ object TypeModelTest {
     private fun tmAssertEquals(expected: DataType, actual: DataType) {
         assertEquals(expected.name, actual.name)
         assertEquals(expected.supertypes.size, actual.supertypes.size, "Wrong number of supertypes for '${expected.name}'")
-        assertEquals(expected.supertypes.map { it.declaration.qualifiedName }.toSet(), actual.supertypes.map { it.declaration.qualifiedName }.toSet())
+        assertEquals(expected.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet(), actual.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet())
 
         assertEquals(expected.subtypes.size, actual.subtypes.size, "Wrong number of subtypes for '${expected.name}'")
         assertEquals(expected.subtypes.map { it.qualifiedTypeName }.toSet(), actual.subtypes.map { it.qualifiedTypeName }.toSet())

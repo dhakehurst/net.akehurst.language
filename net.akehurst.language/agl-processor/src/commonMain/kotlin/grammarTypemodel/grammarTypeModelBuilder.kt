@@ -69,7 +69,7 @@ class GrammarTypeNamespaceBuilder(
     }
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
-    val StringType: PrimitiveType get() = StdLibDefault.String.declaration as PrimitiveType
+    val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDeclaration as PrimitiveType
 
     fun imports(vararg imports:String) {
         imports.forEach { _namespace.addImport(Import(it)) }

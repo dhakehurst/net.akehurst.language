@@ -115,7 +115,7 @@ internal abstract class LanguageProcessorAbstract<AsmType:Any,  ContextType : An
 
     override val targetAsmTransformRuleSet: TransformRuleSet by lazy {
         targetGrammar?.let { asmTransformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
-            ?: error("should not happen")
+            ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
     }
 
     override val crossReferenceModel: CrossReferenceModel by lazy {

@@ -178,7 +178,6 @@ data class LambdaExpressionSimple(
     override fun toString(): String = "{ $expression }"
 }
 
-
 data class IndexOperationSimple(
     override val indices: List<Expression>
 ) : IndexOperation {
@@ -214,6 +213,7 @@ class CastExpressionSimple(
         val ttn = targetType.asString(indent, imports)
         return "${expression.asString(indent, imports)} as $ttn"
     }
+    override fun toString(): String = "$expression as $targetType"
 }
 
 data class TypeReferenceSimple(
@@ -228,14 +228,18 @@ data class TypeReferenceSimple(
         }
         val targs = when {
             typeArguments.isEmpty() -> ""
-            else -> "<${typeArguments.joinToString { it.asString(indent,imports) }}>"
+            else -> "<${typeArguments.joinToString { it.asString(indent, imports) }}>"
         }
         return "$tn$targs"
     }
+
+    override fun toString(): String = "${possiblyQualifiedName.value}: $typeArguments ${if (isNullable) "?" else ""}"
 }
 
 class GroupExpressionSimple(
     override val expression: Expression
 ) : GroupExpression {
     override fun asString(indent: Indent, imports: List<Import>): String = "(${expression.asString(indent, imports)})"
+
+    override fun toString(): String = "($expression)"
 }

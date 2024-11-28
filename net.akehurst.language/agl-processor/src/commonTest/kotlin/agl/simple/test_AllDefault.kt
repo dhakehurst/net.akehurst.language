@@ -6903,10 +6903,12 @@ class test_AllDefault {
                     element("S") {
                         propertyElementExplicitType("type", "Type") {
                             propertyString("name", "A")
-                            propertyListOfElement("typeArgs") {
-                                element("Type") {
-                                    propertyString("name", "B")
-                                    propertyNothing("typeArgs")
+                            propertyElementExplicitType("typeArgs","TypeArgs") {
+                                propertyListOfElement("typeArgList") {
+                                    element("Type") {
+                                        propertyString("name", "B")
+                                        propertyNothing("typeArgs")
+                                    }
                                 }
                             }
                         }

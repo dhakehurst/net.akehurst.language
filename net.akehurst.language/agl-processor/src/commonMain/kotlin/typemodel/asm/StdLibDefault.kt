@@ -64,7 +64,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         typeDecl.appendMethodPrimitive(
             MethodName("map"),
             listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl, Lambda.typeName), null)),
-            TypeParameterReference(typeDecl, SimpleName("E")),
+            StdLibDefault.AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
             "A list created by mapping each element using the given lambda expression."
         )
     }

@@ -26,8 +26,32 @@ object AsmTransform {
 
     const val goalRuleName = "unit"
 
-    //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, goalRuleName))
-    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(AglExpressions.goalRuleName)!!
+    const val grammarStr = """
+namespace net.akehurst.language.agl
+
+grammar Transform : Base {
+
+    unit = option* namespace* ;
+    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
+    transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '} ;
+    typeImport = 'import-types' possiblyQualifiedName ;
+    extends = ':' [possiblyQualifiedName / ',']+ ;
+    transformRule = grammarRuleName ':' transformRuleRhs ;
+    transformRuleRhs = expressionRule | modifyRule ;
+    expressionRule = expression ;
+    modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
+    statement
+      = assignmentStatement
+      ;
+    assignmentStatement = propertyName ':=' expression ;
+    propertyName = IDENTIFIER ;
+    expression = Expression::expression ;
+   
+    grammarRuleName = IDENTIFIER ;
+    possiblyQualifiedTypeName = possiblyQualifiedName ;
+
+}
+    """
 
     val grammar = grammar(
         namespace = "net.akehurst.language.agl.language",
@@ -50,7 +74,7 @@ object AsmTransform {
             lit("{")
             lst(0, -1) { ref("option") }
             lst(0, -1) { ref("typeImport") }
-            lst(1, -1) { ref("transformRule") }
+            lst(0, -1) { ref("transformRule") }
             lit("}")
         }
         concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
@@ -77,32 +101,6 @@ object AsmTransform {
         concatenation("expression") { ebd(AglExpressions.grammar.selfReference, "expression") }
     }
 
-    const val grammarStr = """
-namespace net.akehurst.language.agl
-
-grammar Transform : Base {
-
-    unit = option* namespace* ;
-    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
-    transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule+ '} ;
-    typeImport = 'import-types' possiblyQualifiedName ;
-    extends = ':' [possiblyQualifiedName / ',']+ ;
-    transformRule = grammarRuleName ':' transformRuleRhs ;
-    transformRuleRhs = expressionRule | modifyRule ;
-    expressionRule = expression ;
-    modifyRule = '{' possiblyQualifiedTypeName '->' statement+ '}' ;
-    statement
-      = assignmentStatement
-      ;
-    assignmentStatement = propertyName ':=' expression ;
-    propertyName = IDENTIFIER ;
-    expression = Expression::expression ;
-   
-    grammarRuleName = IDENTIFIER ;
-    possiblyQualifiedTypeName = possiblyQualifiedName ;
-
-}
-    """
 
     const val styleStr = """
     """

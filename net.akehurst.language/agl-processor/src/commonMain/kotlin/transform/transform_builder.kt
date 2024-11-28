@@ -219,15 +219,14 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun build(): TransformRuleSet {
-        val rule = TransformRuleSetDefault(
+        val trs = TransformRuleSetDefault(
             namespace = namespace,
             name = name,
             _rules = _rules,
             argExtends = _extends
         )
-        _importTypes.forEach { rule.addImportType(it) }
-        namespace.addDefinition(rule)
-        return rule
+        _importTypes.forEach { trs.addImportType(it) }
+        return trs
     }
 }
 

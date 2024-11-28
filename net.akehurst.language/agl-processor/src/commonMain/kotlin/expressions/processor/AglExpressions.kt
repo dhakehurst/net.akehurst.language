@@ -51,6 +51,7 @@ grammar Expression extends Base {
     navigationRoot 
      = rootExpression
      | literalExpression
+     | group
     ;
     navigationPart
      = propertyCall
@@ -135,6 +136,7 @@ grammar Expression extends Base {
         choice("navigationRoot") {
             ref("rootExpression")
             ref("literalExpression")
+            ref("group")
         }
         choice("navigationPart") {
             ref("propertyCall")

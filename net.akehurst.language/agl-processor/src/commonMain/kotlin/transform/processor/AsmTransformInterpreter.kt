@@ -43,9 +43,9 @@ class AsmTransformInterpreter(
         const val SELF = "\$self"
         val PATH = PropertyName("\$path")
         val ALTERNATIVE = PropertyName("\$alternative")
-        val LEAF = PropertyName("leaf")
         val CHILD = PropertyName("child")
         val CHILDREN = PropertyName("children")
+        val MATCHED_TEXT = PropertyName("\$matchedText")
         val LIST_OF_ANY = StdLibDefault.List.type(listOf(StdLibDefault.AnyType.nullable().asTypeArgument))
         val SLIST_OF_ANY = StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
         val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)

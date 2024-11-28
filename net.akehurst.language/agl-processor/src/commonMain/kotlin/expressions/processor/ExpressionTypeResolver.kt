@@ -46,7 +46,7 @@ class ExpressionTypeResolver(
         this.isNothing -> StdLibDefault.NothingType
         this.isSelf -> self
         else -> {
-            when (self.declaration) {
+            when (self.resolvedDeclaration) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
                         issues.error(null,"'$self' has no property named '${this.name}'")
@@ -162,7 +162,7 @@ class ExpressionTypeResolver(
         this.expression.typeOfExpressionFor(self)
 
     fun TypeReference.typeOfTypeReference():TypeInstance {
-        val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.declaration
+        val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration
         val targs = this.typeArguments.map {
             it.typeOfTypeReference().asTypeArgument
         }
