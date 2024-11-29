@@ -321,7 +321,7 @@ data class TypeArgumentSimple(
 
     override fun cloneTo(other: TypeModel): TypeArgument {
         val clonedType = type.cloneTo(other)
-       // val clonedTargs = this.type.typeArguments.map { it.cloneTo(other) }
+        // val clonedTargs = this.type.typeArguments.map { it.cloneTo(other) }
         //val clonedTi = clonedDecl.type(clonedTargs, this.type.isNullable)
         return TypeArgumentSimple(
             clonedType
@@ -716,7 +716,7 @@ abstract class TypeNamespaceAbstract(
     override fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType {
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
-            UnionTypeSimple(this, typeName).also( ifCreate)
+            UnionTypeSimple(this, typeName).also(ifCreate)
         } else {
             existing as UnionType
         }
@@ -1129,7 +1129,8 @@ class UnionTypeSimple(
 
             }
 
-    override fun asStringInContext(context: TypeNamespace): String = "union ${signature(context)} { ${alternatives.joinToString { it.signature(context, 0) }}} }"
+    override fun asStringInContext(context: TypeNamespace): String =
+        "union ${signature(context)} { ${alternatives.joinToString(separator = "\n") { it.signature(context, 0) }}} }"
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {

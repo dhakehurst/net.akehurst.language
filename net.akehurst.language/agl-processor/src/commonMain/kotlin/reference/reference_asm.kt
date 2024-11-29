@@ -145,6 +145,7 @@ data class DeclarationsForNamespaceDefault(
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {
+        namespace.addDefinition(this)
         scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last)
     }
 

@@ -121,8 +121,8 @@ interface Formatable {
 
 interface OptionHolder {
     var parent: OptionHolder?
-    operator fun get(name: String): String?
 
+    operator fun get(name: String): String?
     fun clone(parent:OptionHolder?): OptionHolder
 }
 

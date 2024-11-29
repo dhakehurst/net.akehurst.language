@@ -42,13 +42,11 @@ class CrossReferenceModelBuilder(
     private var _namespaces = mutableListOf<CrossReferenceNamespaceDefault>()
 
     fun declarationsFor(namespaceQualifiedName: String, init: DeclarationsForNamespaceBuilder.() -> Unit) {
-        val imports = mutableListOf<Import>()
-        val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName), import =  imports)
+        val ns = CrossReferenceNamespaceDefault(QualifiedName(namespaceQualifiedName))
         val b = DeclarationsForNamespaceBuilder(ns)
         b.init()
         val (def, imps) =b.build()
-        imports.addAll(imps)
-        ns.addDefinition(def)
+        imps.forEach { ns.addImport(it) }
         _namespaces.add(ns)
     }
 

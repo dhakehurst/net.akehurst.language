@@ -33,42 +33,42 @@ class test_BasicTutorial {
 
     companion object {
         val grammarStr = """
-// use this editor to enter the grammar for your language
-
-// each set of grammars must be defined in a namespace
-// one namespace is given for the whole file/grammar-definition
-namespace net.akehurst.language.example
-
-// multiple grammars can be defined,
-// the last grammar defined is the 'target grammar' - see other examples that illustrate this
-
-grammar BasicTutorial {
-
-    #defaultGoalRule: document
-    skip leaf WS = "\s+";
-    skip leaf COMMENT = "//[^\r\n]*" ;
-    document = targetDefList* greeting+ ;
-	greeting = hello greetingTargetList '!' ;
-    greetingTargetList = [targetRefOrWorld / ',']+ ;
-    targetDefList = targetDef ;
-    targetDef = 'target' NAME ;
-    leaf hello = 'Hello' ;
-    targetRefOrWorld = targetRef | 'World' ;
-    targetRef = NAME ;
-    leaf NAME = "[a-zA-Z]+" ;
-}
+            // use this editor to enter the grammar for your language
+            
+            // each set of grammars must be defined in a namespace
+            // one namespace is given for the whole file/grammar-definition
+            namespace net.akehurst.language.example
+            
+            // multiple grammars can be defined,
+            // the last grammar defined is the 'target grammar' - see other examples that illustrate this
+            
+            grammar BasicTutorial {
+            
+                #defaultGoalRule: document
+                skip leaf WS = "\s+";
+                skip leaf COMMENT = "//[^\r\n]*" ;
+                document = targetDefList* greeting+ ;
+                greeting = hello greetingTargetList '!' ;
+                greetingTargetList = [targetRefOrWorld / ',']+ ;
+                targetDefList = targetDef ;
+                targetDef = 'target' NAME ;
+                leaf hello = 'Hello' ;
+                targetRefOrWorld = targetRef | 'World' ;
+                targetRef = NAME ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
         """.trimIndent()
 
         val referencesStr = """
-namespace net.akehurst.language.example.BasicTutorial
-    identify TargetDef by name   
-    references {
-        in Greeting {
-            forall greetingTargetList of-type TargetRef {
-                property name refers-to TargetDef
-            }
-        }
-    }
+            namespace net.akehurst.language.example.BasicTutorial
+                identify TargetDef by name   
+                references {
+                    in Greeting {
+                        forall greetingTargetList of-type TargetRef {
+                            property name refers-to TargetDef
+                        }
+                    }
+                }
         """.trimIndent()
 
         val _processor = Agl.processorFromStringSimple(
@@ -120,12 +120,10 @@ namespace net.akehurst.language.example.BasicTutorial
             Hello George !
         """.trimIndent()
 
-
-
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(64, 7, 6, 3),
+                InputLocation(76, 7, 7, 6),
                 "No target of type(s) [TargetDef] found for referring value 'Ann' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
             )
         )

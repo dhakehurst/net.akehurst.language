@@ -89,7 +89,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
         val ns = CrossReferenceNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
         val def = declarations.invoke(ns)
-        ns.addDefinition(def)
         return ns
     }
 

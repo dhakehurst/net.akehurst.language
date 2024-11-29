@@ -28,13 +28,27 @@ object AglTypemodel {
 
     const val grammarStr = """namespace net.akehurst.language
   grammar Typemodel : Base {
-    unit = namespace declaration+ ;
-    declaration = primitive | enum | collection | datatype ;
-    primitive = 'primitive' IDENTIFIER ;
-    enum = 'enum' IDENTIFIER ;
-    collection = 'collection' IDENTIFIER '<' typeParameterList '>' ;
+    unit = namespace definition+ ;
+    definition
+      = singletonDefinition
+      | primitiveDefinition
+      | enumDefinition
+      | valueDefinition
+      | collectionDefinition
+      | dataDefinition
+      | interfaceDefinition
+      | unionDefinition
+      ;
+    singletonDefinition = 'singleton' IDENTIFIER ;
+    primitiveDefinition = 'primitive' IDENTIFIER ;
+    enumDefinition = 'enum' IDENTIFIER ;
+    valueDefinition = 'value' IDENTIFIER ;
+    collectionDefinition = 'collection' IDENTIFIER '<' typeParameterList '>' ;
+    dataDefinition = 'data' IDENTIFIER supertypes? '{' property* '}' ;
+    interfaceDefinition = 'interface' IDENTIFIER supertypes? '{' property* '}' ;
+    unionDefinition = 'union' IDENTIFIER '{' alternatives* '}' ;
+    
     typeParameterList = [ IDENTIFIER / ',']+ ;
-    datatype = 'datatype' IDENTIFIER supertypes? '{' property* '}' ;
     supertypes = ':' [ typeReference / ',']+ ;
     property = characteristic IDENTIFIER ':' typeReference ;
     typeReference = qualifiedName typeArgumentList? '?'?;

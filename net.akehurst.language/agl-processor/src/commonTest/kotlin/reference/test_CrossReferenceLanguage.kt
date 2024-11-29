@@ -34,11 +34,12 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
+import testFixture.data.testSuit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_CrossReferences {
+class test_CrossReferenceLanguage {
 
     private companion object {
         val aglProc = Agl.registry.agl.crossReference.processor!!
@@ -62,13 +63,15 @@ class test_CrossReferences {
             val actual = result.asm!!
             println(actual.asString())
             assertEquals(expected.asString(), actual.asString())
-            assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace?.toMap())
+            assertEquals(expected.namespace, result.asm?.namespace)
+            assertEquals(expected.allDefinitions, result.asm?.allDefinitions)
             val expNs = expected.declarationsForNamespace[QualifiedName("test.Test")]!!
             val actNs = actual.declarationsForNamespace[QualifiedName("test.Test")]!!
             assertEquals(expNs.scopeDefinition, actNs.scopeDefinition)
             assertEquals(expNs.scopeDefinition.flatMap { it.value.identifiables }, actNs.scopeDefinition.flatMap { it.value.identifiables })
             assertEquals(expNs.references, actNs.references)
         }
+
     }
 
     @Test
@@ -143,11 +146,11 @@ class test_CrossReferences {
     @Test
     fun single_line_comment() {
 
-        val text = """
+        val sentence = """
             // single line comment
         """.trimIndent()
 
-        val result = aglProc.process(text)
+        val result = aglProc.process(sentence)
 
         val expected = CrossReferenceModelDefault(SimpleName(""))
 
@@ -201,9 +204,9 @@ class test_CrossReferences {
     fun one_empty_scope_wrong_scope_ruleName() {
         val grammarStr = """
                 namespace test
-                grammar Test {
-                    rule1 = 'a' ;
-                }
+                    grammar Test {
+                        rule1 = 'a' ;
+                    }
             """.trimIndent()
 
         val sentence = """

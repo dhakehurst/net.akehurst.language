@@ -32,6 +32,14 @@ class OptionHolderDefault(
     override fun toString(): String {
         return options.entries.joinToString { (k,v) -> "${k}: ${v}" }
     }
+
+    override fun hashCode(): Int  = options.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is OptionHolderDefault -> false
+        parent != other.parent -> false
+        options != other.options -> false
+        else -> true
+    }
 }
 
 abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
@@ -170,7 +178,7 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         sb.append("namespace $qualifiedName\n")
         val newIndent = indent.inc
         if (import.isNotEmpty()) {
-            val importStr = import.joinToString(separator = "\n") { "$newIndent${it.value}" }
+            val importStr = import.joinToString(separator = "\n") { "${newIndent}import ${it.value}" }
             sb.append(importStr)
             sb.append("\n")
         }

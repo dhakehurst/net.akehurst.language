@@ -381,7 +381,6 @@ interface PropertyDeclaration {
 
 interface PropertyDeclarationResolved : PropertyDeclaration
 
-
 enum class PropertyCharacteristic {
     /**
      * value is a reference to an object of the given type
