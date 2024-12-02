@@ -20,23 +20,21 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.isStdString
-import net.akehurst.language.expressions.processor.EvaluationContext
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.asmValue
-import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.expressions.api.PropertyCall
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.expressions.api.RootExpression
+import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.NavigationSimple
+import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
@@ -137,7 +135,7 @@ class ReferenceResolverSimple(
                 val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                 val fromEl = _interpreter.evaluateExpression(
                     EvaluationContext.ofSelf(context.element.toTypedObject(elType)), refExpr.fromNavigation
-                )
+                ).asmValue
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> scopeForElement[fromEl]!!
@@ -146,7 +144,7 @@ class ReferenceResolverSimple(
                         scopeForElement[v] ?: error("Scope for '${v}' not found !")
                     }
 
-                    else -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is not an AsmElementSimple, rather it is a '${fromEl::class.simpleName}'")
+                    else -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is not an AsmStructure, rather it is a '${fromEl::class.simpleName}'")
                 }
             }
         }
@@ -321,18 +319,11 @@ class ReferenceResolverSimple(
                 }
             }
             else -> {
-                val front = listOf(this.start) + this.parts.dropLast(1)
-                var v = root
-                for (pn in front) {
-                    val pd = typeModel.typeOf(v).findAllPropertyOrNull(PropertyName((pn as PropertyCall).propertyName))
-                    v = when (pd) {
-                        null -> error("Cannot navigate '$pn' from null value")
-                        else -> {
-                            val elType = typeModel.findByQualifiedNameOrNull(v.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                            v.toTypedObject(elType).getPropertyValue(pd).asmValue
-                        }
-                    }
-                }
+                //val exprEval = ExpressionsInterpreterOverTypedObject(typeModel)
+                val selfType = typeModel.typeOf(root).type()
+                val front = NavigationSimple(this.start, this.parts.dropLast(1))
+                val evc = EvaluationContext(null, mapOf(RootExpressionSimple.SELF.name to root.toTypedObject(selfType)))
+                val v = _interpreter.evaluateExpression(evc,front).asmValue
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {

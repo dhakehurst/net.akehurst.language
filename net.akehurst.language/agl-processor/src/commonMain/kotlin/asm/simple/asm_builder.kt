@@ -186,9 +186,9 @@ class AsmElementSimpleBuilder(
     private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
         val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val v = _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this)
-        return when (v) {
+        return when (v.asmValue) {
             is AsmNothing -> null
-            is AsmPrimitive -> v.value as String
+            is AsmPrimitive -> (v.asmValue as AsmPrimitive).value as String
             else -> TODO()
         }
     }
@@ -196,9 +196,9 @@ class AsmElementSimpleBuilder(
     private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
         val elType = _typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val res = _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this)
-        return when (res) {
+        return when (res.asmValue) {
             is AsmNothing -> null
-            is AsmPrimitive -> res.value as String
+            is AsmPrimitive -> (res.asmValue as AsmPrimitive).value as String
             else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
         }
     }
