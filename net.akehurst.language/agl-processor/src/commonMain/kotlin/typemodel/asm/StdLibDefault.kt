@@ -44,8 +44,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         (td.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("S")))
         (td as DataTypeSimple).addConstructor(
             listOf(
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td, SimpleName("F")), null),
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td, SimpleName("S")), null),
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td.qualifiedName, SimpleName("F")), null),
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td.qualifiedName, SimpleName("S")), null),
             )
         )
         td.appendPropertyStored(PropertyName("first"), TypeParameterReference(td, SimpleName("F")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 0)
@@ -63,7 +63,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
         typeDecl.appendMethodPrimitive(
             MethodName("map"),
-            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl, Lambda.typeName), null)),
+            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, Lambda.typeName), null)),
             StdLibDefault.AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
             "A list created by mapping each element using the given lambda expression."
         )
@@ -73,23 +73,23 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
     val List: CollectionType = super.findOwnedOrCreateCollectionTypeNamed(List_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
         typeDecl.addSupertype(Collection.type(listOf(TypeArgumentSimple(TypeParameterReference(typeDecl, SimpleName("E"))))))
-        typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
+        typeDecl.appendPropertyPrimitive(PropertyName("size"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("first"), TypeParameterReference(typeDecl, SimpleName("E")), "First element in the List.")
         typeDecl.appendPropertyPrimitive(PropertyName("last"), TypeParameterReference(typeDecl, SimpleName("E")), "Last element in the list.")
         typeDecl.appendPropertyPrimitive(
             PropertyName("back"),
-            this.createTypeInstance(typeDecl, List_typeName, listOf(TypeParameterReference(typeDecl, SimpleName("E")).asTypeArgument)),
+            this.createTypeInstance(typeDecl.qualifiedName, List_typeName, listOf(TypeParameterReference(typeDecl, SimpleName("E")).asTypeArgument)),
             "All elements in the List except the first one."
         )
         typeDecl.appendPropertyPrimitive(
             PropertyName("front"),
-            this.createTypeInstance(typeDecl, List_typeName, listOf(TypeParameterReference(typeDecl, SimpleName("E")).asTypeArgument)),
+            this.createTypeInstance(typeDecl.qualifiedName, List_typeName, listOf(TypeParameterReference(typeDecl, SimpleName("E")).asTypeArgument)),
             "All elements in the List except the last one."
         )
-        typeDecl.appendPropertyPrimitive(PropertyName("join"), this.createTypeInstance(typeDecl, String.typeName), "The String value of all elements concatenated.")
+        typeDecl.appendPropertyPrimitive(PropertyName("join"), this.createTypeInstance(typeDecl.qualifiedName, String.typeName), "The String value of all elements concatenated.")
         typeDecl.appendMethodPrimitive(
             MethodName("get"),
-            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(typeDecl, Integer.typeName), null)),
+            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), null)),
             TypeParameterReference(typeDecl, SimpleName("E")),
             "The element at the given index."
         )
@@ -102,13 +102,13 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         typeDecl.appendPropertyPrimitive(
             PropertyName("elements"),
             this.createTypeInstance(
-                typeDecl, List_typeName,
+                typeDecl.qualifiedName, List_typeName,
                 listOf(TypeParameterReference(typeDecl, SimpleName("E")).asTypeArgument)
             ),
             "Number of elements in the List."
         )
-        typeDecl.appendPropertyPrimitive(PropertyName("items"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
-        typeDecl.appendPropertyPrimitive(PropertyName("separators"), this.createTypeInstance(typeDecl, Integer.typeName), "Number of elements in the List.")
+        typeDecl.appendPropertyPrimitive(PropertyName("items"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the List.")
+        typeDecl.appendPropertyPrimitive(PropertyName("separators"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), "Number of elements in the List.")
     }
 
     private val Set_typeName = SimpleName("Set")

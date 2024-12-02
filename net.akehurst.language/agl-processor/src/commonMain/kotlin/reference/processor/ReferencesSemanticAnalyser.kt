@@ -17,15 +17,15 @@
 
 package net.akehurst.language.reference.processor
 
-import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.processor.ExpressionTypeResolver
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -62,7 +62,7 @@ class ReferencesSemanticAnalyser(
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         _context = context
-        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, issues) }
+
 
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
@@ -84,6 +84,7 @@ class ReferencesSemanticAnalyser(
                     )
 
                     else -> {
+                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, ns, issues) }
                         _grammarNamespace = ns as GrammarTypeNamespace
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault)

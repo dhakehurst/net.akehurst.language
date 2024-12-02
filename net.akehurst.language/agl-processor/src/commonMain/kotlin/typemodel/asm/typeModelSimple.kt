@@ -223,6 +223,13 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         }
     }
 
+    override fun commonSuperType(other: TypeInstance): TypeInstance = when {
+        other.conformsTo(this) -> this
+        this.conformsTo(other) -> other
+        // TODO: look at supertypes
+        else -> StdLibDefault.AnyType
+    }
+
     abstract override fun hashCode(): Int
 
     abstract override fun equals(other: Any?): Boolean
@@ -356,10 +363,7 @@ class TypeInstanceSimple(
         }
     }
 
-    val context: TypeDefinition?
-        get() = contextQualifiedTypeName?.let {
-            namespace.findTypeNamed(it)
-        }
+    val context: TypeDefinition? get() = contextQualifiedTypeName?.let { namespace.findTypeNamed(it) }
 
     override val typeName: SimpleName
         get() = resolvedDeclarationOrNull?.name
@@ -370,6 +374,7 @@ class TypeInstanceSimple(
             ?: when (qualifiedOrImportedTypeName) {
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
+                    ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
                 else -> error("Unsupported")
             }
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
@@ -730,7 +735,7 @@ abstract class TypeNamespaceAbstract(
     }
 
     override fun createTypeInstance(
-        context: TypeDefinition?,
+        contextQualifiedTypeName: QualifiedName?,
         qualifiedOrImportedTypeName: PossiblyQualifiedName,
         typeArguments: List<TypeArgument>,
         isNullable: Boolean
@@ -740,7 +745,7 @@ abstract class TypeNamespaceAbstract(
         //    is SimpleName -> Unit
         //    else -> error("Unsupported")
         //}
-        return TypeInstanceSimple(context?.qualifiedName, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
+        return TypeInstanceSimple(contextQualifiedTypeName, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
     }
 
     /*
@@ -836,7 +841,7 @@ abstract class TypeDefinitionSimpleAbstract(
     override var metaInfo = mutableMapOf<String, String>()
 
     override fun type(typeArguments: List<TypeArgument>, isNullable: Boolean): TypeInstance =
-        namespace.createTypeInstance(this, this.name, typeArguments, isNullable)
+        namespace.createTypeInstance(this.qualifiedName, this.name, typeArguments, isNullable)
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
         other === this -> true // fast option
@@ -868,7 +873,7 @@ abstract class TypeDefinitionSimpleAbstract(
     }
 
     override fun addSupertype_dep(qualifiedTypeName: PossiblyQualifiedName) {
-        val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
+        val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, emptyList(), false)
         addSupertype(ti)
     }
 
@@ -1389,7 +1394,7 @@ class DataTypeSimple(
                 }
 
     override fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName) {
-        val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
+        val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, emptyList(), false)
         this.addSubtype(ti)
     }
 

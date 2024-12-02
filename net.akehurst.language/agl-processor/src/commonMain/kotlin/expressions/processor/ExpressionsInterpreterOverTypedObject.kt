@@ -18,13 +18,12 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
-import net.akehurst.language.asm.simple.*
-import net.akehurst.language.expressions.asm.RootExpressionSimple
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.asm.simple.*
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
@@ -136,7 +135,7 @@ class ExpressionsInterpreterOverTypedObject(
 ) {
 
     val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val typeResolver = ExpressionTypeResolver(typeModel, issues)
+    //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**
      * if more than one value is to be passed in as an 'evaluation-context'

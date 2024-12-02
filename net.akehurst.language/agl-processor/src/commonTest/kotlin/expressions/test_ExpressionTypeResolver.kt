@@ -17,7 +17,6 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -46,7 +45,7 @@ class test_ExpressionTypeResolver {
 
         val expression = "list"
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,issues)
+        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
@@ -69,7 +68,7 @@ class test_ExpressionTypeResolver {
         val expression = "list.front"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,issues)
+        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
@@ -92,7 +91,7 @@ class test_ExpressionTypeResolver {
         val expression = "list.front.join"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,issues)
+        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(StdLibDefault.String, actual)
@@ -115,7 +114,7 @@ class test_ExpressionTypeResolver {
         val expression = "list.join as String"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,issues)
+        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
         val actual = typeResolver.typeOfExpressionStr(expression,dt)
 
         assertEquals(StdLibDefault.String, actual)

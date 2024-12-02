@@ -235,7 +235,7 @@ class GenerateTypeModelViaReflection(
                         }
                     }
                 }
-                targetNamespace.createTypeInstance(context, subName, targs, false)
+                targetNamespace.createTypeInstance(context.qualifiedName, subName, targs, false)
             }
             is KTypeParameter -> TypeParameterReference(context, subName.simpleName)
             else -> error("Unsupported")

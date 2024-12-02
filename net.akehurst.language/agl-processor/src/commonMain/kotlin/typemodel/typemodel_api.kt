@@ -93,7 +93,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate:(UnionType)->Unit): UnionType
 
     fun createTypeInstance(
-        context: TypeDefinition?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
+        contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
     fun createTupleTypeInstance(typeArguments: List<TypeArgumentNamed>, nullable: Boolean): TupleTypeInstance
@@ -164,6 +164,7 @@ interface TypeInstance {
     fun signature(context: TypeNamespace?, currentDepth: Int): String
 
     fun conformsTo(other: TypeInstance): Boolean
+    fun commonSuperType(other: TypeInstance): TypeInstance
     fun possiblyQualifiedNameInContext(context: TypeNamespace): Any
 
     fun cloneTo(other: TypeModel): TypeInstance

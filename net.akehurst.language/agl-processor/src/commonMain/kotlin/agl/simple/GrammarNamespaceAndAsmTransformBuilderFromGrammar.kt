@@ -81,7 +81,7 @@ internal class ConstructAndModify<TP : DataType, TR : TransformationRule>(
  *
  */
 internal class GrammarModel2TransformModel(
-    /** base type model, could be empty if can create types, else must hold all tyeps needed **/
+    /** base type model, could be empty if can create types, else must hold all types needed **/
     val typeModel: TypeModel,
     val grammarModel: GrammarModel,
     val configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
@@ -146,6 +146,7 @@ internal class Grammar2Namespaces(
     fun build() {
         val ns = grammar.namespace.qualifiedName
         val gqn = grammar.qualifiedName
+        typeModel.addNamespace(StdLibDefault)
         tpNs = findOrCreateGrammarNamespace(gqn)
         trNs = findOrCreateTransformNamespace()
 
@@ -160,6 +161,8 @@ internal class Grammar2Namespaces(
             }.forEach {
                 gns.addImport(it)
             }
+        }.also {
+            typeModel.resolveImports()
         }
 
     private fun findOrCreateTransformNamespace(): TransformNamespace {

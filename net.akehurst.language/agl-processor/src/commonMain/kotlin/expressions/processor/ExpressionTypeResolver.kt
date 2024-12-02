@@ -1,7 +1,8 @@
-package net.akehurst.language.agl.expressions.processor
+package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -9,6 +10,7 @@ import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 
 class ExpressionTypeResolver(
     val typeModel: TypeModel,
+    val contextNamespace: TypeNamespace,
     val issues: IssueHolder
 ) {
 
@@ -49,13 +51,13 @@ class ExpressionTypeResolver(
             when (self.resolvedDeclaration) {
                 is StructuredType -> {
                     self.allResolvedProperty[PropertyName(this.name)]?.typeInstance ?: run {
-                        issues.error(null,"'$self' has no property named '${this.name}'")
+                        issues.error(null, "'$self' has no property named '${this.name}'")
                         StdLibDefault.NothingType
                     }
                 }
 
                 else -> {
-                    issues.error(null,"'$self' is not a StructuredType cannot access property named '${this.name}'")
+                    issues.error(null, "'$self' is not a StructuredType cannot access property named '${this.name}'")
                     StdLibDefault.NothingType
                 }
             }
@@ -74,7 +76,7 @@ class ExpressionTypeResolver(
                 }
             }
 
-            else ->error("type of Navigation.start not handled")
+            else -> error("type of Navigation.start not handled")
         }
         val r = this.parts.fold(start) { acc, it ->
             when (acc) {
@@ -87,6 +89,8 @@ class ExpressionTypeResolver(
 
     fun NavigationPart.typeOfNavigationPartFor(self: TypeInstance): TypeInstance = when (this) {
         is PropertyCall -> this.typeOfPropertyCallFor(self)
+        is MethodCall -> this.typeOfMethodCallFor(self)
+        is IndexOperation -> this.typeOfIndexOperationFor(self)
         else -> error("subtype of NavigationPart not handled")
 
     }
@@ -119,6 +123,12 @@ class ExpressionTypeResolver(
     fun PropertyCall.typeOfPropertyCallFor(self: TypeInstance?): TypeInstance =
         self?.allResolvedProperty?.get(PropertyName(this.propertyName))?.typeInstance ?: StdLibDefault.NothingType
 
+    fun MethodCall.typeOfMethodCallFor(self: TypeInstance?): TypeInstance =
+        self?.allResolvedMethod?.get(MethodName(this.methodName))?.returnType ?: StdLibDefault.NothingType
+
+    fun IndexOperation.typeOfIndexOperationFor(self: TypeInstance?): TypeInstance =
+        self?.typeArguments?.firstOrNull()?.type ?: StdLibDefault.NothingType
+
     fun WithExpression.typeOfWithExpressionFor(self: TypeInstance): TypeInstance {
         val ctxType = this.withContext.typeOfExpressionFor(self)
         return this.expression.typeOfExpressionFor(ctxType)
@@ -126,13 +136,28 @@ class ExpressionTypeResolver(
 
     fun WhenExpression.typeOfWhenExpressionFor(self: TypeInstance): TypeInstance {
         val opts = this.options.map {
-            it.condition.typeOfExpressionFor(self)
+            it.expression.typeOfExpressionFor(self)
         }
         return commonSuperTypeOf(opts)
     }
 
+    //TODO: add operator functions to StdLib
     fun InfixExpression.typeOfInfixExpressionFor(self: TypeInstance): TypeInstance {
-        TODO()
+        //TODO: Operator precedence
+        var result = this.expressions.first().typeOfExpressionFor(self)
+        for (i in this.operators.indices) {
+            val op = this.operators[i]
+            val rhsExpr = this.expressions[i + 1]
+            val rhs = rhsExpr.typeOfExpressionFor(self)
+            result = typeOfInfixOperator(result, op, rhs)
+        }
+        return result
+    }
+
+    private fun typeOfInfixOperator(lhs: TypeInstance, op: String, rhs: TypeInstance): TypeInstance = when (op) {
+        "==" -> StdLibDefault.Boolean
+        "+" -> lhs
+        else -> error("Unsupported Operator '$op'")
     }
 
     fun CreateObjectExpression.typeOfCreateObjectExpressionFor(self: TypeInstance): TypeInstance =
@@ -156,20 +181,26 @@ class ExpressionTypeResolver(
     }
 
     fun CastExpression.typeOfCastExpressionFor(self: TypeInstance): TypeInstance =
-        this.targetType.typeOfTypeReference()
+        this.targetType.typeOfTypeReference(self)
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
 
-    fun TypeReference.typeOfTypeReference():TypeInstance {
-        val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration
+    fun TypeReference.typeOfTypeReference(self: TypeInstance): TypeInstance {
+        //val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration
         val targs = this.typeArguments.map {
-            it.typeOfTypeReference().asTypeArgument
+            val argTArgs = it.typeArguments.map { typeOfTypeReference(self).asTypeArgument }
+            contextNamespace.createTypeInstance(null, it.possiblyQualifiedName, argTArgs, it.isNullable)
+                .asTypeArgument
         }
-        return td.type(typeArguments = targs, isNullable = this.isNullable)
+        return contextNamespace.createTypeInstance(null, this.possiblyQualifiedName, targs, this.isNullable)
+
     }
 
     fun commonSuperTypeOf(types: List<TypeInstance>): TypeInstance {
-        TODO()
+        return when {
+            types.toSet().size == 1 -> types.first()
+            else -> types.reduce { acc, it -> acc.commonSuperType(it) }
+        }
     }
 }

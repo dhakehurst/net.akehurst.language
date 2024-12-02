@@ -177,12 +177,12 @@ abstract class StructuredTypeBuilder(
         val btargs = tab.build()
         //val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it.asPossiblyQualifiedName, emptyList(), false) }
         val targs = btargs //if (btargs.isEmpty()) atargs else btargs
-        val ti = _namespace.createTypeInstance(_structuredType, typeName.asPossiblyQualifiedName, targs, isNullable)
+        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
         return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics)
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, this._namespace.createTypeInstance(_structuredType, typeName.asPossiblyQualifiedName, emptyList(), isNullable), childIndex)
+        property(propertyName, this._namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, emptyList(), isNullable), childIndex)
 
     fun propertyListTypeOf(propertyName: String, dataTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(propertyName, nullable, childIndex) {
@@ -368,7 +368,7 @@ class InterfaceTypeBuilder(
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
             val pqn = it.asPossiblyQualifiedName
-            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            val ti = _namespace.createTypeInstance(_type.qualifiedName, pqn, emptyList(), false)
             _type.addSubtype(ti)
             (_namespace.findTypeNamed(pqn) as DataType?)?.addSupertype_dep(_type.qualifiedName)
         }
@@ -397,7 +397,7 @@ class DataTypeBuilder(
     fun supertypes(vararg superTypes: String) {
         superTypes.forEach {
             val pqn = it.asPossiblyQualifiedName
-            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            val ti = _namespace.createTypeInstance(_type.qualifiedName, pqn, emptyList(), false)
             _type.addSupertype(ti)
         }
     }
@@ -413,7 +413,7 @@ class DataTypeBuilder(
     fun subtypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
             val pqn = it.asPossiblyQualifiedName
-            val ti = _namespace.createTypeInstance(_type, pqn, emptyList(), false)
+            val ti = _namespace.createTypeInstance(_type.qualifiedName, pqn, emptyList(), false)
             _type.addSubtype(ti)
         }
     }
@@ -441,7 +441,7 @@ class ConstructorBuilder(
     private val _paramList = mutableListOf<ParameterDeclaration>()
 
     fun parameter(name: String, typeName: String, nullable: Boolean = false) {
-        val ty = _namespace.createTypeInstance(_type, typeName.asPossiblyQualifiedName, emptyList(), nullable)
+        val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, emptyList(), nullable)
         _paramList.add(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName(name), ty, null))
     }
 
@@ -461,11 +461,11 @@ class TypeInstanceArgBuilder(
     fun ref(possiblyQualifiedTypeDeclarationName: String) {
         val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
         val ti = when (pqn) {
-            is QualifiedName -> _namespace.createTypeInstance(context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
+            is QualifiedName -> _namespace.createTypeInstance(context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
             is SimpleName -> {
                 val tp = context?.typeParameters?.firstOrNull { it.name == pqn }
                 when {
-                    null == tp || null == context -> _namespace.createTypeInstance(context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
+                    null == tp || null == context -> _namespace.createTypeInstance(context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, emptyList(), nullable)
                     else -> TypeParameterReference(context, tp.name)
                 }
             }
@@ -490,7 +490,7 @@ class TypeInstanceArgBuilder(
     }
 */
     fun build(): TypeInstance {
-        return _namespace.createTypeInstance(context, this.possiblyQualifiedName, _args, nullable)
+        return _namespace.createTypeInstance(context?.qualifiedName, this.possiblyQualifiedName, _args, nullable)
 //        return type.type(_args, false)
     }
 }
@@ -507,7 +507,7 @@ class TypeInstanceArgNamedBuilder(
 
     fun typeRef(name: String, typeName: String, isNullable: Boolean) {
         val t = _namespace.findTypeNamed(typeName.asPossiblyQualifiedName)?.type(emptyList(), isNullable)
-            ?: _namespace.createTypeInstance(context, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
+            ?: _namespace.createTypeInstance(context?.qualifiedName, typeName.asPossiblyQualifiedName, emptyList(), isNullable)
         val ta = TypeArgumentNamedSimple(PropertyName(name), t)
         _args.add(ta)
     }
@@ -549,11 +549,11 @@ class TypeArgumentBuilder(
 
         val pqn = possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName
         val ti = when (pqn) {
-            is QualifiedName -> _namespace.createTypeInstance(_context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+            is QualifiedName -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
             is SimpleName -> {
                 val tp = _context?.typeParameters?.firstOrNull { it.name == pqn }
                 when {
-                    null == tp || null == _context -> _namespace.createTypeInstance(_context, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
+                    null == tp || null == _context -> _namespace.createTypeInstance(_context?.qualifiedName, possiblyQualifiedTypeDeclarationName.asPossiblyQualifiedName, typeArgs, nullable)
                     else -> TypeParameterReference(_context, tp.name)
                 }
             }

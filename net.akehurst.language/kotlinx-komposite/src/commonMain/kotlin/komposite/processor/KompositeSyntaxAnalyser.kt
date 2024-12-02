@@ -33,7 +33,7 @@ data class TypeRefInfo(
 ) {
     fun toTypeInstance(contextType:TypeDefinition):TypeInstance {
         val targs = args.map { it.toTypeInstance(contextType).asTypeArgument }
-        return contextType.namespace.createTypeInstance(contextType, name, targs, isNullable)
+        return contextType.namespace.createTypeInstance(contextType.qualifiedName, name, targs, isNullable)
     }
 }
 

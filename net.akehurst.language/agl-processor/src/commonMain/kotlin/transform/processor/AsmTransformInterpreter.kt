@@ -53,28 +53,29 @@ class AsmTransformInterpreter(
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
                 dataType("Node") {
-                    subtypes("Branch", "Leaf")
-                    property("path", StdLibDefault.AnyType, 0)
-                    property("alternative", StdLibDefault.Integer, 1)
+                    subtypes("BranchSeparated","Branch", "Leaf")
+                    property(PATH.value, StdLibDefault.AnyType, 0)
+                    property(ALTERNATIVE.value, StdLibDefault.Integer, 1)
+                    property(MATCHED_TEXT.value, StdLibDefault.String, 2)
                 }
                 dataType("Leaf") {
                     subtypes("Node")
                     property("value", StdLibDefault.String, 0)
                 }
                 dataType("Branch") {
-                    subtypes("Node")
-                    propertyListTypeOf("children", "std.Any", false, 0)
-                    propertyListTypeOf("child", "std.Any", false, 1)
+                    supertypes("Node")
+                    propertyListTypeOf(CHILDREN.value, StdLibDefault.AnyType.qualifiedTypeName.value, false, 0) //TODO: typeArgument ?
+                    propertyListTypeOf(CHILD.value, StdLibDefault.AnyType.qualifiedTypeName.value, false, 1)
                 }
                 dataType("BranchSeparated") {
-                    subtypes("Node")
-                    propertyListSeparatedType("children", false, 0) {
-                        ref("std.Any")
-                        ref("std.Any")
+                    supertypes("Node")
+                    propertyListSeparatedType(CHILDREN.value, false, 0) {
+                        ref(StdLibDefault.AnyType.qualifiedTypeName.value)
+                        ref(StdLibDefault.AnyType.qualifiedTypeName.value)
                     }
-                    propertyListSeparatedType("child", false, 1) {
-                        ref("std.Any")
-                        ref("std.Any")
+                    propertyListSeparatedType(CHILD.value, false, 1) {
+                        ref(StdLibDefault.AnyType.qualifiedTypeName.value)
+                        ref(StdLibDefault.AnyType.qualifiedTypeName.value)
                     }
                 }
             }
@@ -84,7 +85,7 @@ class AsmTransformInterpreter(
         val PARSE_NODE_TYPE_LEAF = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Leaf"))!!
 
         // TODO: create properer parse Node, Leaf, Branch, etc types
-        val PARSE_NODE_TYPE_BRANCH_SIMPLE = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Branch"))!!
+        val PARSE_NODE_TYPE_BRANCH_SIMPLE = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Branch"))!!.type()
         /*= parseNodeNamespace.createTupleType().let {
             val args = mutableListOf(
                 TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),
@@ -103,7 +104,7 @@ class AsmTransformInterpreter(
             it.appendPropertyStored(CHILD, LIST_OF_ANY, CMP_STR_MEM)
         }*/
 
-        val PARSE_NODE_TYPE_BRANCH_SEPARATED = parseNodeNamespace.findOwnedTypeNamed(SimpleName("BranchSeparated"))!!
+        val PARSE_NODE_TYPE_BRANCH_SEPARATED = parseNodeNamespace.findOwnedTypeNamed(SimpleName("BranchSeparated"))!!.type()
         /*parseNodeNamespace.createTupleType().let {
         val args = mutableListOf(
             TypeArgumentNamedSimple(PATH, SimpleTypeModelStdLib.String),

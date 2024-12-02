@@ -576,7 +576,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
             // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
-        }.type()
+        }
         val self = asmFactory.constructStructure(AsmPathSimple(""), selfType.qualifiedTypeName)
         asmFactory.setProperty(self, 0, AsmTransformInterpreter.PATH.asValueName, asmPath)
         asmFactory.setProperty(self, 1, AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative)

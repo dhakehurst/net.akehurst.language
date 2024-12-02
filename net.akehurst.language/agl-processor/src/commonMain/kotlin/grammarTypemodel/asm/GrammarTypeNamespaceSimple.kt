@@ -44,7 +44,7 @@ class GrammarTypeNamespaceSimple(
                         qualifiedName = qualifiedName,
                         import = imports
                     )
-                    typeModel.addAllNamespaceAndResolveImports(listOf(StdLibDefault, ns))
+                    typeModel.addNamespace(ns)
                     ns
                 }
     }
