@@ -1,74 +1,13 @@
 package agl.simple
 
-import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.TransformString
-import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import testFixture.data.TestDataParserSentence
-import testFixture.data.TestDataProcessor
-import testFixture.data.TestDataProcessorSentencePass
+import testFixture.data.doTest
 import testFixture.data.testSuit
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class test_ProvidedTransform {
 
     companion object {
-        fun processor(grammarStr: String, transformStr: String?) = Agl.processorFromStringSimple(
-            grammarDefinitionStr = GrammarString(grammarStr),
-            transformStr = transformStr?.let { TransformString(it) },
-            grammarAglOptions = Agl.options {
-                semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
-//TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
-                }
-            }
-        )
-
-        fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
-            println("'${sd.sentence}'")
-            when (sd) {
-                is TestDataProcessorSentencePass -> {
-                    val asmRes = proc.process(sd.sentence, Agl.options {
-                        this.parse { goalRuleName(sd.goal) }
-                    })
-                    assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
-                    val actual = asmRes.asm!!
-                    assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
-                }
-
-                //is TestDataParserSentenceFail -> {}
-                else -> error("Unsupported")
-            }
-
-        }
-
-        fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
-            val procRes = processor(testData.grammarStr, testData.transformStr)
-            assertTrue(procRes.issues.isEmpty(), procRes.issues.toString())
-            val proc = procRes.processor!!
-
-            println("--- TypeDomain ---")
-            println(proc.typeModel.asString())
-            println("--- Asm Transform ---")
-            println(proc.asmTransformModel.asString())
-
-            if (null == sentenceIndex) {
-                for (sd in testData.sentences) {
-                    testSentence(proc, sd)
-                }
-            } else {
-                val sd = testData.sentences[sentenceIndex]
-                testSentence(proc, sd)
-            }
-        }
-
         val testData = testSuit {
             // TODO: test where not creating missing types
             testData("S = a; leaf a = 'a'; no provided transform") {

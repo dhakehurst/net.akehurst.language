@@ -1,8 +1,6 @@
 package testFixture.data
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.builder.AsmSimpleBuilder
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.RuleSet
@@ -58,6 +56,7 @@ class TestSuit(
 class TestDataProcessor(
     val description: String,
     val grammarStr: String,
+    val typeStr:String?,
     val transformStr: String?,
     val referenceStr: String?,
     val sentences: List<TestDataProcessorSentence>
@@ -111,12 +110,17 @@ class TestDataBuilder(
    private val _description: String
 ) {
     private lateinit var _grammarStr:String
+    private  var _typeStr:String? = null
     private  var _transformStr:String? = null
     private  var _referenceStr:String? = null
     private val _sentences = mutableListOf<TestDataProcessorSentence>()
 
     fun grammarStr(value:String) {
         _grammarStr = value
+    }
+
+    fun typeStr(value:String) {
+        _typeStr = value
     }
 
     fun transformStr(value:String) {
@@ -137,6 +141,7 @@ class TestDataBuilder(
     fun build() = TestDataProcessor(
         _description,
         _grammarStr,
+        _typeStr,
         _transformStr,
         _referenceStr,
         _sentences

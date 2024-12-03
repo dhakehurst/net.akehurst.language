@@ -31,6 +31,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
@@ -70,20 +71,16 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    abstract override var crossReferenceModelStr: CrossReferenceString?
+    abstract override var crossReferenceStr: CrossReferenceString?
 
     override val typeModel: TypeModel?
         get() = this.processor?.typeModel
 
+    override val asmTransformModel: TransformModel?
+        get() = this.processor?.asmTransformModel
+
     override val crossReferenceModel: CrossReferenceModel?
         get() = this.processor?.crossReferenceModel
-//        set(value) {
-//            val oldValue = this.processor?.crossReferenceModel
-//            if (oldValue != value) {
-//                _crossReferenceModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-//                crossReferenceModelObservers.forEach { it(oldValue, value) }
-//            }
-//        }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>?
         get() = this.processor?.syntaxAnalyser
@@ -143,7 +140,9 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: GrammarModel, newValue: GrammarModel) -> Unit>()
-    override val crossReferenceModelStrObservers = mutableListOf<(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) -> Unit>()
+    override val typeModelStrObservers = mutableListOf<(oldValue: TypeModelString?, newValue: TypeModelString?) -> Unit>()
+    override val asmTransformStrObservers = mutableListOf<(oldValue: TransformString?, newValue: TransformString?) -> Unit>()
+    override val crossReferenceStrObservers = mutableListOf<(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) -> Unit>()
 
     //override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
     override val formatterStrObservers = mutableListOf<(oldValue: FormatString?, newValue: FormatString?) -> Unit>()
@@ -199,6 +198,12 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     }
 
     protected var _typeModelResolver: TypeModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.typeModelResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+
+    protected var _asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.asmTransformModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

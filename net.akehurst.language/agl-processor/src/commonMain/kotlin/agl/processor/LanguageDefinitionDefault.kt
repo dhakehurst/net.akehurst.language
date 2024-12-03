@@ -16,14 +16,12 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.StyleString
+import net.akehurst.language.agl.*
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
@@ -31,6 +29,8 @@ import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
@@ -51,36 +51,43 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val isModifiable: Boolean = true
 
     override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
-        get() = LanguageProcessorConfigurationEmpty(
-            targetGrammarName = this.targetGrammarName,
-            defaultGoalRuleName = this.defaultGoalRule,
-            regexEngineKind = this._regexEngineKind,
-            scannerKind = this._scannerKind,
-            scannerResolver = this._scannerResolver,
-            parserResolver = this._parserResolver,
-            typeModelResolver = this._typeModelResolver,
-            crossReferenceModelResolver = this._crossReferenceModelResolver,
-            syntaxAnalyserResolver = this._syntaxAnalyserResolver,
-            semanticAnalyserResolver = this._semanticAnalyserResolver,
-            formatterResolver = this._formatterResolver,
-            styleResolver = this._styleResolver, //not used to create processor
-            completionProvider = this._completionProviderResolver
-        )
+        get() {
+            return LanguageProcessorConfigurationEmpty(
+                targetGrammarName = this.targetGrammarName,
+                defaultGoalRuleName = this.defaultGoalRule,
+                regexEngineKind = this._regexEngineKind,
+                scannerKind = this._scannerKind,
+                scannerResolver = this._scannerResolver,
+                parserResolver = this._parserResolver,
+                asmTransformModelResolver = this._asmTransformModelResolver,
+                typeModelResolver = this._typeModelResolver,
+                crossReferenceModelResolver = this._crossReferenceModelResolver,
+                syntaxAnalyserResolver = this._syntaxAnalyserResolver,
+                semanticAnalyserResolver = this._semanticAnalyserResolver,
+                formatterResolver = this._formatterResolver,
+                styleResolver = this._styleResolver, //not used to create processor
+                completionProvider = this._completionProviderResolver
+            )
+        }
         set(value) {
             this.updateConfiguration(value)
             super._processor_cache.reset()
         }
 
     override var grammarStr: GrammarString? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateGrammarStr(oldValue, newValue)
-        }
+        updateGrammarStr(oldValue, newValue)
     }
 
-    override var crossReferenceModelStr: CrossReferenceString? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateCrossReferenceModelStr(oldValue, newValue)
-        }
+    override var typeModelStr: TypeModelString? by Delegates.observable(null) { _, oldValue, newValue ->
+        updateTypeModelStr(oldValue, newValue)
+    }
+
+    override var asmTransformStr: TransformString? by Delegates.observable(null) { _, oldValue, newValue ->
+        updateAsmTransformStr(oldValue, newValue)
+    }
+
+    override var crossReferenceStr: CrossReferenceString? by Delegates.observable(null) { _, oldValue, newValue ->
+        updateCrossReferenceStr(oldValue, newValue)
     }
 
     /*
@@ -97,26 +104,30 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     */
     override var styleStr: StyleString? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateStyleStr(oldValue, newValue)
-        }
+        updateStyleStr(oldValue, newValue)
     }
 
     init {
         grammarStr = grammarStrArg
     }
 
-    override fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?) {
+    override fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
         this._doObservableUpdates = false
         this._issues.clear()
         val oldGrammarStr = this.grammarStr
-        val oldScopeModelStr = this.crossReferenceModelStr
+        val oldTypeModelStr = this.typeModelStr
+        val oldTransformStr = this.asmTransformStr
+        val oldCrossReferenceStr = this.crossReferenceStr
         val oldStyleStr = this.styleStr
         this.grammarStr = grammarStr
-        this.crossReferenceModelStr = crossReferenceModelStr
+        this.typeModelStr = typeModelStr
+        this.asmTransformStr = asmTransformStr
+        this.crossReferenceStr = crossReferenceStr
         this.styleStr = styleStr
         updateGrammarStr(oldGrammarStr, grammarStr)
-        updateCrossReferenceModelStr(oldScopeModelStr, crossReferenceModelStr)
+        updateTypeModelStr(oldTypeModelStr, typeModelStr)
+        updateAsmTransformStr(oldTransformStr, asmTransformStr)
+        updateCrossReferenceStr(oldCrossReferenceStr, crossReferenceStr)
         updateStyleStr(oldStyleStr, styleStr)
         this._doObservableUpdates = true
     }
@@ -143,11 +154,69 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
                 else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
             }
-            grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
+            if (_doObservableUpdates) {
+                grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
+            }
         }
     }
 
-    private fun updateCrossReferenceModelStr(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) {
+    private fun updateTypeModelStr(oldValue: TypeModelString?, newValue: TypeModelString?) {
+        if (oldValue != newValue) {
+            super._typeModelResolver = {
+                when {
+                    (null == newValue) -> {
+                        ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
+                    }
+                    else -> {
+                        val res = TypeModelSimple.fromString( newValue)
+                        when {
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            null == res.asm -> error("Internal error: no TypeModel, but no errors reported")
+                            else -> error("Internal error: situation not handled")
+                        }
+                        res
+                    }
+                }
+            }
+            if (_doObservableUpdates) {
+                typeModelStrObservers.forEach { it.invoke(oldValue, newValue) }
+            }
+        }
+    }
+
+    private fun updateAsmTransformStr(oldValue: TransformString?, newValue: TransformString?) {
+        if (oldValue != newValue) {
+            super._asmTransformModelResolver = {
+                when {
+                    (null == newValue) -> {
+                        ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
+                    }
+                    (null == this.typeModel) -> {
+                        val ih = IssueHolder(LanguageProcessorPhase.ALL)
+                        ih.error(null, "TypeModel for LanguageDefinition should not be null")
+                        ProcessResultDefault(null, ih)
+                    }
+                    else -> {
+                        val context = ContextFromGrammarAndTypeModel(grammarModel, typeModel!!)
+                        val res = TransformDomainDefault.fromString(context, newValue)
+                        when {
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            null == res.asm -> error("Internal error: no TypeModel, but no errors reported")
+                            else -> error("Internal error: situation not handled")
+                        }
+                        res
+                    }
+                }
+            }
+            if (_doObservableUpdates) {
+                asmTransformStrObservers.forEach { it.invoke(oldValue, newValue) }
+            }
+        }
+    }
+
+    private fun updateCrossReferenceStr(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) {
         if (oldValue != newValue) {
             super._crossReferenceModelResolver = {
                 when {
@@ -174,7 +243,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                     }
                 }
             }
-            crossReferenceModelStrObservers.forEach { it.invoke(oldValue, newValue) }
+            if (_doObservableUpdates) {
+                crossReferenceStrObservers.forEach { it.invoke(oldValue, newValue) }
+            }
         }
     }
 
@@ -194,7 +265,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                     res
                 }
             }
-            styleStrObservers.forEach { it.invoke(oldValue, newValue) }
+            if (_doObservableUpdates) {
+                styleStrObservers.forEach { it.invoke(oldValue, newValue) }
+            }
         }
     }
 }

@@ -16,10 +16,7 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.FormatString
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.StyleString
+import net.akehurst.language.agl.*
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.grammar.api.Grammar
@@ -27,7 +24,6 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
@@ -36,6 +32,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.jvm.JvmInline
 
@@ -86,9 +83,13 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var targetGrammarName: SimpleName?
     var defaultGoalRule: GrammarRuleName?
 
+    var typeModelStr: TypeModelString?
     val typeModel: TypeModel?
 
-    var crossReferenceModelStr: CrossReferenceString?
+    var asmTransformStr: TransformString?
+    val asmTransformModel: TransformModel?
+
+    var crossReferenceStr: CrossReferenceString?
     val crossReferenceModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -112,7 +113,9 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(GrammarString?, GrammarString?) -> Unit>
     val grammarObservers: MutableList<(GrammarModel, GrammarModel) -> Unit>
-    val crossReferenceModelStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit>
+    val typeModelStrObservers: MutableList<(TypeModelString?, TypeModelString?) -> Unit>
+    val asmTransformStrObservers: MutableList<(TransformString?, TransformString?) -> Unit>
+    val crossReferenceStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit>
 
     //val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
     val formatterStrObservers: MutableList<(FormatString?, FormatString?) -> Unit>
@@ -121,5 +124,5 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit>
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
-    fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?)
+    fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?)
 }

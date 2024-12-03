@@ -16,15 +16,10 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.StyleString
-import net.akehurst.language.grammar.asm.asGrammarModel
-import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.agl.*
 import net.akehurst.language.api.processor.LanguageIdentity
 
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.grammar.api.GrammarModel
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
@@ -52,10 +47,22 @@ internal class LanguageDefinitionFromAsm<AsmType:Any, ContextType : Any>(
         }
     override val isModifiable: Boolean = false
 
-    override var crossReferenceModelStr: CrossReferenceString?
+    override var typeModelStr: TypeModelString?
+        get() = this.typeModel?.asString()?.let { TypeModelString(it) }
+        set(value) {
+            error("Cannot set the typeModelStr of a LanguageDefinitionFromAsm using a String")
+        }
+
+    override var asmTransformStr: TransformString?
+        get() = this.asmTransformModel?.asString()?.let { TransformString(it) }
+        set(value) {
+            error("Cannot set the asmTransformStr of a LanguageDefinitionFromAsm using a String")
+        }
+
+    override var crossReferenceStr: CrossReferenceString?
         get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
         set(value) {
-            error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
+            error("Cannot set the crossReferenceModelStr of a LanguageDefinitionFromAsm using a String")
         }
 
     override var styleStr: StyleString?
@@ -71,8 +78,7 @@ internal class LanguageDefinitionFromAsm<AsmType:Any, ContextType : Any>(
             }
 
      */
-
-    override fun update(grammarStr: GrammarString?, crossReferenceModelStr: CrossReferenceString?, styleStr: StyleString?) {
+    override fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
         error("Cannot update a LanguageDefinitionFromAsm using Strings")
     }
 }

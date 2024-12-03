@@ -131,26 +131,26 @@ object Agl {
      */
     fun processorFromStringSimple(
         grammarDefinitionStr: GrammarString,
-        typeModelStr: TypeModelString? = null,
+        typeStr: TypeModelString? = null,
         transformStr: TransformString? = null,
-        crossReferenceModelStr: CrossReferenceString? = null,
-        styleModelStr: StyleString? = null,
+        referenceStr: CrossReferenceString? = null,
+        styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<Asm,  ContextAsmSimple> = configurationSimple(),
         grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm,  ContextAsmSimple> {
         val config = Agl.configuration(configurationBase) {
-            if (null != typeModelStr) {
-                typeModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TypeModelSimple.fromString(typeModelStr) }
+            if (null != typeStr) {
+                typeModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TypeModelSimple.fromString(typeStr) }
             }
             if (null != transformStr) {
                 asmTransformResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!,p.baseTypeModel), transformStr) }
             }
-            if (null != crossReferenceModelStr) {
-                crossReferenceModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), crossReferenceModelStr) }
+            if (null != referenceStr) {
+                crossReferenceModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), referenceStr) }
             }
-            if (null != styleModelStr) {
-                styleResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleModelStr) }
+            if (null != styleStr) {
+                styleResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
                 formatterResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }

@@ -37,7 +37,7 @@ class test_typemodelFromTransform {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 transformStr = TransformString(transformStr),
-                crossReferenceModelStr = null
+                referenceStr = null
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
             val actualTm = res.processor!!.typeModel

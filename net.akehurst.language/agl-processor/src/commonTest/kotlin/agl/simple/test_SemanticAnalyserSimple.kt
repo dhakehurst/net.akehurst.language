@@ -39,7 +39,7 @@ class test_SemanticAnalyserSimple {
         fun test(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmSimple>, expected: ContextAsmSimple) {
             val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+                referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).let {
                 it.processor!!.crossReferenceModel
                 check(it.issues.isEmpty()) { it.issues.toString() }
@@ -55,7 +55,7 @@ class test_SemanticAnalyserSimple {
         fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmSimple>, expected: List<LanguageIssue>) {
             val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+                referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
             val result = processor.process(sentence, options)
 

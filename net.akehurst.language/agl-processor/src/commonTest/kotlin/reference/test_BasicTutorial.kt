@@ -21,8 +21,6 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -73,7 +71,7 @@ class test_BasicTutorial {
 
         val _processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr),
-            crossReferenceModelStr = CrossReferenceString(referencesStr)
+            referenceStr = CrossReferenceString(referencesStr)
         ).let {
             check(it.issues.errors.isEmpty()) { it.issues.toString() }
             it.processor!!

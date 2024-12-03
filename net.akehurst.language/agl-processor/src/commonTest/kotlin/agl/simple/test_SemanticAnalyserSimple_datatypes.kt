@@ -72,7 +72,7 @@ class test_SemanticAnalyserSimple_datatypes {
         """.trimIndent())
         val processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = grammarStr,
-            crossReferenceModelStr = crossReferenceModelStr
+            referenceStr = crossReferenceModelStr
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel

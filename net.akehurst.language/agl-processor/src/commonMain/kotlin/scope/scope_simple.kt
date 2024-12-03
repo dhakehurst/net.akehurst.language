@@ -112,7 +112,9 @@ class ScopeSimple<ItemType>(
     override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ScopedItem<ItemType>> =
         items[name]?.filter { (typeName, _) ->
             conformsToFunc.invoke(typeName)
-        }?.map { (typeName, item) -> ScopedItem(name, typeName, item) } ?: emptyList()
+        }?.map { (typeName, item) -> ScopedItem(name, typeName, item) }
+            ?: this.parent?.findItemsNamedConformingTo(name, conformsToFunc)
+            ?: emptyList()
 
 
     override fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ScopedItem<ItemType>> = when (qualifiedName.size) {

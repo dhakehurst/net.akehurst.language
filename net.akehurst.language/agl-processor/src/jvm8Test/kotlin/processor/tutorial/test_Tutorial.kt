@@ -82,7 +82,7 @@ class test_Tutorial {
 
         val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr),
-            typeModelStr = TypeModelString(typeModelStr),
+            typeStr = TypeModelString(typeModelStr),
             transformStr = TransformString(transformStr)
         )
     }

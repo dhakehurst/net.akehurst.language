@@ -17,5 +17,86 @@
 
 package net.akehurst.language.transform.processor
 
+import agl.simple.test_ProvidedTransform
+import agl.simple.test_ProvidedTransform.Companion
+import net.akehurst.language.asm.builder.asmSimple
+import testFixture.data.doTest
+import testFixture.data.testSuit
+import kotlin.test.Test
+
 class test_transformInterpreter {
+    companion object {
+
+        val testData = testSuit {
+            testData("Default type of list rule") {
+                grammarStr("""
+                    namespace test
+                    grammar Test {
+                        skip leaf WS = "\s+" ;
+                        S = 'block' name '{' listOfA '}' ;
+                        listOfA = A* ;
+                        A = 'a' ;
+                        leaf name = "[a-zA-Z]+" ;
+                    }
+                """)
+                sentencePass("block AA { a a a  }", "S") {
+                    expectedAsm(asmSimple {
+                        element("S") {
+                            propertyString("name","AA")
+                            propertyListOfElement("listOfA") {
+                                element("A") {}
+                                element("A") {}
+                                element("A") {}
+                            }
+                        }
+                    })
+                }
+            }
+            testData("Substitute default type of list rule") {
+                grammarStr("""
+                    namespace test
+                    grammar Test {
+                        skip leaf WS = "\s+" ;
+                        S = 'block' name '{' listOfA '}' ;
+                        listOfA = A* ;
+                        A = 'a' ;
+                        leaf name = "[a-zA-Z]+" ;
+                    }
+                """)
+                transformStr("""
+                    #create-missing-types
+                    #override-default-transform
+                    namespace test
+                    transform Test {
+                        S: S() {   //TODO: would be nice not to have to override S !
+                          name := child[1] as String
+                          listOfA := child[3] as String
+                        }
+                        listOfA: §matchedText as String
+                    }
+                """.replace("§","$"))
+                sentencePass("block AA { a a a  }", "S") {
+                    expectedAsm(asmSimple {
+                        element("S") {
+                            propertyString("name","AA")
+                            propertyString("listOfA","a a a")
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testAll() {
+        test_ProvidedTransform.testData.testData.forEach {
+            println("****** ${it.description} ******")
+            doTest(it)
+        }
+    }
+
+    @Test
+    fun single() {
+        doTest(testData["Substitute default type of list rule"])
+    }
 }

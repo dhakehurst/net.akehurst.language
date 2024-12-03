@@ -39,7 +39,7 @@ class test_KerML_agl_Singles {
         val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy {
             Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+                referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
         }
 

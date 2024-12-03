@@ -39,7 +39,7 @@ class test_SysML_agl_Singles {
         val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                crossReferenceModelStr = CrossReferenceString(crossReferenceModelStr)
+                referenceStr = CrossReferenceString(crossReferenceModelStr)
             )
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             res.processor!!
