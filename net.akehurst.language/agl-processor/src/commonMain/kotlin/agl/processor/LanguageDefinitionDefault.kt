@@ -192,18 +192,18 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                     (null == newValue) -> {
                         ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                     }
-                    (null == this.typeModel) -> {
+                    (null == this.processor?.baseTypeModel) -> {
                         val ih = IssueHolder(LanguageProcessorPhase.ALL)
-                        ih.error(null, "TypeModel for LanguageDefinition should not be null")
+                        ih.error(null, "BaseTypeModel for LanguageDefinition should not be null")
                         ProcessResultDefault(null, ih)
                     }
                     else -> {
-                        val context = ContextFromGrammarAndTypeModel(grammarModel, typeModel!!)
+                        val context = ContextFromGrammarAndTypeModel(grammarModel, processor!!.baseTypeModel)
                         val res = TransformDomainDefault.fromString(context, newValue)
                         when {
                             res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
                             res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
-                            null == res.asm -> error("Internal error: no TypeModel, but no errors reported")
+                            null == res.asm -> error("Internal error: no AsmTransformModel, but no errors reported")
                             else -> error("Internal error: situation not handled")
                         }
                         res

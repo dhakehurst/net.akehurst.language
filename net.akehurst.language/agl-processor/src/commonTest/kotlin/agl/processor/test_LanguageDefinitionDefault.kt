@@ -358,7 +358,7 @@ class test_LanguageDefinitionDefault {
         val oldProc = sut.processor
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
-        sut.update(g2, null, null)
+        sut.update(g2, null, null,null,null)
         sut.defaultGoalRule = GrammarRuleName("statement")
 
         assertEquals(g2, sut.grammarStr)
@@ -390,7 +390,7 @@ class test_LanguageDefinitionDefault {
         val oldProc = sut.processor
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
-        sut.update(g2, null, null)
+        sut.update(g2, null, null,null,null)
 
         assertEquals(g2, sut.grammarStr)
         assertNotNull(sut.targetGrammar)
@@ -509,7 +509,7 @@ class test_LanguageDefinitionDefault {
                 identify R by n
         """
         )
-        sut.update(g1, cm1, null)
+        sut.update(g1,null,null, cm1, null)
         assertEquals(cm1, sut.crossReferenceStr)
         assertEquals("R", sut.crossReferenceModel!!.allDefinitions.get(0).scopeDefinition.values.first().identifiables.get(0).typeName.value)
         assertTrue(sut.crossReferenceModel!!.allDefinitions.get(0).references.isEmpty())

@@ -91,7 +91,7 @@ class test_LanguageRegistry {
         assertTrue(languageDefinition.issues.isNotEmpty())
         assertNull(languageDefinition.processor)
 
-        languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"),null,null)
+        languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"),null,null,null,null)
         assertEquals(identity, languageDefinition.identity)
         assertTrue(languageDefinition.issues.isEmpty())
         assertNotNull(languageDefinition.processor)

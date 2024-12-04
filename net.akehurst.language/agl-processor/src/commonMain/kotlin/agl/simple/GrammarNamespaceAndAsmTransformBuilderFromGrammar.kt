@@ -156,7 +156,7 @@ internal class Grammar2Namespaces(
 
     private fun findOrCreateGrammarNamespace(qualifiedName: QualifiedName) =
         GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(typeModel,qualifiedName).also { gns ->
-            grammar.extends.map {
+            grammar.allExtends.map {
                 it.resolved?.qualifiedName?.asImport ?: error("Should not happen - should already be resolved at this point!")
             }.forEach {
                 gns.addImport(it)
