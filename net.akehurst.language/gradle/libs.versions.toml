@@ -1,15 +1,15 @@
 [versions]
-project = "4.2.0.20"
+project = "4.2.1.0"
 
-kotlin = "2.0.20"
+kotlin = "2.1.0"
 dokka = "1.9.20"
-exportPublic = "2.0.20"
-nak-kotlinx = "2.0.20"
-buildconfig = "5.4.0"
+exportPublic = "2.1.0"
+nak-kotlinx = "2.1.0"
+buildconfig = "5.5.0"
 credentials = "3.0"
-jsIntegration = "2.0.20"
+jsIntegration = "2.1.0"
 
-korlibs = "6.0.0-alpha9"
+korlibs = "6.0.1"
 kotest = "5.9.1"
 
 [libraries]
