@@ -34,7 +34,6 @@ class ScopeSimple<ItemType>(
     override val scopeIdentity: String = "${parent?.scopeIdentity ?: ""}/$scopeIdentityInParent"
 
     //should only be used for rootScope
-    //TODO: I don't want to store the 'Items' in the scope!
     override val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
@@ -115,7 +114,6 @@ class ScopeSimple<ItemType>(
         }?.map { (typeName, item) -> ScopedItem(name, typeName, item) }
             ?: this.parent?.findItemsNamedConformingTo(name, conformsToFunc)
             ?: emptyList()
-
 
     override fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ScopedItem<ItemType>> = when (qualifiedName.size) {
         0 -> emptySet()

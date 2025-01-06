@@ -107,13 +107,14 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
-            val createReferable:CreateReferableFunction = {ref, item ->
+            val createReferable = { ref:String, item:AsmStructure ->
                 _asm.addToIndex(item)
+                item.path
             }
             val scopeCreator = ScopeCreator(_typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope, createReferable,emptyMap(), issues)
             _asm.traverseDepthFirst(scopeCreator)
 
-            val resolveFunction: ResolveFunction = { ref ->
+            val resolveFunction = { ref:AsmPath ->
                 _asm.elementIndex[ref]
             }
             _asm.traverseDepthFirst(ReferenceResolverSimple(_typeModel, _crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))

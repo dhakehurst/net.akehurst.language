@@ -24,13 +24,15 @@ import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.asm.simple.AsmFactorySimple
+import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
+
+typealias CreateScopedItem<AsmType, ItemInScopeType> = (asm: AsmType, referableName: String, item:AsmStructure) -> ItemInScopeType
+typealias ResolveScopedItem<AsmType, ItemInScopeType> = (asm: AsmType, ref: ItemInScopeType) -> AsmStructure?
 
 class SemanticAnalyserSimple(
     val typeModel: TypeModel,
@@ -57,33 +59,31 @@ class SemanticAnalyserSimple(
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
             else -> {
-                this.buildScope(asm, context.rootScope)
+                this.buildScope(asm, context)
                 val resolve = if (options.resolveReferences) {
                     true
                 } else {
                     _issues.info(null, "Semantic Analysis option 'resolveReferences' is off, references checked but not resolved.")
                     false
                 }
-                this.walkReferences(asm, _locationMap, context.rootScope, resolve)
+                this.walkReferences(asm, _locationMap, context, resolve)
             }
         }
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, rootScope: Scope<AsmPath>, resolve: Boolean) {
-        val resolveFunction: ResolveFunction? = if (resolve) {
-            { ref -> asm.elementIndex[ref] }
+    private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
+        val resFunc: ((ref: AsmPath) -> AsmStructure?)? = if (resolve) {
+            { ref -> context.resolveScopedItem.invoke(asm, ref) }
         } else {
             null
         }
-        asm.traverseDepthFirst(ReferenceResolverSimple(typeModel, crossReferenceModel, rootScope, resolveFunction, locationMap, _issues))
+        asm.traverseDepthFirst(ReferenceResolverSimple(typeModel, crossReferenceModel, context.rootScope, resFunc, locationMap, _issues))
     }
 
-    private fun buildScope(asm: Asm, rootScope: Scope<AsmPath>) {
-        val createReferable:CreateReferableFunction = {ref, item ->
-            asm.addToIndex(item)
-        }
-        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, rootScope, createReferable,_locationMap, _issues)
+    private fun buildScope(asm: Asm, context: ContextAsmSimple) {
+        val createFunc = { ref:String, item:AsmStructure -> context.createScopedItem.invoke(asm,ref,item) }
+        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope, createFunc, _locationMap, _issues)
         asm.traverseDepthFirst(scopeCreator)
     }
 

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
@@ -34,14 +35,11 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
-typealias CreateReferableFunction = (ref: String, AsmStructure) -> Unit?
-
-
-class ScopeCreator(
+class ScopeCreator<ItemInScopeType>(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModelDefault,
-    val rootScope: Scope<AsmPath>,
-    val createReferableFunction : CreateReferableFunction?,
+    val rootScope: Scope<ItemInScopeType>,
+    val createReferableFunction : ((referableName: String, item:AsmStructure) -> ItemInScopeType),
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
 ) : AsmTreeWalker {
@@ -83,15 +81,16 @@ class ScopeCreator(
 
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun createScope(parentScope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
+    private fun createScope(parentScope: Scope<ItemInScopeType>, el: AsmStructure): Scope<ItemInScopeType> {
         val exp = crossReferenceModel.identifyingExpressionFor(parentScope.forTypeName.last, el.qualifiedTypeName)
         return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)) {
             val refInParent = exp.createReferenceLocalToScope(parentScope, el)
+            val scopeItem = createReferableFunction.invoke(el.typeName.value, el)
             when {
                 // Nothing
-                refInParent is AsmNothing -> parentScope.createOrGetChildScope(el.typeName.value, el.qualifiedTypeName, el.path)
+                refInParent is AsmNothing -> parentScope.createOrGetChildScope(el.typeName.value, el.qualifiedTypeName, scopeItem)
                 // String
-                refInParent is AsmPrimitive && refInParent.isStdString -> parentScope.createOrGetChildScope((refInParent.value as String), el.qualifiedTypeName, el.path)
+                refInParent is AsmPrimitive && refInParent.isStdString -> parentScope.createOrGetChildScope((refInParent.value as String), el.qualifiedTypeName, scopeItem)
                 // List<String>
                 refInParent is AsmList && refInParent.isNotEmpty && refInParent.elements.all { it is AsmPrimitive && it.isStdString } -> {
                     val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
@@ -126,7 +125,7 @@ class ScopeCreator(
         }
     }
 
-    private fun addToScope(scope: Scope<AsmPath>, el: AsmStructure) {
+    private fun addToScope(scope: Scope<ItemInScopeType>, el: AsmStructure) {
         val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName.last, el.qualifiedTypeName)
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
@@ -169,10 +168,10 @@ class ScopeCreator(
                         //and scope defined
                         else -> {
                             val refList = scopeLocalReference.elements.map { (it as AsmPrimitive).value as String }
-                            val contextRef = el.path
                             var nextScope = scope
                             for (ref in refList) {
                                 addToScopeAs(nextScope, el, ref)
+                                val contextRef = createReferableFunction.invoke(ref, el)
                                 nextScope = nextScope.createOrGetChildScope(ref, el.qualifiedTypeName, contextRef)
                             }
                         }
@@ -191,8 +190,9 @@ class ScopeCreator(
         }
     }
 
-    private fun addToScopeAs(scope: Scope<AsmPath>, el: AsmStructure, referableName:String) {
-        val added = scope.addToScope(referableName, el.qualifiedTypeName, el.path)
+    private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName:String) {
+        val scopeItem = createReferableFunction.invoke(referableName, el)
+        val added = scope.addToScope(referableName, el.qualifiedTypeName, scopeItem)
         when (added) {
             true -> when(createReferableFunction) {
                 null -> Unit
@@ -203,22 +203,20 @@ class ScopeCreator(
 
     }
 
-    private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue = when (this) {
+    private fun Expression.createReferenceLocalToScope(scope: Scope<ItemInScopeType>, element: AsmStructure): AsmValue = when (this) {
         is RootExpression -> this.createReferenceLocalToScope(scope, element)
         is NavigationExpression -> this.createReferenceLocalToScope(scope, element)
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
-    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<ItemInScopeType>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
 
-
-    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue {
+    private fun NavigationExpression.createReferenceLocalToScope(scope: Scope<ItemInScopeType>, element: AsmStructure): AsmValue {
         val elType = typeModel.findByQualifiedNameOrNull(element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         return _interpreter.evaluateExpression(EvaluationContext.ofSelf(element.toTypedObject(elType)), this).asmValue
     }
-
 
 }

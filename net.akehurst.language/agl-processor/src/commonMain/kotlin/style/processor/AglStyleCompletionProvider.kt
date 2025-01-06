@@ -108,8 +108,8 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 
     private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
         return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.NO_STYLE_ID, "META_IDENTIFIER")
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.NO_STYLE_ID.value, "META_IDENTIFIER")
         )
     }
 

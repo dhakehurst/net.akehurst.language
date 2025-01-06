@@ -63,7 +63,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -97,7 +97,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -216,7 +216,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
             CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

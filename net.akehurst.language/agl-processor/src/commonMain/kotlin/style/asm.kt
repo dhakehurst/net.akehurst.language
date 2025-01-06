@@ -31,8 +31,8 @@ class AglStyleModelDefault(
 
     companion object {
         //not sure if this should be here or in grammar object
-        const val KEYWORD_STYLE_ID = "\$keyword"
-        const val NO_STYLE_ID = "\$nostyle"
+         val KEYWORD_STYLE_ID = AglStyleSelector("\$keyword", AglStyleSelectorKind.SPECIAL)
+         val NO_STYLE_ID = AglStyleSelector("\$nostyle",AglStyleSelectorKind.SPECIAL)
 
         //val DEFAULT_NO_STYLE = AglStyleTagRuleDefault(
         //    listOf(AglStyleSelector(NO_STYLE_ID, AglStyleSelectorKind.SPECIAL))

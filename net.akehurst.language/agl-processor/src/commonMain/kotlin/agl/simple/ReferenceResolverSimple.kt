@@ -40,7 +40,6 @@ import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
-typealias ResolveFunction = (ref: AsmPath) -> AsmStructure?
 
 data class ReferenceExpressionContext(
     val element: AsmValue,
@@ -55,7 +54,7 @@ class ReferenceResolverSimple(
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel,
     val rootScope: Scope<AsmPath>,
-    val resolveFunction: ResolveFunction?,
+    val resolveFunction: ((ref: AsmPath) -> AsmStructure?)?,
     private val _locationMap: Map<Any, InputLocation>,
     private val _issues: IssueHolder
 ) : AsmTreeWalker {
@@ -165,7 +164,7 @@ class ReferenceResolverSimple(
                 }
                 when {
                     targets.isEmpty() -> {
-                        raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${referringValue.value}' in scope of element '$self'")
+                        raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringStr' in scope of element '$self'")
                         val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
                         referringProperty.convertToReferenceTo(null)
                     }
