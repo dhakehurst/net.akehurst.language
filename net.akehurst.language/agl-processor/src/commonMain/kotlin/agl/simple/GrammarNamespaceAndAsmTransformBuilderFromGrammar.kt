@@ -687,7 +687,7 @@ internal class Grammar2TransformRuleSet(
                 TODO("not implemented")
             }
 
-            override fun cloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypeModel): StructuredType {
                 TODO("not implemented")
             }
         }
@@ -855,7 +855,7 @@ internal class Grammar2TransformRuleSet(
                 TODO("not implemented")
             }
 
-            override fun cloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypeModel): StructuredType {
                 TODO("not implemented")
             }
         }

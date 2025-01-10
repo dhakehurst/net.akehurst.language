@@ -27,8 +27,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
     override val qualifiedName: QualifiedName = QualifiedName("std")
 
     //TODO: need some other kinds of type for these really
-    val AnyType = super.findOrCreateSpecialTypeNamed(SimpleName("Any")).type()
-    val NothingType = super.findOrCreateSpecialTypeNamed(SimpleName("Nothing")).type()
+    val AnyType = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Any")).type()
+    val NothingType = super.findOwnedOrCreateSpecialTypeNamed(SimpleName("Nothing")).type()
     //val TupleType = super.findOrCreateSpecialTypeNamed("\$Tuple")
     //val UnnamedSuperTypeType = super.findOrCreateSpecialTypeNamed("\$UnnamedSuperType")
 
@@ -53,7 +53,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
     }
 
     private val LambdaType_typeName = SimpleName("LambdaType")
-    val Lambda = super.findOrCreateSpecialTypeNamed(LambdaType_typeName).type()
+    val Lambda = super.findOwnedOrCreateSpecialTypeNamed(LambdaType_typeName).type()
 
     private val TupleType_typeName = SimpleName("TupleType")
     val TupleType = TupleTypeSimple(this, TupleType_typeName)
@@ -140,7 +140,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         )
     }
 
-    override fun cloneTo(other: TypeModel): TypeNamespace = this
+    override fun findInOrCloneTo(other: TypeModel): TypeNamespace = this
 
 }
 

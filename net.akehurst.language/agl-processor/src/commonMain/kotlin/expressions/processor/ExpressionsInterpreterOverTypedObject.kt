@@ -62,7 +62,10 @@ data class EvaluationContext(
 interface TypedObject {
     val type: TypeInstance
 
-    fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject
+    /**
+     * value of the given PropertyDeclaration or Nothing if no such property exists
+     */
+    fun getPropertyValueOrNothing(propertyDeclaration: PropertyDeclaration): TypedObject
 
     fun callMethod(methodDeclaration: MethodDeclaration, arguments: List<TypedObject>): TypedObject
 
@@ -74,7 +77,7 @@ class TypedObjectAsmValue(
     val self: AsmValue
 ) : TypedObject {
 
-    override fun getPropertyValue(propertyDeclaration: PropertyDeclaration): TypedObject {
+    override fun getPropertyValueOrNothing(propertyDeclaration: PropertyDeclaration): TypedObject {
         val propRes = this.type.allResolvedProperty[propertyDeclaration.name]!!
         val ao = when (propertyDeclaration) {
             is PropertyDeclarationDerived -> TODO()
@@ -88,7 +91,7 @@ class TypedObjectAsmValue(
             }
 
             is PropertyDeclarationStored -> when (self) {
-                is AsmStructure -> self.getProperty(propertyDeclaration.name.asValueName)
+                is AsmStructure -> self.getPropertyOrNothing(propertyDeclaration.name.asValueName)
                 else -> error("Cannot evaluate property '${propertyDeclaration.name}' on object of type '${self::class.simpleName}'")
             }
 
@@ -243,7 +246,7 @@ class ExpressionsInterpreterOverTypedObject(
                 }
             }
 
-            else -> obj.getPropertyValue(pd)
+            else -> obj.getPropertyValueOrNothing(pd)
         }
     }
 

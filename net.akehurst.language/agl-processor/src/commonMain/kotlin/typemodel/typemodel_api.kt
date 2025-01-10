@@ -83,6 +83,17 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     @Deprecated("No longer needed")
     fun findTupleTypeWithIdOrNull(id: Int): TupleType?
 
+    fun findOwnedSingletonTypeNamedOrNull(typeName: SimpleName): SingletonType?
+    fun findOwnedPrimitiveTypeNamedOrNull(typeName: SimpleName): PrimitiveType?
+    fun findOwnedEnumTypeNamedOrNull(typeName: SimpleName): EnumType?
+    fun findOwnedValueTypeNamedOrNull(typeName: SimpleName): ValueType?
+    fun findOwnedInterfaceTypeNamedOrNull(typeName: SimpleName): InterfaceType?
+    fun findOwnedDataTypeNamedOrNull(typeName: SimpleName): DataType?
+    fun findOwnedCollectionTypeNamedOrNull(typeName: SimpleName): CollectionType?
+    fun findOwnedUnionTypeNamedOrNull(typeName: SimpleName): UnionType?
+
+    fun createOwnedDataTypeNamed(typeName: SimpleName): DataType
+
     fun findOwnedOrCreateSingletonTypeNamed(typeName: SimpleName): SingletonType
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: SimpleName): PrimitiveType
     fun findOwnedOrCreateEnumTypeNamed(typeName: SimpleName, literals: List<String>): EnumType
@@ -104,7 +115,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     /**
      * clone the namespace but not the content
      */
-    fun cloneTo(other: TypeModel): TypeNamespace
+    fun findInOrCloneTo(other: TypeModel): TypeNamespace
 }
 
 interface TypeParameter {
@@ -122,7 +133,7 @@ interface TypeArgument {
     fun signature(context: TypeNamespace?, currentDepth: Int): String
     fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
 
-    fun cloneTo(other: TypeModel):TypeArgument
+    fun findInOrCloneTo(other: TypeModel):TypeArgument
 }
 
 interface TypeInstance {
@@ -163,17 +174,25 @@ interface TypeInstance {
 
     fun signature(context: TypeNamespace?, currentDepth: Int): String
 
+    /**
+     * true if
+     *  - this == other
+     *  - other == Any (all types conformTo Any)
+     *  - this.resolvedDeclaration conformsTo other.resolvedDeclaration
+     *    && all this.typeArguments conformTo other.typeArguments
+     */
     fun conformsTo(other: TypeInstance): Boolean
+
     fun commonSuperType(other: TypeInstance): TypeInstance
     fun possiblyQualifiedNameInContext(context: TypeNamespace): Any
 
-    fun cloneTo(other: TypeModel): TypeInstance
+    fun findInOrCloneTo(other: TypeModel): TypeInstance
 }
 
 interface TypeArgumentNamed : TypeArgument {
     val name: PropertyName
 
-    override fun cloneTo(other: TypeModel):TypeArgumentNamed
+    override fun findInOrCloneTo(other: TypeModel):TypeArgumentNamed
 }
 
 interface TupleTypeInstance : TypeInstance {
@@ -214,6 +233,13 @@ interface TypeDefinition : Definition<TypeDefinition> {
 
     fun type(typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false): TypeInstance
 
+    /**
+     * true if
+     *  - this == other
+     *  - other == Any (all types conformTo Any)
+     *  - other is Union && this conformsTo one of the alternatives
+     *  - one of this.supertypes conformsTo other
+     */
     fun conformsTo(other: TypeDefinition): Boolean
 
     fun getOwnedPropertyByIndexOrNull(i: Int): PropertyDeclaration?
@@ -241,7 +267,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
 
     fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String) : MethodDeclarationDerived
 
-    fun cloneTo(other: TypeModel): TypeDefinition
+    fun findInOrCloneTo(other: TypeModel): TypeDefinition
 }
 
 interface SingletonType : TypeDefinition {
@@ -263,7 +289,7 @@ interface StructuredType : TypeDefinition {
      */
     fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
 
-    override fun cloneTo(other: TypeModel): StructuredType
+    override fun findInOrCloneTo(other: TypeModel): StructuredType
 }
 
 //interface TypeParameterVarArg : TypeParameter
@@ -320,7 +346,7 @@ interface UnionType : TypeDefinition {
 
     fun addAlternative(value:TypeInstance)
 
-    override fun cloneTo(other: TypeModel): UnionType
+    override fun findInOrCloneTo(other: TypeModel): UnionType
 }
 
 interface CollectionType : StructuredType {
@@ -377,7 +403,7 @@ interface PropertyDeclaration {
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
-    fun cloneTo(other: TypeModel): PropertyDeclaration
+    fun findInOrCloneTo(other: TypeModel): PropertyDeclaration
 }
 
 interface PropertyDeclarationResolved : PropertyDeclaration
@@ -456,7 +482,7 @@ interface MethodDeclaration {
     val description: String
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
-    fun cloneTo(other: TypeModel): MethodDeclaration
+    fun findInOrCloneTo(other: TypeModel): MethodDeclaration
 }
 
 interface MethodDeclarationPrimitive : MethodDeclaration
@@ -467,7 +493,7 @@ interface ConstructorDeclaration {
     val owner: TypeDefinition
     val parameters: List<ParameterDeclaration>
 
-    fun cloneTo(other: TypeModel): ConstructorDeclaration
+    fun findInOrCloneTo(other: TypeModel): ConstructorDeclaration
 }
 
 @JvmInline
@@ -478,5 +504,5 @@ interface ParameterDeclaration {
     val typeInstance: TypeInstance
     val defaultValue: String?
 
-    fun cloneTo(other: TypeModel): ParameterDeclaration
+    fun findInOrCloneTo(other: TypeModel): ParameterDeclaration
 }

@@ -94,9 +94,14 @@ interface AsmStructure : AsmValue {
     fun hasProperty(name: PropertyValueName): Boolean
 
     /**
-     * the value of the named property, AsmNothing if no property with that name
+     * the value of the named property, (throws) error if no property with that name
      */
     fun getProperty(name: PropertyValueName): AsmValue
+
+    /**
+     * the value of the named property, AsmNothing if no property with that name
+     */
+    fun getPropertyOrNothing(name: PropertyValueName): AsmValue
 
     fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int)
 }

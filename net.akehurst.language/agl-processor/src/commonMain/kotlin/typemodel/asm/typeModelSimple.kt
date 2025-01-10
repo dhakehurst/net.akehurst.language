@@ -292,9 +292,9 @@ class TypeParameterReference(
 
     override fun possiblyQualifiedNameInContext(context: TypeNamespace): PossiblyQualifiedName = typeParameterName
 
-    override fun cloneTo(other: TypeModel): TypeInstance {
+    override fun findInOrCloneTo(other: TypeModel): TypeInstance {
         return TypeParameterReference(
-            this.context.cloneTo(other),
+            this.context.findInOrCloneTo(other),
             this.typeParameterName,
             this.isNullable
         )
@@ -326,13 +326,11 @@ data class TypeArgumentSimple(
         return type.signature(context, currentDepth)
     }
 
-    override fun cloneTo(other: TypeModel): TypeArgument {
-        val clonedType = type.cloneTo(other)
+    override fun findInOrCloneTo(other: TypeModel): TypeArgument {
+        val clonedType = type.findInOrCloneTo(other)
         // val clonedTargs = this.type.typeArguments.map { it.cloneTo(other) }
         //val clonedTi = clonedDecl.type(clonedTargs, this.type.isNullable)
-        return TypeArgumentSimple(
-            clonedType
-        )
+        return TypeArgumentSimple(clonedType)
     }
 
     override fun toString(): String = signature(null, 0)
@@ -375,6 +373,7 @@ class TypeInstanceSimple(
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
                     ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
+
                 else -> error("Unsupported")
             }
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
@@ -406,12 +405,12 @@ class TypeInstanceSimple(
         else -> this.qualifiedTypeName
     }
 
-    override fun cloneTo(other: TypeModel): TypeInstance {
+    override fun findInOrCloneTo(other: TypeModel): TypeInstance {
         return TypeInstanceSimple(
             this.contextQualifiedTypeName,
-            this.namespace.cloneTo(other),
+            this.namespace.findInOrCloneTo(other),
             this.qualifiedOrImportedTypeName,
-            this.typeArguments.map { it.cloneTo(other) },
+            this.typeArguments.map { it.findInOrCloneTo(other) },
             this.isNullable
         )
     }
@@ -456,10 +455,10 @@ class TupleTypeInstanceSimple(
         else -> this.qualifiedTypeName
     }
 
-    override fun cloneTo(other: TypeModel): TypeInstance {
+    override fun findInOrCloneTo(other: TypeModel): TypeInstance {
         return TupleTypeInstanceSimple(
-            this.namespace.cloneTo(other),
-            this.typeArguments.map { it.cloneTo(other) },
+            this.namespace.findInOrCloneTo(other),
+            this.typeArguments.map { it.findInOrCloneTo(other) },
             this.isNullable
         )
     }
@@ -531,13 +530,15 @@ class TypeNamespaceSimple(
     import: List<Import> = emptyList()
 ) : TypeNamespaceAbstract(options, import) {
 
-    override fun cloneTo(other: TypeModel): TypeNamespace {
+    override fun findInOrCloneTo(other: TypeModel): TypeNamespace {
         return other.findNamespaceOrNull(this.qualifiedName)
-            ?: TypeNamespaceSimple(
-                this.qualifiedName,
-                this.options.clone(other.options),
-                this.import
-            ).also { other.addNamespace(it) }
+            ?: run {
+                TypeNamespaceSimple(
+                    this.qualifiedName,
+                    this.options.clone(other.options),
+                    this.import
+                ).also { other.addNamespace(it) }
+            }
     }
 
 }
@@ -646,7 +647,19 @@ abstract class TypeNamespaceAbstract(
     @Deprecated("No longer needed")
     override fun findTupleTypeWithIdOrNull(id: Int): TupleType? = ownedTupleTypes.getOrNull(id)
 
-    fun findOrCreateSpecialTypeNamed(typeName: SimpleName): SpecialTypeSimple {
+    fun findOwnedSpecialTypeNamedOrNull(typeName: SimpleName): SpecialTypeSimple? = findOwnedTypeNamed(typeName) as SpecialTypeSimple?
+    override fun findOwnedSingletonTypeNamedOrNull(typeName: SimpleName): SingletonType? = findOwnedTypeNamed(typeName) as SingletonType?
+    override fun findOwnedPrimitiveTypeNamedOrNull(typeName: SimpleName): PrimitiveType? = findOwnedTypeNamed(typeName) as PrimitiveType?
+    override fun findOwnedEnumTypeNamedOrNull(typeName: SimpleName): EnumType? = findOwnedTypeNamed(typeName) as EnumType?
+    override fun findOwnedCollectionTypeNamedOrNull(typeName: SimpleName): CollectionType? = findOwnedTypeNamed(typeName) as CollectionType?
+    override fun findOwnedValueTypeNamedOrNull(typeName: SimpleName): ValueType? = findOwnedTypeNamed(typeName) as ValueType?
+    override fun findOwnedInterfaceTypeNamedOrNull(typeName: SimpleName): InterfaceType? = findOwnedTypeNamed(typeName) as InterfaceType?
+    override fun findOwnedDataTypeNamedOrNull(typeName: SimpleName): DataType? = findOwnedTypeNamed(typeName) as DataType?
+    override fun findOwnedUnionTypeNamedOrNull(typeName: SimpleName): UnionType? = findOwnedTypeNamed(typeName) as UnionType?
+
+    override fun createOwnedDataTypeNamed(typeName: SimpleName): DataType = DataTypeSimple(this, typeName)
+
+    fun findOwnedOrCreateSpecialTypeNamed(typeName: SimpleName): SpecialTypeSimple {
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
             SpecialTypeSimple(this, typeName)
@@ -709,14 +722,8 @@ abstract class TypeNamespaceAbstract(
         }
     }
 
-    override fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType {
-        val existing = findOwnedTypeNamed(typeName)
-        return if (null == existing) {
-            DataTypeSimple(this, typeName)
-        } else {
-            existing as DataType
-        }
-    }
+    override fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType =
+        findOwnedDataTypeNamedOrNull(typeName) ?: createOwnedDataTypeNamed(typeName)
 
     override fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType {
         val existing = findOwnedTypeNamed(typeName)
@@ -939,15 +946,16 @@ abstract class TypeDefinitionSimpleAbstract(
 
     // --- Implementation
 
-    protected fun cloneTo(other: TypeModel, clone: TypeDefinitionSimpleAbstract) {
-        this.supertypes.forEach { clone.addSupertype(it.cloneTo(other)) }
+    protected fun findInOrCloneTo(other: TypeModel, clone: TypeDefinitionSimpleAbstract) {
+        this.supertypes.forEach { clone.addSupertype(it.findInOrCloneTo(other)) }
         this.typeParameters.forEach { clone.addTypeParameter(it.clone()) }
-        this.property.forEach { clone.addProperty(it.cloneTo(other)) }
-        this.method.forEach { clone.addMethod(it.cloneTo(other)) }
+        this.property.forEach { it.findInOrCloneTo(other) }
+        this.method.forEach { it.findInOrCloneTo(other) }
         clone.metaInfo.putAll(this.metaInfo)
     }
 
     fun addProperty(propertyDeclaration: PropertyDeclaration) {
+        check(this.findOwnedPropertyOrNull(propertyDeclaration.name) == null) { "TypeDefinition '${this.qualifiedName}' already owns a property named '${propertyDeclaration.name}'" }
         this.propertyByIndex[propertyDeclaration.index] = propertyDeclaration
         //this.property[propertyDeclaration.name] = propertyDeclaration
     }
@@ -974,10 +982,12 @@ class SpecialTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): SpecialTypeSimple =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as SpecialTypeSimple?
-            ?: (namespace.cloneTo(other) as TypeNamespaceAbstract).findOrCreateSpecialTypeNamed(this.name)
-                .also { clone -> super.cloneTo(other, clone) }
+    override fun findInOrCloneTo(other: TypeModel): SpecialTypeSimple =
+        (namespace.findInOrCloneTo(other) as TypeNamespaceAbstract).findOwnedSpecialTypeNamedOrNull(this.name)
+            ?: run {
+                (namespace.findInOrCloneTo(other) as TypeNamespaceAbstract).findOwnedOrCreateSpecialTypeNamed(this.name) //FIXME: createOwnedSpecialType
+                    .also { clone -> super.findInOrCloneTo(other, clone) }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String = "special ${signature(context)}"
 
@@ -1007,10 +1017,12 @@ class SingletonTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): SingletonType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as SingletonType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateSingletonTypeNamed(this.name)
-                .also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+    override fun findInOrCloneTo(other: TypeModel): SingletonType =
+        namespace.findInOrCloneTo(other).findOwnedSingletonTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreateSingletonTypeNamed(this.name) //FIXME: createOwnedSingletonType
+                    .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String = "singleton ${signature(context)}"
 
@@ -1040,10 +1052,12 @@ class PrimitiveTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): PrimitiveType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as PrimitiveType?
-            ?: namespace.cloneTo(other).findOwnedOrCreatePrimitiveTypeNamed(this.name)
-                .also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+    override fun findInOrCloneTo(other: TypeModel): PrimitiveType =
+        namespace.findInOrCloneTo(other).findOwnedPrimitiveTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreatePrimitiveTypeNamed(this.name) //FIXME: create
+                    .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String = "primitive ${signature(context)}"
 
@@ -1074,10 +1088,12 @@ class EnumTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): EnumType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as EnumType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateEnumTypeNamed(this.name, this.literals)
-                .also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+    override fun findInOrCloneTo(other: TypeModel): EnumType =
+        namespace.findInOrCloneTo(other).findOwnedEnumTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreateEnumTypeNamed(this.name, this.literals)
+                    .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String = "enum ${signature(context)}"
 
@@ -1125,13 +1141,14 @@ class UnionTypeSimple(
         else -> false
     }
 
-    override fun cloneTo(other: TypeModel): UnionType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as UnionType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateUnionTypeNamed(this.name) { ut ->
-                this.alternatives.forEach { ut.addAlternative(it.cloneTo(other)) }
-            }.also { clone ->
-                super.cloneTo(other, clone as UnionTypeSimple)
-
+    override fun findInOrCloneTo(other: TypeModel): UnionType =
+        namespace.findInOrCloneTo(other).findOwnedUnionTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreateUnionTypeNamed(this.name) { ut ->
+                    this.alternatives.forEach { ut.addAlternative(it.findInOrCloneTo(other)) }
+                }.also { clone ->
+                    super.findInOrCloneTo(other, clone as UnionTypeSimple)
+                }
             }
 
     override fun asStringInContext(context: TypeNamespace): String =
@@ -1179,10 +1196,10 @@ class TypeArgumentNamedSimple(
         return "${name.value}:${type.signature(context, currentDepth)}"
     }
 
-    override fun cloneTo(other: TypeModel): TypeArgumentNamed {
+    override fun findInOrCloneTo(other: TypeModel): TypeArgumentNamed {
         return TypeArgumentNamedSimple(
             this.name,
-            this.type.cloneTo(other)
+            this.type.findInOrCloneTo(other)
         )
     }
 
@@ -1214,7 +1231,7 @@ class TupleTypeSimple(
         else -> "${name}<${this.property.joinToString { it.name.value + ":" + it.typeInstance.signature(context, currentDepth + 1) }}>"
     }
 
-    override fun cloneTo(other: TypeModel): TupleType = StdLibDefault.TupleType
+    override fun findInOrCloneTo(other: TypeModel): TupleType = StdLibDefault.TupleType
 
     override fun conformsTo(other: TypeDefinition): Boolean = when {
         this === other -> true
@@ -1276,13 +1293,15 @@ class ValueTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): ValueType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as ValueType?
-            ?: this.namespace.cloneTo(other).findOwnedOrCreateValueTypeNamed(this.name)
-                .also { clone ->
-                    super.cloneTo(other, clone as TypeDefinitionSimpleAbstract)
-                    this.constructors.forEach { clone.addConstructor(it.parameters.map { it.cloneTo(other) }) }
-                }
+    override fun findInOrCloneTo(other: TypeModel): ValueType =
+        this.namespace.findInOrCloneTo(other).findOwnedValueTypeNamedOrNull(this.name)
+            ?: run {
+                this.namespace.findInOrCloneTo(other).findOwnedOrCreateValueTypeNamed(this.name)
+                    .also { clone ->
+                        super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract)
+                        this.constructors.forEach { clone.addConstructor(it.parameters.map { it.findInOrCloneTo(other) }) }
+                    }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String {
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
@@ -1324,13 +1343,15 @@ class InterfaceTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): InterfaceType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as InterfaceType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateInterfaceTypeNamed(this.name)
-                .also { clone ->
-                    super.cloneTo(other, clone as TypeDefinitionSimpleAbstract)
-                    this.subtypes.forEach { clone.addSubtype(it.cloneTo(other)) }
-                }
+    override fun findInOrCloneTo(other: TypeModel): InterfaceType =
+        namespace.findInOrCloneTo(other).findOwnedInterfaceTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreateInterfaceTypeNamed(this.name)
+                    .also { clone ->
+                        super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract)
+                        this.subtypes.forEach { clone.addSubtype(it.findInOrCloneTo(other)) }
+                    }
+            }
 
     override fun addSubtype(typeInstance: TypeInstance) {
         this.subtypes.add(typeInstance)
@@ -1384,14 +1405,16 @@ class DataTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): DataType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as DataType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateDataTypeNamed(this.name)
-                .also { clone ->
-                    super.cloneTo(other, clone as TypeDefinitionSimpleAbstract)
-                    this.constructors.forEach { clone.addConstructor(it.parameters.map { it.cloneTo(other) }) }
-                    this.subtypes.forEach { clone.addSubtype(it.cloneTo(other)) }
-                }
+    override fun findInOrCloneTo(other: TypeModel): DataType =
+        namespace.findInOrCloneTo(other).findOwnedDataTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).createOwnedDataTypeNamed(this.name)
+                    .also { clone ->
+                        super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract)
+                        this.constructors.forEach { clone.addConstructor(it.parameters.map { it.findInOrCloneTo(other) }) }
+                        this.subtypes.forEach { clone.addSubtype(it.findInOrCloneTo(other)) }
+                    }
+            }
 
     override fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName) {
         val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, emptyList(), false)
@@ -1448,10 +1471,12 @@ class CollectionTypeSimple(
         else -> qualifiedName.value
     }
 
-    override fun cloneTo(other: TypeModel): CollectionType =
-        other.findByQualifiedNameOrNull(this.qualifiedName) as CollectionType?
-            ?: namespace.cloneTo(other).findOwnedOrCreateCollectionTypeNamed(this.name)
-                .also { clone -> super.cloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+    override fun findInOrCloneTo(other: TypeModel): CollectionType =
+        namespace.findInOrCloneTo(other).findOwnedCollectionTypeNamedOrNull(this.name)
+            ?: run {
+                namespace.findInOrCloneTo(other).findOwnedOrCreateCollectionTypeNamed(this.name)
+                    .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
+            }
 
     override fun asStringInContext(context: TypeNamespace): String = "collection ${signature(context)}"
 }
@@ -1461,10 +1486,10 @@ class ConstructorDeclarationSimple(
     override val parameters: List<ParameterDeclaration>
 ) : ConstructorDeclaration {
 
-    override fun cloneTo(other: TypeModel): ConstructorDeclaration =
+    override fun findInOrCloneTo(other: TypeModel): ConstructorDeclaration =
         ConstructorDeclarationSimple(
-            this.owner.cloneTo(other),
-            this.parameters.map { it.cloneTo(other) }
+            this.owner.findInOrCloneTo(other),
+            this.parameters.map { it.findInOrCloneTo(other) }
         )
 }
 
@@ -1524,14 +1549,16 @@ class PropertyDeclarationStored(
 ) : PropertyDeclarationAbstract() {
     override val description: String = "Stored property value."
 
-    override fun cloneTo(other: TypeModel): PropertyDeclaration =
-        owner.cloneTo(other).findOwnedPropertyOrNull(this.name)
-            ?: owner.cloneTo(other).appendPropertyStored(
-                this.name,
-                this.typeInstance.cloneTo(other),
-                this.characteristics,
-                this.index
-            )
+    override fun findInOrCloneTo(other: TypeModel): PropertyDeclaration =
+        owner.findInOrCloneTo(other).findOwnedPropertyOrNull(this.name)
+            ?: run {
+                owner.findInOrCloneTo(other).appendPropertyStored(
+                    this.name,
+                    this.typeInstance.findInOrCloneTo(other),
+                    this.characteristics,
+                    this.index
+                )
+            }
 }
 
 /**
@@ -1548,13 +1575,15 @@ class PropertyDeclarationPrimitive(
 
     override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.PRIMITIVE)
 
-    override fun cloneTo(other: TypeModel): PropertyDeclaration =
-        owner.cloneTo(other).findOwnedPropertyOrNull(this.name)
-            ?: owner.cloneTo(other).appendPropertyPrimitive(
-                this.name,
-                this.typeInstance.cloneTo(other),
-                this.description
-            )
+    override fun findInOrCloneTo(other: TypeModel): PropertyDeclaration =
+        owner.findInOrCloneTo(other).findOwnedPropertyOrNull(this.name)
+            ?: run {
+                owner.findInOrCloneTo(other).appendPropertyPrimitive(
+                    this.name,
+                    this.typeInstance.findInOrCloneTo(other),
+                    this.description
+                )
+            }
 }
 
 class PropertyDeclarationDerived(
@@ -1568,14 +1597,16 @@ class PropertyDeclarationDerived(
 
     override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.DERIVED)
 
-    override fun cloneTo(other: TypeModel): PropertyDeclaration =
-        owner.cloneTo(other).findOwnedPropertyOrNull(this.name)
-            ?: owner.cloneTo(other).appendPropertyDerived(
-                this.name,
-                this.typeInstance.cloneTo(other),
-                this.description,
-                this.expression, //no need to clone this !
-            )
+    override fun findInOrCloneTo(other: TypeModel): PropertyDeclaration =
+        owner.findInOrCloneTo(other).findOwnedPropertyOrNull(this.name)
+            ?: run {
+                owner.findInOrCloneTo(other).appendPropertyDerived(
+                    this.name,
+                    this.typeInstance.findInOrCloneTo(other),
+                    this.description,
+                    this.expression, //no need to clone this !
+                )
+            }
 }
 
 class PropertyDeclarationResolvedSimple(
@@ -1587,15 +1618,17 @@ class PropertyDeclarationResolvedSimple(
 ) : PropertyDeclarationAbstract(), PropertyDeclarationResolved {
     override val index: Int get() = -1 // should never be included in owners list
 
-    override fun cloneTo(other: TypeModel): PropertyDeclaration =
-        owner.cloneTo(other).findOwnedPropertyOrNull(this.name)
-            ?: PropertyDeclarationResolvedSimple(
-                this.owner.cloneTo(other),
-                this.name,
-                this.typeInstance.cloneTo(other),
-                this.characteristics,
-                this.description
-            )
+    override fun findInOrCloneTo(other: TypeModel): PropertyDeclaration =
+        owner.findInOrCloneTo(other).findOwnedPropertyOrNull(this.name)
+            ?: run {
+                PropertyDeclarationResolvedSimple(
+                    this.owner.findInOrCloneTo(other),
+                    this.name,
+                    this.typeInstance.findInOrCloneTo(other),
+                    this.characteristics,
+                    this.description
+                )
+            }
 }
 
 abstract class MethodDeclarationAbstract() : MethodDeclaration {
@@ -1621,14 +1654,16 @@ internal class MethodDeclarationPrimitiveSimple(
         (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     }
 
-    override fun cloneTo(other: TypeModel): MethodDeclarationPrimitive =
-        owner.cloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationPrimitive?
-            ?: owner.cloneTo(other).appendMethodPrimitive(
-                this.name,
-                this.parameters.map { it.cloneTo(other) },
-                this.returnType.cloneTo(other),
-                this.description
-            )
+    override fun findInOrCloneTo(other: TypeModel): MethodDeclarationPrimitive =
+        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationPrimitive?
+            ?: run {
+                owner.findInOrCloneTo(other).appendMethodPrimitive(
+                    this.name,
+                    this.parameters.map { it.findInOrCloneTo(other) },
+                    this.returnType.findInOrCloneTo(other),
+                    this.description
+                )
+            }
 }
 
 class MethodDeclarationDerivedSimple(
@@ -1643,15 +1678,17 @@ class MethodDeclarationDerivedSimple(
         (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     }
 
-    override fun cloneTo(other: TypeModel): MethodDeclarationDerived =
-        owner.cloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationDerived?
-            ?: owner.cloneTo(other).appendMethodDerived(
-                this.name,
-                this.parameters.map { it.cloneTo(other) },
-                this.returnType.cloneTo(other),
-                this.description,
-                this.body
-            )
+    override fun findInOrCloneTo(other: TypeModel): MethodDeclarationDerived =
+        owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name) as MethodDeclarationDerived?
+            ?: run {
+                owner.findInOrCloneTo(other).appendMethodDerived(
+                    this.name,
+                    this.parameters.map { it.findInOrCloneTo(other) },
+                    this.returnType.findInOrCloneTo(other),
+                    this.description,
+                    this.body
+                )
+            }
 }
 
 class MethodDeclarationResolvedSimple(
@@ -1665,15 +1702,17 @@ class MethodDeclarationResolvedSimple(
     //    (owner as TypeDefinitionSimpleAbstract).addMethod(this)
     //}
 
-    override fun cloneTo(other: TypeModel): MethodDeclaration =
-        this.owner.cloneTo(other).findOwnedMethodOrNull(this.name)
-            ?: MethodDeclarationResolvedSimple(
-                owner.cloneTo(other),
-                this.name,
-                this.parameters.map { it.cloneTo(other) },
-                this.returnType.cloneTo(other),
-                this.description
-            )
+    override fun findInOrCloneTo(other: TypeModel): MethodDeclaration =
+        this.owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name)
+            ?: run {
+                MethodDeclarationResolvedSimple(
+                    owner.findInOrCloneTo(other),
+                    this.name,
+                    this.parameters.map { it.findInOrCloneTo(other) },
+                    this.returnType.findInOrCloneTo(other),
+                    this.description
+                )
+            }
 
 }
 
@@ -1683,10 +1722,10 @@ class ParameterDefinitionSimple(
     override val defaultValue: String?
 ) : ParameterDeclaration {
 
-    override fun cloneTo(other: TypeModel): ParameterDeclaration =
+    override fun findInOrCloneTo(other: TypeModel): ParameterDeclaration =
         ParameterDefinitionSimple(
             this.name,
-            this.typeInstance.cloneTo(other),
+            this.typeInstance.findInOrCloneTo(other),
             this.defaultValue
         )
 

@@ -49,7 +49,7 @@ class GrammarTypeNamespaceSimple(
                 }
     }
 
-    override fun cloneTo(other: TypeModel): TypeNamespace =
+    override fun findInOrCloneTo(other: TypeModel): TypeNamespace =
         other.findNamespaceOrNull(this.qualifiedName)
             ?: GrammarTypeNamespaceSimple(
                 this.qualifiedName,

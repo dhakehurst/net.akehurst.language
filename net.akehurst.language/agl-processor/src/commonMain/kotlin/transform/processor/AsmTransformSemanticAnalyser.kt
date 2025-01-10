@@ -198,7 +198,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
      */
     private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: TransformRuleSet, trr: TransformationRule): TypeDefinition {
         val grmDecl = transformFromGrammar.value.typeModel?.findFirstByPossiblyQualifiedOrNull(typePqn)
-        val clonedTypeDeclOrCreated = grmDecl?.cloneTo(_typeModel) ?: let {
+        val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typeModel) ?: let {
             // need a grammarTypeNamespace
             val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
             val t = gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
@@ -281,12 +281,31 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                             val exprTypeResolver = ExpressionTypeResolver(_typeModel, gtns, _issues)
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
                             expr.propertyAssignments.forEach { ass ->
+                                val propName = PropertyName(ass.lhsPropertyName)
                                 var propType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (propType == StdLibDefault.NothingType) {
                                     propType = StdLibDefault.AnyType
                                 }
-                                val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-                                t.appendPropertyStored(PropertyName(ass.lhsPropertyName), propType, characteristics)
+                                val existingProp = t.findOwnedPropertyOrNull(propName)
+                                when {
+                                    null==existingProp -> {
+                                        val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
+                                        t.appendPropertyStored(propName, propType, characteristics)
+                                    }
+                                    else -> when {
+                                        existingProp.typeInstance == propType -> {
+                                            //all ok
+                                        }
+                                        propType.conformsTo( existingProp.typeInstance) -> {
+                                            // also OK
+                                        }
+                                       // existingProp.typeInstance.conformsTo(propType) -> {
+                                       //     // need to change type of prop to propType
+                                       //     //TODO
+                                       // }
+                                        else -> _issues.error(null, "Trying to create missing property '${propName}: ${propType.qualifiedTypeName}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${existingProp.typeInstance.qualifiedTypeName}'.")
+                                    }
+                                }
                             }
                             expr.possiblyQualifiedTypeName
                         }
