@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -28,24 +29,27 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
-    override val semanticAnalysis: SemanticAnalysisOptions< ContextType> = SemanticAnalysisOptionsDefault(),
-    override val completionProvider: CompletionProviderOptions< ContextType> = CompletionProviderOptionsDefault()
+    override val semanticAnalysis: SemanticAnalysisOptions<ContextType> = SemanticAnalysisOptionsDefault(),
+    override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType>
 
-class SemanticAnalysisOptionsDefault< ContextType : Any>(
+class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
+    override var buildScope: Boolean = true,
+    override var replaceIfItemAlreadyExistsInScope: Boolean = false,
+    override var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind? = LanguageIssueKind.ERROR,
     override var checkReferences: Boolean = true,
     override var resolveReferences: Boolean = true,
     override val other: Map<String, Any> = mutableMapOf()
-) : SemanticAnalysisOptions< ContextType>
+) : SemanticAnalysisOptions<ContextType>
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
     override val other: Map<String, Any> = mutableMapOf()
-) : CompletionProviderOptions< ContextType>
+) : CompletionProviderOptions<ContextType>

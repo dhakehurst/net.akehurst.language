@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -80,32 +81,32 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
     private var _semanticAnalyser: SemanticAnalysisOptions< ContextType> = base.semanticAnalysis
     private var _completionProvider: CompletionProviderOptions< ContextType> = base.completionProvider
 
-    fun scan(base: ScanOptions = ScanOptionsDefault(), init: ScanOptionsBuilder.() -> Unit) {
-        val b = ScanOptionsBuilder(base)
+    fun scan(init: ScanOptionsBuilder.() -> Unit) {
+        val b = ScanOptionsBuilder(_scan)
         b.init()
         _scan = b.build()
     }
 
-    fun parse(base: ParseOptions = ParseOptionsDefault(), init: ParseOptionsBuilder.() -> Unit) {
-        val b = ParseOptionsBuilder(base)
+    fun parse(init: ParseOptionsBuilder.() -> Unit) {
+        val b = ParseOptionsBuilder(_parse)
         b.init()
         _parse = b.build()
     }
 
     fun syntaxAnalysis(init: SyntaxAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = SyntaxAnalysisOptionsBuilder<AsmType, ContextType>()
+        val b = SyntaxAnalysisOptionsBuilder<AsmType, ContextType>(_syntaxAnalyser)
         b.init()
         _syntaxAnalyser = b.build()
     }
 
     fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>()
+        val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>(_semanticAnalyser)
         b.init()
         _semanticAnalyser = b.build()
     }
 
     fun completionProvider(init: CompletionProviderOptionsBuilder<AsmType, ContextType>.() -> Unit) {
-        val b = CompletionProviderOptionsBuilder<AsmType, ContextType>()
+        val b = CompletionProviderOptionsBuilder<AsmType, ContextType>(_completionProvider)
         b.init()
         _completionProvider = b.build()
     }
@@ -119,9 +120,11 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
 }
 
 @ProcessOptionsDslMarker
-class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
+class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
+    base: SyntaxAnalysisOptions<AsmType>
+) {
 
-    private var _active = true
+    private var _active = base.active
 
     fun active(value: Boolean) {
         _active = value
@@ -133,14 +136,19 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 }
 
 @ProcessOptionsDslMarker
-class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
+class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
+    base: SemanticAnalysisOptions<ContextType>
+) {
 
-    private var _active = true
-    private var _locationMap = emptyMap<Any, InputLocation>()
-    private var _context: ContextType? = null
-    private var _checkReferences = true
-    private var _resolveReferences = true
-    private val _options = mutableMapOf<String, Any>()
+    private var _active = base.active
+    private var _locationMap = base.locationMap
+    private var _context: ContextType? = base.context
+    private var _buildScope = base.buildScope
+    private var _replaceIfItemAlreadyExistsInScope = base.replaceIfItemAlreadyExistsInScope
+    private var _ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind? = base.ifItemAlreadyExistsInScopeIssueKind
+    private var _checkReferences = base.checkReferences
+    private var _resolveReferences = base.resolveReferences
+    private val _options = base.other.toMutableMap()
 
     fun active(value: Boolean) {
         _active = value
@@ -152,6 +160,16 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 
     fun context(value: ContextType?) {
         _context = value
+    }
+
+    fun buildScope(value: Boolean) {
+        _buildScope = value
+    }
+    fun replaceIfItemAlreadyExistsInScope(value: Boolean) {
+        _replaceIfItemAlreadyExistsInScope = value
+    }
+    fun ifItemAlreadyExistsInScopeIssueKind(value: LanguageIssueKind?) {
+        _ifItemAlreadyExistsInScopeIssueKind = value
     }
 
     fun checkReferences(value: Boolean) {
@@ -171,6 +189,9 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
             _active,
             _locationMap,
             _context,
+            _buildScope,
+            _replaceIfItemAlreadyExistsInScope,
+            _ifItemAlreadyExistsInScopeIssueKind,
             _checkReferences,
             _resolveReferences,
             _options
@@ -179,10 +200,12 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 }
 
 @ProcessOptionsDslMarker
-class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>() {
+class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
+    base:CompletionProviderOptions<ContextType>
+) {
 
-    private var _context: ContextType? = null
-    private val _options = mutableMapOf<String, Any>()
+    private var _context: ContextType? = base.context
+    private val _options = base.other.toMutableMap()
 
     fun context(value: ContextType?) {
         _context = value

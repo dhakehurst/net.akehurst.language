@@ -228,7 +228,7 @@ class test_CompletionProviderSimple {
         }
 
         val context = ContextAsmSimple()
-        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL)
+        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL, false)
 
 
         val expected = listOf(

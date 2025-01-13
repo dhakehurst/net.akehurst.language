@@ -38,14 +38,14 @@ class ContextFromGrammar(
             grammars.allDefinitions.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
                     val rType = namespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
-                    scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, it.name.value)
+                    scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, it.name.value, false)
                 }
                 g.allResolvedTerminal.forEach {
                     val rTypeName = when {
                         it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
                         else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
                     }
-                    scope.addToScope(it.id, QualifiedName(rTypeName), it.value)
+                    scope.addToScope(it.id, QualifiedName(rTypeName), it.value, false)
                 }
             }
             context.rootScope = scope

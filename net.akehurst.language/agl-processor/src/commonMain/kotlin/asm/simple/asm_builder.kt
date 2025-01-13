@@ -30,6 +30,7 @@ import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.expressions.processor.toTypedObject
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
@@ -107,14 +108,14 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
-            val createReferable = { ref:String, item:AsmStructure ->
+            val createReferable = { ref: String, item: AsmStructure ->
                 _asm.addToIndex(item)
                 item.path
             }
-            val scopeCreator = ScopeCreator(_typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope, createReferable,emptyMap(), issues)
+            val scopeCreator = ScopeCreator(_typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope, false, LanguageIssueKind.ERROR, createReferable, emptyMap(), issues)
             _asm.traverseDepthFirst(scopeCreator)
 
-            val resolveFunction = { ref:AsmPath ->
+            val resolveFunction = { ref: AsmPath ->
                 _asm.elementIndex[ref]
             }
             _asm.traverseDepthFirst(ReferenceResolverSimple(_typeModel, _crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))
@@ -214,9 +215,9 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, typeName, init)
 
-    fun propertyTuple(name: String, tupleTypeId:Int? = null, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
+    fun propertyTuple(name: String, tupleTypeId: Int? = null, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front) ?: error("No namespace '${_elementQualifiedTypeName.front.value}'")
-        val tt =  tupleTypeId?.let {
+        val tt = tupleTypeId?.let {
             ns.findTupleTypeWithIdOrNull(tupleTypeId)
         } ?: ns.createTupleType()
         return propertyElementExplicitType(name, tt.qualifiedName.value, init)

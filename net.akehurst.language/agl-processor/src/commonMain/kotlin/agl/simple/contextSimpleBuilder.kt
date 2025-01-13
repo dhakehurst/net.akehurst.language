@@ -39,7 +39,7 @@ class ScopeBuilder(
 
     fun item(id: String, qualifiedTypeName: String, pathStr: String) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path, false)
     }
 
     fun scope(forReferenceInParent: String, forTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
@@ -51,7 +51,7 @@ class ScopeBuilder(
 
     fun scopedItem(id: String, qualifiedTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path, false)
         val forTypeName = qualifiedTypeName.substringAfterLast(".")
         val chScope = _scope.createOrGetChildScope(id, QualifiedName(forTypeName), path)
         val b = ScopeBuilder(chScope)

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.scanner.api.ScanOptions
@@ -34,6 +35,21 @@ interface SemanticAnalysisOptions<ContextType : Any> {
     var active: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
+    var buildScope:Boolean
+
+    /**
+     * whether or not to replace items that already exist in the scope
+     * true -> replace with new item
+     * false -> do not replace, leave old item
+     */
+    var replaceIfItemAlreadyExistsInScope: Boolean
+
+    /**
+     * Report this kind of LanguageIssue if item already exists in scope.
+     * If null, do not report replacements as an issue.
+     */
+    var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?
+
     var checkReferences: Boolean
     var resolveReferences: Boolean
     val other: Map<String, Any>

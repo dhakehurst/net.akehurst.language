@@ -110,6 +110,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
 
     override fun clear() {
         super.clear()
+        this._trf.clear()
         this._asm = null
     }
 
@@ -587,6 +588,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         val typedSelf = asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
         val tr = downData.trRule.forNode
+        _trf.clear()
         val asm = _trf.evaluate(evc, downData.path, tr)
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule: ${it.message}")

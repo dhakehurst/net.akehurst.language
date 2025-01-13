@@ -55,11 +55,20 @@ class SemanticAnalyserSimple(
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
         when {
-            null == context -> _issues.info(null, "No context provided, references not checked or resolved, switch off reference checking or provide a context.")
+            null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis provide a context.")
+            else -> {
+                this.buildScope(options,asm, context)
+                checkAndResolveReferences(options,asm,_locationMap,context)
+            }
+        }
+        return SemanticAnalysisResultDefault(this._issues)
+    }
+
+    private fun checkAndResolveReferences(options:SemanticAnalysisOptions<ContextAsmSimple>,asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
+        when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
             else -> {
-                this.buildScope(asm, context)
                 val resolve = if (options.resolveReferences) {
                     true
                 } else {
@@ -69,7 +78,6 @@ class SemanticAnalyserSimple(
                 this.walkReferences(asm, _locationMap, context, resolve)
             }
         }
-        return SemanticAnalysisResultDefault(this._issues)
     }
 
     private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
@@ -81,10 +89,18 @@ class SemanticAnalyserSimple(
         asm.traverseDepthFirst(ReferenceResolverSimple(typeModel, crossReferenceModel, context.rootScope, resFunc, locationMap, _issues))
     }
 
-    private fun buildScope(asm: Asm, context: ContextAsmSimple) {
-        val createFunc = { ref:String, item:AsmStructure -> context.createScopedItem.invoke(asm,ref,item) }
-        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope, createFunc, _locationMap, _issues)
-        asm.traverseDepthFirst(scopeCreator)
+    private fun buildScope(options:SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, context: ContextAsmSimple) {
+        when {
+            options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
+            else -> {
+                val createFunc = { ref: String, item: AsmStructure -> context.createScopedItem.invoke(asm, ref, item) }
+                val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
+                    options.replaceIfItemAlreadyExistsInScope,
+                    options.ifItemAlreadyExistsInScopeIssueKind,
+                    createFunc, _locationMap, _issues)
+                asm.traverseDepthFirst(scopeCreator)
+            }
+        }
     }
 
 }

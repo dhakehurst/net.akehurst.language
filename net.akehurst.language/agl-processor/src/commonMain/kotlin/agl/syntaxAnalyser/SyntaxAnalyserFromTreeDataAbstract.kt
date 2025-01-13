@@ -47,6 +47,8 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType:Any> : SyntaxAnalyser<
     override fun clear() {
         this.locationMap.clear()
         this.issues.clear()
+        this.extendsSyntaxAnalyser.values.forEach { it.clear() }
+        this.embeddedSyntaxAnalyser.values.forEach { it.clear() }//TODO: could cause issues if there is a loop!
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AsmType> {

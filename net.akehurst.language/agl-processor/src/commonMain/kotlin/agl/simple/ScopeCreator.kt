@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
@@ -26,11 +25,14 @@ import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -39,7 +41,9 @@ class ScopeCreator<ItemInScopeType>(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModelDefault,
     val rootScope: Scope<ItemInScopeType>,
-    val createReferableFunction : ((referableName: String, item:AsmStructure) -> ItemInScopeType),
+    var replaceIfItemAlreadyExistsInScope: Boolean,
+    var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
+    val createReferableFunction: ((referableName: String, item: AsmStructure) -> ItemInScopeType),
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
 ) : AsmTreeWalker {
@@ -132,12 +136,12 @@ class ScopeCreator<ItemInScopeType>(
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
             when {
                 scopeLocalReference is AsmNothing -> {
-                    addToScopeAs(scope,el, el.qualifiedTypeName.value)
+                    addToScopeAs(scope, el, el.qualifiedTypeName.value)
                 }
 
                 scopeLocalReference is AsmPrimitive && scopeLocalReference.isStdString -> {
                     val ref = (scopeLocalReference.value) as String
-                    addToScopeAs(scope,el, ref)
+                    addToScopeAs(scope, el, ref)
                 }
 
                 // List<String>
@@ -190,15 +194,26 @@ class ScopeCreator<ItemInScopeType>(
         }
     }
 
-    private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName:String) {
+    private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
         val scopeItem = createReferableFunction.invoke(referableName, el)
-        val added = scope.addToScope(referableName, el.qualifiedTypeName, scopeItem)
+        val itAlreadyExists = scope.contains(referableName, el.qualifiedTypeName) { itemTypeName, requiredTypeName ->
+            val itemType = typeModel.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
+            val requireType = typeModel.findByQualifiedNameOrNull(requiredTypeName) ?: error("Type not found '${requiredTypeName.value}'")
+            itemType.conformsTo(requireType)
+        }
+        val added = scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
         when (added) {
-            true -> when(createReferableFunction) {
-                null -> Unit
-                else -> createReferableFunction.invoke(referableName, el)
+            false -> Unit
+            true -> createReferableFunction.invoke(referableName, el)
+        }
+        when (itAlreadyExists) {
+            false -> Unit
+            true -> this.ifItemAlreadyExistsInScopeIssueKind?.let {
+                issues.raise(
+                    it, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                    this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope"
+                )
             }
-            else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
         }
 
     }

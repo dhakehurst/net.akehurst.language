@@ -127,6 +127,10 @@ class AsmTransformInterpreter(
     val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)
     val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
 
+    fun clear() {
+        this.issues.clear()
+    }
+
     fun evaluate(evc: EvaluationContext, path: AsmPath, trRule: TransformationRule): AsmValue {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
