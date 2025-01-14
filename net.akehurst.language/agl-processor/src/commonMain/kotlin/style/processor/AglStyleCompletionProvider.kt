@@ -60,7 +60,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
         return if (null == context) {
             emptyList()
         } else {
-            val items = nextExpected.flatMap { it.expectedNextItems.flatMap { provideForTerminalItem(it, context) } }
+            val items = nextExpected.flatMap { it.expectedNextTerminals.flatMap { provideForTerminalItem(it, context) } }
             items
         }
     }

@@ -34,25 +34,7 @@ fun String.lower() = when {
 class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
     override fun typeNameFor(rule: GrammarRule): SimpleName = SimpleName(rule.name.value.replaceFirstChar { it.titlecase() })
     override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): PropertyName {
-//        val prefix = when (context) {
-//            ruleItem.owningRule.grammar -> ""
-//            else -> "${ruleItem.owningRule.grammar.name.lower()}_"
-//        }
-        val baseName = when (ruleItem) {
-            is Terminal -> when (ruleItemType) {
-                is PrimitiveType -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
-                is CollectionType -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value
-                is TupleType -> Grammar2TransformRuleSet.UNNAMED_TUPLE_PROPERTY_NAME.value
-                else -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
-            }
-
-            //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
-            is Embedded -> ruleItem.embeddedGoalName.value.lower()
-            is NonTerminal -> ruleItem.ruleReference.value.lower()
-            is Group -> Grammar2TransformRuleSet.UNNAMED_GROUP_PROPERTY_NAME.value
-            is Choice -> Grammar2TransformRuleSet.UNNAMED_CHOICE_PROPERTY_NAME.value
-            else -> error("Internal error, unhandled subtype of SimpleItem")
-        }.replaceFirstChar { it.lowercase() }
+        val baseName = baseNameFor(ruleItem, ruleItemType)
         val name = when (ruleItemType) {
             is PrimitiveType -> baseName
             is UnionType -> baseName
@@ -69,4 +51,22 @@ class TypeModelFromGrammarConfigurationDefault() : Grammar2TypeModelMapping {
         }
         return PropertyName(name) //prefix + name
     }
+
+    private fun baseNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition):String = when (ruleItem) {
+        is Terminal -> when (ruleItemType) {
+            is PrimitiveType -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
+            is CollectionType -> Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value
+            is TupleType -> Grammar2TransformRuleSet.UNNAMED_TUPLE_PROPERTY_NAME.value
+            else -> Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value
+        }
+
+        //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
+        is Embedded -> ruleItem.embeddedGoalName.value.lower()
+        is NonTerminal -> ruleItem.ruleReference.value.lower()
+        is Group -> Grammar2TransformRuleSet.UNNAMED_GROUP_PROPERTY_NAME.value
+        is Choice -> Grammar2TransformRuleSet.UNNAMED_CHOICE_PROPERTY_NAME.value
+        is OptionalItem -> baseNameFor(ruleItem.item,ruleItemType)
+        is ListOfItems -> baseNameFor(ruleItem.item,ruleItemType)
+        else -> error("Internal error, unhandled subtype of RuleItem")
+    }.replaceFirstChar { it.lowercase() }
 }

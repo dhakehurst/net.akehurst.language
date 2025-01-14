@@ -28,7 +28,7 @@ class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, Co
     override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap { sp ->
-            sp.expectedNextItems.flatMap { ri ->
+            sp.expectedNextTerminals.flatMap { ri ->
                 when (ri) {
                     is Terminal -> provideForTerminal(ri)
                     else -> emptyList()

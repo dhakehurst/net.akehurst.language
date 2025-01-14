@@ -17,42 +17,79 @@
 
 package net.akehurst.language.agl.completionProvider
 
+import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.grammar.api.*
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionItemKind
-import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsGoal
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.grammar.api.*
 import net.akehurst.language.parser.api.RuntimeSpine
+
+internal class SpineNodeDefault(
+    override val ruleItem: RuleItem,
+    override val index: Int
+) : SpineNode {
+    companion object {
+        fun ROOT(rootRuleItem: RuleItem) = object : SpineNode {
+            override val index: Int = 0
+            override val ruleItem: RuleItem get() = error("No Grammar Rule item for root of spine")
+            override val nextExpectedItem: RuleItem get() = rootRuleItem
+            override fun toString(): String = "GOAL"
+        }
+    }
+
+    override val nextExpectedItem = ruleItem.subItem(index)
+
+    override fun toString(): String = "($ruleItem)[$index]"
+}
 
 internal class SpineDefault(
     private val runtimeSpine: RuntimeSpine,
     val mapToGrammar: (Int, Int) -> RuleItem?
 ) : Spine {
 
-    override val expectedNextItems: Set<RuleItem> by lazy {
-        runtimeSpine.expectedNextTerminals.mapNotNull {
+    override val expectedNextTerminals: Set<Terminal> by lazy {
+        runtimeSpine.expectedNextTerminals.map {
             val rr = it as RuntimeRule
-            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber)
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
         }.toSet()
     }
 
-    override val elements: List<RuleItem> by lazy {
-        runtimeSpine.elements.mapNotNull {
-            val rr = it as RuntimeRule
-            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber)
+    override val expectedNextItems: Set<RuleItem> by lazy {
+        val nextRrs = (runtimeSpine.elements.first() as RulePositionRuntime).items
+        nextRrs.map{ rr ->
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for '${rr}'")
+        }.toSet()
+    }
+
+    override val elements: List<SpineNode> by lazy {
+        runtimeSpine.elements.map {
+            val rp = it as RulePositionRuntime
+            when {
+                rp.isGoal -> {
+                    val rr = (rp.rule.rhs as RuntimeRuleRhsGoal).userGoalRuleItem
+                    val gr = mapToGrammar.invoke(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for root runtime-rule '$rr'")
+                    SpineNodeDefault.ROOT(gr)
+                }
+
+                else -> {
+                    val rr = it.rule as RuntimeRule
+                    val ri = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for runtime-rule '$rr'")
+                    SpineNodeDefault(ri, it.position)
+                }
+            }
         }
     }
 
     override val nextChildNumber get() = runtimeSpine.nextChildNumber
 
-    override fun toString(): String = "Spine [$nextChildNumber]->${elements.joinToString(separator = "->") { it.toString() }}"
+    override fun toString(): String = "Spine ${elements.joinToString(separator = "->") { it.toString() }}"
 }
 
-abstract class CompletionProviderAbstract<AsmType:Any, in ContextType> : CompletionProvider<AsmType, ContextType> {
+abstract class CompletionProviderAbstract<AsmType : Any, in ContextType> : CompletionProvider<AsmType, ContextType> {
 
     protected fun provideTerminalsForSpine(spine: Spine): List<CompletionItem> {
-        return spine.expectedNextItems.flatMap { ri ->
+        return spine.expectedNextTerminals.flatMap { ri ->
             when {
                 ri.owningRule.isSkip -> emptyList() //make this an option to exclude skip stuff, this also needs to be extended/improved does not cover all cases
                 ri is Terminal -> provideForTerminal(ri)

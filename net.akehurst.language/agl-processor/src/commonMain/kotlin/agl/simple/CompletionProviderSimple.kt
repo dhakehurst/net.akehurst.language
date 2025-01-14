@@ -42,18 +42,18 @@ class CompletionProviderSimple(
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, context: ContextAsmSimple?, options: Map<String, Any>): List<CompletionItem> {
-        return if (null == context || context.isEmpty || crossReferenceModel.isEmpty) {
+        return if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
             nextExpected.flatMap { sp -> provideTerminalsForSpine(sp) }.toSet().toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val spri = sp.elements.firstOrNull()
-                when (spri) {
+                when (spri?.ruleItem) {
                     null -> provideTerminalsForSpine(sp)
                     else -> {
-                        val type = typeFor(spri)
+                        val type = typeFor(spri.ruleItem)
                         when (type) {
-                            null -> sp.expectedNextItems.flatMap { provideForRuleItem(it, 2, context) }
-                            else -> provideForType(type, sp.nextChildNumber, spri, sp.expectedNextItems, context)
+                            null -> sp.expectedNextTerminals.flatMap { provideForRuleItem(it, 2, context) }
+                            else -> provideForType(type, sp.nextChildNumber, spri.ruleItem, sp.expectedNextItems, context)
                         }
                     }
                 }
@@ -68,35 +68,33 @@ class CompletionProviderSimple(
     }
 
     private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextAsmSimple): List<CompletionItem> {
-        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(nextChildNumber)
-        val expectedPropName = expectedNextItems.map {
-            val ri = when {
-                it.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), it.owningRule.name)
-                it is TangibleItem -> it
-                else -> TODO()
-            }
-            //val tiType = targetNamespace.findTypeUsageForRule()
-            val tiType = StdLibDefault.String.resolvedDeclaration
-            grammar2TypeModel.propertyNameFor(targetGrammar, ri, tiType)
-        }
-        return when (prop) {
-            null -> TODO()
-            else -> {
-                val refTypeNames = expectedPropName.flatMap {
-                    crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, it.value)
-                }
-                val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
-                val items = refTypes.flatMap { refType ->
-                    context.rootScope.findItemsConformingTo {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
-                        itemType.conformsTo(refType)
+        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(nextChildNumber) ?: TODO()
+        val compItems = expectedNextItems.map { ni ->
+            when {
+                ni is Terminal -> provideForTerminal(ni)
+                else -> {
+                    val ni2 = when {
+                        ni.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), ni.owningRule.name)
+                        ni is TangibleItem -> ni
+                        else -> ni
+                    }
+                    val tiType = StdLibDefault.String.resolvedDeclaration
+                    val pn = grammar2TypeModel.propertyNameFor(targetGrammar, ni2, tiType)
+                    val refTypeNames = crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, pn.value)
+                    val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                    val items = refTypes.flatMap { refType ->
+                        context.rootScope.findItemsConformingTo {
+                            val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            itemType.conformsTo(refType)
+                        }
+                    }
+                    items.map {
+                        CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.last.value)
                     }
                 }
-                items.map {
-                    CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.last.value)
-                }
             }
         }
+        return compItems.flatten()
     }
 
     private fun provideForRuleItem(item: RuleItem, desiredDepth: Int, context: ContextAsmSimple?): List<CompletionItem> {

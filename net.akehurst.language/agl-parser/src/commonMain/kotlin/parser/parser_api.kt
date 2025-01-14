@@ -144,7 +144,7 @@ interface RulePosition {
 
 interface RuntimeSpine {
     val expectedNextTerminals: Set<Rule>
-    val elements: List<Rule>
+    val elements: List<RulePosition>
     val nextChildNumber: Int
 }
 

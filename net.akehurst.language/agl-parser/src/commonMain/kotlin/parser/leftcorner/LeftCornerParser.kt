@@ -55,7 +55,7 @@ data class ParseFailureRuntime(
     val expected get() = expectedTerminals.map { it.tag }.toSet()
 
     fun message(sentence: Sentence, location: InputLocation): String {
-        val p = failedSpines.map { it.elements.last().tag }.joinToString(separator = " | ")
+        val p = failedSpines.map { it.elements.last().rule.tag }.joinToString(separator = " | ")
         val contextInText = sentence.contextInText(location.position)
         val message = "Failed to match {$p} at: $contextInText"
         return message
@@ -184,7 +184,7 @@ class LeftCornerParser(
         val errorLength = 1 //TODO: determine a better length
         val location = sentence.locationFor(errorPos, errorLength)
 
-        val p = nextExpected.map { it.elements.last().tag }.toSet().sorted().joinToString(separator = " | ")
+        val p = nextExpected.map { it.elements.last().rule.tag }.toSet().sorted().joinToString(separator = " | ")
         val contextInText = sentence.contextInText(location.position)
         val message = "Failed to match {$p} at: $contextInText"
 

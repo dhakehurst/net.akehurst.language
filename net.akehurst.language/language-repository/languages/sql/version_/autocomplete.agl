@@ -1,0 +1,6 @@
+namespace net.akehurst.language.sql
+
+GOAL[SELECT] -> CompletionItem() {
+    label := 'Select'
+    text := 'SELECT <columns> FROM <table-id>;'
+}

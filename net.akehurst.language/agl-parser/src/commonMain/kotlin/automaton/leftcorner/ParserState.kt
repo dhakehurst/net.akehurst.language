@@ -40,29 +40,29 @@ class ParserState(
     }
 
     //TODO: fast at runtime if not lazy
-    val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
+    //val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
     val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
     val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
     val optionList: List<OptionNum> by lazy { this.rulePositions.map { it.option }.toList() }
     val priorityList: List<Int> get() = optionList.map { it.value }
-    val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
-    val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
-        this.rulePositions.mapNotNull {
-            val rhs = it.rule.rhs
-            when (rhs) {
-                is RuntimeRuleRhsChoice -> rhs.choiceKind
-                else -> null
-            }
-        }.toSet().toList()
-    }
+    //val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
+   // val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
+   //     this.rulePositions.mapNotNull {
+   //         val rhs = it.rule.rhs
+   //         when (rhs) {
+   //             is RuntimeRuleRhsChoice -> rhs.choiceKind
+   //             else -> null
+    //        }
+    //    }.toSet().toList()
+    //}
     val isChoice: Boolean by lazy { this.firstRule.isChoice }
     val isOptional: Boolean by lazy { this.firstRule.isOptional }
     val isList: Boolean by lazy { this.firstRule.isList }
 
-    val firstRuleChoiceKind by lazy {
-        if (Debug.CHECK) check(1 == this.choiceKindList.size)
-        this.choiceKindList[0]
-    }
+   // val firstRuleChoiceKind by lazy {
+    //    if (Debug.CHECK) check(1 == this.choiceKindList.size)
+   //     this.choiceKindList[0]
+   // }
 
     val firstRule get() = runtimeRules.first()
 
@@ -72,7 +72,7 @@ class ParserState(
     val isNotAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
     val isGoal = this.firstRule.isGoal
-    val isUserGoal = this.firstRule == this.stateSet.userGoalRule
+   // val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)

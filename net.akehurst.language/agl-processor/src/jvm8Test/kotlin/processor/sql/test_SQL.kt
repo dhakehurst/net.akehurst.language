@@ -34,12 +34,12 @@ class test_SQLValid(val data: Data) {
 
     companion object {
 
-        private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
+        private val grammarStr = test_SQLValid::class.java.getResource("/sql/version_/grammar.agl").readText()
         val processor by lazy {
             Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }
 
-        var sourceFiles = arrayOf("/sql/valid.txt")
+        var sourceFiles = arrayOf("/sql/version_/valid/valid.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")

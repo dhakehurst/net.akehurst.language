@@ -375,16 +375,20 @@ internal class RuntimeParser(
         return headGrownHeight || headGrownGraft
     }
 
-    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>) =
+    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>, acceptEOT:Boolean) =
         when {
 //            possibleEndOfText.size > 1 -> TODO()
 //            runtimeLhs.size > 1 -> TODO()
             else -> {
-                val lh: LookaheadSetPart = lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                val lh1: LookaheadSetPart = lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 //possibleEndOfText.flatMap { eot ->
                 //    runtimeLhs.map { rt ->
+                val lh = when(acceptEOT) {
+                    true -> lh1.union(LookaheadSetPart.EOT)
+                    false -> lh1
+                }
                 val lookingAt: Boolean = this.graph.isLookingAt(lh, eot, rt, position)
                 val resolved = lh.resolve(eot, rt)
                 Pair(lookingAt, resolved)
@@ -568,9 +572,9 @@ internal class RuntimeParser(
                 val transWithValidLookahead = when {
                     parseArgs.noLookahead -> transitions.map { Pair(it, LookaheadSetPart.ANY) }
                     else -> transitions.mapNotNull {
-                        val lh = matchedLookahead(runtimeContext.head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, runtimeContext.prev.runtimeState.runtimeLookaheadSet)
+                        val m = matchedLookahead(runtimeContext.head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, runtimeContext.prev.runtimeState.runtimeLookaheadSet,parseArgs.allowEOTAfterSkip)
                         when {
-                            lh.first -> Pair(it, lh.second)
+                            m.first -> Pair(it, m.second)
                             else -> null
                         }
                     }
@@ -789,7 +793,11 @@ internal class RuntimeParser(
             else -> {
                 val l = this.graph.scanner.findOrTryCreateLeaf(sentence, head.nextInputPositionAfterSkip, transition.to.firstRule)
                 if (null != l) {
-                    val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
+                    val lh1 = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
+                    val lh = when (parseArgs.allowEOTAfterSkip) {
+                        true -> lh1.union(this.stateSet, LookaheadSet.EOT)
+                        false -> lh1
+                    }
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
 
                     val (skipData, skipFailed) = parseSkipIfAny(head.nextInputPositionAfterSkip, l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, parseArgs)
@@ -833,16 +841,22 @@ internal class RuntimeParser(
         return when {
             parseArgs.nonEmptyWidthOnly -> false
             else -> {
+                //FIXME: we already know lookahead is matched because it was tested during resolveTransitionAmbiguity !
                 val runtimeLhs = previous!!.runtimeState.runtimeLookaheadSet
                 val lhWithMatch = transition.lookahead.flatMap { lh ->
                     possibleEndOfText.flatMap { eot ->
                         runtimeLhs.mapNotNull { rt ->
-                            val b = this.graph.isLookingAt(lh.guard, eot, rt, head.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
+                            val lhg = when(parseArgs.allowEOTAfterSkip) {
+                                true -> lh.guard.union(this.stateSet, LookaheadSet.EOT)
+                                false -> lh.guard
+                            }
+                            val b = this.graph.isLookingAt(lhg, eot, rt, head.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
                             if (b) Triple(eot, rt, lh.up) else null
                         }
                     }
                 }
-                val hasLh = lhWithMatch.isNotEmpty()
+               // val hasLh = lhWithMatch.isNotEmpty()
+                val hasLh  =true // transitions lookahead already checked in resolveTransitionAmbiguity
                 return if (parseArgs.noLookahead || hasLh) { //TODO: don't resolve EOT
                     val newRuntimeLhs = if (parseArgs.noLookahead) {
                         transition.lookahead.flatMap { lh ->
@@ -897,7 +911,7 @@ internal class RuntimeParser(
             else -> {
                 if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
                     val runtimeLhs = previous.runtimeState.runtimeLookaheadSet
-                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs)
+                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs,parseArgs.allowEOTAfterSkip)
                     val hasLh = lhWithMatch.first//isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (parseArgs.noLookahead || hasLh) {
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }

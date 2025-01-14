@@ -29,7 +29,7 @@ class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceMo
     override fun provide(nextExpected: Set<Spine>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap { sp ->
-            sp.expectedNextItems.flatMap { ri ->
+            sp.expectedNextTerminals.flatMap { ri ->
                 when (ri) {
                     is Terminal -> provideForTerminal(ri)
                     else -> emptyList()

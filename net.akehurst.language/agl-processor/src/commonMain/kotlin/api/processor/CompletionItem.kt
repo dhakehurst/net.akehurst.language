@@ -17,6 +17,7 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.grammar.api.Terminal
 
 enum class CompletionItemKind {
     LITERAL,
@@ -33,9 +34,16 @@ data class CompletionItem(
     var description: String = ""
 }
 
+interface SpineNode {
+    val ruleItem:RuleItem
+    val index: Int
+    val nextExpectedItem:RuleItem
+}
+
 interface Spine {
+    val expectedNextTerminals: Set<Terminal>
     val expectedNextItems: Set<RuleItem>
-    val elements: List<RuleItem>
+    val elements: List<SpineNode>
     val nextChildNumber: Int
 }
 

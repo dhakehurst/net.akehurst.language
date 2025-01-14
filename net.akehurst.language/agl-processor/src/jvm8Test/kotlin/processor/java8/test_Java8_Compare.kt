@@ -137,7 +137,7 @@ class test_Java8_Compare(val data: Data) {
     }
 
     private fun clean(str: String): String {
-        val eol: String = StringBuilder().appendln().toString();
+        val eol: String = StringBuilder().appendLine().toString();
         var res = str.replace(eol, " ")
         res = res.trim { it <= ' ' }
         return res
