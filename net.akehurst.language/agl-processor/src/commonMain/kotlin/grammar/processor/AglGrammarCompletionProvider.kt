@@ -27,14 +27,10 @@ class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, Co
 
     override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
         //TODO
-        return nextExpected.flatMap { sp ->
-            sp.expectedNextTerminals.flatMap { ri ->
-                when (ri) {
-                    is Terminal -> provideForTerminal(ri)
-                    else -> emptyList()
-                }
-            }
-        }
+        return nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }
+            .toSet()
+            .toList()
+            .sortedBy { it.kind }
     }
 
 }

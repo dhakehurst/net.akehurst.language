@@ -18,16 +18,14 @@
 package net.akehurst.language.transform.processor
 
 import agl.simple.test_ProvidedTransform
-import agl.simple.test_ProvidedTransform.Companion
 import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest
 import testFixture.data.testSuit
 import kotlin.test.Test
 
 class test_transformInterpreter {
-    companion object {
-
-        val testData = testSuit {
+    private companion object {
+        val testSuit = testSuit {
             testData("Default type of list rule") {
                 grammarStr("""
                     namespace test
@@ -89,7 +87,7 @@ class test_transformInterpreter {
 
     @Test
     fun testAll() {
-        test_ProvidedTransform.testData.testData.forEach {
+        testSuit.testData.forEach {
             println("****** ${it.description} ******")
             doTest(it)
         }
@@ -97,6 +95,6 @@ class test_transformInterpreter {
 
     @Test
     fun single() {
-        doTest(testData["Substitute default type of list rule"])
+        doTest(testSuit["Substitute default type of list rule"])
     }
 }

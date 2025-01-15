@@ -12,13 +12,31 @@ import kotlin.test.assertTrue
 fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
     println("'${sd.sentence}'")
     when (sd) {
-        is TestDataProcessorSentencePass -> {
-            val asmRes = proc.process(sd.sentence, Agl.options {
-                this.parse { goalRuleName(sd.goal) }
-            })
-            assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
-            val actual = asmRes.asm!!
-            assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+        is TestDataProcessorSentencePass -> when {
+            null != sd.expectedAsm && null != sd.expectedCompletionItem -> error("Currently only supports testing either process or autocomplete, not both")
+            null != sd.expectedAsm -> {
+                val asmRes = proc.process(sd.sentence, Agl.options {
+                    parse { goalRuleName(sd.goal) }
+                    semanticAnalysis {
+                        context(sd.context)
+                    }
+                })
+                assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
+                val actual = asmRes.asm!!
+                assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+            }
+
+            null != sd.expectedCompletionItem -> {
+                val actual = proc.expectedItemsAt(sd.sentence, sd.sentence.length, 0, Agl.options {
+                    completionProvider {
+                        context(sd.context)
+                    }
+                })
+                assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
+                assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
+                assertEquals(sd.expectedCompletionItem.toSet(), actual.items.toSet())
+            }
+            else -> error("Must provide either an expectedAsm or expectedCompletionItems")
         }
 
         //is TestDataParserSentenceFail -> {}
@@ -28,6 +46,7 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataPar
 }
 
 fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
+    println("****** ${testData.description} ******")
     val procRes = Agl.processorFromStringSimple(
         grammarDefinitionStr = GrammarString(testData.grammarStr),
         typeStr = testData.typeStr?.let { TypeModelString(it) },
@@ -48,6 +67,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     println("--- Asm Transform ---")
     println(proc.asmTransformModel.asString())
 
+    println("****** ${testData.description} Sentences ******")
     if (null == sentenceIndex) {
         for (sd in testData.sentences) {
             testSentence(proc, sd)
@@ -55,5 +75,11 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     } else {
         val sd = testData.sentences[sentenceIndex]
         testSentence(proc, sd)
+    }
+}
+
+fun executeTestSuit(testSuit:TestSuit) {
+    testSuit.testData.forEach {
+        doTest(it)
     }
 }

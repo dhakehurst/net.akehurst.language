@@ -1,5 +1,7 @@
 package testFixture.data
 
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
@@ -9,6 +11,7 @@ import net.akehurst.language.sentence.api.InputLocation
 interface TestDataParserSentence {
     val sentence: String
     val goal:String
+    val context: ContextAsmSimple?
 }
 
 fun parseError(pos:Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
@@ -23,6 +26,7 @@ data class TestDataParseIssue(
 open class TestDataParserSentencePass(
     override val sentence: String,
     override val goal: String,
+    override val context: ContextAsmSimple?,
     val expectedNumGSSHeads: Int,
     val expectedSppt: List<String>
 ) : TestDataParserSentence
@@ -30,6 +34,7 @@ open class TestDataParserSentencePass(
 class TestDataParserSentenceFail(
     override val sentence: String,
     override val goal: String,
+    override val context: ContextAsmSimple?,
     val expectedIssues: Set<TestDataParseIssue>
 ) : TestDataParserSentence {
     val expected: Set<LanguageIssue> = expectedIssues.map {
@@ -69,7 +74,9 @@ interface TestDataProcessorSentence : TestDataParserSentence{
 class TestDataProcessorSentencePass(
     override val sentence: String,
     override val goal: String,
-    val expectedAsm: Asm
+    override val context: ContextAsmSimple?,
+    val expectedAsm: Asm?,
+    val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
 
 }
@@ -77,6 +84,7 @@ class TestDataProcessorSentencePass(
 class TestDataProcessorSentenceFail(
     override val sentence: String,
     override val goal: String,
+    override val context: ContextAsmSimple?,
     val expected: List<LanguageIssue>
 ) : TestDataProcessorSentence {
 
@@ -154,22 +162,39 @@ class TestDataSentenceBuilder(
     val sentence: String,
     val goal:String
 )  {
-    private var _expectedAsm:Asm = asmSimple {  }
+    private var _context:ContextAsmSimple? = null
+    private var _expectedAsm:Asm? = null
+    private var _expectedCompletionItems:List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
+
+    fun context(value:ContextAsmSimple) {
+        _context = value
+    }
+
+    fun expectedIssues(value: List<LanguageIssue>) {
+        _expectedIssues.addAll(value)
+    }
 
     fun expectedAsm(value:Asm) {
         _expectedAsm = value
+    }
+
+    fun expectedCompletionItems(value:List<CompletionItem>) {
+        _expectedCompletionItems = value
     }
 
     fun build() = when(pass) {
         true -> TestDataProcessorSentencePass(
             sentence,
             goal,
-            _expectedAsm
+            _context,
+            _expectedAsm,
+            _expectedCompletionItems
         )
         false -> TestDataProcessorSentenceFail(
             sentence,
             goal,
+            _context,
             _expectedIssues
         )
     }

@@ -201,11 +201,40 @@ interface OverrideRule : GrammarRule {
 
 interface RuleItem {
     val owningRule: GrammarRule
-    fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
     val allTerminal: Set<Terminal>
     val allNonTerminal: Set<NonTerminal>
     val allEmbedded: Set<Embedded>
+
+    /**
+     * set of all terminals ar start of this item
+     * non-terminals are not recursed into
+     */
+    val firstTerminal: Set<Terminal>
+
+    /**
+     * set of all Tangible items (Terminal, NonTerminal, Empty) ar start of this item
+     * non-terminals are not recursed into
+     */
+    val firstTangible:Set<TangibleItem>
+
+    /**
+     * set of all first Tangible items, following non-terminals that are not leaf items
+     */
+    val firstTangibleRecursive:Set<TangibleItem>
+
+    /**
+     * set of all first Concatenations, following non-terminals
+     */
+    val firstConcatenationRecursive:Set<Concatenation>
+
+    /**
+     * The item at the index (not child number) given
+     */
     fun subItem(index: Int): RuleItem
+
+    fun itemForChild(childNumber:Int): RuleItem?
+
+    fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
 }
 
 interface Choice : RuleItem {

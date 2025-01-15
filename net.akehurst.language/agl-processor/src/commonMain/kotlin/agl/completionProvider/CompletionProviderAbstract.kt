@@ -25,22 +25,34 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.parser.api.RuntimeSpine
 
-internal class SpineNodeDefault(
-    override val ruleItem: RuleItem,
-    override val index: Int
+internal abstract class SpineNodeAbstract(
+    val ruleItem: RuleItem,
+    override val nextChildNumber: Int
 ) : SpineNode {
-    companion object {
-        fun ROOT(rootRuleItem: RuleItem) = object : SpineNode {
-            override val index: Int = 0
-            override val ruleItem: RuleItem get() = error("No Grammar Rule item for root of spine")
-            override val nextExpectedItem: RuleItem get() = rootRuleItem
-            override fun toString(): String = "GOAL"
-        }
-    }
+    override val rule: GrammarRule get() = ruleItem.owningRule
+    override val nextExpectedItem: RuleItem get() = ruleItem.itemForChild(nextChildNumber)
+        ?: error("should never happen")
+    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItem.firstTangibleRecursive
+    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItem.firstConcatenationRecursive
 
-    override val nextExpectedItem = ruleItem.subItem(index)
+    override fun toString(): String = "($ruleItem)[$nextChildNumber]"
+}
 
-    override fun toString(): String = "($ruleItem)[$index]"
+internal class SpineNodeRoot(
+    val rootRuleItem: RuleItem
+) : SpineNode {
+    override val nextChildNumber: Int get() = 0
+    override val rule: GrammarRule get() = rootRuleItem.owningRule
+    override val nextExpectedItem: RuleItem get() = rootRuleItem
+    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItem.firstTangibleRecursive
+    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItem.firstConcatenationRecursive
+    override fun toString(): String = "GOAL"
+}
+
+internal class SpineNodeDefault(
+    _ruleItem: RuleItem,
+    _index: Int
+) : SpineNodeAbstract(_ruleItem, _index) {
 }
 
 internal class SpineDefault(
@@ -48,18 +60,16 @@ internal class SpineDefault(
     val mapToGrammar: (Int, Int) -> RuleItem?
 ) : Spine {
 
-    override val expectedNextTerminals: Set<Terminal> by lazy {
-        runtimeSpine.expectedNextTerminals.map {
-            val rr = it as RuntimeRule
-            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
-        }.toSet()
+    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> by lazy {
+        elements[0].expectedNextLeafNonTerminalOrTerminal
+        //runtimeSpine.expectedNextTerminals.map {
+        //    val rr = it as RuntimeRule
+        //    mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
+        //}.toSet()
     }
 
-    override val expectedNextItems: Set<RuleItem> by lazy {
-        val nextRrs = (runtimeSpine.elements.first() as RulePositionRuntime).items
-        nextRrs.map{ rr ->
-            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for '${rr}'")
-        }.toSet()
+    override val expectedNextConcatenation: Set<Concatenation> by lazy {
+        elements[0].nextExpectedConcatenation
     }
 
     override val elements: List<SpineNode> by lazy {
@@ -69,7 +79,7 @@ internal class SpineDefault(
                 rp.isGoal -> {
                     val rr = (rp.rule.rhs as RuntimeRuleRhsGoal).userGoalRuleItem
                     val gr = mapToGrammar.invoke(rr.runtimeRuleSetNumber, rr.ruleNumber) ?: error("No Grammar Rule item for root runtime-rule '$rr'")
-                    SpineNodeDefault.ROOT(gr)
+                    SpineNodeRoot(gr)
                 }
 
                 else -> {
@@ -88,26 +98,78 @@ internal class SpineDefault(
 
 abstract class CompletionProviderAbstract<AsmType : Any, in ContextType> : CompletionProvider<AsmType, ContextType> {
 
-    protected fun provideTerminalsForSpine(spine: Spine): List<CompletionItem> {
-        return spine.expectedNextTerminals.flatMap { ri ->
+    protected fun provideForTerminalsAndConcatenations(concatenations: Set<Concatenation>, tangibles: Set<TangibleItem>) =
+        provideForConcatenations(concatenations) + provideForTerminals(tangibles)
+
+    protected fun provideForTerminals(tangibles: Set<TangibleItem>): List<CompletionItem> {
+        return tangibles.flatMap { ri ->
             when {
                 ri.owningRule.isSkip -> emptyList() //make this an option to exclude skip stuff, this also needs to be extended/improved does not cover all cases
-                ri is Terminal -> provideForTerminal(ri)
-                else -> provideForRuleItem(ri, 2)
+                else -> provideForTangible(ri)
             }
         }
     }
 
-    protected fun provideForTerminal(terminalItem: Terminal): List<CompletionItem> {
-        val name = when {
-            terminalItem.owningRule.isLeaf -> terminalItem.owningRule.name.value
-            else -> terminalItem.id
+    protected fun provideForConcatenations(concatenations: Set<Concatenation>): List<CompletionItem> =
+        concatenations.map { concat ->
+            val label = concat.owningRule.name.value
+            val text = textFor(concat)
+            CompletionItem(CompletionItemKind.SEGMENT, text, label)
         }
-        val ci = when {
-            terminalItem.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<$name>", name)
-            else -> CompletionItem(CompletionItemKind.LITERAL, terminalItem.value, name)
+
+    private fun textFor(item: RuleItem): String = when (item) {
+        is Choice -> "<${item.alternative.joinToString(separator = "|") { textFor(it) }}>"
+        is Concatenation -> item.items.joinToString(separator = " ") { textFor(it) } //FIXME: SPACE may not be valid skip rule !
+        is ConcatenationItem -> when (item) {
+            is OptionalItem -> textFor(item.item)
+            is ListOfItems -> textFor(item.item)
+            is SimpleItem -> when (item) {
+                is Group -> textFor(item.groupedContent)
+                is TangibleItem -> when (item) {
+                    is EmptyRule -> ""
+                    is Terminal -> when {
+                        item.owningRule.isLeaf -> "<${item.owningRule.name}>"
+                        item.isPattern -> "<${item.value}>"
+                        else -> item.value
+                    }
+
+                    is NonTerminal -> "<${item.ruleReference.value}>"
+                    is Embedded -> "<${item.embeddedGrammarReference.nameOrQName.simpleName.value}::${item.embeddedGoalName.value}>"
+                    else -> error("Unsupported subtype of TangibleItem: ${item::class.simpleName}")
+                }
+
+                else -> error("Unsupported subtype of SimpleItem: ${item::class.simpleName}")
+            }
+
+            else -> error("Unsupported subtype of ConcatenationItem: ${item::class.simpleName}")
         }
-        return listOf(ci)
+
+        else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
+    }
+
+
+    protected fun provideForTangible(tangibleItem: TangibleItem): List<CompletionItem> {
+        return when (tangibleItem) {
+            is NonTerminal -> { //must be a reference to leaf
+                val name = tangibleItem.ruleReference.value
+                val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
+                val text = refRule.compressedLeaf.value
+                listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", text))
+            }
+
+            is Terminal -> {
+                val name = when {
+                    tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
+                    else -> tangibleItem.value
+                }
+                when {
+                    tangibleItem.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", tangibleItem.value))
+                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL, tangibleItem.value, name))
+                }
+            }
+
+            else -> error("Not supported subtype of TangibleItem: ${tangibleItem::class.simpleName}")
+        }
     }
 
     private fun provideForRuleItem(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
@@ -142,7 +204,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, in ContextType> : Compl
                     items
                 }
 
-                is Terminal -> provideForTerminal(item)
+                is Terminal -> provideForTangible(item)
 
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!

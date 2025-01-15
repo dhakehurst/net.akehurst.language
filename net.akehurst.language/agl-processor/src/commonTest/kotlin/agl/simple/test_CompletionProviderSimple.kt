@@ -61,7 +61,7 @@ class test_CompletionProviderSimple {
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(data.expected.size, actual.items.size)
+            assertEquals(data.expected.size, actual.items.size, actual.items.joinToString(separator = "\n"))
             assertEquals(data.expected.toSet(), actual.items.toSet())
         }
 
@@ -77,7 +77,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'")
+            CompletionItem(CompletionItemKind.LITERAL, "a", "a")
         )
         test(
             TestData(
@@ -99,7 +99,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<\"[a-z]\">", "\"[a-z]\"")
+            CompletionItem(CompletionItemKind.PATTERN, "<[a-z]>", "[a-z]")
         )
         test(
             TestData(
@@ -122,7 +122,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "PAT")
+            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "[a-z]")
         )
         test(
             TestData(
@@ -150,9 +150,9 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
-            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'")
+            CompletionItem(CompletionItemKind.LITERAL, "a", "a"),
+            CompletionItem(CompletionItemKind.LITERAL, "b", "b"),
+            CompletionItem(CompletionItemKind.LITERAL, "c", "c")
         )
         test(
             TestData(
@@ -163,7 +163,6 @@ class test_CompletionProviderSimple {
             )
         )
     }
-
 
     @Test
     fun FailedParseReasonLookahead__varDef_no_scope() {
@@ -181,7 +180,7 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
 
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "NAME")
+            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "[a-zA-Z]+")
         )
 
         test(
@@ -232,7 +231,8 @@ class test_CompletionProviderSimple {
 
 
         val expected = listOf(
-            CompletionItem(CompletionItemKind.REFERRED, "int", "TypeDef")
+            CompletionItem(CompletionItemKind.REFERRED, "int", "TypeDef"),
+            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "[a-zA-Z]+"),
         )
 
         test(

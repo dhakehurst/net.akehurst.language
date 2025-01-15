@@ -31,7 +31,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.LITERAL, "namespace", "'namespace'")
+            CompletionItem(CompletionItemKind.SEGMENT, "<namespace> <grammar>", "unit"),
+            CompletionItem(CompletionItemKind.LITERAL, "namespace", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -44,7 +45,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.LITERAL, "namespace", "'namespace'")
+            CompletionItem(CompletionItemKind.SEGMENT, "<namespace> <grammar>", "unit"),
+            CompletionItem(CompletionItemKind.LITERAL, "namespace", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -54,7 +56,7 @@ class test_AglGrammar_expectedItemsAt {
     fun namespace() {
 
         val sentence = "namespace"
-        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 9, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
@@ -67,7 +69,7 @@ class test_AglGrammar_expectedItemsAt {
     fun namespace_WS() {
 
         val sentence = "namespace "
-        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 10, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
@@ -80,13 +82,21 @@ class test_AglGrammar_expectedItemsAt {
     fun namespace_WS_n() {
 
         val sentence = "namespace n"
-        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 11, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.LITERAL, ".", "'.'"),
-            CompletionItem(CompletionItemKind.LITERAL, "grammar", "'grammar'")
+            CompletionItem(CompletionItemKind.SEGMENT, "# <IDENTIFIER> : <IDENTIFIER>", "option"),
+            CompletionItem(CompletionItemKind.SEGMENT, "import <possiblyQualifiedName>", "import"),
+            CompletionItem(CompletionItemKind.SEGMENT, "definition <IDENTIFIER>", "definition"), //FIXME: !
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar <IDENTIFIER> <extends> { <option> <rule> }", "grammar"),
+            CompletionItem(CompletionItemKind.LITERAL, ".", "."),
+            CompletionItem(CompletionItemKind.LITERAL, "#", "#"),
+            CompletionItem(CompletionItemKind.LITERAL, "import", "import"),
+            CompletionItem(CompletionItemKind.LITERAL, "definition", "definition"),  //FIXME: !
+            CompletionItem(CompletionItemKind.LITERAL, "grammar", "grammar")
         )
 
+        assertEquals(expected.size, result.items.size,result.items.joinToString("\n"))
         assertEquals(expected, result.items)
     }
 

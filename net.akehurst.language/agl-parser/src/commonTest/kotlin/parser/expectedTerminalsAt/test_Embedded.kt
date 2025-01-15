@@ -47,7 +47,7 @@ class test_Embedded : test_ExpectedTerminasAtAbstract() {
 
         val testData = listOf(
             TestData("", 0, setOf("'a'", "'d'", "'e'")),
-            TestData("a", 1, setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
+            TestData("a", 1, emptySet())// setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
 
     }

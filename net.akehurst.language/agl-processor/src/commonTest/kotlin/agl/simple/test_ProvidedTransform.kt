@@ -2,13 +2,14 @@ package agl.simple
 
 import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest
+import testFixture.data.executeTestSuit
 import testFixture.data.testSuit
 import kotlin.test.Test
 
 class test_ProvidedTransform {
 
-    companion object {
-        val testData = testSuit {
+    private companion object {
+        val testSuit = testSuit {
             // TODO: test where not creating missing types
             testData("S = a; leaf a = 'a'; no provided transform") {
                 grammarStr(
@@ -380,15 +381,10 @@ class test_ProvidedTransform {
     }
 
     @Test
-    fun testAll() {
-        testData.testData.forEach {
-            println("****** ${it.description} ******")
-            doTest(it)
-        }
-    }
+    fun testAll() = executeTestSuit(testSuit)
 
     @Test
     fun single() {
-        doTest(testData["S = a; leaf a = 'a'; override-default in unit, change only type of root rule"])
+        doTest(testSuit["S = a; leaf a = 'a'; override-default in unit, change only type of root rule"])
     }
 }

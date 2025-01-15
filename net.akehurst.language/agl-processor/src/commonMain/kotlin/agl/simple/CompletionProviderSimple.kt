@@ -27,6 +27,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.Spine
+import net.akehurst.language.api.processor.SpineNode
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -42,41 +43,41 @@ class CompletionProviderSimple(
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, context: ContextAsmSimple?, options: Map<String, Any>): List<CompletionItem> {
-        return if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideTerminalsForSpine(sp) }.toSet().toList() //TODO: can we remove duplicates earlier!
+        val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
+            nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }.toSet()
+                .toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
-                val spri = sp.elements.firstOrNull()
-                when (spri?.ruleItem) {
-                    null -> provideTerminalsForSpine(sp)
+                val firstSpineNode = sp.elements.firstOrNull()
+                when (firstSpineNode) {
+                    null -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
                     else -> {
-                        val type = typeFor(spri.ruleItem)
+                        val type = typeFor(firstSpineNode.rule)
                         when (type) {
-                            null -> sp.expectedNextTerminals.flatMap { provideForRuleItem(it, 2, context) }
-                            else -> provideForType(type, sp.nextChildNumber, spri.ruleItem, sp.expectedNextItems, context)
+                            null -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                            else -> provideForType(type, firstSpineNode, context) + provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
                         }
                     }
                 }
             }
             items.toSet().toList() //TODO: can we remove duplicates earlier!
         }
+        return result.sortedBy { it.kind }
     }
 
-    fun typeFor(ruleItem: RuleItem): TypeInstance? {
-        val rule = ruleItem.owningRule
-        return targetNamespace.findTypeForRule(rule.name)
-    }
+    fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
-    private fun provideForType(type: TypeInstance, nextChildNumber: Int, ri: RuleItem, expectedNextItems: Set<RuleItem>, context: ContextAsmSimple): List<CompletionItem> {
-        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(nextChildNumber) ?: TODO()
-        val compItems = expectedNextItems.map { ni ->
-            when {
-                ni is Terminal -> provideForTerminal(ni)
-                else -> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
+        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+        //TODO: lists ?
+        return when (prop) {
+            null -> emptyList()
+            else -> {
+                val firstTangibles = firstSpineNode.expectedNextLeafNonTerminalOrTerminal
+                val compItems = firstTangibles.mapNotNull { ti ->
                     val ni2 = when {
-                        ni.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), ni.owningRule.name)
-                        ni is TangibleItem -> ni
-                        else -> ni
+                        ti.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), ti.owningRule.name)
+                        else -> ti
                     }
                     val tiType = StdLibDefault.String.resolvedDeclaration
                     val pn = grammar2TypeModel.propertyNameFor(targetGrammar, ni2, tiType)
@@ -92,75 +93,90 @@ class CompletionProviderSimple(
                         CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.last.value)
                     }
                 }
-            }
-        }
-        return compItems.flatten()
-    }
-
-    private fun provideForRuleItem(item: RuleItem, desiredDepth: Int, context: ContextAsmSimple?): List<CompletionItem> {
-        val rule = item.owningRule
-        return when {
-            rule.isLeaf -> listOf(
-                CompletionItem(CompletionItemKind.PATTERN, "<${rule.name}>", rule.compressedLeaf.value)
-            )
-
-            else -> {
-                val cis = getItems(item, desiredDepth, context, emptySet())
-                cis.mapNotNull { it }.toSet().toList()
+                compItems.flatten()
             }
         }
     }
+    /*
+        private fun provideForTerminal(item: Terminal, desiredDepth: Int, context: ContextAsmSimple?): List<CompletionItem> {
+            val owningRule = item.owningRule
+            return when {
+                owningRule.isLeaf -> listOf(
+                    CompletionItem(CompletionItemKind.PATTERN, "<${owningRule.name}>", owningRule.compressedLeaf.value)
+                )
 
-    // uses null to indicate that there is an empty item
-    private fun getItems(item: RuleItem, desiredDepth: Int, context: ContextAsmSimple?, done: Set<RuleItem>): List<CompletionItem?> {
-        //TODO: use scope to add real items to this list - maybe in a subclass
-        return when {
-            done.contains(item) -> emptyList()
-            else -> when (item) {
-                is EmptyRule -> listOf(null)
-                is Choice -> item.alternative.flatMap { getItems(it, desiredDepth, context, done + item) }
-                is Concatenation -> {
-                    var items = getItems(item.items[0], desiredDepth, context, done + item)
-                    var index = 1
-                    while (index < item.items.size && items.any { it == null }) {
-                        items = items.mapNotNull { it } + getItems(item.items[index], desiredDepth, context, done + item)
-                        index++
-                    }
-                    items
+                else -> when {
+                    item.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, "<${item.value}>", item.value))
+                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL, item.value, item.value))
                 }
-
-                is Terminal -> provideForTerminal(item)
-
-                is NonTerminal -> {
-                    //TODO: handle overridden vs embedded rules!
-                    val refRule = item.referencedRuleOrNull(this.targetGrammar)
-                    when (refRule) {
-                        null -> emptyList()
-                        else -> getItems(refRule.rhs, desiredDepth - 1, context, done + item)
-                    }
-                }
-
-                is SeparatedList -> {
-                    val items = getItems(item.item, desiredDepth, context, done + item)
-                    if (item.min == 0) {
-                        items + listOf(null)
-                    } else {
-                        items + emptyList<CompletionItem>()
-                    }
-                }
-
-                is SimpleList -> {
-                    val items = getItems(item.item, desiredDepth, context, done + item)
-                    if (item.min == 0) {
-                        items + listOf(null)
-                    } else {
-                        items + emptyList<CompletionItem>()
-                    }
-                }
-
-                is Group -> getItems(item.groupedContent, desiredDepth, context, done + item)
-                else -> error("not yet supported!")
             }
         }
-    }
+
+        private fun provideForRuleItem(item: RuleItem, desiredDepth: Int, context: ContextAsmSimple?): List<CompletionItem> {
+            val rule = item.owningRule
+            return when {
+                rule.isLeaf -> listOf(
+                    CompletionItem(CompletionItemKind.PATTERN, "<${rule.name}>", rule.compressedLeaf.value)
+                )
+
+                else -> {
+                    val cis = getItems(item, desiredDepth, context, emptySet())
+                    cis.mapNotNull { it }.toSet().toList()
+                }
+            }
+        }
+
+        // uses null to indicate that there is an empty item
+        private fun getItems(item: RuleItem, desiredDepth: Int, context: ContextAsmSimple?, done: Set<RuleItem>): List<CompletionItem?> {
+            //TODO: use scope to add real items to this list - maybe in a subclass
+            return when {
+                done.contains(item) -> emptyList()
+                else -> when (item) {
+                    is EmptyRule -> listOf(null)
+                    is Choice -> item.alternative.flatMap { getItems(it, desiredDepth, context, done + item) }
+                    is Concatenation -> {
+                        var items = getItems(item.items[0], desiredDepth, context, done + item)
+                        var index = 1
+                        while (index < item.items.size && items.any { it == null }) {
+                            items = items.mapNotNull { it } + getItems(item.items[index], desiredDepth, context, done + item)
+                            index++
+                        }
+                        items
+                    }
+
+                    is Terminal -> provideForTerminal(item)
+
+                    is NonTerminal -> {
+                        //TODO: handle overridden vs embedded rules!
+                        val refRule = item.referencedRuleOrNull(this.targetGrammar)
+                        when (refRule) {
+                            null -> emptyList()
+                            else -> getItems(refRule.rhs, desiredDepth - 1, context, done + item)
+                        }
+                    }
+
+                    is SeparatedList -> {
+                        val items = getItems(item.item, desiredDepth, context, done + item)
+                        if (item.min == 0) {
+                            items + listOf(null)
+                        } else {
+                            items + emptyList<CompletionItem>()
+                        }
+                    }
+
+                    is SimpleList -> {
+                        val items = getItems(item.item, desiredDepth, context, done + item)
+                        if (item.min == 0) {
+                            items + listOf(null)
+                        } else {
+                            items + emptyList<CompletionItem>()
+                        }
+                    }
+
+                    is Group -> getItems(item.groupedContent, desiredDepth, context, done + item)
+                    else -> error("not yet supported!")
+                }
+            }
+        }
+     */
 }

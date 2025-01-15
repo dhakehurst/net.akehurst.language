@@ -30,10 +30,26 @@ sealed class RuleItemAbstract : RuleItem {
 
     abstract override val allNonTerminal: Set<NonTerminal>
 
-
 }
 
 class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstract(), Concatenation {
+
+    override val allTerminal: Set<Terminal> by lazy {
+        this.items.flatMap { it.allTerminal }.toSet()
+    }
+
+    override val allNonTerminal: Set<NonTerminal> by lazy {
+        this.items.flatMap { it.allNonTerminal }.toSet()
+    }
+
+    override val allEmbedded: Set<Embedded> by lazy {
+        this.items.flatMap { it.allEmbedded }.toSet()
+    }
+
+    override val firstTerminal: Set<Terminal> get() = items[0].firstTerminal
+    override val firstTangible: Set<TangibleItem> get() = items[0].firstTangible
+    override val firstTangibleRecursive: Set<TangibleItem> get() = items[0].firstTangibleRecursive
+    override val firstConcatenationRecursive: Set<Concatenation> get() = setOf(this)
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -49,17 +65,7 @@ class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstrac
         return this.items.get(index)
     }
 
-    override val allTerminal: Set<Terminal> by lazy {
-        this.items.flatMap { it.allTerminal }.toSet()
-    }
-
-    override val allNonTerminal: Set<NonTerminal> by lazy {
-        this.items.flatMap { it.allNonTerminal }.toSet()
-    }
-
-    override val allEmbedded: Set<Embedded> by lazy {
-        this.items.flatMap { it.allEmbedded }.toSet()
-    }
+    override fun itemForChild(childNumber: Int): RuleItem? = this.items.getOrNull(childNumber)
 
     override fun toString(): String = this.items.joinToString(separator = " ")
 
@@ -68,21 +74,6 @@ class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstrac
 sealed class ChoiceAbstract(
     override val alternative: List<RuleItem>
 ) : RuleItemAbstract(), Choice {
-
-    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
-        this._owningRule = rule
-        this.index = indices
-        var i: Int = 0
-        this.alternative.forEach {
-            val nextIndex: List<Int> = indices + (i++)
-            it.setOwningRule(rule, nextIndex)
-        }
-    }
-
-    override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-        return this.alternative.get(index)
-    }
 
     override val allTerminal: Set<Terminal> by lazy {
         this.alternative.flatMap { it.allTerminal }.toSet()
@@ -95,6 +86,27 @@ sealed class ChoiceAbstract(
     override val allEmbedded: Set<Embedded> by lazy {
         this.alternative.flatMap { it.allEmbedded }.toSet()
     }
+
+    override val firstTerminal: Set<Terminal> get() = alternative.flatMap { it.firstTerminal }.toSet()
+    override val firstTangible: Set<TangibleItem> get() = alternative.flatMap { it.firstTangible }.toSet()
+    override val firstTangibleRecursive: Set<TangibleItem> get() = alternative.flatMap { it.firstTangibleRecursive }.toSet()
+    override val firstConcatenationRecursive: Set<Concatenation> get() = alternative.flatMap { it.firstConcatenationRecursive }.toSet()
+
+    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
+        this._owningRule = rule
+        this.index = indices
+        var i: Int = 0
+        this.alternative.forEach {
+            val nextIndex: List<Int> = indices + (i++)
+            it.setOwningRule(rule, nextIndex)
+        }
+    }
+
+    override fun subItem(index: Int): RuleItem {
+        return this.alternative.get(index)
+    }
+
+    override fun itemForChild(childNumber: Int): RuleItem? = error("Cannot get itemForChild of a choice")
 
     override fun toString(): String = this.alternative.joinToString(separator = " | ")
 
@@ -109,6 +121,18 @@ sealed class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
 class OptionalItemDefault(
     override val item: RuleItem
 ) : ConcatenationItemAbstract(), OptionalItem {
+
+    override val allTerminal: Set<Terminal> get() = this.item.allTerminal
+
+    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal
+
+    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
+
+    override val firstTerminal: Set<Terminal> get() = item.firstTerminal
+    override val firstTangible: Set<TangibleItem> get() = item.firstTangible
+    override val firstTangibleRecursive: Set<TangibleItem> get() = item.firstTangibleRecursive
+    override val firstConcatenationRecursive: Set<Concatenation> get() = item.firstConcatenationRecursive
+
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
@@ -120,11 +144,10 @@ class OptionalItemDefault(
         return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = this.item.allTerminal
-
-    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal
-
-    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
+    override fun itemForChild(childNumber: Int): RuleItem? = when (childNumber) {
+        0 -> item
+        else -> null
+    }
 
     override fun toString(): String = when (item) {
         is Choice -> "($item)?"
@@ -142,7 +165,16 @@ class GroupDefault(
     override val groupedContent: RuleItem
 ) : SimpleItemAbstract(), Group {
 
-    //override val name: RuleName = RuleName("${'$'}group")
+    override val allTerminal: Set<Terminal> get() = this.groupedContent.allTerminal
+
+    override val allNonTerminal: Set<NonTerminal> get() = this.groupedContent.allNonTerminal
+
+    override val allEmbedded: Set<Embedded> get() = this.groupedContent.allEmbedded
+
+    override val firstTerminal: Set<Terminal> get() = this.groupedContent.firstTerminal
+    override val firstTangible: Set<TangibleItem> get() = this.groupedContent.firstTangible
+    override val firstTangibleRecursive: Set<TangibleItem> get() = this.groupedContent.firstTangibleRecursive
+    override val firstConcatenationRecursive: Set<Concatenation> get() = this.groupedContent.firstConcatenationRecursive
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -155,26 +187,32 @@ class GroupDefault(
         return if (0 == index) this.groupedContent else error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = this.groupedContent.allTerminal
-
-    override val allNonTerminal: Set<NonTerminal> get() = this.groupedContent.allNonTerminal
-
-    override val allEmbedded: Set<Embedded> get() = this.groupedContent.allEmbedded
+    override fun itemForChild(childNumber: Int): RuleItem? = when (childNumber) {
+        0 -> groupedContent
+        else -> null
+    }
 
     override fun toString(): String = "( $groupedContent )"
 }
 
-sealed class TangibleItemAbstract() : SimpleItemAbstract(), TangibleItem {}
+sealed class TangibleItemAbstract() : SimpleItemAbstract(), TangibleItem {
+    override val firstTangible: Set<TangibleItem> get() = setOf(this)
+
+    override fun itemForChild(childNumber: Int): RuleItem? = null
+}
 
 class EmptyRuleDefault : TangibleItemAbstract(), EmptyRule {
-
-    //override val name: RuleName = "<empty>"
 
     override val allTerminal: Set<Terminal> get() = emptySet()
 
     override val allNonTerminal: Set<NonTerminal> get() = emptySet()
 
     override val allEmbedded: Set<Embedded> get() = emptySet()
+
+    override val firstTerminal: Set<Terminal> get() = emptySet()
+
+    override val firstTangibleRecursive: Set<Terminal> get() = emptySet()
+    override val firstConcatenationRecursive: Set<Concatenation> get() = emptySet()
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -193,9 +231,18 @@ class TerminalDefault(
     override val isPattern: Boolean
 ) : TangibleItemAbstract(), Terminal {
 
-    //override lateinit var grammar: Grammar
-
     override val id: String = if (isPattern) "\"$value\"" else "'${value}'"
+
+    override val allTerminal: Set<Terminal> get() = setOf(this) //emptySet()
+
+    override val allNonTerminal: Set<NonTerminal> get() = emptySet()
+
+    override val allEmbedded: Set<Embedded> get() = emptySet()
+
+    override val firstTerminal: Set<Terminal> get() = setOf(this)
+
+    override val firstTangibleRecursive: Set<Terminal> get() = setOf(this)
+    override val firstConcatenationRecursive: Set<Concatenation> get() = emptySet()
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -206,12 +253,6 @@ class TerminalDefault(
         error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = setOf(this) //emptySet()
-
-    override val allNonTerminal: Set<NonTerminal> get() = emptySet()
-
-    override val allEmbedded: Set<Embedded> get() = emptySet()
-
     override fun toString(): String = if (isPattern) "\"$value\"" else "'$value'"
 }
 
@@ -219,6 +260,31 @@ class NonTerminalDefault(
     override val targetGrammar: GrammarReference?,
     override val ruleReference: GrammarRuleName
 ) : TangibleItemAbstract(), NonTerminal {
+
+    override val allTerminal: Set<Terminal> get() = emptySet()
+
+    override val allNonTerminal: Set<NonTerminal> get() = setOf(this)
+
+    override val allEmbedded: Set<Embedded> get() = emptySet()
+
+    override val firstTerminal: Set<Terminal> get() = emptySet()
+
+    override val firstTangibleRecursive: Set<TangibleItem>
+        get() {
+            val refRule = this.referencedRule(this.owningRule.grammar)
+            return when {
+                refRule.isLeaf -> setOf(this)
+                else -> refRule.rhs.firstTangibleRecursive
+            }
+        }
+    override val firstConcatenationRecursive: Set<Concatenation>
+        get() {
+            val refRule = this.referencedRule(this.owningRule.grammar)
+            return when {
+                refRule.isLeaf -> emptySet()
+                else -> refRule.rhs.firstConcatenationRecursive
+            }
+        }
 
     override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? =
         this.targetGrammar?.resolved?.findAllResolvedGrammarRule(this.ruleReference)
@@ -238,12 +304,6 @@ class NonTerminalDefault(
         error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = emptySet()
-
-    override val allNonTerminal: Set<NonTerminal> get() = setOf(this)
-
-    override val allEmbedded: Set<Embedded> get() = emptySet()
-
     override fun toString(): String = ruleReference.value
 }
 
@@ -252,7 +312,19 @@ class EmbeddedDefault(
     override val embeddedGrammarReference: GrammarReference
 ) : TangibleItemAbstract(), Embedded {
 
-    //override val name: String get() = this.embeddedGoalName
+    val resolvedGrammarRule: GrammarRule? get() = embeddedGrammarReference.resolved?.findAllResolvedGrammarRule(embeddedGoalName)
+
+    override val allTerminal: Set<Terminal> get() = emptySet()
+
+    override val allNonTerminal: Set<NonTerminal> get() = emptySet()
+
+    override val allEmbedded: Set<Embedded> get() = setOf(this)
+
+    override val firstTerminal: Set<Terminal> get() = emptySet()
+    override val firstTangibleRecursive: Set<TangibleItem>
+        get() = resolvedGrammarRule?.rhs?.firstTangibleRecursive ?: error("Embedded RuleItem is not resolved!")
+    override val firstConcatenationRecursive: Set<Concatenation>
+        get() = resolvedGrammarRule?.rhs?.firstConcatenationRecursive ?: error("Embedded RuleItem is not resolved!")
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return targetGrammar.findAllResolvedGrammarRule(this.embeddedGoalName) ?: error("Grammar GrammarRule '$embeddedGoalName' not found in grammar '${targetGrammar.name}'")
@@ -267,23 +339,28 @@ class EmbeddedDefault(
         error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = emptySet()
-
-    override val allNonTerminal: Set<NonTerminal> get() = emptySet()
-
-    override val allEmbedded: Set<Embedded> get() = setOf(this)
-
     override fun toString(): String = "${embeddedGrammarReference.nameOrQName}.$embeddedGoalName"
 }
 
 sealed class ListOfItemsAbstract(
-) : ConcatenationItemAbstract(), ListOfItems {}
+) : ConcatenationItemAbstract(), ListOfItems {
+    override val firstTerminal: Set<Terminal> get() = item.firstTerminal
+    override val firstTangible: Set<TangibleItem> get() = this.item.firstTangible
+    override val firstTangibleRecursive: Set<TangibleItem> get() = this.item.firstTangibleRecursive
+    override val firstConcatenationRecursive: Set<Concatenation> get() = this.item.firstConcatenationRecursive
+}
 
 class SimpleListDefault(
     override val min: Int,
     override val max: Int,
     override val item: RuleItem
 ) : ListOfItemsAbstract(), SimpleList {
+
+    override val allTerminal: Set<Terminal> get() = this.item.allTerminal
+
+    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal
+
+    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -296,11 +373,10 @@ class SimpleListDefault(
         return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> get() = this.item.allTerminal
-
-    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal
-
-    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
+    override fun itemForChild(childNumber: Int): RuleItem? = when {
+        -1 != max && childNumber > max -> null
+        else -> item
+    }
 
     override fun toString(): String {
         val mult = when {
@@ -322,6 +398,12 @@ class SeparatedListDefault(
     //override val associativity: SeparatedListKind
 ) : ListOfItemsAbstract(), SeparatedList {
 
+    override val allTerminal: Set<Terminal> get() = this.item.allTerminal + this.separator.allTerminal
+
+    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal + this.separator.allNonTerminal
+
+    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded + this.separator.allEmbedded
+
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
@@ -338,11 +420,14 @@ class SeparatedListDefault(
         }
     }
 
-    override val allTerminal: Set<Terminal> get() = this.item.allTerminal + this.separator.allTerminal
-
-    override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal + this.separator.allNonTerminal
-
-    override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded + this.separator.allEmbedded
+    override fun itemForChild(childNumber: Int): RuleItem? = when {
+        -1 != max && childNumber > max -> null
+        else -> when (childNumber % 2) {
+            0 -> item
+            1 -> separator
+            else -> error("Internal error: should not happen!")
+        }
+    }
 
     override fun toString(): String {
         val mult = when {

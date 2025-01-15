@@ -19,55 +19,131 @@ package net.akehurst.language.test.processor.sql
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
 import org.junit.Test
+import testFixture.data.doTest
+import testFixture.data.executeTestSuit
+import testFixture.data.testSuit
 import kotlin.test.assertEquals
 
 class test_autocomplete {
 
     private companion object {
         val grammarStr = test_autocomplete::class.java.getResource("/sql/version_/grammar.agl").readText()
-        val processor by lazy {
-            Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
-        }
+        val referenceStr = test_autocomplete::class.java.getResource("/sql/version_/reference.agl").readText()
 
-        fun testPass(sentence: String, position: Int, options: ProcessOptions<Asm, ContextAsmSimple>? = null, expected: List<CompletionItem>) {
-            val result = processor.expectedItemsAt(sentence, position, -1, options)
-            assertEquals(expected, result.items)
-        }
-    }
-
-    @Test
-    fun empty() {
-        val sentence = ""
-        val position = sentence.length
-
-        val expected = listOf(
-            CompletionItem(CompletionItemKind.SEGMENT, "SELECT <columns> FROM <table-id>;", "Select"),
-            CompletionItem(CompletionItemKind.SEGMENT, "UPDATE <table-id> SET <column-values>;", "Update"),
-            CompletionItem(CompletionItemKind.SEGMENT, "DELETE FROM <table-id>;", "Delete"),
-            CompletionItem(CompletionItemKind.SEGMENT, "INSERT INTO <table-id> ( <columns> ) VALUES ( <values> );", "Insert")
-        )
-        testPass(sentence, position, null, expected)
-    }
-
-    @Test
-    fun SELECT_() {
-        val sentence = "SELECT "
-        val position = sentence.length
-
-        val expected = listOf(
-            CompletionItem(CompletionItemKind.SEGMENT, "<column-id>", "column-id"),
-
-        )
-        testPass(sentence, position, Agl.options {
-            completionProvider {
-                context(ContextAsmSimple())
+        val testSuit = testSuit {
+            testData("With grammar only") {
+                grammarStr(grammarStr)
+                sentencePass("", "statementList") {
+                    context(ContextAsmSimple())
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "<statement> ;", "terminatedStatement"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<SELECT>", "SELECT"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<UPDATE>", "UPDATE"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<DELETE>", "DELETE"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<INSERT>", "INSERT"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<CREATE>", "CREATE"),
+                        )
+                    )
+                }
+                sentencePass("SELECT ", "statementList") {
+                    context(ContextAsmSimple())
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                        )
+                    )
+                }
             }
-        }, expected)
+            testData("With grammar & context") {
+                grammarStr(grammarStr)
+                sentencePass("SELECT * FROM ", "statementList") {
+                    context(contextAsmSimple {
+                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
+                    })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                        )
+                    )
+                }
+                sentencePass("SELECT ", "statementList") {
+                    context(contextAsmSimple {
+                        item("col1", "net.akehurst.language.sql.Column", "")
+                    })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                        )
+                    )
+                }
+            }
+            testData("With grammar, reference and context") {
+                grammarStr(grammarStr)
+                referenceStr(referenceStr)
+                sentencePass("SELECT * FROM ", "statementList") {
+                    context(contextAsmSimple {
+                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
+                        item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", "")
+                    })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.REFERRED, "table1", "TableDefinition"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                        )
+                    )
+                }
+                sentencePass("SELECT ", "statementList") {
+                    context(contextAsmSimple {
+                        item("col1", "net.akehurst.language.sql.Column", "")
+                    })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.REFERRED, "col1", "ColumnDefinition"),
+                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
+                        )
+                    )
+                }
+            }
+            testData("With Reference & Autocomplete file") {
+                grammarStr(grammarStr)
+                referenceStr(referenceStr)
+                sentencePass("", "statementList") {
+                    context(ContextAsmSimple())
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "SELECT <columns> FROM <table-id>;", "Select statement"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "UPDATE <table-id> SET <column-values>;", "Update statement"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DELETE FROM <table-id>;", "Delete statement"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "INSERT INTO <table-id> ( <columns> ) VALUES ( <values> );", "Insert statement"),
+                            CompletionItem(CompletionItemKind.LITERAL, "SELECT", "SELECT"),
+                            CompletionItem(CompletionItemKind.LITERAL, "UPDATE", "UPDATE"),
+                            CompletionItem(CompletionItemKind.LITERAL, "DELETE", "DELETE"),
+                            CompletionItem(CompletionItemKind.LITERAL, "INSERT", "INSERT"),
+                        )
+                    )
+                }
+            }
+        }
+
+    }
+
+    @Test
+    fun testAll() = executeTestSuit(testSuit)
+
+    @Test
+    fun single() {
+        val td = testSuit["With grammar, reference and context"]
+        doTest(td, 0)
     }
 
 }

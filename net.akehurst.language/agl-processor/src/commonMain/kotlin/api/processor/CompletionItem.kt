@@ -16,14 +16,13 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.grammar.api.RuleItem
-import net.akehurst.language.grammar.api.Terminal
+import net.akehurst.language.grammar.api.*
 
 enum class CompletionItemKind {
-    LITERAL,
-    PATTERN,
     REFERRED,
-    SEGMENT
+    SEGMENT,
+    LITERAL,
+    PATTERN
 }
 
 data class CompletionItem(
@@ -35,14 +34,16 @@ data class CompletionItem(
 }
 
 interface SpineNode {
-    val ruleItem:RuleItem
-    val index: Int
+    val rule:GrammarRule
+    val nextChildNumber: Int
     val nextExpectedItem:RuleItem
+    val expectedNextLeafNonTerminalOrTerminal:Set<TangibleItem>
+    val nextExpectedConcatenation:Set<Concatenation>
 }
 
 interface Spine {
-    val expectedNextTerminals: Set<Terminal>
-    val expectedNextItems: Set<RuleItem>
+    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    val expectedNextConcatenation: Set<Concatenation>
     val elements: List<SpineNode>
     val nextChildNumber: Int
 }

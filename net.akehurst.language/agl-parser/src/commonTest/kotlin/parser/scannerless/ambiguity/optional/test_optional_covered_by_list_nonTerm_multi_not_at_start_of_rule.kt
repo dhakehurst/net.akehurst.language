@@ -28,38 +28,23 @@ class test_optional_covered_by_list_nonTerm_multi_not_at_start_of_rule : test_Le
     }
 
     @Test
-    fun empty__fails() {
-        test(td,"")
-    }
+    fun empty__fails() = test(td, "")
 
     @Test
-    fun b__fails() {
-        test(td,"b")
-    }
+    fun b__fails() = test(td, "b")
 
     @Test
-    fun ba() {
-        test(td,"ba")
-    }
+    fun ba() = test(td, "ba")
 
     @Test
-    fun baa() {
-        test(td,"baa")
-    }
+    fun baa() = test(td, "baa")
 
     @Test
-    fun bxa() {
-        test(td,"bxa")
-    }
+    fun bxa() = test(td, "bxa")
 
     @Test
-    fun baaa() {
-        test(td,"baaa")
-    }
+    fun baaa() = test(td, "baaa")
 
     @Test
-    fun baaaa() {
-        test(td,"baaaa")
-    }
-
+    fun baaaa() = test(td, "baaaa")
 }

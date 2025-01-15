@@ -96,7 +96,7 @@ class test_VistraqQuery_Singles {
         val grammarName = "Expressions"
         val goal = "REAL"
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("REAL"))
+            parseError(InputLocation(0, 1, 1, 1),sentence, setOf("<GOAL>"), setOf("REAL"))
         )
         test_process_fail(sentence, goal, grammarName, expected)
     }
@@ -107,7 +107,7 @@ class test_VistraqQuery_Singles {
         val grammarName = "Expressions"
         val goal = "REAL"
         val expected =  setOf(
-            parseError(InputLocation(0, 1, 1, 1),sentence, setOf(), setOf("REAL"))
+            parseError(InputLocation(0, 1, 1, 1),sentence, setOf("<GOAL>"), setOf("REAL"))
         )
         test_process_fail(sentence, goal, grammarName, expected)
     }

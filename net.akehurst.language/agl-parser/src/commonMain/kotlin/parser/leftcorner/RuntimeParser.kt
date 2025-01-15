@@ -971,12 +971,7 @@ internal class RuntimeParser(
                 }
             }
 
-            val slh = when (parseArgs.allowEOTAfterSkip) {
-                true -> skipLh + LookaheadSet.EOT
-                false -> skipLh
-            }
-
-            val skipData = this.tryParseSkipUntilNone(slh, atPosition, parseArgs)
+            val skipData = this.tryParseSkipUntilNone(skipLh, atPosition, parseArgs)
 
             return when {
                 needSkip && null == skipData -> {
@@ -989,21 +984,25 @@ internal class RuntimeParser(
     }
 
     private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeData? {
+        val slh = when (growArgs.allowEOTAfterSkip) {
+            true -> possibleEndOfSkip + LookaheadSet.EOT
+            false -> possibleEndOfSkip
+        }
         return if (this.cacheSkip) {
-            val key = Pair(startPosition, possibleEndOfSkip)
+            val key = Pair(startPosition, slh)
             if (_skip_cache.containsKey(key)) {
                 // can cache null as a valid result
                 _skip_cache[key]
             } else {
                 val skipData = when (skipParser) { //TODO: raise test to outer level
                     null -> null
-                    else -> tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
+                    else -> tryParseSkip(slh, startPosition, growArgs)
                 }
                 _skip_cache[key] = skipData
                 skipData
             }
         } else {
-            tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
+            tryParseSkip(slh, startPosition, growArgs)
         }
     }
 

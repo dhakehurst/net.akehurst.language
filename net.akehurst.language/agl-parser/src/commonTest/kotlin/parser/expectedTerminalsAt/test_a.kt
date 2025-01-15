@@ -49,7 +49,7 @@ class test_a : test_ExpectedTerminasAtAbstract() {
             TestData(" a ", 3, setOf()),
             TestData("ab", 0, setOf("'a'")),
             TestData("ab", 1, setOf()),
-            TestData("ab", 2, setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
+            TestData("ab", 2, emptySet())// setOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
 
     }

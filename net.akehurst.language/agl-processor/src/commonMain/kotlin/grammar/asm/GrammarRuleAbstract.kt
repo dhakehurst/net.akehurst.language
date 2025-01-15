@@ -30,24 +30,25 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
             override val value: String,
             override val isPattern: Boolean
         ) : Terminal, RuleItemAbstract() {
-            //override lateinit var grammar: Grammar
 
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()
-
+            override val firstTerminal: Set<Terminal> get() = emptySet()
+            override val firstTangible: Set<TangibleItem> get() = emptySet()
+            override val firstTangibleRecursive: Set<Terminal> get() = emptySet()
+            override val firstConcatenationRecursive: Set<Concatenation> get() = emptySet()
             override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
                 TODO("not implemented")
             }
-
             override fun subItem(index: Int): RuleItem {
                 TODO("not implemented")
             }
 
-            //override fun asString(indent: Indent): String = when {
-            ////     isPattern -> "\"$value\""
-            //    else -> "'$value'"
-            //}
+            override fun itemForChild(childNumber: Int): RuleItem? {
+                TODO("not implemented")
+            }
+
         }
 
         private fun toRegEx(value: String): String {

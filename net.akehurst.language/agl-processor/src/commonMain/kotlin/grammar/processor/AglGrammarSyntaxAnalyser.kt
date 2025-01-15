@@ -170,8 +170,7 @@ internal class AglGrammarSyntaxAnalyser(
         return Pair(true,{ grammar ->
             val result = NormalRuleDefault(grammar, name, isSkip, isLeaf)
             result.rhs = rhs
-            result
-                .also { this.locationMap[it] = sentence.locationForNode(target.node) }
+            result.also { this.locationMap[it] = sentence.locationForNode(target.node) }
         })
     }
 
