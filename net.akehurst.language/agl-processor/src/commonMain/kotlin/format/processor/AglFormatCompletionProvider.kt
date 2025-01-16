@@ -27,15 +27,6 @@ import net.akehurst.language.formatter.api.AglFormatterModel
 
 class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatterModel, SentenceContext<String>>() {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext<String>>): List<CompletionItem> {
         //TODO
-        return nextExpected.flatMap { sp ->
-            sp.expectedNextLeafNonTerminalOrTerminal.flatMap { ri ->
-                when (ri) {
-                    is Terminal -> provideForTangible(ri)
-                    else -> emptyList()
-                }
-            }
-        }
-    }
+
 }

@@ -26,7 +26,5 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AsmTransformCompletionProvider : CompletionProviderAbstract<TransformModel, ContextFromGrammarAndTypeModel>() {
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromGrammarAndTypeModel>): List<CompletionItem> {
-        TODO("not implemented")
-    }
+    //TODO
 }

@@ -26,12 +26,6 @@ import net.akehurst.language.api.processor.Spine
 
 class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, ContextFromGrammarRegistry>() {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromGrammarRegistry>): List<CompletionItem> {
-        //TODO
-        return nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }
-            .toSet()
-            .toList()
-            .sortedBy { it.kind }
-    }
+    //TODO
 
 }

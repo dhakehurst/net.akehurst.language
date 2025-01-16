@@ -207,14 +207,14 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
 ) {
 
     private var _context: ContextType? = base.context
-    private var _depth: Int? = base.depth
+    private var _depth: Int = base.depth
     private val _options = base.other.toMutableMap()
 
     fun context(value: ContextType?) {
         _context = value
     }
 
-    fun depth(value: Int?) {
+    fun depth(value: Int) {
         _depth = value
     }
 

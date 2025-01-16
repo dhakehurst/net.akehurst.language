@@ -28,15 +28,6 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 
 class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceModel, ContextFromTypeModel>() {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromTypeModel>): List<CompletionItem> {
         //TODO
-        return nextExpected.flatMap { sp ->
-            sp.expectedNextLeafNonTerminalOrTerminal.flatMap { ri ->
-                when (ri) {
-                    is Terminal -> provideForTangible(ri)
-                    else -> emptyList()
-                }
-            }
-        }
-    }
+
 }

@@ -41,20 +41,21 @@ class CompletionProviderSimple(
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextAsmSimple>): List<CompletionItem> {
+        val depth = options.depth
         val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }.toSet()
+            nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }.toSet()
                 .toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val firstSpineNode = sp.elements.firstOrNull()
                 when (firstSpineNode) {
-                    null -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                    null -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
                     else -> {
                         val type = typeFor(firstSpineNode.rule)
                         when (type) {
-                            null -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
-                            else -> provideForType(type, firstSpineNode, context) + provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                            null -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                            else -> provideForType(type, firstSpineNode, context) + provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
                         }
                     }
                 }

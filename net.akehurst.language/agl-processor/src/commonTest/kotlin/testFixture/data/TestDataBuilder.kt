@@ -7,14 +7,15 @@ import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sentence.api.InputLocation
+
 //copied from parser
 interface TestDataParserSentence {
     val sentence: String
-    val options:ProcessOptions<Asm,ContextAsmSimple>
+    val options: ProcessOptions<Asm, ContextAsmSimple>
 }
 
-fun parseError(pos:Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
-    TestDataParseIssue(InputLocation(pos, col, row, len),tryingFor, nextExpected)
+fun parseError(pos: Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
+    TestDataParseIssue(InputLocation(pos, col, row, len), tryingFor, nextExpected)
 
 data class TestDataParseIssue(
     val location: InputLocation,
@@ -50,28 +51,28 @@ class TestDataParser(
 */
 
 class TestSuit(
-    val testData:List<TestDataProcessor>
+    val testData: List<TestDataProcessor>
 ) {
-    operator fun get(index:String) = testData.first { it.description == index }
+    operator fun get(index: String) = testData.first { it.description == index }
 }
 
 // new
 class TestDataProcessor(
     val description: String,
     val grammarStr: String,
-    val typeStr:String?,
+    val typeStr: String?,
     val transformStr: String?,
     val referenceStr: String?,
     val sentences: List<TestDataProcessorSentence>
 ) {
 }
 
-interface TestDataProcessorSentence : TestDataParserSentence{
+interface TestDataProcessorSentence : TestDataParserSentence {
 }
 
 class TestDataProcessorSentencePass(
     override val sentence: String,
-    override val options:ProcessOptions<Asm,ContextAsmSimple>,
+    override val options: ProcessOptions<Asm, ContextAsmSimple>,
     val expectedAsm: Asm?,
     val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
@@ -80,13 +81,13 @@ class TestDataProcessorSentencePass(
 
 class TestDataProcessorSentenceFail(
     override val sentence: String,
-    override val options:ProcessOptions<Asm,ContextAsmSimple>,
+    override val options: ProcessOptions<Asm, ContextAsmSimple>,
     val expected: List<LanguageIssue>
 ) : TestDataProcessorSentence {
 
 }
 
-fun testSuit(init:TestSuitBuilder.()->Unit):TestSuit {
+fun testSuit(init: TestSuitBuilder.() -> Unit): TestSuit {
     val b = TestSuitBuilder()
     b.init()
     return b.build()
@@ -99,46 +100,51 @@ annotation class AsmTestDataBuilderMarker
 class TestSuitBuilder() {
     private val _testData = mutableListOf<TestDataProcessor>()
 
-    fun testData(description:String, init:TestDataBuilder.()->Unit) {
+    fun testData(description: String, init: TestDataBuilder.() -> Unit) {
         val b = TestDataBuilder(description)
         b.init()
-        val td =  b.build()
+        val td = b.build()
         _testData.add(td)
     }
 
-    fun build():TestSuit = TestSuit(_testData)
+    fun build(): TestSuit = TestSuit(_testData)
 }
 
 @AsmTestDataBuilderMarker
 class TestDataBuilder(
-   private val _description: String
+    private val _description: String
 ) {
-    private lateinit var _grammarStr:String
-    private  var _typeStr:String? = null
-    private  var _transformStr:String? = null
-    private  var _referenceStr:String? = null
+    private lateinit var _grammarStr: String
+    private var _typeStr: String? = null
+    private var _transformStr: String? = null
+    private var _referenceStr: String? = null
+    private var _options: ProcessOptions<Asm, ContextAsmSimple> = ProcessOptionsDefault()
     private val _sentences = mutableListOf<TestDataProcessorSentence>()
 
-    fun grammarStr(value:String) {
+    fun grammarStr(value: String) {
         _grammarStr = value
     }
 
-    fun typeStr(value:String) {
+    fun typeStr(value: String) {
         _typeStr = value
     }
 
-    fun transformStr(value:String) {
+    fun transformStr(value: String) {
         _transformStr = value
     }
 
-    fun referenceStr(value:String) {
+    fun referenceStr(value: String) {
         _referenceStr = value
     }
 
+    fun processOptions(value: ProcessOptions<Asm, ContextAsmSimple>) {
+        _options = value
+    }
+
     fun sentencePass(sentence: String, init: TestDataSentenceBuilder.() -> Unit) {
-        val b = TestDataSentenceBuilder(true,sentence)
+        val b = TestDataSentenceBuilder(true, _options, sentence)
         b.init()
-        val td =  b.build()
+        val td = b.build()
         _sentences.add(td)
     }
 
@@ -154,20 +160,21 @@ class TestDataBuilder(
 
 @AsmTestDataBuilderMarker
 class TestDataSentenceBuilder(
-    val pass:Boolean,
+    val pass: Boolean,
+    val baseOptions: ProcessOptions<Asm, ContextAsmSimple>,
     val sentence: String
-)  {
-    private var _options:ProcessOptions<Asm,ContextAsmSimple> = ProcessOptionsDefault()
-    private var _context:ContextAsmSimple? = null
-    private var _expectedAsm:Asm? = null
-    private var _expectedCompletionItems:List<CompletionItem>? = null
+) {
+    private var _options: ProcessOptions<Asm, ContextAsmSimple> = baseOptions
+    private var _context: ContextAsmSimple? = null
+    private var _expectedAsm: Asm? = null
+    private var _expectedCompletionItems: List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
 
-    fun options(value:ProcessOptions<Asm,ContextAsmSimple>) {
+    fun options(value: ProcessOptions<Asm, ContextAsmSimple>) {
         _options = value
     }
 
-    fun context(value:ContextAsmSimple) {
+    fun context(value: ContextAsmSimple) {
         _options.semanticAnalysis.context = value
         _options.completionProvider.context = value
     }
@@ -176,21 +183,22 @@ class TestDataSentenceBuilder(
         _expectedIssues.addAll(value)
     }
 
-    fun expectedAsm(value:Asm) {
+    fun expectedAsm(value: Asm) {
         _expectedAsm = value
     }
 
-    fun expectedCompletionItems(value:List<CompletionItem>) {
+    fun expectedCompletionItems(value: List<CompletionItem>) {
         _expectedCompletionItems = value
     }
 
-    fun build() = when(pass) {
+    fun build() = when (pass) {
         true -> TestDataProcessorSentencePass(
             sentence,
             _options,
             _expectedAsm,
             _expectedCompletionItems
         )
+
         false -> TestDataProcessorSentenceFail(
             sentence,
             _options,

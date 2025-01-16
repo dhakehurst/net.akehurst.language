@@ -58,8 +58,10 @@ interface SemanticAnalysisOptions<ContextType : Any> {
 interface CompletionProviderOptions<ContextType : Any> {
     var context: ContextType?
 
-    /** depth of nested rules to search when constructing possible completions **/
-    var depth:Int?
+    /**
+     * depth of nested rules to search when constructing possible completions
+     **/
+    var depth:Int
 
     val other: Map<String, Any>
 }

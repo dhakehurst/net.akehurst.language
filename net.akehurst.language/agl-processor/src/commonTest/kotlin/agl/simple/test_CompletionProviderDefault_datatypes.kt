@@ -99,8 +99,9 @@ class test_CompletionProviderDefault_datatypes {
         }
 
         val testSuit = testSuit {
-            testData("no reference model") {
+            testData("no reference model, depth==1") {
                 grammarStr(grammarStr)
+                processOptions(Agl.options { completionProvider { depth(1) } })
                 sentencePass("") {
                     context(contextAsmSimple {  })
                     expectedCompletionItems(listOf(
@@ -246,6 +247,102 @@ class test_CompletionProviderDefault_datatypes {
                     ))
                 }
             }
+            testData("no reference model, depth==2") {
+                grammarStr(grammarStr)
+                processOptions(Agl.options { completionProvider { depth(2) } })
+                sentencePass("") {
+                    context(contextAsmSimple {  })
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "class <ID> { <ID> : <typeReference> }", "datatype"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "primitive <ID>", "primitive"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "collection <ID> < <typeParameterList> >", "collection"),
+                        CompletionItem(CompletionItemKind.LITERAL, "class", "'class'"),
+                        CompletionItem(CompletionItemKind.LITERAL, "primitive", "'primitive'"),
+                        CompletionItem(CompletionItemKind.LITERAL, "collection", "'collection'")
+                    ))
+                }
+                sentencePass("class A {") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "<ID> : <TYPE> <typeArguments>", "property"),
+                        CompletionItem(CompletionItemKind.LITERAL, "}", "'}'"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<ID>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop :") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT,"<TYPE> < <typeArgumentList> >","typeReference"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<TYPE>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "< <typeReference> >", "typeArguments"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "<ID> : <TYPE> <typeArguments>", "property"), //FIXME: should not really be valid without WS
+                        CompletionItem(CompletionItemKind.LITERAL, "<", "'<'"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<ID>", "[A-Za-z_][A-Za-z0-9_]*"),  //FIXME: should not really be valid without WS
+                        CompletionItem(CompletionItemKind.LITERAL, "}", "'}'"),
+                    ))
+                }
+                sentencePass("class A { prop : B<") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "<TYPE> < <typeArgumentList> >", "typeReference"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<TYPE>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "< <typeReference> >", "typeArguments"),
+                        CompletionItem(CompletionItemKind.LITERAL, "<", "'<'"),
+                        CompletionItem(CompletionItemKind.LITERAL, ",", "','"),
+                        CompletionItem(CompletionItemKind.LITERAL, ">", "'>'"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C>") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT,"<ID> : <TYPE> <typeArguments>","property"),
+                        CompletionItem(CompletionItemKind.LITERAL, "}", "'}'"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<ID>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C,") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT,"<TYPE> < <typeArgumentList> >","typeReference"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<TYPE>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C,D") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "< <typeReference> >", "typeArguments"),
+                        CompletionItem(CompletionItemKind.LITERAL, "<", "'<'"),
+                        CompletionItem(CompletionItemKind.LITERAL, ",", "','"),
+                        CompletionItem(CompletionItemKind.LITERAL, ">", "'>'"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C,D>") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT,"<ID> : <TYPE> <typeArguments>","property"),
+                        CompletionItem(CompletionItemKind.LITERAL, "}", "'}'"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<ID>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C,D> ") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT,"<ID> : <TYPE> <typeArguments>","property"),
+                        CompletionItem(CompletionItemKind.LITERAL, "}", "'}'"),
+                        CompletionItem(CompletionItemKind.PATTERN, "<ID>", "[A-Za-z_][A-Za-z0-9_]*"),
+                    ))
+                }
+                sentencePass("class A { prop : B<C,D> }") {
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "class <ID> { <ID> : <typeReference> }", "datatype"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "primitive <ID>", "primitive"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "collection <ID> < <typeParameterList> >", "collection"),
+                        CompletionItem(CompletionItemKind.LITERAL, "class", "'class'"),
+                        CompletionItem(CompletionItemKind.LITERAL, "primitive", "'primitive'"),
+                        CompletionItem(CompletionItemKind.LITERAL, "collection", "'collection'")
+                    ))
+                }
+            }
         }
 
         val tests = listOf(
@@ -261,9 +358,6 @@ class test_CompletionProviderDefault_datatypes {
     fun testAll() = executeTestSuit(testSuit)
 
     @Test
-    fun one() {
-        val td = testSuit["no reference model"]
-        println("Test: ${td.description}")
-        doTest(td,1)
-    }
+    fun single() = doTest(testSuit["no reference model, depth==2"],2)
+
 }
