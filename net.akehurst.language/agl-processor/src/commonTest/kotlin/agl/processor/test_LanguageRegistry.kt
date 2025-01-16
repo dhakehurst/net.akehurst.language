@@ -25,13 +25,17 @@ import kotlin.test.*
 
 class test_LanguageRegistry {
 
-    companion object {
+    private companion object {
+        val identity = LanguageIdentity("test.lang")
+    }
 
+    @BeforeTest
+    fun before() {
+        Agl.registry.unregister(identity)
     }
 
     @Test
     fun register_empty() {
-        val identity = LanguageIdentity("test.lang")
         val languageDefinition = Agl.registry.register(
             identity = identity,
             grammarStr = GrammarString(""),
@@ -52,7 +56,6 @@ class test_LanguageRegistry {
 
     @Test
     fun register_valid() {
-        val identity = LanguageIdentity("test.lang")
         val languageDefinition = Agl.registry.register(
             identity = identity,
             grammarStr = GrammarString("namespace ns grammar Test { S = 'b'; }"),
@@ -73,7 +76,6 @@ class test_LanguageRegistry {
 
     @Test
     fun register_update_empty_to_valid() {
-        val identity = LanguageIdentity("test.lang")
         val languageDefinition = Agl.registry.register(
             identity = identity,
             grammarStr = GrammarString(""),
@@ -91,7 +93,7 @@ class test_LanguageRegistry {
         assertTrue(languageDefinition.issues.isNotEmpty())
         assertNull(languageDefinition.processor)
 
-        languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"),null,null,null,null)
+        languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"), null, null, null, null)
         assertEquals(identity, languageDefinition.identity)
         assertTrue(languageDefinition.issues.isEmpty())
         assertNotNull(languageDefinition.processor)

@@ -96,12 +96,38 @@ internal class SpineDefault(
     override fun toString(): String = "Spine ${elements.joinToString(separator = "->") { it.toString() }}"
 }
 
-abstract class CompletionProviderAbstract<AsmType : Any, in ContextType> : CompletionProvider<AsmType, ContextType> {
+abstract class CompletionProviderAbstract<AsmType : Any, ContextType:Any> : CompletionProvider<AsmType, ContextType> {
+
+    companion object {
+        fun provideForTangible(tangibleItem: TangibleItem): List<CompletionItem> {
+            return when (tangibleItem) {
+                is NonTerminal -> { //must be a reference to leaf
+                    val name = tangibleItem.ruleReference.value
+                    val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
+                    val text = refRule.compressedLeaf.value
+                    listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", text))
+                }
+
+                is Terminal -> {
+                    val name = when {
+                        tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
+                        else -> tangibleItem.value
+                    }
+                    when {
+                        tangibleItem.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", tangibleItem.value))
+                        else -> listOf(CompletionItem(CompletionItemKind.LITERAL, tangibleItem.value, "'$name'"))
+                    }
+                }
+
+                else -> error("Not supported subtype of TangibleItem: ${tangibleItem::class.simpleName}")
+            }
+        }
+    }
 
     protected fun provideForTerminalsAndConcatenations(concatenations: Set<Concatenation>, tangibles: Set<TangibleItem>) =
-        provideForConcatenations(concatenations) + provideForTerminals(tangibles)
+        provideForConcatenations(concatenations) + provideForTangibles(tangibles)
 
-    protected fun provideForTerminals(tangibles: Set<TangibleItem>): List<CompletionItem> {
+    protected fun provideForTangibles(tangibles: Set<TangibleItem>): List<CompletionItem> {
         return tangibles.flatMap { ri ->
             when {
                 ri.owningRule.isSkip -> emptyList() //make this an option to exclude skip stuff, this also needs to be extended/improved does not cover all cases
@@ -145,31 +171,6 @@ abstract class CompletionProviderAbstract<AsmType : Any, in ContextType> : Compl
         }
 
         else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
-    }
-
-
-    protected fun provideForTangible(tangibleItem: TangibleItem): List<CompletionItem> {
-        return when (tangibleItem) {
-            is NonTerminal -> { //must be a reference to leaf
-                val name = tangibleItem.ruleReference.value
-                val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
-                val text = refRule.compressedLeaf.value
-                listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", text))
-            }
-
-            is Terminal -> {
-                val name = when {
-                    tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
-                    else -> tangibleItem.value
-                }
-                when {
-                    tangibleItem.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", tangibleItem.value))
-                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL, tangibleItem.value, name))
-                }
-            }
-
-            else -> error("Not supported subtype of TangibleItem: ${tangibleItem::class.simpleName}")
-        }
     }
 
     private fun provideForRuleItem(item: RuleItem, desiredDepth: Int): List<CompletionItem> {

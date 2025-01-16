@@ -78,8 +78,8 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
     private var _scan: ScanOptions = base.scan
     private var _parse: ParseOptions = base.parse
     private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = base.syntaxAnalysis
-    private var _semanticAnalyser: SemanticAnalysisOptions< ContextType> = base.semanticAnalysis
-    private var _completionProvider: CompletionProviderOptions< ContextType> = base.completionProvider
+    private var _semanticAnalyser: SemanticAnalysisOptions<ContextType> = base.semanticAnalysis
+    private var _completionProvider: CompletionProviderOptions<ContextType> = base.completionProvider
 
     fun scan(init: ScanOptionsBuilder.() -> Unit) {
         val b = ScanOptionsBuilder(_scan)
@@ -165,9 +165,11 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
     fun buildScope(value: Boolean) {
         _buildScope = value
     }
+
     fun replaceIfItemAlreadyExistsInScope(value: Boolean) {
         _replaceIfItemAlreadyExistsInScope = value
     }
+
     fun ifItemAlreadyExistsInScopeIssueKind(value: LanguageIssueKind?) {
         _ifItemAlreadyExistsInScopeIssueKind = value
     }
@@ -184,8 +186,8 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
         _options[key] = value
     }
 
-    fun build(): SemanticAnalysisOptions< ContextType> {
-        return SemanticAnalysisOptionsDefault< ContextType>(
+    fun build(): SemanticAnalysisOptions<ContextType> {
+        return SemanticAnalysisOptionsDefault<ContextType>(
             _active,
             _locationMap,
             _context,
@@ -201,14 +203,19 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 
 @ProcessOptionsDslMarker
 class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
-    base:CompletionProviderOptions<ContextType>
+    base: CompletionProviderOptions<ContextType>
 ) {
 
     private var _context: ContextType? = base.context
+    private var _depth: Int? = base.depth
     private val _options = base.other.toMutableMap()
 
     fun context(value: ContextType?) {
         _context = value
+    }
+
+    fun depth(value: Int?) {
+        _depth = value
     }
 
     fun option(key: String, value: Any) {
@@ -216,6 +223,6 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun build(): CompletionProviderOptions<ContextType> {
-        return CompletionProviderOptionsDefault< ContextType>(_context, _options)
+        return CompletionProviderOptionsDefault<ContextType>(_context, _depth, _options)
     }
 }

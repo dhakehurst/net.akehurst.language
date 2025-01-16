@@ -49,9 +49,9 @@ class SemanticAnalyserSimple(
     override fun analyse(
         asm: Asm,
         locationMap: Map<Any, InputLocation>?,
-        context: ContextAsmSimple?,
         options: SemanticAnalysisOptions<ContextAsmSimple>
     ): SemanticAnalysisResult {
+        val context = options.context
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
         when {

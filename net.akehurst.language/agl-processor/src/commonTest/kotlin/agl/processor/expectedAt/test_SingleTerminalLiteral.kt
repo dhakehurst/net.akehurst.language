@@ -35,7 +35,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = ""
         val position = 0
-        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -54,7 +54,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = "a"
         val position = 0
-        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -73,7 +73,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = "a"
         val position = 1
-        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
 
         )

@@ -18,16 +18,14 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionItemKind
-import net.akehurst.language.api.processor.Spine
-import net.akehurst.language.api.processor.SpineNode
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -42,7 +40,8 @@ class CompletionProviderSimple(
     val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, context: ContextAsmSimple?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextAsmSimple>): List<CompletionItem> {
+        val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
             nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }.toSet()
                 .toList() //TODO: can we remove duplicates earlier!

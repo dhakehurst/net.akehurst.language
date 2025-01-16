@@ -55,7 +55,7 @@ class test_CompletionProviderSimple {
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
-            val actual = proc.expectedItemsAt(data.sentence, data.position, 0, Agl.options {
+            val actual = proc.expectedItemsAt(data.sentence, data.position,  Agl.options {
                 completionProvider {
                     context(data.context)
                 }
@@ -77,7 +77,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "a")
+            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'")
         )
         test(
             TestData(
@@ -150,9 +150,9 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "a"),
-            CompletionItem(CompletionItemKind.LITERAL, "b", "b"),
-            CompletionItem(CompletionItemKind.LITERAL, "c", "c")
+            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
+            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'")
         )
         test(
             TestData(

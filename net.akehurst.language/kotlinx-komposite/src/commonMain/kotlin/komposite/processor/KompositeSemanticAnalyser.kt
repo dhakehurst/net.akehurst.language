@@ -34,7 +34,7 @@ class KompositeSemanticAnalyser : SemanticAnalyser<TypeModel,Any> {
     }
 
 
-    override fun analyse(asm: TypeModel, locationMap: Map<Any, InputLocation>?, context: Any?, options: SemanticAnalysisOptions<Any>): SemanticAnalysisResult {
+    override fun analyse(asm: TypeModel, locationMap: Map<Any, InputLocation>?,options: SemanticAnalysisOptions<Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

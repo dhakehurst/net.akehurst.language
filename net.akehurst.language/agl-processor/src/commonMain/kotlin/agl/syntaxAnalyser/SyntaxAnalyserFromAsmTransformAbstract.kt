@@ -186,8 +186,15 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserFromAsmTransformAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<AsmType>)
-                val parentDownData = downStack.peek()!!
-                val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.trRule.forChildren.resolvedType.resolvedDeclaration, nodeInfo)
+                val parentPath = when {
+                    isRoot -> AsmPathSimple.ROOT + (asmFactory.rootList(asm).size).toString()
+                    else -> downStack.peek().path
+                }
+                val parentTr = when {
+                    isRoot -> syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(nodeInfo.node.rule.tag) ?: error("Type not found for ${nodeInfo.node.rule.tag}")
+                    else -> downStack.peek().trRule.forChildren
+                }
+                val p = syntaxAnalyserStack.peek().pathFor(parentPath, parentTr.resolvedType.resolvedDeclaration, nodeInfo)
                 val tu = syntaxAnalyserStack.peek().findTrRuleForGrammarRuleNamedOrNull(embRuleName)
                     ?: error("Type not found for $embRuleName")
                 val dd = resolveCompressed(p, tu, nodeInfo)

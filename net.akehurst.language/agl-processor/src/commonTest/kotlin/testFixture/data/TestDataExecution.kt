@@ -15,23 +15,14 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataPar
         is TestDataProcessorSentencePass -> when {
             null != sd.expectedAsm && null != sd.expectedCompletionItem -> error("Currently only supports testing either process or autocomplete, not both")
             null != sd.expectedAsm -> {
-                val asmRes = proc.process(sd.sentence, Agl.options {
-                    parse { goalRuleName(sd.goal) }
-                    semanticAnalysis {
-                        context(sd.context)
-                    }
-                })
+                val asmRes = proc.process(sd.sentence, sd.options)
                 assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
                 val actual = asmRes.asm!!
                 assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
             }
 
             null != sd.expectedCompletionItem -> {
-                val actual = proc.expectedItemsAt(sd.sentence, sd.sentence.length, 0, Agl.options {
-                    completionProvider {
-                        context(sd.context)
-                    }
-                })
+                val actual = proc.expectedItemsAt(sd.sentence, sd.sentence.length, sd.options)
                 assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
                 assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
                 assertEquals(sd.expectedCompletionItem.toSet(), actual.items.toSet())

@@ -20,13 +20,14 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatterModel
 
 class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatterModel, SentenceContext<String>>() {
 
-    override fun provide(nextExpected: Set<Spine>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext<String>>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap { sp ->
             sp.expectedNextLeafNonTerminalOrTerminal.flatMap { ri ->

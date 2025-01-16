@@ -1,17 +1,16 @@
 package testFixture.data
 
+import net.akehurst.language.agl.processor.ProcessOptionsDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.sentence.api.InputLocation
 //copied from parser
 interface TestDataParserSentence {
     val sentence: String
-    val goal:String
-    val context: ContextAsmSimple?
+    val options:ProcessOptions<Asm,ContextAsmSimple>
 }
 
 fun parseError(pos:Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
@@ -23,25 +22,23 @@ data class TestDataParseIssue(
     val nextExpected: Set<String>
 )
 
+/*
 open class TestDataParserSentencePass(
     override val sentence: String,
-    override val goal: String,
-    override val context: ContextAsmSimple?,
+    override val options:ProcessOptions<*,*>,
     val expectedNumGSSHeads: Int,
     val expectedSppt: List<String>
 ) : TestDataParserSentence
 
 class TestDataParserSentenceFail(
     override val sentence: String,
-    override val goal: String,
-    override val context: ContextAsmSimple?,
+    override val options:ProcessOptions<*,*>,
     val expectedIssues: Set<TestDataParseIssue>
 ) : TestDataParserSentence {
     val expected: Set<LanguageIssue> = expectedIssues.map {
         testFixture.utils.parseError(it.location,sentence, it.tryingFor, it.nextExpected)
     }.toSet()
 }
-
 
 class TestDataParser(
     val description: String,
@@ -50,6 +47,7 @@ class TestDataParser(
     val sentences: List<TestDataParserSentence>
 ) {
 }
+*/
 
 class TestSuit(
     val testData:List<TestDataProcessor>
@@ -73,8 +71,7 @@ interface TestDataProcessorSentence : TestDataParserSentence{
 
 class TestDataProcessorSentencePass(
     override val sentence: String,
-    override val goal: String,
-    override val context: ContextAsmSimple?,
+    override val options:ProcessOptions<Asm,ContextAsmSimple>,
     val expectedAsm: Asm?,
     val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
@@ -83,8 +80,7 @@ class TestDataProcessorSentencePass(
 
 class TestDataProcessorSentenceFail(
     override val sentence: String,
-    override val goal: String,
-    override val context: ContextAsmSimple?,
+    override val options:ProcessOptions<Asm,ContextAsmSimple>,
     val expected: List<LanguageIssue>
 ) : TestDataProcessorSentence {
 
@@ -139,8 +135,8 @@ class TestDataBuilder(
         _referenceStr = value
     }
 
-    fun sentencePass(sentence:String, goal:String, init:TestDataSentenceBuilder.()->Unit) {
-        val b = TestDataSentenceBuilder(true,sentence,goal)
+    fun sentencePass(sentence: String, init: TestDataSentenceBuilder.() -> Unit) {
+        val b = TestDataSentenceBuilder(true,sentence)
         b.init()
         val td =  b.build()
         _sentences.add(td)
@@ -159,16 +155,21 @@ class TestDataBuilder(
 @AsmTestDataBuilderMarker
 class TestDataSentenceBuilder(
     val pass:Boolean,
-    val sentence: String,
-    val goal:String
+    val sentence: String
 )  {
+    private var _options:ProcessOptions<Asm,ContextAsmSimple> = ProcessOptionsDefault()
     private var _context:ContextAsmSimple? = null
     private var _expectedAsm:Asm? = null
     private var _expectedCompletionItems:List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
 
+    fun options(value:ProcessOptions<Asm,ContextAsmSimple>) {
+        _options = value
+    }
+
     fun context(value:ContextAsmSimple) {
-        _context = value
+        _options.semanticAnalysis.context = value
+        _options.completionProvider.context = value
     }
 
     fun expectedIssues(value: List<LanguageIssue>) {
@@ -186,15 +187,13 @@ class TestDataSentenceBuilder(
     fun build() = when(pass) {
         true -> TestDataProcessorSentencePass(
             sentence,
-            goal,
-            _context,
+            _options,
             _expectedAsm,
             _expectedCompletionItems
         )
         false -> TestDataProcessorSentenceFail(
             sentence,
-            goal,
-            _context,
+            _options,
             _expectedIssues
         )
     }

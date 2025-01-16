@@ -26,7 +26,7 @@ class test_Concatination_with_skip {
         val grammarStr = """
             namespace test
             grammar Test {
-                skip WS = "\\s+" ;
+                skip WS = "\s+" ;
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
@@ -38,7 +38,7 @@ class test_Concatination_with_skip {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -50,7 +50,7 @@ class test_Concatination_with_skip {
         val sentence = " "
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -62,7 +62,7 @@ class test_Concatination_with_skip {
         val sentence = " "
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -74,7 +74,7 @@ class test_Concatination_with_skip {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -86,7 +86,7 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -98,7 +98,7 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -110,9 +110,9 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a"
+            "b"
         )
         assertEquals(expected, actual)
     }
@@ -122,7 +122,7 @@ class test_Concatination_with_skip {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "b"
         )
@@ -134,7 +134,7 @@ class test_Concatination_with_skip {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "b"
         )
@@ -146,7 +146,7 @@ class test_Concatination_with_skip {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "c"
         )

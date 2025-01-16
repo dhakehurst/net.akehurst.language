@@ -57,24 +57,23 @@ class ReferencesSemanticAnalyser(
     override fun analyse(
         asm: CrossReferenceModel,
         locationMap: Map<Any, InputLocation>?,
-        context: ContextFromTypeModel?,
         options: SemanticAnalysisOptions< ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
-        _context = context
+        _context = options.context
 
 
-        if (null != context) {
+        if (null != _context) {
             asm.declarationsForNamespace.values.forEach {
                 val importedNamespaces = it.importedNamespaces.mapNotNull { impNs ->
-                    val ns = context.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
+                    val ns = _context!!.typeModel.findNamespaceOrNull(impNs.asQualifiedName)
                     when (ns) {
                         null -> raiseError(it, "Namespace to import not found")
                     }
                     ns
                 }
 
-                val ns = context.typeModel.findNamespaceOrNull(it.namespace.qualifiedName)
+                val ns = _context!!.typeModel.findNamespaceOrNull(it.namespace.qualifiedName)
                 when (ns) {
                     null -> issues.raise(
                         LanguageIssueKind.ERROR,

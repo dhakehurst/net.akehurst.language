@@ -550,22 +550,22 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result0 = pr.processor!!.parse("")
         assertEquals(null, result0.sppt)
-        val expIssues0 = setOf(parseError( InputLocation(0, 1, 1, 1), "", setOf(), setOf("'a'")))
+        val expIssues0 = setOf(parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues0, result0.issues.all)
 
         val result1 = pr.processor!!.parse("a")
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("aa");
         assertEquals(null, result2.sppt)
-        val expIssues2 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(2, 3, 1, 1), "aa^", setOf("'a'")))
+        val expIssues2 = setOf(parseError(InputLocation(2, 3, 1, 1), "aa", setOf("'a'"), setOf("'a'")))
         assertEquals(expIssues2, result2.issues.all)
 
         val result3 = pr.processor!!.parse("aaa");
         assertEquals(null, result3.sppt)
-        val expIssues3 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(3, 4, 1, 1), "aaa^", setOf("'a'")))
+        val expIssues3 = setOf(parseError(InputLocation(3, 4, 1, 1), "aaa", setOf("'a'"), setOf("'a'")))
         assertEquals(expIssues3, result3.issues.all)
 
         val result4 = pr.processor!!.parse("aaaa");
@@ -581,7 +581,7 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result5 = pr.processor!!.parse("aaaaa");
         assertEquals(null, result5.sppt)
-        val expIssues5 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1), "aaaa^a", setOf("<EOT>")))
+        val expIssues5 = listOf(parseError(InputLocation(4, 5, 1, 1), "aaaaa", setOf("'a'"),setOf("<EOT>")))
         assertEquals(expIssues5, result5.issues.errors)
     }
 
@@ -600,12 +600,12 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result0 = pr.processor!!.parse("")
         assertEquals(null, result0.sppt)
-        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        val expIssues0 = setOf(parseError(InputLocation(0, 1, 1, 1), "",setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues0, result0.issues.all)
 
         val result1 = pr.processor!!.parse("a")
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"),setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("aa");
@@ -646,12 +646,12 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result0 = pr.processor!!.parse("")
         assertEquals(null, result0.sppt)
-        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        val expIssues0 = setOf(parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"),setOf("'a'")))
         assertEquals(expIssues0, result0.issues.all)
 
         val result1 = pr.processor!!.parse("a")
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"),setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("aa");
@@ -692,12 +692,12 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result0 = pr.processor!!.parse("")
         assertEquals(null, result0.sppt)
-        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        val expIssues0 = setOf(parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"),setOf("'a'")))
         assertEquals(expIssues0, result0.issues.all)
 
         val result1 = pr.processor!!.parse("a")
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"),setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("aa");
@@ -738,12 +738,12 @@ class test_Agl_processorFromStringSimple_parse {
 
         val result0 = pr.processor!!.parse("")
         assertEquals(null, result0.sppt)
-        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        val expIssues0 = setOf(parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues0, result0.issues.all)
 
         val result1 = pr.processor!!.parse("a")
         assertEquals(null, result1.sppt)
-        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        val expIssues1 = setOf(parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("'a'")))
         assertEquals(expIssues1, result1.issues.all)
 
         val result2 = pr.processor!!.parse("aa")
@@ -954,7 +954,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "",setOf("<GOAL>"), setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -997,7 +997,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "",setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1005,7 +1005,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+                parseError(InputLocation(1, 2, 1, 1), "a",setOf("<GOAL>"), setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -1048,7 +1048,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "",setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1056,7 +1056,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+                parseError(InputLocation(1, 2, 1, 1), "a",setOf("<GOAL>"), setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -1084,7 +1084,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result6.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(5, 6, 1, 1), "aaaaa^a", setOf("<EOT>"))
+                parseError(InputLocation(5, 6, 1, 1), "aaaaaa", setOf("a"),setOf("<EOT>"))
             ), result6.issues.all
         )
 
@@ -1108,7 +1108,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"),setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1116,7 +1116,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+                parseError(InputLocation(1, 2, 1, 1), "a",setOf("<GOAL>"), setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -1159,7 +1159,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "",setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1167,7 +1167,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"),setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -1195,7 +1195,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result6.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(5, 6, 1, 1), "aaaaa^a", setOf("<EOT>"))
+                parseError(InputLocation(5, 6, 1, 1), "aaaaaa",setOf("a"), setOf("<EOT>"))
             ), result6.issues.all
         )
 
@@ -1239,7 +1239,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result2.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1), "aa",setOf("<GOAL>"), setOf("<EOT>"))
             ), result2.issues.all
         )
     }
@@ -1307,7 +1307,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"),setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1350,7 +1350,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1358,7 +1358,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("','"))
             ), result1.issues.all
         )
 
@@ -1402,7 +1402,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1410,7 +1410,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("','"))
             ), result1.issues.all
         )
 
@@ -1438,7 +1438,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result6.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(9, 10, 1, 1), "a,a,a,a,a^,a", setOf("<EOT>"))
+                parseError(InputLocation(9, 10, 1, 1), "a,a,a,a,a,a", setOf("a"), setOf("<EOT>"))
             ), result6.issues.all
         )
     }
@@ -1456,12 +1456,7 @@ class test_Agl_processorFromStringSimple_parse {
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
         val expected = listOf(
-            LanguageIssue(
-                kind = LanguageIssueKind.ERROR, phase = LanguageProcessorPhase.PARSE,
-                location = InputLocation(position = 53, column = 24, line = 3, length = 1),
-                message = ".../ ',' ]2..^0 ;\n    a ...",
-                data = setOf("POSITIVE_INTEGER_GT_ZERO")
-            )
+            parseError(InputLocation(position = 53, column = 24, line = 3, length = 1), grammarStr, setOf("rangeUnBraced"), setOf("POSITIVE_INTEGER_GT_ZERO"))
         )
 
         assertEquals(expected, pr.issues.errors, pr.issues.toString())
@@ -1485,7 +1480,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1493,7 +1488,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("','"))
             ), result1.issues.all
         )
 
@@ -1537,7 +1532,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result0.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'"))
             ), result0.issues.all
         )
 
@@ -1545,7 +1540,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("','"))
             ), result1.issues.all
         )
 
@@ -1573,7 +1568,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result6.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(9, 10, 1, 1), "a,a,a,a,a^,a", setOf("<EOT>"))
+                parseError(InputLocation(9, 10, 1, 1), "a,a,a,a,a,a", setOf("a"), setOf("<EOT>"))
             ), result6.issues.all
         )
     }
@@ -1606,12 +1601,12 @@ class test_Agl_processorFromStringSimple_parse {
             )
         )
 
-        val sentence3 ="b"
+        val sentence3 = "b"
         val result3 = pr.processor!!.parse(sentence3)
         assertEquals(null, result3.sppt)
         assertEquals(
             setOf(
-                parseError( InputLocation(0, 1, 1, 1), sentence3, setOf("<GOAL>"), setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), sentence3, setOf("<GOAL>"), setOf("'a'"))
             ), result3.issues.all
         )
 
@@ -1619,7 +1614,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result4.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^c", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "c", setOf("<GOAL>"), setOf("'a'"))
             ), result4.issues.all
         )
 
@@ -1672,7 +1667,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "", setOf("<GOAL>"), setOf("'a'"))
             ), result1.issues.all
         )
 
@@ -1680,7 +1675,7 @@ class test_Agl_processorFromStringSimple_parse {
         assertEquals(null, result1.sppt)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("b"))
+                parseError(InputLocation(1, 2, 1, 1), "a", setOf("<GOAL>"), setOf("b"))
             ), result2.issues.all
         )
 

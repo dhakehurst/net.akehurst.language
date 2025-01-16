@@ -37,7 +37,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceCo
 //    }
 
     override fun analyse(
-        asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?,
+        asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions< SentenceContext<String>>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))

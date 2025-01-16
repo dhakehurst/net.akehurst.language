@@ -21,7 +21,7 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("a", "S") {
+                sentencePass("a") {
                     expectedAsm(asmSimple {
                         element("S") {
                             propertyString("a", "a")
@@ -46,7 +46,7 @@ class test_ProvidedTransform {
                     namespace test
                 """.trimIndent()
                 )
-                sentencePass("a", "S") {
+                sentencePass("a") {
                     expectedAsm(asmSimple {
                         element("S") {
                             propertyString("a", "a")
@@ -73,7 +73,7 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("a", "S") {
+                sentencePass("a") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyString("yyy", "a")
@@ -104,7 +104,7 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("aa", "S") {
+                sentencePass("aa") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "A") {
@@ -114,7 +114,7 @@ class test_ProvidedTransform {
                         }
                     })
                 }
-                sentencePass("bb", "S") {
+                sentencePass("bb") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
@@ -144,7 +144,7 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("a", "S") {
+                sentencePass("a") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyString("a", "a")
@@ -176,14 +176,14 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("aa", "S") {
+                sentencePass("aa") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
                     })
                 }
-                sentencePass("bb", "S") {
+                sentencePass("bb") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
@@ -217,14 +217,14 @@ class test_ProvidedTransform {
                       }
                 """.trimIndent()
                 )
-                sentencePass("aa", "S") {
+                sentencePass("aa") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
                     })
                 }
-                sentencePass("bb", "S") {
+                sentencePass("bb") {
                     expectedAsm(asmSimple {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
@@ -263,12 +263,12 @@ class test_ProvidedTransform {
                         }
                 """
                 )
-                sentencePass("d", "S") {
+                sentencePass("d") {
                     expectedAsm(asmSimple() {
                         string("d")
                     })
                 }
-                sentencePass("babd", "S") {
+                sentencePass("babd") {
                     expectedAsm(asmSimple {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
@@ -278,7 +278,7 @@ class test_ProvidedTransform {
                         }
                     })
                 }
-                sentencePass("cacd", "S") {
+                sentencePass("cacd") {
                     expectedAsm(asmSimple() {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
@@ -288,7 +288,7 @@ class test_ProvidedTransform {
                         }
                     })
                 }
-                sentencePass("baaaabd", "S") {
+                sentencePass("baaaabd") {
                     expectedAsm(asmSimple {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
@@ -341,12 +341,12 @@ class test_ProvidedTransform {
                         }
                 """.replace("§", "$")
                 )
-                sentencePass("d", "S") {
+                sentencePass("d") {
                     expectedAsm(asmSimple() {
                         string("d")
                     })
                 }
-                sentencePass("babd", "S") {
+                sentencePass("babd") {
                     expectedAsm(asmSimple {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
@@ -356,7 +356,7 @@ class test_ProvidedTransform {
                         }
                     })
                 }
-                sentencePass("cacd", "S") {
+                sentencePass("cacd") {
                     expectedAsm(asmSimple() {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
@@ -366,7 +366,7 @@ class test_ProvidedTransform {
                         }
                     })
                 }
-                sentencePass("baaaabd", "S") {
+                sentencePass("baaaabd") {
                     expectedAsm(asmSimple {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {

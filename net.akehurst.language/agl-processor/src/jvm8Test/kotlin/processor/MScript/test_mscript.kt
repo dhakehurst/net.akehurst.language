@@ -22,10 +22,8 @@ import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
+import testFixture.utils.parseError
 import kotlin.test.*
 
 class test_mscript {
@@ -333,10 +331,7 @@ class test_mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         val expIssues = listOf(
-            LanguageIssue(
-                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^1",
-                setOf("REAL")
-            )
+            parseError(InputLocation(0, 1, 1, 1), text, setOf("<GOAL>"), setOf("REAL"))
         )
         assertNull(result.sppt)
         assertEquals(expIssues, result.issues.errors)

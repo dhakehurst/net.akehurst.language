@@ -51,5 +51,6 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
+    override var depth: Int? = null,
     override val other: Map<String, Any> = mutableMapOf()
 ) : CompletionProviderOptions<ContextType>

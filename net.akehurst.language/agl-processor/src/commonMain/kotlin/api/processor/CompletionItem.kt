@@ -34,11 +34,11 @@ data class CompletionItem(
 }
 
 interface SpineNode {
-    val rule:GrammarRule
+    val rule: GrammarRule
     val nextChildNumber: Int
-    val nextExpectedItem:RuleItem
-    val expectedNextLeafNonTerminalOrTerminal:Set<TangibleItem>
-    val nextExpectedConcatenation:Set<Concatenation>
+    val nextExpectedItem: RuleItem
+    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    val nextExpectedConcatenation: Set<Concatenation>
 }
 
 interface Spine {
@@ -48,6 +48,6 @@ interface Spine {
     val nextChildNumber: Int
 }
 
-interface CompletionProvider<AsmType:Any, in ContextType> {
-    fun provide(nextExpected: Set<Spine>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
+interface CompletionProvider<AsmType : Any, ContextType : Any> {
+    fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem>
 }

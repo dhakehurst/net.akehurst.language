@@ -99,7 +99,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processors[grammar].expectedTerminalsAt(sentence, 0, 1, Agl.options {
+        val actual = processors[grammar].expectedTerminalsAt(sentence, 0,  Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -115,7 +115,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
-        val actual = processors[(grammar)].expectedTerminalsAt(sentence, 6, 1, Agl.options {
+        val actual = processors[(grammar)].expectedTerminalsAt(sentence, 6,  Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -134,7 +134,7 @@ class test_StatechartTools_CodeCompletion {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
-        val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+        val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length,  Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)
@@ -159,7 +159,7 @@ class test_StatechartTools_CodeCompletion {
         val context = contextAsmSimple {
             item("int", "external.BultInType", AsmPathSimple.EXTERNAL.value)
         }
-        val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length, 1, Agl.options {
+        val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length,  Agl.options {
             parse {
                 goalRuleName(goal)
                 //reportErrors(false)

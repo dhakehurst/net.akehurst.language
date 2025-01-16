@@ -18,15 +18,13 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionItemKind
-import net.akehurst.language.api.processor.CompletionProvider
-import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.typemodel.api.TypeInstance
@@ -36,14 +34,15 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     companion object {
         private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
         private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
-        private val aglGrammarNamespace: GrammarTypeNamespace
-            get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
+        private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
         private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
         private val aglStyleTypeModel = Agl.registry.agl.style.processor!!.typeModel
-        private val aglStyleNamespace: GrammarTypeNamespace
-            get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")
+        private val aglStyleNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")
 
+        private val aglBaseQualifiedName = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
+        //private val aglBaseTypeModel = Agl.registry.agl.base.processor!!.typeModel
+        private val aglBaseNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglBaseQualifiedName) as GrammarTypeNamespace? ?: error("")
 
         //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
         private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
@@ -56,7 +55,8 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 //        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
     }
 
-    override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammar?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromGrammar>): List<CompletionItem> {
+        val context = options.context
         return if (null == context) {
             emptyList()
         } else {
@@ -66,7 +66,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
     }
 
     private fun provideForTerminalItem(nextExpected: RuleItem, context: ContextFromGrammar): List<CompletionItem> {
-        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name) ?: error("Should not be null")
+        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
+            ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
+            ?: error("Should not be null")
         return when (nextExpected.owningRule.name) {
             GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, context)
             GrammarRuleName("PATTERN") -> PATTERN(nextExpected, itemType, context)

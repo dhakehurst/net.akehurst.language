@@ -18,15 +18,17 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.reference.api.CrossReferenceModel
 
-class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceModel, SentenceContext<String>>() {
+class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceModel, ContextFromTypeModel>() {
 
-    override fun provide(nextExpected: Set<Spine>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromTypeModel>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap { sp ->
             sp.expectedNextLeafNonTerminalOrTerminal.flatMap { ri ->

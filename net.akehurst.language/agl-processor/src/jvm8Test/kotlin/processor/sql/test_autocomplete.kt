@@ -16,19 +16,14 @@
 
 package net.akehurst.language.test.processor.sql
 
-import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
-import net.akehurst.language.api.processor.ProcessOptions
-import net.akehurst.language.asm.api.Asm
 import org.junit.Test
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit
 import testFixture.data.testSuit
-import kotlin.test.assertEquals
 
 class test_autocomplete {
 
@@ -39,7 +34,7 @@ class test_autocomplete {
         val testSuit = testSuit {
             testData("With grammar only") {
                 grammarStr(grammarStr)
-                sentencePass("", "statementList") {
+                sentencePass("") {
                     context(ContextAsmSimple())
                     expectedCompletionItems(
                         listOf(
@@ -52,7 +47,7 @@ class test_autocomplete {
                         )
                     )
                 }
-                sentencePass("SELECT ", "statementList") {
+                sentencePass("SELECT ") {
                     context(ContextAsmSimple())
                     expectedCompletionItems(
                         listOf(
@@ -64,7 +59,7 @@ class test_autocomplete {
             }
             testData("With grammar & context") {
                 grammarStr(grammarStr)
-                sentencePass("SELECT * FROM ", "statementList") {
+                sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
                         item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
                     })
@@ -74,7 +69,7 @@ class test_autocomplete {
                         )
                     )
                 }
-                sentencePass("SELECT ", "statementList") {
+                sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         item("col1", "net.akehurst.language.sql.Column", "")
                     })
@@ -89,7 +84,7 @@ class test_autocomplete {
             testData("With grammar, reference and context") {
                 grammarStr(grammarStr)
                 referenceStr(referenceStr)
-                sentencePass("SELECT * FROM ", "statementList") {
+                sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
                         item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
                         item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", "")
@@ -101,7 +96,7 @@ class test_autocomplete {
                         )
                     )
                 }
-                sentencePass("SELECT ", "statementList") {
+                sentencePass("SELECT ") {
                     context(contextAsmSimple {
                         item("col1", "net.akehurst.language.sql.Column", "")
                     })
@@ -117,7 +112,7 @@ class test_autocomplete {
             testData("With Reference & Autocomplete file") {
                 grammarStr(grammarStr)
                 referenceStr(referenceStr)
-                sentencePass("", "statementList") {
+                sentencePass("") {
                     context(ContextAsmSimple())
                     expectedCompletionItems(
                         listOf(

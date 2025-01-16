@@ -21,11 +21,12 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 
 class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, ContextFromGrammarRegistry>() {
 
-    override fun provide(nextExpected: Set<Spine>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromGrammarRegistry>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }
             .toSet()

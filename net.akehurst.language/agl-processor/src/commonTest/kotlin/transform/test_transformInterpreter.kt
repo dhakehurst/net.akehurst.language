@@ -17,7 +17,6 @@
 
 package net.akehurst.language.transform.processor
 
-import agl.simple.test_ProvidedTransform
 import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest
 import testFixture.data.testSuit
@@ -37,7 +36,7 @@ class test_transformInterpreter {
                         leaf name = "[a-zA-Z]+" ;
                     }
                 """)
-                sentencePass("block AA { a a a  }", "S") {
+                sentencePass("block AA { a a a  }") {
                     expectedAsm(asmSimple {
                         element("S") {
                             propertyString("name","AA")
@@ -73,7 +72,7 @@ class test_transformInterpreter {
                         listOfA: §matchedText as String
                     }
                 """.replace("§","$"))
-                sentencePass("block AA { a a a  }", "S") {
+                sentencePass("block AA { a a a  }") {
                     expectedAsm(asmSimple {
                         element("S") {
                             propertyString("name","AA")

@@ -27,6 +27,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import testFixture.utils.parseError
 import kotlin.test.*
 
 class test_SysML_agl_Singles {
@@ -159,11 +160,7 @@ class test_SysML_agl_Singles {
         """.trimIndent()
 
         val expIssues = setOf(
-            LanguageIssue(
-                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE,
-                InputLocation(0, 1, 1, 1),
-                "^)", null
-            )
+            parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf())
         )
 
         test_parse(sentence, expIssues)

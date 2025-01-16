@@ -82,12 +82,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     override fun analyse(
         asm: TransformModel,
         locationMap: Map<Any, InputLocation>?,
-        context: ContextFromGrammarAndTypeModel?,
         options: SemanticAnalysisOptions<ContextFromGrammarAndTypeModel>
     ): SemanticAnalysisResult {
-        _context = context
+        _context = options.context
         __asm = asm
-        if (null == context) {
+        if (null == _context) {
             _issues.warn(null, "No context, semantic analysis cannot be performed")
         } else {
             (asm as TransformDomainDefault).typeModel = _typeModel

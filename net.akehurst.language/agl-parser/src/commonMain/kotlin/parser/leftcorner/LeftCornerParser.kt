@@ -272,7 +272,7 @@ class LeftCornerParser(
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpine> {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
-        val usedText = sentenceText.substring(0, position)
+        val usedText = sentenceText.substring(0, position) // parse from start (0) to position - ignore rest of text
         scanner.reset()
         val rp = createRuntimeParser(SentenceDefault(usedText), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp

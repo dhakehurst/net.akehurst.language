@@ -45,7 +45,6 @@ class ExpressionsSemanticAnalyser(
     override fun analyse(
         asm: Expression,
         locationMap: Map<Any, InputLocation>?,
-        context: SentenceContext<String>?,
         options: SemanticAnalysisOptions< SentenceContext<String>>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(issues)

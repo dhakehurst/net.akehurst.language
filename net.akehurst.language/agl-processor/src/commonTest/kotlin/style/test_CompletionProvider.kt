@@ -39,7 +39,7 @@ class test_CompletionProvider {
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<CompletionItem>) {
             val testGrammar = grammarFor(grammarStr)
             val context = ContextFromGrammar.createContextFrom(testGrammar)
-            val actual = aglProc.expectedItemsAt(sentence, position, 0, Agl.options {
+            val actual = aglProc.expectedItemsAt(sentence, position,  Agl.options {
                 completionProvider {
                     context(context)
                 }
@@ -49,7 +49,6 @@ class test_CompletionProvider {
             assertEquals(expected.toSet(), actual.items.toSet())
         }
     }
-
 
     @Test
     fun atStart() {

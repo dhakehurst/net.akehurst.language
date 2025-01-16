@@ -36,7 +36,6 @@ interface SemanticAnalyser<in AsmType : Any, ContextType : Any> {
     fun analyse(
         asm: AsmType,
         locationMap: Map<Any, InputLocation>? = null,
-        context: ContextType? = null,
         options: SemanticAnalysisOptions<ContextType>
     ): SemanticAnalysisResult
 }
