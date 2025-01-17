@@ -88,7 +88,7 @@ interface TransformationRule {
     val resolvedType: TypeInstance
 
     fun resolveTypeAs(type: TypeInstance)
-    fun asString(indent: Indent, imports: List<Import>): String
+    fun asString(indent: Indent = Indent(), imports: List<Import> = emptyList()): String
 }
 
 interface CreateObjectRule : TransformationRule {

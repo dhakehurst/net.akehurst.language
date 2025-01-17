@@ -19,10 +19,10 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.grammar.api.*
 
 enum class CompletionItemKind {
-    REFERRED,
-    SEGMENT,
+    PATTERN,
     LITERAL,
-    PATTERN
+    SEGMENT,
+    REFERRED,
 }
 
 data class CompletionItem(

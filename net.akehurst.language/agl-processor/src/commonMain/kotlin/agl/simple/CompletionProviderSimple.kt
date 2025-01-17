@@ -62,7 +62,7 @@ class CompletionProviderSimple(
             }
             items.toSet().toList() //TODO: can we remove duplicates earlier!
         }
-        return result.sortedBy { it.kind }
+        return defaultSortAndFilter(result)
     }
 
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)

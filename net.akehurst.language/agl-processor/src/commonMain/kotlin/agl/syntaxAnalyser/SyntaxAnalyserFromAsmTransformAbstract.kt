@@ -28,6 +28,7 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.asValueName
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.MutableStack
@@ -598,7 +599,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         _trf.clear()
         val asm = _trf.evaluate(evc, downData.path, tr)
         _trf.issues.forEach {
-            super.issues.error(null, "Error evaluating transformation rule: ${it.message}")
+            super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
         }
         return asm
     }

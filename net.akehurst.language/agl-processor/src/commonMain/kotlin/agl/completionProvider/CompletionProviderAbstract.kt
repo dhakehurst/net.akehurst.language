@@ -63,9 +63,10 @@ internal class SpineDefault(
 
     override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> by lazy {
         //elements[0].expectedNextLeafNonTerminalOrTerminal
+        //TODO: use the above but stop it recursing for ever
         runtimeSpine.expectedNextTerminals.map {
             val rr = it as RuntimeRule
-            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as TangibleItem
         }.toSet()
     }
 
@@ -106,8 +107,31 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
     companion object {
 
-        fun provideDefault(depth:Int, spine: Spine) =
-            provideForRuleItem(depth,spine.expectedNextRuleItem) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
+        fun defaultSortAndFilter(items: List<CompletionItem>): List<CompletionItem> {
+            val grouped = items.groupBy { it.text }
+            val filtered = grouped.map {
+                val list = it.value
+                when (list.size) {
+                    0 -> error("should not happen")
+                    1 -> list.first()
+                    else -> list.firstOrNull { it.kind == CompletionItemKind.REFERRED }
+                        ?: list.firstOrNull { it.kind == CompletionItemKind.LITERAL }
+                        ?: list.firstOrNull { it.kind == CompletionItemKind.PATTERN }
+                        ?: list.first()
+                }
+            }
+            val sorted = filtered.sortedWith(
+                compareByDescending(CompletionItem::kind)
+                    .thenBy(CompletionItem::label)
+                    .thenByDescending({ it.text.length })
+                    .thenByDescending(CompletionItem::text)
+            )
+            return sorted
+        }
+
+        fun provideDefault(depth: Int, spine: Spine): List<CompletionItem> {
+            return provideForRuleItem(depth, spine.expectedNextRuleItem) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
+        }
 
         fun provideForConcatenations(depth: Int, concatenations: Set<Concatenation>): List<CompletionItem> = when (depth) {
             0 -> emptyList()
@@ -159,7 +183,8 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                                 val expName = nameFunc.invoke(exp)
                                 results.map {
                                     when {
-                                        it.list.isBlank() -> Expansion(it.name ?: expName, exp.list)
+                                        exp.list.isBlank() -> it // do not concat blank/empty items
+                                        it.list.isBlank() -> Expansion(it.name ?: expName, exp.list) // first item
                                         else -> Expansion(it.name ?: expName, "${it.list} ${exp.list}")
                                     }
                                 }
@@ -265,10 +290,8 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
     }
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-        return nextExpected.flatMap { sp -> provideDefault(options.depth, sp) }
-            .toSet()
-            .toList()
-            .sortedBy { it.kind }
+        val items = nextExpected.flatMap { sp -> provideDefault(options.depth, sp) }
+        return defaultSortAndFilter(items)
     }
 
     private fun provideForRuleItem(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
