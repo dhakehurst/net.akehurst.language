@@ -31,6 +31,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
             override val isPattern: Boolean
         ) : Terminal, RuleItemAbstract() {
 
+            override val isLiteral: Boolean get() = isPattern.not()
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()

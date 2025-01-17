@@ -285,6 +285,7 @@ interface Terminal : TangibleItem {
      * id of the terminal is its value encosed in '' or ""
      */
     val id: String
+    val isLiteral: Boolean
     val isPattern: Boolean
     val value: String
 }

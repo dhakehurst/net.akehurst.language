@@ -233,6 +233,8 @@ class TerminalDefault(
 
     override val id: String = if (isPattern) "\"$value\"" else "'${value}'"
 
+    override val isLiteral: Boolean get() = isPattern.not()
+
     override val allTerminal: Set<Terminal> get() = setOf(this) //emptySet()
 
     override val allNonTerminal: Set<NonTerminal> get() = emptySet()

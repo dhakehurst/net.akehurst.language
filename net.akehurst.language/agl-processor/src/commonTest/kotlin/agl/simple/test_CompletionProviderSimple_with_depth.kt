@@ -66,7 +66,6 @@ class test_CompletionProviderSimple_with_depth {
             }
         """
 
-
         val testSuit = testSuit {
             testData("Concats 0") {
                 grammarStr(grammarStrConcat)
@@ -139,11 +138,11 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<A> .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<B> .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<C> .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<D> .", "DEFp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<EF> .", "DEFp"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<A> .", "A"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<B> .", "B"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<C> .", "C"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<D> .", "D"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<EF> .", "EF"),
                             CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
                             CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
                             CompletionItem(CompletionItemKind.LITERAL, "c", "'c'"),
@@ -159,11 +158,11 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(3) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "a .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "b .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "c .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "d .", "DEFp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<E> <F> .", "DEFp"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "a .", "A"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "b .", "B"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "c .", "C"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "d .", "D"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "<E> <F> .", "EF"),
                             CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
                             CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
                             CompletionItem(CompletionItemKind.LITERAL, "c", "'c'"),
@@ -175,9 +174,15 @@ class test_CompletionProviderSimple_with_depth {
             }
             testData("Recursive 1") {
                 grammarStr(grammarStrRecursive)
-               sentencePass("") {
-
-               }
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(2) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "<A> . <BC> <DE> <F> .", "S"),
+                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                        )
+                    )
+                }
             }
         }
 
@@ -187,5 +192,5 @@ class test_CompletionProviderSimple_with_depth {
     fun all() = executeTestSuit(testSuit)
 
     @Test
-    fun single() = doTest(testSuit["Choice 3"])
+    fun single() = doTest(testSuit["Concats 2"])
 }

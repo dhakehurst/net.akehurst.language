@@ -138,13 +138,18 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     is Concatenation -> {
                         //FIXME: SPACE may not be valid skip rule !
                         var results = listOf<Expansion>( Expansion(null,""))
+                        val nameFunc = when {
+                            item.items.count { (it is Terminal && it.isLiteral).not() } > 1 -> { exp:Expansion -> null }
+                            else -> { exp:Expansion -> exp.name }
+                        }
                         for (it in item.items) {
                             val expand = expand(depth, it)
                             val newResults = expand.flatMap { exp ->
+                                val expName = nameFunc.invoke(exp)
                                 results.map {
                                     when {
-                                        it.list.isBlank() -> exp
-                                        else ->  Expansion(null,"${it.list} ${exp.list}")
+                                        it.list.isBlank() -> Expansion(it.name?:expName,exp.list)
+                                        else ->  Expansion(it.name?:expName,"${it.list} ${exp.list}")
                                     }
                                 }
                             }
