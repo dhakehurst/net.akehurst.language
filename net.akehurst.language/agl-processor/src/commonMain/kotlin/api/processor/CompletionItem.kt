@@ -27,8 +27,8 @@ enum class CompletionItemKind {
 
 data class CompletionItem(
     val kind: CompletionItemKind,
-    val text: String,
-    val label: String
+    val label: String,
+    val text: String
 ) {
     var description: String = ""
 }
@@ -43,7 +43,7 @@ interface SpineNode {
 
 interface Spine {
     val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
-    val expectedNextConcatenation: Set<Concatenation>
+    val expectedNextRuleItem: RuleItem
     val elements: List<SpineNode>
     val nextChildNumber: Int
 }

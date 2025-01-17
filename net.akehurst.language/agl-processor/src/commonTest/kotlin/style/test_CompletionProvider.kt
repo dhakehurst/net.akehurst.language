@@ -60,9 +60,9 @@ class test_CompletionProvider {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
-            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -77,9 +77,9 @@ class test_CompletionProvider {
         """
         val sentence = "S"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, ",", "selectorAndComposition"),
-            CompletionItem(CompletionItemKind.LITERAL, "{", "rule"),
-            CompletionItem(CompletionItemKind.SEGMENT, "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}", "rule"),
+            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
+            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -94,9 +94,9 @@ class test_CompletionProvider {
         """
         val sentence = "S,"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
-            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -111,11 +111,11 @@ class test_CompletionProvider {
         """
         val sentence = "S {"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "foreground", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "background", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "font-style", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "}", "rule"),
-            CompletionItem(CompletionItemKind.SEGMENT, "<STYLE_ID>: <STYLE_VALUE>;", "style"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -130,7 +130,7 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, ":", "style"),
+            CompletionItem(CompletionItemKind.LITERAL, "style", ":"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -145,9 +145,9 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground:"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "<colour>", "STYLE_VALUE"),
-            CompletionItem(CompletionItemKind.LITERAL, "bold", "STYLE_VALUE"),
-            CompletionItem(CompletionItemKind.LITERAL, "italic", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -162,9 +162,9 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground: "
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "<colour>", "STYLE_VALUE"),
-            CompletionItem(CompletionItemKind.LITERAL, "bold", "STYLE_VALUE"),
-            CompletionItem(CompletionItemKind.LITERAL, "italic", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -179,7 +179,7 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground: blue"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, ";", "style"),
+            CompletionItem(CompletionItemKind.LITERAL, "style", ";"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -194,11 +194,11 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground: blue;"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "foreground", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "background", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "font-style", "STYLE_ID"),
-            CompletionItem(CompletionItemKind.LITERAL, "}", "rule"),
-            CompletionItem(CompletionItemKind.SEGMENT, "<STYLE_ID>: <STYLE_VALUE>;", "style"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -213,9 +213,9 @@ class test_CompletionProvider {
         """
         val sentence = "S { foreground: blue; }"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
-            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
-            CompletionItem(CompletionItemKind.LITERAL, AglStyleModelDefault.KEYWORD_STYLE_ID.value, "META_IDENTIFIER"),
+            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

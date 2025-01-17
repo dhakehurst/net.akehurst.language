@@ -73,7 +73,7 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(0) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
                 }
@@ -84,8 +84,8 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(1) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<ABC> <DEF>", "S"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<ABC> <DEF>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
                 }
@@ -96,8 +96,8 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<A> . <BC> <DE> <F> .", "S"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "<A> . <BC> <DE> <F> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
                 }
@@ -108,9 +108,9 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(3) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "a . <B> . <C> . <D> . f .", "S"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "a . <B> . <C> . <E> . f .", "S"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <B> . <C> . <D> . f ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "S", "a . <B> . <C> . <E> . f ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
                         )
                     )
                 }
@@ -121,13 +121,12 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(1) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<ABC> .", "ABCp"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<DEF> .", "DEFp"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "d", "'d'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "e", "'e'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "X", "<X>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
                         )
                     )
                 }
@@ -138,16 +137,13 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<A> .", "A"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<B> .", "B"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<C> .", "C"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<D> .", "D"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<EF> .", "EF"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "d", "'d'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "e", "'e'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABCp>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEFp>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
                         )
                     )
                 }
@@ -158,16 +154,53 @@ class test_CompletionProviderSimple_with_depth {
                     options(Agl.options { completionProvider { depth(3) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "a .", "A"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "b .", "B"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "c .", "C"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "d .", "D"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "<E> <F> .", "EF"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "d", "'d'"),
-                            CompletionItem(CompletionItemKind.LITERAL, "e", "'e'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCp", "<ABC> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFp", "<DEF> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
+                        )
+                    )
+                }
+            }
+            testData("Choice 4") {
+                grammarStr(grammarStrChoice)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(4) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "<A> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "B", "<B> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "C", "<C> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "D", "<D> ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "EF", "<EF> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
+                        )
+                    )
+                }
+            }
+            testData("Choice 5") {
+                grammarStr(grammarStrChoice)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(5) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "A", "a ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "B", "b ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "C", "c ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "D", "d ."),
+                            CompletionItem(CompletionItemKind.SEGMENT, "EF", "<E> <F> ."),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'e'", "e"),
                         )
                     )
                 }
@@ -175,11 +208,56 @@ class test_CompletionProviderSimple_with_depth {
             testData("Recursive 1") {
                 grammarStr(grammarStrRecursive)
                 sentencePass("") {
+                    options(Agl.options { completionProvider { depth(1) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "X", "<X>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                        )
+                    )
+                }
+            }
+            testData("Recursive 2") {
+                grammarStr(grammarStrRecursive)
+                sentencePass("") {
                     options(Agl.options { completionProvider { depth(2) } })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<A> . <BC> <DE> <F> .", "S"),
-                            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCs", "<ABCs>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFs", "<DEFs>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                        )
+                    )
+                }
+            }
+            testData("Recursive 3") {
+                grammarStr(grammarStrRecursive)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(3) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCs", "<A> <BCs>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFs", "<DEs> <F>"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
+                        )
+                    )
+                }
+            }
+            testData("Recursive 4") {
+                grammarStr(grammarStrRecursive)
+                sentencePass("") {
+                    options(Agl.options { completionProvider { depth(4) } })
+                    expectedCompletionItems(
+                        listOf(
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCs", "a <B> <C>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "ABCs", "a <B> <C> <BCs>"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFs", "<D> <E> f"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "DEFs", "<DEs> <D> <E> f"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+                            CompletionItem(CompletionItemKind.LITERAL, "'d'", "d"),
                         )
                     )
                 }
@@ -192,5 +270,5 @@ class test_CompletionProviderSimple_with_depth {
     fun all() = executeTestSuit(testSuit)
 
     @Test
-    fun single() = doTest(testSuit["Concats 2"])
+    fun single() = doTest(testSuit["Recursive 1"])
 }

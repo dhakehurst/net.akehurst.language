@@ -23,7 +23,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsGoal
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.parser.api.RuntimeSpine
 
 internal abstract class SpineNodeAbstract(
@@ -41,11 +40,11 @@ internal abstract class SpineNodeAbstract(
 }
 
 internal class SpineNodeRoot(
-    val rootRuleItem: RuleItem
+    private val _rootRuleItem: RuleItem
 ) : SpineNode {
     override val nextChildNumber: Int get() = 0
-    override val rule: GrammarRule get() = rootRuleItem.owningRule
-    override val nextExpectedItem: RuleItem get() = rootRuleItem
+    override val rule: GrammarRule get() = _rootRuleItem.owningRule
+    override val nextExpectedItem: RuleItem get() = _rootRuleItem
     override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItem.firstTangibleRecursive
     override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItem.firstConcatenationRecursive
     override fun toString(): String = "GOAL"
@@ -63,15 +62,15 @@ internal class SpineDefault(
 ) : Spine {
 
     override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> by lazy {
-        elements[0].expectedNextLeafNonTerminalOrTerminal
-        //runtimeSpine.expectedNextTerminals.map {
-        //    val rr = it as RuntimeRule
-        //    mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
-        //}.toSet()
+        //elements[0].expectedNextLeafNonTerminalOrTerminal
+        runtimeSpine.expectedNextTerminals.map {
+            val rr = it as RuntimeRule
+            mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal
+        }.toSet()
     }
 
-    override val expectedNextConcatenation: Set<Concatenation> by lazy {
-        elements[0].nextExpectedConcatenation
+    override val expectedNextRuleItem: RuleItem by lazy {
+        elements[0].nextExpectedItem
     }
 
     override val elements: List<SpineNode> by lazy {
@@ -106,8 +105,9 @@ data class Expansion(
 abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : CompletionProvider<AsmType, ContextType> {
 
     companion object {
-        fun provideForTerminalsAndConcatenations(depth: Int, concatenations: Set<Concatenation>, tangibles: Set<TangibleItem>) =
-            provideForConcatenations(depth, concatenations) + provideForTangibles(tangibles)
+
+        fun provideDefault(depth:Int, spine: Spine) =
+            provideForRuleItem(depth,spine.expectedNextRuleItem) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
 
         fun provideForConcatenations(depth: Int, concatenations: Set<Concatenation>): List<CompletionItem> = when (depth) {
             0 -> emptyList()
@@ -116,8 +116,17 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 expanded.map {
                     val label = it.name ?: concat.owningRule.name.value
                     val text = it.list//.joinToString(separator = " ") { textFor(it) }
-                    CompletionItem(CompletionItemKind.SEGMENT, text, label)
+                    CompletionItem(CompletionItemKind.SEGMENT, label, text)
                 }
+            }
+        }
+
+        fun provideForRuleItem(depth: Int, ruleItem: RuleItem): List<CompletionItem> {
+            val expanded = expand(depth, ruleItem)
+            return expanded.map {
+                val label = it.name ?: ruleItem.owningRule.name.value
+                val text = it.list//.joinToString(separator = " ") { textFor(it) }
+                CompletionItem(CompletionItemKind.SEGMENT, label, text)
             }
         }
 
@@ -130,17 +139,19 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         item.alternative.all { it is TangibleItem } -> listOf(Expansion(null, "<${item.alternative.joinToString(separator = "|") { textFor(it).list }}>"))
                         else -> item.alternative.map { textFor(it) }
                     }
+
                 else -> listOf(textFor(item))
             }
+
             else -> {
                 when (item) {
                     is Choice -> item.alternative.flatMap { expand(depth, it) }
                     is Concatenation -> {
                         //FIXME: SPACE may not be valid skip rule !
-                        var results = listOf<Expansion>( Expansion(null,""))
+                        var results = listOf<Expansion>(Expansion(null, ""))
                         val nameFunc = when {
-                            item.items.count { (it is Terminal && it.isLiteral).not() } > 1 -> { exp:Expansion -> null }
-                            else -> { exp:Expansion -> exp.name }
+                            item.items.count { (it is Terminal && it.isLiteral).not() } > 1 -> { exp: Expansion -> null }
+                            else -> { exp: Expansion -> exp.name }
                         }
                         for (it in item.items) {
                             val expand = expand(depth, it)
@@ -148,8 +159,8 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                                 val expName = nameFunc.invoke(exp)
                                 results.map {
                                     when {
-                                        it.list.isBlank() -> Expansion(it.name?:expName,exp.list)
-                                        else ->  Expansion(it.name?:expName,"${it.list} ${exp.list}")
+                                        it.list.isBlank() -> Expansion(it.name ?: expName, exp.list)
+                                        else -> Expansion(it.name ?: expName, "${it.list} ${exp.list}")
                                     }
                                 }
                             }
@@ -159,24 +170,25 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     }
 
                     is ConcatenationItem -> when (item) {
-                        is OptionalItem -> expand(depth, item.item).map { Expansion(it.name,"${it.list}?") }
+                        is OptionalItem -> expand(depth, item.item).map { Expansion(it.name, "${it.list}?") }
                         is ListOfItems -> expand(depth, item.item)
                         is SimpleItem -> when (item) {
                             is Group -> expand(depth, item.groupedContent)
                             is TangibleItem -> when (item) {
-                                is EmptyRule -> listOf( textFor(item))
-                                is Terminal -> listOf( textFor(item))
+                                is EmptyRule -> listOf(textFor(item))
+                                is Terminal -> listOf(textFor(item))
                                 is Embedded -> listOf(textFor(item)) //TODO: could expand this !
                                 is NonTerminal -> {
                                     val refRule = item.referencedRule(item.owningRule.grammar)
                                     when {
-                                        refRule.isLeaf -> listOf( textFor(item))
-                                        else -> expand(depth - 1, refRule.rhs).map { Expansion(it.name?:item.ruleReference.value, it.list) }
+                                        refRule.isLeaf -> listOf(textFor(item))
+                                        else -> expand(depth - 1, refRule.rhs).map { Expansion(it.name ?: item.ruleReference.value, it.list) }
                                     }
                                 }
 
                                 else -> error("Unsupported subtype of TangibleItem: ${item::class.simpleName}")
                             }
+
                             else -> error("Unsupported subtype of SimpleItem: ${item::class.simpleName}")
                         }
 
@@ -190,18 +202,18 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
         fun textFor(item: RuleItem): Expansion = when (item) {
             is Choice -> Expansion(null, "<${item.alternative.joinToString(separator = "|") { textFor(it).list }}>")
-            is Concatenation -> Expansion(null, item.items.joinToString(separator = " ") { textFor(it).list } ) //FIXME: SPACE may not be valid skip rule !
+            is Concatenation -> Expansion(null, item.items.joinToString(separator = " ") { textFor(it).list }) //FIXME: SPACE may not be valid skip rule !
             is ConcatenationItem -> when (item) {
-                is OptionalItem -> Expansion(null,textFor(item.item).list + "?")
+                is OptionalItem -> Expansion(null, textFor(item.item).list + "?")
                 is ListOfItems -> textFor(item.item)
                 is SimpleItem -> when (item) {
                     is Group -> textFor(item.groupedContent)
                     is TangibleItem -> when (item) {
-                        is EmptyRule -> Expansion(null,"")
+                        is EmptyRule -> Expansion(null, "")
                         is Terminal -> when {
-                            item.owningRule.isLeaf ->Expansion( null,"<${item.owningRule.name}>")
-                            item.isPattern ->Expansion(null, "<${item.value}>")
-                            else ->Expansion(null,  item.value)
+                            item.owningRule.isLeaf -> Expansion(null, "<${item.owningRule.name}>")
+                            item.isPattern -> Expansion(null, "<${item.value}>")
+                            else -> Expansion(null, item.value)
                         }
 
                         is NonTerminal -> Expansion(item.ruleReference.value, "<${item.ruleReference.value}>")
@@ -233,7 +245,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     val name = tangibleItem.ruleReference.value
                     val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
                     val text = refRule.compressedLeaf.value
-                    listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", text))
+                    listOf(CompletionItem(CompletionItemKind.PATTERN, text, "<$name>"))
                 }
 
                 is Terminal -> {
@@ -242,8 +254,8 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         else -> tangibleItem.value
                     }
                     when {
-                        tangibleItem.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, "<$name>", tangibleItem.value))
-                        else -> listOf(CompletionItem(CompletionItemKind.LITERAL, tangibleItem.value, "'$name'"))
+                        tangibleItem.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, "<$name>"))
+                        else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.value))
                     }
                 }
 
@@ -253,7 +265,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
     }
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-        return nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(options.depth, sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }
+        return nextExpected.flatMap { sp -> provideDefault(options.depth, sp) }
             .toSet()
             .toList()
             .sortedBy { it.kind }
@@ -263,7 +275,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         val rule = item.owningRule
         return when {
             rule.isLeaf -> listOf(
-                CompletionItem(CompletionItemKind.PATTERN, "<${rule.name}>", rule.compressedLeaf.value)
+                CompletionItem(CompletionItemKind.PATTERN, rule.compressedLeaf.value, "<${rule.name}>")
             )
 
             else -> {

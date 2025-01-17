@@ -44,18 +44,18 @@ class CompletionProviderSimple(
         val depth = options.depth
         val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal) }.toSet()
+            nextExpected.flatMap { sp -> provideDefault(depth,sp) }.toSet()
                 .toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val firstSpineNode = sp.elements.firstOrNull()
                 when (firstSpineNode) {
-                    null -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                    null -> provideDefault(depth,sp)
                     else -> {
                         val type = typeFor(firstSpineNode.rule)
                         when (type) {
-                            null -> provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
-                            else -> provideForType(type, firstSpineNode, context) + provideForTerminalsAndConcatenations(depth,sp.expectedNextConcatenation, sp.expectedNextLeafNonTerminalOrTerminal)
+                            null -> provideDefault(depth,sp)
+                            else -> provideForType(type, firstSpineNode, context) + provideDefault(depth,sp)
                         }
                     }
                 }
@@ -66,6 +66,7 @@ class CompletionProviderSimple(
     }
 
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
+
 
     private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
@@ -90,7 +91,7 @@ class CompletionProviderSimple(
                         }
                     }
                     items.map {
-                        CompletionItem(CompletionItemKind.REFERRED, it.referableName, it.qualifiedTypeName.last.value)
+                        CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
                     }
                 }
                 compItems.flatten()

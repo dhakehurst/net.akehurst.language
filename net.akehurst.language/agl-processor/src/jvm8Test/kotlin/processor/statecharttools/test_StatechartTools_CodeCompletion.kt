@@ -24,7 +24,6 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.test.Test

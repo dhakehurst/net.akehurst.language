@@ -77,7 +77,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'")
+            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a")
         )
         test(
             TestData(
@@ -99,7 +99,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<[a-z]>", "[a-z]")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-z]", "<[a-z]>")
         )
         test(
             TestData(
@@ -122,7 +122,7 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "[a-z]")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-z]", "<PAT>")
         )
         test(
             TestData(
@@ -150,9 +150,9 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "a", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "b", "'b'"),
-            CompletionItem(CompletionItemKind.LITERAL, "c", "'c'")
+            CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
+            CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
+            CompletionItem(CompletionItemKind.LITERAL, "'c'", "c")
         )
         test(
             TestData(
@@ -180,7 +180,7 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
 
         val expected = listOf(
-            CompletionItem(CompletionItemKind.PATTERN, "<NAME>", "[a-zA-Z]+")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<NAME>")
         )
 
         test(
@@ -231,8 +231,8 @@ class test_CompletionProviderSimple {
 
 
         val expected = listOf(
-            CompletionItem(CompletionItemKind.REFERRED, "int", "TypeDef"),
-            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "[a-zA-Z]+"),
+            CompletionItem(CompletionItemKind.REFERRED, "TypeDef", "int"),
+            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<REF>"),
         )
 
         test(

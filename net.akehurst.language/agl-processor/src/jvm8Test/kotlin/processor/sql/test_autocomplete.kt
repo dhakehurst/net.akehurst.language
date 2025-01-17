@@ -38,12 +38,12 @@ class test_autocomplete {
                     context(ContextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "<statement> ;", "terminatedStatement"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<SELECT>", "SELECT"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<UPDATE>", "UPDATE"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<DELETE>", "DELETE"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<INSERT>", "INSERT"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<CREATE>", "CREATE"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<statement> ;"),
+                            CompletionItem(CompletionItemKind.PATTERN, "SELECT", "<SELECT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "UPDATE", "<UPDATE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "DELETE", "<DELETE>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "INSERT", "<INSERT>"),
+                            CompletionItem(CompletionItemKind.PATTERN, "CREATE", "<CREATE>"),
                         )
                     )
                 }
@@ -52,7 +52,7 @@ class test_autocomplete {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
                 }
@@ -65,7 +65,7 @@ class test_autocomplete {
                     })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
                 }
@@ -76,7 +76,7 @@ class test_autocomplete {
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
                 }
@@ -91,8 +91,8 @@ class test_autocomplete {
                     })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.REFERRED, "table1", "TableDefinition"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.REFERRED, "TableDefinition", "table1"),
+                            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                         )
                     )
                 }
@@ -102,8 +102,8 @@ class test_autocomplete {
                     })
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.REFERRED, "col1", "ColumnDefinition"),
-                            CompletionItem(CompletionItemKind.PATTERN, "<REF>", "REF"),
+                            CompletionItem(CompletionItemKind.REFERRED, "ColumnDefinition", "col1"),
+                            CompletionItem(CompletionItemKind.PATTERN, "REF", "<REF>"),
                             CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
                         )
                     )
@@ -116,10 +116,10 @@ class test_autocomplete {
                     context(ContextAsmSimple())
                     expectedCompletionItems(
                         listOf(
-                            CompletionItem(CompletionItemKind.SEGMENT, "SELECT <columns> FROM <table-id>;", "Select statement"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "UPDATE <table-id> SET <column-values>;", "Update statement"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "DELETE FROM <table-id>;", "Delete statement"),
-                            CompletionItem(CompletionItemKind.SEGMENT, "INSERT INTO <table-id> ( <columns> ) VALUES ( <values> );", "Insert statement"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Select statement", "SELECT <columns> FROM <table-id>;"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Update statement", "UPDATE <table-id> SET <column-values>;"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Delete statement", "DELETE FROM <table-id>;"),
+                            CompletionItem(CompletionItemKind.SEGMENT, "Insert statement", "INSERT INTO <table-id> ( <columns> ) VALUES ( <values> );"),
                             CompletionItem(CompletionItemKind.LITERAL, "SELECT", "SELECT"),
                             CompletionItem(CompletionItemKind.LITERAL, "UPDATE", "UPDATE"),
                             CompletionItem(CompletionItemKind.LITERAL, "DELETE", "DELETE"),

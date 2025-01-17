@@ -31,8 +31,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "<namespace> <grammar>", "unit"),
-            CompletionItem(CompletionItemKind.LITERAL, "namespace", "'namespace'")
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace> <grammar>"),
+            CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -45,8 +45,8 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, 0, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "<namespace> <grammar>", "unit"),
-            CompletionItem(CompletionItemKind.LITERAL, "namespace", "'namespace'")
+            CompletionItem(CompletionItemKind.SEGMENT, "unit", "<namespace> <grammar>"),
+            CompletionItem(CompletionItemKind.LITERAL, "'namespace'", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -59,7 +59,7 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
         )
 
         assertEquals(expected, result.items)
@@ -72,7 +72,7 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
         )
 
         assertEquals(expected, result.items)
@@ -85,15 +85,15 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.SEGMENT, "# <IDENTIFIER> : <IDENTIFIER>", "option"),
-            CompletionItem(CompletionItemKind.SEGMENT, "import <possiblyQualifiedName>", "import"),
-            CompletionItem(CompletionItemKind.SEGMENT, "definition <IDENTIFIER>", "definition"), //FIXME: !
-            CompletionItem(CompletionItemKind.SEGMENT, "grammar <IDENTIFIER> <extends> { <option> <rule> }", "grammar"),
-            CompletionItem(CompletionItemKind.LITERAL, ".", "'.'"),
-            CompletionItem(CompletionItemKind.LITERAL, "#", "'#'"),
-            CompletionItem(CompletionItemKind.LITERAL, "import", "'import'"),
-            CompletionItem(CompletionItemKind.LITERAL, "definition", "'definition'"),  //FIXME: !
-            CompletionItem(CompletionItemKind.LITERAL, "grammar", "'grammar'")
+            CompletionItem(CompletionItemKind.SEGMENT, "option", "# <IDENTIFIER> : <IDENTIFIER>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "import", "import <possiblyQualifiedName>"),
+            CompletionItem(CompletionItemKind.SEGMENT, "definition", "definition <IDENTIFIER>"), //FIXME: !
+            CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends> { <option> <rule> }"),
+            CompletionItem(CompletionItemKind.LITERAL, "'.'", "."),
+            CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
+            CompletionItem(CompletionItemKind.LITERAL, "'import'", "import"),
+            CompletionItem(CompletionItemKind.LITERAL, "'definition'", "definition"),  //FIXME: !
+            CompletionItem(CompletionItemKind.LITERAL, "'grammar'", "grammar")
         )
 
         assertEquals(expected.size, result.items.size,result.items.joinToString("\n"))
@@ -107,7 +107,7 @@ class test_AglGrammar_expectedItemsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, )
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
+            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
         )
 
         assertEquals(expected, result.items)
