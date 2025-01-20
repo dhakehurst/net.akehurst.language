@@ -77,8 +77,8 @@ grammar Transform : Base {
             lst(0, -1) { ref("transformRule") }
             lit("}")
         }
-        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
         concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
+        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
         concatenation("transformRule") {
             ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
         }

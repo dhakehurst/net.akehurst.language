@@ -52,28 +52,29 @@ class AsmTransformSyntaxAnalyser(
     override fun registerHandlers() {
         super.register(this::unit)
         super.register(this::namespace)
-        super.register(this::transformList)
+        //super.register(this::transformList)
         super.register(this::transform)
         super.register(this::extends)
-        super.register(this::transformRuleList)
+        super.register(this::typeImport)
+        //super.register(this::transformRuleList)
         super.register(this::transformRule)
         super.register(this::transformRuleRhs)
         super.register(this::expressionRule)
         super.register(this::modifyRule)
         super.register(this::assignmentStatement)
         super.register(this::propertyName)
-        super.register(this::expression)
         super.register(this::grammarRuleName)
         super.register(this::possiblyQualifiedTypeName)
+        super.register(this::expression)
     }
 
     // override unit = option* namespace* ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformModel {
-        val options = children[0] as List<Pair<String,String>>
+        val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<TransformNamespace>
         val name = SimpleName("ParsedTransformUnit") //TODO: how to specify name, does it matter?
         //val typeModel = TypeModelSimple(name) //TODO: how to specify type model ?
-       // typeModel.addNamespace(SimpleTypeModelStdLib)
+        // typeModel.addNamespace(SimpleTypeModelStdLib)
         val optHolder = OptionHolderDefault(null, options.associate { it })
         return TransformDomainDefault(
             name = name,
@@ -86,26 +87,28 @@ class AsmTransformSyntaxAnalyser(
     private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformNamespace {
         val pqn = children[1] as PossiblyQualifiedName
         val nsName = pqn.asQualifiedName(null)
-        val options = children[2] as List<Pair<String,String>>
+        val options = children[2] as List<Pair<String, String>>
         val imports = children[3] as List<Import>
         val transformBuilders = children[4] as List<(TransformNamespaceDefault) -> TransformRuleSet>
 
         val optHolder = OptionHolderDefault(null, options.associate { it })
-        val namespace = TransformNamespaceDefault(nsName,optHolder,imports)
+        val namespace = TransformNamespaceDefault(nsName, optHolder, imports)
         transformBuilders.map { it.invoke(namespace) }
         return namespace
     }
 
+    /*
     // transformList = transform+ ;
     private fun transformList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(TransformNamespace) -> TransformRuleSet> =
         children as List<(TransformNamespace) -> TransformRuleSet>
+    */
 
     // transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule+ '} ;
     private fun transform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TransformNamespace) -> TransformRuleSet {
         val name = SimpleName(children[1] as String)
         val extends = children[2] as List<PossiblyQualifiedName>? ?: emptyList()
-        val options = children[4] as List<Pair<String,String>>
-        val typeImports = children[5] as List<Import> //TODO: use these
+        val options = children[4] as List<Pair<String, String>>
+        val typeImports = children[5] as List<Import>
         val rules = children[6] as List<TransformationRule>
 
         val optHolder = OptionHolderDefault(null, options.associate { it })
@@ -117,13 +120,20 @@ class AsmTransformSyntaxAnalyser(
             asm
         }
     }
-    // extends = ':' [possiblyQualifiedName / ',']+ ;
-    private fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName>  =
-        (children[1] as List<Any>).toSeparatedList<Any,PossiblyQualifiedName,String>().items
 
+    // extends = ':' [possiblyQualifiedName / ',']+ ;
+    private fun extends(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<PossiblyQualifiedName> =
+        (children[1] as List<Any>).toSeparatedList<Any, PossiblyQualifiedName, String>().items
+
+    // typeImport = 'import-types' possiblyQualifiedName ;
+    private fun typeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
+        Import( (children[1] as PossiblyQualifiedName).value )
+
+    /*
     // transformRuleList = transformRule+ ;
     private fun transformRuleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TransformationRule> =
         children as List<TransformationRule>
+    */
 
     // transformRule = grammarRuleName ':' transformRuleRhs ;
     private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
