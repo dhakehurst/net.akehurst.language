@@ -16,22 +16,42 @@
 
 package net.akehurst.language.formatter.api
 
-import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.style.api.StyleNamespace
+import net.akehurst.language.style.api.StyleSet
 
-interface AglFormatterModel {
+interface AglFormatModel : Model<FormatNamespace, FormatSet> {
 
     val defaultWhiteSpace: String
 
     /**
      * all format rules indexed by the type name that the rule applies to
      */
-    val rules: Map<SimpleName, AglFormatterRule>
+    val rules: Map<SimpleName, AglFormatRule>
 
 }
 
-interface AglFormatterRule {
-    val model: AglFormatterModel
+interface FormatNamespace : Namespace<FormatSet> {
+    val formatSet: List<FormatSet>
+}
+
+interface FormatSetReference {
+    val localNamespace: FormatNamespace
+    val nameOrQName: PossiblyQualifiedName
+    val resolved: FormatSet?
+
+    fun resolveAs(resolved: FormatSet)
+}
+
+
+interface FormatSet : Definition<FormatSet> {
+    override val namespace: FormatNamespace
+    val extends: List<FormatSetReference>
+    val rules: List<AglFormatRule>
+}
+
+interface AglFormatRule {
     val forTypeName: SimpleName
     val formatExpression: FormatExpression
 }

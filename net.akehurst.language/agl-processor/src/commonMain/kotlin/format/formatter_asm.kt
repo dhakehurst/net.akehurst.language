@@ -17,26 +17,38 @@
 
 package net.akehurst.language.format.asm
 
-import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.grammar.api.*
-import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.DefinitionAbstract
+import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.formatter.api.*
+import net.akehurst.language.formatter.api.TemplateElementExpressionEmbedded
+import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 
-internal class AglFormatterModelSimple : AglFormatterModel {
+internal class AglFormatModelDefault(
+    override val name: SimpleName,
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    namespaces: List<FormatNamespace> = emptyList()
+) : AglFormatModel, ModelAbstract<FormatNamespace, FormatSet>(namespaces, options) {
     companion object {
         private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
                 ruleItem.isPattern -> TODO()
-                else -> TemplateElementTextSimple(ruleItem.value)
+                else -> TemplateElementTextDefault(ruleItem.value)
             }
 
-            is EmptyRule -> TemplateElementTextSimple("")
+            is EmptyRule -> TemplateElementTextDefault("")
             is NonTerminal -> fromRuleItem(grammar, ruleItem.referencedRule(grammar).rhs)
             is Embedded -> TODO()
             is Choice -> TODO()
@@ -48,13 +60,13 @@ internal class AglFormatterModelSimple : AglFormatterModel {
             else -> error("Internal error: subtype of RuleItem not handled: '${ruleItem::class.simpleName}'")
         }
 
-        fun fromGrammar(grammarList: GrammarModel, typeModel: TypeModel): ProcessResult<AglFormatterModel> {
+        fun fromGrammar(grammarModel: GrammarModel, typeModel: TypeModel): ProcessResult<AglFormatModel> {
             val issues = IssueHolder(LanguageProcessorPhase.ALL)
-            val formatModel = AglFormatterModelSimple()
+            val formatModel = AglFormatModelDefault(grammarModel.name)
             for (ns in typeModel.namespace) {
                 when {
                     ns is GrammarTypeNamespace -> {
-                        val grammar = grammarList.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }
+                        val grammar = grammarModel.allDefinitions.firstOrNull { gr -> gr.qualifiedName == ns.qualifiedName }
                         when {
                             null != grammar -> {
                                 for ((rn, ty) in ns.allRuleNameToType) {
@@ -77,30 +89,77 @@ internal class AglFormatterModelSimple : AglFormatterModel {
             }
             return ProcessResultDefault(formatModel, issues)
         }
+
+        fun fromString(context: ContextFromTypeModel, formatModelStr: FormatString) : ProcessResult<AglFormatModel> {
+            TODO()
+        }
     }
 
     override val defaultWhiteSpace: String get() = " "
 
-    override val rules = mutableMapOf<SimpleName, AglFormatterRule>()
+    override val rules = mutableMapOf<SimpleName, AglFormatRule>()
 
     fun addRule(typeName: SimpleName) {
-
+        TODO("is it needed ?")
     }
 }
 
-class AglFormatterRuleSimple(
-    override val model: AglFormatterModel,
-    override val forTypeName: SimpleName
-) : AglFormatterRule {
+class AglFormatNamespaceDefault(
+    override val qualifiedName: QualifiedName,
+    options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    import: List<Import> = emptyList()
+) : FormatNamespace, NamespaceAbstract<FormatSet>(options, import) {
 
+    override val formatSet: List<FormatSet> get() = super.definition
+}
+
+class FormatSetReferenceDefault(
+    override val localNamespace: FormatNamespace,
+    override val nameOrQName: PossiblyQualifiedName
+) : FormatSetReference {
+    override var resolved: FormatSet? = null
+    override fun resolveAs(resolved: FormatSet) {
+        this.resolved = resolved
+    }
+}
+
+class FormatSetDefault(
+    override val namespace: FormatNamespace,
+    override val name: SimpleName,
+    override val extends: List<FormatSetReference>,
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+) : FormatSet, DefinitionAbstract<FormatSet>() {
+
+    override val rules: List<AglFormatRule> = mutableListOf()
+}
+
+class AglFormatRuleDefault(
+    override val forTypeName: SimpleName,
     override val formatExpression: FormatExpression
-        get() = TODO("not implemented")
+) : AglFormatRule {
 }
 
-class AglFormatExpressionSimple() : FormatExpression {
+class FormatExpressionWhenDefault(
+    override val options: List<FormatWhenOption>
+) : FormatExpressionWhen
 
-}
+class FormatWhenOptionDefault(
+    override val condition: Expression,
+    override val format: FormatExpression
+) : FormatWhenOption
 
-class TemplateElementTextSimple(
+class FormatExpressionTemplateDefault(
+    override val content: List<TemplateElement>
+) : FormatExpressionTemplate
+
+class TemplateElementTextDefault(
     override val text: String
 ) : TemplateElementText
+
+class TemplateElementExpressionSimpleDefault(
+    override val identifier: String
+) : TemplateElementExpressionSimple
+
+class TemplateElementExpressionEmbeddedDefault(
+    override val expression: FormatExpression
+) : TemplateElementExpressionEmbedded

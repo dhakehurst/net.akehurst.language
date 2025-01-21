@@ -93,7 +93,7 @@ class CrossReferenceModelDefault(
         }
     }
 
-    fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression? {
+    override fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression? {
         return when (possiblyQualifiedTypeName) {
             is QualifiedName -> {
                 val qn = possiblyQualifiedTypeName

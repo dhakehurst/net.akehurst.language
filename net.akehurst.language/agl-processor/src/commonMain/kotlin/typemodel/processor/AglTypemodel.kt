@@ -17,16 +17,26 @@
 
 package net.akehurst.language.typemodel.processor
 
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglTypemodel {
+object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
 
     const val goalRuleName = "unit"
 
-    const val grammarStr = """namespace net.akehurst.language
+    override val grammarString = """namespace net.akehurst.language
   grammar Typemodel : Base {
     unit = namespace definition+ ;
     definition
@@ -62,17 +72,7 @@ object AglTypemodel {
        ;
 
   }"""
-
-    val grammar = grammar(
-        namespace = "net.akehurst.language",
-        name = "Typemodel"
-    ) {
-        extendsGrammar(AglBase.grammar.selfReference)
-
-    }
-
-
-    const val komposite = """namespace net.akehurst.language.typemodel.api
+    override val kompositeString = """namespace net.akehurst.language.typemodel.api
     interface TypeInstance {
         cmp typeArguments
     }
@@ -122,7 +122,18 @@ namespace net.akehurst.language.grammarTypemodel.api
 
 """
 
-    val typeModel by lazy {
+    override val grammarModel: GrammarModel by lazy {
+        grammarModel("TypeModel") {
+            namespace("net.akehurst.language") {
+                grammar("Typemodel") {
+                    extendsGrammar(AglBase.targetGrammar.selfReference)
+TODO()
+                }
+            }
+        }
+    }
+
+    override val typeModel by lazy {
         typeModel("Typemodel", true, AglGrammar.typeModel.namespace) {
             namespace("net.akehurst.language.typemodel.api", listOf("std", "net.akehurst.language.base.api")) {
                 enumType("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
@@ -687,4 +698,15 @@ namespace net.akehurst.language.grammarTypemodel.api
             }
         }
     }
+
+    override val asmTransformModel: TransformModel get() = TODO("not implemented")
+
+    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+
+    override val styleModel: AglStyleModel get() = TODO("not implemented")
+
+    override val formatModel: AglFormatModel get() = TODO("not implemented")
+
+
+    val targetGrammar get() = grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.TypeModel"))!!
 }

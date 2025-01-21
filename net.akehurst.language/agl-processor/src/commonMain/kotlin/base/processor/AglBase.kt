@@ -17,20 +17,27 @@
 
 package net.akehurst.language.base.processor
 
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglBase {
+object AglBase : LanguageObjectAbstract<Any, SentenceContext<String>>() {
+    const val NAME = "Base"
     const val goalRuleName = "qualifiedName"
 
-    //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
-    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
-
-    const val grammarStr = """namespace net.akehurst.language
-  grammar Base {
+    override val grammarString: String = """namespace net.akehurst.language
+  grammar $NAME {
     skip leaf WHITESPACE = "\s+" ;
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip leaf SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
@@ -44,34 +51,18 @@ object AglBase {
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
   }"""
 
-    val grammar: Grammar by lazy {
-        grammar(
-            namespace = "net.akehurst.language",
-            name = "Base"
-        ) {
-            concatenation("WHITESPACE", isSkip = true, isLeaf = true) { pat("\\s+") }
-            concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/") }
-            concatenation("SINGLE_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("//[^\\n\\r]*") }
-
-            concatenation("unit") { lst(0, -1) { ref("option") }; lst(0, -1) { ref("namespace") } }
-            concatenation("namespace") {
-                lit("namespace"); ref("possiblyQualifiedName")
-                lst(0, -1) { ref("option") };
-                lst(0, -1) { ref("import") }
-                lst(0, -1) { ref("definition") }
-            }
-            concatenation("import") { lit("import"); ref("possiblyQualifiedName") }
-            concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
-            separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
-            concatenation("option") {
-                lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("IDENTIFIER") } }
-            }
-            concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
-        }
+    override val kompositeString = """namespace net.akehurst.language.base.api
+    interface Model {
+        cmp namespace
     }
-
-    const val styleStr = """namespace net.akehurst.language
-  styles Base {
+    
+namespace net.akehurst.language.base.asm
+    class NamespaceAbstract {
+        cmp _definition
+    }
+"""
+    override val styleString: String = """namespace net.akehurst.language
+  styles $NAME {
     ${'$'}nostyle {
       foreground: black;
       background: white;
@@ -83,27 +74,37 @@ object AglBase {
     }
   }"""
 
-    const val formatterStr = """
-    """
+    override val grammarModel: GrammarModel by lazy {
+        grammarModel(NAME) {
+            namespace("net.akehurst.language") {
+                grammar(NAME) {
+                    concatenation("WHITESPACE", isSkip = true, isLeaf = true) { pat("\\s+") }
+                    concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/") }
+                    concatenation("SINGLE_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("//[^\\n\\r]*") }
 
-    //TODO: gen this from the ASM
-    override fun toString(): String = grammarStr.trimIndent()
-
-    const val komposite = """namespace net.akehurst.language.base.api
-    interface Model {
-        cmp namespace
+                    concatenation("unit") { lst(0, -1) { ref("option") }; lst(0, -1) { ref("namespace") } }
+                    concatenation("namespace") {
+                        lit("namespace"); ref("possiblyQualifiedName")
+                        lst(0, -1) { ref("option") };
+                        lst(0, -1) { ref("import") }
+                        lst(0, -1) { ref("definition") }
+                    }
+                    concatenation("import") { lit("import"); ref("possiblyQualifiedName") }
+                    concatenation("definition") { lit("definition"); ref("IDENTIFIER") }
+                    separatedList("possiblyQualifiedName", 1, -1) { ref("IDENTIFIER"); lit(".") }
+                    concatenation("option") {
+                        lit("#"); ref("IDENTIFIER"); opt { grp { lit(":"); ref("IDENTIFIER") } }
+                    }
+                    concatenation("IDENTIFIER", isLeaf = true) { pat("[a-zA-Z_][a-zA-Z_0-9-]*") } //TODO: do not end with '-'
+                }
+            }
+        }
     }
-    
-namespace net.akehurst.language.base.asm
-    class NamespaceAbstract {
-        cmp _definition
-    }
-"""
 
     /** implemented as kotlin classes **/
-    val typeModel: TypeModel by lazy {
+    override val typeModel: TypeModel by lazy {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
-        typeModel("Base", true, listOf(StdLibDefault)) {
+        typeModel(NAME, true, listOf(StdLibDefault)) {
             namespace("net.akehurst.language.base.api", listOf("std")) {
                 interfaceType("PublicValueType") {}
                 valueType("SimpleName") {
@@ -202,4 +203,26 @@ namespace net.akehurst.language.base.asm
             }
         }
     }
+
+    override val asmTransformModel: TransformModel get() = TODO("not implemented")
+
+    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+
+    override val formatModel: AglFormatModel by lazy {
+        formatModel(NAME) {
+            TODO("not implemented")
+        }
+    }
+
+    override val styleModel: AglStyleModel by lazy {
+        styleModel(NAME) {
+            TODO("not implemented")
+        }
+    }
+
+    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Base")) !! }
+
+    //TODO: gen this from the ASM
+    override fun toString(): String = grammarString.trimIndent()
+
 }

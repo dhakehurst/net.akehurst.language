@@ -17,13 +17,15 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.regex.agl.RegexEngineAgl
@@ -52,7 +54,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = base.crossReferenceModelResolver
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = base.syntaxAnalyserResolver
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = base.semanticAnalyserResolver
-    private var _formatterResolver: FormatterResolver<AsmType, ContextType>? = base.formatterResolver
+    private var _formatterResolver: FormatModelResolver<AsmType, ContextType>? = base.formatterResolver
     private var _styleResolver: StyleResolver<AsmType, ContextType>? = base.styleResolver
     private var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = base.completionProvider
 
@@ -118,7 +120,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _semanticAnalyserResolver = { ProcessResultDefault(func.invoke(), IssueHolder(LanguageProcessorPhase.ALL)) }
     }
 
-    fun formatterResolver(func: FormatterResolver<AsmType, ContextType>?) {
+    fun formatterResolver(func: FormatModelResolver<AsmType, ContextType>?) {
         _formatterResolver = func
     }
 

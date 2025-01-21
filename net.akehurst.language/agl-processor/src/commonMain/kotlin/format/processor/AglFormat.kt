@@ -20,7 +20,7 @@ import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.builder.grammar
 
 
-internal object AglFormat {
+object AglFormat {
     const val goalRuleName = "unit"
 
     //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "unit"))
@@ -36,9 +36,12 @@ internal object AglFormat {
             ref("namespace"); lst(1, -1) { ref("format") }
         }
         concatenation("format") {
-            lit("format"); ref("IDENTIFIER"); lit("{");
+            lit("format"); ref("IDENTIFIER");  opt { ref("extends") }; lit("{");
             lst(1, -1) { ref("formatRule") }
             lit("}")
+        }
+        concatenation("extends") {
+            lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
         }
         concatenation("formatRule") {
             ref("typeReference"); lit("->"); ref("formatExpression")
@@ -81,7 +84,8 @@ internal object AglFormat {
         grammar AglFormat extends Expressions {        
             unit = namespace formatList ;
             formatList = format+ ;
-            format = 'format' IDENTIFIER '{' ruleList '}' ;
+            format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
+            extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule+ ;
             formatRule = typeReference '->' formatExpression ;
             formatExpression
@@ -103,7 +107,6 @@ internal object AglFormat {
             templateExpressionEmbedded = '$${'{'}' formatExpression '}'
                         
             typeReference = IDENTIFIER ;
-            propertyReference = IDENTIFIER ;
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }

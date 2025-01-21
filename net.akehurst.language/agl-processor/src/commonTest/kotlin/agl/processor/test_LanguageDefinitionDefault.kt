@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
@@ -62,8 +62,8 @@ class test_LanguageDefinitionDefault {
 
     val formatterStrObserverCalled = mutableListOf<Pair<FormatString?, FormatString?>>()
     val formatterStrObserver: (FormatString?, FormatString?) -> Unit = { old, new -> formatterStrObserverCalled.add(Pair(old, new)) }
-    val formatterObserverCalled = mutableListOf<Pair<AglFormatterModel?, AglFormatterModel?>>()
-    val formatterObserver: (AglFormatterModel?, AglFormatterModel?) -> Unit = { old, new -> formatterObserverCalled.add(Pair(old, new)) }
+    val formatterObserverCalled = mutableListOf<Pair<AglFormatModel?, AglFormatModel?>>()
+    val formatterObserver: (AglFormatModel?, AglFormatModel?) -> Unit = { old, new -> formatterObserverCalled.add(Pair(old, new)) }
 
     @BeforeTest
     fun before() {

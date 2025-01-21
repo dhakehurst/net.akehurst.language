@@ -22,7 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_AglTypemodel2 {
+class test_AglTypemodel_typemodel {
 
     @Test
     fun typemodel() {

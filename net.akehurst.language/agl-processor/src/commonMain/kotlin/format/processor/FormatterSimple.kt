@@ -17,17 +17,15 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.processor.FormatResultDefault
-import net.akehurst.language.asm.api.*
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.format.asm.AglFormatExpressionFromAsm
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 class FormatterSimple<AsmType>(
-    val model: AglFormatterModel?
+    val model: AglFormatModel?
 ) : Formatter<AsmType> {
 
     override fun format(asm: AsmType): FormatResult {
@@ -41,7 +39,7 @@ class FormatterSimple<AsmType>(
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    private fun AsmValue.format(model: AglFormatterModel?): String {
+    private fun AsmValue.format(model: AglFormatModel?): String {
         val o = this
         return when (o) {
             is AsmNothing -> ""
@@ -53,7 +51,7 @@ class FormatterSimple<AsmType>(
         }
     }
 
-    private fun AsmStructure.format(model: AglFormatterModel?): String {
+    private fun AsmStructure.format(model: AglFormatModel?): String {
         val formatRule = model?.rules?.get(this.typeName)
         return when (formatRule) {
             null -> {
@@ -66,7 +64,7 @@ class FormatterSimple<AsmType>(
                 }.joinToString(separator = "") { it }
             }
 
-            else -> (formatRule.formatExpression as AglFormatExpressionFromAsm).execute(model, this)
+            else -> formatRule.formatExpression.execute(model, this)
         }
     }
 
@@ -96,29 +94,28 @@ class FormatterSimple<AsmType>(
         TODO()
     }
 
-    private fun AglFormatExpressionFromAsm.execute(model: AglFormatterModel?, el: AsmStructure): String {
-        return when (this.asm.typeName) {
-            SimpleName("LiteralString") -> (el.getProperty(PropertyValueName("literal_string")) as AsmPrimitive).value.toString()
-            SimpleName("TemplateString") -> {
-                val templateContentList = (this.asm.getProperty(PropertyValueName("templateContentList")) as AsmList).elements
-                templateContentList.joinToString(separator = model?.defaultWhiteSpace ?: "") {
-                    when (it.typeName) {
-                        SimpleName("Text") -> ((it as AsmStructure).getProperty(PropertyValueName("raw_text")) as AsmPrimitive).value.toString()
-                        SimpleName("TemplateExpressionSimple") -> {
+    private fun FormatExpression.execute(model: AglFormatModel?, el: AsmStructure): String {
+        return when (this) {
+            is FormatExpressionLiteral -> (el.getProperty(PropertyValueName("literal_string")) as AsmPrimitive).value.toString()
+            is FormatExpressionTemplate -> {
+                this.content.joinToString(separator = model?.defaultWhiteSpace ?: "") {
+                    when (it) {
+                        is TemplateElementText -> ((it as AsmStructure).getProperty(PropertyValueName("raw_text")) as AsmPrimitive).value.toString()
+                        is TemplateElementExpressionSimple -> {
                             val id1 = (it as AsmStructure).getProperty(PropertyValueName("dollar_identifier"))
                             val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
                             val pv = el.getProperty(PropertyValueName(id))
                             pv.format(model)
                         }
 
-                        SimpleName("TemplateExpressionEmbedded") -> TODO()
-                        else -> error("Element type ${it.typeName} not handled")
+                        is TemplateElementExpressionEmbedded -> TODO()
+                        else -> error("Element type ${it::class.simpleName} not handled")
                     }
                 }
             }
 
-            SimpleName("WhenExpression") -> TODO()
-            else -> error("Element type ${this.asm.typeName} not handled")
+            is FormatExpressionWhen -> TODO()
+            else -> error("Element type ${this::class.simpleName} not handled")
         }
     }
 }

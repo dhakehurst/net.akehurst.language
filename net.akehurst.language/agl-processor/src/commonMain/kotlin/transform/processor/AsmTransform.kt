@@ -17,16 +17,17 @@
 
 package net.akehurst.language.transform.processor
 
+import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
 
-object AsmTransform {
+object AsmTransform { //: LanguageObject {
 
     const val goalRuleName = "unit"
 
-    const val grammarStr = """
+     val grammarString: String = """
 namespace net.akehurst.language.agl
 
 grammar Transform : Base {
@@ -57,7 +58,7 @@ grammar Transform : Base {
         namespace = "net.akehurst.language.agl.language",
         name = "Transform"
     ) {
-        extendsGrammar(AglBase.grammar.selfReference)
+        extendsGrammar(AglBase.targetGrammar.selfReference)
 
         concatenation("unit") {
             lst(0, -1) { ref("option") }

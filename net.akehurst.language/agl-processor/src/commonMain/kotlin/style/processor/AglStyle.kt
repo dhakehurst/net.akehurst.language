@@ -57,7 +57,7 @@ grammar Style : Base {
         namespace = "net.akehurst.language",
         name = "Style"
     ) {
-        extendsGrammar(AglBase.grammar.selfReference)
+        extendsGrammar(AglBase.targetGrammar.selfReference)
 
         concatenation("unit") {
             ref("namespace"); lst(0, -1) { ref("styleSet") }

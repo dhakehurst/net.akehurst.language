@@ -17,10 +17,9 @@
 
 package net.akehurst.language.agl
 
-import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.asm.GrammarModelDefault
@@ -34,6 +33,7 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
@@ -153,7 +153,7 @@ object Agl {
                 styleResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
-                formatterResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
+                formatterResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
@@ -216,7 +216,7 @@ object Agl {
     }
 
     fun <AsmType:Any, ContextType : Any> processorFromGeneratedCode(
-        generated: GeneratedLanguageProcessorAbstract<AsmType, ContextType>
+        generated: LanguageObjectAbstract<AsmType, ContextType>
     ): LanguageProcessor<AsmType,  ContextType> {
         return LanguageProcessorFromGenerated(generated)
     }

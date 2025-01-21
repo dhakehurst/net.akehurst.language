@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,24 @@
  *
  */
 
-package net.akehurst.language.format.processor
+package net.akehurst.language.typemodel.processor
 
-import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.typemodel.api.TypeModel
+import kotlin.test.Test
 
-class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatModel, SentenceContext<String>>() {
+class test_Processor {
 
-        //TODO
+    private companion object {
+
+        fun testPass(typeModeStr:String, expected:TypeModel) {
+            val actual = Agl.registry.agl.types.processor!!.process(typeModeStr)
+        }
+    }
+
+    @Test
+    fun test() {
+
+    }
 
 }

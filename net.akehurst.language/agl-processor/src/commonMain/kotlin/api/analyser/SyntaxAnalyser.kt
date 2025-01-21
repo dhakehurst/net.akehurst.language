@@ -17,10 +17,6 @@
 package net.akehurst.language.api.syntaxAnalyser
 
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.api.AsmPath
-import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.expressions.processor.TypedObject
@@ -35,20 +31,32 @@ import net.akehurst.language.typemodel.api.TypeInstance
 interface AsmFactory<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType> {
 
     fun constructAsm(): AsmType
-    fun rootList(asm:AsmType): List<AsmValue>
+    fun rootList(asm: AsmType): List<AsmValueType>
     fun addRoot(asm: AsmType, root: AsmValueType)
     fun removeRoot(asm: AsmType, root: AsmValueType)
 
-    fun toTypedObject(self: AsmValueType, selfType: TypeInstance):TypedObject
+    fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject
     fun nothingValue(): AsmValueType
     fun anyValue(value: Any): AsmValueType
     fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
     fun listOfValues(elements: List<AsmValueType>): AsmValueType
     fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
 
-    fun constructStructure(path: AsmPath, qualifiedTypeName: QualifiedName): AsmStructureType
-    fun setProperty(self: AsmStructureType, index: Int, name: PropertyValueName, value: AsmValueType)
+    fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
+    fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
 
+}
+
+interface AsmWalker<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType, PropertyType, ListValueType> {
+    fun beforeRoot(root: AsmValueType)
+    fun afterRoot(root: AsmValueType)
+    fun onNothing(owningProperty: PropertyType?, value: AsmValueType)
+    fun onPrimitive(owningProperty: PropertyType?, value: AsmValueType)
+    fun beforeStructure(owningProperty: PropertyType?, value: AsmStructureType)
+    fun onProperty(owner: AsmStructureType, property: PropertyType)
+    fun afterStructure(owningProperty: PropertyType?, value: AsmStructureType)
+    fun beforeList(owningProperty: PropertyType?, value: ListValueType)
+    fun afterList(owningProperty: PropertyType?, value: ListValueType)
 }
 
 /**
@@ -58,7 +66,7 @@ interface AsmFactory<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmVa
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser<AsmType:Any> { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument here maybe!
 
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called

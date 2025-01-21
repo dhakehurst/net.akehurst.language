@@ -17,9 +17,6 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
-/**
- * E - type of elements in the scope
- */
-interface SentenceContext<E> {
-    //val rootScope: Scope<E>
+interface SentenceContext {
+
 }

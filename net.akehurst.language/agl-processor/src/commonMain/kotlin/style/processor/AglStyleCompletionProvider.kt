@@ -31,15 +31,15 @@ import net.akehurst.language.typemodel.api.TypeInstance
 class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFromGrammar> {
 
     companion object {
-        private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-        private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
+        private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
+        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typeModel
         private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
-        private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
-        private val aglStyleTypeModel = Agl.registry.agl.style.processor!!.typeModel
+        private val aglStyleQualifiedName get() = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
+        private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typeModel
         private val aglStyleNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")
 
-        private val aglBaseQualifiedName = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
+        private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
         //private val aglBaseTypeModel = Agl.registry.agl.base.processor!!.typeModel
         private val aglBaseNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglBaseQualifiedName) as GrammarTypeNamespace? ?: error("")
 

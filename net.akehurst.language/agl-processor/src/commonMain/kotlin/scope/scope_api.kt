@@ -19,17 +19,17 @@ package net.akehurst.language.scope.api
 
 import net.akehurst.language.base.api.QualifiedName
 
-data class ScopedItem<ItemType>(
+data class ItemInScope<ItemInScopeType>(
     val referableName: String,
     val qualifiedTypeName: QualifiedName,
-    val item: ItemType
+    val item: ItemInScopeType
 )
 
 /**
  * ItemType - type of elements in the scope
  * TypeNames are specifically passed as Strings so that A Scope is easily serialised
  */
-interface Scope<ItemType> {
+interface Scope<ItemInScopeType> {
 
     /**
      * unqualified TypeName from the ScopeDefinition,
@@ -42,18 +42,18 @@ interface Scope<ItemType> {
     /**
      * item.name -> item.type -> item
      */
-    val items: Map<String, Map<QualifiedName, ItemType>>
+    val items: Map<String, Map<QualifiedName, ItemInScopeType>>
 
     //TODO: don't want this here..see implementation
-    val scopeMap:Map<ItemType, Scope<ItemType>>
+   // val scopeMap:Map<ItemType, Scope<ItemInScopeType>>
 
 
     /**
      * childScopeIdentityInThis -> child Scope
      */
-    val childScopes: Map<String, Scope<ItemType>>
+    val childScopes: Map<String, Scope<ItemInScopeType>>
 
-    val rootScope: Scope<ItemType>
+    val rootScope: Scope<ItemInScopeType>
 
     val isEmpty: Boolean
 
@@ -62,32 +62,32 @@ interface Scope<ItemType> {
     /**
      * find all items in this scope with the given <name>, return list of pairs (item,its-typeName)
      */
-    fun findItemsNamed(name: String): Set<ScopedItem<ItemType>>
+    fun findItemsNamed(name: String): Set<ItemInScope<ItemInScopeType>>
 
     /**
      * return List<Pair<referableName, item>>
      */
-    fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ScopedItem<ItemType>>
+    fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>>
 
-    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ScopedItem<ItemType>>
+    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>>
 
     /**
      * find all items with the given qualified name, return list of pairs (item,its-typeName)
      * if qualifiedName contains only one name, first try to find it
      */
-    fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ScopedItem<ItemType>>
+    fun findItemsByQualifiedName(qualifiedName: List<String>): Set<ItemInScope<ItemInScopeType>>
 
-    fun findItemsByQualifiedNameConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ScopedItem<ItemType>>
+    fun findItemsByQualifiedNameConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>>
 
-    fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemType>?
+    fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemInScopeType>?
 
-    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName, item: ItemType): Scope<ItemType>
+    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName, item: ItemInScopeType): Scope<ItemInScopeType>
 
     /**
      * adds Pair(item, typeName) to this scope
      * return true if added, false if the pair is already in the scope
      */
-    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, item: ItemType, replaceIfAlreadyExists:Boolean): Boolean
+    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, item: ItemInScopeType, replaceIfAlreadyExists:Boolean): Boolean
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

@@ -19,7 +19,7 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.format.test.FormatModelTest
-import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -30,7 +30,7 @@ class test_AglFormat {
     private companion object {
         data class TestData(
             val sentence: String,
-            val expectedAsm: AglFormatterModel? = null
+            val expectedAsm: AglFormatModel? = null
         )
 
         val testData = listOf(

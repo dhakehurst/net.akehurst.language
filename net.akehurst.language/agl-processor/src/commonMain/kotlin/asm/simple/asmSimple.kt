@@ -59,12 +59,13 @@ class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
     override fun listOfSeparatedValues(elements: ListSeparated<AsmValue, AsmValue, AsmValue>): AsmValue {
         return AsmListSeparatedSimple(elements)
     }
-    override fun constructStructure(path:AsmPath, qualifiedTypeName: QualifiedName): AsmStructureSimple {
+    override fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureSimple {
+        val path = args[0] as AsmPath
         return AsmStructureSimple(path, qualifiedTypeName)
     }
 
-    override fun setProperty(self: AsmStructureSimple, index:Int, name: PropertyValueName, value: AsmValue) {
-       self.setProperty(name, value,index)
+    override fun setProperty(self: AsmStructureSimple, index: Int, propertyName: String, value: AsmValue) {
+       self.setProperty(PropertyValueName(propertyName), value,index)
     }
 
     override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject {
@@ -78,7 +79,7 @@ class AsmPathSimple(
 
     companion object {
         const val SEPARATOR = "/"
-        val EXTERNAL = AsmPathSimple("§external")
+        //val EXTERNAL = AsmPathSimple("§external")
         val ROOT = AsmPathSimple(SEPARATOR)
     }
 
@@ -90,7 +91,7 @@ class AsmPathSimple(
             else -> AsmPathSimple(this.value.substringBeforeLast("/"))
         }
 
-    override val isExternal: Boolean get() = EXTERNAL.value == this.value
+    //override val isExternal: Boolean get() = EXTERNAL.value == this.value
 
     override operator fun plus(segment: String) = if (this == ROOT) AsmPathSimple("/$segment") else AsmPathSimple("$value/$segment")
 

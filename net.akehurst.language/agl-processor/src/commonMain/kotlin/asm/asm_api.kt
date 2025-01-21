@@ -28,7 +28,7 @@ interface AsmPath {
     val segments: List<String>
     val parent: AsmPath?
 
-    val isExternal: Boolean
+   // val isExternal: Boolean
 
     operator fun plus(segment: String): AsmPath
 }

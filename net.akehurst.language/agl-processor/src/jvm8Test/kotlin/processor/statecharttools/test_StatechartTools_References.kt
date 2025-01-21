@@ -19,22 +19,22 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.asm.simple.AsmPathSimple
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
-import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
+import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.format.asm.AglFormatterModelFromAsm
+import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -67,7 +67,7 @@ class test_StatechartTools_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
+                formatterResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
@@ -508,7 +508,7 @@ StatechartSpecification {
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("BuiltInType"))
 
         val expectedContext = contextAsmSimple {
-            item("integer", "external.BuiltInType", AsmPathSimple.EXTERNAL.value)
+            item("integer", "external.BuiltInType", "")
         }
 
         val expectedAsm = asmSimple(
@@ -543,7 +543,7 @@ StatechartSpecification {
         }
 
         val context = contextAsmSimple {
-            item("integer", bit.qualifiedName.value, AsmPathSimple.EXTERNAL.value)
+            item("integer", bit.qualifiedName.value, "")
         }
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }

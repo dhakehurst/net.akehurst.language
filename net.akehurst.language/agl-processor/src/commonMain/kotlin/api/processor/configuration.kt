@@ -23,10 +23,9 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.regex.api.RegexEngineKind
 import net.akehurst.language.style.api.AglStyleModel
@@ -41,7 +40,7 @@ typealias TypeModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,
 typealias CrossReferenceModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceModel>
 typealias SyntaxAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
-typealias FormatterResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatterModel>
+typealias FormatModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatModel>
 typealias StyleResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglStyleModel>
 typealias CompletionProviderResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
 
@@ -69,7 +68,7 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val crossReferenceModelResolver: CrossReferenceModelResolver<AsmType,  ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>?
-    val formatterResolver: FormatterResolver<AsmType,  ContextType>?
+    val formatterResolver: FormatModelResolver<AsmType,  ContextType>?
     val styleResolver: StyleResolver<AsmType,  ContextType>?
     val completionProvider: CompletionProviderResolver<AsmType,  ContextType>?
 }

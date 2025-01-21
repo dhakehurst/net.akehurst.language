@@ -485,7 +485,7 @@ class test_CrossReferenceLanguage {
                 "For references in 'Rule2', referred to type 'AnExternalType2' not found"
             )
         )
-
+//FIXME: location fails
         test(grammarStr, sentence, expected, null, expIssues)
 
     }

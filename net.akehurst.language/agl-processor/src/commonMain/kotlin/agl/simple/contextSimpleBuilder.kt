@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.asm.api.AsmPath
+import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 
 fun contextAsmSimple(init: ScopeBuilder.() -> Unit): ContextAsmSimple {
@@ -34,17 +35,17 @@ annotation class ContextSimpleDslMarker
 
 @ContextSimpleDslMarker
 class ScopeBuilder(
-    private val _scope: ScopeSimple<AsmPath>
+    private val _scope: ScopeSimple<AsmStructure>
 ) {
 
-    fun item(id: String, qualifiedTypeName: String, pathStr: String) {
-        val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path, false)
+    fun item(id: String, qualifiedTypeName: String, item: AsmStructure) {
+        //val path = AsmPathSimple(pathStr)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), item, false)
     }
 
-    fun scope(forReferenceInParent: String, forTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
-        val path = AsmPathSimple(pathStr)
-        val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName), path)
+    fun scope(forReferenceInParent: String, forTypeName: String, item: AsmStructure, init: ScopeBuilder.() -> Unit = {}) {
+       // val path = AsmPathSimple(pathStr)
+        val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName), item)
         val b = ScopeBuilder(chScope)
         b.init()
     }

@@ -23,6 +23,7 @@ class OptionHolderDefault(
     override var parent: OptionHolder? = null,
     val options: Map<String, String> = emptyMap()
 ) : OptionHolder {
+
     override operator fun get(name: String): String? {
         return this.options[name] ?: this.parent?.get(name)
     }

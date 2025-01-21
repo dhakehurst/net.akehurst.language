@@ -22,11 +22,10 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.issues.api.IssueCollection
@@ -92,7 +91,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      */
     val crossReferenceModel: CrossReferenceModel
 
-    val formatterModel: AglFormatterModel?
+    val formatterModel: AglFormatModel?
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 

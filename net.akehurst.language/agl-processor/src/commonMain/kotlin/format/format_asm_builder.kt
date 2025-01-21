@@ -15,30 +15,38 @@
  *
  */
 
-package net.akehurst.language.agl.format.asm
+package net.akehurst.language.agl.format.builder
 
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.AsmSimple
-import net.akehurst.language.asm.api.AsmStructure
-import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.format.asm.AglFormatterModelFromAsm
-import net.akehurst.language.formatter.api.AglFormatterModel
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.format.asm.AglFormatModelDefault
+import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.FormatNamespace
 
 @DslMarker
 annotation class FormatModelDslMarker
 
-fun formatModel(init: FormatModelBuilder.() -> Unit): AglFormatterModel {
-    val b = FormatModelBuilder()
+fun formatModel(name:String, init: FormatModelBuilder.() -> Unit): AglFormatModel {
+    val b = FormatModelBuilder(SimpleName(name))
     b.init()
     return b.build()
 }
 
 @FormatModelDslMarker
 class FormatModelBuilder(
+    val name:SimpleName
 ) {
+
+    private val _namespaces = mutableListOf<FormatNamespace>()
+    private val _options = mutableMapOf<String,String>()
+    private val _model = AglFormatModelDefault(name, OptionHolderDefault(null, _options), _namespaces)
 
     private val _asm = AsmSimple()
     private val _ruleList = mutableListOf<AsmStructure>()
@@ -59,9 +67,7 @@ class FormatModelBuilder(
         _ruleList.add(formatRuleElement)
     }
 
-    fun build(): AglFormatterModel {
-        return AglFormatterModelFromAsm(_asm)
-    }
+    fun build(): AglFormatModel = _model
 }
 
 @FormatModelDslMarker

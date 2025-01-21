@@ -237,7 +237,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
     }
 
     private fun createAsmStructure(path: AsmPath, qualifiedTypeName: QualifiedName): Any {
-        return asmFactory.constructStructure(path, qualifiedTypeName)
+        return asmFactory.constructStructure(qualifiedTypeName,path)
     }
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
@@ -586,12 +586,12 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
         }
-        val self = asmFactory.constructStructure(AsmPathSimple(""), selfType.qualifiedTypeName)
-        asmFactory.setProperty(self, 0, AsmTransformInterpreter.PATH.asValueName, asmPath)
-        asmFactory.setProperty(self, 1, AsmTransformInterpreter.ALTERNATIVE.asValueName, alternative)
-        asmFactory.setProperty(self, 2, AsmTransformInterpreter.CHILDREN.asValueName, childrenAsmList)
-        asmFactory.setProperty(self, 3, AsmTransformInterpreter.CHILD.asValueName, childrenAsmList)
-        asmFactory.setProperty(self, 4, AsmTransformInterpreter.MATCHED_TEXT.asValueName, asmMatchedText)
+        val self = asmFactory.constructStructure(selfType.qualifiedTypeName, AsmPathSimple(""))
+        asmFactory.setProperty(self, 0, AsmTransformInterpreter.PATH.value, asmPath)
+        asmFactory.setProperty(self, 1, AsmTransformInterpreter.ALTERNATIVE.value, alternative)
+        asmFactory.setProperty(self, 2, AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
+        asmFactory.setProperty(self, 3, AsmTransformInterpreter.CHILD.value, childrenAsmList)
+        asmFactory.setProperty(self, 4, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
 
         val typedSelf = asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
@@ -952,7 +952,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
     private fun setPropertyFromDeclaration(el: Any, declaration: PropertyDeclaration, value: Any?) {
         // whether it is a reference or not is handled later in Semantic Analysis
         val v = value ?: asmFactory.nothingValue()
-        asmFactory.setProperty(el, declaration.index, declaration.name.asValueName, v)
+        asmFactory.setProperty(el, declaration.index, declaration.name.value, v)
     }
 
 }

@@ -25,22 +25,53 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.asm.api.AsmPrimitive
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.simple.isStdString
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.processor.EvaluationContext
+import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.asmValue
+import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
-
-typealias CreateScopedItem<AsmType, ItemInScopeType> = (asm: AsmType, referableName: String, item:AsmStructure) -> ItemInScopeType
-typealias ResolveScopedItem<AsmType, ItemInScopeType> = (asm: AsmType, ref: ItemInScopeType) -> AsmStructure?
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class SemanticAnalyserSimple(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
 ) : SemanticAnalyser<Asm, ContextAsmSimple> {
 
+    companion object {
+        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceModel: CrossReferenceModel, inTypeName: SimpleName, self: AsmStructure): String? {
+            return when {
+                crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
+                else -> {
+                    val exp = crossReferenceModel.identifyingExpressionFor(inTypeName, self.qualifiedTypeName)
+                    when (exp) {
+                        null -> null
+                        else -> {
+                            val elType = interpreter.typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), exp).asmValue
+                            when {
+                                value is AsmPrimitive && value.isStdString -> value.value as String
+                                else -> TODO()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private lateinit var _locationMap: Map<Any, InputLocation>
+
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
 
     override fun clear() {
         _issues.clear()
@@ -57,14 +88,14 @@ class SemanticAnalyserSimple(
         when {
             null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis provide a context.")
             else -> {
-                this.buildScope(options,asm, context)
-                checkAndResolveReferences(options,asm,_locationMap,context)
+                this.buildScope(options, asm, context)
+                checkAndResolveReferences(options, asm, _locationMap, context)
             }
         }
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun checkAndResolveReferences(options:SemanticAnalysisOptions<ContextAsmSimple>,asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
+    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
@@ -81,26 +112,40 @@ class SemanticAnalyserSimple(
     }
 
     private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
-        val resFunc: ((ref: AsmPath) -> AsmStructure?)? = if (resolve) {
+        val resFunc: ((ref: AsmStructure) -> AsmStructure?)? = if (resolve) {
             { ref -> context.resolveScopedItem.invoke(asm, ref) }
         } else {
             null
         }
-        asm.traverseDepthFirst(ReferenceResolverSimple(typeModel, crossReferenceModel, context.rootScope, resFunc, locationMap, _issues))
+        asm.traverseDepthFirst(
+            ReferenceResolverSimple(
+                typeModel, crossReferenceModel, context.rootScope,
+                this::identifyingValueInFor,
+                resFunc,
+                locationMap, _issues
+            )
+        )
     }
 
-    private fun buildScope(options:SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, context: ContextAsmSimple) {
+    private fun buildScope(options: SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, context: ContextAsmSimple) {
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
                 val createFunc = { ref: String, item: AsmStructure -> context.createScopedItem.invoke(asm, ref, item) }
-                val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
+                val scopeCreator = ScopeCreator(
+                    typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
                     options.replaceIfItemAlreadyExistsInScope,
                     options.ifItemAlreadyExistsInScopeIssueKind,
-                    createFunc, _locationMap, _issues)
+                    this::identifyingValueInFor,
+                    createFunc,
+                    _locationMap, _issues
+                )
                 asm.traverseDepthFirst(scopeCreator)
             }
         }
     }
+
+    private fun identifyingValueInFor(inTypeName: SimpleName, self: AsmStructure): String? =
+        identifyingValueInFor(_interpreter, crossReferenceModel, inTypeName, self)
 
 }

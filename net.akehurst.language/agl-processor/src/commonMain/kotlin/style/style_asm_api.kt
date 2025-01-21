@@ -36,6 +36,7 @@ interface StyleSetReference {
 }
 
 interface StyleSet : Definition<StyleSet> {
+    override val namespace: StyleNamespace
     val extends: List<StyleSetReference>
     val rules : List<AglStyleRule>
     val metaRules: List<AglStyleMetaRule>

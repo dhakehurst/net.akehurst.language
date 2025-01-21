@@ -63,6 +63,16 @@ class StyleNamespaceDefault(
 
 }
 
+data class StyleSetReferenceDefault(
+    override val localNamespace: StyleNamespace,
+    override val nameOrQName: PossiblyQualifiedName
+) : StyleSetReference {
+    override var resolved: StyleSet? = null
+    override fun resolveAs(resolved: StyleSet) {
+        this.resolved = resolved
+    }
+}
+
 class AglStyleSetDefault(
     override val namespace: StyleNamespace,
     override val name: SimpleName,
@@ -86,16 +96,6 @@ class AglStyleSetDefault(
         return sb.toString()
     }
 
-}
-
-data class StyleSetReferenceDefault(
-    override val localNamespace: StyleNamespace,
-    override val nameOrQName: PossiblyQualifiedName
-) : StyleSetReference {
-    override var resolved: StyleSet? = null
-    override fun resolveAs(resolved: StyleSet) {
-        this.resolved = resolved
-    }
 }
 
 data class AglStyleMetaRuleDefault(

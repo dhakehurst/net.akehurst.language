@@ -36,8 +36,8 @@ import net.akehurst.language.style.api.AglStyleTagRule
 class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGrammar> {
 
     companion object {
-        private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-        private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
+        private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
+        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typeModel
         private val aglGrammarNamespace: GrammarTypeNamespace
             get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 

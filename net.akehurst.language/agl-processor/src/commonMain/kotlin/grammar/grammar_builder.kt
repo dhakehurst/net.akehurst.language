@@ -17,42 +17,96 @@
 
 package net.akehurst.language.grammar.builder
 
-import net.akehurst.language.base.api.Namespace
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.base.api.asPossiblyQualifiedName
+import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
+import net.akehurst.language.typemodel.api.TypeNamespace
+import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 @DslMarker
 annotation class GrammarBuilderMarker
 
-fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
-    val ns = GrammarNamespaceDefault(QualifiedName(namespace))
-    val gr = GrammarDefault(ns, SimpleName(name))
-    ns.addDefinition(gr)
-    val b = GrammarBuilder(gr)
+fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(), init: GrammarModelBuilder.() -> Unit): GrammarModel {
+    val b = GrammarModelBuilder(SimpleName(name), namespaces)
     b.init()
     return b.build()
 }
 
-//fun (grammar: GrammarAbstract, init: GrammarBuilder.() -> Unit): Grammar {
-//    val b = GrammarBuilder(grammar)
-//    b.init()
-//    return b.build()
-//}
+fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
+    val ns = GrammarNamespaceDefault(QualifiedName(namespace))
+    val b = GrammarBuilder(ns, SimpleName(name))
+    b.init()
+    val gr = b.build()
+    ns.addDefinition(gr)
+    return b.build()
+}
 
 @GrammarBuilderMarker
-class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract) {
+class GrammarModelBuilder(
+    name: SimpleName,
+    namespaces: List<GrammarNamespace>
+) {
+    private val _options = mutableMapOf<String, String>()
+    private val _model = GrammarModelDefault(name, OptionHolderDefault(null, _options), namespaces)
 
+    fun option(key: String, value: String) {
+        _options[key] = value
+    }
+
+    fun namespace(qualifiedName: String, init: GrammarNamespaceBuilder.() -> Unit) {
+        val b = GrammarNamespaceBuilder(_model, qualifiedName)
+        b.init()
+        val ns = b.build()
+        _model.addNamespace(ns)
+    }
+
+    fun build() = _model
+}
+
+@GrammarBuilderMarker
+class GrammarNamespaceBuilder(
+    val grammarModel: GrammarModel,
+    qualifiedName: String
+) {
+    private val _options = mutableMapOf<String, String>()
+    private val _import = mutableListOf<Import>()
+    private val _namespace = GrammarNamespaceDefault(qualifiedName.asQualifiedName, OptionHolderDefault(null, _options), _import)
+
+    fun option(key: String, value: String) {
+        _options[key] = value
+    }
+
+    fun import(qualifiedName:String) {
+        _import.add(Import(qualifiedName))
+    }
+
+    fun grammar(name:String, init: GrammarBuilder.() -> Unit) {
+        val b = GrammarBuilder(_namespace, SimpleName(name))
+        b.init()
+        val g = b.build()
+        _namespace.addDefinition(g)
+    }
+
+    fun build() = _namespace
+}
+
+@GrammarBuilderMarker
+class GrammarBuilder(
+    namespace:GrammarNamespace,
+    name:SimpleName,
+) {
+
+    private val _grammar = GrammarDefault(namespace, name)
     private val _terminals = mutableMapOf<String, Terminal>()
 
     fun extends(nameOrQName: String) {
-        grammar.extends.add(GrammarReferenceDefault(grammar.namespace, nameOrQName.asPossiblyQualifiedName))
+        _grammar.extends.add(GrammarReferenceDefault(_grammar.namespace, nameOrQName.asPossiblyQualifiedName))
     }
 
     fun extendsGrammar(extended: GrammarReference) {
-        grammar.extends.add(extended)
+        _grammar.extends.add(extended)
     }
 
     private fun terminal(value: String, isPattern: Boolean): Terminal {
@@ -60,7 +114,6 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         return if (null == t) {
             val tt = TerminalDefault(value, isPattern)
             _terminals[value] = tt
-            //tt.grammar = this.grammar
             tt
         } else {
             if (isPattern == t.isPattern) {
@@ -73,13 +126,13 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
 
     private fun createRule(grammarRuleName: GrammarRuleName, overrideKind: OverrideKind?, isSkip: Boolean, isLeaf: Boolean, rhs: RuleItem) = when (overrideKind) {
         null -> {
-            val gr = NormalRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf)
+            val gr = NormalRuleDefault(_grammar, grammarRuleName, isSkip, isLeaf)
             gr.rhs = rhs
             gr
         }
 
         else -> {
-            val gr = OverrideRuleDefault(this.grammar, grammarRuleName, isSkip, isLeaf, overrideKind)
+            val gr = OverrideRuleDefault(_grammar, grammarRuleName, isSkip, isLeaf, overrideKind)
             gr.overriddenRhs = rhs
             gr
         }
@@ -96,29 +149,29 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
     fun empty(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false) {
         val rhs = EmptyRuleDefault()
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun choice(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: ChoiceItemBuilder.() -> Unit) {
-        val ib = ChoiceItemBuilder(grammar.namespace)
+        val ib = ChoiceItemBuilder(_grammar.namespace)
         ib.init()
         val items = ib.build()
         val rhs = ChoiceLongestDefault(items)
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun concatenation(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: ConcatenationItemBuilder.() -> Unit) {
-        val ib = ConcatenationItemBuilder(grammar.namespace)
+        val ib = ConcatenationItemBuilder(_grammar.namespace)
         ib.init()
         val items = ib.build()
         val rhs = ConcatenationDefault(items)
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun optional(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder(grammar.namespace)
+        val ib = SimpleItemsBuilder(_grammar.namespace)
         ib.init()
         val items = ib.build()
         when (items.size) {
@@ -128,11 +181,11 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         }
         val rhs = OptionalItemDefault(items[0])
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun list(grammarRuleName: String, min: Int, max: Int, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder(grammar.namespace)
+        val ib = SimpleItemsBuilder(_grammar.namespace)
         ib.init()
         val items = ib.build()
         when (items.size) {
@@ -142,11 +195,11 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         }
         val rhs = SimpleListDefault(min, max, items[0])
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun separatedList(grammarRuleName: String, min: Int, max: Int, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false, init: SimpleItemsBuilder.() -> Unit) {
-        val ib = SimpleItemsBuilder(grammar.namespace)
+        val ib = SimpleItemsBuilder(_grammar.namespace)
         ib.init()
         val items = ib.build()
         when (items.size) {
@@ -157,18 +210,18 @@ class GrammarBuilder internal constructor(internal val grammar: GrammarAbstract)
         }
         val rhs = SeparatedListDefault(min, max, items[0], items[1])
         val gr = createRule(GrammarRuleName(grammarRuleName), overrideKind, isSkip, isLeaf, rhs)
-        this.grammar.grammarRule.add(gr)
+        _grammar.grammarRule.add(gr)
     }
 
     fun preference(itemReference: String, init: PreferenceRuleBuilder.() -> Unit) {
-        val forItem = NonTerminalDefault(this.grammar.selfReference, GrammarRuleName(itemReference))
-        val prb = PreferenceRuleBuilder(this.grammar, forItem)
+        val forItem = NonTerminalDefault(_grammar.selfReference, GrammarRuleName(itemReference))
+        val prb = PreferenceRuleBuilder(_grammar, forItem)
         prb.init()
         val pr = prb.build()
-        grammar.preferenceRule.add(pr)
+        _grammar.preferenceRule.add(pr)
     }
 
-    fun build(): Grammar = grammar
+    fun build(): Grammar = _grammar
 }
 
 @GrammarBuilderMarker
@@ -320,24 +373,24 @@ class PreferenceRuleBuilder(
 ) {
     val optionList = mutableListOf<PreferenceOption>()
 
-    fun optionLeft(spine: List<String>, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
+    fun optionLeft(spine: List<String>, choiceIndicator: ChoiceIndicator, choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
-                choiceNumber =  choiceNumber,
+                choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 Associativity.LEFT
             )
         )
     }
 
-    fun optionRight(spine: List<String>, choiceIndicator:ChoiceIndicator,choiceNumber: Int, terminals: List<String>) {
+    fun optionRight(spine: List<String>, choiceIndicator: ChoiceIndicator, choiceNumber: Int, terminals: List<String>) {
         optionList.add(
             PreferenceOptionDefault(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
-                choiceNumber =  choiceNumber,
+                choiceNumber = choiceNumber,
                 onTerminals = terminals.map { TerminalDefault(it, false) },
                 Associativity.RIGHT
             )

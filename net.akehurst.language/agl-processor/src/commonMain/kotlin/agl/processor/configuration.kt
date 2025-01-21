@@ -21,7 +21,6 @@ import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.format.asm.AglFormatterModelFromAsm
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.asm.api.Asm
@@ -29,6 +28,7 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -54,7 +54,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = null,
+    override var formatterResolver: FormatModelResolver<AsmType, ContextType>? = null,
     override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
     override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -99,7 +99,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = { p ->
+    override var formatterResolver: FormatModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
             null,
             IssueHolder(LanguageProcessorPhase.ALL)
@@ -164,8 +164,8 @@ internal class LanguageProcessorConfigurationSimple(
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override var formatterResolver: FormatterResolver<Asm, ContextAsmSimple>? = { p ->
-        AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString(""))
+    override var formatterResolver: FormatModelResolver<Asm, ContextAsmSimple>? = { p ->
+        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(

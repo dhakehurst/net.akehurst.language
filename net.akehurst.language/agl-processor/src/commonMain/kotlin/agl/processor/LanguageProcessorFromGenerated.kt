@@ -16,32 +16,32 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.format.processor.FormatterSimple
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
 internal class LanguageProcessorFromGenerated<AsmType:Any, ContextType : Any>(
-    val generated: GeneratedLanguageProcessorAbstract<AsmType, ContextType>,
+    val generated: LanguageObjectAbstract<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
         get() = TODO("not implemented")
 
     override val targetRuleSet: RuleSet = generated.ruleSet
-    override val grammarModel: GrammarModel = generated.grammar
+    override val grammarModel: GrammarModel = generated.grammarModel
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
-    override val formatter: Formatter<AsmType>? = generated.formatter
+    override val formatter: Formatter<AsmType> = FormatterSimple(generated.formatModel)
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
 
     init {

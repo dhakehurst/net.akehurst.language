@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,28 @@
  *
  */
 
-package net.akehurst.language.format.processor
+package net.akehurst.language.typemodel.processor
 
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.typemodel.api.TypeModel
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatModel, SentenceContext<String>> {
+class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextFromGrammar> {
+
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+
     override fun clear() {
-
     }
 
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        return emptyList()
-//    }
-
-    override fun analyse(
-        asm: AglFormatModel, locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< SentenceContext<String>>
-    ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+    override fun analyse(asm: TypeModel, locationMap: Map<Any, InputLocation>?, options: SemanticAnalysisOptions<ContextFromGrammar>): SemanticAnalysisResult {
+        return SemanticAnalysisResultDefault(_issues)
     }
+
 }

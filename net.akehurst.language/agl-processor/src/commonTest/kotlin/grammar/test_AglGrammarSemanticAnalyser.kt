@@ -52,7 +52,7 @@ class test_AglGrammarSemanticAnalyser {
             // grammars are registered in a registry when semantically analysed,
             // thus need to analyse Base grammar first
             val context = ContextFromGrammarRegistry(Agl.registry)
-            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.grammar.namespace as GrammarNamespace))
+            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.targetGrammar.namespace as GrammarNamespace))
             semanticAnalysis(
                 SyntaxAnalysisResultDefault(
                     gm,

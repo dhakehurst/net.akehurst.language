@@ -20,7 +20,7 @@ package net.akehurst.language.reference.api
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.reference.asm.ReferenceExpressionAbstract
+
 
 interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNamespace> {
 
@@ -29,6 +29,7 @@ interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNa
     fun isScopeDefinedFor(possiblyQualifiedTypeName: PossiblyQualifiedName): Boolean
     fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression>
     fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName>
+    fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression?
 }
 
 interface CrossReferenceNamespace : Namespace<DeclarationsForNamespace> {
@@ -111,6 +112,6 @@ interface ReferenceExpressionProperty : ReferenceExpression {
 interface ReferenceExpressionCollection : ReferenceExpression {
     val expression: Expression
     val ofType: PossiblyQualifiedName?
-    val referenceExpressionList: List<ReferenceExpressionAbstract>
+    val referenceExpressionList: List<ReferenceExpression>
 }
 

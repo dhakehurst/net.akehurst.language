@@ -86,7 +86,7 @@ grammar AglGrammar extends Base {
             namespace = "net.akehurst.language",
             name = "Grammar"
         ) {
-            extendsGrammar(AglBase.grammar.selfReference)
+            extendsGrammar(AglBase.targetGrammar.selfReference)
             concatenation("unit") {
                 ref("namespace"); lst(1, -1) { ref("grammar") }
             }

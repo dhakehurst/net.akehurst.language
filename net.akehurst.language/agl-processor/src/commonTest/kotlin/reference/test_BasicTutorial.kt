@@ -125,7 +125,7 @@ class test_BasicTutorial {
                 "No target of type(s) [TargetDef] found for referring value 'Ann' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
             )
         )
-
+//FIXME: path different
         testFail(sentence, expIssues)
     }
 }

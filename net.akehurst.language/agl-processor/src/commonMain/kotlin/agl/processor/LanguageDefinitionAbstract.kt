@@ -23,7 +23,6 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.IssueCollection
@@ -221,7 +220,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    protected var _formatterResolver: FormatterResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatterResolver) { _, oldValue, newValue ->
+    protected var _formatterResolver: FormatModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatterResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
