@@ -55,7 +55,7 @@ class test_CompletionProviderSimple {
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
-            val actual = proc.expectedItemsAt(data.sentence, data.position,  Agl.options {
+            val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
                 completionProvider {
                     context(data.context)
                 }
@@ -150,6 +150,10 @@ class test_CompletionProviderSimple {
         """
         val sentence = ""
         val expected = listOf(
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "A", text = "<A>"),
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "B", text = "<B>"),
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "C", text = "<C>"),
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "S", text = "<Inner::S>"),
             CompletionItem(CompletionItemKind.LITERAL, "'a'", "a"),
             CompletionItem(CompletionItemKind.LITERAL, "'b'", "b"),
             CompletionItem(CompletionItemKind.LITERAL, "'c'", "c")
@@ -180,6 +184,7 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
 
         val expected = listOf(
+            CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
             CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<NAME>")
         )
 
@@ -227,11 +232,12 @@ class test_CompletionProviderSimple {
         }
 
         val context = ContextAsmSimple()
-        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), AsmPathSimple.EXTERNAL, false)
+        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), "int", false)
 
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.REFERRED, "TypeDef", "int"),
+            CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
             CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z]+", "<REF>"),
         )
 

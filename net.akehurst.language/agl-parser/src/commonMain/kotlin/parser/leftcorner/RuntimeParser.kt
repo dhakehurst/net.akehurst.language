@@ -35,7 +35,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.parsermessages.Message
+import net.akehurst.language.parsermessages.IssueMessage
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sentence.api.Sentence
@@ -246,7 +246,7 @@ internal class RuntimeParser(
 
             val progStep = progressSteps[head] //FIXME: maybe slow - is there a better way?
             if (progStep > 1000) { //FIXME: make part of config
-                this.interrupt(Message.PARSER_WONT_STOP) //TODO: include why - which node/rule
+                this.interrupt(IssueMessage.PARSER_WONT_STOP) //TODO: include why - which node/rule
             } else {
                 progressSteps[head] = progStep + 1
             }

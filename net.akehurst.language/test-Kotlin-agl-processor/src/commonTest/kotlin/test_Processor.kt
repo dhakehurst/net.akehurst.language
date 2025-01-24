@@ -99,7 +99,7 @@ class test_Processor {
 
         class MyContext(
             val predefined:Map<String, Value>
-        ) : SentenceContext<Value>
+        ) : SentenceContext
 
         class MySemanticAnalyser : SemanticAnalyser<Value, MyContext> {
             val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)

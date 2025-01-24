@@ -155,7 +155,7 @@ internal class Grammar2Namespaces(
     }
 
     private fun findOrCreateGrammarNamespace(qualifiedName: QualifiedName) =
-        GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(typeModel,qualifiedName).also { gns ->
+        GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(typeModel, qualifiedName).also { gns ->
             grammar.allExtends.map {
                 it.resolved?.qualifiedName?.asImport ?: error("Should not happen - should already be resolved at this point!")
             }.forEach {
@@ -271,7 +271,11 @@ internal class Grammar2TransformRuleSet(
         val existing = _grRuleNameToTrRule[ruleName]
         return if (null == existing) {
             val tn = this.configuration?.typeNameFor(rule) ?: SimpleName(ruleName.value)
-            val tp = grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
+            val tp = when (rule) {
+                is NormalRule -> grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
+                is OverrideRule -> grammarTypeNamespace.findTypeNamed(tn) ?: error("Type for override rule '${rule.qualifiedName}' not found")
+                else -> error("Subtype of GrammarRule '${rule::class.simpleName}' not supported")
+            }
             val tt = tp.type()
             val tr = cnm.construct(tp as TP)
             tr.grammarRuleName = rule.name
@@ -632,6 +636,7 @@ internal class Grammar2TransformRuleSet(
                 }
                 unionType.type().toSubtypeTrRule()
             }
+
             subtypeTransforms.allOfType(StdLibDefault.List) -> { //=== PrimitiveType.LIST } -> {
                 val itemType = StdLibDefault.AnyType//TODO: compute better elementType ?
                 val choiceType = StdLibDefault.List.type(listOf(itemType.asTypeArgument))
@@ -1156,9 +1161,9 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun typeNameForChoiceItem(choice: Choice):SimpleName {
+    private fun typeNameForChoiceItem(choice: Choice): SimpleName {
         val ruleName = choice.owningRule.name
-        val nextNum = _unnamedUnionNames.get(ruleName)?:let {
+        val nextNum = _unnamedUnionNames.get(ruleName) ?: let {
             _unnamedUnionNames[ruleName] = 1
             1
         }

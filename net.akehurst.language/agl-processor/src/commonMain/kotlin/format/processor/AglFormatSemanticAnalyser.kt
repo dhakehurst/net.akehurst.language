@@ -27,7 +27,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.sentence.api.InputLocation
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatModel, SentenceContext<String>> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatModel, SentenceContext> {
     override fun clear() {
 
     }
@@ -38,7 +38,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatModel, SentenceConte
 
     override fun analyse(
         asm: AglFormatModel, locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< SentenceContext<String>>
+        options: SemanticAnalysisOptions< SentenceContext>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }

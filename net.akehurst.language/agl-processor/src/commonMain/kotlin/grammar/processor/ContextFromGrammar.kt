@@ -27,7 +27,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 // used by other languages that reference rules  in a grammar
 class ContextFromGrammar(
-) : SentenceContext<String> {
+) : SentenceContext {
     companion object {
         fun createContextFrom(grammars: GrammarModel): ContextFromGrammar {
             val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel

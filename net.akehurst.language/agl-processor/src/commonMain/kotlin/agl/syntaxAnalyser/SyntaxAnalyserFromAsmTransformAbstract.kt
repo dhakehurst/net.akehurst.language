@@ -240,7 +240,14 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         return asmFactory.constructStructure(qualifiedTypeName,path)
     }
 
-    private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
+    private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo) =
+        parsePathFor(parentPath,parentType,nodeInfo)
+
+    private fun parsePathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
+        return parentPath.plus(nodeInfo.node.rule.tag)
+    }
+
+    private fun asmPathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
             is PrimitiveType -> parentPath
             is UnionType -> parentPath
@@ -255,7 +262,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
                         val prop = parentType.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                        prop?.let { parentPath.plus(prop.name.value) } ?: parentPath.plus("<error>")
+                        val elem = prop?.let { prop.name.value } ?: "<error>"
+                        parentPath.plus(elem)
                     }
                 }
             }
@@ -603,7 +611,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         }
         return asm
     }
-
+/*
     private fun createValueFromBranch1(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any? {
         val targetType = findTrRuleForGrammarRuleNamedOrNull(target.node.rule.tag)
 
@@ -948,7 +956,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
             el
         }
     }
-
+*/
     private fun setPropertyFromDeclaration(el: Any, declaration: PropertyDeclaration, value: Any?) {
         // whether it is a reference or not is handled later in Semantic Analysis
         val v = value ?: asmFactory.nothingValue()

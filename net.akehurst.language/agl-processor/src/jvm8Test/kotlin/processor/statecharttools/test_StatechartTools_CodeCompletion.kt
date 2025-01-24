@@ -156,7 +156,7 @@ class test_StatechartTools_CodeCompletion {
               var x:
         """.trimIndent()
         val context = contextAsmSimple {
-            item("int", "external.BultInType", AsmPathSimple.EXTERNAL.value)
+            item("int", "external.BultInType", "int")
         }
         val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length,  Agl.options {
             parse {

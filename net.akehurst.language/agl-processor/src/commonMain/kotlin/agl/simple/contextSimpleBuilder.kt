@@ -17,15 +17,17 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.asm.simple.AsmPathSimple
-import net.akehurst.language.scope.asm.ScopeSimple
-import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.scope.asm.ScopeSimple
 
-fun contextAsmSimple(init: ScopeBuilder.() -> Unit): ContextAsmSimple {
-    val context = ContextAsmSimple()
-    val b = ScopeBuilder(context.rootScope)
+fun contextAsmSimple(
+    createScopedItem: CreateScopedItem<AsmStructure, Any> = {  ref, item -> item },
+    resolveScopedItem: ResolveScopedItem< AsmStructure, Any> = {  ref -> ref as AsmStructure },
+    init: ScopeBuilder<Any>.() -> Unit
+): ContextAsmSimple {
+    val context = ContextAsmSimple(createScopedItem, resolveScopedItem)
+    val b = ScopeBuilder(context.rootScope, createScopedItem, resolveScopedItem)
     b.init()
     return context
 }
@@ -34,28 +36,30 @@ fun contextAsmSimple(init: ScopeBuilder.() -> Unit): ContextAsmSimple {
 annotation class ContextSimpleDslMarker
 
 @ContextSimpleDslMarker
-class ScopeBuilder(
-    private val _scope: ScopeSimple<AsmStructure>
+class ScopeBuilder<ItemInScopeType : Any>(
+    private val _scope: ScopeSimple<ItemInScopeType>,
+    private val _createScopedItem: CreateScopedItem< AsmStructure, ItemInScopeType>,
+    private val _resolveScopedItem: ResolveScopedItem< AsmStructure, ItemInScopeType>
 ) {
 
-    fun item(id: String, qualifiedTypeName: String, item: AsmStructure) {
-        //val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, QualifiedName(qualifiedTypeName), item, false)
+    fun item(id: String, qualifiedTypeName: String, itemInScope: ItemInScopeType) {
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), itemInScope, false)
     }
 
-    fun scope(forReferenceInParent: String, forTypeName: String, item: AsmStructure, init: ScopeBuilder.() -> Unit = {}) {
-       // val path = AsmPathSimple(pathStr)
-        val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName), item)
-        val b = ScopeBuilder(chScope)
+    fun scope(forReferenceInParent: String, forTypeName: String, itemInScope: ItemInScopeType, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
+        // val path = AsmPathSimple(pathStr)
+       // val itemInScope = _createScopedItem.invoke(forReferenceInParent, item)
+        val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName), itemInScope)
+        val b = ScopeBuilder(chScope, _createScopedItem,_resolveScopedItem)
         b.init()
     }
 
-    fun scopedItem(id: String, qualifiedTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
-        val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, QualifiedName(qualifiedTypeName), path, false)
+    fun scopedItem(id: String, qualifiedTypeName: String, itemInScope: ItemInScopeType, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
+        //val itemInScope = _createScopedItem.invoke(id, item)
+        _scope.addToScope(id, QualifiedName(qualifiedTypeName), itemInScope, false)
         val forTypeName = qualifiedTypeName.substringAfterLast(".")
-        val chScope = _scope.createOrGetChildScope(id, QualifiedName(forTypeName), path)
-        val b = ScopeBuilder(chScope)
+        val chScope = _scope.createOrGetChildScope(id, QualifiedName(forTypeName), itemInScope)
+        val b = ScopeBuilder(chScope, _createScopedItem,_resolveScopedItem)
         b.init()
     }
 

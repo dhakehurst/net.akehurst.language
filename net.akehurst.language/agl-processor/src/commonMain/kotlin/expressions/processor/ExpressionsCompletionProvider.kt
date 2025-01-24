@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class ExpressionsCompletionProvider : CompletionProviderAbstract<Expression, SentenceContext<String>>() {
+class ExpressionsCompletionProvider : CompletionProviderAbstract<Expression, SentenceContext>() {
 
        //TODO
 

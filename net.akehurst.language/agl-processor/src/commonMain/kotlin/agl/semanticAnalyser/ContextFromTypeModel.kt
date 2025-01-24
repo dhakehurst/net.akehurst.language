@@ -26,7 +26,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 
 class ContextFromTypeModelReference(
     val languageDefinitionId: LanguageIdentity
-) : SentenceContext<String> {
+) : SentenceContext {
     //val rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     /*
         fun dereference(reg: LanguageRegistry): ContextFromTypeModel? {
@@ -42,7 +42,7 @@ class ContextFromTypeModelReference(
 
 class ContextFromTypeModel(
     val typeModel: TypeModel
-) : SentenceContext<String> {
+) : SentenceContext {
 
     override fun hashCode(): Int = typeModel.hashCode()
 

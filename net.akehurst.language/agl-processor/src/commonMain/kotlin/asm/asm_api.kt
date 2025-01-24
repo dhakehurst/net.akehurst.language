@@ -77,7 +77,8 @@ value class PropertyValueName(override val value: String): PublicValueType {
 }
 
 interface AsmStructure : AsmValue {
-    val path: AsmPath
+    val parsePath: AsmPath
+    var semanticPath: AsmPath?
 
     val property: Map<PropertyValueName, AsmStructureProperty>
 

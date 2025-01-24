@@ -16,6 +16,7 @@
 
 package net.akehurst.language.grammar.asm
 
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
 
 abstract class GrammarItemAbstract() : GrammarItem {
@@ -118,6 +119,8 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
         }
 
     }
+
+    override val qualifiedName get() = this.grammar.qualifiedName.append(SimpleName(this.name.value))
 
     override val isOneEmbedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
 

@@ -151,7 +151,7 @@ interface Grammar : Definition<Grammar> {
 }
 
 @JvmInline
-value class GrammarRuleName(override val value: String):PublicValueType {
+value class GrammarRuleName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -171,11 +171,12 @@ interface PreferenceOption : Formatable {
 }
 
 interface Spine {
-    val parts:List<NonTerminal>
+    val parts: List<NonTerminal>
 }
 
 interface GrammarRule : GrammarItem {
     val name: GrammarRuleName
+    val qualifiedName: QualifiedName
     val isOverride: Boolean
     val isSkip: Boolean
     val isLeaf: Boolean
@@ -215,24 +216,24 @@ interface RuleItem {
      * set of all Tangible items (Terminal, NonTerminal, Empty) ar start of this item
      * non-terminals are not recursed into
      */
-    val firstTangible:Set<TangibleItem>
+    val firstTangible: Set<TangibleItem>
 
     /**
      * set of all first Tangible items, following non-terminals that are not leaf items
      */
-    val firstTangibleRecursive:Set<TangibleItem>
+    val firstTangibleRecursive: Set<TangibleItem>
 
     /**
      * set of all first Concatenations, following non-terminals
      */
-    val firstConcatenationRecursive:Set<Concatenation>
+    val firstConcatenationRecursive: Set<Concatenation>
 
     /**
      * The item at the index (not child number) given
      */
     fun subItem(index: Int): RuleItem
 
-    fun itemForChild(childNumber:Int): RuleItem?
+    fun itemForChild(childNumber: Int): RuleItem?
 
     fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
 }

@@ -144,7 +144,7 @@ open class AsmSimple() : Asm {
     }
 
     override fun addToIndex(value: AsmStructure) {
-        this.elementIndex[value.path] = value
+        this.elementIndex[value.parsePath] = value
     }
 
     override fun traverseDepthFirst(callback: AsmTreeWalker) {
@@ -288,7 +288,7 @@ class AsmReferenceSimple(
 
     override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.path.value}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.parsePath.value}' : ${value!!.typeName}}"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {
@@ -306,16 +306,18 @@ class AsmReferenceSimple(
 
     override fun toString(): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.path.value}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.semanticPath?.value ?: value!!.parsePath.value}' : ${value!!.typeName}}"
     }
 }
 
 class AsmStructureSimple(
-    override val path: AsmPath,
+    override val parsePath: AsmPath,
     override val qualifiedTypeName: QualifiedName
 ) : AsmValueAbstract(), AsmStructure {
 
     private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
+
+    override var semanticPath: AsmPath? = null
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
     override val propertyOrdered
@@ -347,7 +349,7 @@ class AsmStructureSimple(
     fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
     override fun getPropertyOrNothing(name: PropertyValueName): AsmValue  = property[name]?.value ?: AsmNothingSimple
-    override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
+    override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
     fun getPropertyAsString(name: PropertyValueName): String = (getProperty(name) as AsmPrimitive).value as String
     fun getPropertyAsAsmElement(name: PropertyValueName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
     fun getPropertyAsReference(name: PropertyValueName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
@@ -378,8 +380,8 @@ class AsmStructureSimple(
 
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmStructure -> false
-        this.path != other.path -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
+        this.parsePath != other.parsePath -> false
         this.property.size != other.property.size -> false
         else -> {
             this.property.all { (k, v) ->
@@ -393,13 +395,13 @@ class AsmStructureSimple(
         }
     }
 
-    override fun hashCode(): Int = path.hashCode()
+    override fun hashCode(): Int = parsePath.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmStructureSimple -> this.path == other.path //&& this.asm == other.asm
+        is AsmStructureSimple -> this.parsePath == other.parsePath //&& this.asm == other.asm
         else -> false
     }
 
-    override fun toString(): String = ":$typeName[${path.value}] { ${this.property.values.joinToString()}} }"
+    override fun toString(): String = ":$typeName[${semanticPath?.value ?: parsePath.value}] { ${this.property.values.joinToString()}} }"
 
 }
 

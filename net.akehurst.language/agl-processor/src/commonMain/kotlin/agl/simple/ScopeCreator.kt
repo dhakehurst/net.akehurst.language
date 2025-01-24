@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -28,6 +29,9 @@ import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
+/**
+ * Creates scopes and sets semantic Path on AsmStructures, based on scopes and identifying expressions from CrossReference definitions
+ */
 class ScopeCreator<ItemInScopeType>(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel,
@@ -64,6 +68,8 @@ class ScopeCreator<ItemInScopeType>(
         addToScope(scope, value)
         val chScope = createScope(scope, value)
         currentScope.push(chScope)
+
+        value.semanticPath = chScope.scopePath.fold(AsmPathSimple.ROOT) {acc, it -> acc.plus(it) }
     }
 
     override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}
@@ -77,15 +83,17 @@ class ScopeCreator<ItemInScopeType>(
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
     private fun createScope(parentScope: Scope<ItemInScopeType>, el: AsmStructure): Scope<ItemInScopeType> {
-        val inTypeName = parentScope.forTypeName.last
-        val refInParent = identifyingValueInFor.invoke(inTypeName, el)
-        return when {
+        return if (crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)) {
+            val inTypeName = parentScope.forTypeName.last
+            val refInParent = identifyingValueInFor.invoke(inTypeName, el)
+             when {
                 // Nothing
-                null==refInParent  -> {
-                    TODO("Is this used ?")
-                    val ref = el.typeName.value  // use type name as ref
-                    val scopeItem = createItemInScopeFunction.invoke(ref, el)
-                    parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
+                null == refInParent -> {
+                    //TODO: do we actually need to do anything here ?
+                    //val ref = el.typeName.value  // use type name as ref
+                    // val scopeItem = createItemInScopeFunction.invoke(ref, el)
+                    //parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
+                    parentScope
                 }
                 // String
                 refInParent is String -> {
@@ -94,8 +102,8 @@ class ScopeCreator<ItemInScopeType>(
                     parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
                 }
                 // List<String>
-                refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String} -> {
-                    TODO("Think this needs fixing!")
+                refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String } -> {
+                    //TODO("Think this needs fixing!")
                     val exp = crossReferenceModel.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
                     val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
                     val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.qualifiedTypeName.last, el.qualifiedTypeName)
@@ -124,6 +132,9 @@ class ScopeCreator<ItemInScopeType>(
                     parentScope
                 }
             }
+        } else {
+            parentScope
+        }
     }
 
     private fun addToScope(scope: Scope<ItemInScopeType>, el: AsmStructure) {
@@ -131,9 +142,9 @@ class ScopeCreator<ItemInScopeType>(
         val scopeLocalReference = identifyingValueInFor.invoke(inTypeName, el)
             when {
                 null==scopeLocalReference -> {
-                    TODO("Is this used ?")
-                    val ref =el.qualifiedTypeName.value
-                    addToScopeAs(scope, el, ref)
+                    //TODO: do we actually need to do anything here ?
+                    //val ref =el.qualifiedTypeName.value
+                    //addToScopeAs(scope, el, ref)
                 }
 
                 scopeLocalReference is String -> {
@@ -143,7 +154,7 @@ class ScopeCreator<ItemInScopeType>(
 
                 // List<String>
                 scopeLocalReference is List<*> && scopeLocalReference.isNotEmpty() && scopeLocalReference.all { it is String } -> {
-                    TODO("Think this needs fixing!")
+                    //TODO("Think this needs fixing!")
                     val exp = crossReferenceModel.identifyingExpressionFor(inTypeName, el.qualifiedTypeName)
                     val scopeDefined = crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)
                     val idExprDefinedInScope = crossReferenceModel.identifyingExpressionFor(el.typeName, el.qualifiedTypeName)
@@ -151,21 +162,21 @@ class ScopeCreator<ItemInScopeType>(
                         scopeDefined.not() -> {
                             issues.error(
                                 this.locationMap[el],
-                                "Cannot create a local reference in '$scope' for '$el' because there is no scope defined for ${el.qualifiedTypeName} although its identifying expression evaluates to a List<String>"
+                                "Cannot create a local reference in '$scope' for item with type '${el.qualifiedTypeName}' because there is no scope defined for the type, although its identifying expression evaluates to a List<String>"
                             )
                         }
 
                         scopeDefined && null == idExprDefinedInScope -> {
                             issues.error(
                                 this.locationMap[el],
-                                "Cannot create a local reference in '$scope' for '$el' because it has no identifying expression in the scope (which should evaluate to a List<String>)"
+                                "Cannot create a local reference in '$scope' for item with type '${el.qualifiedTypeName}' because the type has no identifying expression in the scope (which should evaluate to a List<String>)"
                             )
                         }
 
                         scopeDefined && exp != idExprDefinedInScope -> {
                             issues.error(
                                 this.locationMap[el],
-                                "Cannot create a local reference in '$scope' for '$el' because the identifying expression is different in the scope and the parent scope"
+                                "Cannot create a local reference in '$scope' for item with type '${el.qualifiedTypeName}' because the identifying expression is different in the scope and the parent scope"
                             )
                         }
                         //and scope defined

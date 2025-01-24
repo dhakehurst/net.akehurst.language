@@ -72,14 +72,14 @@ interface AglLanguages {
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
 
-    val base: LanguageDefinition<Any, SentenceContext<String>>
-    val expressions: LanguageDefinition<Expression,  SentenceContext<String>>
+    val base: LanguageDefinition<Any, SentenceContext>
+    val expressions: LanguageDefinition<Expression,  SentenceContext>
     val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry>
     val types: LanguageDefinition<TypeModel, ContextFromGrammar>
     val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
-    val format: LanguageDefinition<AglFormatModel, SentenceContext<String>>
+    val format: LanguageDefinition<AglFormatModel, SentenceContext>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -97,7 +97,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val formatLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglFormat.grammar.qualifiedName.value) }
         override val crossReferenceLanguageIdentity: LanguageIdentity by lazy {LanguageIdentity(  AglCrossReference.grammar.qualifiedName.value) }
 
-        override val base: LanguageDefinition<Any, SentenceContext<String>> by lazy {
+        override val base: LanguageDefinition<Any, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = baseLanguageIdentity,
@@ -121,9 +121,9 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val expressions: LanguageDefinition<Expression, SentenceContext<String>> by lazy {
+        override val expressions: LanguageDefinition<Expression, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm<Expression, SentenceContext<String>>(
+                LanguageDefinitionFromAsm<Expression, SentenceContext>(
                     identity = expressionsLanguageIdentity,
                     AglExpressions.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
@@ -240,7 +240,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
         override val format by lazy {
             this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm<AglFormatModel, SentenceContext<String>>(
+                LanguageDefinitionFromAsm<AglFormatModel, SentenceContext>(
                     identity = formatLanguageIdentity,
                     AglFormat.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,

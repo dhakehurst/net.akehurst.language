@@ -24,4 +24,4 @@ import net.akehurst.language.typemodel.api.TypeModel
 data class ContextFromGrammarAndTypeModel(
     val grammarModel: GrammarModel,
     val typeModel: TypeModel
-) : SentenceContext<String>
+) : SentenceContext

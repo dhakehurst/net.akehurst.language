@@ -23,19 +23,12 @@ import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.NavigationExpression
-import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.asmValue
-import net.akehurst.language.expressions.processor.toTypedObject
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
@@ -72,7 +65,7 @@ class AsmSimpleBuilder(
 ) {
     private val _interpreter = ExpressionsInterpreterOverTypedObject(_typeModel)
     private val _asm = AsmSimple()
-    private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<AsmStructure>>()
+    private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<Any>>()
     private val _identifyingValueInFor = { inTypeName: SimpleName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceModel, inTypeName, item)
     }
@@ -83,7 +76,7 @@ class AsmSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _scopeMap, this._asm, _identifyingValueInFor, path, typeName, true, _context?.rootScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
@@ -101,7 +94,7 @@ class AsmSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _scopeMap, this._asm, path, _context?.rootScope,_identifyingValueInFor)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, path, _context?.rootScope,_identifyingValueInFor)
         b.init()
         val list = b.build()
         _asm.addRoot(list)
@@ -111,25 +104,22 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
-            val createReferable = { ref: String, item: AsmStructure ->
-                _asm.addToIndex(item)
-                item
-            }
+            // Build Scope
             val scopeCreator = ScopeCreator(
                 _typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope,
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
-                createReferable,
+                _context.createScopedItem,
                 emptyMap(), issues
             )
             _asm.traverseDepthFirst(scopeCreator)
 
-            val resolveFunction = { ref: AsmStructure -> ref }
+            // resolve refs
             _asm.traverseDepthFirst(
                 ReferenceResolverSimple(
                     _typeModel, _crossReferenceModel, _context.rootScope,
                     _identifyingValueInFor,
-                    resolveFunction,
+                    _context.resolveScopedItem,
                     emptyMap(), issues
                 )
             )
@@ -148,13 +138,14 @@ class AsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
-    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmStructure>>,
+    private val _context: ContextAsmSimple?,
+    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
     private val _asm: AsmSimple,
     private val _identifyingValueInFor: (inTypeName:SimpleName, item:AsmStructure) -> Any?,
     _asmPath: AsmPath,
     _typeName: String,
     _isRoot: Boolean,
-    _parentScope: ScopeSimple<AsmStructure>?
+    _parentScope: ScopeSimple<Any>?
 ) {
     private val _elementQualifiedTypeName: QualifiedName = _typeName.let {
         val qtn = it.asPossiblyQualifiedName
@@ -181,10 +172,11 @@ class AsmElementSimpleBuilder(
     }
     private val _elementScope by lazy {
         _parentScope?.let {
-            if (_crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
-                val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element)
+            if (null!=_context && _crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
+                val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
                     ?: _element.typeName.value
-                val newScope = _parentScope.createOrGetChildScope(refInParent as String, _element.qualifiedTypeName, _element)
+                val itemInScope = _context.createScopedItem.invoke(refInParent,_element)
+                val newScope = _parentScope.createOrGetChildScope(refInParent as String, _element.qualifiedTypeName, itemInScope)
                 _scopeMap[_asmPath] = newScope
                 newScope
             } else {
@@ -241,10 +233,10 @@ class AsmElementSimpleBuilder(
 
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
-        val newPath = _element.path + name
+        val newPath = _element.parsePath + name
         val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
-        val b = AsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _elementScope)
+        val b = AsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
         this._element.setProperty(PropertyValueName(name), el, 0)//TODO childIndex
@@ -257,10 +249,10 @@ class AsmElementSimpleBuilder(
         this.propertyListOfElement(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, init)
 
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
-        val newPath = _element.path + name
+        val newPath = _element.parsePath + name
         val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
-        val b = ListAsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope,_identifyingValueInFor)
+        val b = ListAsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel,_context, _scopeMap, this._asm, newPath, _elementScope,_identifyingValueInFor)
         b.init()
         val list = b.build()
         this._element.setProperty(PropertyValueName(name), list, 0)//TODO childIndex
@@ -273,26 +265,6 @@ class AsmElementSimpleBuilder(
     }
 
     fun build(): AsmStructure {
-        val es = _elementScope
-        if (null == es) {
-            //do nothing
-        } else {
-            val scopeFor = es.forTypeName.last
-            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName)
-            val elType = _typeModel.findByQualifiedNameOrNull(_element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            val res = nav?.let { ExpressionsInterpreterOverTypedObject(_typeModel).evaluateExpression(EvaluationContext.ofSelf(_element.toTypedObject(elType)), it) }
-
-            val referableName = when (res) {
-                null -> null
-                else -> when (res.asmValue) {
-                    is AsmPrimitive -> (res.asmValue as AsmPrimitive).value as String
-                    else -> error("Evaluation of navigation '$nav' on '$_element' should result in a String, but it is a '${res::class.simpleName}'")
-                }
-            }
-            if (null != referableName) {
-//                es.addToScope(referableName, _element.typeName, _element.path)
-            }
-        }
         return _element
     }
 }
@@ -301,11 +273,12 @@ class AsmElementSimpleBuilder(
 class ListAsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _defaultNamespace: TypeNamespace,
-    private val _scopeModel: CrossReferenceModel,
-    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmStructure>>,
+    private val _crossReferenceModel: CrossReferenceModel,
+    private val _context: ContextAsmSimple?,
+    private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,
-    private val _parentScope: ScopeSimple<AsmStructure>?,
+    private val _parentScope: ScopeSimple<Any>?,
     private val _identifyingValueInFor: (inTypeName:SimpleName, item:AsmStructure) -> Any?,
 ) {
 
@@ -317,7 +290,7 @@ class ListAsmElementSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit) {
         val newPath = _asmPath + (_list.size).toString()
-        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _scopeModel, _scopeMap, _asm, newPath, _parentScope,_identifyingValueInFor)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, _asm, newPath, _parentScope,_identifyingValueInFor)
         b.init()
         val list = b.build()
         _list.add(list)
@@ -325,7 +298,7 @@ class ListAsmElementSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _asmPath + (_list.size).toString()
-        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _scopeModel, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _parentScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _parentScope)
         b.init()
         val el = b.build()
         _list.add(el)

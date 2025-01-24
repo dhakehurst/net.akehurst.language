@@ -17,6 +17,10 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
-interface SentenceContext {
+interface SentenceContext{
+
+}
+
+interface ContextWithScope : SentenceContext {
 
 }

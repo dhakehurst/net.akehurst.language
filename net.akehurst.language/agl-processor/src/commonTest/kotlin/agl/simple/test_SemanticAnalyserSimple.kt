@@ -52,7 +52,8 @@ class test_SemanticAnalyserSimple {
             assertEquals(expected.asString(), options.semanticAnalysis.context!!.asString())
         }
 
-        fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmSimple>, expected: List<LanguageIssue>) {
+        fun test_issues(grammarStr: String, crossReferenceModelStr: String, sentence: String, options: ProcessOptions<Asm, ContextAsmSimple
+                >, expected: List<LanguageIssue>) {
             val processor = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -88,7 +89,7 @@ class test_SemanticAnalyserSimple {
                 LanguageIssueKind.INFORMATION,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 null,
-                "No context provided, references not checked or resolved, switch off reference checking or provide a context."
+                "No context provided, references not built, checked or resolved, switch off semanticAnalysis or provide a context."
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -106,7 +107,7 @@ class test_SemanticAnalyserSimple {
             namespace test.Test 
         """
         val sentence = "a"
-        val context = ContextAsmSimple()
+        val context = contextAsmSimple {  }
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 context(context)
@@ -262,7 +263,7 @@ class test_SemanticAnalyserSimple {
 
     @Test
     fun identifyingExpression_by_value_Nothing() {
-        // will identify by typename if id by evaluates to Nothing
+        // will identify by typename if id by evaluates to Nothing - //TODO: I think we don't want this !
         val grammarStr = """
             namespace test
             grammar Test {
@@ -305,7 +306,7 @@ class test_SemanticAnalyserSimple {
                 identify S by a
         """
         val sentence = "a"
-        val context = ContextAsmSimple()
+        val context = ContextAsmSimpleWithAsmPath()
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 checkReferences(true)
@@ -340,7 +341,7 @@ class test_SemanticAnalyserSimple {
                 identify S by as
         """
         val sentence = "a.a.a"
-        val context = ContextAsmSimple()
+        val context = ContextAsmSimpleWithAsmPath()
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 checkReferences(true)
@@ -352,7 +353,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5),
-                "Cannot create a local reference in '//' for ':S[/0]' because there is no scope defined for test.Test.S although its identifying expression evaluates to a List<String>"
+                "Cannot create a local reference in '//' for item with type 'test.Test.S' because there is no scope defined for the type, although its identifying expression evaluates to a List<String>"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -377,7 +378,7 @@ class test_SemanticAnalyserSimple {
                 }
         """
         val sentence = "a.a.a"
-        val context = ContextAsmSimple()
+        val context = ContextAsmSimpleWithAsmPath()
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 checkReferences(true)
@@ -389,7 +390,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5),
-                "Cannot create a local reference in '//' for ':S[/0]' because it has no identifying expression in the scope (which should evaluate to a List<String>)"
+                "Cannot create a local reference in '//' for item with type 'test.Test.S' because the type has no identifying expression in the scope (which should evaluate to a List<String>)"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -414,7 +415,7 @@ class test_SemanticAnalyserSimple {
                 }
         """
         val sentence = "a.a.a"
-        val context = ContextAsmSimple()
+        val context = ContextAsmSimpleWithAsmPath()
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 checkReferences(true)
@@ -426,7 +427,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5),
-                "Cannot create a local reference in '//' for ':S[/0]' because the identifying expression is different in the scope and the parent scope"
+                "Cannot create a local reference in '//' for item with type 'test.Test.S' because the identifying expression is different in the scope and the parent scope"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -451,7 +452,7 @@ class test_SemanticAnalyserSimple {
                 }
         """
         val sentence = "a.a.a"
-        val context = ContextAsmSimple()
+        val context = ContextAsmSimpleWithAsmPath()
         val options = Agl.options<Asm, ContextAsmSimple> {
             semanticAnalysis {
                 checkReferences(true)
@@ -501,7 +502,7 @@ class test_SemanticAnalyserSimple {
         val sentence = """
             aabba
         """.trimIndent()
-
+        TODO()
         /*        val expected = scope {
                     element("S") {
                         propertyListOfString("l", listOf("a", "a", "b", "b", "a"))
@@ -528,7 +529,7 @@ class test_SemanticAnalyserSimple {
                 propertyListOfString("l", listOf())
             }
         }
-
+        TODO()
 //        test(grammarStr, sentence, expected)
     }
 

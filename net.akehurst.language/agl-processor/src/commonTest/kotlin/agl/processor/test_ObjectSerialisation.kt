@@ -25,7 +25,6 @@ import kotlin.test.assertTrue
  class test_ObjectSerialisation {
 
     private companion object {
-        const val goal = "conceptDefinition"
         val grammarStr = """
         namespace test
         grammar Test {
@@ -39,8 +38,8 @@ import kotlin.test.assertTrue
 
             property = NAME ':' value ;
             value = object | STRING | list ;
-            list = '[' item* ']' ;
-            item = object | STRING ;
+            list = '[' value* ']' ;
+            //item = object | STRING ;
 
             // other chars NOT : or whitespace
             leaf NAME = "([^: \t\n\x0B\f\r]|\\.)+" ;

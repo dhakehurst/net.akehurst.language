@@ -19,14 +19,11 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.asm.api.AsmPrimitive
-import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.Expression
@@ -47,11 +44,11 @@ class SemanticAnalyserSimple(
 ) : SemanticAnalyser<Asm, ContextAsmSimple> {
 
     companion object {
-        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceModel: CrossReferenceModel, inTypeName: SimpleName, self: AsmStructure): String? {
+        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceModel: CrossReferenceModel, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
-                crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
+                //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {
-                    val exp = crossReferenceModel.identifyingExpressionFor(inTypeName, self.qualifiedTypeName)
+                    val exp = crossReferenceModel.identifyingExpressionFor(inScopeForTypeName, self.qualifiedTypeName)
                     when (exp) {
                         null -> null
                         else -> {
@@ -59,6 +56,7 @@ class SemanticAnalyserSimple(
                             val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), exp).asmValue
                             when {
                                 value is AsmPrimitive && value.isStdString -> value.value as String
+                                value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }
                                 else -> TODO()
                             }
                         }
@@ -86,7 +84,7 @@ class SemanticAnalyserSimple(
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
         when {
-            null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis provide a context.")
+            null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis or provide a context.")
             else -> {
                 this.buildScope(options, asm, context)
                 checkAndResolveReferences(options, asm, _locationMap, context)
@@ -112,8 +110,8 @@ class SemanticAnalyserSimple(
     }
 
     private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
-        val resFunc: ((ref: AsmStructure) -> AsmStructure?)? = if (resolve) {
-            { ref -> context.resolveScopedItem.invoke(asm, ref) }
+        val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
+            { ref -> context.resolveScopedItem.invoke(ref) }
         } else {
             null
         }
@@ -131,7 +129,7 @@ class SemanticAnalyserSimple(
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
-                val createFunc = { ref: String, item: AsmStructure -> context.createScopedItem.invoke(asm, ref, item) }
+                val createFunc = { ref: String, item: AsmStructure -> context.createScopedItem.invoke(ref, item) }
                 val scopeCreator = ScopeCreator(
                     typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
                     options.replaceIfItemAlreadyExistsInScope,
@@ -145,7 +143,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun identifyingValueInFor(inTypeName: SimpleName, self: AsmStructure): String? =
-        identifyingValueInFor(_interpreter, crossReferenceModel, inTypeName, self)
+    private fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? =
+        identifyingValueInFor(_interpreter, crossReferenceModel, inScopeNamed, self)
 
 }

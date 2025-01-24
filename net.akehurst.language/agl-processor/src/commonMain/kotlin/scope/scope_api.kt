@@ -38,6 +38,7 @@ interface Scope<ItemInScopeType> {
     val forTypeName: QualifiedName
 
     val scopeIdentity: String
+    val scopePath:List<String>
 
     /**
      * item.name -> item.type -> item

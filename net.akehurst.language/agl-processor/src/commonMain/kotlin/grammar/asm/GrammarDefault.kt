@@ -200,9 +200,9 @@ abstract class GrammarAbstract(
 
     override val resolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
         val resolvedRules = linkedMapOf<GrammarRuleName, GrammarRule>() //use linkedMap so order stays the same
-        val inheritedRules = emptyList<GrammarRule>()
+        val inheritedRules = allInheritedResolvedGrammarRule//emptyList<GrammarRule>()
         this.grammarRule.forEach { rule ->
-            val r = resolve(rule, inheritedRules) ?: rule
+            val r = resolve(rule, inheritedRules.toList()) ?: rule
             resolvedRules[r.name] = r
         }
         resolvedRules.values.toOrderedSet()

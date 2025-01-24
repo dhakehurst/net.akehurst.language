@@ -32,7 +32,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglBase : LanguageObjectAbstract<Any, SentenceContext<String>>() {
+object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
     const val NAME = "Base"
     const val goalRuleName = "qualifiedName"
 

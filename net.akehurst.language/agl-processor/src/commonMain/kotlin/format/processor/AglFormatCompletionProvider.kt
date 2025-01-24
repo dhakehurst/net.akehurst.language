@@ -21,7 +21,7 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.formatter.api.AglFormatModel
 
-class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatModel, SentenceContext<String>>() {
+class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatModel, SentenceContext>() {
 
         //TODO
 

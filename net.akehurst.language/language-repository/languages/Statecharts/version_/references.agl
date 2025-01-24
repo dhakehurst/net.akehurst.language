@@ -1,10 +1,20 @@
-namespace com.itemis.create.Expressions {
+namespace com.itemis.create.Expressions
     references {
-
+        in TypeSpecifier {
+            property fqn refers-to BuiltInType
+        }
+        in TypeCastExpression {
+            property typeSpecifier.fqn refers-to BuiltInType
+        }
+        in FunctionCall {
+            property id refers-to com.itemis.create.Global.OperationDeclaration
+            forall argumentList.arguments {
+                property argumentId.id refers-to Parameter from $self.id  // id should be a reference to an OperationDeclaration at this point
+            }
+        }
     }
-}
 
-namespace com.itemis.create.Global {
+namespace com.itemis.create.Global
     import external  //imports types AnnotationType, RegularState, BuiltInType
 
     identify Interface by id
@@ -32,31 +42,16 @@ namespace com.itemis.create.Global {
         in ActiveStateReferenceExpression {
             property fqn refers-to RegularState
         }
-        in TypeCastExpression {
-            property typeSpecifier.fqn refers-to BuiltInType
-        }
-        in FunctionCall {
-            property id refers-to OperationDeclaration
-            forall argumentList.arguments {
-                property argumentId.id refers-to Parameter from id  // id should be a reference to an OperationDeclaration at this point
-            }
-        }
-        in TypeSpecifier {
-            property fqn refers-to BuiltInType
-        }
+
     }
-}
 
-namespace com.itemis.create.States {
-}
-
-namespace com.itemis.create.Transitions {
+namespace com.itemis.create.States
 
 
+namespace com.itemis.create.Transitions
 
-}
 
-namespace com.itemis.create.Statechart {
+namespace com.itemis.create.Statechart
     //identify Region by name
     identify State by name
     //scope Region {
@@ -73,4 +68,3 @@ namespace com.itemis.create.Statechart {
             }
         }
     }
-}

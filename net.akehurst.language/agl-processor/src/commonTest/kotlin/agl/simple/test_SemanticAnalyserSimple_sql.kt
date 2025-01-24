@@ -21,6 +21,9 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.asm.api.AsmList
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -129,6 +132,77 @@ grammar SQL {
         ).processor!!
         val typeModel = processor.typeModel
         val crossReferenceModel = processor.crossReferenceModel
+
+        operator fun AsmStructure.get(value:String) = this.getProperty(PropertyValueName(value))
+        fun <T> Any.ass() = this as T
+    }
+
+    @Test
+    fun syntaxAnalyserPaths() {
+        //TODO: this test should not really be here, it is a SyntaxAnalyser test
+        val sentence = """
+            CREATE TABLE table1 (
+                col1 int,
+                col2 int,
+                col3 varchar(255)
+            );
+            
+            SELECT col1 FROM table1 ;
+        """.trimIndent()
+        val result = processor.process(sentence)
+
+        val expected = asmSimple(typeModel = typeModel) {
+            element("StatementList") {
+                propertyListOfElement("terminatedStatement") {
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "TableDefinition") {
+                            propertyString("create", "CREATE")
+                            propertyString("table", "TABLE")
+                            propertyString("table-id", "table1")
+                            propertyListOfElement("columnDefinitionList") {
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col1")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col2")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col3")
+                                    propertyString("datatype-ref", "varchar")
+                                    propertyElementExplicitType("datatype-size", "Datatype-size") {
+                                        propertyString("integer", "255")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "Select") {
+                            propertyString("select", "SELECT")
+                            propertyListOfElement("columns") {
+                                element("ColumnRef") {
+                                    propertyString("ref", "col1")
+                                }
+                            }
+                            propertyString("from", "FROM")
+                            propertyElementExplicitType("tableRef", "TableRef") {
+                                propertyString("ref", "table1")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+
+        //check paths
+        val asmRoot = result.asm!!.root[0] as AsmStructure
+        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.value)
     }
 
     @Test

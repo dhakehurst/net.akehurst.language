@@ -29,7 +29,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 
 class ExpressionsSemanticAnalyser(
-) : SemanticAnalyser<Expression, SentenceContext<String>> {
+) : SemanticAnalyser<Expression, SentenceContext> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<Any, InputLocation> = emptyMap()
@@ -45,7 +45,7 @@ class ExpressionsSemanticAnalyser(
     override fun analyse(
         asm: Expression,
         locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< SentenceContext<String>>
+        options: SemanticAnalysisOptions< SentenceContext>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(issues)
     }

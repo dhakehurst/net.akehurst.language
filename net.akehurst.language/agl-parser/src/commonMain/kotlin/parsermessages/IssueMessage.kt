@@ -17,7 +17,7 @@
 
 package net.akehurst.language.parsermessages
 
-object Message {
+object IssueMessage {
 
     const val PARSER_WONT_STOP = "The Parser has exceeded the configured number of non-progressing steps, self-terminated as it is likely it will never stop."
 

@@ -28,14 +28,14 @@ object TestContextSimple {
         assertMatches(expected.rootScope, actual.rootScope)
     }
 
-    fun assertMatches(expected: ScopeSimple<AsmPath>, actual: ScopeSimple<AsmPath>) {
-        assertEquals(expected.path, actual.path)
+    fun assertMatches(expected: ScopeSimple<Any>, actual: ScopeSimple<Any>) {
+        assertEquals(expected.scopeIdentity, actual.scopeIdentity)
         assertEquals(expected.items, actual.items)
         assertMatches(expected.childScopes, actual.childScopes)
     }
 
 
-    fun assertMatches(expected: Map<String, ScopeSimple<AsmPath>>, actual: Map<String, ScopeSimple<AsmPath>>) {
+    fun assertMatches(expected: Map<String, ScopeSimple<Any>>, actual: Map<String, ScopeSimple<Any>>) {
         assertEquals(expected.keys, actual.keys)
         for (k in expected.keys) {
             assertMatches(expected[k]!!, actual[k]!!)
