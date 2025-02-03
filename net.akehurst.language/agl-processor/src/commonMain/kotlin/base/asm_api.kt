@@ -90,7 +90,10 @@ value class SimpleName(override val value: String) : PossiblyQualifiedName, Publ
         else -> namespace.append(this)
     }
 
-    override fun toString(): String = value
+    override fun toString(): String = when {
+        value.contains(Regex("\\s")) -> "'$value'"
+        else -> value
+    }
 }
 
 // This is added so that any value class will correctly

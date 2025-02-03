@@ -969,7 +969,7 @@ abstract class TypeDefinitionSimpleAbstract(
 class SpecialTypeSimple(
     override val namespace: TypeNamespace,
     override val name: SimpleName
-) : TypeDefinitionSimpleAbstract() {
+) : TypeDefinitionSimpleAbstract(), SpecialType {
 
     init {
         namespace.addDefinition(this)
@@ -1151,8 +1151,17 @@ class UnionTypeSimple(
                 }
             }
 
-    override fun asStringInContext(context: TypeNamespace): String =
-        "union ${signature(context)} { ${alternatives.joinToString(separator = "\n") { it.signature(context, 0) }}} }"
+    override fun asStringInContext(context: TypeNamespace): String {
+        val alts = alternatives.joinToString(separator = " | ") { it.signature(context, 0) }
+        return when {
+            alts.length < 80 ->"union ${signature(context)} { $alts }"
+            else -> {
+                val altsnl = alternatives.joinToString(separator = "\n    | ") { it.signature(context, 0) }
+                "union ${signature(context)} {\n   ${altsnl}\n  }"
+            }
+        }
+
+    }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {
@@ -1435,7 +1444,7 @@ class DataTypeSimple(
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
                 val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
-                "${it.name}:$psig $chrs"
+                "${it.name}: $psig $chrs"
             }
         return "datatype ${name}${sups} {\n    $props\n  }"
     }

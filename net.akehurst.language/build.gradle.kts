@@ -70,6 +70,7 @@ subprojects {
     }
 
     configure<KotlinMultiplatformExtension> {
+        applyDefaultHierarchyTemplate()
         jvm("jvm8") {
             compilations {
                 val main by getting {
@@ -127,7 +128,7 @@ subprojects {
 //        }
 
 
-        applyDefaultHierarchyTemplate()
+
         sourceSets {
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")

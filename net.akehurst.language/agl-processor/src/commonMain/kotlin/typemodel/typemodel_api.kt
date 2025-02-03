@@ -270,6 +270,8 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun findInOrCloneTo(other: TypeModel): TypeDefinition
 }
 
+interface SpecialType : TypeDefinition {}
+
 interface SingletonType : TypeDefinition {
 }
 
