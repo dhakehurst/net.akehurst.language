@@ -766,7 +766,8 @@ abstract class TypeNamespaceAbstract(
 
     // --- Formatable ---
     override fun asString(indent: Indent): String {
-        val types = this.ownedTypesByName.entries.sortedBy { it.key.value }
+        val types = this.ownedTypesByName.entries //.sortedBy { it.key.value }
+            .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> {it.value::class.simpleName}.thenBy{it.value.name.value})
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
         val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}.*" }
         val s = """namespace '$qualifiedName' {
@@ -1523,6 +1524,7 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override val isPrimitive: Boolean get() = characteristics.contains(PropertyCharacteristic.PRIMITIVE)
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
+        this,
         this.owner,
         this.name,
         this.typeInstance.resolved(typeArguments),
@@ -1619,6 +1621,7 @@ class PropertyDeclarationDerived(
 }
 
 class PropertyDeclarationResolvedSimple(
+    override val original: PropertyDeclaration,
     override val owner: TypeDefinition,
     override val name: PropertyName,
     override val typeInstance: TypeInstance,
@@ -1631,6 +1634,7 @@ class PropertyDeclarationResolvedSimple(
         owner.findInOrCloneTo(other).findOwnedPropertyOrNull(this.name)
             ?: run {
                 PropertyDeclarationResolvedSimple(
+                    this.original.findInOrCloneTo(other),
                     this.owner.findInOrCloneTo(other),
                     this.name,
                     this.typeInstance.findInOrCloneTo(other),
@@ -1642,6 +1646,7 @@ class PropertyDeclarationResolvedSimple(
 
 abstract class MethodDeclarationAbstract() : MethodDeclaration {
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved = MethodDeclarationResolvedSimple(
+        this,
         this.owner,
         this.name,
         this.parameters.map {
@@ -1701,6 +1706,7 @@ class MethodDeclarationDerivedSimple(
 }
 
 class MethodDeclarationResolvedSimple(
+    override val original: MethodDeclaration,
     override val owner: TypeDefinition,
     override val name: MethodName,
     override val parameters: List<ParameterDeclaration>,
@@ -1715,6 +1721,7 @@ class MethodDeclarationResolvedSimple(
         this.owner.findInOrCloneTo(other).findOwnedMethodOrNull(this.name)
             ?: run {
                 MethodDeclarationResolvedSimple(
+                    this.original.findInOrCloneTo(other),
                     owner.findInOrCloneTo(other),
                     this.name,
                     this.parameters.map { it.findInOrCloneTo(other) },

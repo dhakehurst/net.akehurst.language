@@ -25,6 +25,7 @@ import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -36,14 +37,16 @@ class test_ExpressionsInterpreter {
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(expected, actual.asmValue)
         }
 
         fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(AsmNothingSimple, actual.asmValue)
             assertEquals(expected, interpreter.issues.all.toList())
@@ -226,7 +229,7 @@ class test_ExpressionsInterpreter {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index '4' out of range"
+                "in getIndex argument index '4' out of range"
             )
         )
         test_fail(tm, self, "prop1[4]", expectedIssues)

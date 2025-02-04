@@ -18,13 +18,13 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.asm.api.*
-import net.akehurst.language.asm.simple.*
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.transform.processor.AsmTransformInterpreter
+//import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
 
@@ -61,72 +61,32 @@ data class EvaluationContext(
 
 interface TypedObject {
     val type: TypeInstance
+    fun asString(): String
+}
+
+interface ObjectGraph {
+    val typeModel: TypeModel
+
+    fun nothing(): TypedObject
+    fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject
+    fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject>): TypedObject
+    fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject
+    fun createLambdaValue(lambda: (it: TypedObject) -> TypedObject): TypedObject
+
+    fun valueOf(value: TypedObject): Any
+
+    fun getIndex(tobj: TypedObject, index: Any): TypedObject
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
      */
-    fun getPropertyValueOrNothing(propertyDeclaration: PropertyDeclaration): TypedObject
+    fun getProperty(tobj: TypedObject, propertyName: String): TypedObject
+    fun setProperty(tobj: TypedObject, propertyName: String, value: TypedObject)
 
-    fun callMethod(methodDeclaration: MethodDeclaration, arguments: List<TypedObject>): TypedObject
-
-    fun asString(): String
+    fun executeMethod(tobj: TypedObject, methodName: String, args: List<TypedObject>): TypedObject
+    fun cast(tobj: TypedObject, newType: TypeInstance): TypedObject
 }
 
-class TypedObjectAsmValue(
-    override val type: TypeInstance,
-    val self: AsmValue
-) : TypedObject {
-
-    override fun getPropertyValueOrNothing(propertyDeclaration: PropertyDeclaration): TypedObject {
-        val propRes = this.type.allResolvedProperty[propertyDeclaration.name]!!
-        val ao = when (propertyDeclaration) {
-            is PropertyDeclarationDerived -> TODO()
-            is PropertyDeclarationPrimitive -> {
-                val type = this.type.resolvedDeclaration
-                val typeProps = StdLibPrimitiveExecutions.property[type]
-                    ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
-                val propExec = typeProps[propertyDeclaration]
-                    ?: error("StdLibPrimitiveExecutions not found for property '${propertyDeclaration.name}' of TypeDeclaration '${type.qualifiedName}'")
-                propExec.invoke(self, propRes)
-            }
-
-            is PropertyDeclarationStored -> when (self) {
-                is AsmStructure -> self.getPropertyOrNothing(propertyDeclaration.name.asValueName)
-                else -> error("Cannot evaluate property '${propertyDeclaration.name}' on object of type '${self::class.simpleName}'")
-            }
-
-            else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
-        }
-        return TypedObjectAsmValue(propRes.typeInstance, ao)
-    }
-
-    override fun callMethod(methodDeclaration: MethodDeclaration, arguments: List<TypedObject>): TypedObject {
-        val methRes = this.type.allResolvedMethod[methodDeclaration.name]!!
-        val ao = when (methodDeclaration) {
-            is MethodDeclarationPrimitiveSimple -> {
-                val type = this.type.resolvedDeclaration
-                val typeMeths = StdLibPrimitiveExecutions.method[type]
-                    ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
-                val methExec = typeMeths[methodDeclaration]
-                    ?: error("StdLibPrimitiveExecutions not found for method '${methodDeclaration.name}' of TypeDeclaration '${type.qualifiedName}'")
-                methExec.invoke(self, methRes, arguments)
-            }
-
-            is MethodDeclarationDerivedSimple -> {
-                TODO()
-            }
-
-            else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
-        }
-        return TypedObjectAsmValue(methRes.returnType, ao)
-    }
-
-    override fun asString(): String = self.asString()
-
-    override fun toString(): String = "$self : ${type.qualifiedTypeName}"
-}
-
-fun AsmValue.toTypedObject(type: TypeInstance) = TypedObjectAsmValue(type, this)
 val TypedObject.asmValue
     get() = when (this) {
         is TypedObjectAsmValue -> this.self
@@ -134,10 +94,10 @@ val TypedObject.asmValue
     }
 
 class ExpressionsInterpreterOverTypedObject(
-    val typeModel: TypeModel
+    val objectGraph: ObjectGraph,
+    val issues: IssueHolder
 ) {
-
-    val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val typeModel = objectGraph.typeModel
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**
@@ -173,7 +133,7 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluateRootExpression(evc: EvaluationContext, expression: RootExpression): TypedObject {
         return when {
-            expression.isNothing -> AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+            expression.isNothing -> objectGraph.nothing()
             expression.isSelf -> {
                 //_issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
                 evc.self
@@ -194,13 +154,8 @@ class ExpressionsInterpreterOverTypedObject(
             ?: error("Evaluation Context does not contain '$name' and there is no 'self' object with that property name")
     }
 
-    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject = when (expression.qualifiedTypeName) {
-        StdLibDefault.Boolean.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(StdLibDefault.Boolean)
-        StdLibDefault.Integer.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(StdLibDefault.Integer)
-        StdLibDefault.Real.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(StdLibDefault.Real)
-        StdLibDefault.String.qualifiedTypeName -> AsmPrimitiveSimple(expression.qualifiedTypeName, expression.value).toTypedObject(StdLibDefault.String)
-        else -> error("should not happen")
-    }
+    private fun evaluateLiteralExpression(expression: LiteralExpression): TypedObject =
+        objectGraph.createPrimitiveValue(expression.qualifiedTypeName, expression.value)
 
     private fun evaluateNavigation(evc: EvaluationContext, expression: NavigationExpression): TypedObject {
         // start should be a RootExpression or LiteralExpression
@@ -219,35 +174,7 @@ class ExpressionsInterpreterOverTypedObject(
 
     private fun evaluatePropertyName(obj: TypedObject, propertyName: PropertyName): TypedObject {
         val type = obj.type
-        val pd = type.resolvedDeclaration.findAllPropertyOrNull(propertyName)
-        return when (pd) {
-            null -> when {
-                obj.asmValue is AsmStructure -> {
-                    // try with no type
-                    val p = (obj.asmValue as AsmStructure).property[propertyName.asValueName]
-                    when (p) {
-                        null -> {
-                            issues.error(null, "Property '$propertyName' not found on type '${obj.type.typeName}'")
-                            AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
-                        }
-
-                        else -> {
-                            val pv = p.value
-                            val tp = typeModel.findByQualifiedNameOrNull(pv.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                            TypedObjectAsmValue(tp, pv)
-                        }
-                    }
-
-                }
-
-                else -> {
-                    issues.error(null, "Property '$propertyName' not found on type '${obj.type.typeName}'")
-                    AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
-                }
-            }
-
-            else -> obj.getPropertyValueOrNothing(pd)
-        }
+        return objectGraph.getProperty(obj, propertyName.value)
     }
 
     private fun evaluateMethodCall(evc: EvaluationContext, obj: TypedObject, methodName: MethodName, args: List<Expression>): TypedObject {
@@ -256,14 +183,14 @@ class ExpressionsInterpreterOverTypedObject(
         return when (md) {
             null -> {
                 issues.error(null, "Method '$methodName' not found on type '${obj.type.typeName}'")
-                AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+                objectGraph.nothing()
             }
 
             else -> {
                 val argValues = args.map {
                     evaluateExpression(evc, it)
                 }
-                obj.callMethod(md, argValues)
+                objectGraph.executeMethod(obj, methodName.value, argValues)
             }
         }
     }
@@ -278,43 +205,25 @@ class ExpressionsInterpreterOverTypedObject(
                             idx.type.conformsTo(StdLibDefault.Integer) -> {
                                 val listElementType = obj.type.typeArguments.getOrNull(0)?.type
                                     ?: StdLibDefault.AnyType
-                                val i = (idx.asmValue as AsmPrimitive).value as Int
-                                val elem = (obj.asmValue as AsmList).elements.getOrNull(i)
+                                val i = objectGraph.valueOf(idx) as Int
+                                val elem = objectGraph.getIndex(obj, i)
                                 when {
-                                    null == elem -> {
-                                        issues.error(null, "Index '$i' out of range")
-                                        AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
-                                    }
-
-                                    elem.isNothing -> elem.toTypedObject(StdLibDefault.NothingType)
+                                    objectGraph.nothing() == elem -> objectGraph.nothing()
                                     else -> {
-                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.qualifiedTypeName)?.let {
-                                            when (it) {
-                                                is TupleType -> {
-                                                    val targs = (elem as AsmStructure).property.map {
-                                                        val n = PropertyName(it.key.value)
-                                                        val t = StdLibDefault.AnyType //TODO: can do better!
-                                                        TypeArgumentNamedSimple(n, t)
-                                                    }
-                                                    it.typeTuple(targs)
-                                                }
-
-                                                else -> it.type()
-                                            }
-                                        }
+                                        val elemType = typeModel.findByQualifiedNameOrNull(elem.type.qualifiedTypeName)?.type()
                                         when {
                                             null == elemType -> {
-                                                issues.error(null, "Cannot find type '${elem.qualifiedTypeName}' of List element '$elem'")
-                                                elem.toTypedObject(listElementType)
+                                                issues.error(null, "Cannot find type '${elem.type.qualifiedTypeName}' of List element '$elem'")
+                                                objectGraph.cast(elem, listElementType)
                                             }
-
-                                            elemType.conformsTo(listElementType) -> elem.toTypedObject(elemType)
+                                            elemType.resolvedDeclaration is TupleType -> objectGraph.cast(elem,elemType)
+                                            elemType.conformsTo(listElementType) -> objectGraph.cast(elem,elemType)
                                             else -> {
                                                 issues.error(
                                                     null,
-                                                    "List element '$elem' of type '${elem.qualifiedTypeName}' does not conform to the expected List element type of '${listElementType}'"
+                                                    "List element '$elem' of type '${elem.type.qualifiedTypeName}' does not conform to the expected List element type of '${listElementType}'"
                                                 )
-                                                elem.toTypedObject(elemType)
+                                                objectGraph.cast(elem,elemType)
                                             }
                                         }
                                     }
@@ -323,21 +232,21 @@ class ExpressionsInterpreterOverTypedObject(
 
                             else -> {
                                 issues.error(null, "Index value must evaluate to an Integer for Lists")
-                                AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+                                objectGraph.nothing()
                             }
                         }
                     }
 
                     else -> {
                         issues.error(null, "Only one index value should be used for Lists")
-                        AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+                        objectGraph.nothing()
                     }
                 }
             }
 
             else -> {
                 issues.error(null, "Index operation on non List value is not possible: ${obj.asString()}")
-                AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+                objectGraph.nothing()
             }
         }
     }
@@ -358,12 +267,12 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateInfixOperator(lhs: TypedObject, op: String, rhs: TypedObject): TypedObject = when (op) {
         "==" -> when {
             lhs.type == rhs.type -> {
-                val lhsv = lhs.asmValue
-                val rhsv = rhs.asmValue
+                val lhsv = objectGraph.valueOf(lhs)
+                val rhsv = objectGraph.valueOf(rhs)
                 if (lhsv == rhsv) {
-                    AsmPrimitiveSimple.stdBoolean(true).toTypedObject(StdLibDefault.Boolean)
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true)
                 } else {
-                    AsmPrimitiveSimple.stdBoolean(false).toTypedObject(StdLibDefault.Boolean)
+                    objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)
                 }
             }
 
@@ -372,9 +281,9 @@ class ExpressionsInterpreterOverTypedObject(
 
         "+" -> when {
             lhs.type.conformsTo(StdLibDefault.String) && rhs.type.conformsTo(StdLibDefault.String) -> {
-                val lhsValue = (lhs.asmValue as AsmPrimitive).value as String
-                val rhsValue = (rhs.asmValue as AsmPrimitive).value as String
-                AsmPrimitiveSimple.stdString(lhsValue + rhsValue).toTypedObject(StdLibDefault.String)
+                val lhsv = objectGraph.valueOf(lhs) as String
+                val rhsv = objectGraph.valueOf(rhs) as String
+                objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, lhsv + rhsv)
             }
 
             else -> error("'$op' not supported for '${lhs.type.qualifiedTypeName}' && '${rhs.type.qualifiedTypeName}'")
@@ -386,7 +295,7 @@ class ExpressionsInterpreterOverTypedObject(
     private fun evaluateWith(evc: EvaluationContext, expression: WithExpression): TypedObject {
         val newSelf = evaluateExpression(evc, expression.withContext)
         return when {
-            newSelf.asmValue is AsmNothing -> newSelf
+            objectGraph.nothing() == newSelf -> newSelf
             else -> {
                 val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
                 val result = evaluateExpression(newEvc, expression.expression)
@@ -400,7 +309,7 @@ class ExpressionsInterpreterOverTypedObject(
             val condValue = evaluateExpression(evc, opt.condition)
             when (condValue.type) {
                 StdLibDefault.Boolean -> {
-                    if ((condValue.asmValue as AsmPrimitive).value as Boolean) {
+                    if (objectGraph.valueOf(condValue) as Boolean) {
                         val result = evaluateExpression(evc, opt.expression)
                         return result
                     } else {
@@ -411,59 +320,49 @@ class ExpressionsInterpreterOverTypedObject(
                 else -> error("Conditions/Options in a when expression must result in a Boolean value")
             }
         }
-        return AsmNothingSimple.toTypedObject(StdLibDefault.NothingType)
+        return objectGraph.nothing()
     }
 
     private fun evaluateCreateTuple(evc: EvaluationContext, expression: CreateTupleExpression): TypedObject {
-        //val ns = typeModel.findOrCreateNamespace(QualifiedName("\$interpreter"), listOf(Import(SimpleTypeModelStdLib.qualifiedName.value)))
-        val tupleType = StdLibDefault.TupleType //ns.createTupleType()
-        val tuple = AsmStructureSimple(AsmPathSimple(""), tupleType.qualifiedName)
         val typeArgs = mutableListOf<TypeArgumentNamed>()
+        val tuple = objectGraph.createTupleValue(typeArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            tuple.setProperty(PropertyName(it.lhsPropertyName).asValueName, value.asmValue, tuple.property.size)
-            //tupleType.appendPropertyStored(it.lhsPropertyName, value.type, setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED))
-            //val selfType = evc.self?.type ?: error("No self Type")
-            //val exprType =  typeResolver.typeFor( it.rhs,selfType) ?: error("Cannot get type for expression '${it.rhs}' over type '$selfType'")
+            objectGraph.setProperty(tuple, it.lhsPropertyName, value)
             typeArgs.add(TypeArgumentNamedSimple(PropertyName(it.lhsPropertyName), value.type))
         }
-        return tuple.toTypedObject(tupleType.type(typeArgs))
+        return tuple
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext, expression: CreateObjectExpression): TypedObject {
         val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName)
             ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
-        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
-        val obj = AsmStructureSimple((asmPath.asmValue as AsmAny).value as AsmPath, typeDecl.qualifiedName)
-
+//        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
         val args = expression.arguments.map { evaluateExpression(evc, it) }
         val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
         if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
-        consProps.forEachIndexed { idx, pd ->
-            val value = args[idx]
-            obj.setProperty(pd.name.asValueName, value.asmValue, obj.property.size)
-        }
-
+        val constructorArgs = consProps.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.associate { it }
+        val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
         expression.propertyAssignments.forEach {
             val value = evaluateExpression(evc, it.rhs)
-            obj.setProperty(PropertyName(it.lhsPropertyName).asValueName, value.asmValue, obj.property.size)
+            objectGraph.setProperty(obj, it.lhsPropertyName, value)
         }
-        return obj.toTypedObject(typeDecl.type())
+        return obj
     }
 
     private fun evaluateLambda(evc: EvaluationContext, expression: LambdaExpression): TypedObject {
-        val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        return AsmLambdaSimple({ it ->
-            val newEvc = evc.child(mapOf("it" to it.toTypedObject(StdLibDefault.AnyType)))
-            evaluateExpression(newEvc, expression.expression).asmValue
-        }).toTypedObject(lambdaType)
+        val lambda = objectGraph.createLambdaValue { it ->
+            val newEvc = evc.child(mapOf("it" to it))
+            evaluateExpression(newEvc, expression.expression)
+        }
+        return lambda
     }
 
     private fun evaluateCast(evc: EvaluationContext, expression: CastExpression): TypedObject {
         //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
-        return exprResult.asmValue.toTypedObject(tgtType)
+        return objectGraph.cast(exprResult, tgtType)
     }
 
     private fun evaluateGroup(evc: EvaluationContext, expression: GroupExpression): TypedObject {
@@ -479,69 +378,3 @@ class ExpressionsInterpreterOverTypedObject(
 
 }
 
-object StdLibPrimitiveExecutions {
-
-    val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
-        StdLibDefault.List to mapOf(
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdInteger(self.elements.size)
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                self.elements.first()
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("last"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                self.elements.last()
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("back"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmListSimple(self.elements.drop(1))
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("front"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmListSimple(self.elements.dropLast(1))
-            },
-            StdLibDefault.List.findAllPropertyOrNull(PropertyName("join"))!! to { self, prop ->
-                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
-            }
-        ),
-        StdLibDefault.ListSeparated to mapOf(
-            StdLibDefault.ListSeparated.findAllPropertyOrNull(PropertyName("items"))!! to { self, prop ->
-                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmListSimple(self.elements.items)
-            },
-            StdLibDefault.ListSeparated.findAllPropertyOrNull(PropertyName("separators"))!! to { self, prop ->
-                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmListSimple(self.elements.separators)
-            },
-        )
-    )
-
-    val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((AsmValue, MethodDeclaration, List<TypedObject>) -> AsmValue)>>(
-        StdLibDefault.List to mapOf(
-            StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
-                check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
-                check(args[0].asmValue is AsmPrimitive) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                val arg1 = args[0].asmValue as AsmPrimitive
-                val idx = arg1.value as Int
-                self.elements.get(idx)
-            },
-            StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
-                check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].asmValue is AsmLambda) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].asmValue::class.simpleName}'." }
-                val lambda = args[0].asmValue as AsmLambda
-                val mapped = self.elements.map {
-                    val args = mapOf("it" to it)
-                    lambda.invoke(args)
-                }
-                AsmListSimple(mapped)
-            }
-        )
-    )
-}

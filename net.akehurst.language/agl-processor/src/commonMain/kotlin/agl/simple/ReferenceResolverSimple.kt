@@ -63,7 +63,7 @@ class ReferenceResolverSimple<ItemInScopeType>(
 
     private val scopeStack = mutableStackOf(rootScope)
     private val scopeForElement = mutableMapOf<AsmStructure, Scope<ItemInScopeType>>()
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues),_issues)
 
     private fun raiseError(element: Any, message: String) {
         _issues.error(

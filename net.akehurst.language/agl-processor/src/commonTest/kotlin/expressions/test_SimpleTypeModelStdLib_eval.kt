@@ -22,6 +22,8 @@ import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
@@ -33,7 +35,8 @@ class test_SimpleTypeModelStdLib_eval {
     companion object {
         fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-            val interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+            val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(self.toTypedObject(st)), expression)
             assertEquals(expected, actual.asmValue)
         }

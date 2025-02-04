@@ -31,7 +31,7 @@ val PropertyName.asValueName get() = PropertyValueName(this.value)
 
 class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
 
-    override fun constructAsm(): Asm  = AsmSimple()
+    override fun constructAsm(): Asm = AsmSimple()
 
     override fun rootList(asm: Asm): List<AsmValue> {
         return asm.root
@@ -45,11 +45,11 @@ class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
         (asm as AsmSimple).removeRoot(root)
     }
 
-    override fun nothingValue(): AsmValue  = AsmNothingSimple
-    override fun anyValue(value:Any): AsmValue  = AsmAnySimple(value)
+    override fun nothingValue(): AsmValue = AsmNothingSimple
+    override fun anyValue(value: Any): AsmValue = AsmAnySimple(value)
 
     override fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValue {
-       return AsmPrimitiveSimple(qualifiedTypeName, value)
+        return AsmPrimitiveSimple(qualifiedTypeName, value)
     }
 
     override fun listOfValues(elements: List<AsmValue>): AsmValue {
@@ -59,13 +59,14 @@ class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
     override fun listOfSeparatedValues(elements: ListSeparated<AsmValue, AsmValue, AsmValue>): AsmValue {
         return AsmListSeparatedSimple(elements)
     }
-    override fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureSimple {
+
+    override fun constructStructure(qualifiedTypeName: QualifiedName, vararg args: Any): AsmStructureSimple {
         val path = args[0] as AsmPath
         return AsmStructureSimple(path, qualifiedTypeName)
     }
 
     override fun setProperty(self: AsmStructureSimple, index: Int, propertyName: String, value: AsmValue) {
-       self.setProperty(PropertyValueName(propertyName), value,index)
+        self.setProperty(PropertyValueName(propertyName), value, index)
     }
 
     override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject {
@@ -79,6 +80,7 @@ class AsmPathSimple(
 
     companion object {
         const val SEPARATOR = "/"
+
         //val EXTERNAL = AsmPathSimple("§external")
         val ROOT = AsmPathSimple(SEPARATOR)
     }
@@ -271,6 +273,17 @@ val AsmValue.isStdString get() = this is AsmPrimitive && this.qualifiedTypeName 
 val AsmValue.isStdInteger get() = this is AsmPrimitive && this.qualifiedTypeName == StdLibDefault.Integer.qualifiedTypeName
 val AsmValue.isNothing get() = this is AsmNothing
 
+val AsmValue.raw: Any
+    get() = when (this) {
+        is AsmNothing -> Unit
+        is AsmAny -> this.value
+        is AsmPrimitive -> this.value
+        is AsmList -> this.elements.map { it.raw }
+        else -> {
+            TODO()
+        }
+    }
+
 class AsmReferenceSimple(
     override val reference: String,
     override var value: AsmStructure?
@@ -348,7 +361,7 @@ class AsmStructureSimple(
     fun getPropertyAsReferenceOrNull(name: PropertyValueName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
     fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue  = property[name]?.value ?: AsmNothingSimple
+    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
     override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
     fun getPropertyAsString(name: PropertyValueName): String = (getProperty(name) as AsmPrimitive).value as String
     fun getPropertyAsAsmElement(name: PropertyValueName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
@@ -543,14 +556,14 @@ class AsmListSeparatedSimple(
 }
 
 class AsmLambdaSimple(
-    val func: (it: AsmValue) -> AsmValue
+    val lambda: (it: AsmValue) -> AsmValue
 ) : AsmValueAbstract(), AsmLambda {
 
     override val qualifiedTypeName = StdLibDefault.Lambda.qualifiedTypeName
 
     override fun invoke(args: Map<String, AsmValue>): AsmValue {
         val it = args["it"]!!
-        return this.func.invoke(it)
+        return this.lambda.invoke(it)
     }
 
     override fun equalTo(other: AsmValue): Boolean {

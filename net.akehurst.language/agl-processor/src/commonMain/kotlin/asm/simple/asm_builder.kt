@@ -24,6 +24,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -63,7 +64,8 @@ class AsmSimpleBuilder(
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
 ) {
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(_typeModel)
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(_typeModel, _issues),_issues)
     private val _asm = AsmSimple()
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<Any>>()
     private val _identifyingValueInFor = { inTypeName: SimpleName, item: AsmStructure ->
@@ -102,7 +104,6 @@ class AsmSimpleBuilder(
     }
 
     fun build(): AsmSimple {
-        val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
             // Build Scope
             val scopeCreator = ScopeCreator(
@@ -110,7 +111,7 @@ class AsmSimpleBuilder(
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
                 _context.createScopedItem,
-                emptyMap(), issues
+                emptyMap(), _issues
             )
             _asm.traverseDepthFirst(scopeCreator)
 
@@ -120,12 +121,12 @@ class AsmSimpleBuilder(
                     _typeModel, _crossReferenceModel, _context.rootScope,
                     _identifyingValueInFor,
                     _context.resolveScopedItem,
-                    emptyMap(), issues
+                    emptyMap(), _issues
                 )
             )
         }
-        if (failIfIssues && issues.errors.isNotEmpty()) {
-            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
+        if (failIfIssues && _issues.errors.isNotEmpty()) {
+            error("Issues building asm:\n${_issues.all.joinToString(separator = "\n") { "$it" }}")
 
         } else {
             return _asm

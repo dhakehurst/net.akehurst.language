@@ -27,7 +27,10 @@ import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.expressions.processor.asmValue
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
@@ -124,8 +127,8 @@ class AsmTransformInterpreter(
         }*/
     }
 
-    val exprInterpreter = ExpressionsInterpreterOverTypedObject(typeModel)
-    val issues get() = exprInterpreter.issues// IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
+    val exprInterpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, issues),issues)
 
     fun clear() {
         this.issues.clear()

@@ -28,7 +28,7 @@ interface AsmPath {
     val segments: List<String>
     val parent: AsmPath?
 
-   // val isExternal: Boolean
+    // val isExternal: Boolean
 
     operator fun plus(segment: String): AsmPath
 }
@@ -37,7 +37,7 @@ interface Asm {
     val root: List<AsmValue>
     val elementIndex: Map<AsmPath, AsmStructure>
 
-    fun addToIndex(value:AsmStructure)
+    fun addToIndex(value: AsmStructure)
     fun traverseDepthFirst(callback: AsmTreeWalker)
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }
@@ -72,7 +72,7 @@ interface AsmReference {
 }
 
 @JvmInline
-value class PropertyValueName(override val value: String): PublicValueType {
+value class PropertyValueName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -130,8 +130,8 @@ interface AsmListSeparated : AsmList {
     override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 }
 
-interface AsmLambda {
-    fun invoke( args:Map<String, AsmValue> ) : AsmValue
+interface AsmLambda : AsmValue {
+    fun invoke(args: Map<String, AsmValue>): AsmValue
 }
 
 interface AsmTreeWalker {

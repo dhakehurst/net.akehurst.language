@@ -27,10 +27,7 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.processor.EvaluationContext
-import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.asmValue
-import net.akehurst.language.expressions.processor.toTypedObject
+import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.scope.api.Scope
@@ -69,7 +66,7 @@ class SemanticAnalyserSimple(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private lateinit var _locationMap: Map<Any, InputLocation>
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(typeModel)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues),_issues)
 
     override fun clear() {
         _issues.clear()

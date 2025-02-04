@@ -101,7 +101,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateInterfaceTypeNamed(typeName: SimpleName): InterfaceType
     fun findOwnedOrCreateDataTypeNamed(typeName: SimpleName): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
-    fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate:(UnionType)->Unit): UnionType
+    fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType
 
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
@@ -133,7 +133,7 @@ interface TypeArgument {
     fun signature(context: TypeNamespace?, currentDepth: Int): String
     fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
 
-    fun findInOrCloneTo(other: TypeModel):TypeArgument
+    fun findInOrCloneTo(other: TypeModel): TypeArgument
 }
 
 interface TypeInstance {
@@ -192,7 +192,7 @@ interface TypeInstance {
 interface TypeArgumentNamed : TypeArgument {
     val name: PropertyName
 
-    override fun findInOrCloneTo(other: TypeModel):TypeArgumentNamed
+    override fun findInOrCloneTo(other: TypeModel): TypeArgumentNamed
 }
 
 interface TupleTypeInstance : TypeInstance {
@@ -263,9 +263,9 @@ interface TypeDefinition : Definition<TypeDefinition> {
         parameters: List<ParameterDeclaration>,
         returnType: TypeInstance,
         description: String
-    ):MethodDeclarationPrimitive
+    ): MethodDeclarationPrimitive
 
-    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String) : MethodDeclarationDerived
+    fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDeclarationDerived
 
     fun findInOrCloneTo(other: TypeModel): TypeDefinition
 }
@@ -346,7 +346,7 @@ interface UnionType : TypeDefinition {
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val alternatives: List<TypeInstance>
 
-    fun addAlternative(value:TypeInstance)
+    fun addAlternative(value: TypeInstance)
 
     override fun findInOrCloneTo(other: TypeModel): UnionType
 }
@@ -358,7 +358,7 @@ interface CollectionType : StructuredType {
 }
 
 @JvmInline
-value class PropertyName(override val value: String):PublicValueType {
+value class PropertyName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -408,7 +408,9 @@ interface PropertyDeclaration {
     fun findInOrCloneTo(other: TypeModel): PropertyDeclaration
 }
 
-interface PropertyDeclarationResolved : PropertyDeclaration
+interface PropertyDeclarationResolved : PropertyDeclaration {
+    val original: PropertyDeclaration
+}
 
 enum class PropertyCharacteristic {
     /**
@@ -474,7 +476,7 @@ enum class PropertyCharacteristic {
 }
 
 @JvmInline
-value class MethodName(override val value: String):PublicValueType
+value class MethodName(override val value: String) : PublicValueType
 
 interface MethodDeclaration {
     val owner: TypeDefinition
@@ -489,7 +491,9 @@ interface MethodDeclaration {
 
 interface MethodDeclarationPrimitive : MethodDeclaration
 interface MethodDeclarationDerived : MethodDeclaration
-interface MethodDeclarationResolved : MethodDeclaration
+interface MethodDeclarationResolved : MethodDeclaration {
+    val original: MethodDeclaration
+}
 
 interface ConstructorDeclaration {
     val owner: TypeDefinition
@@ -499,7 +503,7 @@ interface ConstructorDeclaration {
 }
 
 @JvmInline
-value class ParameterName(override val value: String):PublicValueType
+value class ParameterName(override val value: String) : PublicValueType
 
 interface ParameterDeclaration {
     val name: ParameterName
