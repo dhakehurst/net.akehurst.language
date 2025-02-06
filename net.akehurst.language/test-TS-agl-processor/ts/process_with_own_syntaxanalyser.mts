@@ -159,8 +159,8 @@ class MySemanticAnalyser implements SemanticAnalyser<Value, MyContext> {
     clear() {
     }
 
-    analyse(asm: Value, locationMap: Nullable<KtMap<any, InputLocation>> | undefined, context: Nullable<MyContext> | undefined, options: SemanticAnalysisOptions<Value, MyContext>): SemanticAnalysisResult {
-        this.analyseValue(asm, context)
+    analyse(asm: Value, locationMap: Nullable<KtMap<any, InputLocation>> | undefined, options: SemanticAnalysisOptions<Value, MyContext>): SemanticAnalysisResult {
+        this.analyseValue(asm, options.context)
         return new SemanticAnalysisResultDefault(this.issues)
     }
 
@@ -210,7 +210,6 @@ export function process_with_own_syntaxanalyser() {
         ["var1", new LiteralValue(true, "Boolean")],
         ["var2", new LiteralValue(55, "Integer")]
     ]));
-
     for (const sentence of sentences) {
         console.log(`Processing: '${sentence}'`)
         const pres = proc.process(sentence, Agl.getInstance().options(undefined, (b) => {

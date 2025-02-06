@@ -32,7 +32,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Base"),
             listOf(StdLibDefault),
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite)
+            listOf(AglBase.kompositeString)
         )
         gen.addPackage("net.akehurst.language.base.api")
         gen.addPackage("net.akehurst.language.base.asm")
@@ -54,7 +54,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Grammar"),
             btm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglGrammar.komposite)
+            listOf(AglBase.kompositeString, AglGrammar.komposite)
         )
         gen.addPackage("net.akehurst.language.grammar.api")
         gen.addPackage("net.akehurst.language.grammar.asm")
@@ -76,7 +76,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Typemodel"),
             grammar.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglTypemodel.komposite)
+            listOf(AglBase.kompositeString, AglTypemodel.kompositeString)
         )
         gen.addPackage("net.akehurst.language.typemodel.api")
         gen.addPackage("net.akehurst.language.typemodel.asm")
@@ -100,7 +100,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Asm"),
             baseTm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglAsm.komposite)
+            listOf(AglBase.kompositeString, AglAsm.komposite)
         )
         gen.include("net.akehurst.language.collections.ListSeparated")
         gen.addPackage("net.akehurst.language.asm.api")
@@ -123,7 +123,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             btm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglExpressions.komposite)
+            listOf(AglBase.kompositeString, AglExpressions.komposite)
         )
         gen.addPackage("net.akehurst.language.expressions.api")
         gen.addPackage("net.akehurst.language.expressions.asm")
@@ -145,7 +145,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             expr.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglExpressions.komposite, AglCrossReference.komposite)
+            listOf(AglBase.kompositeString, AglExpressions.komposite, AglCrossReference.komposite)
         )
         gen.addPackage("net.akehurst.language.reference.api")
         gen.addPackage("net.akehurst.language.reference.asm")
@@ -167,7 +167,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Scope"),
             btm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglScope.komposite)
+            listOf(AglBase.kompositeString, AglScope.komposite)
         )
         gen.addPackage("net.akehurst.language.scope.api")
         gen.addPackage("net.akehurst.language.scope.asm")
@@ -189,7 +189,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             baseTm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.komposite, AglStyle.komposite)
+            listOf(AglBase.kompositeString, AglStyle.komposite)
         )
         gen.addPackage("net.akehurst.language.style.api")
         gen.addPackage("net.akehurst.language.style.asm")
