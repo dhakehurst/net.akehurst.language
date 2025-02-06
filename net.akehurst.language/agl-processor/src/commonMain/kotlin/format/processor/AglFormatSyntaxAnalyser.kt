@@ -20,9 +20,9 @@ import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrati
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.formatter.api.*
@@ -33,13 +33,14 @@ import net.akehurst.language.sppt.treedata.locationForNode
 internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatModel>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
-        QualifiedName("Base") to BaseSyntaxAnalyser()
+        QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
     )
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglFormatModel>> = emptyMap()
 
     override fun registerHandlers() {
         super.register(this::unit)
+        super.register(this::namespace)
         super.register(this::format)
         super.register(this::formatRule)
         super.register(this::formatExpression)
@@ -54,7 +55,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::typeReference)
     }
 
-    // unit = namespace formatList ;
+    // unit = namespace format+ ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatModel {
         val ns = children[0] as FormatNamespace
         val ruleBuilder = children[1] as List<((ns: FormatNamespace) -> FormatSet)>
@@ -97,14 +98,17 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     //formatRule = typeReference '->' formatExpression ;
     fun formatRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatRule {
         val forTypeName = children[0] as SimpleName
-        val expression = children[1] as FormatExpression
+        val expression = children[2] as FormatExpression
         return AglFormatRuleDefault(forTypeName, expression)
     }
 
     //formatExpression = expression | templateString | whenExpression    ;
-    fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression =
-        children[0] as FormatExpression
-
+    fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression = when(nodeInfo.alt.option.value) {
+        0 -> FormatExpressionExpressionDefault(children[0] as Expression)
+        1 -> children[0] as FormatExpressionTemplate
+        2 -> children[0] as FormatExpressionWhen
+        else -> error("Option not handled")
+    }
     // whenExpression = 'when' '{' whenOptionList '}' ;
     private fun whenExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpressionWhen {
         val optionList = children[2] as List<FormatWhenOption>

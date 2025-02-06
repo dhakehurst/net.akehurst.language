@@ -2,10 +2,10 @@
 project = "4.2.1.0"
 
 kotlin = "2.1.0"
-dokka = "1.9.20"
+dokka = "2.0.0"
 exportPublic = "2.1.0"
 nak-kotlinx = "2.1.0"
-buildconfig = "5.5.0"
+buildconfig = "5.5.1"
 credentials = "3.0"
 jsIntegration = "2.1.0"
 

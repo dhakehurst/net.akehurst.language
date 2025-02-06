@@ -56,7 +56,8 @@ object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
     collectionDefinition = 'collection' IDENTIFIER '<' typeParameterList '>' ;
     dataDefinition = 'data' IDENTIFIER supertypes? '{' property* '}' ;
     interfaceDefinition = 'interface' IDENTIFIER supertypes? '{' property* '}' ;
-    unionDefinition = 'union' IDENTIFIER '{' alternatives* '}' ;
+    unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
+    alternatives = [typeReference / '|']+ ;
     
     typeParameterList = [ IDENTIFIER / ',']+ ;
     supertypes = ':' [ typeReference / ',']+ ;
@@ -127,7 +128,26 @@ namespace net.akehurst.language.grammarTypemodel.api
             namespace("net.akehurst.language") {
                 grammar("Typemodel") {
                     extendsGrammar(AglBase.targetGrammar.selfReference)
-TODO()
+
+                    concatenation("unit") { ref("namespace"); lst(1, -1) { ref("definition") } }
+                    choice("definition") {
+                        ref("singletonDefinition")
+                        ref("primitiveDefinition")
+                        ref("enumDefinition")
+                        ref("valueDefinition")
+                        ref("collectionDefinition")
+                        ref("dataDefinition")
+                        ref("interfaceDefinition")
+                        ref("unionDefinition")
+                    }
+                    concatenation("singletonDefinition") { lit("singleton"); ref("IDENTIFIER") }
+                    concatenation("primitiveDefinition") { lit("primitive"); ref("IDENTIFIER") }
+                    concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER") }
+                    concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER") }
+                    //concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER") '<' typeParameterList '>' ; }
+                    //concatenation("dataDefinition") { lit("data"); ref("IDENTIFIER") supertypes ? '{' property* '}' ; }
+                    //concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER") supertypes ? '{' property* '}' ; }
+                   // concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER") '{' alternatives* '}' ; }
                 }
             }
         }

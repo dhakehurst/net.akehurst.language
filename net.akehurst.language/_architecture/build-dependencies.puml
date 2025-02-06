@@ -1,0 +1,18 @@
+@startuml
+!pragma layout smetana
+
+artifact "kotlin" as kotlin
+artifact "exportPublic" as exportPublic
+artifact "nak-kotlinx" as nak_kotlinx
+artifact "agl" as agl
+
+'dashed - api dependency
+'dotted - impl dependency
+
+agl -[dashed]-> kotlin
+agl -[dashed]-> exportPublic
+agl -[dashed]-> nak_kotlinx
+
+
+
+@enduml

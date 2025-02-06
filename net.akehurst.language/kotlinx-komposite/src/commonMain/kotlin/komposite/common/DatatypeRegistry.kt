@@ -17,8 +17,8 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.kotlinx.komposite.api.KompositeException
-import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.kotlinx.reflect.KotlinxReflect
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
@@ -137,9 +137,9 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         this._primitiveMappers[mapper.primitiveKlass] = mapper
     }
 
-    fun registerFromConfigString(kompositeModel: String, primitiveMappers: Map<KClass<*>, PrimitiveMapper<*, *>>) {
+    fun registerFromAglTypesString(kompositeModel: String, primitiveMappers: Map<KClass<*>, PrimitiveMapper<*, *>>) {
         try {
-            val result = Komposite.process(kompositeModel)
+            val result = Agl.registry.agl.types.processor!!.process(kompositeModel)
             if (null == result.asm) {
                 throw KompositeException("Error processing config string", result.issues.errors, null)
             } else {

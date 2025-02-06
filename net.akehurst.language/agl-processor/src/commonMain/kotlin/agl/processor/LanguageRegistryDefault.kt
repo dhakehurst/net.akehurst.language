@@ -122,6 +122,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val expressions: LanguageDefinition<Expression, SentenceContext> by lazy {
+            base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<Expression, SentenceContext>(
                     identity = expressionsLanguageIdentity,
@@ -145,14 +146,16 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry> by lazy {
+            base //ensure base is instantiated
+            val lang = AglGrammar
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = grammarLanguageIdentity,
-                    AglGrammar.grammar.asGrammarModel(),
+                    lang.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglGrammar.grammar.name.value)
-                        defaultGoalRuleName(AglGrammar.goalRuleName)
+                        targetGrammarName(lang.grammar.name.value)
+                        defaultGoalRuleName(lang.goalRuleName)
                         // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -160,7 +163,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                         syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), AglGrammar.styleStr) }
+                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), lang.styleStr) }
                         completionProvider { ProcessResultDefault(AglGrammarCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     }
                 )
@@ -168,6 +171,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val types: LanguageDefinition<TypeModel, ContextFromGrammar> by lazy {
+            base //ensure base is instantiated
             val lang = AglTypemodel
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
@@ -192,6 +196,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel> by lazy {
+            base //ensure base is instantiated
             val lang = AsmTransform
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
@@ -216,6 +221,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel> by lazy {
+            expressions //ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<CrossReferenceModel, ContextFromTypeModel>(
                     identity = crossReferenceLanguageIdentity,
@@ -239,6 +245,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val format by lazy {
+            expressions //ensure expressions is instantiated
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<AglFormatModel, SentenceContext>(
                     identity = formatLanguageIdentity,
@@ -262,6 +269,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val style: LanguageDefinition<AglStyleModel, ContextFromGrammar> by lazy {
+            base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = styleLanguageIdentity,
@@ -290,6 +298,9 @@ class LanguageRegistryDefault : LanguageRegistry {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
             this._registry[definition.identity] = definition
+            definition.grammarModel.allDefinitions.forEach {
+                registerGrammar(it)
+            }
             definition
         }
     }
@@ -311,7 +322,10 @@ class LanguageRegistryDefault : LanguageRegistry {
     )
 
     override fun unregister(identity: LanguageIdentity) {
-        this._registry.remove(identity)
+        val definition = this._registry.remove(identity)
+        definition?.grammarModel?.allDefinitions?.forEach {
+            unregisterGrammar(it.qualifiedName)
+        }
     }
 
     override fun <AsmType:Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>? {
@@ -368,5 +382,9 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun registerGrammar(grammar: Grammar) {
         _grammars[grammar.qualifiedName] = grammar
+    }
+
+    fun unregisterGrammar(qualifiedName: QualifiedName) {
+        _grammars.remove(qualifiedName)
     }
 }

@@ -144,7 +144,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val formatter: Formatter<AsmType>? by lazy {
         val res = configuration.formatterResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        FormatterSimple<AsmType>(res?.asm)
+        FormatterSimple<AsmType>(res?.asm, typeModel)
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {

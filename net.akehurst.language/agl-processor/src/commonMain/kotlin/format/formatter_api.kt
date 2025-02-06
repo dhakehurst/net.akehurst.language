@@ -18,8 +18,6 @@ package net.akehurst.language.formatter.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.style.api.StyleNamespace
-import net.akehurst.language.style.api.StyleSet
 
 interface AglFormatModel : Model<FormatNamespace, FormatSet> {
 
@@ -60,8 +58,8 @@ interface FormatExpression {
 
 }
 
-interface FormatExpressionLiteral : FormatExpression {
-    val value: String
+interface FormatExpressionExpression : FormatExpression {
+    val expression: Expression
 }
 
 interface FormatExpressionTemplate : FormatExpression {

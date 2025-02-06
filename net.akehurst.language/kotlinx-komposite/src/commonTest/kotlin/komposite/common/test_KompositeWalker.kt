@@ -56,7 +56,7 @@ class test_KompositeWalker {
     @Test
     fun walk_null_with_non_nullable_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -83,7 +83,7 @@ class test_KompositeWalker {
     @Test
     fun walk_null_with_nullable_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -110,7 +110,7 @@ class test_KompositeWalker {
     @Test
     fun walk_primitive_String_no_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -135,7 +135,7 @@ class test_KompositeWalker {
     @Test
     fun walk_primitive_String_with_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -161,7 +161,7 @@ class test_KompositeWalker {
     @Test
     fun walk_primitive_AValueClass_no_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -189,7 +189,7 @@ class test_KompositeWalker {
     @Test
     fun walk_primitive_AValueClass_with_type() {
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive String
@@ -223,7 +223,7 @@ class test_KompositeWalker {
     fun walk_Map_no_type() {
         var result = ""
         val reg = DatatypeRegistry()
-        reg.registerFromConfigString(
+        reg.registerFromAglTypesString(
             """
             namespace kotlin {
                 primitive Int

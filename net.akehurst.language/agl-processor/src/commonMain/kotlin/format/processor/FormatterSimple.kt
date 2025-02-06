@@ -20,13 +20,18 @@ import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.typemodel.api.TypeModel
 
 class FormatterSimple<AsmType>(
-    val model: AglFormatModel?
+    val model: AglFormatModel?,
+    val typeModel: TypeModel,
 ) : Formatter<AsmType> {
+
+    private val _issues = IssueHolder(LanguageProcessorPhase.FORMAT)
 
     override fun format(asm: AsmType): FormatResult {
         val sb = StringBuilder()
@@ -69,14 +74,18 @@ class FormatterSimple<AsmType>(
     }
 
     private fun formatExpression(formatExpr: FormatExpression, asm: AsmStructure) = when (formatExpr) {
-        is FormatExpressionLiteral -> formatFromLiteral(formatExpr)
+        is FormatExpressionExpression -> formatFromExpression(formatExpr,asm)
         is FormatExpressionTemplate -> formatFromTemplate(formatExpr, asm)
         is FormatExpressionWhen -> formatFromWhen(formatExpr, asm)
         else -> error("Internal error: subtype of AglFormatExpression not handled: '${formatExpr::class.simpleName}'")
     }
 
-    private fun formatFromLiteral(formatExpr: FormatExpressionLiteral): String {
-        return formatExpr.value
+    private fun formatFromExpression(formatExpr: FormatExpressionExpression, asm: AsmStructure): String {
+        val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues),_issues)
+        val tp = typeModel.findByQualifiedNameOrNull(asm.qualifiedTypeName)!!.type()
+        val evc = EvaluationContext.ofSelf(asm.toTypedObject(tp))
+        val res = interpreter.evaluateExpression(evc, formatExpr.expression)
+        return (res.asmValue as AsmPrimitive).value as String
     }
 
     private fun formatFromTemplate(formatExpr: FormatExpressionTemplate, asm: AsmStructure): String {
@@ -96,7 +105,8 @@ class FormatterSimple<AsmType>(
 
     private fun FormatExpression.execute(model: AglFormatModel?, el: AsmStructure): String {
         return when (this) {
-            is FormatExpressionLiteral -> (el.getProperty(PropertyValueName("literal_string")) as AsmPrimitive).value.toString()
+            is FormatExpressionExpression -> formatFromExpression(this, el)
+                //(el.getProperty(PropertyValueName("literal_string")) as AsmPrimitive).value.toString()
             is FormatExpressionTemplate -> {
                 this.content.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it) {

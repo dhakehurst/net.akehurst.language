@@ -20,6 +20,7 @@ import net.akehurst.kotlinx.reflect.EnumValuesFunction
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.EnumType
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,16 +31,15 @@ enum class EEEE {
 class test_EnumType {
 
     @Test
-    fun valueOfString() {
+    fun valueOfEnum() {
         KotlinxReflect.registerClass("net.akehurst.kotlin.komposite.common.EEEE",EEEE::class,EEEE::values as EnumValuesFunction)
 
-        val komposite = """
-        namespace net.akehurst.kotlin.komposite.common {
-            enum EEEE
-        }
+        val typeModel = """
+        namespace net.akehurst.kotlin.komposite.common
+          enum EEE
         """.trimIndent()
         val dt = DatatypeRegistry()
-        dt.registerFromConfigString(komposite, emptyMap())
+        dt.registerFromAglTypesString(typeModel, emptyMap())
 
         val et = dt.findFirstByNameOrNull(SimpleName("EEEE")) as EnumType
 

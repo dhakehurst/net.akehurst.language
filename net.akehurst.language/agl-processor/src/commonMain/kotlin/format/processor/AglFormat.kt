@@ -82,8 +82,7 @@ object AglFormat {
     const val grammarStr = """
         namespace net.akehurst.language.agl
         grammar AglFormat extends Expressions {        
-            unit = namespace formatList ;
-            formatList = format+ ;
+            unit = namespace format+ ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule+ ;

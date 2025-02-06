@@ -148,6 +148,12 @@ class FormatWhenOptionDefault(
     override val format: FormatExpression
 ) : FormatWhenOption
 
+class FormatExpressionExpressionDefault(
+    override val expression: Expression
+) : FormatExpressionExpression {
+
+}
+
 class FormatExpressionTemplateDefault(
     override val content: List<TemplateElement>
 ) : FormatExpressionTemplate
