@@ -27,12 +27,14 @@ import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.formatter.api.TemplateElementExpressionEmbedded
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
 
@@ -127,14 +129,16 @@ class FormatSetDefault(
     override val namespace: FormatNamespace,
     override val name: SimpleName,
     override val extends: List<FormatSetReference>,
-    override val options: OptionHolder = OptionHolderDefault(null, emptyMap())
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+    _rules: List<AglFormatRule>
 ) : FormatSet, DefinitionAbstract<FormatSet>() {
-
-    override val rules: List<AglFormatRule> = mutableListOf()
+    override val rules: Map<TypeReference, AglFormatRule> by lazy {
+        _rules.associateBy { it.forTypeName }
+    }
 }
 
 class AglFormatRuleDefault(
-    override val forTypeName: SimpleName,
+    override val forTypeName: TypeReference,
     override val formatExpression: FormatExpression
 ) : AglFormatRule {
 }

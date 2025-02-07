@@ -17,29 +17,24 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 //import net.akehurst.language.asm.simple.*
-import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
-import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
-import net.akehurst.language.asm.simple.asValueName
-import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.emptyListSeparated
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.parser.api.Rule
-import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.locationForNode
@@ -50,7 +45,6 @@ import net.akehurst.language.transform.asm.*
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.SpecialTypeSimple
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 data class NodeTrRules(
@@ -601,7 +595,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         asmFactory.setProperty(self, 3, AsmTransformInterpreter.CHILD.value, childrenAsmList)
         asmFactory.setProperty(self, 4, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
 
-        val typedSelf = asmFactory.toTypedObject(self, selfType)
+        //TODO: use factory, requires TransformInterpreter to be generic on SelfType
+        val typedSelf = TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
         val tr = downData.trRule.forNode
         _trf.clear()

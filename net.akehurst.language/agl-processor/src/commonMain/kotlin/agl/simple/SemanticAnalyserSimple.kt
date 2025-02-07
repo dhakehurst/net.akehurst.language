@@ -41,7 +41,7 @@ class SemanticAnalyserSimple(
 ) : SemanticAnalyser<Asm, ContextAsmSimple> {
 
     companion object {
-        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject, crossReferenceModel: CrossReferenceModel, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
+        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceModel: CrossReferenceModel, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
                 //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {
@@ -50,7 +50,7 @@ class SemanticAnalyserSimple(
                         null -> null
                         else -> {
                             val elType = interpreter.typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), exp).asmValue
+                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType,self)), exp).self
                             when {
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }

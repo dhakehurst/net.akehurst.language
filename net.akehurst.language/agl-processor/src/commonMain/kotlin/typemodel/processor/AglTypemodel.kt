@@ -38,8 +38,7 @@ object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
 
     override val grammarString = """namespace net.akehurst.language
   grammar Typemodel : Base {
-    unit = namespace definition+ ;
-    definition
+    override definition
       = singletonDefinition
       | primitiveDefinition
       | enumDefinition
@@ -62,7 +61,7 @@ object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
     typeParameterList = [ IDENTIFIER / ',']+ ;
     supertypes = ':' [ typeReference / ',']+ ;
     property = characteristic IDENTIFIER ':' typeReference ;
-    typeReference = qualifiedName typeArgumentList? '?'?;
+    typeReference = possiblyQualifiedName typeArgumentList? '?'?;
     typeArgumentList = '<' [ typeReference / ',']+ '>' ;
     characteristic
        = 'reference-val'    // reference, constructor argument

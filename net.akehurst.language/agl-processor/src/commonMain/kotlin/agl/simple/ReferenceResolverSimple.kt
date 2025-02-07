@@ -154,8 +154,8 @@ class ReferenceResolverSimple<ItemInScopeType>(
                 //scope for result of navigation
                 val elType = typeModel.findByQualifiedNameOrNull(context.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                 val fromEl = _interpreter.evaluateExpression(
-                    EvaluationContext.ofSelf(context.element.toTypedObject(elType)), refExpr.fromNavigation
-                ).asmValue
+                    EvaluationContext.ofSelf(TypedObjectAsmValue(elType, context.element)), refExpr.fromNavigation
+                ).self
                 when (fromEl) {
                     is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
                     is AsmStructure -> {
@@ -177,7 +177,7 @@ class ReferenceResolverSimple<ItemInScopeType>(
             }
         }
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-        var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.referringPropertyNavigation).asmValue
+        var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType,self)), refExpr.referringPropertyNavigation).self
         if (referringValue is AsmReference) {
             referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
@@ -299,12 +299,12 @@ class ReferenceResolverSimple<ItemInScopeType>(
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
         val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(self.toTypedObject(elType)), refExpr.expression)
+        val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType,self)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
-            when (coll.asmValue) {
+            when (coll.self) {
                 is AsmNothing -> Unit //do nothing
                 is AsmList -> {
-                    for (el in (coll.asmValue as AsmList).elements) {
+                    for (el in (coll.self as AsmList).elements) {
                         when {
                             el is AsmNothing -> Unit //do nothing
                             null == refExpr.ofType -> handleReferenceExpression(re, context, el)
@@ -352,8 +352,8 @@ class ReferenceResolverSimple<ItemInScopeType>(
                 //val exprEval = ExpressionsInterpreterOverTypedObject(typeModel)
                 val selfType = typeModel.typeOf(root).type()
                 val front = NavigationSimple(this.start, this.parts.dropLast(1))
-                val evc = EvaluationContext(null, mapOf(RootExpressionSimple.SELF.name to root.toTypedObject(selfType)))
-                val v = _interpreter.evaluateExpression(evc, front).asmValue
+                val evc = EvaluationContext(null, mapOf(RootExpressionSimple.SELF.name to TypedObjectAsmValue(selfType,root)))
+                val v = _interpreter.evaluateExpression(evc, front).self
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {
                     is AsmStructure -> {

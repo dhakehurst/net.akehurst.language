@@ -74,7 +74,6 @@ object AglFormat {
             lit("\${"); ref("formatExpression"); lit("}")
         }
 
-        concatenation("typeReference") { ref("IDENTIFIER") }
         concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
         concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
     }
@@ -105,7 +104,6 @@ object AglFormat {
             templateExpressionSimple = DOLLAR_IDENTIFIER ;
             templateExpressionEmbedded = '$${'{'}' formatExpression '}'
                         
-            typeReference = IDENTIFIER ;
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }

@@ -22,7 +22,7 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.expressions.processor.TypedObject
-import net.akehurst.language.expressions.processor.toTypedObject
+import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -69,8 +69,8 @@ class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
         self.setProperty(PropertyValueName(propertyName), value, index)
     }
 
-    override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject {
-        return self.toTypedObject(selfType)
+    override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject<AsmValue> {
+        return TypedObjectAsmValue(selfType, self)
     }
 }
 

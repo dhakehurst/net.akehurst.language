@@ -28,7 +28,6 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
-import net.akehurst.language.expressions.processor.asmValue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.transform.api.TransformationRule
@@ -134,7 +133,7 @@ class AsmTransformInterpreter(
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext, path: AsmPath, trRule: TransformationRule): AsmValue {
+    fun evaluate(evc: EvaluationContext<AsmValue>, path: AsmPath, trRule: TransformationRule): AsmValue {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
 //        when {
@@ -154,18 +153,18 @@ class AsmTransformInterpreter(
         return asm
     }
 
-    private fun evaluateSelfStatement(evc: EvaluationContext, expression: Expression): AsmValue {
-        return exprInterpreter.evaluateExpression(evc, expression).asmValue
+    private fun evaluateSelfStatement(evc: EvaluationContext<AsmValue>, expression: Expression): AsmValue {
+        return exprInterpreter.evaluateExpression(evc, expression).self
     }
 
-    private fun executeStatementOn(evc: EvaluationContext, st: AssignmentStatement, asm: AsmStructure) {
+    private fun executeStatementOn(evc: EvaluationContext<AsmValue>, st: AssignmentStatement, asm: AsmStructure) {
         val propValue = evaluateExpressionOver(st.rhs, evc)
         asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
-    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext): AsmValue {
+    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValue>): AsmValue {
         val res = exprInterpreter.evaluateExpression(evc, expr)
-        return res.asmValue
+        return res.self
     }
 
 }

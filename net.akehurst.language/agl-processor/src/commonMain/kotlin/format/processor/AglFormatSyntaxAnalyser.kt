@@ -22,6 +22,7 @@ import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
 import net.akehurst.language.format.asm.AglFormatModelDefault
@@ -52,7 +53,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::templateExpression)
         super.register(this::templateExpressionSimple)
         super.register(this::templateExpressionEmbedded)
-        super.register(this::typeReference)
+        //super.register(this::typeReference)
     }
 
     // unit = namespace format+ ;
@@ -78,7 +79,9 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val rules: List<AglFormatRule> = children[4] as List<AglFormatRule>
         return { ns ->
             val extends = extendsFunc.map { it.invoke(ns) }
-            FormatSetDefault(ns, name, extends, options)
+            val fs = FormatSetDefault(ns, name, extends, options, rules)
+            ns.addDefinition(fs)
+            fs
         }
     }
 
@@ -97,7 +100,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
 
     //formatRule = typeReference '->' formatExpression ;
     fun formatRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatRule {
-        val forTypeName = children[0] as SimpleName
+        val forTypeName = children[0] as TypeReference
         val expression = children[2] as FormatExpression
         return AglFormatRuleDefault(forTypeName, expression)
     }
@@ -150,7 +153,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         TemplateElementExpressionEmbeddedDefault(children[1] as FormatExpression)
 
     // typeReference = IDENTIFIER ;
-    fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
-        SimpleName(children[0] as String)
+   // fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
+   //    SimpleName(children[0] as String)
 
 }

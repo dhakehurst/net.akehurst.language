@@ -35,7 +35,7 @@ interface AsmFactory<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmVa
     fun addRoot(asm: AsmType, root: AsmValueType)
     fun removeRoot(asm: AsmType, root: AsmValueType)
 
-    fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject
+    fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
     fun nothingValue(): AsmValueType
     fun anyValue(value: Any): AsmValueType
     fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType

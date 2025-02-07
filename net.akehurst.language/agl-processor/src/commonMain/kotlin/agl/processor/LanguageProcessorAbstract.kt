@@ -26,6 +26,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.format.processor.FormatterSimple
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.*
@@ -144,7 +145,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val formatter: Formatter<AsmType>? by lazy {
         val res = configuration.formatterResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        FormatterSimple<AsmType>(res?.asm, typeModel)
+        FormatterSimple<AsmType>(res?.asm,typeModel)
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
