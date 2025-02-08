@@ -48,7 +48,6 @@ internal class ConverterToRuntimeRules(
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem? =
         this._originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
 
-
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     private val _ruleSetNumber by lazy { RuntimeRuleSet.numberForGrammar[grammar.qualifiedName.value] }
@@ -61,12 +60,17 @@ internal class ConverterToRuntimeRules(
     private val _terminalRules = mutableMapOf<String, RuntimeRule>()
     private val _embeddedRules = mutableMapOf<Pair<Grammar, String>, RuntimeRule>()
     private val _originalRuleItem: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
-    private val _embeddedConverters: LazyMutableMapNonNull<Grammar, ConverterToRuntimeRules> = lazyMutableMapNonNull { embeddedGrammar ->
-        val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
-        embeddedConverter
-    }
-
     private val _pseudoRuleNameGenerator by lazy { PseudoRuleNames(grammar) }
+
+    fun resolveEmbedded(embeddedConverters: Map<Grammar, RuntimeRuleSet>) {
+        _embeddedRules.forEach { (p,rule) ->
+            val (embeddedGrammar, embeddedGoalRuleName) = p
+            val embeddedRuntimeRuleSet = embeddedConverters[embeddedGrammar] ?: error("Embedded ConverterToRuntimeRules not found for grammar '${embeddedGrammar.qualifiedName.value}'")
+            val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
+            rule.setRhs(RuntimeRuleRhsEmbedded(rule, embeddedRuntimeRuleSet, embeddedStartRuntimeRule))
+
+        }
+    }
 
     private fun recordOriginalRuleItem(runtimeRule: RuntimeRule, originalRuleItem: RuleItem) {
         this._originalRuleItem[Pair(runtimeRule.runtimeRuleSetNumber, runtimeRule.ruleNumber)] = originalRuleItem
@@ -99,12 +103,7 @@ internal class ConverterToRuntimeRules(
 
     private fun embeddedRule(embeddedRuleName: String, isSkip: Boolean, embeddedGrammar: Grammar, embeddedGoalRuleName: String): RuntimeRule {
         if (Debug.CHECK) check(this._runtimeRules.containsKey(embeddedRuleName).not())
-        val embeddedConverter = _embeddedConverters[embeddedGrammar]
-        val embeddedRuntimeRuleSet = embeddedConverter.runtimeRuleSet
-        val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
-        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, embeddedRuleName, isSkip, false).also {
-            it.setRhs(RuntimeRuleRhsEmbedded(it, embeddedRuntimeRuleSet, embeddedStartRuntimeRule))
-        }
+        val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, embeddedRuleName, isSkip, false)
         _runtimeRules[newRule.tag] = newRule
         _embeddedRules[Pair(embeddedGrammar, embeddedGoalRuleName)] = newRule
         return newRule

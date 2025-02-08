@@ -55,10 +55,6 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<TypeModel>> = emptyMap()
 
-    override fun clear() {
-        super.clear()
-    }
-
     // unit = namespace+ ;
     private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
         val result = TypeModelSimple(SimpleName("A Komposite"))

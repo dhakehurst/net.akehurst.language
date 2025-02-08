@@ -54,7 +54,17 @@ interface ScanOptions {
 
 enum class MatchableKind { EOT, LITERAL, REGEX }
 
-data class Matchable(
+//TODO: FIXME:
+// the same 'tag' could come from different RuleSets when using embedded grammars
+// - it could have different rhs
+// - even if the same rhs patten the matchable could be a different object
+// -- in which case the _regEx is not set for one of them because of Sets
+// don't want to pass in the RuntimeRule because don't want to serialise it
+// could pass in the rr id ? - may end up with duplicate tags/patterns for diff rr ids?
+// -- maybe that is correct!
+class Matchable(
+    val ruleSetNumber: Int,
+    val ruleNumber:Int,
     val tag: String,
     /**
      * must NOT be empty/blank
@@ -101,6 +111,13 @@ data class Matchable(
                 it.matchedText.length
             } ?: -1
         }
+    }
+
+    override fun toString(): String = "Matchable($ruleSetNumber, $ruleNumber, $kind, $tag, $expression)"
+    override fun hashCode(): Int  = Pair(ruleSetNumber, ruleNumber).hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is Matchable -> false
+        else -> ruleSetNumber == other.ruleSetNumber && ruleNumber == other.ruleNumber
     }
 }
 

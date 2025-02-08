@@ -79,7 +79,7 @@ class RuntimeRuleRhsCommonTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
 
-    override val matchable by lazy { Matchable(rule.tag, "", MatchableKind.EOT) }//only used if EOT RuntimeRule
+    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, "", MatchableKind.EOT) }//only used if EOT RuntimeRule
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsCommonTerminal(clonedRules[rule.tag]!!)
     override fun toString(): String = rule.tag
@@ -95,7 +95,7 @@ class RuntimeRuleRhsPattern(
                 .replace("\\\"", "\"")
     }
 
-    override val matchable by lazy { Matchable(rule.tag, this.patternUnescaped, MatchableKind.REGEX) }
+    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.patternUnescaped, MatchableKind.REGEX) }
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, patternUnescaped)
     override fun toString(): String = "\"$patternUnescaped\""
 }
@@ -112,7 +112,7 @@ class RuntimeRuleRhsLiteral(
                 .replace("\\\\", "\\")
     }
 
-    override val matchable by lazy { Matchable(rule.tag, this.literalUnescaped, MatchableKind.LITERAL) }
+    override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.literalUnescaped, MatchableKind.LITERAL) }
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, literalUnescaped)
     override fun toString(): String = "'$literalUnescaped'"

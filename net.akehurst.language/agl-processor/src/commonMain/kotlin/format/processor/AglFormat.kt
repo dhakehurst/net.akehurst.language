@@ -16,6 +16,7 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
@@ -30,7 +31,7 @@ object AglFormat {
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
 
     val grammarModel by lazy {
-        grammarModel("AglFormat") {
+        grammarModel(name="AglFormat", grammarRegistry = Agl.registry) {
             namespace("net.akehurst.language") {
                 grammar("Template") {
                     concatenation("templateString") {
@@ -48,12 +49,11 @@ object AglFormat {
                     }
                     concatenation("templateExpressionProperty") { ref("DOLLAR_IDENTIFIER") }
                     concatenation("templateExpressionList") {
-                        lit("$"); lit("["); ebd("Expressions", "IDENTIFIER"); lit("/"); ebd("Expressions", "STRING"); lit("]")
+                        lit("$"); lit("["); ebd("Expressions", "expression"); lit("|"); ebd("Expressions", "STRING"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
-                        lit("\${"); ref("formatExpression"); lit("}")
+                        lit("\${"); ebd("Format","formatExpression"); lit("}")
                     }
-
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
                     concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
                 }
@@ -103,14 +103,14 @@ object AglFormat {
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
             templateExpressionList = '$' '[' Expressions::expression '/' Expressions::STRING ']' ;
-            templateExpressionEmbedded = '$${'{'}' formatExpression '}'
+            templateExpressionEmbedded = '$${'{'}' AglFormat::formatExpression '}'
             
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }
         
         grammar AglFormat extends Expressions {        
-            unit = namespace format+ ;
+            override unit = namespace format+ ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule+ ;

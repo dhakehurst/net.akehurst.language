@@ -148,6 +148,8 @@ interface Grammar : Definition<Grammar> {
 
     fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
 
+    fun findAllResolvedEmbeddedGrammars(found:Set<Grammar> = emptySet()) : Set<Grammar>
+
 }
 
 @JvmInline

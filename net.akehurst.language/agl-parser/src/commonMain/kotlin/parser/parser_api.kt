@@ -17,6 +17,7 @@
 
 package net.akehurst.language.parser.api
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.issues.api.IssueCollection
@@ -26,7 +27,12 @@ import kotlin.jvm.JvmInline
 
 interface RuleSet {
     val nonSkipTerminals: List<Rule>
+
+    /** all terminals in this RuleSet */
     val terminals: List<Rule>
+
+    /** all transitive terminals from RuleSets of embedded rules */
+    val embeddedTerminals: List<RuntimeRule>
 
     fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): Automaton
     fun usedAutomatonFor(goalRuleName: String):Automaton

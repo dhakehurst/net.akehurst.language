@@ -23,6 +23,7 @@ import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLea
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.syntaxAnalyser.AsmFactory
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
@@ -103,7 +104,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
-    override fun clear() {
+    override fun clear(done: Set<SyntaxAnalyser<*>>) {
         super.clear()
         this._trf.clear()
         this._asm = null

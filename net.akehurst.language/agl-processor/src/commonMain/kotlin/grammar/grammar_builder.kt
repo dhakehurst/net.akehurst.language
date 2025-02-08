@@ -17,10 +17,16 @@
 
 package net.akehurst.language.grammar.builder
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
+import net.akehurst.language.api.processor.GrammarRegistry
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
@@ -28,10 +34,19 @@ import net.akehurst.language.typemodel.asm.TypeModelSimple
 @DslMarker
 annotation class GrammarBuilderMarker
 
-fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(), init: GrammarModelBuilder.() -> Unit): GrammarModel {
+fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarModelBuilder.() -> Unit): GrammarModel {
     val b = GrammarModelBuilder(SimpleName(name), namespaces)
     b.init()
-    return b.build()
+    val gm = b.build()
+    grammarRegistry?.let { gr ->
+        gm.allDefinitions.forEach { gr.registerGrammar(it) }
+        val sa = AglGrammarSemanticAnalyser()
+        val opts = SemanticAnalysisOptionsDefault(
+            context = ContextFromGrammarRegistry(gr)
+        )
+        sa.analyse(gm,emptyMap(), opts)
+    }
+    return gm
 }
 
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
@@ -78,11 +93,11 @@ class GrammarNamespaceBuilder(
         _options[key] = value
     }
 
-    fun import(qualifiedName:String) {
+    fun import(qualifiedName: String) {
         _import.add(Import(qualifiedName))
     }
 
-    fun grammar(name:String, init: GrammarBuilder.() -> Unit) {
+    fun grammar(name: String, init: GrammarBuilder.() -> Unit) {
         val b = GrammarBuilder(_namespace, SimpleName(name))
         b.init()
         val g = b.build()
@@ -94,8 +109,8 @@ class GrammarNamespaceBuilder(
 
 @GrammarBuilderMarker
 class GrammarBuilder(
-    namespace:GrammarNamespace,
-    name:SimpleName,
+    namespace: GrammarNamespace,
+    name: SimpleName,
 ) {
 
     private val _grammar = GrammarDefault(namespace, name)

@@ -19,7 +19,7 @@ package net.akehurst.language.collections
 
 fun <E> List<E>.indexOfOrNull(element: E) = indexOf(element).let { if (-1 == it) null else it }
 
-internal fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
+fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
     var result: MutableSet<T> = this.toMutableSet()
     var newThings: MutableSet<T> = this.toMutableSet()
     var newStuff = true
@@ -54,7 +54,7 @@ internal fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
     return result
 }
 
-internal fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
+fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
     var result: MutableList<T> = this.toMutableList()
     var newThings: MutableList<T> = this.toMutableList()
     var newStuff = true

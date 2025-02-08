@@ -23,6 +23,7 @@ import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
@@ -34,7 +35,7 @@ import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import net.akehurst.language.sppt.treedata.locationForNode
 
 
-abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType:Any> : SyntaxAnalyser<AsmType> {
+abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyser<AsmType> {
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -42,13 +43,23 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType:Any> : SyntaxAnalyser<
     abstract val asm: AsmType
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf()
 
-    override fun clear() {
-        this.locationMap.clear()
-        this.issues.clear()
-        this.extendsSyntaxAnalyser.values.forEach { it.clear() }
-        this.embeddedSyntaxAnalyser.values.forEach { it.clear() }//TODO: could cause issues if there is a loop!
+    fun setEmbeddedSyntaxAnalyser(qualifiedName: QualifiedName, sa: SyntaxAnalyser<AsmType>) {
+        (embeddedSyntaxAnalyser as MutableMap).set(qualifiedName, sa)
+    }
+
+    override fun clear(done: Set<SyntaxAnalyser<*>>) {
+        when {
+            done.contains(this) -> Unit
+            else -> {
+                this.locationMap.clear()
+                this.issues.clear()
+                val newDone = done+this
+                extendsSyntaxAnalyser.values.forEach { it.clear(newDone)  }
+                embeddedSyntaxAnalyser.values.forEach { it.clear(newDone)  }
+            }
+        }
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AsmType> {

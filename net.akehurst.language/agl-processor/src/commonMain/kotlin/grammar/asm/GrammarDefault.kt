@@ -252,10 +252,7 @@ abstract class GrammarAbstract(
         this.allResolvedGrammarRule.flatMap { it.rhs.allEmbedded }.toSet()
     }
 
-    override val allResolvedEmbeddedGrammars: Set<Grammar> by lazy {
-        val egs = this.allResolvedEmbeddedRules.mapNotNull { it.embeddedGrammarReference.resolved }.toSet()
-        egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
-    }
+    override val allResolvedEmbeddedGrammars: Set<Grammar> by lazy { findAllResolvedEmbeddedGrammars() }
 
     override fun findOwnedGrammarRuleOrNull(ruleName: GrammarRuleName): GrammarRule? {
         return grammarRule.firstOrNull { it.name == ruleName }
@@ -287,6 +284,16 @@ abstract class GrammarAbstract(
         return all.first()
     }
 
+    override fun findAllResolvedEmbeddedGrammars(found:Set<Grammar> ): Set<Grammar> {
+        return when {
+            found.contains(this) -> emptySet()
+            else -> {
+                val egs = this.allResolvedEmbeddedRules.mapNotNull { it.embeddedGrammarReference.resolved }.toSet()
+                egs + egs.flatMap { it.findAllResolvedEmbeddedGrammars(found+egs) }.toSet()
+            }
+        }
+    }
+
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
         sb.append("grammar $name")
@@ -310,5 +317,7 @@ abstract class GrammarAbstract(
     }
 
     override fun toString(): String = qualifiedName.value
+
+
 
 }

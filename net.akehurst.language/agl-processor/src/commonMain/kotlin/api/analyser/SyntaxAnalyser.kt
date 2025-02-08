@@ -86,7 +86,7 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
     /**
      * reset the sppt2ast, clearing any cached values
      */
-    fun clear()
+    fun clear(done:Set<SyntaxAnalyser<*>> = emptySet())
 
     /**
      * configure the SyntaxAnalyser

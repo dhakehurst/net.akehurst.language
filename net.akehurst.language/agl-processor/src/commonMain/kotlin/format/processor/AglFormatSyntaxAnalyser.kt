@@ -37,7 +37,11 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
     )
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglFormatModel>> = emptyMap()
+    private val templateAnalyser = AglTemplateSyntaxAnalyser()
+        .also { it.setEmbeddedSyntaxAnalyser(QualifiedName("net.akehurst.language.Format"), this) }
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
+        QualifiedName("net.akehurst.language.Template") to templateAnalyser
+    )
 
     override fun registerHandlers() {
         super.register(this::unit)
@@ -47,14 +51,6 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::formatExpression)
         super.register(this::whenExpression)
         super.register(this::whenOption)
-        super.register(this::templateString)
-        super.register(this::templateContent)
-        super.register(this::text)
-        super.register(this::templateExpression)
-        super.register(this::templateExpressionProperty)
-        super.register(this::templateExpressionList)
-        super.register(this::templateExpressionEmbedded)
-        //super.register(this::typeReference)
     }
 
     // unit = namespace format+ ;
@@ -126,59 +122,5 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val expression = children[2] as FormatExpression
         return FormatWhenOptionDefault(condition, expression)
     }
-
-
-    // templateString = '"' templateContentList '"' ;
-    fun templateString(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpressionTemplate {
-        val content = children[1] as List<TemplateElement>
-        return FormatExpressionTemplateDefault(content)
-    }
-
-    // templateContent = text | templateExpression ;
-    fun templateContent(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElement =
-        children[0] as TemplateElement
-
-    // text = RAW_TEXT ;
-    fun text(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementText {
-        val parsedText = children[0] as String
-        var lines = parsedText.split('\n')
-        lines = when {
-            lines.first().isBlank() -> lines.drop(1)
-            else -> lines
-        }
-        lines = when {
-            lines.last().isBlank() -> lines.dropLast(1)
-            else -> lines
-        }
-        val prefixMatch = Regex("\\s+").matchAt(lines.first(), 0)
-        val prefix = prefixMatch?.value?.length ?: 0
-        lines.map { ln -> ln.drop(prefix) }
-        val joined = lines.joinToString("\n")
-        val unescaped = joined.replace("\\", "")
-        return TemplateElementTextDefault(unescaped)
-    }
-
-    // templateExpression = templateExpressionSimple | templateExpressionEmbedded ;
-    fun templateExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElement =
-        children[0] as TemplateElement
-
-    // templateExpressionProperty = DOLLAR_IDENTIFIER ;
-    fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
-        TemplateElementExpressionPropertyDefault((children[0] as String).drop(1))
-
-    // templateExpressionList = '$' '[' IDENTIFIER '/' STRING ']' ;
-    fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {
-        val expression = children[2] as String
-        val separator = children[4] as String
-        return TemplateElementExpressionListDefault(expression, separator)
-    }
-
-    // templateExpressionEmbedded = '${' formatExpression '}'
-    fun templateExpressionEmbedded(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionEmbedded =
-        TemplateElementExpressionEmbeddedDefault(children[1] as FormatExpression)
-
-    // typeReference = IDENTIFIER ;
-    // fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
-    //    SimpleName(children[0] as String)
 
 }
