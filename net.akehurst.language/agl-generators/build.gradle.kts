@@ -5,3 +5,9 @@ dependencies {
 
     jvm8MainImplementation(kotlin("reflect"))
 }
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+    }
+}

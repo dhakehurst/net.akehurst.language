@@ -37,12 +37,34 @@ class GenerateGrammarModelBuild(
 ) {
 
     companion object {
-        val generatedFormat = """
+        val generatedFormat = $$"""
             namespace net.akehurst.language.grammar
               format Asm {
-                GrammarModel -> "grammarModel() {
+                //OptionHolder -> ""
                 
-                                }"
+                SimpleName -> value    // TODO: move these to something we extend
+                QualifiedName -> value
+                
+                GrammarModel -> "
+                  grammarModel(\"$name\") {
+                    $options
+                    $[namespace / '\\n']
+                  }
+                "
+                GrammarNamespace -> "
+                  namespace(\"$qualifiedName\", $import) {
+                    $options
+                    $[definition / '\\n']
+                  }
+                "
+                Grammar -> "
+                  grammar(\"$name\") {
+                    $options
+                    $extends
+                    $grammarRule
+                    $preferenceRule
+                  }
+                "
               }
         """
         val formatModel by lazy {
@@ -51,7 +73,6 @@ class GenerateGrammarModelBuild(
             res.asm!!
         }
         val formatSet = formatModel.findDefinitionOrNullByQualifiedName("net.akehurst.language.grammar.Asm".asQualifiedName)!!
-
     }
 
     fun generateFromString(grammarString: GrammarString):String {

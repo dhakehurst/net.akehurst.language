@@ -92,7 +92,10 @@ class ObjectGraphByReflection(
         }
     }
 
-    override fun toTypedObject(obj: Any?): TypedObject<Any> = obj?.let { TypedObjectByReflection(typeFor(obj), obj) } ?: nothing()
+    override fun toTypedObject(obj: Any?): TypedObject<Any> = when {
+        obj is TypedObject<*> -> obj as TypedObject<Any>
+        else ->  obj?.let { TypedObjectByReflection(typeFor(obj), obj) } ?: nothing()
+    }
 
     override fun nothing() = TypedObjectByReflection(StdLibDefault.NothingType,Unit)
 

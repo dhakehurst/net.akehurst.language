@@ -16,8 +16,11 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarModel
 
 
 object AglFormat {
@@ -26,60 +29,86 @@ object AglFormat {
     //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "unit"))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
 
-    val grammar = grammar(
-        namespace = "net.akehurst.language.agl.language",
-        name = "Format"
-    ) {
-        extendsGrammar(AglExpressions.grammar.selfReference)
+    val grammarModel by lazy {
+        grammarModel("AglFormat") {
+            namespace("net.akehurst.language") {
+                grammar("Template") {
+                    concatenation("templateString") {
+                        lit("\""); lst(0, -1) { ref("templateContent") }; lit("\"")
+                    }
+                    choice("templateContent") {
+                        ref("text")
+                        ref("templateExpression")
+                    }
+                    concatenation("text") { ref("RAW_TEXT") }
+                    choice("templateExpression") {
+                        ref("templateExpressionProperty")
+                        ref("templateExpressionList")
+                        ref("templateExpressionEmbedded")
+                    }
+                    concatenation("templateExpressionProperty") { ref("DOLLAR_IDENTIFIER") }
+                    concatenation("templateExpressionList") {
+                        lit("$"); lit("["); ebd("Expressions", "IDENTIFIER"); lit("/"); ebd("Expressions", "STRING"); lit("]")
+                    }
+                    concatenation("templateExpressionEmbedded") {
+                        lit("\${"); ref("formatExpression"); lit("}")
+                    }
 
-        concatenation("unit") {
-            ref("namespace"); lst(1, -1) { ref("format") }
-        }
-        concatenation("format") {
-            lit("format"); ref("IDENTIFIER");  opt { ref("extends") }; lit("{");
-            lst(1, -1) { ref("formatRule") }
-            lit("}")
-        }
-        concatenation("extends") {
-            lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
-        }
-        concatenation("formatRule") {
-            ref("typeReference"); lit("->"); ref("formatExpression")
-        }
-        choice("formatExpression") {
-            ref("expression")
-            ref("templateString")
-            ref("whenExpression")
-        }
-        concatenation("whenExpression") {
-            lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
-        }
-        concatenation("whenOption") {
-            ref("expression"); lit("->"); ref("formatExpression")
-        }
-        concatenation("templateString") {
-            lit("\""); lst(0, -1) { ref("templateContent") }; lit("\"")
-        }
-        choice("templateContent") {
-            ref("text")
-            ref("templateExpression")
-        }
-        concatenation("text") { ref("RAW_TEXT") }
-        choice("templateExpression") {
-            ref("templateExpressionSimple")
-            ref("templateExpressionEmbedded")
-        }
-        concatenation("templateExpressionSimple") { ref("DOLLAR_IDENTIFIER") }
-        concatenation("templateExpressionEmbedded") {
-            lit("\${"); ref("formatExpression"); lit("}")
-        }
+                    concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
+                    concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
+                }
+                grammar("Format") {
+                    extendsGrammar(AglExpressions.grammar.selfReference)
 
-        concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
-        concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
+                    concatenation("unit") {
+                        ref("namespace"); lst(1, -1) { ref("format") }
+                    }
+                    concatenation("format") {
+                        lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(1, -1) { ref("formatRule") }
+                        lit("}")
+                    }
+                    concatenation("extends") {
+                        lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
+                    }
+                    concatenation("formatRule") {
+                        ref("typeReference"); lit("->"); ref("formatExpression")
+                    }
+                    choice("formatExpression") {
+                        ref("expression")
+                        ebd("Template", "templateString")
+                        ref("whenExpression")
+                    }
+                    concatenation("whenExpression") {
+                        lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
+                    }
+                    concatenation("whenOption") {
+                        ref("expression"); lit("->"); ref("formatExpression")
+                    }
+                }
+            }
+        }
     }
+    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Format")) !! }
+
 
     const val grammarStr = """
         namespace net.akehurst.language.agl
+        grammar Template {
+            // no skip rules
+            templateString = '"' templateContentList '"' ;
+            templateContentList = templateContent* ;
+            templateContent = text | templateExpression ;
+            text = RAW_TEXT ;
+            templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
+            templateExpressionProperty = DOLLAR_IDENTIFIER ;
+            templateExpressionList = '$' '[' Expressions::expression '/' Expressions::STRING ']' ;
+            templateExpressionEmbedded = '$${'{'}' formatExpression '}'
+            
+            leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
+            leaf RAW_TEXT = "(\\\"|[^\"])+" ;
+        }
+        
         grammar AglFormat extends Expressions {        
             unit = namespace format+ ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
@@ -88,24 +117,12 @@ object AglFormat {
             formatRule = typeReference '->' formatExpression ;
             formatExpression
               = expression
-              | templateString
+              | Template::templateString
               | whenExpression
               ;
-              
             whenExpression = 'when' '{' whenOptionList '}' ;
             whenOptionList = whenOption* ;
             whenOption = expression '->' formatExpression ;
-            
-            templateString = '"' templateContentList '"' ;
-            templateContentList = templateContent* ;
-            templateContent = text | templateExpression ;
-            text = RAW_TEXT ;
-            templateExpression = templateExpressionSimple | templateExpressionEmbedded ;
-            templateExpressionSimple = DOLLAR_IDENTIFIER ;
-            templateExpressionEmbedded = '$${'{'}' formatExpression '}'
-                        
-            leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
-            leaf RAW_TEXT = "(\\\"|[^\"])+" ;
         }
     """
     const val styleStr = """

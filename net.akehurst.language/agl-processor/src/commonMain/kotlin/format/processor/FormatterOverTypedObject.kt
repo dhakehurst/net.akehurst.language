@@ -41,12 +41,14 @@ class FormatterOverTypedObject<SelfType>(
     }
 
     private val _rules by lazy {
-        formatSet.rules.values.associateBy { rl ->
+        formatSet.rules.associateBy { rl ->
             expressionInterpreter.evaluateTypeReference(rl.forTypeName)
         }
     }
 
-    fun findRuleFor(type: TypeInstance): AglFormatRule? = _rules[type]
+    fun findRuleFor(type: TypeInstance): AglFormatRule? = _rules.entries.firstOrNull { (ti, rl) ->
+        type.conformsTo(ti)
+    }?.value
 
     override fun format(asm: TypedObject<SelfType>): FormatResult {
         val evc = EvaluationContext.ofSelf(asm)
@@ -78,8 +80,9 @@ class FormatterOverTypedObject<SelfType>(
                     is SpecialType -> when {
                         StdLibDefault.NothingType.resolvedDeclaration == selfType -> ""
                         StdLibDefault.AnyType.resolvedDeclaration == selfType -> self.toString()
-                        else ->error("SpecialType not handled '${self.type.resolvedDeclaration::class.simpleName}'")
+                        else -> error("SpecialType not handled '${self.type.resolvedDeclaration::class.simpleName}'")
                     }
+
                     is SingletonType -> objectGraph.valueOf(self).toString()
                     is PrimitiveType -> objectGraph.valueOf(self).toString()
                     is ValueType -> objectGraph.valueOf(self).toString()
@@ -92,14 +95,16 @@ class FormatterOverTypedObject<SelfType>(
                                 formatSelf(EvaluationContext.ofSelf(tobj))
                             }
                         }
+
                         selfType.isStdSet -> TODO()
                         selfType.isStdMap -> {
-                            val coll = objectGraph.valueOf(self) as Map<Any,SelfType>
+                            val coll = objectGraph.valueOf(self) as Map<Any, SelfType>
                             coll.values.joinToString(separator = "") {
                                 val tobj = objectGraph.toTypedObject(it)
                                 formatSelf(EvaluationContext.ofSelf(tobj))
                             }
                         }
+
                         else -> TODO()
                     }
 
@@ -127,15 +132,27 @@ class FormatterOverTypedObject<SelfType>(
 
     private fun formatFromExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionExpression): String {
         val res = expressionInterpreter.evaluateExpression(evc, formatExpr.expression)
-        return (res.self as AsmPrimitive).value as String
+        val value = res.self
+        return when (value) {
+            null -> {
+                _issues.error(null, "Expression should result in a String value, got 'null'")
+                ""
+            }
+            is String -> value as String
+            else -> {
+                _issues.error(null, "Expression should result in a String value, got '${value::class.simpleName}'")
+                res.self.toString()
+            }
+        }
     }
 
     private fun formatFromTemplate(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionTemplate): String {
         return formatExpr.content.joinToString(separator = "") {
             when (it) {
                 is TemplateElementText -> formatTemplateElementText(evc, it)
-                is TemplateElementExpressionSimple -> TODO()
-                is TemplateElementExpressionEmbedded -> TODO()
+                is TemplateElementExpressionProperty -> formatTemplateElementExpressionSimple(evc, it)
+                is TemplateElementExpressionList -> formatTemplateElementExpressionList(evc, it)
+                is TemplateElementExpressionEmbedded -> formatTemplateElementExpressionEmbedded(evc, it)
                 else -> error("Internal error: subtype of TemplateElement not handled: '${it::class.simpleName}'")
             }
         }
@@ -145,15 +162,44 @@ class FormatterOverTypedObject<SelfType>(
         return templateElement.text
     }
 
-    private fun formatTemplateElementExpressionSimple(): String {
-        TODO()
-        //val id1 = (it as AsmStructure).getProperty(PropertyValueName("dollar_identifier"))
-        //val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
-       // val pv = el.getProperty(PropertyValueName(id))
-       // pv.format(model)
+    private fun formatTemplateElementExpressionSimple(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionProperty): String {
+        val self = evc.self
+        return when (self) {
+            null -> ""
+            else -> {
+                val value = objectGraph.getProperty(self, templateElement.propertyName)
+                formatSelf(EvaluationContext.ofSelf(value))
+            }
+        }
     }
 
-    private fun formatTemplateElementExpressionEmbedded(): String {
+    private fun formatTemplateElementExpressionList(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionList): String {
+        val self = evc.self
+        return when (self) {
+            null -> ""
+            else -> {
+                //val typedlist = expressionInterpreter.evaluateExpression(evc, templateElement.listPropertyName)
+                val typedlist = objectGraph.getProperty(self, templateElement.listPropertyName)
+                val list = objectGraph.valueOf(typedlist)
+                when (list) {
+                    is List<*> -> {
+                        (list as List<Any>).joinToString(separator = templateElement.separator) {
+                            val typedElement = objectGraph.toTypedObject(it as SelfType)
+                            formatSelf(EvaluationContext.ofSelf(typedElement))
+                        }
+                    }
+
+                    else -> {
+                        _issues.error(null, "Expected a list object but got a '${list::class.simpleName}'")
+                        ""
+                    }
+                }
+
+            }
+        }
+    }
+
+    private fun formatTemplateElementExpressionEmbedded(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionEmbedded): String {
         TODO()
     }
 

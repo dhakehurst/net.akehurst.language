@@ -97,7 +97,7 @@ class FormatterSimple<AsmType>(
         return formatExpr.content.joinToString(separator = "") {
             when (it) {
                 is TemplateElementText -> TODO()
-                is TemplateElementExpressionSimple -> TODO()
+                is TemplateElementExpressionProperty -> TODO()
                 is TemplateElementExpressionEmbedded -> TODO()
                 else -> error("Internal error: subtype of TemplateElement not handled: '${it::class.simpleName}'")
             }
@@ -116,7 +116,7 @@ class FormatterSimple<AsmType>(
                 this.content.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it) {
                         is TemplateElementText -> ((it as AsmStructure).getProperty(PropertyValueName("raw_text")) as AsmPrimitive).value.toString()
-                        is TemplateElementExpressionSimple -> {
+                        is TemplateElementExpressionProperty -> {
                             val id1 = (it as AsmStructure).getProperty(PropertyValueName("dollar_identifier"))
                             val id = (id1 as AsmPrimitive).value.toString().substringAfter("\$")
                             val pv = el.getProperty(PropertyValueName(id))

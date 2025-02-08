@@ -87,7 +87,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
     override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmSimple> = SemanticAnalyserSimple(typeModel, crossReferenceModel)
-    val formatter: Formatter<Asm> = FormatterSimple(null)
+    val formatter: Formatter<Asm> = FormatterSimple(null, typeModel)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

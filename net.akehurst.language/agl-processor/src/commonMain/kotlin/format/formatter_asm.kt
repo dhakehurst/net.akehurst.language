@@ -34,7 +34,6 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
 
@@ -130,11 +129,8 @@ class FormatSetDefault(
     override val name: SimpleName,
     override val extends: List<FormatSetReference>,
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-    _rules: List<AglFormatRule>
+    override val rules: List<AglFormatRule>
 ) : FormatSet, DefinitionAbstract<FormatSet>() {
-    override val rules: Map<TypeReference, AglFormatRule> by lazy {
-        _rules.associateBy { it.forTypeName }
-    }
 }
 
 class AglFormatRuleDefault(
@@ -166,9 +162,14 @@ class TemplateElementTextDefault(
     override val text: String
 ) : TemplateElementText
 
-class TemplateElementExpressionSimpleDefault(
-    override val identifier: String
-) : TemplateElementExpressionSimple
+class TemplateElementExpressionPropertyDefault(
+    override val propertyName: String
+) : TemplateElementExpressionProperty
+
+class TemplateElementExpressionListDefault(
+    override val listPropertyName: String,
+    override val separator: String
+) : TemplateElementExpressionList
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression

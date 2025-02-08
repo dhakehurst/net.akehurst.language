@@ -19,7 +19,6 @@ package net.akehurst.language.formatter.api
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
-import net.akehurst.language.typemodel.api.TypeInstance
 
 interface AglFormatModel : Model<FormatNamespace, FormatSet> {
 
@@ -48,7 +47,7 @@ interface FormatSetReference {
 interface FormatSet : Definition<FormatSet> {
     override val namespace: FormatNamespace
     val extends: List<FormatSetReference>
-    val rules: Map<TypeReference, AglFormatRule>
+    val rules: List<AglFormatRule>
 
 }
 
@@ -84,8 +83,13 @@ interface TemplateElementText : TemplateElement {
     val text: String
 }
 
-interface TemplateElementExpressionSimple : TemplateElement {
-    val identifier: String
+interface TemplateElementExpressionProperty : TemplateElement {
+    val propertyName: String
+}
+
+interface TemplateElementExpressionList : TemplateElement {
+    val listPropertyName: String
+    val separator:String
 }
 
 interface TemplateElementExpressionEmbedded : TemplateElement {

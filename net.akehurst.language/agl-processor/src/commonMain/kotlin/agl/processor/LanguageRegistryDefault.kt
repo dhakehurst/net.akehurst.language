@@ -94,7 +94,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val typesLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglTypemodel.targetGrammar.qualifiedName.value) }
         override val asmTransformLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AsmTransform.grammar.qualifiedName.value) }
         override val styleLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglStyle.grammar.qualifiedName.value) }
-        override val formatLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglFormat.grammar.qualifiedName.value) }
+        override val formatLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglFormat.targetGrammar.qualifiedName.value) }
         override val crossReferenceLanguageIdentity: LanguageIdentity by lazy {LanguageIdentity(  AglCrossReference.grammar.qualifiedName.value) }
 
         override val base: LanguageDefinition<Any, SentenceContext> by lazy {
@@ -249,10 +249,10 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm<AglFormatModel, SentenceContext>(
                     identity = formatLanguageIdentity,
-                    AglFormat.grammar.asGrammarModel(),
+                    AglFormat.grammarModel,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglFormat.grammar.name.value)
+                        targetGrammarName(AglFormat.targetGrammar.name.value)
                         defaultGoalRuleName(AglFormat.goalRuleName)
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }

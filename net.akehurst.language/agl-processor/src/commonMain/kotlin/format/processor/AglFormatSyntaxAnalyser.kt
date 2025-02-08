@@ -51,7 +51,8 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::templateContent)
         super.register(this::text)
         super.register(this::templateExpression)
-        super.register(this::templateExpressionSimple)
+        super.register(this::templateExpressionProperty)
+        super.register(this::templateExpressionList)
         super.register(this::templateExpressionEmbedded)
         //super.register(this::typeReference)
     }
@@ -106,12 +107,13 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     }
 
     //formatExpression = expression | templateString | whenExpression    ;
-    fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression = when(nodeInfo.alt.option.value) {
+    fun formatExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpression = when (nodeInfo.alt.option.value) {
         0 -> FormatExpressionExpressionDefault(children[0] as Expression)
         1 -> children[0] as FormatExpressionTemplate
         2 -> children[0] as FormatExpressionWhen
         else -> error("Option not handled")
     }
+
     // whenExpression = 'when' '{' whenOptionList '}' ;
     private fun whenExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatExpressionWhen {
         val optionList = children[2] as List<FormatWhenOption>
@@ -137,23 +139,46 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         children[0] as TemplateElement
 
     // text = RAW_TEXT ;
-    fun text(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementText =
-        TemplateElementTextDefault(children[0] as String)
+    fun text(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementText {
+        val parsedText = children[0] as String
+        var lines = parsedText.split('\n')
+        lines = when {
+            lines.first().isBlank() -> lines.drop(1)
+            else -> lines
+        }
+        lines = when {
+            lines.last().isBlank() -> lines.dropLast(1)
+            else -> lines
+        }
+        val prefixMatch = Regex("\\s+").matchAt(lines.first(), 0)
+        val prefix = prefixMatch?.value?.length ?: 0
+        lines.map { ln -> ln.drop(prefix) }
+        val joined = lines.joinToString("\n")
+        val unescaped = joined.replace("\\", "")
+        return TemplateElementTextDefault(unescaped)
+    }
 
     // templateExpression = templateExpressionSimple | templateExpressionEmbedded ;
     fun templateExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElement =
         children[0] as TemplateElement
 
-    // templateExpressionSimple = DOLLAR_IDENTIFIER ;
-    fun templateExpressionSimple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionSimple =
-        TemplateElementExpressionSimpleDefault(children[0] as String)
+    // templateExpressionProperty = DOLLAR_IDENTIFIER ;
+    fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
+        TemplateElementExpressionPropertyDefault((children[0] as String).drop(1))
+
+    // templateExpressionList = '$' '[' IDENTIFIER '/' STRING ']' ;
+    fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {
+        val expression = children[2] as String
+        val separator = children[4] as String
+        return TemplateElementExpressionListDefault(expression, separator)
+    }
 
     // templateExpressionEmbedded = '${' formatExpression '}'
     fun templateExpressionEmbedded(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionEmbedded =
         TemplateElementExpressionEmbeddedDefault(children[1] as FormatExpression)
 
     // typeReference = IDENTIFIER ;
-   // fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
-   //    SimpleName(children[0] as String)
+    // fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleName =
+    //    SimpleName(children[0] as String)
 
 }
