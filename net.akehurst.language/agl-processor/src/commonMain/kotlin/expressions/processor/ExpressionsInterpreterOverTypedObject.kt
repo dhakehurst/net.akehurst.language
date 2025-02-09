@@ -131,6 +131,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
         is WhenExpression -> this.evaluateWhen(evc, expression)
         is InfixExpression -> this.evaluateInfix(evc, expression)
         is CastExpression -> this.evaluateCast(evc, expression)
+        is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
         is GroupExpression -> this.evaluateGroup(evc, expression)
         else -> error("Subtype of Expression not handled in 'evaluateFor'")
     }
@@ -368,6 +369,14 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
         val exprResult = evaluateExpression(evc, expression.expression)
         val tgtType = evaluateTypeReference(expression.targetType)
         return objectGraph.cast(exprResult, tgtType)
+    }
+
+    private fun evaluateTypeTest(evc: EvaluationContext<SelfType>, expression: TypeTestExpression): TypedObject<SelfType> {
+        //TODO: do we need a type check? or can we assume it is already done in semantic analysis!
+        val exprResult = evaluateExpression(evc, expression.expression)
+        val tgtType = evaluateTypeReference(expression.targetType)
+        val res = exprResult.type.conformsTo(tgtType)
+        return objectGraph.toTypedObject(res as SelfType)
     }
 
     private fun evaluateGroup(evc: EvaluationContext<SelfType>, expression: GroupExpression): TypedObject<SelfType> {

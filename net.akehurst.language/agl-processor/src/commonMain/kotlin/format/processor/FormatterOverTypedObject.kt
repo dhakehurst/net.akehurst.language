@@ -79,12 +79,14 @@ class FormatterOverTypedObject<SelfType>(
                 when (selfType) {
                     is SpecialType -> when {
                         StdLibDefault.NothingType.resolvedDeclaration == selfType -> ""
-                        StdLibDefault.AnyType.resolvedDeclaration == selfType -> self.toString()
+                        StdLibDefault.AnyType.resolvedDeclaration == selfType -> self.self.toString()
                         else -> error("SpecialType not handled '${self.type.resolvedDeclaration::class.simpleName}'")
                     }
 
                     is SingletonType -> objectGraph.valueOf(self).toString()
-                    is PrimitiveType -> objectGraph.valueOf(self).toString()
+                    is PrimitiveType -> {
+                        objectGraph.valueOf(self).toString()
+                    }
                     is ValueType -> objectGraph.valueOf(self).toString()
                     is EnumType -> objectGraph.valueOf(self).toString()
                     is CollectionType -> when {

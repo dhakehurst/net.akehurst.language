@@ -105,7 +105,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
     }
 
     override fun clear(done: Set<SyntaxAnalyser<*>>) {
-        super.clear()
+        super.clear(done)
         this._trf.clear()
         this._asm = null
     }

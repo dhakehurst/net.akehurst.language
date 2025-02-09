@@ -56,6 +56,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::whenOptionList)
         super.register(this::whenOption)
         super.register(this::cast)
+        super.register(this::typeTest)
         super.register(this::group)
         super.register(this::propertyCall)
         super.register(this::methodCall)
@@ -75,7 +76,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val value: String
     )
 
-    // expression = root | literal | navigation | tuple  | object | with | when | cast | group
+    // expression = root | literal | navigation | tuple  | object | with | when | cast | typeTest | group
     private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[0] as Expression
 
@@ -204,7 +205,14 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return CastExpressionSimple( expression,pqn)
     }
 
-    // cast = '(' expression ')' ;
+    // typeTest = expression 'is' typeReference ;
+    private fun typeTest(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeTestExpression {
+        val expression = children[0] as Expression
+        val pqn = children[2] as TypeReference
+        return TypeTestExpressionSimple( expression,pqn)
+    }
+
+    // group = '(' expression ')' ;
     private fun group(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GroupExpression {
         val expression = children[1] as Expression
         return GroupExpressionSimple( expression)

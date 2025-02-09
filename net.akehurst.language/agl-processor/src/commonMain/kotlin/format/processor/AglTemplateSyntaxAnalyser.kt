@@ -55,7 +55,7 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
     // text = RAW_TEXT ;
     fun text(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementText {
         val parsedText = children[0] as String
-        var lines = parsedText.split('\n')
+       /* var lines = parsedText.split('\n')
         var joined = when {
             1==lines.size -> lines[0]
             else -> {
@@ -74,8 +74,8 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
                 lines.map { ln -> ln.drop(prefix) }
                 lines.joinToString("\n")
             }
-        }
-        val unescaped = joined.replace("\\", "")
+        }*/
+        val unescaped = parsedText.replace("\\", "")
         return TemplateElementTextDefault(unescaped)
     }
 
@@ -87,10 +87,10 @@ internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationA
     fun templateExpressionProperty(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionProperty =
         TemplateElementExpressionPropertyDefault((children[0] as String).drop(1))
 
-    // templateExpressionList = '$' '[' IDENTIFIER '/' STRING ']' ;
+    // templateExpressionList = '$[' IDENTIFIER '/' STRING ']' ;
     fun templateExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TemplateElementExpressionList {
-        val expression = children[2] as String
-        val separator = children[4] as String
+        val expression = children[1] as String
+        val separator = (children[3] as String).removeSurrounding("'").replace("\\\\n", "\n")
         return TemplateElementExpressionListDefault(expression, separator)
     }
 

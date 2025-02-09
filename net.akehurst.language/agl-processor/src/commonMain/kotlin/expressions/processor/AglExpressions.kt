@@ -42,6 +42,7 @@ grammar Expression extends Base {
       | with
       | when
       | cast
+      | typeTest
       | group
       ;
     rootExpression = propertyReference ;
@@ -81,7 +82,8 @@ grammar Expression extends Base {
     whenOptionList = whenOption+ ;
     whenOption = expression '->' expression ;
     
-    cast = expression 'as' typeReference
+    cast = expression 'as' typeReference ;
+    typeTest = expression 'is' typeReference ;
     
     group = '(' expression ')' ;
     
@@ -124,6 +126,7 @@ grammar Expression extends Base {
             ref("with")
             ref("when")
             ref("cast")
+            ref("typeTest")
             ref("group")
         }
         concatenation("rootExpression") {
@@ -189,6 +192,7 @@ grammar Expression extends Base {
             ref("expression"); lit("->"); ref("expression")
         }
         concatenation("cast") { ref("expression"); lit("as"); ref("typeReference") }
+        concatenation("typeTest") { ref("expression"); lit("is"); ref("typeReference") }
         concatenation("group") { lit("("); ref("expression"); lit(")") }
         concatenation("propertyCall") {
             lit("."); ref("propertyReference")

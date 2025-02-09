@@ -61,10 +61,15 @@ class GenerateGrammarModelBuild(
                   grammar(\"$name\") {
                     $options
                     $extends
-                    $grammarRule
+                    $[grammarRule / '\\n']
                     $preferenceRule
                   }
                 "
+                GrammarRule -> when {
+                  rhs is Concatenation -> "concatenation(\"$name\") { $rhs }"
+                  rhs is Choice -> "choice(\"$name\") { $rhs }"
+                  else -> "???(\"$name\") { $rhs }"
+                }
               }
         """
         val formatModel by lazy {

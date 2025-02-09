@@ -216,6 +216,17 @@ class CastExpressionSimple(
     override fun toString(): String = "$expression as $targetType"
 }
 
+class TypeTestExpressionSimple(
+    override val expression: Expression,
+    override val targetType: TypeReference
+) : TypeTestExpression {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val ttn = targetType.asString(indent, imports)
+        return "${expression.asString(indent, imports)} as $ttn"
+    }
+    override fun toString(): String = "$expression as $targetType"
+}
+
 data class TypeReferenceSimple(
     override val possiblyQualifiedName: PossiblyQualifiedName,
     override val typeArguments: List<TypeReference>,

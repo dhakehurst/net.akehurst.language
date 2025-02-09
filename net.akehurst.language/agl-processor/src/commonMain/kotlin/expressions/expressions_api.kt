@@ -104,6 +104,11 @@ interface CastExpression  : Expression {
     val targetType:TypeReference
 }
 
+interface TypeTestExpression  : Expression {
+    val expression: Expression
+    val targetType:TypeReference
+}
+
 interface TypeReference {
     val possiblyQualifiedName:PossiblyQualifiedName
     val typeArguments:List<TypeReference>
