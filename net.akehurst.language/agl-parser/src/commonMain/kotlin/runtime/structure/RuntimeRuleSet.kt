@@ -115,8 +115,10 @@ class RuntimeRuleSet(
     }
 
     override val embeddedTerminals: List<RuntimeRule> by lazy {
-        TODO("What about recursive !")
-        findEmbeddedRuleSets().flatMap { it.terminals }.toSet().toList()
+        //TODO("What about recursive !")
+        findEmbeddedRuleSets().flatMap {
+            it.terminals
+        }.toSet().toList()
     }
 
     /*
@@ -328,10 +330,12 @@ class RuntimeRuleSet(
         return when {
             found.contains(this) -> found
             else -> {
-                runtimeRules.filter{ it.isEmbedded }.flatMap {
+                val res = runtimeRules.filter{ it.isEmbedded }.flatMap {
                     val es = (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet
-                        es.findEmbeddedRuleSets(found+es)
+                    val r = es.findEmbeddedRuleSets(found+this)
+                    r + es
                 }.toSet()
+                res
             }
         }
     }

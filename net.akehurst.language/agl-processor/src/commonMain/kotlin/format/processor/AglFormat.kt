@@ -49,7 +49,7 @@ object AglFormat {
                     }
                     concatenation("templateExpressionProperty") { ref("DOLLAR_IDENTIFIER") }
                     concatenation("templateExpressionList") {
-                        lit("$"); lit("["); ebd("Expressions", "expression"); lit("|"); ebd("Expressions", "STRING"); lit("]")
+                        lit("\$["); ebd("Expressions", "propertyName"); lit("/"); ebd("Expressions", "STRING"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
                         lit("\${"); ebd("Format","formatExpression"); lit("}")
@@ -61,11 +61,11 @@ object AglFormat {
                     extendsGrammar(AglExpressions.grammar.selfReference)
 
                     concatenation("unit") {
-                        ref("namespace"); lst(1, -1) { ref("format") }
+                        ref("namespace"); lst(0, -1) { ref("format") }
                     }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
-                        lst(1, -1) { ref("formatRule") }
+                        lst(0, -1) { ref("formatRule") }
                         lit("}")
                     }
                     concatenation("extends") {
@@ -102,7 +102,7 @@ object AglFormat {
             text = RAW_TEXT ;
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
-            templateExpressionList = '$' '[' Expressions::expression '/' Expressions::STRING ']' ;
+            templateExpressionList = '$[' Expressions::expression '/' Expressions::STRING ']' ;
             templateExpressionEmbedded = '$${'{'}' AglFormat::formatExpression '}'
             
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
@@ -110,10 +110,10 @@ object AglFormat {
         }
         
         grammar AglFormat extends Expressions {        
-            override unit = namespace format+ ;
+            override unit = namespace format* ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
-            ruleList = formatRule+ ;
+            ruleList = formatRule* ;
             formatRule = typeReference '->' formatExpression ;
             formatExpression
               = expression

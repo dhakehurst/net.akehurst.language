@@ -19,23 +19,17 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
-import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.sppt.treedata.locationForNode
 
 internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatModel>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf(
-        QualifiedName("Expressions") to ExpressionsSyntaxAnalyser()
+        QualifiedName("net.akehurst.language.Expressions") to ExpressionsSyntaxAnalyser()
     )
 
     override fun registerHandlers() {

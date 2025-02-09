@@ -11,6 +11,10 @@ dependencies {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+    }
+
     js("js") {
         binaries.library()
         generateTypeScriptDefinitions()

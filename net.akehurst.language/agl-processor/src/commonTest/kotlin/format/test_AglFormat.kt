@@ -96,6 +96,14 @@ class test_AglFormat {
                 sentence = """
                     namespace test
                     format Test {
+                        Type1 -> "He said \"boo\" to me!"
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                sentence = """
+                    namespace test
+                    format Test {
                         Type1 -> "§prop"
                     }
                 """.trimIndent().replace("§", "\$")

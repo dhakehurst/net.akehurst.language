@@ -65,7 +65,8 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
         return when (item) {
-            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name.value, item.embeddedGoalName.value)))
+            //is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name.value, item.embeddedGoalName.value)))
+            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.nameOrQName.value, item.embeddedGoalName.value)))
             is Terminal -> emptySet()
             is NonTerminal -> emptySet()
             is EmptyRule -> emptySet()

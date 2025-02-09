@@ -48,7 +48,7 @@ abstract class ScannerAbstract(
     override val matchables: List<Matchable> by lazy {
         validTerminals.mapNotNull {
             ((it as RuntimeRule).rhs as RuntimeRuleRhsTerminal).matchable?.using(regexEngine)
-        }
+        }.toSet().toList()
     }
 
     override fun isEnd(sentence: Sentence, position: Int): Boolean = position >= sentence.text.length
