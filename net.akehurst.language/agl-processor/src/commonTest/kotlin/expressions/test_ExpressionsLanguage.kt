@@ -83,10 +83,10 @@ class test_ExpressionsLanguage {
             "with(1) true",
             "with(a[1].f().z) A('d',x.y.z,\$self) { a:= 1 b:=\$self }",
             // when
-            "when { true -> 1 }",
-            "when{1+1->2}",
-            "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] }",
-            "when { a+b-c -> 2 }",
+            "when { true -> 1 else -> false }",
+            "when{1+1->2 else->3}",
+            "when { z==1 -> 2  x!=2 -> x.y  a[7].f() -> x.y().d[9] else -> x}",
+            "when { a+b-c -> 2 else -> 5 }",
             // cast
             "a as B",
             "a.b.c as D",

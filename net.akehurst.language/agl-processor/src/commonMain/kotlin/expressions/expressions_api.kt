@@ -87,10 +87,15 @@ interface WithExpression : Expression {
 
 interface WhenExpression : Expression {
     val options: List<WhenOption>
+    val elseOption: WhenOptionElse
 }
 
 interface WhenOption {
     val condition: Expression
+    val expression: Expression
+}
+
+interface WhenOptionElse {
     val expression: Expression
 }
 

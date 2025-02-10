@@ -20,7 +20,6 @@ import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrati
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.*
@@ -53,8 +52,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::propertyName)
         super.register(this::with)
         super.registerFor("when", this::when_)
-        super.register(this::whenOptionList)
         super.register(this::whenOption)
+        super.register(this::whenOptionElse)
         super.register(this::cast)
         super.register(this::typeTest)
         super.register(this::group)
@@ -85,12 +84,12 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val v = children[0] as String
         return when {
             v.startsWith("\$") -> when (v) {
-                RootExpressionSimple.NOTHING.name -> RootExpressionSimple.NOTHING
-                RootExpressionSimple.SELF.name -> RootExpressionSimple.SELF
-                else -> RootExpressionSimple(v)
+                RootExpressionDefault.NOTHING.name -> RootExpressionDefault.NOTHING
+                RootExpressionDefault.SELF.name -> RootExpressionDefault.SELF
+                else -> RootExpressionDefault(v)
             }
 
-            else -> RootExpressionSimple(v)
+            else -> RootExpressionDefault(v)
         }
     }
 
@@ -100,23 +99,23 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // literal = BOOLEAN | INTEGER | REAL | STRING ;
     private fun literal(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LiteralExpression = when (nodeInfo.alt.option.asIndex) {
-        0 -> LiteralExpressionSimple(StdLibDefault.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
-        1 -> LiteralExpressionSimple(StdLibDefault.Integer.qualifiedTypeName, (children[0] as String).toInt())
-        2 -> LiteralExpressionSimple(StdLibDefault.Real.qualifiedTypeName, (children[0] as String).toDouble())
-        3 -> LiteralExpressionSimple(StdLibDefault.String.qualifiedTypeName, (children[0] as String).trim('\''))
+        0 -> LiteralExpressionDefault(StdLibDefault.Boolean.qualifiedTypeName, (children[0] as String).toBoolean())
+        1 -> LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, (children[0] as String).toInt())
+        2 -> LiteralExpressionDefault(StdLibDefault.Real.qualifiedTypeName, (children[0] as String).toDouble())
+        3 -> LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName, (children[0] as String).trim('\''))
         else -> error("Internal error: alternative ${nodeInfo.alt.option} not handled for 'literal'")
     }
 
     // navigation = navigationRoot navigationPartList ;
-    private fun navigationExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationSimple {
+    private fun navigationExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationExpressionDefault {
         val navigationRoot = children[0] as Expression
         val parts = children[1] as List<NavigationPart>
-        return NavigationSimple(navigationRoot, parts)
+        return NavigationExpressionDefault(navigationRoot, parts)
     }
 
     // navigationRoot = root | literal | group;
     private fun navigationRoot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
-         children[0] as Expression
+        children[0] as Expression
 
     // navigationPartList = navigationPart+ ;
     private fun navigationPartList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<NavigationPart> =
@@ -131,7 +130,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun infixExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): InfixExpression {
         val expressions = children.filterIsInstance<Expression>()
         val operators = children.filterIsInstance<String>()
-        return InfixExpressionSimple(expressions, operators)
+        return InfixExpressionDefault(expressions, operators)
     }
 
     // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
@@ -139,7 +138,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val pqn = children[0] as PossiblyQualifiedName
         val args = children[1] as List<Expression>
         val propertyAssignments = children[2] as List<AssignmentStatement>?
-        val exp = CreateObjectExpressionSimple(pqn, args)
+        val exp = CreateObjectExpressionDefault(pqn, args)
         exp.propertyAssignments = propertyAssignments ?: emptyList()
         return exp
     }
@@ -152,7 +151,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // tuple = 'tuple' assignmentBlock ;
     private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {
         val propertyAssignments = children[1] as List<AssignmentStatement>
-        return CreateTupleExpressionSimple(propertyAssignments)
+        return CreateTupleExpressionDefault(propertyAssignments)
     }
 
     // assignmentBlock = '{' assignmentList  '}' ;
@@ -167,7 +166,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
         val rhs = children[2] as Expression
-        return AssignmentStatementSimple(lhsPropertyName, rhs)
+        return AssignmentStatementDefault(lhsPropertyName, rhs)
     }
 
     // propertyName = IDENTIFIER | SPECIAL
@@ -178,50 +177,53 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {
         val withContext = children[2] as Expression
         val expression = children[4] as Expression
-        return WithExpressionSimple(withContext, expression)
+        return WithExpressionDefault(withContext, expression)
     }
 
-    // when = 'when' '{' whenOptionList '}' ;
+    // when = 'when' '{' whenOption+ whenOptionElse '}' ;
     private fun when_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenExpression {
         val optionList = children[2] as List<WhenOption>
-        return WhenExpressionSimple(optionList)
+        val whenOptionElse = children[3] as WhenOptionElse
+        return WhenExpressionDefault(optionList, whenOptionElse)
     }
-
-    // whenOptionList = whenOption+ ;
-    private fun whenOptionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<WhenOption> =
-        children as List<WhenOption>
 
     // whenOption = expression '->' expression ;
     private fun whenOption(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOption {
         val condition = children[0] as Expression
         val expression = children[2] as Expression
-        return WhenOptionSimple(condition, expression)
+        return WhenOptionDefault(condition, expression)
+    }
+
+    // whenOption = 'else' '->' expression ;
+    private fun whenOptionElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WhenOptionElse {
+        val expression = children[2] as Expression
+        return WhenOptionElseDefault(expression)
     }
 
     // cast = expression 'as' typeReference ;
     private fun cast(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CastExpression {
         val expression = children[0] as Expression
         val pqn = children[2] as TypeReference
-        return CastExpressionSimple( expression,pqn)
+        return CastExpressionDefault(expression, pqn)
     }
 
     // typeTest = expression 'is' typeReference ;
     private fun typeTest(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeTestExpression {
         val expression = children[0] as Expression
         val pqn = children[2] as TypeReference
-        return TypeTestExpressionSimple( expression,pqn)
+        return TypeTestExpressionDefault(expression, pqn)
     }
 
     // group = '(' expression ')' ;
     private fun group(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GroupExpression {
         val expression = children[1] as Expression
-        return GroupExpressionSimple( expression)
+        return GroupExpressionDefault(expression)
     }
 
     // propertyCall = '.' propertyReference ;
     private fun propertyCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyCall {
         val id = children[1] as String
-        return PropertyCallSimple(id)
+        return PropertyCallDefault(id)
     }
 
     // methodCall = '.' methodReference '(' argumentList ')' lambda? ;
@@ -229,8 +231,8 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         val methodReference = children[1] as String
         val argumentList = children[3] as List<Expression>
         val lambda = children[5] as LambdaExpression?
-        val args = argumentList + (lambda?.let{ listOf(it) } ?: emptyList())
-        return MethodCallSimple(methodReference, args)
+        val args = argumentList + (lambda?.let { listOf(it) } ?: emptyList())
+        return MethodCallDefault(methodReference, args)
     }
 
     // argumentList = [expression / ',']* ;
@@ -241,13 +243,13 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // lambda = '{' expression '}' ;
     private fun lambda(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): LambdaExpression {
         val expression = children[1] as Expression
-        return LambdaExpressionSimple(expression)
+        return LambdaExpressionDefault(expression)
     }
 
     // indexOperation = '[' indexList ']' ;
     private fun indexOperation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IndexOperation {
         val expr = children[1] as List<Expression>
-        return IndexOperationSimple(expr)
+        return IndexOperationDefault(expr)
     }
 
     // indexList = [expression / ',']+ ;
@@ -263,17 +265,17 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         children[0] as String
 
     // typeReference = possiblyQualifiedName typeArgumentList? '?'?;
-    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) : TypeReference {
+    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeReference {
         val pqn = children[0] as PossiblyQualifiedName
         val targs = (children[1] as List<TypeReference>?) ?: emptyList()
         val isNullable = children[2] != null
-        return TypeReferenceSimple(pqn, targs, isNullable)
+        return TypeReferenceDefault(pqn, targs, isNullable)
     }
 
     // typeArgumentList = '<' [ typeReference / ',']+ '>' ;
-    private fun typeArgumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) : List<TypeReference> {
+    private fun typeArgumentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<TypeReference> {
         val list = children[1] as List<Any>
-        val slist = list.toSeparatedList<Any,TypeReference,String>()
+        val slist = list.toSeparatedList<Any, TypeReference, String>()
         return slist.items
     }
 

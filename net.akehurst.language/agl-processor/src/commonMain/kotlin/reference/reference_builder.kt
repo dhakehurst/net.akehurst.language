@@ -18,8 +18,8 @@ package net.akehurst.language.reference.builder
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.*
-import net.akehurst.language.expressions.asm.NavigationSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.reference.api.*
@@ -122,7 +122,7 @@ class ReferenceDefinitionBuilder(
         val refPropNav = exprResult.asm?.let {
             when (it) {
                 is NavigationExpression -> it
-                is RootExpression -> NavigationSimple(RootExpressionSimple(it.name), emptyList())
+                is RootExpression -> NavigationExpressionDefault(RootExpressionDefault(it.name), emptyList())
                 else -> error("Navigation cannot be created from given referringPropertyStr '$it'")
             }
         } ?: error("Navigation cannot be created from given expression '$fromExpressionStr'")

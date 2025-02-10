@@ -123,12 +123,10 @@ namespace net.akehurst.language.grammarTypemodel.api
 """
 
     override val grammarModel: GrammarModel by lazy {
-        grammarModel("TypeModel") {
+        grammarModel("AglTypemodel") {
             namespace("net.akehurst.language") {
                 grammar("Typemodel") {
-                    extendsGrammar(AglBase.targetGrammar.selfReference)
-
-                    concatenation("unit") { ref("namespace"); lst(1, -1) { ref("definition") } }
+                    extends("net.akehurst.language.Base")
                     choice("definition") {
                         ref("singletonDefinition")
                         ref("primitiveDefinition")
@@ -143,10 +141,23 @@ namespace net.akehurst.language.grammarTypemodel.api
                     concatenation("primitiveDefinition") { lit("primitive"); ref("IDENTIFIER") }
                     concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER") }
                     concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER") }
-                    //concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER") '<' typeParameterList '>' ; }
-                    //concatenation("dataDefinition") { lit("data"); ref("IDENTIFIER") supertypes ? '{' property* '}' ; }
-                    //concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER") supertypes ? '{' property* '}' ; }
-                   // concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER") '{' alternatives* '}' ; }
+                    concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER"); lit("<"); ref("typeParameterList"); lit(">") }
+                    concatenation("dataDefinition") { lit("data"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{"); lst(0, -1) { ref("property") }; lit("}") }
+                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{"); lst(0, -1) { ref("property") }; lit("}") }
+                    concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER"); lit("{"); ref("alternatives"); lit("}") }
+                    separatedList("alternatives", 1, -1) { ref("typeReference"); lit("|") }
+                    separatedList("typeParameterList", 1, -1) { ref("IDENTIFIER"); lit(",") }
+                    concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
+                    concatenation("property") { ref("characteristic"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt { lit("?") } }
+                    concatenation("typeArgumentList") { lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">") }
+                    choice("characteristic") {
+                        lit("reference-val")
+                        lit("reference-var")
+                        lit("composite-val")
+                        lit("composite-var")
+                        lit("dis")
+                    }
                 }
             }
         }

@@ -31,12 +31,10 @@ import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.expressions.api.*
-import net.akehurst.language.expressions.asm.NavigationSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -351,8 +349,8 @@ class ReferenceResolverSimple<ItemInScopeType>(
             else -> {
                 //val exprEval = ExpressionsInterpreterOverTypedObject(typeModel)
                 val selfType = typeModel.typeOf(root).type()
-                val front = NavigationSimple(this.start, this.parts.dropLast(1))
-                val evc = EvaluationContext(null, mapOf(RootExpressionSimple.SELF.name to TypedObjectAsmValue(selfType,root)))
+                val front = NavigationExpressionDefault(this.start, this.parts.dropLast(1))
+                val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to TypedObjectAsmValue(selfType,root)))
                 val v = _interpreter.evaluateExpression(evc, front).self
                 val lastProp = (this.parts.last() as PropertyCall).propertyName
                 when (v) {

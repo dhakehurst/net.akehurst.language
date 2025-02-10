@@ -149,6 +149,8 @@ namespace net.akehurst.language.base.asm
                     typeParameters("DT")
                     supertype("Formatable")
                 }
+                interfaceType("DefinitionReference") {}
+                interfaceType("OptionHolder") {}
                 dataType("Indent") {
 
                     constructor_ {
@@ -159,7 +161,6 @@ namespace net.akehurst.language.base.asm
                     propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
                 }
                 dataType("Asm_apiKt") {
-
                 }
             }
             namespace("net.akehurst.language.base.asm", listOf("net.akehurst.language.base.api", "std")) {
@@ -200,6 +201,9 @@ namespace net.akehurst.language.base.asm
                     supertype("Model") { ref("NT"); ref("DT") }
                     constructor_ {}
                 }
+                dataType("OptionHolderDefault") {
+                    supertype("OptionHolder")
+                }
             }
         }
     }
@@ -220,7 +224,7 @@ namespace net.akehurst.language.base.asm
         }
     }
 
-    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Base")) !! }
+    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Base"))!! }
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarString.trimIndent()

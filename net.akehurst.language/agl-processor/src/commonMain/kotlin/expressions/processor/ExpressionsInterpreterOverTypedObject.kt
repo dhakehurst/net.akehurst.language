@@ -22,7 +22,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -34,10 +34,10 @@ data class EvaluationContext<SelfType>(
 ) {
     companion object {
         fun <SelfType> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionSimple.SELF.name to self))
+        fun <SelfType> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionDefault.SELF.name to self))
     }
 
-    val self = namedValues[RootExpressionSimple.SELF.name]
+    val self = namedValues[RootExpressionDefault.SELF.name]
 
     fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
 
@@ -97,7 +97,7 @@ interface ObjectGraph<SelfType> {
 //        else -> error("Not possible to convert ${this::class.simpleName} to AsmValue")
 //    }
 
-class ExpressionsInterpreterOverTypedObject<SelfType>(
+open class ExpressionsInterpreterOverTypedObject<SelfType>(
     val objectGraph: ObjectGraph<SelfType>,
     val issues: IssueHolder
 ) {
@@ -119,7 +119,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
      * if more than one value is to be passed in as an 'evaluation-context'
      * self can contain a 'tuple' of all the necessary named values
      */
-    fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+    open fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
         is RootExpression -> this.evaluateRootExpression(evc, expression)
         is LiteralExpression -> this.evaluateLiteralExpression(expression)
         is CreateObjectExpression -> this.evaluateCreateObject(evc, expression)
@@ -133,7 +133,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
         is CastExpression -> this.evaluateCast(evc, expression)
         is TypeTestExpression -> this.evaluateTypeTest(evc, expression)
         is GroupExpression -> this.evaluateGroup(evc, expression)
-        else -> error("Subtype of Expression not handled in 'evaluateFor'")
+        else -> error("Subtype of Expression not handled in evaluateExpression '${expression::class.simpleName}'")
     }
 
     private fun evaluateRootExpression(evc: EvaluationContext<SelfType>, expression: RootExpression): TypedObject<SelfType> {
@@ -303,7 +303,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
         return when {
             objectGraph.nothing() == newSelf -> newSelf
             else -> {
-                val newEvc = evc.child(mapOf(RootExpressionSimple.SELF.name to newSelf))
+                val newEvc = evc.child(mapOf(RootExpressionDefault.SELF.name to newSelf))
                 val result = evaluateExpression(newEvc, expression.expression)
                 result
             }
@@ -317,7 +317,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
                 StdLibDefault.Boolean -> {
                     if (objectGraph.valueOf(condValue) as Boolean) {
                         val result = evaluateExpression(evc, opt.expression)
-                        return result
+                        return result // return after first condition found that is true
                     } else {
                         //condition not true
                     }
@@ -326,7 +326,7 @@ class ExpressionsInterpreterOverTypedObject<SelfType>(
                 else -> error("Conditions/Options in a when expression must result in a Boolean value")
             }
         }
-        return objectGraph.nothing()
+        return evaluateExpression(evc, expression.elseOption.expression)
     }
 
     private fun evaluateCreateTuple(evc: EvaluationContext<SelfType>, expression: CreateTupleExpression): TypedObject<SelfType> {

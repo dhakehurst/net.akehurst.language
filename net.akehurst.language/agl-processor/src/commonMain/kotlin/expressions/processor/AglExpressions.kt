@@ -78,9 +78,9 @@ grammar Expression extends Base {
         
     with = 'with' '(' expression ')' expression ;
     
-    when = 'when' '{' whenOptionList '}' ;
-    whenOptionList = whenOption+ ;
+    when = 'when' '{' whenOption+ whenOptionElse '}' ;
     whenOption = expression '->' expression ;
+    whenOptionElse = 'else' -> expression
     
     cast = expression 'as' typeReference ;
     typeTest = expression 'is' typeReference ;
@@ -183,13 +183,13 @@ grammar Expression extends Base {
             lit("with"); lit("("); ref("expression"); lit(")"); ref("expression")
         }
         concatenation("when") {
-            lit("when"); lit("{"); ref("whenOptionList"); lit("}")
-        }
-        list("whenOptionList", 1, -1) {
-            ref("whenOption")
+            lit("when"); lit("{"); lst(1,-1) {  ref("whenOption") }; ref("whenOptionElse"); lit("}")
         }
         concatenation("whenOption") {
             ref("expression"); lit("->"); ref("expression")
+        }
+        concatenation("whenOptionElse") {
+            lit("else"); lit("->"); ref("expression")
         }
         concatenation("cast") { ref("expression"); lit("as"); ref("typeReference") }
         concatenation("typeTest") { ref("expression"); lit("is"); ref("typeReference") }

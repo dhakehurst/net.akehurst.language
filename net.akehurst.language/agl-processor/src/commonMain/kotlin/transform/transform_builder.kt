@@ -169,7 +169,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun leafStringRule(grammarRuleName: String) {
-        val tr = TransformationRuleDefault(RootExpressionSimple.SELF) //("leaf"))
+        val tr = TransformationRuleDefault(RootExpressionDefault.SELF) //("leaf"))
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         tr.resolveTypeAs(StdLibDefault.String)
         _rules.add(tr)
@@ -210,7 +210,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun createObject(grammarRuleName: String, typeName: String, modifyStatements: AssignmentBuilder.() -> Unit = {}) {
         val qtn = resolveType(GrammarRuleName(grammarRuleName), typeName).qualifiedName
-        val expr = CreateObjectExpressionSimple(qtn, emptyList())
+        val expr = CreateObjectExpressionDefault(qtn, emptyList())
         val ab = AssignmentBuilder()
         ab.modifyStatements()
         val ass = ab.build()
@@ -243,6 +243,6 @@ class AssignmentBuilder() {
     }
 
     fun build(): List<AssignmentStatement> {
-        return _assignments.map { AssignmentStatementSimple(it.first, it.second) }
+        return _assignments.map { AssignmentStatementDefault(it.first, it.second) }
     }
 }

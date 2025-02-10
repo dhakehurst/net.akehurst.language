@@ -40,7 +40,7 @@ class GenerateGrammarModelBuild(
         val generatedFormat = $$"""
             namespace net.akehurst.language.grammar
               format Asm {
-                //OptionHolder -> ""
+                OptionHolder -> ""
                 
                 SimpleName -> value    // TODO: move these to something we extend
                 QualifiedName -> value
@@ -60,15 +60,37 @@ class GenerateGrammarModelBuild(
                 Grammar -> "
                   grammar(\"$name\") {
                     $options
-                    $extends
+                    $[extends / '\\n']
                     $[grammarRule / '\\n']
                     $preferenceRule
                   }
                 "
+                GrammarReference -> "extends(\"${resolved.qualifiedName.value}\")"
                 GrammarRule -> when {
                   rhs is Concatenation -> "concatenation(\"$name\") { $rhs }"
                   rhs is Choice -> "choice(\"$name\") { $rhs }"
+                  rhs is SimpleList -> "list(\"$name\") { $rhs }"
+                  rhs is SeparatedList -> "separatedList(\"$name\", ${rhs.min}, ${rhs.max}) { ${rhs.item}; ${rhs.separator} }"
                   else -> "???(\"$name\") { $rhs }"
+                }
+                
+                RuleItem -> when {
+                  $self is EmptyRule -> ''
+                  $self is Terminal -> when {
+                    $self.isPattern -> "pat(\"$value\")"
+                    else -> "lit(\"$value\")"
+                  }
+                  $self is NonTerminal -> "ref(\"${ruleReference.value}\")"
+                  $self is Embedded -> "ebd()"
+                  $self is Concatenation -> "$[items / '; ']"
+                  $self is Choice -> "
+                    $[alternative / '\\n']
+                  "
+                  $self is Group -> "grp() { $[groupedContent / '; '] }"
+                  $self is OptionalItem -> "opt { $item }"
+                  $self is SimpleList -> "lst($min, $max) { $item }"
+                  $self is SeparatedList -> "sLst($min, $max) { $item; $separator }"
+                  else -> "??"
                 }
               }
         """
@@ -97,7 +119,7 @@ class GenerateGrammarModelBuild(
     fun generateFromAsm(grammarModel: GrammarModel): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
         val og = ObjectGraphByReflection(AglGrammar.typeModel, issues)
-        val formatter = FormatterOverTypedObject<Any>(formatSet, og)
+        val formatter = FormatterOverTypedObject<Any>(formatSet, og,issues)
 
         val tp = grammarTypeModel.findFirstByNameOrNull(SimpleName("GrammarModel"))!!.type()
         val tobj = TypedObjectByReflection(tp, grammarModel)

@@ -3,15 +3,23 @@ package net.akehurst.language.agl.generators
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.typemodel.processor.AglTypemodel
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_GenerateGrammarModelBuild {
 
     @Test
-    fun Agl_types() {
+    fun generte_AglTypemodel_grammarString() {
         val gen = GenerateGrammarModelBuild()
 
         val actual = gen.generateFromString(GrammarString(AglTypemodel.grammarString))
         println(actual)
+    }
+
+    @Test
+    fun AglTypemodel_grammarString_assert() {
+        val actual = AglTypemodel.grammarModel.asString()
+        val expected = AglTypemodel.grammarString
+        assertEquals(expected, actual)
     }
 
 }

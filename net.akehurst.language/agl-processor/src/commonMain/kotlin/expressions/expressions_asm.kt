@@ -21,6 +21,7 @@ import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
 abstract class ExpressionAbstract : Expression {
 
@@ -30,7 +31,7 @@ abstract class ExpressionAbstract : Expression {
     override fun asString(indent: Indent, imports: List<Import>): String = toString()
 }
 
-data class CreateTupleExpressionSimple(
+data class CreateTupleExpressionDefault(
     override val propertyAssignments: List<AssignmentStatement>
 ) : ExpressionAbstract(), CreateTupleExpression {
 
@@ -47,7 +48,7 @@ data class CreateTupleExpressionSimple(
     override fun toString(): String = "tuple { ... }"
 }
 
-data class CreateObjectExpressionSimple(
+data class CreateObjectExpressionDefault(
     override val possiblyQualifiedTypeName: PossiblyQualifiedName,
     override val arguments: List<Expression>
 ) : ExpressionAbstract(), CreateObjectExpression {
@@ -71,7 +72,7 @@ data class CreateObjectExpressionSimple(
     override fun toString(): String = "$possiblyQualifiedTypeName { ... }"
 }
 
-class WithExpressionSimple(
+class WithExpressionDefault(
     override val withContext: Expression,
     override val expression: Expression
 ) : ExpressionAbstract(), WithExpression {
@@ -87,8 +88,9 @@ class WithExpressionSimple(
     override fun toString(): String = "with($withContext) $expression"
 }
 
-class WhenExpressionSimple(
-    override val options: List<WhenOption>
+class WhenExpressionDefault(
+    override val options: List<WhenOption>,
+    override val elseOption: WhenOptionElse,
 ) : ExpressionAbstract(), WhenExpression {
 
     override fun asString(indent: Indent, imports: List<Import>): String {
@@ -104,26 +106,34 @@ class WhenExpressionSimple(
     override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
 }
 
-class OnExpressionSimple(
+class OnExpressionDefault(
     override val expression: Expression
 ) : ExpressionAbstract(), OnExpression {
     override var propertyAssignments: List<AssignmentStatement> = emptyList()
 }
 
-class WhenOptionSimple(
+class WhenOptionDefault(
     override val condition: Expression,
     override val expression: Expression
 ) : WhenOption {
     override fun toString(): String = "$condition -> $expression"
 }
 
-data class RootExpressionSimple(
+class WhenOptionElseDefault(
+    override val expression: Expression
+) : WhenOptionElse {
+
+    override fun toString(): String = "else -> $expression"
+}
+
+
+data class RootExpressionDefault(
     override val name: String
 ) : ExpressionAbstract(), RootExpression {
     companion object {
-        val NOTHING = RootExpressionSimple("\$nothing")
-        val SELF = RootExpressionSimple("\$self")
-        val ERROR = RootExpressionSimple("\$error")
+        val NOTHING = RootExpressionDefault("\$nothing")
+        val SELF = RootExpressionDefault("\$self")
+        val ERROR = RootExpressionDefault("\$error")
     }
 
     override val isNothing: Boolean get() = NOTHING == this
@@ -132,12 +142,12 @@ data class RootExpressionSimple(
     override fun toString(): String = name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        !is RootExpressionSimple -> false
+        !is RootExpressionDefault -> false
         else -> other.name == this.name
     }
 }
 
-data class LiteralExpressionSimple(
+data class LiteralExpressionDefault(
     override val qualifiedTypeName: QualifiedName,
     override val value: Any
 ) : ExpressionAbstract(), LiteralExpression {
@@ -145,7 +155,7 @@ data class LiteralExpressionSimple(
     override fun toString(): String = value.toString()
 }
 
-data class NavigationSimple(
+data class NavigationExpressionDefault(
     override val start: Expression,
     override val parts: List<NavigationPart>
 ) : ExpressionAbstract(), NavigationExpression {
@@ -153,13 +163,13 @@ data class NavigationSimple(
     override fun toString(): String = "$start${parts.joinToString(separator = "")}"
 }
 
-data class PropertyCallSimple(
+data class PropertyCallDefault(
     override val propertyName: String
 ) : PropertyCall {
     override fun toString(): String = ".$propertyName"
 }
 
-data class MethodCallSimple(
+data class MethodCallDefault(
     override val methodName: String,
     override val arguments: List<Expression>
 ) : MethodCall {
@@ -167,7 +177,7 @@ data class MethodCallSimple(
     override fun toString(): String = ".$methodName(${arguments.joinToString()})"
 }
 
-data class LambdaExpressionSimple(
+data class LambdaExpressionDefault(
     override val expression: Expression
 ) : LambdaExpression {
 
@@ -178,14 +188,14 @@ data class LambdaExpressionSimple(
     override fun toString(): String = "{ $expression }"
 }
 
-data class IndexOperationSimple(
+data class IndexOperationDefault(
     override val indices: List<Expression>
 ) : IndexOperation {
 
     override fun toString(): String = "[${indices.joinToString { it.toString() }}]"
 }
 
-class AssignmentStatementSimple(
+class AssignmentStatementDefault(
     override val lhsPropertyName: String,
     override val rhs: Expression
 ) : AssignmentStatement {
@@ -196,7 +206,7 @@ class AssignmentStatementSimple(
 
 }
 
-class InfixExpressionSimple(
+class InfixExpressionDefault(
     override val expressions: List<Expression>,
     override val operators: List<String>
 ) : InfixExpression {
@@ -205,7 +215,7 @@ class InfixExpressionSimple(
     override fun toString(): String = "${expressions.first()} ${operators.indices.joinToString { operators[it] + " " + expressions[it + 1] }}"
 }
 
-class CastExpressionSimple(
+class CastExpressionDefault(
     override val expression: Expression,
     override val targetType: TypeReference
 ) : CastExpression {
@@ -216,7 +226,7 @@ class CastExpressionSimple(
     override fun toString(): String = "$expression as $targetType"
 }
 
-class TypeTestExpressionSimple(
+class TypeTestExpressionDefault(
     override val expression: Expression,
     override val targetType: TypeReference
 ) : TypeTestExpression {
@@ -227,7 +237,7 @@ class TypeTestExpressionSimple(
     override fun toString(): String = "$expression as $targetType"
 }
 
-data class TypeReferenceSimple(
+data class TypeReferenceDefault(
     override val possiblyQualifiedName: PossiblyQualifiedName,
     override val typeArguments: List<TypeReference>,
     override val isNullable: Boolean
@@ -247,7 +257,7 @@ data class TypeReferenceSimple(
     override fun toString(): String = "${possiblyQualifiedName.value}: $typeArguments ${if (isNullable) "?" else ""}"
 }
 
-class GroupExpressionSimple(
+class GroupExpressionDefault(
     override val expression: Expression
 ) : GroupExpression {
     override fun asString(indent: Indent, imports: List<Import>): String = "(${expression.asString(indent, imports)})"

@@ -17,8 +17,8 @@
 package net.akehurst.language.reference.processor
 
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.expressions.asm.NavigationSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationExpression
@@ -179,10 +179,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
         val navigation = when (expr) {
             is NavigationExpression -> expr
-            is RootExpression -> NavigationSimple(RootExpressionSimple(expr.name), emptyList())
+            is RootExpression -> NavigationExpressionDefault(RootExpressionDefault(expr.name), emptyList())
             else -> {
                 issues.error(locationMap[expr], "", null)
-                NavigationSimple(RootExpressionSimple.ERROR, emptyList())
+                NavigationExpressionDefault(RootExpressionDefault.ERROR, emptyList())
             }
         }
         return ReferenceExpressionPropertyDefault(navigation, typeReferences, from).also {

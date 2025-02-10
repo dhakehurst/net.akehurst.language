@@ -194,7 +194,7 @@ interface NormalRule : GrammarRule {
 enum class OverrideKind {
     REPLACE,
     APPEND_ALTERNATIVE, // either append this as another option or convert original toa choice and append this option
-    SUBSTITUTION
+    SUBSTITUTION //TODO: document this!
 }
 
 interface OverrideRule : GrammarRule {

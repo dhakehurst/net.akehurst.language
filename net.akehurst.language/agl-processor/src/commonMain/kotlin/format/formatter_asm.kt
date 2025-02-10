@@ -141,22 +141,41 @@ class AglFormatRuleDefault(
 
 class FormatExpressionWhenDefault(
     override val options: List<FormatWhenOption>
-) : FormatExpressionWhen
+) : FormatExpressionWhen {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        TODO("not implemented")
+    }
+}
 
 class FormatWhenOptionDefault(
     override val condition: Expression,
     override val format: FormatExpression
-) : FormatWhenOption
+) : FormatWhenOption {
+    override val expression: Expression = format
+}
+
+class FormatWhenOptionElseDefault(
+    override val format: FormatExpression
+) : FormatWhenOptionElse {
+    override val expression: Expression = format
+}
 
 class FormatExpressionExpressionDefault(
     override val expression: Expression
 ) : FormatExpressionExpression {
 
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        TODO("not implemented")
+    }
 }
 
 class FormatExpressionTemplateDefault(
     override val content: List<TemplateElement>
-) : FormatExpressionTemplate
+) : FormatExpressionTemplate {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        TODO("not implemented")
+    }
+}
 
 class TemplateElementTextDefault(
     override val text: String

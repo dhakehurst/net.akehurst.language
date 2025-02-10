@@ -51,6 +51,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::formatExpression)
         super.register(this::whenExpression)
         super.register(this::whenOption)
+        super.register(this::whenOptionElse)
     }
 
     // unit = namespace format+ ;
@@ -122,5 +123,12 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val expression = children[2] as FormatExpression
         return FormatWhenOptionDefault(condition, expression)
     }
+
+    // whenOptionElse = else '->' formatExpression ;
+    private fun whenOptionElse(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatWhenOptionElse {
+        val expression = children[2] as FormatExpression
+        return FormatWhenOptionElseDefault(expression)
+    }
+
 
 }

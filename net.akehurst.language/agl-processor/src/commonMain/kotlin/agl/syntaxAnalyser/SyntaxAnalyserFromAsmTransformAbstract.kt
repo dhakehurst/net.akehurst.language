@@ -276,7 +276,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         val parentTypeDecl = parentTrRule?.resolvedType?.resolvedDeclaration
         val nodeRule = nodeInfo.node.rule
         return when {
-            null == parentTypeDecl -> transformationRule(StdLibDefault.NothingType, RootExpressionSimple.NOTHING)
+            null == parentTypeDecl -> transformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
             /*
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo -> transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
@@ -311,7 +311,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
             }
 */
             else -> when {
-                nodeRule.isPseudo -> transformationRule(StdLibDefault.AnyType, RootExpressionSimple.SELF)
+                nodeRule.isPseudo -> transformationRule(StdLibDefault.AnyType, RootExpressionDefault.SELF)
                 /*
                 nodeRule.isPseudo -> { //TODO: check if isPseudo maybe just need to return self..higher TR-rule handles pars-tree-nodes?
                     //must be group or choice

@@ -74,12 +74,13 @@ class test_AglFormat {
                 """.trimIndent()
             ),
             TestData(
-                sentence = """
+                sentence = $$"""
                     namespace test
                     format Test {
                         Type1 -> when {
                           true -> ''
                           false -> ''
+                          else -> $nothing
                         }
                     }
                 """.trimIndent()

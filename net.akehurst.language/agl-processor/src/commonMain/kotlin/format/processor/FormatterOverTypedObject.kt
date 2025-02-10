@@ -20,29 +20,22 @@ import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.formatter.api.*
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class FormatterOverTypedObject<SelfType>(
     val formatSet: FormatSet,
-    val objectGraph: ObjectGraph<SelfType>
-) : Formatter<TypedObject<SelfType>> {
-
-    private val _issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-
-    val typeModel: TypeModel = objectGraph.typeModel
-
-    val expressionInterpreter by lazy {
-        ExpressionsInterpreterOverTypedObject(objectGraph, _issues)
-    }
+    objectGraph: ObjectGraph<SelfType>,
+    issues: IssueHolder
+) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<TypedObject<SelfType>> {
 
     private val _rules by lazy {
         formatSet.rules.associateBy { rl ->
-            expressionInterpreter.evaluateTypeReference(rl.forTypeName)
+            super.evaluateTypeReference(rl.forTypeName)
         }
     }
 
@@ -53,7 +46,7 @@ class FormatterOverTypedObject<SelfType>(
     override fun format(asm: TypedObject<SelfType>): FormatResult {
         val evc = EvaluationContext.ofSelf(asm)
         val str = formatSelf(evc)
-        return FormatResultDefault(str, _issues)
+        return FormatResultDefault(str, issues)
     }
 
     private fun formatSelf(evc: EvaluationContext<SelfType>): String {
@@ -87,6 +80,7 @@ class FormatterOverTypedObject<SelfType>(
                     is PrimitiveType -> {
                         objectGraph.valueOf(self).toString()
                     }
+
                     is ValueType -> objectGraph.valueOf(self).toString()
                     is EnumType -> objectGraph.valueOf(self).toString()
                     is CollectionType -> when {
@@ -133,30 +127,125 @@ class FormatterOverTypedObject<SelfType>(
     }
 
     private fun formatFromExpression(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionExpression): String {
-        val res = expressionInterpreter.evaluateExpression(evc, formatExpr.expression)
+        val res = super.evaluateExpression(evc, formatExpr.expression)
         val value = res.self
         return when (value) {
             null -> {
-                _issues.error(null, "Expression should result in a String value, got 'null'")
+                issues.error(null, "Expression should result in a value, got 'null'")
                 ""
             }
+
             is String -> value as String
             else -> {
-                _issues.error(null, "Expression should result in a String value, got '${value::class.simpleName}'")
-                res.self.toString()
+                //issues.error(null, "Expression should result in a String value, got '${value::class.simpleName}'")
+                formatSelf(EvaluationContext.ofSelf(res))
             }
         }
     }
 
     private fun formatFromTemplate(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionTemplate): String {
-        return formatExpr.content.joinToString(separator = "") {
-            when (it) {
-                is TemplateElementText -> formatTemplateElementText(evc, it)
-                is TemplateElementExpressionProperty -> formatTemplateElementExpressionSimple(evc, it)
-                is TemplateElementExpressionList -> formatTemplateElementExpressionList(evc, it)
-                is TemplateElementExpressionEmbedded -> formatTemplateElementExpressionEmbedded(evc, it)
-                else -> error("Internal error: subtype of TemplateElement not handled: '${it::class.simpleName}'")
+        val sb = StringBuilder()
+        when (formatExpr.content.size) {
+            0 -> Unit
+            else -> {
+                val firstContent = formatTemplateContent(evc, formatExpr.content[0])
+                val prefix = computePrefix(firstContent)
+                when (prefix.length) {
+                    0 -> {
+                        for (it in formatExpr.content) {
+                            val res = formatTemplateContent(evc, it)
+                            sb.append(res)
+                        }
+                    }
+
+                    else -> {
+                        val withPrefixRemoved1 = firstContent.substringAfter("\n").drop(prefix.length)
+                        sb.append(withPrefixRemoved1)
+                        var contentMid = formatExpr.content.drop(1).dropLast(1) //TODO: if < 3 elements ?
+                        var indent = ""
+                        var previousWasEmpty = false
+                        for (it in contentMid) {
+                            val res = formatTemplateContent(evc, it)
+                            if (res.isEmpty()) {
+                                previousWasEmpty = true
+                            } else {
+                                val res2 = when (previousWasEmpty) {
+                                    true -> res.trimStart('\n').trimStart()
+                                    else -> res
+                                }
+                                val withPrefixRemoved = removePrefixAddIndent(res2, prefix, indent)
+                                indent = computeIndent(removePrefixAddIndent(res, prefix, indent))
+                                sb.append(withPrefixRemoved)
+                                previousWasEmpty = false
+                            }
+                        }
+                        if (formatExpr.content.last() is TemplateElementText) {
+                            val lastContent = formatTemplateContent(evc, formatExpr.content.last())
+                            val lc = removePrefixAddIndent(lastContent, prefix, indent)
+                            val txt = lc.substringAfter("\n")
+                            if (txt.isBlank()) {
+                                sb.append(lc.substringBefore("\n"))
+                            } else {
+                                sb.append(lc)
+                            }
+                        }
+                    }
+                }
             }
+        }
+
+        return sb.toString()
+    }
+
+    private fun computePrefix(txt: String): String {
+        return when {
+            txt.startsWith("\n") -> {
+                val txt = txt.substringAfter("\n")
+                val len = txt.length - txt.trimStart().length
+                txt.substring(0, len)
+            }
+
+            else -> ""
+        }
+    }
+
+    private fun computeIndent(txt: String): String {
+        return when {
+            txt.contains("\n") -> {
+                val txt = txt.substringAfterLast("\n")
+                val len = txt.length - txt.trimStart().length
+                txt.substring(0, len)
+            }
+
+            else -> ""
+        }
+    }
+
+    private fun removePrefixAddIndent(txt: String, prefix: String, indent: String): String {
+        return when {
+            txt.contains("\n") -> {
+                val lines = txt.split("\n")
+                val first = lines[0]
+                val adjusted = lines.drop(1).map {
+                    when {
+                        it.startsWith(prefix) -> indent + it.substringAfter(prefix)
+                        else -> indent+it
+                    }
+                }
+                "${indent}$first" + "\n" + adjusted.joinToString("\n")
+            }
+
+            else -> txt
+        }
+    }
+
+    private fun formatTemplateContent(evc: EvaluationContext<SelfType>, content: TemplateElement): String {
+        return when (content) {
+            is TemplateElementText -> formatTemplateElementText(evc, content)
+            is TemplateElementExpressionProperty -> formatTemplateElementExpressionSimple(evc, content)
+            is TemplateElementExpressionList -> formatTemplateElementExpressionList(evc, content)
+            is TemplateElementExpressionEmbedded -> formatTemplateElementExpressionEmbedded(evc, content)
+            else -> error("Internal error: subtype of TemplateElement not handled: '${content::class.simpleName}'")
         }
     }
 
@@ -192,7 +281,7 @@ class FormatterOverTypedObject<SelfType>(
                     }
 
                     else -> {
-                        _issues.error(null, "Expected a list object but got a '${list::class.simpleName}'")
+                        issues.error(null, "Expected a list object but got a '${list::class.simpleName}'")
                         ""
                     }
                 }
@@ -202,11 +291,40 @@ class FormatterOverTypedObject<SelfType>(
     }
 
     private fun formatTemplateElementExpressionEmbedded(evc: EvaluationContext<SelfType>, templateElement: TemplateElementExpressionEmbedded): String {
-        TODO()
+        val v = evaluateExpression(evc, templateElement.expression)
+        return objectGraph.valueOf(v) as String
     }
 
     private fun formatFromWhen(evc: EvaluationContext<SelfType>, formatExpr: FormatExpressionWhen): String {
-        TODO()
+        for (opt in formatExpr.options) {
+            val condValue = super.evaluateExpression(evc, opt.condition)
+            when (condValue.type) {
+                StdLibDefault.Boolean -> {
+                    if (objectGraph.valueOf(condValue) as Boolean) {
+                        val result = formatExpression(evc, opt.format)
+                        return result // return after first condition found that is true
+                    } else {
+                        //condition not true
+                    }
+                }
+
+                else -> error("Conditions/Options in a when expression must result in a Boolean value")
+            }
+        }
+        return ""
     }
 
+    override fun evaluateExpression(evc: EvaluationContext<SelfType>, expression: Expression): TypedObject<SelfType> = when (expression) {
+        is FormatExpression -> {
+            val fmt = when (expression) {
+                is FormatExpressionExpression -> formatFromExpression(evc, expression)
+                is FormatExpressionTemplate -> formatFromTemplate(evc, expression)
+                is FormatExpressionWhen -> formatFromWhen(evc, expression)
+                else -> error("Subtype of FormatExpression not handled in evaluateExpression '${expression::class.simpleName}'")
+            }
+            objectGraph.toTypedObject(fmt as SelfType)
+        }
+
+        else -> super.evaluateExpression(evc, expression)
+    }
 }

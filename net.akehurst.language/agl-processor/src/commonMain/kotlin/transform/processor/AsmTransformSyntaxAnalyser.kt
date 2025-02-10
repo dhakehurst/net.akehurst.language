@@ -19,9 +19,9 @@ package net.akehurst.language.transform.processor
 
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.expressions.asm.AssignmentStatementSimple
-import net.akehurst.language.expressions.asm.OnExpressionSimple
-import net.akehurst.language.expressions.asm.RootExpressionSimple
+import net.akehurst.language.expressions.asm.AssignmentStatementDefault
+import net.akehurst.language.expressions.asm.OnExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
@@ -158,17 +158,17 @@ class AsmTransformSyntaxAnalyser(
     private fun modifyRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TransformationRule {
         val possiblyQualifiedTypeName = children[1] as PossiblyQualifiedName
         val statements = children[3] as List<AssignmentStatement>
-        val expr = OnExpressionSimple(RootExpressionSimple("\$it"))
+        val expr = OnExpressionDefault(RootExpressionDefault("\$it"))
         expr.propertyAssignments = statements
         val tr = TransformationRuleDefault(expr)
         return tr
     }
 
     // assignmentStatement = propertyName ':=' Expression.expression ;
-    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementSimple {
+    private fun assignmentStatement(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatementDefault {
         val propName = children[0] as String
         val expr = children[2] as Expression
-        return AssignmentStatementSimple(propName, expr)
+        return AssignmentStatementDefault(propName, expr)
     }
 
     // propertyName = IDENTIFIER ;

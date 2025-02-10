@@ -31,7 +31,7 @@ import net.akehurst.language.expressions.api.CastExpression
 import net.akehurst.language.expressions.api.CreateObjectExpression
 import net.akehurst.language.expressions.api.CreateTupleExpression
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.asm.CreateObjectExpressionSimple
+import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
@@ -144,7 +144,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                     val defExpr = defRule.expression
                     val newExpr = when (defExpr) {
                         is CreateObjectExpression -> {
-                            CreateObjectExpressionSimple(pqn, defExpr.arguments).also { it.propertyAssignments = defExpr.propertyAssignments }
+                            CreateObjectExpressionDefault(pqn, defExpr.arguments).also { it.propertyAssignments = defExpr.propertyAssignments }
                         }
 
                         else -> error("Unsupported ${defExpr::class.simpleName}")

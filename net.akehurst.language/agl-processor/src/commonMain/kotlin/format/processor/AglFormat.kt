@@ -20,6 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
 
@@ -59,7 +60,6 @@ object AglFormat {
                 }
                 grammar("Format") {
                     extendsGrammar(AglExpressions.grammar.selfReference)
-
                     concatenation("unit") {
                         ref("namespace"); lst(0, -1) { ref("format") }
                     }
@@ -77,13 +77,16 @@ object AglFormat {
                     choice("formatExpression") {
                         ref("expression")
                         ebd("Template", "templateString")
-                        ref("whenExpression")
+              //          ref("whenExpression")
                     }
-                    concatenation("whenExpression") {
-                        lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
-                    }
-                    concatenation("whenOption") {
+              //      concatenation("whenExpression") {
+              //          lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
+              //      }
+                    concatenation("whenOption", OverrideKind.REPLACE) {
                         ref("expression"); lit("->"); ref("formatExpression")
+                    }
+                    concatenation("whenOptionElse", OverrideKind.REPLACE) {
+                        lit("else"); lit("->"); ref("formatExpression")
                     }
                 }
             }
@@ -102,7 +105,7 @@ object AglFormat {
             text = RAW_TEXT ;
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
-            templateExpressionList = '$[' Expressions::expression '/' Expressions::STRING ']' ;
+            templateExpressionList = '$[' Expressions::propertyName '/' Expressions::STRING ']' ;
             templateExpressionEmbedded = '$${'{'}' AglFormat::formatExpression '}'
             
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
@@ -115,14 +118,18 @@ object AglFormat {
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;
             formatRule = typeReference '->' formatExpression ;
+            
+            // TODO: override expression +=| formatExpression
+            
             formatExpression
               = expression
               | Template::templateString
-              | whenExpression
+           //   | whenExpression
               ;
-            whenExpression = 'when' '{' whenOptionList '}' ;
-            whenOptionList = whenOption* ;
-            whenOption = expression '->' formatExpression ;
+           // whenExpression = 'when' '{' whenOptionList '}' ;
+           // whenOptionList = whenOption* ;
+            override whenOption = expression '->' formatExpression ;
+            override whenOptionElse = 'else' '->' formatExpression ;
         }
     """
     const val styleStr = """

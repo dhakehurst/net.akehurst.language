@@ -19,6 +19,9 @@ package net.akehurst.language.formatter.api
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.api.WhenOption
+import net.akehurst.language.expressions.api.WhenOptionElse
+import net.akehurst.language.formatter.api.FormatWhenOptionElse
 
 interface AglFormatModel : Model<FormatNamespace, FormatSet> {
 
@@ -56,7 +59,7 @@ interface AglFormatRule {
     val formatExpression: FormatExpression
 }
 
-interface FormatExpression {
+interface FormatExpression : Expression {
 
 }
 
@@ -72,8 +75,11 @@ interface FormatExpressionWhen : FormatExpression {
     val options: List<FormatWhenOption>
 }
 
-interface FormatWhenOption {
-    val condition: Expression
+interface FormatWhenOption : WhenOption {
+    val format: FormatExpression
+}
+
+interface FormatWhenOptionElse : WhenOptionElse {
     val format: FormatExpression
 }
 
