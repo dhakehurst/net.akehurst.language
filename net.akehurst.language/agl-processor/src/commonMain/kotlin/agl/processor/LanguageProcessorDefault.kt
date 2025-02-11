@@ -37,7 +37,7 @@ internal class LanguageProcessorDefault<AsmType:Any, ContextType : Any>(
     private var _runtimeRuleSet: MutableMap<String,RuleSet> = mutableMapOf()
 
     init {
-        val allGrammars = grammarModel.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }
+        val allGrammars = grammarModel.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet()
         val converters = allGrammars.map  { ConverterToRuntimeRules(it) }
         val grmToRrs = converters.associateBy({ it.grammar}, { it.runtimeRuleSet })
         converters.forEach {c ->

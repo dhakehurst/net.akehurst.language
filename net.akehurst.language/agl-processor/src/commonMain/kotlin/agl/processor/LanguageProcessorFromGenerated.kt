@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.format.processor.FormatterSimple
+import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.parser.api.RuleSet
 
@@ -41,7 +41,7 @@ internal class LanguageProcessorFromGenerated<AsmType:Any, ContextType : Any>(
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val crossReferenceModel: CrossReferenceModel = generated.crossReferenceModel ?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
-    override val formatter: Formatter<AsmType> = FormatterSimple(generated.formatModel, generated.typeModel)
+    override val formatter: Formatter<AsmType> = FormatterOverAsmSimple(generated.formatModel, generated.typeModel, this.issues) as Formatter<AsmType>
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
 
     init {

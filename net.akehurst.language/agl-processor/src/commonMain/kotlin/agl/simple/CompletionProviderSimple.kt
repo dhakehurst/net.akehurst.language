@@ -86,7 +86,7 @@ class CompletionProviderSimple(
                     val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                     val items = refTypes.flatMap { refType ->
                         context.rootScope.findItemsConformingTo {
-                            val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(refType)
                         }
                     }

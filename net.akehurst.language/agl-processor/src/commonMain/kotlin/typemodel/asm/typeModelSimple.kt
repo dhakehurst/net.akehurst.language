@@ -43,6 +43,7 @@ class TypeModelSimple(
 
 }
 
+// TODO: extend ModelAbstract !
 abstract class TypeModelSimpleAbstract() : TypeModel {
 
     override val AnyType: TypeDefinition get() = StdLibDefault.AnyType.resolvedDeclaration //TODO: stdLib not necessarily part of model !
@@ -83,15 +84,15 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
         }
     }
 
-    override fun findFirstByPossiblyQualifiedOrNull(typeName: PossiblyQualifiedName): TypeDefinition? {
+    override fun findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName: PossiblyQualifiedName): TypeDefinition? {
         return when (typeName) {
             is QualifiedName -> findNamespaceOrNull(typeName.front)?.findOwnedTypeNamed(typeName.last)
-            is SimpleName -> findFirstByNameOrNull(typeName)
+            is SimpleName -> findFirstDefinitionByNameOrNull(typeName)
             else -> error("Unsupported")
         }
     }
 
-    override fun findFirstByNameOrNull(typeName: SimpleName): TypeDefinition? {
+    override fun findFirstDefinitionByNameOrNull(typeName: SimpleName): TypeDefinition? {
         for (ns in namespace) {
             val t = ns.findOwnedTypeNamed(typeName)
             if (null != t) {
@@ -119,7 +120,7 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
 
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace? = _namespace.value[qualifiedName]
 
-    override fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName): TypeDefinition? {
+    override fun findDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition? {
         TODO("not implemented")
     }
 

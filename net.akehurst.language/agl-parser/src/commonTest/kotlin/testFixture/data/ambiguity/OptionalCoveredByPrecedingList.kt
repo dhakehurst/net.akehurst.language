@@ -22,10 +22,10 @@ object OptionalCoveredByPrecedingList : TestDataProviderAbstract() {
                 TestDataParserSentenceFail("", setOf(parseError(0,1,1,1,setOf("<GOAL>"),setOf("'b'")))),
                 TestDataParserSentenceFail("b", setOf(parseError(1,2,1,1,setOf("<GOAL>"),setOf("v")))),
                 TestDataParserSentencePass("ba", 1, listOf(" S { 'b' vs {v:'a'} oa{<EMPTY>} }")),
-                TestDataParserSentencePass("baa", 1, listOf("S { 'b' vs { v:'a' } oa{ 'a' } }")),
-                TestDataParserSentencePass("bxa", 1, listOf("S { 'b'  vs { v:'x' } oa{ 'a' } }")),
-                TestDataParserSentencePass("baaa", 1, listOf("S { 'b' vs { v:'a' v:'a' } oa{ 'a' } }")),
-                TestDataParserSentencePass("baaaa", 1, listOf("S { 'b'  vs { v:'a' v:'a' v:'a' } oa{ 'a' } }"))
+                TestDataParserSentencePass("baa", 2, listOf("S { 'b' vs { v:'a' } oa{ 'a' } }")),
+                TestDataParserSentencePass("bxa", 2, listOf("S { 'b'  vs { v:'x' } oa{ 'a' } }")),
+                TestDataParserSentencePass("baaa", 2, listOf("S { 'b' vs { v:'a' v:'a' } oa{ 'a' } }")),
+                TestDataParserSentencePass("baaaa", 2, listOf("S { 'b'  vs { v:'a' v:'a' v:'a' } oa{ 'a' } }"))
             )
         ),
         TestDataParser(

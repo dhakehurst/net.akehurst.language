@@ -18,14 +18,16 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectByReflection
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
+import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.api.GrammarNamespace
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -94,13 +96,14 @@ class GenerateGrammarModelBuild(
                 }
               }
         """
-        val formatModel by lazy {
-            val res = Agl.registry.agl.format.processor!!.process(generatedFormat)
-            check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
-            res.asm!!
-        }
-        val formatSet = formatModel.findDefinitionOrNullByQualifiedName("net.akehurst.language.grammar.Asm".asQualifiedName)!!
     }
+
+    val formatModel by lazy {
+        val res = AglFormatModelDefault.fromString(ContextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
+        check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
+        res.asm!!
+    }
+    val formatSet get() = formatModel.findDefinitionByQualifiedNameOrNull("net.akehurst.language.grammar.Asm".asQualifiedName)!!
 
     fun generateFromString(grammarString: GrammarString):String {
         val res = Agl.registry.agl.grammar.processor!!.process(
@@ -119,23 +122,13 @@ class GenerateGrammarModelBuild(
     fun generateFromAsm(grammarModel: GrammarModel): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
         val og = ObjectGraphByReflection(AglGrammar.typeModel, issues)
-        val formatter = FormatterOverTypedObject<Any>(formatSet, og,issues)
+        val formatter = FormatterOverTypedObject<Any>(formatModel, og,issues)
 
-        val tp = grammarTypeModel.findFirstByNameOrNull(SimpleName("GrammarModel"))!!.type()
+        val tp = grammarTypeModel.findFirstDefinitionByNameOrNull(SimpleName("GrammarModel"))!!.type()
         val tobj = TypedObjectByReflection(tp, grammarModel)
-        val res = formatter.format(tobj)
+        val res = formatter.format(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }
         return res.sentence!!
-    }
-
-    fun generateNamespace(asm: GrammarNamespace): String {
-        val sb = StringBuilder()
-
-        asm.options
-        sb.append(asm.import.joinToString(separator = "\n", postfix = "\n") { "import(\"${it}\")" })
-
-
-        return sb.toString()
     }
 }

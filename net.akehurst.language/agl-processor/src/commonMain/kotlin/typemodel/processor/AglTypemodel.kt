@@ -19,10 +19,8 @@ package net.akehurst.language.typemodel.processor
 
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammar
@@ -738,5 +736,5 @@ namespace net.akehurst.language.grammarTypemodel.api
     override val formatModel: AglFormatModel get() = TODO("not implemented")
 
 
-    val targetGrammar get() = grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.TypeModel"))!!
+    val targetGrammar get() = grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.TypeModel"))!!
 }

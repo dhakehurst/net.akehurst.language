@@ -18,10 +18,8 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
 
 
@@ -60,9 +58,7 @@ object AglFormat {
                 }
                 grammar("Format") {
                     extendsGrammar(AglExpressions.grammar.selfReference)
-                    concatenation("unit") {
-                        ref("namespace"); lst(0, -1) { ref("format") }
-                    }
+                    concatenation("definition", OverrideKind.REPLACE) { ref("format") }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
                         lst(0, -1) { ref("formatRule") }
@@ -92,7 +88,7 @@ object AglFormat {
             }
         }
     }
-    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Format")) !! }
+    val targetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Format")) !! }
 
 
     const val grammarStr = """
@@ -113,7 +109,7 @@ object AglFormat {
         }
         
         grammar AglFormat extends Expressions {        
-            override unit = namespace format* ;
+            override definition = format ;
             format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             ruleList = formatRule* ;

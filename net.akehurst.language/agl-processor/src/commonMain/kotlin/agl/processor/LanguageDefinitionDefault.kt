@@ -64,7 +64,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 crossReferenceModelResolver = this._crossReferenceModelResolver,
                 syntaxAnalyserResolver = this._syntaxAnalyserResolver,
                 semanticAnalyserResolver = this._semanticAnalyserResolver,
-                formatterResolver = this._formatterResolver,
+                formatModelResolver = this._formatterResolver,
                 styleResolver = this._styleResolver, //not used to create processor
                 completionProvider = this._completionProviderResolver
             )
@@ -140,7 +140,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this._crossReferenceModelResolver = configuration.crossReferenceModelResolver
         this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
         this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
-        this._formatterResolver = configuration.formatterResolver
+        this._formatterResolver = configuration.formatModelResolver
         this._styleResolver = configuration.styleResolver
         this._completionProviderResolver = configuration.completionProvider
         this._doObservableUpdates = true

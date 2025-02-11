@@ -440,7 +440,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             is CollectionType -> dt // can't get runtime-type of kotlin collection types
             else -> {
                 val dataKClassName = data::class.simpleName!! //TODO: want qualified name here when JS supports it
-                registry.findFirstByNameOrNull(SimpleName(dataKClassName))
+                registry.findFirstDefinitionByNameOrNull(SimpleName(dataKClassName))
                     ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
             }
         }

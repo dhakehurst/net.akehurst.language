@@ -751,12 +751,13 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S","S", """
+                "S","S", $$"""
                 when {
-                  0==§alternative -> tuple { a:=child[0] b:=child[1] }
-                  1==§alternative -> tuple { c:=child[0] d:=child[1] }
+                  0==$alternative -> tuple { a:=child[0] b:=child[1] }
+                  1==$alternative -> tuple { c:=child[0] d:=child[1] }
+                  else -> $nothing
                 }
-            """.replace("§", "$")
+            """
             ) {
                 tupleType {
                     typeRef("a", "A", false)
@@ -1194,22 +1195,24 @@ class test_AllDefault {
             leafStringRule("d")
             leafStringRule("x")
             unionRule(
-                "B", "B", """
+                "B", "B", $$"""
                 when {
-                  0 == §alternative -> with(child[0]) §self
-                  1 == §alternative -> with(child[0]) §self
-                }""".replace("§", "$")
+                  0 == $alternative -> with(child[0]) $self
+                  1 == $alternative -> with(child[0]) $self
+                  else -> $nothing
+                }"""
             ) {
                 typeRef("String")
                 typeRef("D")
             }
             unionRule(
-                "S", "S", """
+                "S", "S", $$"""
                 when {
-                  0 == §alternative -> with(child[0]) §self
-                  1 == §alternative -> with(child[0]) §self
-                  2 == §alternative -> with(child[0]) §self
-                }""".replace("§", "$")
+                  0 == $alternative -> with(child[0]) $self
+                  1 == $alternative -> with(child[0]) $self
+                  2 == $alternative -> with(child[0]) $self
+                  else -> $nothing
+                }"""
             ) {
                 typeRef("A")
                 typeRef("B")
@@ -1296,11 +1299,12 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S", "S","""
+                "S", "S",$$"""
                 when {
-                  0 == §alternative -> with(child[0]) §self
-                  1 == §alternative -> with(child[0]) children
-                }""".replace("§", "$")
+                  0 == $alternative -> with(child[0]) $self
+                  1 == $alternative -> with(child[0]) children
+                  else -> $nothing
+                }"""
             ) {
                 typeRef("BC")
                 listType(false) {
@@ -1401,11 +1405,12 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S", "S","""
+                "S", "S",$$"""
                 when {
-                  0 == §alternative -> with(child[0]) §self
-                  1 == §alternative -> with(child[0]) children
-                }""".replace("§", "$")
+                  0 == $alternative -> with(child[0]) $self
+                  1 == $alternative -> with(child[0]) children
+                  else -> $nothing
+                }"""
             ) {
                 typeRef("BC")
                 listType(false) {
@@ -1521,11 +1526,12 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S","S", """
+                "S","S", $$"""
                 when {
-                  0 == §alternative -> with(child[0]) §self
-                  1 == §alternative -> with(child[0]) §self
-                }""".replace("§", "$")
+                  0 == $alternative -> with(child[0]) $self
+                  1 == $alternative -> with(child[0]) $self
+                  else -> $nothing
+                }"""
             ) {
                 typeRef("String")
                 typeRef("S1")
@@ -4571,12 +4577,13 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) when {
-                       0==§alternative -> tuple { b:=child[0] c:=child[1] }
-                       1==§alternative -> with(child[0]) §self
+                       0==$alternative -> tuple { b:=child[0] c:=child[1] }
+                       1==$alternative -> with(child[0]) $self
+                       else -> $nothing
                     }
-                """.replace("§", "$")
+                """
                 )
                 assignment("e", "child[2]")
             }
@@ -4678,7 +4685,13 @@ class test_AllDefault {
         ) {
             createObject("S", "S") {
                 assignment("a", "child[0]")
-                assignment("\$choice", "with(child[1]) when { 0==\$alternative -> tuple { b:=child[0] c:=child[1] } 1==\$alternative -> tuple { d:=child[0] e:=child[1] } }")
+                assignment("\$choice", $$"""
+                    with(child[1]) when {
+                      0==$alternative -> tuple { b:=child[0] c:=child[1] }
+                      1==$alternative -> tuple { d:=child[0] e:=child[1] }
+                      else -> $nothing
+                    }
+                """)
                 assignment("f", "child[2]")
             }
             leafStringRule("a")
@@ -4788,10 +4801,11 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) when {
-                      0==§alternative -> tuple { b:=child[1] c:=child[2] }
-                      1==§alternative -> tuple { d:=child[0] e:=child[1] }
+                      0==$alternative -> tuple { b:=child[1] c:=child[2] }
+                      1==$alternative -> tuple { d:=child[0] e:=child[1] }
+                      else -> $nothing
                     }
                 """.trimMargin().replace("§", "$")
                 )
@@ -4901,10 +4915,11 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) with(child[0]) when {
-                       0==§alternative -> tuple { b:=child[0] c:=child[1] }
-                       1==§alternative -> tuple { d:=child[0] e:=child[1] }
+                       0==$alternative -> tuple { b:=child[0] c:=child[1] }
+                       1==$alternative -> tuple { d:=child[0] e:=child[1] }
+                       else -> $nothing
                     }
                 """.trimIndent().replace("§", "$")
                 )
@@ -5262,12 +5277,13 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) when {
-                       0 == §alternative -> with(child[0]) §self
-                       1 == §alternative -> with(child[0]) children
+                       0 == $alternative -> with(child[0]) $self
+                       1 == $alternative -> with(child[0]) children
+                       else -> $nothing
                     }
-                """.trimMargin().replace("§", "$")
+                """.trimMargin()
                 )
                 assignment("e", "child[2]")
             }
@@ -5391,12 +5407,13 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("a", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) with(child[0]) when {
-                       0 == §alternative -> with(child[0]) §self
-                       1 == §alternative -> with(child[0]) children
+                       0 == $alternative -> with(child[0]) $self
+                       1 == $alternative -> with(child[0]) children
+                       else -> $nothing
                     }
-                """.trimMargin().replace("§", "$")
+                """.trimMargin()
                 )
                 assignment("e", "child[2]")
             }
@@ -5520,12 +5537,13 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S", "S","""
+                "S", "S",$$"""
                     when {
-                        0 == §alternative -> tuple { a := child[0] b:= child[1] }
-                        1 == §alternative -> tuple { c := child[0] d:= child[1] e := child[2] }
+                        0 == $alternative -> tuple { a := child[0] b:= child[1] }
+                        1 == $alternative -> tuple { c := child[0] d:= child[1] e := child[2] }
+                        else -> $nothing
                     }
-                """.trimIndent().replace("§", "\$")
+                """.trimIndent()
             ) {
                 tupleType {
                     typeRef("a", "String", false)
@@ -5628,10 +5646,11 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S", "S","""
+                "S", "S",$$"""
                     when {
-                        0 == §alternative -> tuple { §group := with(child[0]) tuple { a := child[0] b:= child[1] } }
-                        1 == §alternative -> tuple { §group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
+                        0 == $alternative -> tuple { $group := with(child[0]) tuple { a := child[0] b:= child[1] } }
+                        1 == $alternative -> tuple { $group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
+                        else -> $nothing
                     }
                 """.trimIndent().replace("§", "\$")
             ) {
@@ -5745,12 +5764,13 @@ class test_AllDefault {
             true
         ) {
             unionRule(
-                "S", "S","""
+                "S", "S",$$"""
                     when {
-                        0 == §alternative -> tuple { §group := with(child[0]) tuple { a := child[0] b:= child[1] } }
-                        1 == §alternative -> tuple { §group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
+                        0 == $alternative -> tuple { $group := with(child[0]) tuple { a := child[0] b:= child[1] } }
+                        1 == $alternative -> tuple { $group := with(child[0]) tuple { c := child[0] d:= child[1] e := child[2] } }
+                        else -> $nothing
                     }
-                """.trimIndent().replace("§", "\$")
+                """.trimIndent()
             ) {
                 tupleType {
                     tupleType("\$group", false) {
@@ -5869,10 +5889,11 @@ class test_AllDefault {
             createObject("S", "S") {
                 assignment("x", "child[0]")
                 assignment(
-                    "\$choice", """
+                    "\$choice", $$"""
                     with(child[1]) when {
-                      0 == §alternative -> tuple { a := child[0] b:= child[1] }
-                      1 == §alternative -> tuple { c := child[0] d:= child[1] e:= child[2] }
+                      0 == $alternative -> tuple { a := child[0] b:= child[1] }
+                      1 == $alternative -> tuple { c := child[0] d:= child[1] e:= child[2] }
+                      else -> $nothing
                     }
                     """.trimIndent().replace("§", "\$")
                 )
@@ -5981,19 +6002,20 @@ class test_AllDefault {
                 assignment("ch", "child[0]")
             }
             unionRule(
-                "CH", "CH","""
+                "CH", "CH",$$"""
                 when {
-                  0 == §alternative -> tuple {
+                  0 == $alternative -> tuple {
                       a := child[0]
                       b := child[1]
                   }
-                  1 == §alternative -> tuple {
+                  1 == $alternative -> tuple {
                       c := child[0]
                       d := child[1]
                       e := child[2]
                   }
+                  else -> $nothing
                 }
-            """.trimIndent().replace("§", "\$")
+            """.trimIndent()
             ) {
                 tupleType {
                     typeRef("a", "String", false)
@@ -6112,19 +6134,20 @@ class test_AllDefault {
                 assignment("y", "child[2]")
             }
             unionRule(
-                "CH", "CH","""
+                "CH", "CH",$$"""
                 when {
-                  0 == §alternative -> tuple {
+                  0 == $alternative -> tuple {
                       a := child[0]
                       b := child[1]
                   }
-                  1 == §alternative -> tuple {
+                  1 == $alternative -> tuple {
                       c := child[0]
                       d := child[1]
                       e := child[2]
                   }
+                  else -> $nothing
                 }
-            """.trimIndent().replace("§", "\$")
+            """.trimIndent()
             ) {
                 tupleType {
                     typeRef("a", "String", false)
@@ -6274,22 +6297,23 @@ class test_AllDefault {
                 assignment("e", "child[2]")
             }
             unionRule(
-                "R", "R","""
+                "R", "R",$$"""
                 when {
-                  0 == §alternative -> tuple {
-                      §group := with(child[0]) tuple {
+                  0 == $alternative -> tuple {
+                      $group := with(child[0]) tuple {
                           b := child[0]
                           c := child[1]
                       }
                   }
-                  1 == §alternative -> tuple {
-                      §group := with(child[0]) tuple {
+                  1 == $alternative -> tuple {
+                      $group := with(child[0]) tuple {
                           c := child[0]
                           d := child[1]
                       }
                   }
+                  else -> $nothing
                 } 
-                """.trimIndent().replace("§", "\$")
+                """.trimIndent()
             ) {
                 tupleType {
                     tupleType("\$group", false) {
@@ -6305,11 +6329,12 @@ class test_AllDefault {
                 }
             }
             unionRule(
-                "X", "X","""
+                "X", "X",$$"""
                 when {
-                    0 == §alternative -> with(child[0]) §self
-                    1 == §alternative -> with(child[0]) §self
-                }""".replace("§", "$")
+                    0 == $alternative -> with(child[0]) $self
+                    1 == $alternative -> with(child[0]) $self
+                    else -> $nothing
+                }"""
             ) {
                 typeRef("R", false)
                 typeRef("String", false)
@@ -6458,12 +6483,13 @@ class test_AllDefault {
                 transform("Inner") {
                     importTypes("test.Inner")
                     unionRule(
-                        "S", "S","""
+                        "S", "S",$$"""
                        when {
-                          0 == §alternative -> with(child[0]) §self
-                          1 == §alternative -> with(child[0]) §self
+                          0 == $alternative -> with(child[0]) $self
+                          1 == $alternative -> with(child[0]) $self
+                          else -> $nothing
                        }
-                    """.trimIndent().replace("§", "\$")
+                    """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6477,12 +6503,13 @@ class test_AllDefault {
                 transform("Outer") {
                     importTypes("test.Outer")
                     unionRule(
-                        "S", "S","""
+                        "S", "S",$$"""
                        when {
-                          0 == §alternative -> with(child[0]) §self
-                          1 == §alternative -> with(child[0]) §self
+                          0 == $alternative -> with(child[0]) $self
+                          1 == $alternative -> with(child[0]) $self
+                          else -> $nothing
                        }
-                    """.trimIndent().replace("§", "\$")
+                    """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6492,20 +6519,21 @@ class test_AllDefault {
                         assignment("s", "child[1]")
                     }
                     unionRule(
-                        "B", "B","""
+                        "B", "B",$$"""
                        when {
-                          0 == §alternative -> tuple {
+                          0 == $alternative -> tuple {
                               b := child[0]
-                              s := with(child[1]) §self
+                              s := with(child[1]) $self
                               b2 := child[2]
                           }
-                          1 == §alternative -> tuple {
+                          1 == $alternative -> tuple {
                               c := child[0]
-                              s := with(child[1]) §self
+                              s := with(child[1]) $self
                               c2 := child[2]
                           }
+                          else -> $nothing
                        }
-                    """.trimIndent().replace("§", "\$")
+                    """
                     ) {
                         tupleType {
                             typeRef("b", "String", false)

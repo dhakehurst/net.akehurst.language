@@ -17,10 +17,7 @@
 
 package net.akehurst.language.base.api
 
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformRuleSetReference
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
@@ -146,7 +143,11 @@ interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
 
     fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>?
 
-    fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName): DT?
+    fun findDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName): DT?
+
+    fun findFirstDefinitionByNameOrNull(simpleName: SimpleName): DT?
+
+    fun findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn: PossiblyQualifiedName): DT?
 
     fun resolveReference(reference:DefinitionReference<DT>): DT?
 

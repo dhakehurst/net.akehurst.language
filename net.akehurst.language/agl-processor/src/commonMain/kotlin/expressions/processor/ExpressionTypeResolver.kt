@@ -2,7 +2,6 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -161,7 +160,7 @@ class ExpressionTypeResolver(
     }
 
     fun CreateObjectExpression.typeOfCreateObjectExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedTypeName)?.type() ?: StdLibDefault.NothingType
+        typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.possiblyQualifiedTypeName)?.type() ?: StdLibDefault.NothingType
 
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {

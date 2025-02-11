@@ -55,7 +55,7 @@ internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : 
     override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatModelResolver<AsmType, ContextType>? = null,
+    override var formatModelResolver: FormatModelResolver<AsmType, ContextType>? = null,
     override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
     override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -100,7 +100,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatModelResolver<AsmType, ContextType>? = { p ->
+    override var formatModelResolver: FormatModelResolver<AsmType, ContextType>? = { p ->
         ProcessResultDefault(
             null,
             IssueHolder(LanguageProcessorPhase.ALL)
@@ -165,7 +165,7 @@ internal class LanguageProcessorConfigurationSimple(
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override var formatterResolver: FormatModelResolver<Asm, ContextAsmSimple>? = { p ->
+    override var formatModelResolver: FormatModelResolver<Asm, ContextAsmSimple>? = { p ->
         AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->

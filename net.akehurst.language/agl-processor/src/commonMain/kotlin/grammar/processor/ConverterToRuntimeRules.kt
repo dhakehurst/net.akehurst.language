@@ -58,17 +58,17 @@ internal class ConverterToRuntimeRules(
     private var _precRules = emptyList<PrefRule>()
 
     private val _terminalRules = mutableMapOf<String, RuntimeRule>()
-    private val _embeddedRules = mutableMapOf<Pair<Grammar, String>, RuntimeRule>()
+    private val _embeddedRules = mutableMapOf<Embedded, RuntimeRule>()
     private val _originalRuleItem: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
     private val _pseudoRuleNameGenerator by lazy { PseudoRuleNames(grammar) }
 
     fun resolveEmbedded(embeddedConverters: Map<Grammar, RuntimeRuleSet>) {
-        _embeddedRules.forEach { (p,rule) ->
-            val (embeddedGrammar, embeddedGoalRuleName) = p
+        _embeddedRules.forEach { (ebd,rule) ->
+            val embeddedGrammar = ebd.embeddedGrammarReference.resolved!!
+            val embeddedGoalRuleName = ebd.embeddedGoalName.value
             val embeddedRuntimeRuleSet = embeddedConverters[embeddedGrammar] ?: error("Embedded ConverterToRuntimeRules not found for grammar '${embeddedGrammar.qualifiedName.value}'")
             val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
             rule.setRhs(RuntimeRuleRhsEmbedded(rule, embeddedRuntimeRuleSet, embeddedStartRuntimeRule))
-
         }
     }
 
@@ -101,11 +101,12 @@ internal class ConverterToRuntimeRules(
         return newRule
     }
 
-    private fun embeddedRule(embeddedRuleName: String, isSkip: Boolean, embeddedGrammar: Grammar, embeddedGoalRuleName: String): RuntimeRule {
+    private fun embeddedRule(embeddedRuleName:String?, item:Embedded, isSkip: Boolean): RuntimeRule {
+        val embeddedRuleName = embeddedRuleName ?: _pseudoRuleNameGenerator.nameForRuleItem(item)
         if (Debug.CHECK) check(this._runtimeRules.containsKey(embeddedRuleName).not())
         val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, embeddedRuleName, isSkip, false)
         _runtimeRules[newRule.tag] = newRule
-        _embeddedRules[Pair(embeddedGrammar, embeddedGoalRuleName)] = newRule
+        _embeddedRules[item] = newRule
         return newRule
     }
 
@@ -113,7 +114,7 @@ internal class ConverterToRuntimeRules(
 
     private fun findTerminal(value: String): RuntimeRule? = this._terminalRules[value]
 
-    private fun findEmbedded(grammar: Grammar, goalRuleName: String): RuntimeRule? = this._embeddedRules[Pair(grammar, goalRuleName)]
+    private fun findEmbedded(item: Embedded): RuntimeRule? = this._embeddedRules[item]
 
     private fun buildCompressedRule(target: GrammarRule, isSkip: Boolean): RuntimeRule {
         val ci = target.compressedLeaf
@@ -226,13 +227,13 @@ internal class ConverterToRuntimeRules(
                 }
 
                 target.isOneEmbedded -> {
-                    val embeddedRuleName = target.name
+                    val embeddedRuleName = target.name.value
                     val e = if (target.rhs is Embedded) {
                         target.rhs as Embedded
                     } else {
                         (target.rhs as Concatenation).items[0] as Embedded
                     }
-                    val embeddedRule = this.embeddedRule(embeddedRuleName.value, false, e.embeddedGrammarReference.resolved!!, e.embeddedGoalName.value)
+                    val embeddedRule = this.embeddedRule(embeddedRuleName, e, false)
                     this.recordOriginalRuleItem(embeddedRule, e)
                     Pair(embeddedRule, e)
                 }
@@ -372,10 +373,9 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createRuleForRuleItemEmbedded(target: Embedded, arg: String): RuntimeRule {
-        val existing = this.findEmbedded(target.embeddedGrammarReference.resolved!!, target.embeddedGoalName.value)
+        val existing = this.findEmbedded(target)
         return if (null == existing) {
-            val embeddedRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-            val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammarReference.resolved!!, target.embeddedGoalName.value)
+            val embeddedRule = this.embeddedRule(null, target, false)
             this.recordOriginalRuleItem(embeddedRule, target)
             embeddedRule
         } else {
@@ -434,4 +434,6 @@ internal class ConverterToRuntimeRules(
         this.recordOriginalRuleItem(nrule, target)
         return nrule
     }
+
+    override fun toString(): String = "Converter for '${grammar.qualifiedName}'"
 }

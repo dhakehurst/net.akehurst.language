@@ -15,7 +15,7 @@ class test_AglGrammar {
         val actual = AglGrammar.typeModel
 
         assertNotNull(actual)
-        val grm = actual.findFirstByNameOrNull(SimpleName("GrammarDefault"))
+        val grm = actual.findFirstDefinitionByNameOrNull(SimpleName("GrammarDefault"))
         assertNotNull(grm)
 
         val grm_name = grm.findAllPropertyOrNull(PropertyName("name"))
@@ -30,7 +30,7 @@ class test_AglGrammar {
 
     @Test
     fun supertype_correctly_created() {
-        val grmNs = AglGrammar.typeModel.findFirstByNameOrNull(SimpleName("GrammarNamespaceDefault"))
+        val grmNs = AglGrammar.typeModel.findFirstDefinitionByNameOrNull(SimpleName("GrammarNamespaceDefault"))
         assertNotNull(grmNs)
         assertEquals("GrammarNamespace", grmNs.supertypes[0].typeName.value)
         assertEquals("NamespaceAbstract", grmNs.supertypes[1].typeName.value)

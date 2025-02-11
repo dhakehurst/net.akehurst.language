@@ -41,7 +41,7 @@ class test_ExpressionTypeResolver {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
+        val dt = tm.findFirstDefinitionByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list"
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
@@ -63,7 +63,7 @@ class test_ExpressionTypeResolver {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
+        val dt = tm.findFirstDefinitionByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list.front"
 
@@ -86,7 +86,7 @@ class test_ExpressionTypeResolver {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
+        val dt = tm.findFirstDefinitionByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list.front.join"
 
@@ -109,7 +109,7 @@ class test_ExpressionTypeResolver {
                 }
             }
         }
-        val dt = tm.findFirstByNameOrNull(SimpleName("Test"))!!
+        val dt = tm.findFirstDefinitionByNameOrNull(SimpleName("Test"))!!
 
         val expression = "list.join as String"
 

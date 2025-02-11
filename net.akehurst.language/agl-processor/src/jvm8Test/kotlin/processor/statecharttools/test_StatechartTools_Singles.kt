@@ -27,6 +27,7 @@ import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -43,19 +44,35 @@ class test_StatechartTools_Singles {
 
         private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found"))
 
-        private val formatterStr = FormatString("""
-           namespace com.itemis.create.Expressions {
-               AssignmentExpression -> "§expression §assignmentOperator §expression2"
-               FeatureCall -> "§elementReferenceExpression\§list"
+        private val formatterStr = FormatString($$"""
+           namespace com.itemis.create
+             format Expressions {
+               PrimitiveValueExpression -> "$literal"
+               AssignmentExpression -> "$expression $assignmentOperator $expression2"
+               InfixExpression -> "$[expression / ' ']"
                RootElement -> id
-               FunctionCall -> "§id(§{argumentList.arguments.join(', ')})"
-           }
-           namespace com.itemis.create.Global {
-               VariableDeclaration -> "§variableDeclarationKind §id" 
+               FunctionCall -> "$id(${argumentList.arguments.join(', ')})"
+             }
+           
+             format Global : Expressions {
+               VariableDeclaration -> "$variableDeclarationKind $id" 
                ElementReferenceExpression -> id
                PrimitiveValueExpression -> literal
-           }
-        """.replace("§", "\$"))
+             }
+             
+             format States : Expressions {
+               ReactionEffect -> "$self"
+             }
+           
+             format Transitions : Expressions {
+             
+             }
+             
+             format Statechart {
+             
+             }
+             
+        """)
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
             .also {
@@ -76,7 +93,8 @@ class test_StatechartTools_Singles {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                //formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+                formatModelResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+//TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),

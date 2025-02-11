@@ -16,8 +16,10 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.base.api.PossiblyQualifiedName
+
 interface Formatter<in AsmType> {
 
-    fun format(asm:AsmType): FormatResult
+    fun format(formatSetName: PossiblyQualifiedName, asm:AsmType): FormatResult
 
 }

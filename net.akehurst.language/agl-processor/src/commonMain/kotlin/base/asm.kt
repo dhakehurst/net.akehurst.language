@@ -64,13 +64,29 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
 
     override fun findNamespaceOrNull(qualifiedName: QualifiedName): Namespace<DT>? = _namespace[qualifiedName]
 
-    override fun findDefinitionOrNullByQualifiedName(qualifiedName: QualifiedName) =
+    override fun findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn: PossiblyQualifiedName): DT? = when(pqn) {
+        is QualifiedName -> findDefinitionByQualifiedNameOrNull(pqn)
+        is SimpleName -> findFirstDefinitionByNameOrNull(pqn)
+        else -> error("Unsupported subtype of PossiblyQualifiedName ${pqn::class.simpleName}")
+    }
+
+    override fun findDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName) =
         _namespace[qualifiedName.front]?.findOwnedDefinitionOrNull(qualifiedName.last)
+
+    override fun findFirstDefinitionByNameOrNull(simpleName: SimpleName): DT? {
+        for (ns in namespace) {
+            val t = ns.findDefinitionOrNull(simpleName)
+            if (null != t) {
+                return t
+            }
+        }
+        return null
+    }
 
     override fun resolveReference(reference: DefinitionReference<DT>): DT? {
         val res = when (reference.nameOrQName) {
-            is QualifiedName -> findDefinitionOrNullByQualifiedName(reference.nameOrQName as QualifiedName)
-            is SimpleName -> findDefinitionOrNullByQualifiedName(reference.nameOrQName.asQualifiedName(reference.localNamespace.qualifiedName))
+            is QualifiedName -> findDefinitionByQualifiedNameOrNull(reference.nameOrQName as QualifiedName)
+            is SimpleName -> findDefinitionByQualifiedNameOrNull(reference.nameOrQName.asQualifiedName(reference.localNamespace.qualifiedName))
             else -> error("Unsupported")
         }
         return if (null != res) {

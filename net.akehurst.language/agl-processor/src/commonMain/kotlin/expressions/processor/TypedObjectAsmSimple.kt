@@ -140,7 +140,7 @@ class ObjectGraphAsmSimple(
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<AsmValue>>): TypedObject<AsmValue> {
-        val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(possiblyQualifiedTypeName)
+        val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
         val asmPath = AsmPathSimple("??") //TODO:
         val obj = AsmStructureSimple(asmPath, typeDecl.qualifiedName)

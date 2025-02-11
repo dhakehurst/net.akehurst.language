@@ -182,10 +182,10 @@ class ReferenceResolverSimple<ItemInScopeType>(
         when {
             referringValue is AsmPrimitive -> {
                 val referringStr = referringValue.value as String
-                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.findItemsNamedConformingTo(referringStr) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                        val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -238,10 +238,10 @@ class ReferenceResolverSimple<ItemInScopeType>(
 
             referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                 val list = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByPossiblyQualifiedOrNull(it) }
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
                 val targets = referredToTypes.flatMap { td ->
                     scope.rootScope.findItemsByQualifiedNameConformingTo(list) {
-                        val itemType = typeModel.findFirstByPossiblyQualifiedOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                        val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                         itemType.conformsTo(td)
                     }
                 }
@@ -318,7 +318,7 @@ class ReferenceResolverSimple<ItemInScopeType>(
     }
 
     private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
-        val type = typeModel.findFirstByPossiblyQualifiedOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
+        val type = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
         val selfType = typeModel.typeOf(this)
         return selfType.conformsTo(type)
     }

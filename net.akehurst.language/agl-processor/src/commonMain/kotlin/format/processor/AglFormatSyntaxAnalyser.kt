@@ -19,6 +19,9 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.*
+import net.akehurst.language.base.asm.DefinitionDefault
+import net.akehurst.language.base.asm.ModelDefault
+import net.akehurst.language.base.asm.NamespaceDefault
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
@@ -46,6 +49,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     override fun registerHandlers() {
         super.register(this::unit)
         super.register(this::namespace)
+        super.register(this::definition)
         super.register(this::format)
         super.register(this::formatRule)
         super.register(this::formatExpression)
@@ -54,20 +58,35 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::whenOptionElse)
     }
 
-    // unit = namespace format+ ;
+    // override unit from BaseSyntaxAnalyser
+    // unit = option* namespace* ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatModel {
-        val ns = children[0] as FormatNamespace
-        val ruleBuilder = children[1] as List<((ns: FormatNamespace) -> FormatSet)>
-        ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglFormatModelDefault(name = SimpleName("ParsedFormatUnit"), namespaces = listOf(ns))
-        return su
+        val options = children[0] as List<Pair<String,String>>
+        val namespace = children[1] as List<FormatNamespace>
+        val optHolder = OptionHolderDefault(null,options.associate{it})
+        namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
+        val result = AglFormatModelDefault(SimpleName("Unit"), optHolder, namespace)
+        return result
     }
 
+    // override namespace from BaseSyntaxAnalyser
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatNamespace {
-        val qualifiedName = children[1] as PossiblyQualifiedName
-        val imports = emptyList<Import>()
-        return AglFormatNamespaceDefault(qualifiedName = qualifiedName.asQualifiedName(null), import = imports)
+        val pqn = children[1] as PossiblyQualifiedName
+        val options = children[2] as List<Pair<String,String>>
+        val import = children[3] as List<Import>
+        val definition = children[4] as List<(ns: FormatNamespace) -> FormatSet>
+
+        val optHolder = OptionHolderDefault(null,options.associate{it})
+        val ns = AglFormatNamespaceDefault(pqn.asQualifiedName(null),optHolder, import)
+        definition.forEach {
+            val def = it.invoke(ns)
+            ns.addDefinition(def)
+        }
+        return ns
     }
+
+    fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatSet =
+        children[0] as ((ns: FormatNamespace) -> FormatSet)
 
     // format = 'format' IDENTIFIER extends? '{' ruleList '}' ;
     fun format(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (ns: FormatNamespace) -> FormatSet {
@@ -77,9 +96,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val rules: List<AglFormatRule> = children[4] as List<AglFormatRule>
         return { ns ->
             val extends = extendsFunc.map { it.invoke(ns) }
-            val fs = FormatSetDefault(ns, name, extends, options, rules)
-            ns.addDefinition(fs)
-            fs
+            FormatSetDefault(ns, name, extends, options, rules)
         }
     }
 

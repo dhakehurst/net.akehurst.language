@@ -29,7 +29,6 @@ import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -67,7 +66,7 @@ class test_StatechartTools_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
+                formatModelResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),

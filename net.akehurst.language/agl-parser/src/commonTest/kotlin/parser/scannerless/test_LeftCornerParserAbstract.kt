@@ -114,8 +114,8 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
     ): SharedPackedParseTree? {
         println("${this::class.simpleName} - '$sentence'")
         val scanner = when (scannerKind) {
-            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
-            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals+rrs.embeddedTerminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals+rrs.embeddedTerminals)
         }
         scanner.matchables
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
@@ -152,8 +152,8 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
 
     fun testFailWithOptions(rrs: RuleSet, sentence: String, expectedNumGSSHeads: Int, options: ParseOptions, scannerKind: ScannerKind): ParseResult {
         val scanner = when (scannerKind) {
-            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
-            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
+            ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals+rrs.embeddedTerminals)
+            ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals+rrs.embeddedTerminals)
         }
         val parser = LeftCornerParser(scanner, rrs as RuntimeRuleSet)
         if (build) parser.buildFor(options.goalRuleName!!)

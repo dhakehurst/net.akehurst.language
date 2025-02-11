@@ -72,7 +72,7 @@ class test_KompositeWalker {
         }
 
         val data = null
-        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(isNullable = false)
+        val type = reg.findFirstDefinitionByNameOrNull(SimpleName("String"))!!.type(isNullable = false)
         sut.walk(WalkInfo(null, ""), data, type)
 
         val expected = "null:Nothing"
@@ -99,7 +99,7 @@ class test_KompositeWalker {
         }
 
         val data = null
-        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type(isNullable = true)
+        val type = reg.findFirstDefinitionByNameOrNull(SimpleName("String"))!!.type(isNullable = true)
         sut.walk(WalkInfo(null, ""), data, type)
 
         val expected = "null:String"
@@ -152,7 +152,7 @@ class test_KompositeWalker {
         }
 
         val data = "Hello"
-        val type = reg.findFirstByNameOrNull(SimpleName("String"))!!.type()
+        val type = reg.findFirstDefinitionByNameOrNull(SimpleName("String"))!!.type()
         sut.walk(WalkInfo(null, ""), data, type)
 
         assertEquals("'Hello':String", result)
@@ -213,7 +213,7 @@ class test_KompositeWalker {
         }
 
         val data = "Hello"
-        val type = reg.findFirstByNameOrNull(SimpleName("AValueClass"))!!.type()
+        val type = reg.findFirstDefinitionByNameOrNull(SimpleName("AValueClass"))!!.type()
         sut.walk(WalkInfo(null, ""), data, type)
 
         assertEquals("'Hello':AValueClass", result)

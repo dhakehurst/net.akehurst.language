@@ -177,7 +177,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun transRule(grammarRuleName: String, typeName: String, expressionStr: String) {
         val expression = expression(expressionStr)
-        val typeDef = typeModel.findFirstByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
+        val typeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
         val tr = transformationRule(
             type = typeDef.type(),
             expression = expression

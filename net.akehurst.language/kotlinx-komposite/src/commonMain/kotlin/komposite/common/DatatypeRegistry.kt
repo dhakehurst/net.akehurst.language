@@ -164,7 +164,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
 
         //TODO: use KOTLIN_TO_AGL name mapping
         val qname = cls.simpleName ?: error("class does not have a simple name!")
-        return this.findFirstByNameOrNull(SimpleName( qname))
+        return this.findFirstDefinitionByNameOrNull(SimpleName( qname))
     }
 
     fun findPrimitiveMapperByKClass(cls: KClass<*>): PrimitiveMapper<*, *>? {
@@ -178,42 +178,42 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
     }
 
     fun isSingleton(value: Any): Boolean {
-        return this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) is SingletonType
+        return this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is SingletonType
     }
 
     fun isPrimitive(value: Any): Boolean {
-        return this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) is PrimitiveType
+        return this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is PrimitiveType
     }
 
     fun isEnum(value: Any): Boolean {
-        return this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) is EnumType
+        return this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is EnumType
     }
 
     fun isCollection(value: Any): Boolean {
         //TODO: use type hierachy so we can e.g. register List rather than ArrayList
         return when (value) {
-            is List<*> -> this.findFirstByNameOrNull(SimpleName("List")) is CollectionType
-            is Set<*> -> this.findFirstByNameOrNull(SimpleName("Set")) is CollectionType
-            is Map<*, *> -> this.findFirstByNameOrNull(SimpleName("Map")) is CollectionType
-            is Collection<*> -> this.findFirstByNameOrNull(SimpleName("Collection")) is CollectionType
-            is Array<*> -> this.findFirstByNameOrNull(SimpleName("Array")) is CollectionType
-            else -> this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) is CollectionType
+            is List<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("List")) is CollectionType
+            is Set<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Set")) is CollectionType
+            is Map<*, *> -> this.findFirstDefinitionByNameOrNull(SimpleName("Map")) is CollectionType
+            is Collection<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Collection")) is CollectionType
+            is Array<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Array")) is CollectionType
+            else -> this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is CollectionType
         }
     }
 
     fun isDatatype(value: Any): Boolean {
-        return this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) is DataType
+        return this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) is DataType
     }
 
     fun findCollectionTypeFor(value: Any): CollectionType? {
         //TODO: use qualified name when possible
         return when (value) {
-            is List<*> -> this.findFirstByNameOrNull(SimpleName("List")) as CollectionType?
-            is Set<*> -> this.findFirstByNameOrNull(SimpleName("Set")) as CollectionType?
-            is Map<*, *> -> this.findFirstByNameOrNull(SimpleName("Map")) as CollectionType?
-            is Collection<*> -> this.findFirstByNameOrNull(SimpleName("Collection")) as CollectionType?
-            is Array<*> -> this.findFirstByNameOrNull(SimpleName("Array")) as CollectionType?
-            else -> this.findFirstByNameOrNull(SimpleName(value::class.simpleName!!)) as CollectionType?
+            is List<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("List")) as CollectionType?
+            is Set<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Set")) as CollectionType?
+            is Map<*, *> -> this.findFirstDefinitionByNameOrNull(SimpleName("Map")) as CollectionType?
+            is Collection<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Collection")) as CollectionType?
+            is Array<*> -> this.findFirstDefinitionByNameOrNull(SimpleName("Array")) as CollectionType?
+            else -> this.findFirstDefinitionByNameOrNull(SimpleName(value::class.simpleName!!)) as CollectionType?
         }
     }
 

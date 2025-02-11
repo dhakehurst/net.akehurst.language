@@ -224,7 +224,7 @@ namespace net.akehurst.language.base.asm
         }
     }
 
-    val targetGrammar by lazy { grammarModel.findDefinitionOrNullByQualifiedName(QualifiedName("net.akehurst.language.Base"))!! }
+    val targetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarString.trimIndent()

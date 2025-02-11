@@ -20,6 +20,7 @@ import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.formatter.api.*
@@ -28,13 +29,18 @@ import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class FormatterOverTypedObject<SelfType>(
-    val formatSet: FormatSet,
+    val formatModel: AglFormatModel,
     objectGraph: ObjectGraph<SelfType>,
     issues: IssueHolder
-) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<TypedObject<SelfType>> {
+) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<SelfType> {
 
+    companion object {
+        val prefixMatchPattern = Regex("\\s+")
+    }
+
+    private lateinit var _formatSet: FormatSet
     private val _rules by lazy {
-        formatSet.rules.associateBy { rl ->
+        _formatSet.rules.associateBy { rl ->
             super.evaluateTypeReference(rl.forTypeName)
         }
     }
@@ -43,8 +49,10 @@ class FormatterOverTypedObject<SelfType>(
         type.conformsTo(ti)
     }?.value
 
-    override fun format(asm: TypedObject<SelfType>): FormatResult {
-        val evc = EvaluationContext.ofSelf(asm)
+    override fun format(formatSetName: PossiblyQualifiedName, asm: SelfType): FormatResult {
+        _formatSet = formatModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(formatSetName) ?: error("FormatSet named '${formatSetName.value}' cannot be found")
+        val typesSelf = objectGraph.toTypedObject(asm)
+        val evc = EvaluationContext.ofSelf(typesSelf)
         val str = formatSelf(evc)
         return FormatResultDefault(str, issues)
     }
@@ -147,54 +155,76 @@ class FormatterOverTypedObject<SelfType>(
         val sb = StringBuilder()
         when (formatExpr.content.size) {
             0 -> Unit
+            1 -> {
+                val text = formatTemplateContent(evc, formatExpr.content.last())
+                sb.append(text)
+            }
             else -> {
-                val firstContent = formatTemplateContent(evc, formatExpr.content[0])
-                val prefix = computePrefix(firstContent)
-                when (prefix.length) {
-                    0 -> {
-                        for (it in formatExpr.content) {
-                            val res = formatTemplateContent(evc, it)
-                            sb.append(res)
-                        }
-                    }
+                // find the shortest prefix
+                val textContent = formatExpr.content
+                    .filter { it is TemplateElementText }
+                    .associateWith { formatTemplateContent(evc, it) }
+                val prefix = computePrefix(textContent.values)
 
-                    else -> {
-                        val withPrefixRemoved1 = firstContent.substringAfter("\n").drop(prefix.length)
-                        sb.append(withPrefixRemoved1)
-                        var contentMid = formatExpr.content.drop(1).dropLast(1) //TODO: if < 3 elements ?
-                        var indent = ""
-                        var previousWasEmpty = false
-                        for (it in contentMid) {
-                            val res = formatTemplateContent(evc, it)
-                            if (res.isEmpty()) {
-                                previousWasEmpty = true
-                            } else {
-                                val res2 = when (previousWasEmpty) {
-                                    true -> res.trimStart('\n').trimStart()
-                                    else -> res
-                                }
-                                val withPrefixRemoved = removePrefixAddIndent(res2, prefix, indent)
-                                indent = computeIndent(removePrefixAddIndent(res, prefix, indent))
-                                sb.append(withPrefixRemoved)
-                                previousWasEmpty = false
-                            }
+                //handle first element
+                val firstContent = formatTemplateContent(evc, formatExpr.content[0])
+                //val prefix = computePrefix(firstContent)
+                val withPrefixRemoved1 = firstContent.substringAfter("\n").drop(prefix.length)
+                sb.append(withPrefixRemoved1)
+
+                // handle mid elements
+                var contentMid = formatExpr.content.drop(1).dropLast(1) //TODO: if < 3 elements ?
+                var indent = ""
+                var previousWasEmpty = false
+                for (elem in contentMid) {
+                    val res = formatTemplateContent(evc, elem)
+                    if (res.isEmpty()) {
+                        previousWasEmpty = true
+                    } else {
+                        val res2 = when (previousWasEmpty) {
+                            true -> res.trimStart('\n').trimStart()
+                            else -> res
                         }
-                        if (formatExpr.content.last() is TemplateElementText) {
-                            val lastContent = formatTemplateContent(evc, formatExpr.content.last())
-                            val lc = removePrefixAddIndent(lastContent, prefix, indent)
-                            val txt = lc.substringAfter("\n")
-                            if (txt.isBlank()) {
-                                sb.append(lc.substringBefore("\n"))
-                            } else {
-                                sb.append(lc)
-                            }
+                        val withPrefixRemoved = removePrefixAddIndent(res2, prefix, indent)
+                        if (elem is TemplateElementText) {
+                            indent = computeIndent(removePrefixAddIndent(res, prefix, ""))
                         }
+                        sb.append(withPrefixRemoved)
+                        previousWasEmpty = false
                     }
+                }
+
+                // handle last element
+                if (formatExpr.content.last() is TemplateElementText) {
+                    val lastContent = formatTemplateContent(evc, formatExpr.content.last())
+                    val lc = removePrefixAddIndent(lastContent, prefix, indent)
+                    val txt = lc.substringAfter("\n")
+                    if (txt.isBlank()) {
+                        sb.append(lc.substringBefore("\n"))
+                    } else {
+                        sb.append(lc)
+                    }
+                } else {
+                    val lastContent = formatTemplateContent(evc, formatExpr.content.last())
+                    val lc = removePrefixAddIndent(lastContent, prefix, indent)
+                    sb.append(lc)
                 }
             }
         }
 
         return sb.toString()
+    }
+
+    private fun computePrefix(texts: Collection<String>): String {
+        val lines = texts.flatMap {
+            it.splitToSequence("\n") // get all text
+                .drop(1)             // that is after an EOL
+        }
+            .dropLast(1) // don't consider very last line, which is closing quote
+        val prefixes = lines
+            .filter { it.isNotEmpty() }
+            .map { prefixMatchPattern.matchAt(it, 0)?.value ?: "" }
+        return prefixes.minByOrNull { it.length } ?: ""
     }
 
     private fun computePrefix(txt: String): String {
@@ -229,7 +259,7 @@ class FormatterOverTypedObject<SelfType>(
                 val adjusted = lines.drop(1).map {
                     when {
                         it.startsWith(prefix) -> indent + it.substringAfter(prefix)
-                        else -> indent+it
+                        else -> indent + it
                     }
                 }
                 "${indent}$first" + "\n" + adjusted.joinToString("\n")

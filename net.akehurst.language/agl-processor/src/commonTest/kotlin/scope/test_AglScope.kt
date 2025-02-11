@@ -35,7 +35,7 @@ class test_AglScope {
 
     @Test
     fun domainTypes() {
-        val td = AglScope.typeModel.findFirstByNameOrNull(SimpleName("Scope"))
+        val td = AglScope.typeModel.findFirstDefinitionByNameOrNull(SimpleName("Scope"))
         assertNotNull(td)
         assertEquals("Scope", td.name.value)
         val itemsProp = td.findAllPropertyOrNull(PropertyName("items"))

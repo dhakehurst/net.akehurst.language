@@ -17,6 +17,7 @@
 
 package net.akehurst.language.format.asm
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -37,7 +38,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 
-internal class AglFormatModelDefault(
+class AglFormatModelDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespaces: List<FormatNamespace> = emptyList()
@@ -91,8 +92,18 @@ internal class AglFormatModelDefault(
             return ProcessResultDefault(formatModel, issues)
         }
 
-        fun fromString(context: ContextFromTypeModel, formatModelStr: FormatString) : ProcessResult<AglFormatModel> {
-            TODO()
+        fun fromString(context: ContextFromTypeModel, formatModelStr: FormatString): ProcessResult<AglFormatModel> {
+            val proc = Agl.registry.agl.format.processor ?: error("Agl Format language not found!")
+            val res = proc.process(
+                sentence = formatModelStr.value,
+                Agl.options {
+                    semanticAnalysis { context(context) }
+                }
+            )
+            return when {
+                res.issues.errors.isEmpty() -> res
+                else -> error(res.issues.toString())
+            }
         }
     }
 
@@ -179,17 +190,25 @@ class FormatExpressionTemplateDefault(
 
 class TemplateElementTextDefault(
     override val text: String
-) : TemplateElementText
+) : TemplateElementText {
+    override fun toString(): String = text
+}
 
 class TemplateElementExpressionPropertyDefault(
     override val propertyName: String
-) : TemplateElementExpressionProperty
+) : TemplateElementExpressionProperty {
+    override fun toString(): String = "\$$propertyName"
+}
 
 class TemplateElementExpressionListDefault(
     override val listPropertyName: String,
     override val separator: String
-) : TemplateElementExpressionList
+) : TemplateElementExpressionList {
+    override fun toString(): String = "\$[$listPropertyName / '$separator']"
+}
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression
-) : TemplateElementExpressionEmbedded
+) : TemplateElementExpressionEmbedded {
+    override fun toString(): String = "\${$expression}"
+}

@@ -597,6 +597,7 @@ class test_Converter {
             }
         }
 
+        assertEquals(expected.toString(), actual.toString())
         RuntimeRuleSetTest.assertRrsEquals(expected, actual)
     }
 }

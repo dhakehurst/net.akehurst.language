@@ -68,7 +68,7 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val crossReferenceModelResolver: CrossReferenceModelResolver<AsmType,  ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>?
-    val formatterResolver: FormatModelResolver<AsmType,  ContextType>?
+    val formatModelResolver: FormatModelResolver<AsmType,  ContextType>?
     val styleResolver: StyleResolver<AsmType,  ContextType>?
     val completionProvider: CompletionProviderResolver<AsmType,  ContextType>?
 }

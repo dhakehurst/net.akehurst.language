@@ -20,7 +20,6 @@ import net.akehurst.kotlinx.reflect.EnumValuesFunction
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.EnumType
-import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -41,7 +40,7 @@ class test_EnumType {
         val dt = DatatypeRegistry()
         dt.registerFromAglTypesString(typeModel, emptyMap())
 
-        val et = dt.findFirstByNameOrNull(SimpleName("EEEE")) as EnumType
+        val et = dt.findFirstDefinitionByNameOrNull(SimpleName("EEEE")) as EnumType
 
         val actual = et.valueOf("RED")
         assertEquals(EEEE.RED, actual)

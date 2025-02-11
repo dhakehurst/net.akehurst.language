@@ -26,8 +26,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
-import net.akehurst.language.format.processor.FormatterSimple
+import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
@@ -136,16 +135,21 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatterModel: AglFormatModel? by lazy {
-        val res = configuration.formatterResolver?.invoke(this)
+    override val formatModel: AglFormatModel? by lazy {
+        val res = configuration.formatModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
     }
 
     override val formatter: Formatter<AsmType>? by lazy {
-        val res = configuration.formatterResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
-        FormatterSimple<AsmType>(res?.asm,typeModel)
+        val res = configuration.formatModelResolver?.invoke(this)
+        res?.let {
+            this.issues.addAll(res.issues)
+            res.asm?.let {
+                //TODO: make a formatter Resolver !
+                FormatterOverAsmSimple(it, typeModel, this.issues) as Formatter<AsmType>
+            }
+        }
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
@@ -248,9 +252,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
+        val formatSetName = this.targetGrammar!!.qualifiedName //TODO: make configuratble in options
+        //val fm = formatModel?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a FormatModel")
         val frmtr = this.formatter
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Formatter")
-        return frmtr.format(asm)
+        return frmtr.format(formatSetName, asm)
     }
 
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {

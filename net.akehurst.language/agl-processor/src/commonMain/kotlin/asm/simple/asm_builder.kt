@@ -160,7 +160,7 @@ class AsmElementSimpleBuilder(
                 when (qtn) {
                     StdLibDefault.TupleType.name -> StdLibDefault.TupleType.qualifiedName
                     //UnionType.NAME -> UnionType.NAME
-                    else -> _typeModel.findFirstByPossiblyQualifiedOrNull(qtn)?.qualifiedName
+                    else -> _typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(qtn)?.qualifiedName
                         ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))
                 }
             }

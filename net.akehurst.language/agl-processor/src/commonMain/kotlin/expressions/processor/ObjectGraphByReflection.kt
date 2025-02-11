@@ -79,7 +79,7 @@ class ObjectGraphByReflection(
             }
 
             else -> {
-                val tp = typeModel.findFirstByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+                val tp = typeModel.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
                 when (tp) {
                     null -> {
                         issues.error(null, "ObjectGraphByReflection cannot get type for ${obj::class.simpleName}")

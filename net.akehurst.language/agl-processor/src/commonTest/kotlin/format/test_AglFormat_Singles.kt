@@ -140,7 +140,7 @@ class test_AglFormat_Singles {
         val sentence = $$"""
             namespace test
             format F {
-                Type -> "he said $[greetings | ','] to me!" 
+                Type -> "he said $[greetings / ','] to me!" 
             }
         """.trimIndent()
         val asm = null

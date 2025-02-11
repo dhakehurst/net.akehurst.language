@@ -91,7 +91,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      */
     val crossReferenceModel: CrossReferenceModel
 
-    val formatterModel: AglFormatModel?
+    val formatModel: AglFormatModel?
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 

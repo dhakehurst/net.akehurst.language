@@ -111,7 +111,7 @@ class test_ObjectGraphByReflection {
     fun object_getProperty() {
         val og = ObjectGraphByReflection(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val obj = TestClass("A", 1, TestClass("B", 2, null))
-        val tp = testTypeModel.findFirstByNameOrNull(SimpleName("TestClass"))!!.type()
+        val tp = testTypeModel.findFirstDefinitionByNameOrNull(SimpleName("TestClass"))!!.type()
         val tobj = TypedObjectByReflection(tp, obj)
 
         val actual1 = og.getProperty(tobj, "prop1")

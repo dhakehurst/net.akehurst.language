@@ -29,10 +29,13 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.aut
-import net.akehurst.language.format.processor.FormatterSimple
+import net.akehurst.language.format.asm.AglFormatModelDefault
+import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceModel
@@ -43,6 +46,8 @@ import net.akehurst.language.typemodel.builder.typeModel
 
 // sample
 object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>() {
+
+    val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
     override val grammarString = """
         namespace test
@@ -87,7 +92,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
     override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmSimple> = SemanticAnalyserSimple(typeModel, crossReferenceModel)
-    val formatter: Formatter<Asm> = FormatterSimple(null, typeModel)
+    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typeModel, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

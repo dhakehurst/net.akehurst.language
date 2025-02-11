@@ -17,7 +17,7 @@ class test_AglBase {
         val actual = AglBase.typeModel
 
         assertNotNull(actual)
-        val ns = actual.findFirstByNameOrNull(SimpleName("NamespaceDefault"))
+        val ns = actual.findFirstDefinitionByNameOrNull(SimpleName("NamespaceDefault"))
         assertNotNull(ns)
         assertEquals("net.akehurst.language.base.asm.NamespaceDefault",ns.qualifiedName.value)
         val ns__def = ns.findAllPropertyOrNull(PropertyName("_definition"))
@@ -28,7 +28,7 @@ class test_AglBase {
                 dataType("TestDefinition")
             }
         }
-        val tDef = tm.findFirstByNameOrNull(SimpleName("TestDefinition"))
+        val tDef = tm.findFirstDefinitionByNameOrNull(SimpleName("TestDefinition"))
         assertNotNull(tDef)
         val nsOfTDef = ns.type(listOf(tDef.type().asTypeArgument))
 

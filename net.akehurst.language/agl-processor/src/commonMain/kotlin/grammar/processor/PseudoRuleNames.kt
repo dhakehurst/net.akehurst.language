@@ -43,7 +43,18 @@ internal class PseudoRuleNames(val grammar: Grammar) {
         grammar.allResolvedNonTerminalRule.forEach {
             when {
                 it.isLeaf -> Unit
-                it.isOneEmbedded -> Unit
+                it.isOneEmbedded -> {
+                    val e = if (it.rhs is Embedded) {
+                        it.rhs as Embedded
+                    } else {
+                        (it.rhs as Concatenation).items[0] as Embedded
+                    }
+                    val pseudoRuleNames = pseudoRulesFor(it.rhs)
+                    pseudoRuleNames.forEach {
+                        _nameForRuleItem[it.first] = it.second
+                        _itemForPseudoRuleName[it.second] = it.first
+                    }
+                }
                 else -> {
                     val pseudoRuleNames = pseudoRulesFor(it.rhs)
                     pseudoRuleNames.forEach {

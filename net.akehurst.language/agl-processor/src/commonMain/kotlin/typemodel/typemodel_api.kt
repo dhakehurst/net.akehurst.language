@@ -29,10 +29,6 @@ interface TypeModel : Model<TypeNamespace, TypeDefinition> {
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypeNamespace
 
-    fun findFirstByPossiblyQualifiedOrNull(typeName: PossiblyQualifiedName): TypeDefinition?
-
-    fun findFirstByNameOrNull(typeName: SimpleName): TypeDefinition?
-
     fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition?
 
     fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypeNamespace>)

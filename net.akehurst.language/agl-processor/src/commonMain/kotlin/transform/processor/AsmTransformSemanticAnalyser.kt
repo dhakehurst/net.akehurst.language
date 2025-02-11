@@ -135,10 +135,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                 rulesToConvert.forEach { trr ->
                     val expr = trr.expression as RootExpression
                     val pqn = expr.name.asPossiblyQualifiedName
-                    val exprType = _typeModel.findFirstByPossiblyQualifiedOrNull(pqn)?.type() ?: StdLibDefault.NothingType
+                    val exprType = _typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
                     // expression is to simply redefine the type for the grammar rule
                     // actual trr expression should be same as default
-                    val defRs = transformFromGrammar.value.findDefinitionOrNullByQualifiedName(trs.qualifiedName) ?: error("Should exist!")
+                    val defRs = transformFromGrammar.value.findDefinitionByQualifiedNameOrNull(trs.qualifiedName) ?: error("Should exist!")
                     val defRule = defRs.findOwnedTrRuleForGrammarRuleNamedOrNull(trr.grammarRuleName) ?: error("Should exist!")
                     val clonedTypeDeclOrCreated = findOrCloneFromDefaultTypeForTransformRule(pqn, trs, trr)
                     val defExpr = defRule.expression
@@ -196,7 +196,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
      * else create or find grammar-type-namespace and create new datatype for 'typePqn'
      */
     private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: TransformRuleSet, trr: TransformationRule): TypeDefinition {
-        val grmDecl = transformFromGrammar.value.typeModel?.findFirstByPossiblyQualifiedOrNull(typePqn)
+        val grmDecl = transformFromGrammar.value.typeModel?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
         val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typeModel) ?: let {
             // need a grammarTypeNamespace
             val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")

@@ -220,7 +220,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    protected var _formatterResolver: FormatModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatterResolver) { _, oldValue, newValue ->
+    protected var _formatterResolver: FormatModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

@@ -341,7 +341,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType>(
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
-        val typeDecl = typeModel.findFirstByPossiblyQualifiedOrNull(expression.possiblyQualifiedTypeName)
+        val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
             ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
 //        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
         val args = expression.arguments.map { evaluateExpression(evc, it) }
@@ -385,7 +385,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType>(
 
      fun evaluateTypeReference(typeReference: TypeReference): TypeInstance {
         //TODO: issues rather than exceptions!
-        val decl = typeModel.findFirstByPossiblyQualifiedOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
+        val decl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeReference.possiblyQualifiedName) ?: error("Type not found ${typeReference.possiblyQualifiedName}")
         val targs = typeReference.typeArguments.map { evaluateTypeReference(it).asTypeArgument }
         return decl.type(targs, typeReference.isNullable)
     }
