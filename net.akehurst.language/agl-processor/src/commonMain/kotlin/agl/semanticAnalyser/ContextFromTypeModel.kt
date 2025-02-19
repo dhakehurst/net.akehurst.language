@@ -18,7 +18,6 @@
 package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.api.processor.LanguageIdentity
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.TypeModel
 

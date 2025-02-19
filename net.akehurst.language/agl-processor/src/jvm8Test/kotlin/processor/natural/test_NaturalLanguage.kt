@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.natural
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.sentence.common.SentenceDefault
 import org.junit.Test
 import org.junit.runner.RunWith

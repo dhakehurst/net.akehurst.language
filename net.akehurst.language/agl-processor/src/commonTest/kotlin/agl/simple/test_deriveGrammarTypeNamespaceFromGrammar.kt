@@ -20,8 +20,8 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters

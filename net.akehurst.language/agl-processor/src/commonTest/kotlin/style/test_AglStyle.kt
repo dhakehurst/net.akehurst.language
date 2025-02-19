@@ -19,10 +19,10 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.style.api.AglStyleMetaRule
 import net.akehurst.language.style.api.AglStyleSelectorKind
 import net.akehurst.language.style.api.AglStyleTagRule

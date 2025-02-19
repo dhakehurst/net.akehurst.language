@@ -18,13 +18,13 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
 class test_BasicTutorial {

@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test

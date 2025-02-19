@@ -19,7 +19,6 @@ package net.akehurst.language.api.semanticAnalyser
 
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.sentence.api.InputLocation
 
 /**

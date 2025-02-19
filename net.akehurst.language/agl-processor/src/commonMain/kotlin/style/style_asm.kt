@@ -16,11 +16,14 @@
 package net.akehurst.language.style.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.StyleString
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.api.processor.StyleString
 import net.akehurst.language.base.api.*
-import net.akehurst.language.base.asm.*
+import net.akehurst.language.base.asm.DefinitionAbstract
+import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.NamespaceAbstract
+import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(

@@ -19,11 +19,10 @@ package net.akehurst.language.format.processor
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
-import net.akehurst.language.asm.api.*
-import net.akehurst.language.asm.simple.AsmSimple
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.expressions.processor.*
-import net.akehurst.language.formatter.api.*
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel

@@ -19,7 +19,6 @@ package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.scope.asm.ScopeSimple
-import net.akehurst.language.asm.api.AsmPath
 import kotlin.test.assertEquals
 
 object TestContextSimple {

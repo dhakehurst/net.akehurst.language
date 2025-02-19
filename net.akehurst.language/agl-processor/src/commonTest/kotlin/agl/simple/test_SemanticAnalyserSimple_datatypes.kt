@@ -18,9 +18,9 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind

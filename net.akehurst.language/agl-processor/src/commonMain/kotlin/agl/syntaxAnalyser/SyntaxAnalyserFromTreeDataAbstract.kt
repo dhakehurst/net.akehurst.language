@@ -18,12 +18,10 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.api.processor.SyntaxAnalysisResult
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.RuleItem
-import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation

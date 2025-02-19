@@ -18,20 +18,20 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.asm.api.AsmPath
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asm.api.AsmPath
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration

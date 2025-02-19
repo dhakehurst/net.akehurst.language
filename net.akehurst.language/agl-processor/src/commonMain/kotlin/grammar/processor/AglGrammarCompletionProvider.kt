@@ -19,10 +19,6 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.api.Terminal
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionProviderOptions
-import net.akehurst.language.api.processor.Spine
 
 class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, ContextFromGrammarRegistry>() {
 

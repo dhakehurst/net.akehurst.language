@@ -1,7 +1,7 @@
 package net.akehurst.language.test.thirdparty.freon
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 
 object CalculatorLanguage {

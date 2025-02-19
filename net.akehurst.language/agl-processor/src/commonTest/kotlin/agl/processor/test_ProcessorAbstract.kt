@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.assertEquals

@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sentence.api.InputLocation

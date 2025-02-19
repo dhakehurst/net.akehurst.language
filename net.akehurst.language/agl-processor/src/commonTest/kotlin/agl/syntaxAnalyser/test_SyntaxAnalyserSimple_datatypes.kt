@@ -17,19 +17,19 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals

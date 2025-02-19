@@ -20,10 +20,6 @@ package net.akehurst.language.transform.processor
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionProviderOptions
-import net.akehurst.language.api.processor.Spine
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AsmTransformCompletionProvider : CompletionProviderAbstract<TransformModel, ContextFromGrammarAndTypeModel>() {
     //TODO

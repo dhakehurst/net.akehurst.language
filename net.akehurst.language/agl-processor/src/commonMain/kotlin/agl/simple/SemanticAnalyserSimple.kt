@@ -17,20 +17,18 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault

@@ -18,10 +18,10 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.typemodel.api.TypeModel
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit

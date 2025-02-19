@@ -18,8 +18,8 @@
 package net.akehurst.language.scope.asm
 
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.api.ItemInScope
+import net.akehurst.language.scope.api.Scope
 
 class ScopeSimple<ItemInScopeType>(
     val parent: ScopeSimple<ItemInScopeType>?,

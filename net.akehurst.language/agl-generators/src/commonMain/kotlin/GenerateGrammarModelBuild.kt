@@ -18,11 +18,11 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.FormatString
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectByReflection
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.processor.FormatString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
 import net.akehurst.language.format.asm.AglFormatModelDefault

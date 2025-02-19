@@ -16,7 +16,6 @@
 
 package net.akehurst.language.reference.processor
 
-import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar

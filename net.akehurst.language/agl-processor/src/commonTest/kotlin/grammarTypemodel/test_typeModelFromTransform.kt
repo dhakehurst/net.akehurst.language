@@ -18,14 +18,14 @@
 package net.akehurst.language.typemodel
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.TransformString
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.processor.TransformString
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

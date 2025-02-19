@@ -19,11 +19,11 @@ package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.typemodel.api.TypeInstance

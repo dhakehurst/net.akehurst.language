@@ -16,10 +16,10 @@
 
 package net.akehurst.language.automaton.leftcorner
 
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand

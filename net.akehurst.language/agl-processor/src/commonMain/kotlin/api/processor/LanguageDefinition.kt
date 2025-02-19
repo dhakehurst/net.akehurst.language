@@ -16,21 +16,20 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.*
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
@@ -45,6 +44,24 @@ interface GrammarRegistry {
 value class LanguageIdentity(override val value: String) : PublicValueType {
     val last: String get() = value.split(".").last()
 }
+
+@JvmInline
+value class GrammarString(override val value: String) : PublicValueType
+
+@JvmInline
+value class TypeModelString(override val value: String) : PublicValueType
+
+@JvmInline
+value class TransformString(override val value: String) : PublicValueType
+
+@JvmInline
+value class CrossReferenceString(override val value: String) : PublicValueType
+
+@JvmInline
+value class StyleString(override val value: String) : PublicValueType
+
+@JvmInline
+value class FormatString(override val value: String) : PublicValueType
 
 interface LanguageRegistry : GrammarRegistry {
 

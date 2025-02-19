@@ -16,7 +16,10 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.api.Concatenation
+import net.akehurst.language.grammar.api.GrammarRule
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.grammar.api.TangibleItem
 
 enum class CompletionItemKind {
     PATTERN,

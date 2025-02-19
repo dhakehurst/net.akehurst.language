@@ -20,8 +20,6 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.grammar.builder.grammar
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglExpressions {

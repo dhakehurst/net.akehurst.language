@@ -16,18 +16,18 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.processor.LanguageObjectAbstract
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.grammar.api.RuleItem
-import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 
 internal class LanguageProcessorFromGenerated<AsmType:Any, ContextType : Any>(
     val generated: LanguageObjectAbstract<AsmType, ContextType>,

@@ -17,17 +17,17 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.regex.agl.RegexEngineAgl
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 

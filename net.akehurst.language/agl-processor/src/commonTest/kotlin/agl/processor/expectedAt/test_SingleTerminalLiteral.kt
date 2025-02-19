@@ -17,7 +17,7 @@
 package net.akehurst.language.processor.expectedAt
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

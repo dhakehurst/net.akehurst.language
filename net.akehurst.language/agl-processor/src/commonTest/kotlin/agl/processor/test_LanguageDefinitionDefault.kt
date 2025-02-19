@@ -16,13 +16,11 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.*
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.api.processor.LanguageDefinition
-import net.akehurst.language.api.processor.LanguageIdentity
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
@@ -33,8 +31,8 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.style.api.AglStyleModel
 import kotlin.test.*
 

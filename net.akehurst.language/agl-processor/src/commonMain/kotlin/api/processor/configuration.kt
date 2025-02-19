@@ -17,18 +17,18 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.scanner.api.Scanner
-import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.parser.api.Parser
+import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>

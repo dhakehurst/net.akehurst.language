@@ -17,7 +17,10 @@
 
 package net.akehurst.language.expressions.api
 
-import net.akehurst.language.base.api.*
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.Indent
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 
 interface Expression {
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String

@@ -20,15 +20,27 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
-import net.akehurst.language.grammar.asm.GrammarReferenceDefault
-import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.GrammarReferenceDefault
+import net.akehurst.language.grammar.asm.NonTerminalDefault
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
+import kotlin.collections.List
+import kotlin.collections.Set
+import kotlin.collections.emptyList
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatMap
+import kotlin.collections.flatten
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.plus
+import kotlin.collections.toList
+import kotlin.collections.toSet
+import kotlin.error
 
 class CompletionProviderSimple(
     val targetGrammar: Grammar,

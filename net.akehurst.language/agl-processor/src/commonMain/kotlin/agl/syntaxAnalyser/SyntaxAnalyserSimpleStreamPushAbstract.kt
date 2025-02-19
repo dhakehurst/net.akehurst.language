@@ -21,7 +21,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asm.simple.AsmPathSimple
@@ -29,6 +28,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.reference.api.CrossReferenceModel

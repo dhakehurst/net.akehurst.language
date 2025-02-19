@@ -17,13 +17,16 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.ProcessOptions
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SyntaxAnalysisOptions
 import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.common.ScanOptionsDefault
+import net.akehurst.language.sentence.api.InputLocation
 
 class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val scan: ScanOptions = ScanOptionsDefault(),

@@ -16,8 +16,7 @@
 package net.akehurst.language.agl.processor.atom_basic
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.api.processor.LanguageProcessorException
+import net.akehurst.language.api.processor.GrammarString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -26,7 +25,6 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 

@@ -17,7 +17,6 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.LeafData
 import kotlin.test.Test

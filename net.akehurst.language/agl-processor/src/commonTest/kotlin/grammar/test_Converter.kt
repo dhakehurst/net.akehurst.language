@@ -16,11 +16,11 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.grammar.asm.ChoiceIndicator
+import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.parser.api.RulePosition
 import kotlin.test.Test
 import kotlin.test.assertEquals

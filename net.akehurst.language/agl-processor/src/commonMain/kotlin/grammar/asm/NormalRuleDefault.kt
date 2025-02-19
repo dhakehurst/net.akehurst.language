@@ -17,7 +17,10 @@
 package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.Indent
-import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.api.NormalRule
+import net.akehurst.language.grammar.api.RuleItem
 
 class NormalRuleDefault(
     override val grammar: Grammar,

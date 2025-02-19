@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.thirdparty.freon
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessorException
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -19,17 +19,17 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextAsmSimple
-import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.processor.test.utils.notWidth
+import net.akehurst.language.sentence.api.InputLocation
 import kotlin.test.*
 
 class test_Java8_Singles_aglOptm {

@@ -18,12 +18,8 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammar.api.Terminal
-import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionProviderOptions
-import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.expressions.api.Expression
 
 class ExpressionsCompletionProvider : CompletionProviderAbstract<Expression, SentenceContext>() {
 

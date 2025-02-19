@@ -17,8 +17,7 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

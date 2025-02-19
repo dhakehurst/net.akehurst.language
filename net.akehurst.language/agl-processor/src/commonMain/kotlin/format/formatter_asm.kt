@@ -18,10 +18,9 @@
 package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.FormatString
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.ModelAbstract
@@ -30,7 +29,6 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.formatter.api.*
-import net.akehurst.language.formatter.api.TemplateElementExpressionEmbedded
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase

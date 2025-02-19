@@ -18,8 +18,8 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
-import net.akehurst.language.agl.GrammarString
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple

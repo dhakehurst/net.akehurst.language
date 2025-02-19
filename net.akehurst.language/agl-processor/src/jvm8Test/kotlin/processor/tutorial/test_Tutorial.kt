@@ -18,13 +18,13 @@
 package net.akehurst.language.test.processor.tutorial
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.TransformString
-import net.akehurst.language.agl.TypeModelString
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.TransformString
+import net.akehurst.language.api.processor.TypeModelString
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.FixMethodOrder
 import org.junit.runners.MethodSorters
 import kotlin.test.Test

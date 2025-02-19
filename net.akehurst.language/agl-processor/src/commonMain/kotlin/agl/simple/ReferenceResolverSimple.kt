@@ -17,23 +17,23 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.asm.simple.isStdString
-import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
-import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.api.ReferenceExpression
-import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.*
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.ReferenceExpression
+import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
+import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
+import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel

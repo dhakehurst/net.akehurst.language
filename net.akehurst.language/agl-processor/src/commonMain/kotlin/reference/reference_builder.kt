@@ -17,11 +17,14 @@
 package net.akehurst.language.reference.builder
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.base.api.*
-import net.akehurst.language.expressions.asm.NavigationExpressionDefault
-import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.api.NavigationExpression
 import net.akehurst.language.expressions.api.RootExpression
+import net.akehurst.language.expressions.asm.NavigationExpressionDefault
+import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.reference.api.*
 import net.akehurst.language.reference.asm.*
 

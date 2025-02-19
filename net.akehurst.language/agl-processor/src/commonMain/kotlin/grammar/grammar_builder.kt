@@ -17,19 +17,14 @@
 
 package net.akehurst.language.grammar.builder
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
 import net.akehurst.language.api.processor.GrammarRegistry
-import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.typemodel.api.TypeNamespace
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 @DslMarker
 annotation class GrammarBuilderMarker

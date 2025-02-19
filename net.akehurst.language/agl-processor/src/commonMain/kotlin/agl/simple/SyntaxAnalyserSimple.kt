@@ -17,17 +17,14 @@
 package net.akehurst.language.agl.simple
 
 
-import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
-import net.akehurst.language.asm.api.*
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.simple.AsmFactorySimple
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.lazyMap
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.typemodel.api.TypeModel
 
 /**
  * TypeName <=> RuleName

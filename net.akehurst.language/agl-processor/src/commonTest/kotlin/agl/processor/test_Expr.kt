@@ -18,8 +18,8 @@
 package agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
 import net.akehurst.language.agl.processor.test_ProcessorAbstract
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 
 class test_Expr : test_ProcessorAbstract() {

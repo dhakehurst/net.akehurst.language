@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.processor.MScript
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.GrammarString
-import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.sentence.api.InputLocation
 import testFixture.utils.parseError
 import kotlin.test.*

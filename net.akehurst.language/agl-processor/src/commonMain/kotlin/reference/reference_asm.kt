@@ -17,8 +17,8 @@
 package net.akehurst.language.reference.asm
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.CrossReferenceString
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
