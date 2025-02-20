@@ -27,7 +27,9 @@ import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
+import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.transform.api.TransformationRule
@@ -37,8 +39,9 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
-class AsmTransformInterpreter(
-    val typeModel: TypeModel
+class AsmTransformInterpreter<AsmValueType:Any>(
+    val typeModel: TypeModel,
+    val objectGraph: ObjectGraph<AsmValueType>,
 ) {
 
     companion object {
@@ -127,42 +130,32 @@ class AsmTransformInterpreter(
     }
 
     val issues get() = IssueHolder(LanguageProcessorPhase.INTERPRET)
-    val exprInterpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, issues),issues)
+    val exprInterpreter = ExpressionsInterpreterOverTypedObject(objectGraph,issues)
 
     fun clear() {
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValue>, path: AsmPath, trRule: TransformationRule): AsmValue {
+    fun evaluate(evc: EvaluationContext<AsmValueType>, path: AsmPath, trRule: TransformationRule): TypedObject<AsmValueType> {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
-//        when {
-//            trRule.modifyStatements.isEmpty() -> Unit
-//            else -> when (asm) {
-//                is AsmStructure -> {
-//                    for (st in trRule.modifyStatements) {
-//                        executeStatementOn(self, st, asm)
-//                    }
-//                }
-//
-//                else -> {
-//                    issues.error(null, "'self' value for transformation-rule is not a Structure, cannot set/modify properties")
-//                }
-//            }
-//        }
         return asm
     }
 
-    private fun evaluateSelfStatement(evc: EvaluationContext<AsmValue>, expression: Expression): AsmValue {
-        return exprInterpreter.evaluateExpression(evc, expression).self
+    private fun evaluateSelfStatement(evc: EvaluationContext<AsmValueType>, expression: Expression): TypedObject<AsmValueType> {
+        return exprInterpreter.evaluateExpression(evc, expression)
     }
 
-    private fun executeStatementOn(evc: EvaluationContext<AsmValue>, st: AssignmentStatement, asm: AsmStructure) {
+    private fun executeStatementOn(evc: EvaluationContext<AsmValueType>, st: AssignmentStatement, asm: AsmStructure) {
+        val propertyName = st.lhsPropertyName
         val propValue = evaluateExpressionOver(st.rhs, evc)
-        asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
+        val tObj = objectGraph.toTypedObject(asm as AsmValueType)
+        val pv = objectGraph.toTypedObject(propValue)
+        objectGraph.setProperty(tObj, propertyName, pv)
+        //asm.setProperty(PropertyValueName(st.lhsPropertyName), propValue, asm.property.size)
     }
 
-    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValue>): AsmValue {
+    private fun evaluateExpressionOver(expr: Expression, evc: EvaluationContext<AsmValueType>): AsmValueType {
         val res = exprInterpreter.evaluateExpression(evc, expr)
         return res.self
     }

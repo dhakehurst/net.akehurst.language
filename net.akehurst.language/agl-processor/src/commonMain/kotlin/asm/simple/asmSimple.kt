@@ -29,7 +29,14 @@ import net.akehurst.language.typemodel.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
 
-class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
+class AsmFactorySimple() : AsmFactory<Asm, AsmValue> {
+
+    //override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject<AsmValue> {
+   //     return TypedObjectAsmValue(selfType, self)
+    //}
+
+   // override fun nothingValue(): AsmValue = AsmNothingSimple
+   // override fun anyValue(value: Any): AsmValue = AsmAnySimple(value)
 
     override fun constructAsm(): Asm = AsmSimple()
 
@@ -45,33 +52,27 @@ class AsmFactorySimple() : AsmFactory<Asm, AsmValue, AsmStructureSimple> {
         (asm as AsmSimple).removeRoot(root)
     }
 
-    override fun nothingValue(): AsmValue = AsmNothingSimple
-    override fun anyValue(value: Any): AsmValue = AsmAnySimple(value)
+   // override fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValue {
+   //     return AsmPrimitiveSimple(qualifiedTypeName, value)
+   // }
 
-    override fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValue {
-        return AsmPrimitiveSimple(qualifiedTypeName, value)
-    }
+  //  override fun listOfValues(elements: List<AsmValue>): AsmValue {
+  //      return AsmListSimple(elements)
+  //  }
 
-    override fun listOfValues(elements: List<AsmValue>): AsmValue {
-        return AsmListSimple(elements)
-    }
+  //  override fun listOfSeparatedValues(elements: ListSeparated<AsmValue, AsmValue, AsmValue>): AsmValue {
+  //      return AsmListSeparatedSimple(elements)
+  //  }
 
-    override fun listOfSeparatedValues(elements: ListSeparated<AsmValue, AsmValue, AsmValue>): AsmValue {
-        return AsmListSeparatedSimple(elements)
-    }
+    //override fun constructStructure(qualifiedTypeName: QualifiedName, vararg args: Any): AsmStructureSimple {
+    //    val path = args[0] as AsmPath
+    //    return AsmStructureSimple(path, qualifiedTypeName)
+    //}
 
-    override fun constructStructure(qualifiedTypeName: QualifiedName, vararg args: Any): AsmStructureSimple {
-        val path = args[0] as AsmPath
-        return AsmStructureSimple(path, qualifiedTypeName)
-    }
+    //override fun setProperty(self: AsmStructureSimple, index: Int, propertyName: String, value: AsmValue) {
+   //     self.setProperty(PropertyValueName(propertyName), value, index)
+    //}
 
-    override fun setProperty(self: AsmStructureSimple, index: Int, propertyName: String, value: AsmValue) {
-        self.setProperty(PropertyValueName(propertyName), value, index)
-    }
-
-    override fun toTypedObject(self: AsmValue, selfType: TypeInstance): TypedObject<AsmValue> {
-        return TypedObjectAsmValue(selfType, self)
-    }
 }
 
 class AsmPathSimple(

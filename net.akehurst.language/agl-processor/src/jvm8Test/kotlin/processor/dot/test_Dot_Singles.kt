@@ -279,9 +279,13 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules(processor.targetGrammar!!)
-        val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals)
-        val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
+        val converters = processor.grammarModel!!.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet().map { ConverterToRuntimeRules(it) }
+        val grmToRrs = converters.associateBy({ it.grammar }, { it.runtimeRuleSet })
+        converters.forEach { c -> c.resolveEmbedded(grmToRrs) }
+
+        val targetRrs = grmToRrs[processor.targetGrammar!!]!!
+        val scanner = ScannerOnDemand(RegexEnginePlatform, targetRrs.terminals)
+        val parser = LeftCornerParser(scanner, targetRrs)
 
         //fails at season 9 with edge_list
         val result = parser.parseForGoal(goal, sentence)

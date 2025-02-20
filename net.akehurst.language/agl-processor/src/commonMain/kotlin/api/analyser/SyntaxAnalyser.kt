@@ -28,22 +28,22 @@ import net.akehurst.language.typemodel.api.TypeInstance
 /**
  * stateless set of functions that construct elements of an ASM
  */
-interface AsmFactory<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType> {
+interface AsmFactory<AsmType : Any, AsmValueType : Any> {
 
     fun constructAsm(): AsmType
     fun rootList(asm: AsmType): List<AsmValueType>
     fun addRoot(asm: AsmType, root: AsmValueType)
     fun removeRoot(asm: AsmType, root: AsmValueType)
 
-    fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
-    fun nothingValue(): AsmValueType
-    fun anyValue(value: Any): AsmValueType
-    fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
-    fun listOfValues(elements: List<AsmValueType>): AsmValueType
-    fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
+    //fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
+    //fun nothingValue(): AsmValueType
+    //fun anyValue(value: Any): AsmValueType
+    //fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
+    //fun listOfValues(elements: List<AsmValueType>): AsmValueType
+   // fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
 
-    fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
-    fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
+    //fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
+    //fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
 
 }
 

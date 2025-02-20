@@ -49,7 +49,7 @@ class TypedObjectByReflection(
 
 
 class ObjectGraphByReflection(
-    override val typeModel: TypeModel,
+    override var typeModel: TypeModel,
     val issues: IssueHolder
 ) : ObjectGraph<Any> {
 
@@ -98,6 +98,7 @@ class ObjectGraphByReflection(
     }
 
     override fun nothing() = TypedObjectByReflection(StdLibDefault.NothingType,Unit)
+    override fun any(value: Any)= TypedObjectByReflection(StdLibDefault.AnyType,value)
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value)
 
@@ -108,7 +109,11 @@ class ObjectGraphByReflection(
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<Any> {
-        TODO()
+        TODO("not implemented")
+    }
+
+    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<Any>>): TypedObject<Any> {
+        TODO("not implemented")
     }
 
     override fun createLambdaValue(lambda: (it: TypedObject<Any>) -> TypedObject<Any>): TypedObject<Any> {

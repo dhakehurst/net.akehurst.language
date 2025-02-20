@@ -219,4 +219,53 @@ object Agl {
             ProcessResultDefault(res.asm ?: GrammarModelDefault(SimpleName("fromString-error")), res.issues)
         }
     }
+
+    /**
+     * Create a LanguageProcessor from a grammar definition string,
+     * using default configuration of:
+     * - targetGrammar = last grammar defined in grammarDefinitionStr
+     * - defaultGoalRuleName = first non skip goal in targetGrammar
+     * - syntaxAnalyser = SyntaxAnalyserSimple(TypeModelFromGrammar)
+     * - semanticAnalyser = SemanticAnalyserSimple
+     * - formatter = null (TODO)
+     *
+     * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
+     * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
+     */
+    fun languageDefinitionFromStringSimple(
+        identity: LanguageIdentity,
+        grammarDefinitionStr: GrammarString,
+        typeStr: TypeModelString? = null,
+        transformStr: TransformString? = null,
+        referenceStr: CrossReferenceString? = null,
+        styleStr: StyleString? = null,
+        formatterModelStr: FormatString? = null,
+        configurationBase: LanguageProcessorConfiguration<Asm,  ContextAsmSimple> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+    ): LanguageDefinition<Asm,  ContextAsmSimple> {
+        val config = Agl.configuration(configurationBase) {
+            if (null != typeStr) {
+                typeModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TypeModelSimple.fromString(typeStr) }
+            }
+            if (null != transformStr) {
+                asmTransformResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!,p.baseTypeModel), transformStr) }
+            }
+            if (null != referenceStr) {
+                crossReferenceModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), referenceStr) }
+            }
+            if (null != styleStr) {
+                styleResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
+            }
+            if (null != formatterModelStr) {
+                formatModelResolver { p:LanguageProcessor<Asm, ContextAsmSimple> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
+            }
+        }
+        return LanguageDefinitionDefault(
+            identity = identity,
+            grammarStrArg = grammarDefinitionStr,
+            aglOptions = grammarAglOptions,
+            buildForDefaultGoal = false,
+            initialConfiguration = config
+        )
+    }
 }

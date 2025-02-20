@@ -21,6 +21,7 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
@@ -107,9 +108,8 @@ class TypedObjectAsmValue(
     override fun toString(): String = "$self : ${type.qualifiedTypeName}"
 }
 
-
 class ObjectGraphAsmSimple(
-    override val typeModel: TypeModel,
+    override var typeModel: TypeModel,
     val issues: IssueHolder
 ) : ObjectGraph<AsmValue> {
 
@@ -124,6 +124,7 @@ class ObjectGraphAsmSimple(
     override fun toTypedObject(obj: AsmValue?): TypedObject<AsmValue> = obj?.toTypedObject() ?: nothing()
 
     override fun nothing() = AsmNothingSimple.toTypedObject()
+    override fun any(value: Any) = AsmAnySimple(object{}).toTypedObject()
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = when (qualifiedTypeName) {
         StdLibDefault.Boolean.qualifiedTypeName -> AsmPrimitiveSimple(qualifiedTypeName, value).toTypedObject()
@@ -146,6 +147,20 @@ class ObjectGraphAsmSimple(
         val obj = AsmStructureSimple(asmPath, typeDecl.qualifiedName)
         constructorArgs.forEach { (k, v) -> obj.setProperty(PropertyValueName(k), v.self, obj.property.size) }
         return TypedObjectAsmValue(typeDecl.type(), obj)
+    }
+
+    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<AsmValue>>): TypedObject<AsmValue> {
+        return when(qualifiedTypeName) {
+            StdLibDefault.List.qualifiedName -> {
+                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
+                TypedObjectAsmValue(StdLibDefault.List.type(listOf(elType.asTypeArgument)), AsmListSimple(collection.map { it.self }))
+            }
+            StdLibDefault.ListSeparated.qualifiedName -> {
+                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
+                TypedObjectAsmValue(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument)), AsmListSeparatedSimple(collection.map { it.self }.toSeparatedList()))
+            }
+            else -> nothing()
+        }
     }
 
     override fun createLambdaValue(lambda: (it: TypedObject<AsmValue>) -> TypedObject<AsmValue>): TypedObject<AsmValue> {

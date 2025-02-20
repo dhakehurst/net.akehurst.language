@@ -84,8 +84,8 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
-        configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = null,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }
 

@@ -26,12 +26,10 @@ import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
-import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
@@ -60,9 +58,9 @@ data class DownData2(
     val trRule: NodeTrRules
 )
 
-data class ChildData(
+data class ChildData<AsmValueType:Any>(
     val nodeInfo: SpptDataNodeInfo,
-    val value: Any?
+    val value: TypedObject<AsmValueType>?
 )
 
 /**
@@ -71,11 +69,12 @@ data class ChildData(
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
+abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueType:Any>(
     _typeModel: TypeModel,
     val asmTransformModel: TransformModel,
     val relevantTrRuleSet: QualifiedName,
-    argAsmFactory: AsmFactory<AsmType, *, *>
+    val objectGraph: ObjectGraph<AsmValueType>,
+    argAsmFactory: AsmFactory<AsmType, AsmValueType>
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {
@@ -88,17 +87,21 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
 
     }
 
-    val typeModel: TypeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
-        it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
-    }
+    val typeModel: TypeModel get() = objectGraph.typeModel
 
-    private val asmFactory: AsmFactory<AsmType, Any, Any> = argAsmFactory as AsmFactory<AsmType, Any, Any>
+    private val asmFactory: AsmFactory<AsmType, AsmValueType> = argAsmFactory
     private var _asm: AsmType? = null
     override val asm: AsmType get() = _asm as AsmType
 
     val relevantRuleSet = asmTransformModel.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
         ?: error("Relevant TransformRuleSet not Found for '$relevantTrRuleSet'")
-    val _trf = AsmTransformInterpreter(typeModel)
+    val _trf = AsmTransformInterpreter(typeModel, objectGraph)
+
+    init {
+        objectGraph.typeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
+            it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
+        }
+    }
 
     private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
         return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
@@ -111,9 +114,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
     }
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<AsmType>> = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<AsmType, AsmValueType>> = mutableStackOf(this)
         val downStack = mutableStackOf<DownData2>() //when null don't use branch
-        val stack = mutableStackOf<ChildData>()
+        val stack = mutableStackOf<ChildData<AsmValueType>>()
         val walker = object : SpptWalker {
             var isRoot = true
             override fun beginTree() {
@@ -126,7 +129,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
 
             override fun endTree() {
                 val root = stack.pop()
-                syntaxAnalyserStack.peek().addAsmRoot(root.value!! as AsmValue)
+                syntaxAnalyserStack.peek().addAsmRoot(root.value!!.self)
                 //do not pop the asm, leave it here, so it can be retrieved when wanted.
                 // embedded ASMs are popped in endEmbedded
             }
@@ -167,7 +170,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> asmFactory.nothingValue()
+                    typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> objectGraph.nothing()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
@@ -179,9 +182,9 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
                 val embeddedRhs = (nodeInfo.node.rule as RuntimeRule).rhs as RuntimeRuleRhsEmbedded
                 val embRuleName = embeddedRhs.embeddedStartRule.tag
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
-                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserFromAsmTransformAbstract?
+                val embSyntaxAnalyser = embeddedSyntaxAnalyser[QualifiedName(embGrmName)] as SyntaxAnalyserFromAsmTransformAbstract<*, *>?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser using TrRuleSet '${relevantTrRuleSet}'")
-                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<AsmType>)
+                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserFromAsmTransformAbstract<AsmType, AsmValueType>)
                 val parentPath = when {
                     isRoot -> AsmPathSimple.ROOT + (asmFactory.rootList(asm).size).toString()
                     else -> downStack.peek().path
@@ -204,7 +207,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
                 val value = asmFactory.rootList(embeddedAsm).last()
                 removeAsmRoot(value)
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
-                stack.push(ChildData(nodeInfo, value))
+                stack.push(ChildData(nodeInfo, objectGraph.toTypedObject(value)))
             }
 
             override fun skip(startPosition: Int, nextInputPosition: Int) {
@@ -223,17 +226,17 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         this._asm = value
     }
 
-    private fun addAsmRoot(rootValue: Any) {
+    private fun addAsmRoot(rootValue: AsmValueType) {
         asmFactory.addRoot(_asm!!, rootValue)
     }
 
-    private fun removeAsmRoot(rootValue: Any) {
+    private fun removeAsmRoot(rootValue: AsmValueType) {
         asmFactory.removeRoot(_asm!!, rootValue)
     }
 
-    private fun createAsmStructure(path: AsmPath, qualifiedTypeName: QualifiedName): Any {
-        return asmFactory.constructStructure(qualifiedTypeName,path)
-    }
+   // private fun createAsmStructure(path: AsmPath, qualifiedTypeName: QualifiedName): Any {
+    //    return objectGraph.constructStructure(qualifiedTypeName,path)
+   // }
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo) =
         parsePathFor(parentPath,parentType,nodeInfo)
@@ -560,44 +563,44 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         }
     }
 
-    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): Any? = when {
-        target.node.rule.isEmptyTerminal -> asmFactory.nothingValue() // for empty or optional rules
+    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): TypedObject<AsmValueType>? = when {
+        target.node.rule.isEmptyTerminal -> objectGraph.nothing() // for empty or optional rules
         target.node.rule.isEmptyListTerminal -> null  // return null for empty lists
 
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
-            asmFactory.primitiveValue(StdLibDefault.String.qualifiedTypeName, v)
+            objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, v)
         }
     }
 
-    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any? =
+    private fun createValueFromBranch(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType>? =
         createValueFromBranch2(sentence, downData, target, children)
 
-    private fun createValueFromBranch2(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData>): Any {
+    private fun createValueFromBranch2(sentence: Sentence, downData: DownData2, target: SpptDataNodeInfo, children: List<ChildData<AsmValueType>>): TypedObject<AsmValueType> {
         // optional children should have value Nothing, if it is an empty list then it will contain null
         val asmChildren = children.mapNotNull { it.value }
         val childrenAsmList = when {
-            target.node.rule.isListSeparated -> asmFactory.listOfSeparatedValues(asmChildren.toSeparatedList())
-            else -> asmFactory.listOfValues(asmChildren)
+            target.node.rule.isListSeparated -> objectGraph.createCollection(StdLibDefault.ListSeparated.qualifiedName, asmChildren)
+            else -> objectGraph.createCollection(StdLibDefault.List.qualifiedName, asmChildren)
         }
-        val asmMatchedText = AsmPrimitiveSimple.stdString(sentence.matchedTextNoSkip(target.node))
+        val asmMatchedText = objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName,sentence.matchedTextNoSkip(target.node))
 
-        val asmPath = asmFactory.anyValue(downData.path)
-        val alternative = asmFactory.primitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value)
+        val asmPath = objectGraph.any(downData.path)
+        val alternative = objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value)
         val selfType = when {
             // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
         }
-        val self = asmFactory.constructStructure(selfType.qualifiedTypeName, AsmPathSimple(""))
-        asmFactory.setProperty(self, 0, AsmTransformInterpreter.PATH.value, asmPath)
-        asmFactory.setProperty(self, 1, AsmTransformInterpreter.ALTERNATIVE.value, alternative)
-        asmFactory.setProperty(self, 2, AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
-        asmFactory.setProperty(self, 3, AsmTransformInterpreter.CHILD.value, childrenAsmList)
-        asmFactory.setProperty(self, 4, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
+        val self = objectGraph.createStructureValue(selfType.qualifiedTypeName, mapOf(AsmTransformInterpreter.PATH.value to asmPath))
+        objectGraph.setProperty(self, AsmTransformInterpreter.PATH.value, asmPath)
+        objectGraph.setProperty(self, AsmTransformInterpreter.ALTERNATIVE.value, alternative)
+        objectGraph.setProperty(self,  AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
+        objectGraph.setProperty(self, AsmTransformInterpreter.CHILD.value,childrenAsmList)
+        objectGraph.setProperty(self, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
 
         //TODO: use factory, requires TransformInterpreter to be generic on SelfType
-        val typedSelf = TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
+        val typedSelf = self //TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
         val evc = EvaluationContext.of(mapOf(AsmTransformInterpreter.SELF to typedSelf))
         val tr = downData.trRule.forNode
         _trf.clear()
@@ -953,10 +956,10 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any>(
         }
     }
 */
-    private fun setPropertyFromDeclaration(el: Any, declaration: PropertyDeclaration, value: Any?) {
+    private fun setPropertyFromDeclaration(el: AsmValueType, declaration: PropertyDeclaration, value: AsmValueType?) {
         // whether it is a reference or not is handled later in Semantic Analysis
-        val v = value ?: asmFactory.nothingValue()
-        asmFactory.setProperty(el, declaration.index, declaration.name.value, v)
+        val v = objectGraph.toTypedObject(value)
+        objectGraph.setProperty(objectGraph.toTypedObject(el), declaration.name.value, v)
     }
 
 }

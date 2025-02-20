@@ -66,14 +66,16 @@ interface TypedObject<out SelfType> {
 }
 
 interface ObjectGraph<SelfType> {
-    val typeModel: TypeModel
+    var typeModel: TypeModel
 
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj:SelfType?) : TypedObject<SelfType>
 
     fun nothing(): TypedObject<SelfType>
+    fun any(value: Any): TypedObject<SelfType>
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject<SelfType>
     fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType>
+    fun createCollection(qualifiedTypeName: QualifiedName, collection:Iterable<TypedObject<SelfType>>): TypedObject<SelfType>
     fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType>
     fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType>
 

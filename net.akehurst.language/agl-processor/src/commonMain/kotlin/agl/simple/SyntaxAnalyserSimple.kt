@@ -20,9 +20,14 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmFactorySimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.lazyMap
+import net.akehurst.language.expressions.processor.ObjectGraph
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 
@@ -38,7 +43,13 @@ class SyntaxAnalyserSimple(
     asmTransformModel: TransformModel,
     relevantTrRuleSet: QualifiedName
     //scopeModel: CrossReferenceModel
-) : SyntaxAnalyserFromAsmTransformAbstract<Asm>(typeModel, asmTransformModel, relevantTrRuleSet,AsmFactorySimple()) {
+) : SyntaxAnalyserFromAsmTransformAbstract<Asm, AsmValue>(
+    typeModel,
+    asmTransformModel,
+    relevantTrRuleSet,
+    ObjectGraphAsmSimple(typeModel, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)),
+    AsmFactorySimple()
+) {
     // : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, asmTransformModel) {//, scopeModel) {
 
     companion object {

@@ -349,6 +349,19 @@ class LanguageRegistryDefault : LanguageRegistry {
         return findOrNull(LanguageIdentity("$localNamespace.$nameOrQName")) ?: findOrNull(LanguageIdentity(nameOrQName))
     }
 
+    fun <AsmType:Any, ContextType : Any> createLanguageDefinition(
+        identity: LanguageIdentity,
+        grammarStr: GrammarString?,
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
+    ) : LanguageDefinition<AsmType, ContextType> = LanguageDefinitionDefault<AsmType, ContextType>(
+        identity = identity,
+        grammarStrArg = grammarStr,
+        aglOptions = aglOptions,
+        buildForDefaultGoal = false,
+        initialConfiguration = configuration ?: Agl.configurationEmpty()
+    )
+
     override fun <AsmType:Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
@@ -356,13 +369,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
-            val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
-                identity = identity,
-                grammarStrArg = null,
-                aglOptions = aglOptions,
-                buildForDefaultGoal = false,
-                initialConfiguration = configuration ?: Agl.configurationEmpty()
-            )
+            val placeholder = createLanguageDefinition(identity, null, aglOptions, configuration)
             registerFromDefinition(placeholder)
         } else {
             existing
