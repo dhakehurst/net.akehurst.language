@@ -121,13 +121,15 @@ subprojects {
 //        }
 
 
-        // wasm not suppored by kotet
-//        @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-//        wasmJs() {
-//            browser()
-//        }
+        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+        wasmJs() {
+            binaries.library()
+            browser()
+        }
 
-
+       // macosArm64 {
+       //     binaries.sharedLib()
+       // }
 
         sourceSets {
             all {
@@ -207,8 +209,8 @@ subprojects {
         "signKotlinMultiplatformPublication",
         "signJvm8Publication",
         "signJsPublication",
-        //"signWasmJsPublication",
-        // "signMacosArm64Publication"
+        "signWasmJsPublication",
+//         "signMacosArm64Publication"
     )
 
     tasks.forEach {

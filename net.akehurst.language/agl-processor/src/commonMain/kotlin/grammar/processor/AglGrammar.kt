@@ -225,11 +225,7 @@ grammar AglGrammar extends Base {
 
     const val styleStr: String = """namespace net.akehurst.language
   styles Grammar {
-    'namespace' {
-      foreground: darkgreen;
-      font-style: bold;
-    }
-    'grammar', 'extends', 'override', 'skip', 'leaf' {
+    'namespace', 'grammar', 'extends', 'override', 'skip', 'leaf' {
       foreground: darkgreen;
       font-style: bold;
     }

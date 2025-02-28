@@ -84,6 +84,7 @@ interface AglLanguages {
 class LanguageRegistryDefault : LanguageRegistry {
 
     private val _grammars = mutableMapOf<QualifiedName, Grammar>()
+    //private val _registryLock = Mutex
     private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
     override val agl: AglLanguages = object : AglLanguages {

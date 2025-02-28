@@ -239,9 +239,13 @@ interface AglStyleRule {
         }
     }
 
-    const val styleStr = """namespace net.akehurst.language
+    const val styleStr = $$"""namespace net.akehurst.language
 styles Style {
-    META_IDENTIFIER {
+    $keyword {
+      foreground: darkgreen;
+      font-style: bold;
+    }
+    SPECIAL_IDENTIFIER {
       foreground: orange;
       font-style: bold;
     }

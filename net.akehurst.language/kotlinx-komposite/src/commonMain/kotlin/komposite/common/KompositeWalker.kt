@@ -17,6 +17,7 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.kotlinx.komposite.api.KompositeException
+import net.akehurst.language.agl.expressions.processor.get
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.typemodel.api.*

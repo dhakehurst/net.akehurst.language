@@ -44,8 +44,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         (td.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("S")))
         (td as DataTypeSimple).addConstructor(
             listOf(
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td.qualifiedName, SimpleName("F")), null),
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(td.qualifiedName, SimpleName("S")), null),
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("first"), this.createTypeInstance(td.qualifiedName, SimpleName("F")), null),
+                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("second"), this.createTypeInstance(td.qualifiedName, SimpleName("S")), null),
             )
         )
         td.appendPropertyStored(PropertyName("first"), TypeParameterReference(td, SimpleName("F")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 0)
@@ -61,6 +61,18 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
     private val Collection_typeName = SimpleName("Collection")
     val Collection = super.findOwnedOrCreateCollectionTypeNamed(Collection_typeName).also { typeDecl ->
         (typeDecl.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("E")))
+        typeDecl.appendPropertyPrimitive(
+            PropertyName("asMap"),
+            this.createTypeInstance(typeDecl.qualifiedName, QualifiedName("std.Map"),
+                listOf(
+                    StdLibDefault.AnyType.asTypeArgument, //TODO: should be type of Pair.first
+                    StdLibDefault.AnyType.asTypeArgument //TODO: should be type of Pair.second
+                ),
+                false
+            ),
+            "A Map object with elements being the Pairs of this List."
+        )
+
         typeDecl.appendMethodPrimitive(
             MethodName("map"),
             listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, Lambda.typeName), null)),

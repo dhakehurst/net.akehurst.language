@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.kotlinx.komposite.common
+package net.akehurst.language.agl.expressions.processor
 
-import net.akehurst.kotlinx.komposite.api.KompositeException
 import net.akehurst.kotlinx.reflect.KotlinxReflect
 import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.typemodel.api.*
@@ -29,7 +28,8 @@ fun SingletonType.objectInstance(): Any {
         val obj = KotlinxReflect.objectInstance<Any>(this.qualifiedName.value)
         return obj as Any
     } catch (t: Throwable) {
-        throw KompositeException("Unable to fetch objectInstance ${this.name} due to ${t.message ?: "Unknown"}")
+        t.printStackTrace()
+        error("Unable to fetch objectInstance ${this.name} due to ${t.message ?: "Unknown"}")
     }
 }
 
@@ -39,7 +39,8 @@ fun DataType.constructDataType(vararg constructorArgs: Any?): Any {
         val obj = cls.reflect().construct(*constructorArgs)
         return obj
     } catch (t: Throwable) {
-        throw KompositeException("Unable to construct ${this.name} from ${constructorArgs.toList()} due to ${t.message ?: "Unknown"}")
+        t.printStackTrace()
+        error("Unable to construct ${this.name} from ${constructorArgs.toList()} due to ${t.message ?: "Unknown"}")
     }
 }
 
@@ -49,7 +50,8 @@ fun ValueType.constructValueType(value: Any): Any {
         val obj = cls.reflect().construct(value)
         return obj
     } catch (t: Throwable) {
-        throw KompositeException("Unable to construct ${this.name} from ${value} due to ${t.message ?: "Unknown"}")
+        t.printStackTrace()
+        error("Unable to construct ${this.name} from ${value} due to ${t.message ?: "Unknown"}")
     }
 }
 
@@ -126,7 +128,8 @@ fun PropertyDeclaration.set(obj: Any, value: Any?) {
         }
 
     } catch (t: Throwable) {
-        throw KompositeException("Unable to set property ${this.owner.name}.${this.name} to ${value} due to ${t.message ?: "Unknown"}",t)
+        t.printStackTrace()
+        error("Unable to set property ${this.owner.name}.${this.name} to ${value} due to ${t.message ?: "Unknown"}")
     }
 }
 

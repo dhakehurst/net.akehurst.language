@@ -52,7 +52,14 @@ object StdLibPrimitiveExecutions {
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("join"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
-            }
+            },
+            StdLibDefault.List.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
+                check(self is AsmList) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                val map = self.elements.associate {
+                    check(it.raw is Pair<*,*>) { }
+                    it.raw as Pair<*,*>
+                }
+                TODO("No AsmMap object ? maybe use tuple !")            }
         ),
         StdLibDefault.ListSeparated to mapOf(
             StdLibDefault.ListSeparated.findAllPropertyOrNull(PropertyName("items"))!! to { self, prop ->
@@ -88,7 +95,7 @@ object StdLibPrimitiveExecutions {
                 }
                 AsmListSimple(mapped)
             }
-        )
+        ),
     )
 }
 
@@ -108,7 +115,7 @@ class TypedObjectAsmValue(
     override fun toString(): String = "$self : ${type.qualifiedTypeName}"
 }
 
-class ObjectGraphAsmSimple(
+open class ObjectGraphAsmSimple(
     override var typeModel: TypeModel,
     val issues: IssueHolder
 ) : ObjectGraph<AsmValue> {
@@ -156,8 +163,10 @@ class ObjectGraphAsmSimple(
                 TypedObjectAsmValue(StdLibDefault.List.type(listOf(elType.asTypeArgument)), AsmListSimple(collection.map { it.self }))
             }
             StdLibDefault.ListSeparated.qualifiedName -> {
-                val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType
-                TypedObjectAsmValue(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument)), AsmListSeparatedSimple(collection.map { it.self }.toSeparatedList()))
+                val list = collection.toList()
+                val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
+                val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
+                TypedObjectAsmValue(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument,sepType.asTypeArgument)), AsmListSeparatedSimple(collection.map { it.self }.toSeparatedList()))
             }
             else -> nothing()
         }

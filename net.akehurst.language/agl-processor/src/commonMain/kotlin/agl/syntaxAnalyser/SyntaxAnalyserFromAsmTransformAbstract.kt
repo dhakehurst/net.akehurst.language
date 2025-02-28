@@ -44,6 +44,7 @@ import net.akehurst.language.transform.asm.*
 import net.akehurst.language.transform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 data class NodeTrRules(
@@ -73,8 +74,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     _typeModel: TypeModel,
     val asmTransformModel: TransformModel,
     val relevantTrRuleSet: QualifiedName,
-    val objectGraph: ObjectGraph<AsmValueType>,
-    argAsmFactory: AsmFactory<AsmType, AsmValueType>
+    val asmFactory: AsmFactory<AsmType, AsmValueType>
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {
@@ -87,18 +87,17 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
     }
 
-    val typeModel: TypeModel get() = objectGraph.typeModel
+    val typeModel: TypeModel get() = asmFactory.typeModel
 
-    private val asmFactory: AsmFactory<AsmType, AsmValueType> = argAsmFactory
     private var _asm: AsmType? = null
     override val asm: AsmType get() = _asm as AsmType
 
     val relevantRuleSet = asmTransformModel.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
         ?: error("Relevant TransformRuleSet not Found for '$relevantTrRuleSet'")
-    val _trf = AsmTransformInterpreter(typeModel, objectGraph)
+    val _trf = AsmTransformInterpreter(typeModel, asmFactory)
 
     init {
-        objectGraph.typeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
+        asmFactory.typeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
             it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
         }
     }
@@ -170,7 +169,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> objectGraph.nothing()
+                    typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> asmFactory.nothing()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
@@ -207,7 +206,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val value = asmFactory.rootList(embeddedAsm).last()
                 removeAsmRoot(value)
                 value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
-                stack.push(ChildData(nodeInfo, objectGraph.toTypedObject(value)))
+                stack.push(ChildData(nodeInfo, asmFactory.toTypedObject(value)))
             }
 
             override fun skip(startPosition: Int, nextInputPosition: Int) {
@@ -564,12 +563,12 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     }
 
     private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): TypedObject<AsmValueType>? = when {
-        target.node.rule.isEmptyTerminal -> objectGraph.nothing() // for empty or optional rules
+        target.node.rule.isEmptyTerminal -> asmFactory.nothing() // for empty or optional rules
         target.node.rule.isEmptyListTerminal -> null  // return null for empty lists
 
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
-            objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, v)
+            asmFactory.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName, v)
         }
     }
 
@@ -580,24 +579,31 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         // optional children should have value Nothing, if it is an empty list then it will contain null
         val asmChildren = children.mapNotNull { it.value }
         val childrenAsmList = when {
-            target.node.rule.isListSeparated -> objectGraph.createCollection(StdLibDefault.ListSeparated.qualifiedName, asmChildren)
-            else -> objectGraph.createCollection(StdLibDefault.List.qualifiedName, asmChildren)
+            target.node.rule.isListSeparated -> asmFactory.createCollection(StdLibDefault.ListSeparated.qualifiedName, asmChildren)
+            else -> asmFactory.createCollection(StdLibDefault.List.qualifiedName, asmChildren)
         }
-        val asmMatchedText = objectGraph.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName,sentence.matchedTextNoSkip(target.node))
+        val asmMatchedText = asmFactory.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName,sentence.matchedTextNoSkip(target.node))
 
-        val asmPath = objectGraph.any(downData.path)
-        val alternative = objectGraph.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value)
+        val asmPath = asmFactory.any(downData.path)
+        val alternative = asmFactory.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value)
         val selfType = when {
             // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
             else -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE
         }
-        val self = objectGraph.createStructureValue(selfType.qualifiedTypeName, mapOf(AsmTransformInterpreter.PATH.value to asmPath))
-        objectGraph.setProperty(self, AsmTransformInterpreter.PATH.value, asmPath)
-        objectGraph.setProperty(self, AsmTransformInterpreter.ALTERNATIVE.value, alternative)
-        objectGraph.setProperty(self,  AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
-        objectGraph.setProperty(self, AsmTransformInterpreter.CHILD.value,childrenAsmList)
-        objectGraph.setProperty(self, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
+//        val self = asmFactory.createStructureValue(selfType.qualifiedTypeName, mapOf(AsmTransformInterpreter.PATH.value to asmPath))
+        val self = asmFactory.createTupleValue(listOf(
+            TypeArgumentNamedSimple(AsmTransformInterpreter.PATH, StdLibDefault.AnyType),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.ALTERNATIVE, StdLibDefault.Integer),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILDREN, StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILD, StdLibDefault.AnyType),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.MATCHED_TEXT, StdLibDefault.String),
+        ))
+        asmFactory.setProperty(self, AsmTransformInterpreter.PATH.value, asmPath)
+        asmFactory.setProperty(self, AsmTransformInterpreter.ALTERNATIVE.value, alternative)
+        asmFactory.setProperty(self,  AsmTransformInterpreter.CHILDREN.value, childrenAsmList)
+        asmFactory.setProperty(self, AsmTransformInterpreter.CHILD.value,childrenAsmList)
+        asmFactory.setProperty(self, AsmTransformInterpreter.MATCHED_TEXT.value, asmMatchedText)
 
         //TODO: use factory, requires TransformInterpreter to be generic on SelfType
         val typedSelf = self //TypedObjectAsmValue(selfType, self as AsmValue) //asmFactory.toTypedObject(self, selfType)
@@ -958,8 +964,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 */
     private fun setPropertyFromDeclaration(el: AsmValueType, declaration: PropertyDeclaration, value: AsmValueType?) {
         // whether it is a reference or not is handled later in Semantic Analysis
-        val v = objectGraph.toTypedObject(value)
-        objectGraph.setProperty(objectGraph.toTypedObject(el), declaration.name.value, v)
+        val v = asmFactory.toTypedObject(value)
+        asmFactory.setProperty(asmFactory.toTypedObject(el), declaration.name.value, v)
     }
 
 }
