@@ -141,5 +141,11 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit>
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
-    fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?)
+    fun update(
+        grammarStr: GrammarString?=null,
+        typeModelStr: TypeModelString?=null,
+        asmTransformStr: TransformString?=null,
+        crossReferenceStr: CrossReferenceString?=null,
+        styleStr: StyleString?=null
+    )
 }

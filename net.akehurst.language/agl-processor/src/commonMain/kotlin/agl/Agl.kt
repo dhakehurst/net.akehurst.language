@@ -220,6 +220,43 @@ object Agl {
         }
     }
 
+    fun <AsmType : Any, ContextType : Any> languageDefinitionFromString(
+        identity: LanguageIdentity,
+        grammarDefinitionStr: GrammarString,
+        typeStr: TypeModelString? = null,
+        transformStr: TransformString? = null,
+        referenceStr: CrossReferenceString? = null,
+        styleStr: StyleString? = null,
+        formatterModelStr: FormatString? = null,
+        configurationBase: LanguageProcessorConfiguration<AsmType,  ContextType> = configurationBase(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+    ) : LanguageDefinition<AsmType,  ContextType> {
+        val config = Agl.configuration(configurationBase) {
+            if (null != typeStr) {
+                typeModelResolver { p -> TypeModelSimple.fromString(typeStr) }
+            }
+            if (null != transformStr) {
+                asmTransformResolver { p -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!,p.baseTypeModel), transformStr) }
+            }
+            if (null != referenceStr) {
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), referenceStr) }
+            }
+            if (null != styleStr) {
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
+            }
+            if (null != formatterModelStr) {
+                formatModelResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterModelStr) }
+            }
+        }
+        return LanguageDefinitionDefault(
+            identity = identity,
+            grammarStrArg = grammarDefinitionStr,
+            aglOptions = grammarAglOptions,
+            buildForDefaultGoal = false,
+            initialConfiguration = config
+        )
+    }
+
     /**
      * Create a LanguageProcessor from a grammar definition string,
      * using default configuration of:
