@@ -90,7 +90,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     override val agl: AglLanguages = object : AglLanguages {
         override val baseLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglBase.targetGrammar.qualifiedName.value) }
         override val expressionsLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglExpressions.grammar.qualifiedName.value) }
-        override val grammarLanguageIdentity: LanguageIdentity by lazy {LanguageIdentity( AglGrammar.grammar.qualifiedName.value) }
+        override val grammarLanguageIdentity: LanguageIdentity by lazy {LanguageIdentity( AglGrammar.targetGrammar.qualifiedName.value) }
         override val typesLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglTypemodel.targetGrammar.qualifiedName.value) }
         override val asmTransformLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AsmTransform.grammar.qualifiedName.value) }
         override val styleLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity( AglStyle.grammar.qualifiedName.value) }
@@ -151,10 +151,10 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
                     identity = grammarLanguageIdentity,
-                    lang.grammar.asGrammarModel(),
+                    lang.grammarModel,
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
-                        targetGrammarName(lang.grammar.name.value)
+                        targetGrammarName(lang.targetGrammar.name.value)
                         defaultGoalRuleName(lang.goalRuleName)
                         // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -163,7 +163,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                         syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), lang.styleStr) }
+                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), lang.styleString) }
                         completionProvider { ProcessResultDefault(AglGrammarCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     }
                 )

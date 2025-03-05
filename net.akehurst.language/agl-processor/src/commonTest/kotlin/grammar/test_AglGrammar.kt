@@ -10,6 +10,14 @@ import kotlin.test.assertTrue
 class test_AglGrammar {
 
     @Test
+    fun asString() {
+        val actual = AglGrammar.grammarModel.asString()
+        val expected = AglGrammar.grammarString
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun typeModel() {
 
         val actual = AglGrammar.typeModel

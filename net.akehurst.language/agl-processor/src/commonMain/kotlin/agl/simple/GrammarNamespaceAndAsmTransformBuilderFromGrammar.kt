@@ -273,7 +273,12 @@ internal class Grammar2TransformRuleSet(
             val tn = this.configuration?.typeNameFor(rule) ?: SimpleName(ruleName.value)
             val tp = when (rule) {
                 is NormalRule -> grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn) // DataTypeSimple(this, elTypeName)
-                is OverrideRule -> grammarTypeNamespace.findTypeNamed(tn) ?: error("Type for override rule '${rule.qualifiedName}' not found")
+                is OverrideRule -> when (rule.overrideKind) {
+                    OverrideKind.APPEND_ALTERNATIVE -> grammarTypeNamespace.findTypeNamed(tn) ?: error("Type for override rule '${rule.qualifiedName}' not found")
+                    OverrideKind.REPLACE -> grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn)
+                    OverrideKind.SUBSTITUTION -> TODO()
+                }
+
                 else -> error("Subtype of GrammarRule '${rule::class.simpleName}' not supported")
             }
             val tt = tp.type()

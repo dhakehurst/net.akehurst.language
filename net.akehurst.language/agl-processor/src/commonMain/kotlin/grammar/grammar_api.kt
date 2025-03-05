@@ -192,8 +192,8 @@ interface NormalRule : GrammarRule {
 }
 
 enum class OverrideKind {
-    REPLACE,
-    APPEND_ALTERNATIVE, // either append this as another option or convert original toa choice and append this option
+    REPLACE, // replace references to original rule with this one
+    APPEND_ALTERNATIVE, // either append this as another option or convert original to a choice and append this option
     SUBSTITUTION //TODO: document this!
 }
 

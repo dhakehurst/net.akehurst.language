@@ -15,10 +15,9 @@
  *
  */
 
-package agl.processor
+package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.test_ProcessorAbstract
 import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 

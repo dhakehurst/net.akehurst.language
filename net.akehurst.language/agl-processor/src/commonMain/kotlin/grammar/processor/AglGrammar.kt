@@ -16,283 +16,84 @@
 
 package net.akehurst.language.grammar.processor
 
+import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.OverrideKind
+import net.akehurst.language.grammar.api.OverrideRule
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglGrammar {
-
-    const val OPTION_defaultGoalRule = "defaultGoalRule"
+object AglGrammar : LanguageObjectAbstract<Any, SentenceContext>() {
+    const val NAME = "Grammar"
+    const val NAMESPACE_NAME = "net.akehurst.language"
     const val goalRuleName = "unit"
 
-    //override val options = listOf(GrammarOptionDefault(OPTION_defaultGoalRule, "grammarDefinition"))
-    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("grammarDefinition")!!
+    const val OPTION_defaultGoalRule = "defaultGoalRule"
 
-    const val grammarStr = """net.akehurst.language.grammar
-grammar AglGrammar extends Base {
-    unit = namespace grammar+ ;
-    grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
-    extends = ':' [possiblyQualifiedName / ',']+ ;
-    rule = grammarRule | overrideRule | preferenceRule ;
-    grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
-    overrideRule = 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
-    overrideOperator = '==' | '=' | '+=|' ;
-    ruleTypeLabels = 'skip'? 'leaf'? ;
-    rhs = empty | concatenation | choice ;
-    empty = ;
-    choice = ambiguousChoice | priorityChoice | simpleChoice ;
-    ambiguousChoice = [ concatenation / '||' ]2+ ;
-    priorityChoice = [ concatenation / '<' ]2+ ;
-    simpleChoice = [ concatenation / '|' ]2+ ;
-    concatenation = concatenationItem+ ;
-    concatenationItem = simpleItemOrGroup | listOfItems ;
-    simpleItemOrGroup = simpleItem | group ;
-    simpleItem = terminal | nonTerminal | embedded ;
-    listOfItems = simpleList | separatedList ;
-    multiplicity = '*' | '+' | '?' | range ;
-    range = rangeUnBraced | rangeBraced ;
-    rangeUnBraced = POSITIVE_INTEGER rangeMax? ;
-    rangeBraced = '{' POSITIVE_INTEGER rangeMax? '}' ;
-    rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
-    rangeMaxUnbounded = '+' ;
-    rangeMaxBounded = '..' POSITIVE_INTEGER_GT_ZERO ;
-    simpleList = simpleItemOrGroup multiplicity ;
-    separatedList = '[' simpleItemOrGroup '/' simpleItemOrGroup ']' multiplicity ;
-    group = '(' groupedContent ')' ;
-    groupedContent = concatenation | choice ;
-    nonTerminal = possiblyQualifiedName ;
-    embedded = possiblyQualifiedName '::' nonTerminal ;
-    terminal = LITERAL | PATTERN ;
-    leaf LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
-    leaf PATTERN = "\"(\\\"|[^\"])*\"" ;
-    leaf POSITIVE_INTEGER = "[0-9]+" ;
-    leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
-    
-    preferenceRule = 'preference' simpleItem '{' preferenceOption* '}' ;
-    preferenceOption = spine choiceNumber? 'on' terminalList associativity ;
-    choiceNumber = POSITIVE_INTEGER | CHOICE_INDICATOR ;
-    terminalList = [simpleItem / ',']+ ;
-    spine = [nonTerminal / '<-']+ ;
-    associativity = 'left' | 'right' ;
-    leaf CHOICE_INDICATOR = "EMPTY|ITEM" ;
-}
-"""
+    override val grammarString = """
+        namespace net.akehurst.language
+          grammar Grammar : Base {
+            override unit = namespace grammar+ ;
+            grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
+            extends = ':' [possiblyQualifiedName / ',']+ ;
+            rule = grammarRule | overrideRule | preferenceRule ;
+            grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
+            overrideRule = 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
+            overrideOperator = '==' | '=' | '+=|' ;
+            ruleTypeLabels = 'skip'? 'leaf'? ;
+            rhs = empty | concatenation | choice ;
+            empty = /* empty */ ;
+            choice = ambiguousChoice | priorityChoice | simpleChoice ;
+            ambiguousChoice = [concatenation / '||'] 2+ ;
+            priorityChoice = [concatenation / '<'] 2+ ;
+            simpleChoice = [concatenation / '|'] 2+ ;
+            concatenation = concatenationItem+ ;
+            concatenationItem = simpleItemOrGroup | listOfItems ;
+            simpleItemOrGroup = simpleItem | group ;
+            simpleItem = terminal | nonTerminal | embedded ;
+            listOfItems = simpleList | separatedList ;
+            multiplicity = '*' | '+' | '?' | range ;
+            range = rangeUnBraced | rangeBraced ;
+            rangeUnBraced = POSITIVE_INTEGER rangeMax? ;
+            rangeBraced = '{' POSITIVE_INTEGER rangeMax? '}' ;
+            rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
+            rangeMaxUnbounded = '+' ;
+            rangeMaxBounded = '..' POSITIVE_INTEGER_GT_ZERO ;
+            simpleList = simpleItemOrGroup multiplicity ;
+            separatedList = '[' simpleItemOrGroup '/' simpleItemOrGroup ']' multiplicity ;
+            group = '(' groupedContent ')' ;
+            groupedContent = concatenation | choice ;
+            nonTerminal = possiblyQualifiedName ;
+            embedded = possiblyQualifiedName '::' nonTerminal ;
+            terminal = LITERAL | PATTERN ;
+            leaf LITERAL = "'([^'\\]|\\.)+'" ;
+            leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
+            leaf POSITIVE_INTEGER = "[0-9]+" ;
+            leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
+            preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;
+            preferenceOption = spine choiceNumber? 'on' terminalList associativity ;
+            choiceNumber = POSITIVE_INTEGER | CHOICE_INDICATOR ;
+            terminalList = [simpleItem / ',']+ ;
+            spine = [nonTerminal / '<-']+ ;
+            associativity = 'left' | 'right' ;
+            leaf CHOICE_INDICATOR = "EMPTY|ITEM" ;
+          }
+        """.trimIndent()
 
-    val grammar: Grammar by lazy {
-        grammar(
-            namespace = "net.akehurst.language",
-            name = "Grammar"
-        ) {
-            extendsGrammar(AglBase.targetGrammar.selfReference)
-            concatenation("unit") {
-                ref("namespace"); lst(1, -1) { ref("grammar") }
-            }
-            concatenation("grammar") {
-                lit("grammar"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{")
-                lst(0, -1) { ref("option") }
-                lst(1, -1) { ref("rule") }
-                lit("}")
-            }
-            concatenation("extends") {
-                lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
-            }
-            choice("rule") {
-                ref("grammarRule")
-                ref("overrideRule")
-                ref("preferenceRule")
-            }
-            concatenation("grammarRule") {
-                ref("ruleTypeLabels"); ref("IDENTIFIER"); lit("="); ref("rhs"); lit(";")
-            }
-            concatenation("overrideRule") {
-                lit("override"); ref("ruleTypeLabels"); ref("IDENTIFIER"); ref("overrideOperator"); ref("rhs"); lit(";")
-            }
-            choice("overrideOperator") {
-                lit("==")
-                lit("=")
-                lit("+=|")
-            }
-            concatenation("ruleTypeLabels") {
-                opt { lit("skip") }; opt { lit("leaf") }
-            }
-            choice("rhs") {
-                ref("empty");
-                ref("concatenation")
-                ref("choice")
-            }
-            empty("empty")
-            choice("choice") {
-                ref("ambiguousChoice")
-                ref("priorityChoice") //TODO: remove this
-                ref("simpleChoice")
-            }
-            separatedList("ambiguousChoice", 2, -1) { ref("concatenation");lit("||") }
-            separatedList("priorityChoice", 2, -1) { ref("concatenation");lit("<") }
-            separatedList("simpleChoice", 2, -1) { ref("concatenation");lit("|") }
-            list("concatenation", 1, -1) { ref("concatenationItem") }
-            choice("concatenationItem") {
-                ref("simpleItemOrGroup")
-                ref("listOfItems")
-            }
-            choice("simpleItemOrGroup") {
-                ref("simpleItem")
-                ref("group")
-            }
-            choice("simpleItem") {
-                ref("terminal")
-                ref("nonTerminal")
-                ref("embedded")
-            }
-            choice("listOfItems") {
-                ref("simpleList")
-                ref("separatedList")
-                // TODO: Associative lists ?
-            }
-            choice("multiplicity") {
-                lit("*")
-                lit("+")
-                lit("?")
-                ref("range")
-            }
-            choice("range") {
-                ref("rangeUnBraced")
-                ref("rangeBraced")
-            }
-            concatenation("rangeUnBraced") {
-                ref("POSITIVE_INTEGER"); opt { ref("rangeMax") }
-            }
-            concatenation("rangeBraced") {
-                lit("{"); ref("POSITIVE_INTEGER"); opt { ref("rangeMax") }; lit("}")
-            }
-            choice("rangeMax") {
-                ref("rangeMaxUnbounded")
-                ref("rangeMaxBounded")
-            }
-            concatenation("rangeMaxUnbounded") { lit("+") }
-            concatenation("rangeMaxBounded") {
-                lit(".."); ref("POSITIVE_INTEGER_GT_ZERO")
-            }
-            concatenation("simpleList") {
-                ref("simpleItemOrGroup"); ref("multiplicity")
-            }
-            concatenation("separatedList") {
-                lit("["); ref("simpleItemOrGroup"); lit("/"); ref("simpleItemOrGroup"); lit("]"); ref("multiplicity")
-            }
-            concatenation("group") {
-                lit("("); ref("groupedContent"); lit(")")
-            }
-            choice("groupedContent") {
-                ref("concatenation")
-                ref("choice")
-            }
-            concatenation("nonTerminal") { ref("possiblyQualifiedName") }
-            concatenation("embedded") {
-                ref("possiblyQualifiedName"); lit("::"); ref("nonTerminal")
-            }
-            choice("terminal") {
-                ref("LITERAL")
-                ref("PATTERN")
-            }
-            concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)+'") }
-            concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)+\"") }
-            concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") }
-            concatenation("POSITIVE_INTEGER_GT_ZERO", isLeaf = true) { pat("[1-9][0-9]*") }
-
-            concatenation("preferenceRule") {
-                lit("preference"); ref("simpleItem"); lit("{")
-                lst(1, -1) { ref("preferenceOption") }
-                lit("}")
-            }
-            concatenation("preferenceOption") {
-                ref("spine"); opt {ref("choiceNumber")}; lit("on"); ref("terminalList"); ref("associativity")
-            }
-            choice("choiceNumber") {
-                concat { ref("POSITIVE_INTEGER") }
-                concat { ref("CHOICE_INDICATOR") }
-            }
-            separatedList("terminalList", 1, -1) { ref("simpleItem"); lit(",") }
-            separatedList("spine", 1, -1) { ref("nonTerminal"); lit("<-") }
-            choice("associativity") {
-                lit("left")
-                lit("right")
-            }
-            concatenation("CHOICE_INDICATOR", isLeaf = true) { pat("EMPTY|ITEM") }
-        }
-    }
-
-    const val styleStr: String = """namespace net.akehurst.language
-  styles Grammar {
-    'namespace', 'grammar', 'extends', 'override', 'skip', 'leaf' {
-      foreground: darkgreen;
-      font-style: bold;
-    }
-    LITERAL {
-      foreground: blue;
-    }
-    PATTERN {
-      foreground: darkblue;
-    }
-    IDENTIFIER {
-      foreground: darkred;
-      font-style: italic;
-    }
-    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
-      foreground: LightSlateGrey;
-    }
-  }"""
-
-    val formatStr = """
-namespace net.akehurst.language.Grammar {
-    Namespace -> 'namespace §possiblyQualifiedName'
-    Grammar -> 'grammar §name §{extendsOpt()}{
-                 §{options.join(§eol)}
-                 §{rules.join(§eol)}
-               }'
-    fun Grammar.extendsOpt() = when {
-      extends.isEmpty -> ''
-      else -> ': §{extends.join(',')} '
-    }
-    GrammarReference -> nameOrQName
-    GrammarOption -> '@§name §value'
-    GrammarRule -> '§{isOverride?'override ':''}§{isSkip?'skip ':''}§{isLeaf?'leaf ':''}§name = §rhs ;'
-    PreferenceRule -> ''
-    ChoiceLongest -> when {
-         2 >= alternative.size -> alternative.join(' | ')
-         else -> alternative.join('§eol§indent| ')
-    }
-    ChoiceAmbiguous -> when {
-         2 >= alternative.size -> alternative.join(' || ')
-         else -> alternative.join('§eol§indent| ')
-    }
-    Concatenation -> items.join(' ')
-    OptionalItem -> '§{item}?'
-    SimpleList -> '§item§{multiplicity()}'
-    SeparatedList -> '[ §item / §separator ]§{multiplicity()}'
-    fun ListOfItems.multiplicity() = when {
-        0==min && 1==max -> '?'
-        1==min && -1==max -> '+'
-        0==min && -1==max -> '*'
-        -1==max -> '§min+'
-        else -> '{§min..§max}'
-    }
-    Group -> '(§groupedContent)'
-    EmptyRule -> ''
-    Terminal -> when {
-        isPattern -> '"value"'
-        else '\'§value\''
-    }
-    NonTerminal -> name
-    Embedded -> '§{embeddedGrammarReference}::§{embeddedGoalName}'
-}
-""".trimIndent().replace("§", "\$")
-
-    //TODO: gen this from the ASM
-    override fun toString(): String = grammarStr
-
-    const val komposite = """namespace net.akehurst.language.grammar.api
+    override val kompositeString = """namespace net.akehurst.language.grammar.api
 interface Grammar {
     cmp extends
     cmp options
@@ -334,8 +135,172 @@ interface Embedded {
 }
 """;
 
+    override val styleString: String = """namespace net.akehurst.language
+  styles Grammar {
+    'namespace', 'grammar', 'extends', 'override', 'skip', 'leaf' {
+      foreground: darkgreen;
+      font-style: bold;
+    }
+    LITERAL {
+      foreground: blue;
+    }
+    PATTERN {
+      foreground: darkblue;
+    }
+    IDENTIFIER {
+      foreground: darkred;
+      font-style: italic;
+    }
+    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
+      foreground: LightSlateGrey;
+    }
+  }"""
+
+    override val grammarModel: GrammarModel by lazy {
+        grammarModel(AglBase.NAME) {
+            namespace(NAMESPACE_NAME) {
+                grammar(NAME) {
+                    extendsGrammar(AglBase.targetGrammar.selfReference)
+                    concatenation("unit", overrideKind = OverrideKind.REPLACE) {
+                        ref("namespace"); lst(1, -1) { ref("grammar") }
+                    }
+                    concatenation("grammar") {
+                        lit("grammar"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{")
+                        lst(0, -1) { ref("option") }
+                        lst(1, -1) { ref("rule") }
+                        lit("}")
+                    }
+                    concatenation("extends") {
+                        lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
+                    }
+                    choice("rule") {
+                        ref("grammarRule")
+                        ref("overrideRule")
+                        ref("preferenceRule")
+                    }
+                    concatenation("grammarRule") {
+                        ref("ruleTypeLabels"); ref("IDENTIFIER"); lit("="); ref("rhs"); lit(";")
+                    }
+                    concatenation("overrideRule") {
+                        lit("override"); ref("ruleTypeLabels"); ref("IDENTIFIER"); ref("overrideOperator"); ref("rhs"); lit(";")
+                    }
+                    choice("overrideOperator") {
+                        lit("==")
+                        lit("=")
+                        lit("+=|")
+                    }
+                    concatenation("ruleTypeLabels") {
+                        opt { lit("skip") }; opt { lit("leaf") }
+                    }
+                    choice("rhs") {
+                        ref("empty");
+                        ref("concatenation")
+                        ref("choice")
+                    }
+                    empty("empty")
+                    choice("choice") {
+                        ref("ambiguousChoice")
+                        ref("priorityChoice") //TODO: remove this
+                        ref("simpleChoice")
+                    }
+                    separatedList("ambiguousChoice", 2, -1) { ref("concatenation");lit("||") }
+                    separatedList("priorityChoice", 2, -1) { ref("concatenation");lit("<") }
+                    separatedList("simpleChoice", 2, -1) { ref("concatenation");lit("|") }
+                    list("concatenation", 1, -1) { ref("concatenationItem") }
+                    choice("concatenationItem") {
+                        ref("simpleItemOrGroup")
+                        ref("listOfItems")
+                    }
+                    choice("simpleItemOrGroup") {
+                        ref("simpleItem")
+                        ref("group")
+                    }
+                    choice("simpleItem") {
+                        ref("terminal")
+                        ref("nonTerminal")
+                        ref("embedded")
+                    }
+                    choice("listOfItems") {
+                        ref("simpleList")
+                        ref("separatedList")
+                        // TODO: Associative lists ?
+                    }
+                    choice("multiplicity") {
+                        lit("*")
+                        lit("+")
+                        lit("?")
+                        ref("range")
+                    }
+                    choice("range") {
+                        ref("rangeUnBraced")
+                        ref("rangeBraced")
+                    }
+                    concatenation("rangeUnBraced") {
+                        ref("POSITIVE_INTEGER"); opt { ref("rangeMax") }
+                    }
+                    concatenation("rangeBraced") {
+                        lit("{"); ref("POSITIVE_INTEGER"); opt { ref("rangeMax") }; lit("}")
+                    }
+                    choice("rangeMax") {
+                        ref("rangeMaxUnbounded")
+                        ref("rangeMaxBounded")
+                    }
+                    concatenation("rangeMaxUnbounded") { lit("+") }
+                    concatenation("rangeMaxBounded") {
+                        lit(".."); ref("POSITIVE_INTEGER_GT_ZERO")
+                    }
+                    concatenation("simpleList") {
+                        ref("simpleItemOrGroup"); ref("multiplicity")
+                    }
+                    concatenation("separatedList") {
+                        lit("["); ref("simpleItemOrGroup"); lit("/"); ref("simpleItemOrGroup"); lit("]"); ref("multiplicity")
+                    }
+                    concatenation("group") {
+                        lit("("); ref("groupedContent"); lit(")")
+                    }
+                    choice("groupedContent") {
+                        ref("concatenation")
+                        ref("choice")
+                    }
+                    concatenation("nonTerminal") { ref("possiblyQualifiedName") }
+                    concatenation("embedded") {
+                        ref("possiblyQualifiedName"); lit("::"); ref("nonTerminal")
+                    }
+                    choice("terminal") {
+                        ref("LITERAL")
+                        ref("PATTERN")
+                    }
+                    concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)+'") }
+                    concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)+\"") }
+                    concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") }
+                    concatenation("POSITIVE_INTEGER_GT_ZERO", isLeaf = true) { pat("[1-9][0-9]*") }
+
+                    concatenation("preferenceRule") {
+                        lit("preference"); ref("simpleItem"); lit("{")
+                        lst(1, -1) { ref("preferenceOption") }
+                        lit("}")
+                    }
+                    concatenation("preferenceOption") {
+                        ref("spine"); opt { ref("choiceNumber") }; lit("on"); ref("terminalList"); ref("associativity")
+                    }
+                    choice("choiceNumber") {
+                        concat { ref("POSITIVE_INTEGER") }
+                        concat { ref("CHOICE_INDICATOR") }
+                    }
+                    separatedList("terminalList", 1, -1) { ref("simpleItem"); lit(",") }
+                    separatedList("spine", 1, -1) { ref("nonTerminal"); lit("<-") }
+                    choice("associativity") {
+                        lit("left")
+                        lit("right")
+                    }
+                    concatenation("CHOICE_INDICATOR", isLeaf = true) { pat("EMPTY|ITEM") }
+                }
+            }
+        }
+    }
+
     /** implemented as kotlin classes **/
-    val typeModel: TypeModel by lazy {
+    override val typeModel: TypeModel by lazy {
         //TODO: GrammarTypeNamespace?
         typeModel("Grammar", true, AglBase.typeModel.namespace) {
             namespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
@@ -770,14 +735,14 @@ interface Embedded {
         }
     }
 
-    val asmTransform by lazy {
+    override val asmTransformModel: TransformModel by lazy {
         asmTransform(
-            name = grammar.name.value,
+            name = NAME,
             typeModel = typeModel,
             createTypes = false
         ) {
-            namespace(qualifiedName = grammar.qualifiedName.value) {
-                transform(grammar.name.value) {
+            namespace(qualifiedName = NAMESPACE_NAME) {
+                transform(NAME) {
                     createObject("unit", "DefinitionBlock") {
                         assignment("definitions", "child[1]")
                     }
@@ -793,16 +758,16 @@ interface Embedded {
                         assignment(
                             "embeddedGrammarReference",
                             """
-                GrammarReference {
-                    localNamespace := ???
-                    nameOrQName := child[0]
-                }
-                """.trimIndent()
+                            GrammarReference {
+                                localNamespace := ???
+                                nameOrQName := child[0]
+                            }
+                            """.trimIndent()
                         )
                     }
                     createObject("terminal", "Terminal") {
                         assignment("value", "child[0].dropAtBothEnds(1)")
-                        assignment("isPattern", "1 == §alternative")
+                        assignment("isPattern", "1 == \$alternative")
                     }
 
                     transRule("qualifiedName", "String", "children.join()")
@@ -815,6 +780,70 @@ interface Embedded {
             }
         }
     }
+
+    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+
+    override val formatModel: AglFormatModel by lazy {
+        formatModel(AglBase.NAME) {
+            TODO("not implemented")
+        }
+    }
+
+    override val styleModel: AglStyleModel by lazy {
+        styleModel(AglBase.NAME) {
+            TODO("not implemented")
+        }
+    }
+
+    val formatStr = $$"""
+namespace net.akehurst.language.Grammar {
+    Namespace -> 'namespace $possiblyQualifiedName'
+    Grammar -> 'grammar $name ${extendsOpt()}{
+                 ${options.join($eol)}
+                 ${rules.join($eol)}
+               }'
+    fun Grammar.extendsOpt() = when {
+      extends.isEmpty -> ''
+      else -> ': ${extends.join(',')} '
+    }
+    GrammarReference -> nameOrQName
+    GrammarOption -> '@$name $value'
+    GrammarRule -> '${isOverride?'override ':''}${isSkip?'skip ':''}${isLeaf?'leaf ':''}$name = $rhs ;'
+    PreferenceRule -> ''
+    ChoiceLongest -> when {
+         2 >= alternative.size -> alternative.join(' | ')
+         else -> alternative.join('$eol$indent| ')
+    }
+    ChoiceAmbiguous -> when {
+         2 >= alternative.size -> alternative.join(' || ')
+         else -> alternative.join('$eol$indent| ')
+    }
+    Concatenation -> items.join(' ')
+    OptionalItem -> '${item}?'
+    SimpleList -> '$item${multiplicity()}'
+    SeparatedList -> '[ $item / $separator ]${multiplicity()}'
+    fun ListOfItems.multiplicity() = when {
+        0==min && 1==max -> '?'
+        1==min && -1==max -> '+'
+        0==min && -1==max -> '*'
+        -1==max -> '$min+'
+        else -> '{$min..$max}'
+    }
+    Group -> '($groupedContent)'
+    EmptyRule -> ''
+    Terminal -> when {
+        isPattern -> '"value"'
+        else '\'$value\''
+    }
+    NonTerminal -> name
+    Embedded -> '${embeddedGrammarReference}::${embeddedGoalName}'
+}
+""".trimIndent().replace("$", "\$")
+
+    val targetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
+
+    //TODO: gen this from the ASM
+    override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 
 }
 

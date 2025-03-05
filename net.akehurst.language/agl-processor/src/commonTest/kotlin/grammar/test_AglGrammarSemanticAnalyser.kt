@@ -59,7 +59,7 @@ class test_AglGrammarSemanticAnalyser {
         }
 
         fun parse(sentence: String): SharedPackedParseTree {
-            val conv = ConverterToRuntimeRules(AglGrammar.grammar)
+            val conv = ConverterToRuntimeRules(AglGrammar.targetGrammar)
             val rrs = conv.runtimeRuleSet
             val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             val parser = LeftCornerParser(scanner, rrs)

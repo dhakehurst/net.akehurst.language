@@ -299,7 +299,7 @@ abstract class GrammarAbstract(
         sb.append("grammar $name")
         val extendsStr = when {
             extends.isEmpty() -> ""
-            else -> " extends ${extends.joinToString(separator = ", ") { it.nameOrQName.toString() }}"
+            else -> " : ${extends.joinToString(separator = ", ") { it.nameOrQName.toString() }}"
         }
         sb.append(extendsStr)
         sb.append(" {\n")

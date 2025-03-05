@@ -255,7 +255,7 @@ class TerminalDefault(
         error("subitem ${index} not found")
     }
 
-    override fun toString(): String = if (isPattern) "\"$value\"" else "'$value'"
+    override fun toString(): String = if (isPattern) "\"${value.replace("\"","\\\"")}\"" else "'${value.replace("'","\\'")}'"
 }
 
 class NonTerminalDefault(

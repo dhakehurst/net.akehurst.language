@@ -29,7 +29,7 @@ import kotlin.test.assertNotNull
 
 internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
-    private val grammar = AglGrammar.grammar
+    private val grammar = AglGrammar.targetGrammar
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
     private val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals.toList())
     private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)
