@@ -30,7 +30,7 @@ import kotlin.test.assertNotNull
 class test_AglGrammar_parse_item {
 
     private companion object {
-        private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammar.targetGrammar)
+        private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammar.defaultTargetGrammar)
         private val parser: Parser =
             LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals), converterToRuntimeRules.runtimeRuleSet)
     }

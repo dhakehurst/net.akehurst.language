@@ -76,61 +76,6 @@ class ScannerOnDemand(
             else -> lh.content.any { this.isLookingAt(sentence, position, it) }
         }
     }
-    /*
-        private fun matchLiteral(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
-            val rhs = terminalRule.rhs
-            return when (rhs) {
-                is RuntimeRuleRhsLiteral -> when {
-                    rhs.literalUnescaped.isEmpty() -> error("Zero length literals are not permitted.")
-                    else -> {
-                        val match = this.isLookingAt(position, terminalRule)
-                        when {
-                            match -> {
-                                val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).literalUnescaped
-                                val eolPositions = emptyList<Int>() //this.eolPositions(text)
-                                RegexMatcher.MatchResult(text, eolPositions)
-                            }
-
-                            else -> null
-                        }
-                    }
-                }
-
-                else -> error("Should not happen")
-            }
-        }
-
-        private fun matchRegEx(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
-            val m = regex.find(this.sentence.text, position)
-            return if (null == m)
-                null
-            else {
-                val matchedText = m.value
-                val x = this.sentence.text.substring(position, position + matchedText.length)
-                if (x == matchedText) {
-                    matchedText
-                } else {
-                    null
-                }
-            }
-        }
-
-        private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
-            val matchedText = regex.matchAt(this.sentence.text, position)?.value
-            return if (null == matchedText || 0 == matchedText.length)
-                null
-            else {
-                val eolPositions = eolPositions(matchedText)
-                RegexMatcher.MatchResult(matchedText, eolPositions)
-            }
-        }
-
-        private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
-            val stext = this.sentence.text.substring(position)
-            val match = regex.find(stext)
-            return match?.value
-        }
-    */
 
     internal fun tryMatchText(sentence: Sentence, position: Int, terminalRule: RuntimeRule): Int {
         val rhs = terminalRule.rhs as RuntimeRuleRhsTerminal

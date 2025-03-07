@@ -40,7 +40,7 @@ class test_SharedPackedParseTree {
         fun parse(rrs:RuntimeRuleSet, goal:String, sentence: Sentence): ParseResult {
             val scaner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             val parser = LeftCornerParser(scaner, rrs)
-            return parser.parse(sentence.text, ParseOptionsDefault(goal))
+            return parser.parse(sentence.text, ParseOptionsDefault(goalRuleName = goal))
         }
     }
 

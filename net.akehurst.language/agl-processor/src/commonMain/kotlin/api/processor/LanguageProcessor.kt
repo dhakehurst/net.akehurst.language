@@ -29,6 +29,7 @@ import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sppt.api.SPPTParser
@@ -126,7 +127,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar
      */
-    fun scan(sentence: String): ScanResult
+    fun scan(sentence: String, options: ScanOptions?=null): ScanResult
 
     /**
      * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.

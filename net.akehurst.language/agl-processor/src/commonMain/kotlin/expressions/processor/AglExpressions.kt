@@ -113,7 +113,7 @@ grammar Expression extends Base {
         namespace = "net.akehurst.language",
         name = "Expressions"
     ) {
-        extendsGrammar(AglBase.targetGrammar.selfReference)
+        extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
         choice("expression") {
             ref("rootExpression")
             ref("literalExpression")

@@ -16,9 +16,14 @@
 
 package net.akehurst.language.grammar.processor
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatModel
@@ -36,12 +41,12 @@ import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglGrammar : LanguageObjectAbstract<Any, SentenceContext>() {
+object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextFromGrammarRegistry>() {
+    const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
-    const val NAMESPACE_NAME = "net.akehurst.language"
-    const val goalRuleName = "unit"
-
     const val OPTION_defaultGoalRule = "defaultGoalRule"
+
+    override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
     override val grammarString = """
         namespace net.akehurst.language
@@ -157,10 +162,10 @@ interface Embedded {
   }"""
 
     override val grammarModel: GrammarModel by lazy {
-        grammarModel(AglBase.NAME) {
+        grammarModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
-                    extendsGrammar(AglBase.targetGrammar.selfReference)
+                    extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
                     concatenation("unit", overrideKind = OverrideKind.REPLACE) {
                         ref("namespace"); lst(1, -1) { ref("grammar") }
                     }
@@ -790,9 +795,9 @@ interface Embedded {
     }
 
     override val styleModel: AglStyleModel by lazy {
-        styleModel(AglBase.NAME) {
-            TODO("not implemented")
-        }
+        val res = Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), styleString)
+        check(res.issues.errors.isEmpty()) { res.issues.toString() }
+        res.asm!!
     }
 
     val formatStr = $$"""
@@ -840,7 +845,12 @@ namespace net.akehurst.language.Grammar {
 }
 """.trimIndent().replace("$", "\$")
 
-    val targetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
+    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
+    override val defaultTargetGoalRule: String = "unit"
+
+    override val syntaxAnalyser: SyntaxAnalyser<GrammarModel> by lazy { AglGrammarSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextFromGrammarRegistry> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarModel, ContextFromGrammarRegistry> by lazy { AglGrammarCompletionProvider() }
 
     //TODO: gen this from the ASM
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"

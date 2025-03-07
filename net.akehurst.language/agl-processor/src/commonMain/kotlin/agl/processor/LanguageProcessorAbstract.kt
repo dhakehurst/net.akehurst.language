@@ -40,6 +40,7 @@ import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sentence.common.SentenceDefault
@@ -65,14 +66,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val scanner: Scanner? by lazy {
         val res = configuration.scannerResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
     override val parser: Parser? by lazy {
         //ScanOnDemandParser(this.runtimeRuleSet)
         val res = configuration.parserResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
@@ -97,7 +98,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val baseTypeModel: TypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
             ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
     }
@@ -106,7 +107,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val asmTransformModel: TransformModel by lazy {
         val res = configuration.asmTransformModelResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
             ?: TransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
             ?: error("should not happen")
@@ -119,32 +120,32 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val crossReferenceModel: CrossReferenceModel by lazy {
         val res = configuration.crossReferenceModelResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar" + grammarModel.name.value))
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by lazy {
         val res = configuration.semanticAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
     override val formatModel: AglFormatModel? by lazy {
         val res = configuration.formatModelResolver?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
     override val formatter: Formatter<AsmType>? by lazy {
         val res = configuration.formatModelResolver?.invoke(this)
         res?.let {
-            this.issues.addAll(res.issues)
+            this.issues.addAllFrom(res.issues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
                 FormatterOverAsmSimple(it, typeModel, this.issues) as Formatter<AsmType>
@@ -154,7 +155,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
         val res = configuration.completionProvider?.invoke(this)
-        res?.let { this.issues.addAll(res.issues) }
+        res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
@@ -166,7 +167,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun parseOptionsDefault(): ParseOptions = ParseOptionsDefault(
-        this.defaultGoalRuleName?.value
+        goalRuleName = this.defaultGoalRuleName?.value
     )
 
     override fun optionsDefault(): ProcessOptions<AsmType, ContextType> =
@@ -181,8 +182,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return this
     }
 
-    override fun scan(sentence: String): ScanResult {
-        return this.scanner?.scan(SentenceDefault(sentence), 0)?.also { scanner?.reset() }
+    override fun scan(sentence: String, options: ScanOptions?): ScanResult {
+        return this.scanner?.scan(SentenceDefault(sentence), options)?.also { scanner?.reset() }
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Scanner")
     }
 
@@ -216,15 +217,15 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {
         val opts = defaultOptions(options)
         val parseResult = this.parse(sentence, opts.parse)
-        return if (null == parseResult.sppt || opts.syntaxAnalysis.active.not()) {
+        return if (null == parseResult.sppt || opts.syntaxAnalysis.enabled.not()) {
             ProcessResultDefault(null, parseResult.issues)
         } else {
             val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(parseResult.sppt!!, opts)
-            if (null == synxResult.asm || opts.semanticAnalysis.active.not() || null == this.semanticAnalyser) {
+            if (null == synxResult.asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
                 val issues = parseResult.issues + synxResult.issues
                 if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
                 if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
-                if (opts.semanticAnalysis.active.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
+                if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
                 ProcessResultDefault(synxResult.asm, issues)
             } else {
                 opts.semanticAnalysis.locationMap = synxResult.locationMap

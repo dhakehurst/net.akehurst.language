@@ -68,7 +68,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
 
     private val transformFromGrammar = cached {
         val res = TransformDomainDefault.fromGrammarModel(_grammarModel)
-        _issues.addAll(res.issues)
+        _issues.addAllFrom(res.issues)
         res.asm!!
     }
 

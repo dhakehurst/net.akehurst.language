@@ -35,9 +35,9 @@ class test_LanguageProcessor_scan {
             }
             val result = pr.processor!!.scan(sentence)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-            assertEquals(expected.size, result.tokens.size)
+            assertEquals(expected.size, result.allTokens.size)
             for (i in expected.indices) {
-                assertEquals(expected[i], result.tokens[i])
+                assertEquals(expected[i], result.allTokens[i])
             }
         }
 
@@ -65,7 +65,7 @@ class test_LanguageProcessor_scan {
     fun pattern_empty_a() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = \"[x]*\"; }")
         val sentence = SentenceDefault("ab")
-        val tokens = pr.processor!!.scan(sentence.text).tokens
+        val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -82,7 +82,7 @@ class test_LanguageProcessor_scan {
     fun a_a() {
         val pr = Agl.processorFromStringSimple(GrammarString("namespace test grammar Test { a = 'a';}"))
         val sentence = SentenceDefault("a")
-        val tokens = pr.processor!!.scan(sentence.text).tokens
+        val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -98,7 +98,7 @@ class test_LanguageProcessor_scan {
     @Test
     fun a_aa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
-        val tokens = pr.processor!!.scan("aa").tokens
+        val tokens = pr.processor!!.scan("aa").allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -109,7 +109,7 @@ class test_LanguageProcessor_scan {
     @Test
     fun a_aaa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
-        val tokens = pr.processor!!.scan("aaa").tokens
+        val tokens = pr.processor!!.scan("aaa").allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -121,7 +121,7 @@ class test_LanguageProcessor_scan {
     fun ab_aba() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
         val sentence = SentenceDefault("aba")
-        val tokens = pr.processor!!.scan(sentence.text).tokens
+        val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -145,12 +145,12 @@ class test_LanguageProcessor_scan {
             }
         """.trimIndent()
         )
-        var tokens = pr.processor!!.scan("a").tokens
+        var tokens = pr.processor!!.scan("a").allTokens
         var tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(1, tokens.size)
 
-        tokens = pr.processor!!.scan("a b").tokens
+        tokens = pr.processor!!.scan("a b").allTokens
         tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(3, tokens.size)
@@ -158,7 +158,7 @@ class test_LanguageProcessor_scan {
         tokens = pr.processor!!.scan("""
              a
              b
-        """).tokens
+        """).allTokens
         tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(5, tokens.size)

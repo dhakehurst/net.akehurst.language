@@ -25,14 +25,14 @@ import net.akehurst.language.sentence.api.InputLocation
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)
  */
 interface SyntaxAnalysisOptions<AsmType : Any> {
-    var active: Boolean
+    var enabled: Boolean
 }
 
 /**
  * Options to configure the semantic analysis of an Abstract Syntax Model (ASM)
  */
 interface SemanticAnalysisOptions<ContextType : Any> {
-    var active: Boolean
+    var enabled: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
     var buildScope:Boolean

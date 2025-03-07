@@ -23,6 +23,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.parser.api.RulePosition
@@ -32,7 +33,9 @@ import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 
-interface LanguageObject {
+interface LanguageObject<AsmType : Any, ContextType : Any> {
+    val identity: LanguageIdentity
+
     val grammarString: String
     val typemodelString: String
     val kompositeString: String
@@ -48,9 +51,16 @@ interface LanguageObject {
     val crossReferenceModel: CrossReferenceModel
     val styleModel: AglStyleModel
     val formatModel: AglFormatModel
+
+    val defaultTargetGrammar: Grammar
+    val defaultTargetGoalRule: String
+
+    val syntaxAnalyser: SyntaxAnalyser<AsmType>?
+    val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    val completionProvider: CompletionProvider<AsmType, ContextType>?
 }
 
-abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : LanguageObject {
+abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : LanguageObject<AsmType, ContextType> {
 
     companion object {
         const val GOAL_RULE = RuntimeRuleSet.GOAL_RULE_NUMBER
@@ -66,7 +76,7 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
         val GOAL = ParseAction.GOAL
     }
 
-    override val kompositeModel: TypeModel  get() = typeModel
+    override val kompositeModel: TypeModel get() = typeModel
 
     override val grammarString: String by lazy { grammarModel.asString() }
     override val typemodelString: String by lazy { typeModel.asString() }
@@ -79,7 +89,7 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
     open val ruleSet: RuleSet get() = TODO()
     open val mapToGrammar: (Int, Int) -> RuleItem get() = TODO()
     open val automata: Map<String, Automaton> get() = TODO()
-    open val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = TODO()
-    open val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = TODO()
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = TODO()
+    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = TODO()
 
 }

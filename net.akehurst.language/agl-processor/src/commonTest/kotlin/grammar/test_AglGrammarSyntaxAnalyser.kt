@@ -35,17 +35,17 @@ import kotlin.test.assertTrue
 class test_AglGrammarSyntaxAnalyser {
 
     private companion object {
-        val conv = ConverterToRuntimeRules(AglGrammar.targetGrammar)
+        val conv = ConverterToRuntimeRules(AglGrammar.defaultTargetGrammar)
         val rrs = conv.runtimeRuleSet
         val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
         val parser = LeftCornerParser(scanner, rrs)
 
         fun parse(sentence: String): SharedPackedParseTree {
-            val conv = ConverterToRuntimeRules(AglGrammar.targetGrammar)
+            val conv = ConverterToRuntimeRules(AglGrammar.defaultTargetGrammar)
             val rrs = conv.runtimeRuleSet
             val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             val parser = LeftCornerParser(scanner, rrs)
-            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.goalRuleName) })
+            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.defaultTargetGoalRule) })
             assertTrue(res.issues.isEmpty(), res.issues.toString())
             return res.sppt!!
         }

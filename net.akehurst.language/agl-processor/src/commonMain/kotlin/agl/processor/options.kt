@@ -37,11 +37,11 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 ) : ProcessOptions<AsmType, ContextType>
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
-    override var active: Boolean = true
+    override var enabled: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType>
 
 class SemanticAnalysisOptionsDefault<ContextType : Any>(
-    override var active: Boolean = true,
+    override var enabled: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
     override var buildScope: Boolean = true,

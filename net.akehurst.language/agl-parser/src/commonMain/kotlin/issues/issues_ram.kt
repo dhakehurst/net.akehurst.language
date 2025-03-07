@@ -24,8 +24,8 @@ import net.akehurst.language.sentence.api.InputLocation
 
 operator fun IssueCollection<LanguageIssue>.plus(other: IssueCollection<LanguageIssue>): IssueHolder {
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
-    issues.addAll(this)
-    issues.addAll(other)
+    issues.addAllFrom(this)
+    issues.addAllFrom(other)
     return issues
 }
 
@@ -59,9 +59,12 @@ class IssueHolder(
     fun error(location: InputLocation?, message: String, data: Any? = null) =
         raise(LanguageIssueKind.ERROR, defaultPhase, location, message, data)
 
+    fun addAll(issues: Iterable<LanguageIssue>) {
+        this._issues.addAll(issues)
+    }
 
-    fun addAll(other: IssueCollection<LanguageIssue>) {
-        this._issues.addAll(other.all)
+    fun addAllFrom(other: IssueCollection<LanguageIssue>) {
+        this.addAll(other.all)
     }
 
     override val size: Int get() = this._issues.size

@@ -55,7 +55,7 @@ class test_RuntimeParser {
         val goal = "S"
         val position = 0
 
-        val actual = sp.expectedAt(sentence, position, ParseOptionsDefault(goal))
+        val actual = sp.expectedAt(sentence, position, ParseOptionsDefault(goalRuleName = goal))
 
         val expected = setOf(rrs.findTerminalRule("'a'"))
 //TODO()
@@ -73,7 +73,7 @@ class test_RuntimeParser {
         val goal = "S"
         val position = 0
 
-        val actual = sp.expectedTerminalsAt(sentence, position, ParseOptionsDefault(goal))
+        val actual = sp.expectedTerminalsAt(sentence, position, ParseOptionsDefault(goalRuleName = goal))
 
         val expected = setOf(rrs.findTerminalRule("'a'"))
 

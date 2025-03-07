@@ -120,7 +120,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
                         null
                     } else {
                         val r = it.invoke(p)
-                        _issues.addAll(r.issues)
+                        _issues.addAllFrom(r.issues)
                         r.asm
                     }
                 }

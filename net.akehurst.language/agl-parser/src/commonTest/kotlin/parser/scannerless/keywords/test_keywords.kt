@@ -56,7 +56,7 @@ class test_keywords : test_LeftCornerParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = ParseOptionsDefault(goal),
+            options = ParseOptionsDefault(goalRuleName = goal),
             scannerKind = ScannerKind.OnDemand,
             expectedTrees = arrayOf(expected)
         )
@@ -78,7 +78,7 @@ class test_keywords : test_LeftCornerParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = ParseOptionsDefault(goal),
+            options = ParseOptionsDefault(goalRuleName = goal),
             scannerKind = ScannerKind.OnDemand,
             expectedTrees = arrayOf(expected)
         )
@@ -100,7 +100,7 @@ class test_keywords : test_LeftCornerParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = ParseOptionsDefault(goal),
+            options = ParseOptionsDefault(goalRuleName = goal),
             scannerKind = ScannerKind.Classic,
             expectedTrees = arrayOf(expected)
         )
@@ -120,7 +120,7 @@ class test_keywords : test_LeftCornerParserAbstract() {
             rrs = rrs,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            options = ParseOptionsDefault(goal),
+            options = ParseOptionsDefault(goalRuleName = goal),
             scannerKind = ScannerKind.Classic,
         )
 

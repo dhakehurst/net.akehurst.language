@@ -65,7 +65,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyse
         val treeData = (sppt as SPPTFromTreeData).treeData
         this.walkTree(sentence, treeData, false)
         this.embeddedSyntaxAnalyser.values.forEach {
-            this.issues.addAll((it as SyntaxAnalyserFromTreeDataAbstract).issues)
+            this.issues.addAllFrom((it as SyntaxAnalyserFromTreeDataAbstract).issues)
         }
         return SyntaxAnalysisResultDefault(asm, issues, locationMap)
     }

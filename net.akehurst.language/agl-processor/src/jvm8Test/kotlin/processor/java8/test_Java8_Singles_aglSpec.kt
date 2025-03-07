@@ -80,7 +80,7 @@ class test_Java8_Singles_aglSpec {
             grammarDefinitionStr = grammarStr,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    enabled(false) // switch off for performance
                 }
             },
             configuration = Agl.configuration {

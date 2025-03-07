@@ -147,7 +147,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     private fun updateGrammarStr(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue?.value, aglOptions)
-            this._issues.addAll(res.issues)
+            this._issues.addAllFrom(res.issues)
             this.grammarModel = when {
                 res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
                 else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
@@ -168,8 +168,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                     else -> {
                         val res = TypeModelSimple.fromString( newValue)
                         when {
-                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
-                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAllFrom(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAllFrom(res.issues)
                             null == res.asm -> error("Internal error: no TypeModel, but no errors reported")
                             else -> error("Internal error: situation not handled")
                         }
@@ -199,8 +199,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                         val context = ContextFromGrammarAndTypeModel(grammarModel, processor!!.baseTypeModel)
                         val res = TransformDomainDefault.fromString(context, newValue)
                         when {
-                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
-                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAllFrom(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAllFrom(res.issues)
                             null == res.asm -> error("Internal error: no AsmTransformModel, but no errors reported")
                             else -> error("Internal error: situation not handled")
                         }
@@ -232,8 +232,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                         val res = CrossReferenceModelDefault.fromString(ContextFromTypeModel(this.typeModel!!), newValue)
                         //val res = Agl.registry.agl.crossReference.processor!!.process(newValue)
                         when {
-                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
-                            res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                            res.issues.errors.isEmpty() && null != res.asm -> _issues.addAllFrom(res.issues) //add non-errors if any
+                            res.issues.errors.isNotEmpty() -> _issues.addAllFrom(res.issues)
                             null == res.asm -> error("Internal error: no CrossReferenceModel, but no errors reported")
                             else -> error("Internal error: situation not handled")
                         }
@@ -255,8 +255,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 } else {
                     val res = Agl.registry.agl.style.processor!!.process(newValue.value)
                     when {
-                        res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
-                        res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                        res.issues.errors.isEmpty() && null != res.asm -> _issues.addAllFrom(res.issues) //add non-errors if any
+                        res.issues.errors.isNotEmpty() -> _issues.addAllFrom(res.issues)
                         null == res.asm -> error("Internal error: no StyleModel, but no errors reported")
                         else -> error("Internal error: situation not handled")
                     }

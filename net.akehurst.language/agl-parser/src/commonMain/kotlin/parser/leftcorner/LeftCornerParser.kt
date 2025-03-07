@@ -36,6 +36,7 @@ import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import kotlin.math.max
 
 class ParseOptionsDefault(
+    override var enabled:Boolean = true,
     override var goalRuleName: String? = null,
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,

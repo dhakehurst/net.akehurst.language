@@ -35,9 +35,19 @@ annotation class ProcessOptionsDslMarker
 class ScanOptionsBuilder(
     base: ScanOptions
 ) {
+    private var _enabled: Boolean = true
+    private var _resultsByLine: Boolean = false
+
+    fun enabled(value: Boolean) {
+        _enabled = value
+    }
+
+    fun resultsByLine(value: Boolean) {
+        _resultsByLine = value
+    }
 
     fun build(): ScanOptions {
-        return ScanOptionsDefault()
+        return ScanOptionsDefault(_enabled, _resultsByLine)
     }
 }
 
@@ -45,10 +55,15 @@ class ScanOptionsBuilder(
 class ParseOptionsBuilder(
     base: ParseOptions
 ) {
+    private var _enabled: Boolean = true
     private var _goalRuleName: String? = base.goalRuleName
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
+
+    fun enabled(value: Boolean) {
+        _enabled = value
+    }
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
@@ -68,7 +83,7 @@ class ParseOptionsBuilder(
 
     fun build(): ParseOptions {
         return ParseOptionsDefault(
-            _goalRuleName, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+            _enabled, _goalRuleName, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
         )
     }
 }
@@ -127,14 +142,14 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
     base: SyntaxAnalysisOptions<AsmType>
 ) {
 
-    private var _active = base.active
+    private var _enabled = base.enabled
 
-    fun active(value: Boolean) {
-        _active = value
+    fun enabled(value: Boolean) {
+        _enabled = value
     }
 
     fun build(): SyntaxAnalysisOptions<AsmType> {
-        return SyntaxAnalysisOptionsDefault<AsmType>(_active)
+        return SyntaxAnalysisOptionsDefault<AsmType>(_enabled)
     }
 }
 
@@ -143,7 +158,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
     base: SemanticAnalysisOptions<ContextType>
 ) {
 
-    private var _active = base.active
+    private var _enabled = base.enabled
     private var _locationMap = base.locationMap
     private var _context: ContextType? = base.context
     private var _buildScope = base.buildScope
@@ -153,8 +168,8 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
     private var _resolveReferences = base.resolveReferences
     private val _options = base.other.toMutableMap()
 
-    fun active(value: Boolean) {
-        _active = value
+    fun enabled(value: Boolean) {
+        _enabled = value
     }
 
     fun locationMap(value: Map<Any, InputLocation>) {
@@ -191,7 +206,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     fun build(): SemanticAnalysisOptions<ContextType> {
         return SemanticAnalysisOptionsDefault<ContextType>(
-            _active,
+            _enabled,
             _locationMap,
             _context,
             _buildScope,

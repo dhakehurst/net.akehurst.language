@@ -47,7 +47,7 @@ class test_AglGrammarSemanticAnalyser {
             // grammars are registered in a registry when semantically analysed,
             // thus need to analyse Base grammar first
             val context = ContextFromGrammarRegistry(Agl.registry)
-            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.targetGrammar.namespace as GrammarNamespace))
+            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
             semanticAnalysis(
                 SyntaxAnalysisResultDefault(
                     gm,
@@ -59,11 +59,11 @@ class test_AglGrammarSemanticAnalyser {
         }
 
         fun parse(sentence: String): SharedPackedParseTree {
-            val conv = ConverterToRuntimeRules(AglGrammar.targetGrammar)
+            val conv = ConverterToRuntimeRules(AglGrammar.defaultTargetGrammar)
             val rrs = conv.runtimeRuleSet
             val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             val parser = LeftCornerParser(scanner, rrs)
-            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.goalRuleName) })
+            val res = parser.parse(sentence, Agl.parseOptions { goalRuleName(AglGrammar.defaultTargetGoalRule) })
             assertTrue(res.issues.isEmpty(), res.issues.toString())
             return res.sppt!!
         }

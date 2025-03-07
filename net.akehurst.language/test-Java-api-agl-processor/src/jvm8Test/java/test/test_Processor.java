@@ -91,9 +91,9 @@ public class test_Processor {
             ScanResult result = proc.scan(sentence.getText());
 
             Assert.assertNotNull(result);
-            Assert.assertFalse(result.getTokens().isEmpty());
+            Assert.assertFalse(result.getAllTokens().isEmpty());
             String scanned = "";
-            for(LeafData it:result.getTokens()) {
+            for(LeafData it:result.getAllTokens()) {
                 scanned += sentence.textAt(it.getPosition(), it.getLength());
             }
 

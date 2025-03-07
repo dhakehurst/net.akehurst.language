@@ -47,7 +47,7 @@ class test_TreeDataComplete {
         fun test(sentence: String, rrs: RuntimeRuleSet, goal: String, parent: SpptDataNode, expected: List<Pair<OptionNum, List<SpptDataNode>>>) {
             //when ()
             val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
-            val tree = parser.parse(sentence, ParseOptionsDefault(goal)).sppt!!.treeData
+            val tree = parser.parse(sentence, ParseOptionsDefault(goalRuleName = goal)).sppt!!.treeData
             val actual = tree.childrenFor(parent)
 
             //then

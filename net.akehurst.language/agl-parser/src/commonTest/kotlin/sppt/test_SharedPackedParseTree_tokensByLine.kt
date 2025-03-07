@@ -52,7 +52,7 @@ class test_SharedPackedParseTree_tokensByLine {
         val parser = LeftCornerParser(scaner, rrs)
 
         fun parse(sentence: Sentence): ParseResult {
-            return parser.parse(sentence.text, ParseOptionsDefault("S"))
+            return parser.parse(sentence.text, ParseOptionsDefault(goalRuleName = "S"))
         }
     }
 

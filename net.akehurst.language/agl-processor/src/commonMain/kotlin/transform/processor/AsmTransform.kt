@@ -57,7 +57,7 @@ grammar AsmTransform : Base {
         namespace = "net.akehurst.language",
         name = "AsmTransform"
     ) {
-        extendsGrammar(AglBase.targetGrammar.selfReference)
+        extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 
         concatenation("unit") {
             lst(0, -1) { ref("option") }

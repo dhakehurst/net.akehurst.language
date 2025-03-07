@@ -28,16 +28,29 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.regex.api.RegexEngine
 import net.akehurst.language.scanner.api.*
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.LeafData
 
 class ScanOptionsDefault(
+    override var enabled:Boolean = true,
+    override var resultsByLine:Boolean = false,
+    override var startAtPosition: Int = 0,
+    override var offsetPosition: Int = 0
 ) : ScanOptions
 
 
 data class ScanResultDefault(
-    override val tokens: List<LeafData>,
+    override val tokensByLine: List<List<LeafData>>,
     override val issues: IssueCollection<LanguageIssue>
-) : ScanResult
+) : ScanResult {
+    override val allTokens: List<LeafData> by lazy { tokensByLine.flatten() }
+}
+
+data class ScanByLineEndState(
+    val tokens:List<LeafData>,
+    val eolPosition: Int,
+    val leftOverText: String
+)
 
 abstract class ScannerAbstract(
     override val regexEngine: RegexEngine
@@ -59,27 +72,117 @@ abstract class ScannerAbstract(
         return len
     }
 
-    override fun scan(sentence: Sentence, startAtPosition: Int, offsetPosition: Int): ScanResult {
+    override fun scan(sentence: Sentence, options: ScanOptions?): ScanResult {
+        val opts = options ?: ScanOptionsDefault()
         //TODO: improve this algorithm...it is not efficient
         this.reset()
+        val startAtPosition = opts.startAtPosition
+        val offsetPosition = opts.offsetPosition
         val inputText = sentence.text
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
-        val undefined = RuntimeRuleSet.UNDEFINED_RULE
+        return when {
+            opts.resultsByLine -> {
+                val result = mutableListOf<List<LeafData>>()
+                val lines = sentence.text.split("\n")
+                var state = ScanByLineEndState(emptyList(), -1, "")
+                for(ln in lines) {
+                    val res = scanByLine(state,sentence, offsetPosition)
+                    result.add(res.tokens)
+                    state = res
+                }
+                ScanResultDefault(result, issues)
+            }
+            else -> {
+                val result = mutableListOf<LeafData>()
+                var position = startAtPosition
+                var nextInputPosition = position
+                var currentUndefinedText = ""
+                var currentUndefinedStart = -1
+                while (nextInputPosition < inputText.length) {
+                    val matches: List<LeafData> = this.matchables.mapNotNull {
+                        val matchLength = it.matchedLength(sentence, position)
+                        when (matchLength) {
+                            -1 -> null
+                            0 -> null
+                            else -> {
+                                //val loc = sentence.locationFor(startPosition, matchLength)
+                                //val matchedText = inputText.substring(startPosition, startPosition + matchLength)
+                                LeafData(it.tag, it.kind == MatchableKind.REGEX, position + offsetPosition, matchLength, emptyList())
+                            }
+                        }
+                    }
+                    // prefer literals over patterns
+                    val longest = matches.maxWithOrNull(Comparator<LeafData> { l1, l2 ->
+                        when {
+                            l1.isPattern.not() && l2.isPattern -> 1
+                            l1.isPattern && l2.isPattern.not() -> -1
+                            else -> when {
+//                        l1.location.length > l2.location.length -> 1
+//                        l2.location.length > l1.location.length -> -1
+                                l1.length > l2.length -> 1
+                                l2.length > l1.length -> -1
+                                else -> 0
+                            }
+                        }
+                    })
+                    when {
+                        //(null == longest || longest.location.length == 0) -> {
+                        (null == longest || longest.length == 0) -> {
+                            val text = inputText[nextInputPosition].toString()
+                            if (-1 == currentUndefinedStart) {
+                                currentUndefinedStart = nextInputPosition
+                            }
+                            currentUndefinedText += text
+                            nextInputPosition += 1
+                        }
+
+                        else -> {
+                            if (-1 != currentUndefinedStart) {
+//                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
+//                        val ud = LeafData(undefined.tag, false, loc, emptyList())
+                                val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+                                result.add(ud)
+                                currentUndefinedStart = -1
+                                currentUndefinedText = ""
+                            }
+                            result.add(longest)
+//                    nextInputPosition += longest.location.length
+                            nextInputPosition += longest.length
+                        }
+                    }
+                    position = nextInputPosition
+                }
+                //catch undefined stuff at end
+                if (-1 != currentUndefinedStart) {
+                    val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
+//            val ud = LeafData(undefined.tag, false, loc, emptyList())
+                    val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+                    result.add(ud)
+                }
+                 ScanResultDefault(listOf(result), issues)
+            }
+        }
+    }
+
+    /*
+     * if tokens pass over an eol then we must scan that portion twice
+     * once for each line
+     */
+    fun scanByLine(previousState:ScanByLineEndState, sentence: Sentence, offsetPosition:Int): ScanByLineEndState {
         val result = mutableListOf<LeafData>()
-        var position = startAtPosition
-        var nextInputPosition = position
+        // start scanning at start of leftOverText
+        val startPosition = previousState.eolPosition - previousState.leftOverText.length  + 1
         var currentUndefinedText = ""
         var currentUndefinedStart = -1
-        while (nextInputPosition < inputText.length) {
+        var nextInputPosition = startPosition
+        while (nextInputPosition < sentence.text.length) {
             val matches: List<LeafData> = this.matchables.mapNotNull {
-                val matchLength = it.matchedLength(sentence, position)
+                val matchLength = it.matchedLength(sentence, nextInputPosition)
                 when (matchLength) {
                     -1 -> null
                     0 -> null
                     else -> {
-                        //val loc = sentence.locationFor(startPosition, matchLength)
-                        //val matchedText = inputText.substring(startPosition, startPosition + matchLength)
-                        LeafData(it.tag, it.kind == MatchableKind.REGEX, position + offsetPosition, matchLength, emptyList())
+                        LeafData(it.tag, it.kind == MatchableKind.REGEX, nextInputPosition + offsetPosition, matchLength, emptyList())
                     }
                 }
             }
@@ -100,7 +203,7 @@ abstract class ScannerAbstract(
             when {
                 //(null == longest || longest.location.length == 0) -> {
                 (null == longest || longest.length == 0) -> {
-                    val text = inputText[nextInputPosition].toString()
+                    val text = sentence.text[nextInputPosition].toString()
                     if (-1 == currentUndefinedStart) {
                         currentUndefinedStart = nextInputPosition
                     }
@@ -112,7 +215,7 @@ abstract class ScannerAbstract(
                     if (-1 != currentUndefinedStart) {
 //                        val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
 //                        val ud = LeafData(undefined.tag, false, loc, emptyList())
-                        val ud = LeafData(undefined.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+                        val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
                         result.add(ud)
                         currentUndefinedStart = -1
                         currentUndefinedText = ""
@@ -122,16 +225,16 @@ abstract class ScannerAbstract(
                     nextInputPosition += longest.length
                 }
             }
-            position = nextInputPosition
         }
         //catch undefined stuff at end
         if (-1 != currentUndefinedStart) {
             val loc = sentence.locationFor(currentUndefinedStart, currentUndefinedText.length)
 //            val ud = LeafData(undefined.tag, false, loc, emptyList())
-            val ud = LeafData(undefined.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
+            val ud = LeafData(RuntimeRuleSet.UNDEFINED_RULE.tag, false, currentUndefinedStart + offsetPosition, currentUndefinedText.length, emptyList())
             result.add(ud)
         }
-        return ScanResultDefault(result, issues)
+        val leftOverText = ""
+        return ScanByLineEndState(result, nextInputPosition, leftOverText)
     }
 
 }

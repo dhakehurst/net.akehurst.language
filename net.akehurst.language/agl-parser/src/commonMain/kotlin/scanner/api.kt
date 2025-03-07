@@ -27,7 +27,14 @@ import net.akehurst.language.sppt.api.LeafData
 import net.akehurst.language.sppt.api.SpptDataNode
 
 interface ScanResult {
-    val tokens: List<LeafData>
+    /**
+     * if the scan options resultsByLine is false, the first list of LeafData contains all tokens
+     * else each list represents a separate line
+     */
+    val tokensByLine: List<List<LeafData>>
+
+    val allTokens: List<LeafData>
+
     val issues: IssueCollection<LanguageIssue>
 }
 
@@ -46,10 +53,14 @@ interface Scanner {
     fun matchedLength(sentence: Sentence, position: Int, terminalRule: Rule):Int
     fun findOrTryCreateLeaf(sentence: Sentence, position: Int, terminalRule: Rule): SpptDataNode?
 
-    fun scan(sentence: Sentence, startAtPosition: Int = 0, offsetPosition: Int = 0): ScanResult
+    fun scan(sentence: Sentence, options: ScanOptions?=null): ScanResult
 }
 
 interface ScanOptions {
+    var enabled:Boolean
+    var resultsByLine:Boolean
+    var startAtPosition: Int
+    var offsetPosition: Int
 }
 
 enum class MatchableKind { EOT, LITERAL, REGEX }

@@ -17,6 +17,7 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -57,9 +58,9 @@ grammar Style : Base {
         namespace = "net.akehurst.language",
         name = "Style"
     ) {
-        extendsGrammar(AglBase.targetGrammar.selfReference)
+        extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 
-        concatenation("unit") {
+        concatenation("unit", overrideKind = OverrideKind.REPLACE) {
             ref("namespace"); lst(0, -1) { ref("styleSet") }
         }
         concatenation("styleSet") {

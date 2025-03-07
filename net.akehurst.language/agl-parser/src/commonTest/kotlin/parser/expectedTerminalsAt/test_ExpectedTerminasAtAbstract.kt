@@ -30,7 +30,7 @@ abstract class test_ExpectedTerminasAtAbstract {
 
     protected fun test(rrs: RuleSet, goal: String, data: TestData) {
         val parser = LeftCornerParser(ScannerOnDemand(RegexEnginePlatform, rrs.terminals), rrs)
-        val result = parser.expectedTerminalsAt(data.sentence, data.position, ParseOptionsDefault(goal))
+        val result = parser.expectedTerminalsAt(data.sentence, data.position, ParseOptionsDefault(true, goal))
 
         val actual = result.filter { it.isEmptyTerminal.not() && it.isEmptyListTerminal.not() && it.isSkip.not() }.map { (it as RuntimeRule).rhs.toString() }.toSet()
         val expected = data.expected

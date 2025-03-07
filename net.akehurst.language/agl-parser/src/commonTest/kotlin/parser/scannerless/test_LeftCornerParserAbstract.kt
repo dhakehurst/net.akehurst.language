@@ -61,7 +61,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
         )
     }
 
-    fun test_fail(rrs: RuleSet, goal: String, sentence: String, expected:Set<LanguageIssue>, options: ParseOptions = ParseOptionsDefault(goal), scannerKind: ScannerKind = ScannerKind.OnDemand) {
+    fun test_fail(rrs: RuleSet, goal: String, sentence: String, expected:Set<LanguageIssue>, options: ParseOptions = ParseOptionsDefault(goalRuleName = goal), scannerKind: ScannerKind = ScannerKind.OnDemand) {
         val scanner = when (scannerKind) {
             ScannerKind.OnDemand -> ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
             ScannerKind.Classic -> ScannerClassic(RegexEnginePlatform, rrs.terminals)
@@ -97,7 +97,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
     ): SharedPackedParseTree? =
         testWithOptions(
             rrs, embeddedRuntimeRuleSets, sentence, expectedNumGSSHeads, printAutomaton,
-            ParseOptionsDefault(goal),
+            ParseOptionsDefault(goalRuleName = goal),
             ScannerKind.OnDemand,
             *expectedTrees
         )
@@ -146,7 +146,7 @@ abstract class test_LeftCornerParserAbstract(val build: Boolean = false) {
     }
 
     fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection<LanguageIssue>> {
-        val r = testFailWithOptions(rrs, sentence, expectedNumGSSHeads, ParseOptionsDefault(goal), ScannerKind.OnDemand)
+        val r = testFailWithOptions(rrs, sentence, expectedNumGSSHeads, ParseOptionsDefault(goalRuleName = goal), ScannerKind.OnDemand)
         return Pair(r.sppt, r.issues)
     }
 

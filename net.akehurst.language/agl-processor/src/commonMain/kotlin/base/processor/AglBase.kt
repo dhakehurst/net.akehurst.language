@@ -18,12 +18,18 @@
 package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
@@ -33,8 +39,10 @@ import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
+    const val NAMESPACE_NAME = "net.akehurst.language"
     const val NAME = "Base"
-    const val goalRuleName = "qualifiedName"
+
+    override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
     override val grammarString: String = """namespace net.akehurst.language
   grammar $NAME {
@@ -224,7 +232,13 @@ namespace net.akehurst.language.base.asm
         }
     }
 
-    val targetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
+    override val defaultTargetGoalRule: String = "qualifiedName"
+    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.Base"))!! }
+
+    override val syntaxAnalyser: SyntaxAnalyser<Any>? = null
+    override val semanticAnalyser: SemanticAnalyser<Any, SentenceContext>? = null
+    override val completionProvider: CompletionProvider<Any, SentenceContext>? = null
+
 
     //TODO: gen this from the ASM
     override fun toString(): String = grammarString.trimIndent()

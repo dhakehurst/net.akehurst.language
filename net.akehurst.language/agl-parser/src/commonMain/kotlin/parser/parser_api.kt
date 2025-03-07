@@ -159,6 +159,7 @@ interface RuntimeSpine {
  * there is no separate scanner, so scanner options are passed to the parser
  */
 interface ParseOptions {
+    var enabled:Boolean
     var goalRuleName: String?
     var reportErrors: Boolean
     var reportGrammarAmbiguities: Boolean

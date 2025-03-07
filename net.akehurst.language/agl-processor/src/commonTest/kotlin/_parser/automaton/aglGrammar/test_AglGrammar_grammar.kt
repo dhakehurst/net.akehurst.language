@@ -27,7 +27,7 @@ import kotlin.test.Test
 
 internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
-    private val grammar = AglGrammar.targetGrammar
+    private val grammar = AglGrammar.defaultTargetGrammar
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
     private val scanner = ScannerOnDemand(RegexEnginePlatform, converterToRuntimeRules.runtimeRuleSet.terminals.toList())
     private val parser = LeftCornerParser(scanner, converterToRuntimeRules.runtimeRuleSet)

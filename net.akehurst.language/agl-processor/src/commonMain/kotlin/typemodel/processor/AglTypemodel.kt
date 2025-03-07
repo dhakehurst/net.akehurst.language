@@ -17,13 +17,25 @@
 
 package net.akehurst.language.typemodel.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.typemodel.processor.TypemodelSyntaxAnalyser
+import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.AglGrammarCompletionProvider
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
@@ -31,8 +43,11 @@ import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
-
+    const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
+    const val NAME = "Typemodel"
     const val goalRuleName = "unit"
+
+    override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
     override val grammarString = """namespace net.akehurst.language
   grammar Typemodel : Base {
@@ -121,10 +136,10 @@ namespace net.akehurst.language.grammarTypemodel.api
 """
 
     override val grammarModel: GrammarModel by lazy {
-        grammarModel("AglTypemodel") {
-            namespace("net.akehurst.language") {
-                grammar("Typemodel") {
-                    extends("net.akehurst.language.Base")
+        grammarModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                grammar(NAME) {
+                    extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
                     choice("definition") {
                         ref("singletonDefinition")
                         ref("primitiveDefinition")
@@ -731,10 +746,19 @@ namespace net.akehurst.language.grammarTypemodel.api
 
     override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
 
-    override val styleModel: AglStyleModel get() = TODO("not implemented")
+    override val styleModel: AglStyleModel by lazy {
+        val res = Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), styleString)
+        check(res.issues.errors.isEmpty()) { res.issues.toString() }
+        res.asm!!
+    }
 
     override val formatModel: AglFormatModel get() = TODO("not implemented")
 
+    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule: String = "unit"
 
-    val targetGrammar get() = grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("net.akehurst.language.TypeModel"))!!
+    override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypemodelSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextFromGrammar> by lazy { TypemodelSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypeModel, ContextFromGrammar> by lazy { TypemodelCompletionProvider() }
+
 }

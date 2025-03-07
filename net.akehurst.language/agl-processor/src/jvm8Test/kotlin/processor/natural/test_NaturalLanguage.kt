@@ -82,7 +82,7 @@ class test_NaturalLanguage(val data: Data) {
     @Test
     fun test() {
         val sentence = SentenceDefault(this.data.sentence)
-        val scan = processor.scan(sentence.text).tokens
+        val scan = processor.scan(sentence.text).allTokens
         scan.forEach { l ->
             if (l.name == "undefined") {
                 throw RuntimeException("Found unknown words '${sentence.textAt(l.position,l.length)}', at ${sentence.locationFor(l.position, l.length)}")

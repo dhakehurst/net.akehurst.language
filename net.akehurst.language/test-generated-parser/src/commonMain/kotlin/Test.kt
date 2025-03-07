@@ -20,7 +20,9 @@ import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.runtime.structure.ruleSet
+import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -32,6 +34,7 @@ import net.akehurst.language.automaton.leftcorner.aut
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -48,6 +51,9 @@ import net.akehurst.language.typemodel.builder.typeModel
 object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>() {
 
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
+
+    override val identity: LanguageIdentity
+        get() = TODO("not implemented")
 
     override val grammarString = """
         namespace test
@@ -67,6 +73,10 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>()
     override val crossReferenceModel: CrossReferenceModel get() = TODO("builder for cross reference model")
     override val styleModel: AglStyleModel get() = TODO("not implemented")
     override val formatModel: AglFormatModel get() = TODO("not implemented")
+    override val defaultTargetGrammar: Grammar
+        get() = TODO("not implemented")
+    override val defaultTargetGoalRule: String
+        get() = TODO("not implemented")
 
     override val ruleSet: RuleSet = ruleSet("Test") {
         concatenation("S") { literal("a") }
@@ -92,6 +102,8 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextAsmSimple>()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
     override val semanticAnalyser: SemanticAnalyser<Asm, ContextAsmSimple> = SemanticAnalyserSimple(typeModel, crossReferenceModel)
+    override val completionProvider: CompletionProvider<Asm, ContextAsmSimple>?
+        get() = TODO("not implemented")
     val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typeModel, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
