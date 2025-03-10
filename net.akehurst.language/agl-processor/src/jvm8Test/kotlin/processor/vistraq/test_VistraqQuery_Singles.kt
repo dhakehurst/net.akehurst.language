@@ -386,10 +386,10 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
         println("parse")
         val goal = "query"
-        processor.parse(queryStr, ParseOptionsDefault(goal))
+        processor.parse(queryStr, ParseOptionsDefault(goalRuleName = goal))
         println("timed parse")
         val v = measureTimedValue {
-            processor.parse(queryStr, ParseOptionsDefault(goal))
+            processor.parse(queryStr, ParseOptionsDefault(goalRuleName = goal))
         }
         println(v.duration)
         val result = v.value

@@ -234,7 +234,7 @@ UnitOfMeasurement {
 //    }
 //}
         """.trimIndent()
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }

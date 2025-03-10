@@ -512,7 +512,7 @@ grammar Packages : Interfaces {
         val sentence = """
         {}
         """.trimIndent()
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

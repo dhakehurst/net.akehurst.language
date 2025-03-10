@@ -62,7 +62,7 @@ class test_Java8_Singles_aglOptm {
         val sentence = "0"
         val goal = "Literal"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -73,7 +73,7 @@ class test_Java8_Singles_aglOptm {
         val sentence = "true"
         val goal = "Expression"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         // expect WIDTH ambiguity as 'true' could be a type name
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
@@ -128,7 +128,7 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
-        val result = p.parse(sentence, ParseOptionsDefault(goal))
+        val result = p.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -140,7 +140,7 @@ class test_Java8_Singles_aglOptm {
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -150,7 +150,7 @@ class test_Java8_Singles_aglOptm {
     fun Expression_arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -160,7 +160,7 @@ class test_Java8_Singles_aglOptm {
     fun ArrayAccess__arrayIndex() {
         val sentence = "a[0]"
         val goal = "ArrayAccess"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -204,7 +204,7 @@ grammar Expressions {
 
         val sentence = "a[b]"
         val goal = "ArrayAccess"
-        val result = p.parse(sentence, ParseOptionsDefault(goal))
+        val result = p.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -214,7 +214,7 @@ grammar Expressions {
     fun Expression__arrayIndex_navigationToField() {
         val sentence = "a[0].b"
         val goal = "Expression"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -225,7 +225,7 @@ grammar Expressions {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -235,7 +235,7 @@ grammar Expressions {
     fun TypeDeclaration__class_fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -245,7 +245,7 @@ grammar Expressions {
     fun ClassBody__fieldDeclaration() {
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -255,7 +255,7 @@ grammar Expressions {
     fun CompilationUnit__fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -266,7 +266,7 @@ grammar Expressions {
         val sentence = "0b012"
         val goal = "VariableInitializer"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNull(result.sppt)
         assertEquals(
             listOf(
@@ -303,7 +303,7 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "CompilationUnit"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -314,7 +314,7 @@ public class BadBinaryLiterals {
     fun BlockStatement__UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -324,7 +324,7 @@ public class BadBinaryLiterals {
     fun BlockStatement__UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -334,7 +334,7 @@ public class BadBinaryLiterals {
     fun Block__UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -344,7 +344,7 @@ public class BadBinaryLiterals {
     fun ClassDeclaration__enumDecl() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -357,7 +357,7 @@ public class BadBinaryLiterals {
     fun CompilationUnit__interfaceDecl() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -369,7 +369,7 @@ public class BadBinaryLiterals {
     fun CompilationUnit__class_with_constructor() {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -381,7 +381,7 @@ public class BadBinaryLiterals {
     fun FormalParameterList__A_a() {
         val sentence = "A a"
         val goal = "FormalParameterList"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -394,7 +394,7 @@ public class BadBinaryLiterals {
     fun FormalParameterList__A_this() {
         val sentence = "A this"
         val goal = "FormalParameterList"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -407,7 +407,7 @@ public class BadBinaryLiterals {
     fun FormalParameterList__varargsParameter() {
         val sentence = "A... this"
         val goal = "FormalParameterList"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -420,7 +420,7 @@ public class BadBinaryLiterals {
     fun FormalParameterList__2parameters() {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -433,7 +433,7 @@ public class BadBinaryLiterals {
     fun FormalParameterList__3parameters() {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -446,7 +446,7 @@ public class BadBinaryLiterals {
     fun ConstructorDeclaration__head_body() {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -459,7 +459,7 @@ public class BadBinaryLiterals {
     fun ConstructorDeclarator__head() {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -472,7 +472,7 @@ public class BadBinaryLiterals {
     fun ConstructorBody__body() {
         val sentence = "{  }"
         val goal = "ConstructorBody"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -528,7 +528,7 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "Block"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -640,7 +640,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "CompilationUnit"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -658,7 +658,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "Statement"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(2, result.sppt!!.maxNumHeads)
@@ -680,7 +680,7 @@ class A {
         """.trimIndent()
         val goal = "CompilationUnit"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.errors.toString())
         assertNotNull(result.sppt)
         assertEquals(3, result.sppt!!.maxNumHeads)
@@ -703,7 +703,7 @@ class A {
         """.trimIndent()
         val goal = "Statement"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(2, result.sppt!!.maxNumHeads)
@@ -720,7 +720,7 @@ class A {
         """.trimIndent()
         val goal = "Navigations"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -737,7 +737,7 @@ class A {
         """.trimIndent()
         val goal = "MethodInvocation"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -754,7 +754,7 @@ class A {
         """.trimIndent()
         val goal = "Navigations"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -771,7 +771,7 @@ class A {
         """.trimIndent()
         val goal = "Navigations"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -788,7 +788,7 @@ class A {
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -805,7 +805,7 @@ class A {
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -822,7 +822,7 @@ class A {
         """.trimIndent()
         val goal = "MethodInvocation"
 
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -850,7 +850,7 @@ class A {
         val goal = "TypeReference"
         for (sentence in sentences) {
             println("sentence = '$sentence'")
-            val result = proc.parse(sentence, ParseOptionsDefault(goal))
+            val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
             assertTrue(result.issues.notWidth.isEmpty(), result.issues.toString())
             assertNotNull(result.sppt)
             assertTrue(2 >= result.sppt!!.maxNumHeads)
@@ -861,7 +861,7 @@ class A {
     fun Expression__InfixAdditive() {
         val sentence = "1+2+3+4"
         val goal = "Expression"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -873,7 +873,7 @@ class A {
         val goal = "Expression"
         for (sentence in sentences) {
             println("sentence = '$sentence'")
-            val result = proc.parse(sentence, ParseOptionsDefault(goal))
+            val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
             assertTrue(result.issues.isEmpty(), result.issues.toString())
             assertNotNull(result.sppt)
             assertTrue(1 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
@@ -886,7 +886,7 @@ class A {
         val goal = "Expression"
         for (sentence in sentences) {
             println("sentence = '$sentence'")
-            val result = proc.parse(sentence, ParseOptionsDefault(goal))
+            val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
             assertTrue(result.issues.isEmpty(), result.issues.toString())
             assertNotNull(result.sppt)
             println(result.sppt!!.toStringAll)
@@ -899,7 +899,7 @@ class A {
         val sentences = listOf("+1", "-1", "++1", "--1")
         val goal = "Expression"
         for (sentence in sentences) {
-            val result = proc.parse(sentence, ParseOptionsDefault(goal))
+            val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
             assertTrue(result.issues.isEmpty(), result.issues.toString())
             assertNotNull(result.sppt)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -912,7 +912,7 @@ class A {
         val goal = "Expression"
         for (sentence in sentences) {
             println("sentence = '$sentence'")
-            val result = proc.parse(sentence, ParseOptionsDefault(goal))
+            val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
             assertNotNull(result.sppt)
             println(result.sppt!!.toStringAll)
             assertTrue(result.issues.notWidth.isEmpty(), result.issues.toString())
@@ -933,7 +933,7 @@ public class Test${"$"}Test {
 }
         """
         val goal = "CompilationUnit"
-        val result = proc.parse(sentence, ParseOptionsDefault(goal))
+        val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)

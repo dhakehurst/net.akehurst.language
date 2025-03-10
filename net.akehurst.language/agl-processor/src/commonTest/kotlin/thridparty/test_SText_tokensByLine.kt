@@ -261,7 +261,7 @@ FQN = ID ('.' ID)*;
     @Test
     fun t1() {
         val text = "after 10 s / raise ABC.intEvent"
-        val result = processor.parse(text, ParseOptionsDefault("StateScope"))
+        val result = processor.parse(text, ParseOptionsDefault(goalRuleName = "StateScope"))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)

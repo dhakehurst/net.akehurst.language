@@ -44,7 +44,7 @@ class test_Xml_Singles {
             <?xml version="1.0" encoding="UTF-8" ?>
             <root ></root>
         """.trimIndent()
-        val result = processor.parse(sentence, ParseOptionsDefault(goal))
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNull(result.sppt)
         assertTrue(result.issues.isNotEmpty())
     }

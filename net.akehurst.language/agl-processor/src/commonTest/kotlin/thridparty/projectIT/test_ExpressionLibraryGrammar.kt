@@ -86,7 +86,7 @@ class test_ExpressionLibraryGrammar {
                 | 4567 | ;
                 | ( true - false + "aap" ) | ;
         """.trimIndent()
-        processor.parse(sentence, ParseOptionsDefault(goal))
+        processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
     }
 
 }

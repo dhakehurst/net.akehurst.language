@@ -16,17 +16,17 @@
 
 package net.akehurst.language.automaton.leftcorner
 
+internal data class FirstOfResult(val needsFirstOfParentNext: Boolean, val result: LookaheadSetPart) {
+    fun union(other: FirstOfResult) = FirstOfResult(this.needsFirstOfParentNext || other.needsFirstOfParentNext, this.result.union(other.result))
+    fun endResult(firstOfParentNext: LookaheadSetPart) = when {
+        needsFirstOfParentNext -> result.union(firstOfParentNext)
+        else -> result
+    }
+}
+
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
 ) : BuildCache {
-
-    private data class FirstOfResult(val needsFirstOfParentNext: Boolean, val result: LookaheadSetPart) {
-        fun union(other: FirstOfResult) = FirstOfResult(this.needsFirstOfParentNext || other.needsFirstOfParentNext, this.result.union(other.result))
-        fun endResult(firstOfParentNext: LookaheadSetPart) = when {
-            needsFirstOfParentNext -> result.union(firstOfParentNext)
-            else -> result
-        }
-    }
 
     protected var _cacheOff = true
 

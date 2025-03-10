@@ -83,7 +83,7 @@ class test_QueryParserValid(val data: Data) {
     fun parse() {
         val queryStr = this.data.queryStr
         val goal = "query"
-        val result = processor.parse(queryStr, ParseOptionsDefault(goal))
+        val result = processor.parse(queryStr, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         val resultStr = result.sppt!!.asSentence

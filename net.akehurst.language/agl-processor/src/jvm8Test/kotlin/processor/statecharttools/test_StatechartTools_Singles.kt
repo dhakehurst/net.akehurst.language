@@ -121,7 +121,7 @@ class test_StatechartTools_Singles {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "true || false"
-        val result = processors[grammar].parse(sentence, ParseOptionsDefault(goal))
+        val result = processors[grammar].parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)

@@ -53,7 +53,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            ParseOptionsDefault(goal)
+            ParseOptionsDefault(goalRuleName = goal)
         )
     }
 
@@ -66,7 +66,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            ParseOptionsDefault(goal)
+            ParseOptionsDefault(goalRuleName = goal)
         )
 
         p.parse(
@@ -77,7 +77,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            ParseOptionsDefault(goal)
+            ParseOptionsDefault(goalRuleName = goal)
         )
     }
 
@@ -91,7 +91,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            ParseOptionsDefault(goal)
+            ParseOptionsDefault(goalRuleName = goal)
         )
     }
 
@@ -106,7 +106,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            ParseOptionsDefault(goal)
+            ParseOptionsDefault(goalRuleName = goal)
         )
     }
 
