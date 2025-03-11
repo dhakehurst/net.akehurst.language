@@ -23,6 +23,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -57,34 +58,33 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 scannerKind = this._scannerKind,
                 scannerResolver = this._scannerResolver,
                 parserResolver = this._parserResolver,
-                asmTransformModelResolver = this._asmTransformModelResolver,
-                typeModelResolver = this._typeModelResolver,
-                crossReferenceModelResolver = this._crossReferenceModelResolver,
+                transformResolver = this._asmTransformModelResolver,
+                typesResolver = this._typeModelResolver,
+                crossReferenceResolver = this._crossReferenceModelResolver,
                 syntaxAnalyserResolver = this._syntaxAnalyserResolver,
                 semanticAnalyserResolver = this._semanticAnalyserResolver,
-                formatModelResolver = this._formatterResolver,
+                formatResolver = this._formatterResolver,
                 styleResolver = this._styleResolver, //not used to create processor
-                completionProvider = this._completionProviderResolver
+                completionProviderResolver = this._completionProviderResolver
             )
         }
         set(value) {
-            this.updateConfiguration(value)
-            super._processor_cache.reset()
+            this.updateFromConfiguration(value)
         }
 
-    override var grammarStr: GrammarString? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var grammarString: GrammarString? by Delegates.observable(null) { _, oldValue, newValue ->
         updateGrammarStr(oldValue, newValue)
     }
 
-    override var typeModelStr: TypeModelString? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var typesString: TypesString? by Delegates.observable(null) { _, oldValue, newValue ->
         updateTypeModelStr(oldValue, newValue)
     }
 
-    override var asmTransformStr: TransformString? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var transformString: TransformString? by Delegates.observable(null) { _, oldValue, newValue ->
         updateAsmTransformStr(oldValue, newValue)
     }
 
-    override var crossReferenceStr: CrossReferenceString? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var crossReferenceString: CrossReferenceString? by Delegates.observable(null) { _, oldValue, newValue ->
         updateCrossReferenceStr(oldValue, newValue)
     }
 
@@ -101,27 +101,31 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             }
         }
     */
-    override var styleStr: StyleString? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var styleString: StyleString? by Delegates.observable(null) { _, oldValue, newValue ->
         updateStyleStr(oldValue, newValue)
     }
 
-    init {
-        grammarStr = grammarStrArg
+    override var formatString: FormatString? by Delegates.observable(null) { _, oldValue, newValue ->
+        //updateStyleStr(oldValue, newValue)
     }
 
-    override fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
+    init {
+        grammarString = grammarStrArg
+    }
+
+    override fun update(grammarStr: GrammarString?, typeModelStr: TypesString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
         this._doObservableUpdates = false
         this._issues.clear()
-        val oldGrammarStr = this.grammarStr
-        val oldTypeModelStr = this.typeModelStr
-        val oldTransformStr = this.asmTransformStr
-        val oldCrossReferenceStr = this.crossReferenceStr
-        val oldStyleStr = this.styleStr
-        this.grammarStr = grammarStr
-        this.typeModelStr = typeModelStr
-        this.asmTransformStr = asmTransformStr
-        this.crossReferenceStr = crossReferenceStr
-        this.styleStr = styleStr
+        val oldGrammarStr = this.grammarString
+        val oldTypeModelStr = this.typesString
+        val oldTransformStr = this.transformString
+        val oldCrossReferenceStr = this.crossReferenceString
+        val oldStyleStr = this.styleString
+        this.grammarString = grammarStr
+        this.typesString = typeModelStr
+        this.transformString = asmTransformStr
+        this.crossReferenceString = crossReferenceStr
+        this.styleString = styleStr
         updateGrammarStr(oldGrammarStr, grammarStr)
         updateTypeModelStr(oldTypeModelStr, typeModelStr)
         updateAsmTransformStr(oldTransformStr, asmTransformStr)
@@ -130,18 +134,19 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this._doObservableUpdates = true
     }
 
-    private fun updateConfiguration(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
+    private fun updateFromConfiguration(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
         this._doObservableUpdates = false
         this.targetGrammarName = configuration.targetGrammarName
         this.defaultGoalRule = configuration.defaultGoalRuleName
-        this._typeModelResolver = configuration.typeModelResolver
-        this._crossReferenceModelResolver = configuration.crossReferenceModelResolver
+        this._typeModelResolver = configuration.typesResolver
+        this._crossReferenceModelResolver = configuration.crossReferenceResolver
         this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
         this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
-        this._formatterResolver = configuration.formatModelResolver
+        this._formatterResolver = configuration.formatResolver
         this._styleResolver = configuration.styleResolver
-        this._completionProviderResolver = configuration.completionProvider
+        this._completionProviderResolver = configuration.completionProviderResolver
         this._doObservableUpdates = true
+        super._processor_cache.reset()
     }
 
     private fun updateGrammarStr(oldValue: GrammarString?, newValue: GrammarString?) {
@@ -158,7 +163,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    private fun updateTypeModelStr(oldValue: TypeModelString?, newValue: TypeModelString?) {
+    private fun updateTypeModelStr(oldValue: TypesString?, newValue: TypesString?) {
         if (oldValue != newValue) {
             super._typeModelResolver = {
                 when {
@@ -166,7 +171,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                         ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                     }
                     else -> {
-                        val res = TypeModelSimple.fromString( newValue)
+                        val res = TypeModelSimple.fromString(SimpleName("FromGrammar"+grammarModel!!.name.value),ContextFromGrammar.createContextFrom(grammarModel!!), newValue)
                         when {
                             res.issues.errors.isEmpty() && null != res.asm -> _issues.addAllFrom(res.issues) //add non-errors if any
                             res.issues.errors.isNotEmpty() -> _issues.addAllFrom(res.issues)

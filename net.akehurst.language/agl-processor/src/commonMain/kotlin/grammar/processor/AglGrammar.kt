@@ -33,6 +33,7 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.api.OverrideRule
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
@@ -737,6 +738,233 @@ interface Embedded {
                     }
                 }
             }
+            /*
+            grammarTypeNamespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+                dataType("grammar","GrammarDefault") {
+                    supertype("GrammarAbstract")
+                    constructor_ {
+                        parameter("namespace", "GrammarNamespace", false)
+                        parameter("name", "SimpleName", false)
+                        parameter("options", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false) {
+                        typeArgument("GrammarOption")
+                    }
+                }
+                dataType("rule","GrammarRuleAbstract") {
+                    supertype("GrammarItemAbstract")
+                    supertype("GrammarRule")
+                    constructor_ {}
+                }
+                dataType("grammarRule","NormalRuleDefault") {
+                    supertype("GrammarRuleAbstract")
+                    supertype("NormalRule")
+                    constructor_ {
+                        parameter("grammar", "Grammar", false)
+                        parameter("name", "GrammarRuleName", false)
+                        parameter("isSkip", "Boolean", false)
+                        parameter("isLeaf", "Boolean", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rhs", "RuleItem", false)
+                }
+                dataType("overrideRule","OverrideRuleDefault") {
+                    supertype("GrammarRuleAbstract")
+                    supertype("OverrideRule")
+                    constructor_ {
+                        parameter("grammar", "Grammar", false)
+                        parameter("name", "GrammarRuleName", false)
+                        parameter("isSkip", "Boolean", false)
+                        parameter("isLeaf", "Boolean", false)
+                        parameter("overrideKind", "OverrideKind", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "overrideKind", "OverrideKind", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
+                }
+                stringTypeFor("overrideOperator")
+                dataType("rhs","RuleItemAbstract") {
+                    supertype("RuleItem")
+                    constructor_ {}
+                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "index", "List", false) {
+                        typeArgument("Integer")
+                    }
+                }
+                dataType("empty","EmptyRuleDefault") {
+                    supertype("TangibleItemAbstract")
+                    supertype("EmptyRule")
+                    constructor_ {}
+                }
+                dataType("choice","ChoiceAbstract") {
+                    supertype("RuleItemAbstract")
+                    supertype("Choice")
+                    constructor_ {
+                        parameter("alternative", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
+                        typeArgument("RuleItem")
+                    }
+                }
+                dataType("ambiguousChoice","ChoiceAmbiguousDefault") {
+                    supertype("ChoiceAbstract")
+                    supertype("ChoiceAmbiguous")
+                    constructor_ {
+                        parameter("alternative", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
+                        typeArgument("RuleItem")
+                    }
+                }
+                dataType("priorityChoice","ChoicePriorityDefault") {
+                    supertype("ChoiceAbstract")
+                    supertype("ChoicePriority")
+                    constructor_ {
+                        parameter("alternative", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
+                        typeArgument("RuleItem")
+                    }
+                }
+                dataType("simpleChoice","ChoiceLongestDefault") {
+                    supertype("ChoiceAbstract")
+                    supertype("ChoiceLongest")
+                    constructor_ {
+                        parameter("alternative", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
+                        typeArgument("RuleItem")
+                    }
+                }
+                dataType("concatenation","ConcatenationDefault") {
+                    supertype("RuleItemAbstract")
+                    supertype("Concatenation")
+                    constructor_ {
+                        parameter("items", "List", false)
+                    }
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false) {
+                        typeArgument("RuleItem")
+                    }
+                }
+                dataType("concatenationItem","ConcatenationItemAbstract") {
+                    supertype("RuleItemAbstract")
+                    supertype("ConcatenationItem")
+                    constructor_ {}
+                }
+                dataType("simpleItemOrGroup","SimpleItemAbstract") {
+                    supertype("ConcatenationItemAbstract")
+                    supertype("SimpleItem")
+                    constructor_ {}
+                }
+                dataType("simpleItem","TangibleItemAbstract") {
+                    supertype("SimpleItemAbstract")
+                    supertype("TangibleItem")
+                    constructor_ {}
+                }
+                dataType("simpleList","SimpleListDefault") {
+                    supertype("ListOfItemsAbstract")
+                    supertype("SimpleList")
+                    constructor_ {
+                        parameter("min", "Integer", false)
+                        parameter("max", "Integer", false)
+                        parameter("item", "RuleItem", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
+                }
+                dataType("separatedList","SeparatedListDefault") {
+                    supertype("ListOfItemsAbstract")
+                    supertype("SeparatedList")
+                    constructor_ {
+                        parameter("min", "Integer", false)
+                        parameter("max", "Integer", false)
+                        parameter("item", "RuleItem", false)
+                        parameter("separator", "RuleItem", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
+                }
+                dataType("group","GroupDefault") {
+                    supertype("SimpleItemAbstract")
+                    supertype("Group")
+                    constructor_ {
+                        parameter("groupedContent", "RuleItem", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
+                }
+                dataType("nonTerminal","NonTerminalDefault") {
+                    supertype("TangibleItemAbstract")
+                    supertype("NonTerminal")
+                    constructor_ {
+                        parameter("targetGrammar", "GrammarReference", false)
+                        parameter("ruleReference", "GrammarRuleName", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "ruleReference", "GrammarRuleName", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "targetGrammar", "GrammarReference", false)
+                }
+                dataType("embedded","EmbeddedDefault") {
+                    supertype("TangibleItemAbstract")
+                    supertype("Embedded")
+                    constructor_ {
+                        parameter("embeddedGoalName", "GrammarRuleName", false)
+                        parameter("embeddedGrammarReference", "GrammarReference", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGoalName", "GrammarRuleName", false)
+                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
+                }
+                dataType("terminal","TerminalDefault") {
+                    supertype("TangibleItemAbstract")
+                    supertype("Terminal")
+                    constructor_ {
+                        parameter("value", "String", false)
+                        parameter("isPattern", "Boolean", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "id", "String", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isPattern", "Boolean", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                }
+
+                dataType("preferenceRule","PreferenceRuleDefault") {
+                    supertype("GrammarItemAbstract")
+                    supertype("PreferenceRule")
+                    constructor_ {
+                        parameter("grammar", "Grammar", false)
+                        parameter("forItem", "SimpleItem", false)
+                        parameter("optionList", "List", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "forItem", "SimpleItem", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
+                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false) {
+                        typeArgument("PreferenceOption")
+                    }
+                }
+                dataType("preferenceOption","PreferenceOptionDefault") {
+                    supertype("PreferenceOption")
+                    constructor_ {
+                        parameter("item", "NonTerminal", false)
+                        parameter("choiceNumber", "Integer", false)
+                        parameter("onTerminals", "List", false)
+                        parameter("associativity", "Associativity", false)
+                    }
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "associativity", "Associativity", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "choiceNumber", "Integer", false)
+                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "item", "NonTerminal", false)
+                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "onTerminals", "List", false) {
+                        typeArgument("SimpleItem")
+                    }
+                }
+            }
+             */
         }
     }
 
@@ -747,10 +975,15 @@ interface Embedded {
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
+                imports(
+                    "net.akehurst.language.grammar.asm"
+                )
                 transform(NAME) {
-                    createObject("unit", "DefinitionBlock") {
-                        assignment("definitions", "child[1]")
-                    }
+                    //TODO: currently the types are not found in the typemodel
+                //    createObject("unit", "DefinitionBlock") {
+                //        assignment("definitions", "child[1]")
+                //    }
+                    /*
                     createObject("grammar", "Grammar") {
                         assignment("namespace", "child[1]")
                         assignment("name", "child[1]")
@@ -781,6 +1014,8 @@ interface Embedded {
                     leafStringRule("PATTERN")
                     leafStringRule("POSITIVE_INTEGER")
                     leafStringRule("POSITIVE_INTEGER_GT_ZERO")
+
+                     */
                 }
             }
         }

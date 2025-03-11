@@ -78,8 +78,8 @@ class test_SyntaxAnalyserSimple_datatypes {
         val processor = Agl.processorFromString<Asm, ContextAsmSimple>(
             grammarStr,
             Agl.configuration {
-                crossReferenceModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                crossReferenceResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                typesResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).processor!!

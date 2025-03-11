@@ -22,7 +22,7 @@ import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.TransformString
-import net.akehurst.language.api.processor.TypeModelString
+import net.akehurst.language.api.processor.TypesString
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import org.junit.FixMethodOrder
@@ -82,7 +82,7 @@ class test_Tutorial {
 
         val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr),
-            typeStr = TypeModelString(typeModelStr),
+            typeStr = TypesString(typeModelStr),
             transformStr = TransformString(transformStr)
         )
     }

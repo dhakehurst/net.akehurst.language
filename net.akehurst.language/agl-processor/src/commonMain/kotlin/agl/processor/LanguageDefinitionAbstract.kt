@@ -43,7 +43,6 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: LanguageIdentity
-    abstract override var grammarStr: GrammarString?
 
     override var grammarModel: GrammarModel by Delegates.observable(argGrammarModel) { _, oldValue, newValue ->
         // check not same Grammar object,
@@ -70,12 +69,10 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    abstract override var crossReferenceStr: CrossReferenceString?
-
     override val typeModel: TypeModel?
         get() = this.processor?.typeModel
 
-    override val asmTransformModel: TransformModel?
+    override val transformModel: TransformModel?
         get() = this.processor?.asmTransformModel
 
     override val crossReferenceModel: CrossReferenceModel?
@@ -109,8 +106,6 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 
     override val issues: IssueCollection<LanguageIssue> get() = _issues
 
-    abstract override var styleStr: StyleString?
-
     override val style: AglStyleModel?
         get() {
             return if (null == _style) {
@@ -139,7 +134,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: GrammarModel, newValue: GrammarModel) -> Unit>()
-    override val typeModelStrObservers = mutableListOf<(oldValue: TypeModelString?, newValue: TypeModelString?) -> Unit>()
+    override val typeModelStrObservers = mutableListOf<(oldValue: TypesString?, newValue: TypesString?) -> Unit>()
     override val asmTransformStrObservers = mutableListOf<(oldValue: TransformString?, newValue: TransformString?) -> Unit>()
     override val crossReferenceStrObservers = mutableListOf<(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) -> Unit>()
 
@@ -178,7 +173,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     protected var _regexEngineKind = initialConfiguration.regexEngineKind //TODO: make observable
     protected var _scannerKind = initialConfiguration.scannerKind
 
-    protected var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.crossReferenceModelResolver) { _, oldValue, newValue ->
+    protected var _crossReferenceModelResolver: CrossReferenceResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.crossReferenceResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
@@ -196,13 +191,13 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    protected var _typeModelResolver: TypeModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.typeModelResolver) { _, oldValue, newValue ->
+    protected var _typeModelResolver: TypesResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.typesResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _asmTransformModelResolver: AsmTransformModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.asmTransformModelResolver) { _, oldValue, newValue ->
+    protected var _asmTransformModelResolver: TransformResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.transformResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
@@ -220,7 +215,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    protected var _formatterResolver: FormatModelResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatModelResolver) { _, oldValue, newValue ->
+    protected var _formatterResolver: FormatResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
@@ -232,7 +227,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.completionProvider) { _, oldValue, newValue ->
+    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.completionProviderResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

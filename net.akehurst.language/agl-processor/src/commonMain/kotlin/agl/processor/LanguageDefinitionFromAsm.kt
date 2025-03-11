@@ -20,7 +20,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.grammar.api.GrammarModel
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-internal class LanguageDefinitionFromAsm<AsmType:Any, ContextType : Any>(
+internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
     grammarModel: GrammarModel,
     buildForDefaultGoal: Boolean,
@@ -37,45 +37,45 @@ internal class LanguageDefinitionFromAsm<AsmType:Any, ContextType : Any>(
             error("Cannot set the configuration of a LanguageDefinitionFromAsm")
         }
 
-    override var grammarStr: GrammarString?
+    override var grammarString: GrammarString?
         get() = this.grammarModel.asString().let { GrammarString(it) }
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
     override val isModifiable: Boolean = false
 
-    override var typeModelStr: TypeModelString?
-        get() = this.typeModel?.asString()?.let { TypeModelString(it) }
+    override var typesString: TypesString?
+        get() = this.typeModel?.asString()?.let { TypesString(it) }
         set(value) {
             error("Cannot set the typeModelStr of a LanguageDefinitionFromAsm using a String")
         }
 
-    override var asmTransformStr: TransformString?
-        get() = this.asmTransformModel?.asString()?.let { TransformString(it) }
+    override var transformString: TransformString?
+        get() = this.transformModel?.asString()?.let { TransformString(it) }
         set(value) {
             error("Cannot set the asmTransformStr of a LanguageDefinitionFromAsm using a String")
         }
 
-    override var crossReferenceStr: CrossReferenceString?
+    override var crossReferenceString: CrossReferenceString?
         get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
         set(value) {
             error("Cannot set the crossReferenceModelStr of a LanguageDefinitionFromAsm using a String")
         }
 
-    override var styleStr: StyleString?
-        get() = this.style?.asString() ?.let { StyleString(it) }
+    override var styleString: StyleString?
+        get() = this.style?.asString()?.let { StyleString(it) }
         set(value) {
             error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
         }
-    /*
-        override var formatStr: String?
-            get() = this.grammar.toString() //TODO:
-            set(value) {
-                error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
-            }
 
-     */
-    override fun update(grammarStr: GrammarString?, typeModelStr: TypeModelString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
+    override var formatString: FormatString?
+        get() = FormatString(this.formatter?.formatModel?.asString() ?:"")
+        set(value) {
+            error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
+        }
+
+
+    override fun update(grammarStr: GrammarString?, typeModelStr: TypesString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?) {
         error("Cannot update a LanguageDefinitionFromAsm using Strings")
     }
 }

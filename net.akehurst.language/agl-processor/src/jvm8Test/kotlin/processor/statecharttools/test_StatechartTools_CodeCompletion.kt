@@ -76,7 +76,7 @@ class test_StatechartTools_CodeCompletion {
                         }*/
             val cfg = Agl.configuration(Agl.configurationSimple()) {
                 targetGrammarName(grmName)
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), CrossReferenceString( crossReferenceModelStr)) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), CrossReferenceString( crossReferenceModelStr)) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }

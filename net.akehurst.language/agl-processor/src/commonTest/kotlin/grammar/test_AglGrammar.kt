@@ -19,7 +19,6 @@ class test_AglGrammar {
 
     @Test
     fun typeModel() {
-
         val actual = AglGrammar.typeModel
 
         assertNotNull(actual)
@@ -34,6 +33,14 @@ class test_AglGrammar {
         assertNotNull(grm_extends)
         assertTrue(grm_extends.isReadWrite)
 
+    }
+
+    @Test
+    fun transformModel() {
+        val actual = AglGrammar.asmTransformModel.asString()
+        val expected = AglGrammar.asmTransformString
+
+        assertEquals(expected, actual)
     }
 
     @Test

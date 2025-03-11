@@ -34,13 +34,13 @@ import net.akehurst.language.typemodel.api.TypeModel
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScannerResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Scanner>
 typealias ParserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Parser>
-typealias AsmTransformModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TransformModel>
-typealias TypeModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TypeModel>
+typealias TransformResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TransformModel>
+typealias TypesResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TypeModel>
 //typealias AsmFactoryResolver<AsmFactoryType> = () -> AsmFactoryType
-typealias CrossReferenceModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceModel>
+typealias CrossReferenceResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceModel>
 typealias SyntaxAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
-typealias FormatModelResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatModel>
+typealias FormatResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatModel>
 typealias StyleResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglStyleModel>
 typealias CompletionProviderResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
 
@@ -57,20 +57,27 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val targetGrammarName: SimpleName?
     val defaultGoalRuleName: GrammarRuleName?
 
+    val grammarString: GrammarString?
+    val typesString: TypesString?
+    val transformString: TransformString?
+    val crossReferenceString: CrossReferenceString?
+    val styleString: StyleString?
+    val formatString:FormatString?
+
     val regexEngineKind: RegexEngineKind
     val scannerKind: ScannerKind
 
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType,  ContextType>?
-    val asmTransformModelResolver: AsmTransformModelResolver<AsmType,  ContextType>?
-    val typeModelResolver: TypeModelResolver<AsmType,  ContextType>?
+    val transformResolver: TransformResolver<AsmType,  ContextType>?
+    val typesResolver: TypesResolver<AsmType,  ContextType>?
 //    val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>?
-    val crossReferenceModelResolver: CrossReferenceModelResolver<AsmType,  ContextType>?
+    val crossReferenceResolver: CrossReferenceResolver<AsmType,  ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>?
-    val formatModelResolver: FormatModelResolver<AsmType,  ContextType>?
+    val formatResolver: FormatResolver<AsmType,  ContextType>?
     val styleResolver: StyleResolver<AsmType,  ContextType>?
-    val completionProvider: CompletionProviderResolver<AsmType,  ContextType>?
+    val completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>?
 }
 
 

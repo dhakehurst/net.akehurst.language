@@ -18,7 +18,7 @@
 package net.akehurst.language.typemodel.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.typemodel.processor.TypemodelSyntaxAnalyser
+import net.akehurst.language.agl.typemodel.processor.TypesSyntaxAnalyser
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -31,11 +31,7 @@ import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.AglGrammarCompletionProvider
-import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
@@ -757,7 +753,7 @@ namespace net.akehurst.language.grammarTypemodel.api
     override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
     override val defaultTargetGoalRule: String = "unit"
 
-    override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypemodelSyntaxAnalyser() }
+    override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypesSyntaxAnalyser() }
     override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextFromGrammar> by lazy { TypemodelSemanticAnalyser() }
     override val completionProvider: CompletionProvider<TypeModel, ContextFromGrammar> by lazy { TypemodelCompletionProvider() }
 

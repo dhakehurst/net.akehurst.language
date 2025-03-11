@@ -78,7 +78,7 @@ class test_Agl {
 
     @Test
     fun grammar_styleStr() {
-        val actual = Agl.registry.agl.grammar.styleStr?.value
+        val actual = Agl.registry.agl.grammar.styleString?.value
         val expected = AglGrammar.styleString
         assertEquals(expected, actual)
     }

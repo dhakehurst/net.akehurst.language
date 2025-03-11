@@ -17,8 +17,11 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.formatter.api.AglFormatModel
 
 interface Formatter<in AsmType> {
+
+    val formatModel: AglFormatModel
 
     fun format(formatSetName: PossiblyQualifiedName, asm:AsmType): FormatResult
 

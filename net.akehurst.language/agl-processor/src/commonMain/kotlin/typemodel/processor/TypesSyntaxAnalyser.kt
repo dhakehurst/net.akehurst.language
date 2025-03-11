@@ -24,7 +24,7 @@ data class TypeRefInfo(
     }
 }
 
-class TypemodelSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
+class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         QualifiedName("Base") to BaseSyntaxAnalyser()

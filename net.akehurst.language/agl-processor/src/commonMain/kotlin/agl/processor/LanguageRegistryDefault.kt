@@ -19,7 +19,6 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
-import net.akehurst.language.agl.typemodel.processor.TypemodelSyntaxAnalyser
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.Namespace
@@ -27,7 +26,6 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsCompletionProvider
@@ -52,14 +50,14 @@ import net.akehurst.language.style.processor.AglStyleCompletionProvider
 import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
 import net.akehurst.language.style.processor.AglStyleSyntaxAnalyser
 import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.transform.processor.AsmTransform
 import net.akehurst.language.transform.processor.AsmTransformCompletionProvider
 import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
 import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.processor.AglTypemodel
-import net.akehurst.language.typemodel.processor.TypemodelCompletionProvider
-import net.akehurst.language.typemodel.processor.TypemodelSemanticAnalyser
 
 interface AglLanguages {
     val baseLanguageIdentity: LanguageIdentity
@@ -275,8 +273,12 @@ class LanguageRegistryDefault : LanguageRegistry {
                     defaultGoalRuleName(languageObject.defaultTargetGoalRule)
                     // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                     //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
+//                    typesResolver { ProcessResultDefault(languageObject.typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                    typesResolver {p-> ProcessResultDefault(typeModel(p.grammarModel!!.name.value,true){}, IssueHolder(LanguageProcessorPhase.ALL)) } //TODO: above, needs languageobject to contain typemodel with grammar mapping
+//                    transformResolver { ProcessResultDefault(languageObject.asmTransformModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                    transformResolver { p-> TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel) } //TODO: above
+
+                    crossReferenceResolver { ProcessResultDefault(languageObject.crossReferenceModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                     syntaxAnalyserResolver { ProcessResultDefault(languageObject.syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(languageObject.semanticAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
                     //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }

@@ -17,11 +17,17 @@
 
 package net.akehurst.language.typemodel.asm
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.util.cached
 
 class TypeModelSimple(
@@ -30,13 +36,18 @@ class TypeModelSimple(
 ) : TypeModelSimpleAbstract() {
 
     companion object {
-        fun fromString(typeModelStr: TypeModelString): ProcessResult<TypeModel> {
-            TODO()
-//            val proc = Agl.registry.agl.typeModel.processor ?: error("TypeModel language not found!")
-//            return proc.process(
-//                sentence = typeModelStr,
-//                options = Agl.options { semanticAnalysis { context(context) } }
-//            )
+        fun fromString(name: SimpleName, context: ContextFromGrammar, typesString: TypesString): ProcessResult<TypeModel> {
+            return when {
+                typesString.value.isBlank() -> ProcessResultDefault( typeModel(name.value,true) {  }, IssueHolder(LanguageProcessorPhase.ALL) )
+                else -> {
+                    val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
+                    proc.process(typesString.value)
+                    proc.process(
+                        sentence = typesString.value,
+                        options = Agl.options { semanticAnalysis { context(context) } }
+                    )
+                }
+            }
         }
     }
 

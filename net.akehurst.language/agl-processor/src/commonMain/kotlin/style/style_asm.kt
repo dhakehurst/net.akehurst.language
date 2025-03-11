@@ -46,7 +46,7 @@ class AglStyleModelDefault(
         //}
 
         fun fromString(context: ContextFromGrammar, aglStyleModelSentence: StyleString): ProcessResult<AglStyleModel> {
-            val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
+            val proc = Agl.registry.agl.style.processor ?: error("Styles language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence.value,
                 options = Agl.options { semanticAnalysis { context(context) } }

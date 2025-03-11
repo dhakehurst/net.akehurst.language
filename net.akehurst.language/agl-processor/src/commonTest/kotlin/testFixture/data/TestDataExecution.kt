@@ -39,7 +39,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     println("****** ${testData.description} ******")
     val procRes = Agl.processorFromStringSimple(
         grammarDefinitionStr = GrammarString(testData.grammarStr),
-        typeStr = testData.typeStr?.let { TypeModelString(it) },
+        typeStr = testData.typeStr?.let { TypesString(it) },
         transformStr = testData.transformStr?.let { TransformString(it) },
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {

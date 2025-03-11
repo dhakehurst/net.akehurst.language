@@ -32,7 +32,7 @@ class ContextFromGrammar(
         fun createContextFrom(grammars: GrammarModel): ContextFromGrammar {
             val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
             val namespace: GrammarTypeNamespace =
-                aglGrammarTypeModel.findNamespaceOrNull(Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName) as GrammarTypeNamespace? ?: error("")
+                aglGrammarTypeModel.findNamespaceOrNull(Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName) as GrammarTypeNamespace? ?: error("should not happen")
             val context = ContextFromGrammar()
             val scope = ScopeSimple<String>(null, grammars.primary!!.name.value, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
             grammars.allDefinitions.forEach { g ->

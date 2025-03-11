@@ -31,7 +31,7 @@ import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class FormatterOverTypedObject<SelfType>(
-    val formatModel: AglFormatModel,
+    override val formatModel: AglFormatModel,
     objectGraph: ObjectGraph<SelfType>,
     issues: IssueHolder
 ) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<SelfType> {

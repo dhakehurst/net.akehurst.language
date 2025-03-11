@@ -97,7 +97,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val baseTypeModel: TypeModel by lazy {
-        val res = configuration.typeModelResolver?.invoke(this)
+        val res = configuration.typesResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
             ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
@@ -106,7 +106,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
 
     override val asmTransformModel: TransformModel by lazy {
-        val res = configuration.asmTransformModelResolver?.invoke(this)
+        val res = configuration.transformResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
             ?: TransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
@@ -119,7 +119,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val crossReferenceModel: CrossReferenceModel by lazy {
-        val res = configuration.crossReferenceModelResolver?.invoke(this)
+        val res = configuration.crossReferenceResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar" + grammarModel.name.value))
     }
@@ -137,13 +137,13 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val formatModel: AglFormatModel? by lazy {
-        val res = configuration.formatModelResolver?.invoke(this)
+        val res = configuration.formatResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }
 
     override val formatter: Formatter<AsmType>? by lazy {
-        val res = configuration.formatModelResolver?.invoke(this)
+        val res = configuration.formatResolver?.invoke(this)
         res?.let {
             this.issues.addAllFrom(res.issues)
             res.asm?.let {
@@ -154,7 +154,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
-        val res = configuration.completionProvider?.invoke(this)
+        val res = configuration.completionProviderResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
     }

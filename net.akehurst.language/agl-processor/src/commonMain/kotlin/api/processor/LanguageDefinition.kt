@@ -49,7 +49,7 @@ value class LanguageIdentity(override val value: String) : PublicValueType {
 value class GrammarString(override val value: String) : PublicValueType
 
 @JvmInline
-value class TypeModelString(override val value: String) : PublicValueType
+value class TypesString(override val value: String) : PublicValueType
 
 @JvmInline
 value class TransformString(override val value: String) : PublicValueType
@@ -94,19 +94,19 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val identity: LanguageIdentity
     val isModifiable: Boolean
 
-    var grammarStr: GrammarString?
+    var grammarString: GrammarString?
     var grammarModel: GrammarModel
     val targetGrammar: Grammar?
     var targetGrammarName: SimpleName?
     var defaultGoalRule: GrammarRuleName?
 
-    var typeModelStr: TypeModelString?
+    var typesString: TypesString?
     val typeModel: TypeModel?
 
-    var asmTransformStr: TransformString?
-    val asmTransformModel: TransformModel?
+    var transformString: TransformString?
+    val transformModel: TransformModel?
 
-    var crossReferenceStr: CrossReferenceString?
+    var crossReferenceString: CrossReferenceString?
     val crossReferenceModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -114,7 +114,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    //var formatStr: String?
+    var formatString: FormatString?
     //val formatterModel:AglFormatterModel?
     val formatter: Formatter<AsmType>?
 
@@ -122,7 +122,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
     val processor: LanguageProcessor<AsmType, ContextType>?
 
-    var styleStr: StyleString?
+    var styleString: StyleString?
     val style: AglStyleModel?
 
     val issues: IssueCollection<LanguageIssue>
@@ -130,7 +130,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(GrammarString?, GrammarString?) -> Unit>
     val grammarObservers: MutableList<(GrammarModel, GrammarModel) -> Unit>
-    val typeModelStrObservers: MutableList<(TypeModelString?, TypeModelString?) -> Unit>
+    val typeModelStrObservers: MutableList<(TypesString?, TypesString?) -> Unit>
     val asmTransformStrObservers: MutableList<(TransformString?, TransformString?) -> Unit>
     val crossReferenceStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit>
 
@@ -143,7 +143,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     fun update(
         grammarStr: GrammarString?=null,
-        typeModelStr: TypeModelString?=null,
+        typeModelStr: TypesString?=null,
         asmTransformStr: TransformString?=null,
         crossReferenceStr: CrossReferenceString?=null,
         styleStr: StyleString?=null

@@ -84,7 +84,7 @@ class test_StatechartTools_Singles {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
@@ -93,7 +93,7 @@ class test_StatechartTools_Singles {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatModelResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
 //TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(

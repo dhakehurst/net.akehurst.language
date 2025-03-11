@@ -28,12 +28,12 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 class FormatterOverAsmSimple(
-    val model: AglFormatModel,
+    override val formatModel: AglFormatModel,
     val typeModel: TypeModel,
     val issues: IssueHolder
 ) : Formatter<Asm> {
 
-    private val _formatter = FormatterOverTypedObject(model, ObjectGraphAsmSimple(typeModel, issues),issues)
+    private val _formatter = FormatterOverTypedObject(formatModel, ObjectGraphAsmSimple(typeModel, issues),issues)
 
     override fun format(formatSetName: PossiblyQualifiedName, asm: Asm): FormatResult {
         val sb = StringBuilder()
