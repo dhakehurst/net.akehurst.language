@@ -39,7 +39,7 @@ import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**
- * A LanguageProcessor is used to process a sentence using a given grammar.
+ * A LanguageProcessor is immutable and used to process a sentence using a given grammar.
  * In this context, the stages in processing a language are defined as:
  *   - scan: produce list of tokens / leaves
  *   - parse: produce a SharedPackedParseTree
@@ -47,6 +47,8 @@ import net.akehurst.language.typemodel.api.TypeModel
  *   - semanticAnalysis: produce a list of SemanticAnalyserIssue to indicate errors and warnings about the semantics of the sentence
  */
 interface LanguageProcessor<AsmType:Any, ContextType : Any> {
+
+    val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     val issues: IssueCollection<LanguageIssue>
 

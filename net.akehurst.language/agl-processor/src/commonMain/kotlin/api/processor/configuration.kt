@@ -57,6 +57,9 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val targetGrammarName: SimpleName?
     val defaultGoalRuleName: GrammarRuleName?
 
+    val regexEngineKind: RegexEngineKind
+    val scannerKind: ScannerKind
+
     val grammarString: GrammarString?
     val typesString: TypesString?
     val transformString: TransformString?
@@ -64,19 +67,17 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
     val styleString: StyleString?
     val formatString:FormatString?
 
-    val regexEngineKind: RegexEngineKind
-    val scannerKind: ScannerKind
-
     val scannerResolver: ScannerResolver<AsmType, ContextType>?
     val parserResolver: ParserResolver<AsmType,  ContextType>?
-    val transformResolver: TransformResolver<AsmType,  ContextType>?
     val typesResolver: TypesResolver<AsmType,  ContextType>?
+    val transformResolver: TransformResolver<AsmType,  ContextType>?
 //    val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>?
     val crossReferenceResolver: CrossReferenceResolver<AsmType,  ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>?
-    val formatResolver: FormatResolver<AsmType,  ContextType>?
+
     val styleResolver: StyleResolver<AsmType,  ContextType>?
+    val formatResolver: FormatResolver<AsmType,  ContextType>?
     val completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>?
 }
 

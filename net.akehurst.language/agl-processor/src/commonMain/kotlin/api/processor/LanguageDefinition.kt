@@ -72,7 +72,6 @@ interface LanguageRegistry : GrammarRegistry {
      */
     fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        grammarStr: GrammarString?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -89,24 +88,27 @@ interface LanguageRegistry : GrammarRegistry {
     ): LanguageDefinition<AsmType, ContextType>
 }
 
+/**
+ * mutable, you can change the language components for a definition
+ */
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     val identity: LanguageIdentity
     val isModifiable: Boolean
 
-    var grammarString: GrammarString?
-    var grammarModel: GrammarModel
+    val grammarString: GrammarString?
+    val grammarModel: GrammarModel?
     val targetGrammar: Grammar?
-    var targetGrammarName: SimpleName?
-    var defaultGoalRule: GrammarRuleName?
+    val targetGrammarName: SimpleName?
+    val defaultGoalRule: GrammarRuleName?
 
-    var typesString: TypesString?
-    val typeModel: TypeModel?
+    val typesString: TypesString?
+    val typesModel: TypeModel?
 
-    var transformString: TransformString?
+    val transformString: TransformString?
     val transformModel: TransformModel?
 
-    var crossReferenceString: CrossReferenceString?
+    val crossReferenceString: CrossReferenceString?
     val crossReferenceModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -114,7 +116,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    var formatString: FormatString?
+    val formatString: FormatString?
     //val formatterModel:AglFormatterModel?
     val formatter: Formatter<AsmType>?
 
@@ -122,14 +124,14 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
     val processor: LanguageProcessor<AsmType, ContextType>?
 
-    var styleString: StyleString?
-    val style: AglStyleModel?
+    val styleString: StyleString?
+    val styleModel: AglStyleModel?
 
     val issues: IssueCollection<LanguageIssue>
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(GrammarString?, GrammarString?) -> Unit>
-    val grammarObservers: MutableList<(GrammarModel, GrammarModel) -> Unit>
+    val grammarObservers: MutableList<(GrammarModel?, GrammarModel?) -> Unit>
     val typeModelStrObservers: MutableList<(TypesString?, TypesString?) -> Unit>
     val asmTransformStrObservers: MutableList<(TransformString?, TransformString?) -> Unit>
     val crossReferenceStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit>
@@ -142,10 +144,11 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
     fun update(
-        grammarStr: GrammarString?=null,
-        typeModelStr: TypesString?=null,
-        asmTransformStr: TransformString?=null,
-        crossReferenceStr: CrossReferenceString?=null,
-        styleStr: StyleString?=null
+        grammarString: GrammarString?=null,
+        typesString: TypesString?=null,
+        transformString: TransformString?=null,
+        crossReferenceString: CrossReferenceString?=null,
+        styleString: StyleString?=null,
+        formatString: FormatString?=null,
     )
 }

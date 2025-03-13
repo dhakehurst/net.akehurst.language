@@ -62,7 +62,6 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
 
     abstract override val grammarModel: GrammarModel
-    protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     override val scanner: Scanner? by lazy {
         val res = configuration.scannerResolver?.invoke(this)

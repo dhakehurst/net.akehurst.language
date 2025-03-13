@@ -29,7 +29,10 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.regex.api.RegexEngineKind
+import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
@@ -38,13 +41,12 @@ import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     argGrammarModel: GrammarModel,
-    argBuildForDefaultGoal: Boolean,
-    initialConfiguration: LanguageProcessorConfiguration<AsmType,  ContextType>
+    argBuildForDefaultGoal: Boolean
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: LanguageIdentity
 
-    override var grammarModel: GrammarModel by Delegates.observable(argGrammarModel) { _, oldValue, newValue ->
+    override var grammarModel: GrammarModel? by Delegates.observable(argGrammarModel) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -53,39 +55,27 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    override val targetGrammar: Grammar? get() = this.grammarModel.allDefinitions.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarModel.primary
+    override val targetGrammar: Grammar? get() = this.grammarModel?.allDefinitions?.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarModel?.primary
 
     abstract override val isModifiable: Boolean
 
-    override var targetGrammarName: SimpleName? by Delegates.observable(initialConfiguration.targetGrammarName) { _, oldValue, newValue ->
+    override var targetGrammarName: SimpleName? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    override var defaultGoalRule: GrammarRuleName? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    override var defaultGoalRule: GrammarRuleName? by Delegates.observable(initialConfiguration.defaultGoalRuleName) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-        }
-    }
-
-    override val typeModel: TypeModel?
-        get() = this.processor?.typeModel
-
-    override val transformModel: TransformModel?
-        get() = this.processor?.asmTransformModel
-
-    override val crossReferenceModel: CrossReferenceModel?
-        get() = this.processor?.crossReferenceModel
-
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType>?
-        get() = this.processor?.syntaxAnalyser
-
-    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
-        get() = this.processor?.semanticAnalyser
-
-    override val formatter: Formatter<AsmType>?
-        get() = this.processor?.formatter
+    override val typesModel: TypeModel? get() = this.processor?.typeModel
+    override val transformModel: TransformModel? get() = this.processor?.asmTransformModel
+    override val crossReferenceModel: CrossReferenceModel? get() = this.processor?.crossReferenceModel
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = this.processor?.syntaxAnalyser
+    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this.processor?.semanticAnalyser
+    override val formatter: Formatter<AsmType>? get() = this.processor?.formatter
 
     /*
     abstract override var formatStr: String?
@@ -106,7 +96,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 
     override val issues: IssueCollection<LanguageIssue> get() = _issues
 
-    override val style: AglStyleModel?
+    override val styleModel: AglStyleModel?
         get() {
             return if (null == _style) {
                 _styleResolver?.let {
@@ -133,7 +123,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
-    override val grammarObservers = mutableListOf<(oldValue: GrammarModel, newValue: GrammarModel) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: GrammarModel?, newValue: GrammarModel?) -> Unit>()
     override val typeModelStrObservers = mutableListOf<(oldValue: TypesString?, newValue: TypesString?) -> Unit>()
     override val asmTransformStrObservers = mutableListOf<(oldValue: TransformString?, newValue: TransformString?) -> Unit>()
     override val crossReferenceStrObservers = mutableListOf<(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) -> Unit>()
@@ -150,11 +140,12 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     // --- implementation ---
 
     protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val g = this.targetGrammar
-        if (null == g) {
+        val tg = this.targetGrammar
+        val gm = this.grammarModel
+        if (null == tg || null == gm) {
             null //if no targetGrammar, don't provide a processor
         } else {
-            val proc = Agl.processorFromGrammar(this.grammarModel, this.configuration)
+            val proc = Agl.processorFromGrammar(gm, this.configuration)
             if (argBuildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             processorObservers.forEach { it(null, proc) }
             proc
@@ -168,66 +159,74 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     //}.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
 
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
-    protected val _style: AglStyleModel? = null
+    protected var _style: AglStyleModel = AglStyleModelDefault(SimpleName("<empty>"))
 
-    protected var _regexEngineKind = initialConfiguration.regexEngineKind //TODO: make observable
-    protected var _scannerKind = initialConfiguration.scannerKind
-
-    protected var _crossReferenceModelResolver: CrossReferenceResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.crossReferenceResolver) { _, oldValue, newValue ->
+    protected var _regexEngineKind: RegexEngineKind by Delegates.observable(RegexEngineKind.AGL) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _scannerKind : ScannerKind by Delegates.observable(ScannerKind.OnDemand) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _scannerResolver: ScannerResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.scannerResolver) { _, oldValue, newValue ->
+    protected var _crossReferenceModelResolver: CrossReferenceResolver<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _parserResolver: ParserResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.parserResolver) { _, oldValue, newValue ->
+    protected var _scannerResolver: ScannerResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _typeModelResolver: TypesResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.typesResolver) { _, oldValue, newValue ->
+    protected var _parserResolver: ParserResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _asmTransformModelResolver: TransformResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.transformResolver) { _, oldValue, newValue ->
+    protected var _typeModelResolver: TypesResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.syntaxAnalyserResolver) { _, oldValue, newValue ->
+    protected var _asmTransformModelResolver: TransformResolver<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.semanticAnalyserResolver) { _, oldValue, newValue ->
+    protected var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _formatterResolver: FormatResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.formatResolver) { _, oldValue, newValue ->
+    protected var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _styleResolver: StyleResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.styleResolver) { _, oldValue, newValue ->
+    protected var _formatterResolver: FormatResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(initialConfiguration.completionProviderResolver) { _, oldValue, newValue ->
+    protected var _styleResolver: StyleResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+
+    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

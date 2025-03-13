@@ -241,7 +241,6 @@ object Agl {
         }
         return LanguageDefinitionDefault(
             identity = identity,
-            grammarStrArg = grammarDefinitionStr,
             aglOptions = grammarAglOptions,
             buildForDefaultGoal = false,
             initialConfiguration = config
@@ -262,7 +261,7 @@ object Agl {
      */
     fun languageDefinitionFromStringSimple(
         identity: LanguageIdentity,
-        grammarDefinitionStr: GrammarString,
+        grammarDefinitionStr: GrammarString?= null,
         typeStr: TypesString? = null,
         transformStr: TransformString? = null,
         referenceStr: CrossReferenceString? = null,
@@ -281,7 +280,6 @@ object Agl {
         }
         return LanguageDefinitionDefault(
             identity = identity,
-            grammarStrArg = grammarDefinitionStr,
             aglOptions = grammarAglOptions,
             buildForDefaultGoal = false,
             initialConfiguration = config

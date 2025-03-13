@@ -38,7 +38,6 @@ class test_LanguageRegistry {
     fun register_empty() {
         val languageDefinition = Agl.registry.register(
             identity = identity,
-            grammarStr = GrammarString(""),
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
@@ -58,7 +57,6 @@ class test_LanguageRegistry {
     fun register_valid() {
         val languageDefinition = Agl.registry.register(
             identity = identity,
-            grammarStr = GrammarString("namespace ns grammar Test { S = 'b'; }"),
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
@@ -66,7 +64,9 @@ class test_LanguageRegistry {
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
-            configuration = Agl.configurationSimple()
+            configuration =Agl.configuration(base= Agl.configurationSimple()) {
+                grammarString(GrammarString("namespace ns grammar Test { S = 'b'; }"))
+            }
         )
 
         assertEquals(identity, languageDefinition.identity)
@@ -78,7 +78,6 @@ class test_LanguageRegistry {
     fun register_update_empty_to_valid() {
         val languageDefinition = Agl.registry.register(
             identity = identity,
-            grammarStr = GrammarString(""),
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
@@ -86,7 +85,9 @@ class test_LanguageRegistry {
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
-            configuration = Agl.configurationSimple()
+            configuration =Agl.configuration(base= Agl.configurationSimple()) {
+                grammarString(GrammarString(""))
+            }
         )
 
         assertEquals(identity, languageDefinition.identity)

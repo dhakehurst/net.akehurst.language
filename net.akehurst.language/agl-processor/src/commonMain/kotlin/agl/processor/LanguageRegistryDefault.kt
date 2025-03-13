@@ -237,7 +237,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
             this._registry[definition.identity] = definition
-            definition.grammarModel.allDefinitions.forEach {
+            definition.grammarModel?.allDefinitions?.forEach {
                 registerGrammar(it)
             }
             definition
@@ -246,14 +246,12 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        grammarStr: GrammarString?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
         LanguageDefinitionDefault<AsmType, ContextType>(
             identity = identity,
-            grammarStrArg = grammarStr,
             aglOptions = aglOptions,
             buildForDefaultGoal = buildForDefaultGoal,
             initialConfiguration = configuration
@@ -322,12 +320,10 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     fun <AsmType : Any, ContextType : Any> createLanguageDefinition(
         identity: LanguageIdentity,
-        grammarStr: GrammarString?,
         aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> = LanguageDefinitionDefault<AsmType, ContextType>(
         identity = identity,
-        grammarStrArg = grammarStr,
         aglOptions = aglOptions,
         buildForDefaultGoal = false,
         initialConfiguration = configuration ?: Agl.configurationEmpty()
@@ -340,7 +336,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
-            val placeholder = createLanguageDefinition(identity, null, aglOptions, configuration)
+            val placeholder = createLanguageDefinition(identity, aglOptions, configuration)
             registerFromDefinition(placeholder)
         } else {
             existing

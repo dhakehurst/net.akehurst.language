@@ -30,7 +30,6 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.style.api.AglStyleModel
@@ -42,8 +41,8 @@ class test_LanguageDefinitionDefault {
 
     val grammarStrObserverCalled = mutableListOf<Pair<GrammarString?, GrammarString?>>()
     val grammarStrObserver: (GrammarString?, GrammarString?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
-    val grammarObserverCalled = mutableListOf<Pair<GrammarModel, GrammarModel>>()
-    val grammarObserver: (GrammarModel, GrammarModel) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
+    val grammarObserverCalled = mutableListOf<Pair<GrammarModel?, GrammarModel?>>()
+    val grammarObserver: (GrammarModel?, GrammarModel?) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
 
     val crossReferenceModelStrObserverCalled = mutableListOf<Pair<CrossReferenceString?, CrossReferenceString?>>()
     val crossReferenceModelStrObserver: (CrossReferenceString?, CrossReferenceString?) -> Unit = { old, new -> crossReferenceModelStrObserverCalled.add(Pair(old, new)) }
@@ -65,13 +64,16 @@ class test_LanguageDefinitionDefault {
 
     @BeforeTest
     fun before() {
-        Agl.registry.unregister(LanguageIdentity("ns.test"))
-        this.sut = Agl.registry.register<Asm, ContextAsmSimple>(
+        this.sut = Agl.languageDefinitionFromStringSimple(
             identity = LanguageIdentity("ns.test"),
-            grammarStr = null,
-            aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
-            buildForDefaultGoal = false,
-            configuration = Agl.configurationSimple()
+            grammarDefinitionStr = null,
+            typeStr = null,
+            transformStr = null,
+            referenceStr =  null,
+            styleStr = null,
+            formatterModelStr = null,
+            configurationBase = Agl.configurationSimple(),
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
         )
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
@@ -107,28 +109,53 @@ class test_LanguageDefinitionDefault {
     }
 
     @Test
-    fun createFromStr() {
-        val g = GrammarString("namespace ns grammar Test1 { S = 'b'; }")
-        val def = Agl.registry.register<Asm, ContextAsmSimple>(
+    fun languageDefinitionFromStringSimple__empty() {
+        val def =Agl.languageDefinitionFromStringSimple(
             identity = LanguageIdentity("ns.Test1"),
-            grammarStr = g,
-            aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
-            buildForDefaultGoal = false,
-            Agl.configuration {
-                targetGrammarName(null)
-                defaultGoalRuleName(null)
-//                typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                semanticAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                formatResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-            }
+            grammarDefinitionStr = null,
+            typeStr = null,
+            transformStr = null,
+            referenceStr =  null,
+            styleStr = null,
+            formatterModelStr = null,
+            configurationBase = Agl.configurationSimple(),
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
         )
+        assertNull(def.grammarString)
+        assertNull(def.targetGrammar)
+        assertNull(def.processor)
+        assertNull(def.typesModel)
+        assertNull(def.transformModel)
+        assertNull(def.crossReferenceModel)
+        assertNotNull(def.styleModel)
+        assertTrue(def.styleModel!!.isEmpty)
+        assertNull(def.formatter)
+        assertTrue(sut.issues.isEmpty())
+    }
 
+    @Test
+    fun languageDefinitionFromStringSimple__grammar_only() {
+        val g = GrammarString("namespace ns grammar Test1 { S = 'b'; }")
+        val def =Agl.languageDefinitionFromStringSimple(
+            identity = LanguageIdentity("ns.Test1"),
+            grammarDefinitionStr = g,
+            typeStr = null,
+            transformStr = null,
+            referenceStr =  null,
+            styleStr = null,
+            formatterModelStr = null,
+            configurationBase = Agl.configurationSimple(),
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
+        )
         assertEquals(g, def.grammarString)
         assertNotNull(def.targetGrammar)
         assertNotNull(def.processor)
+        assertNotNull(def.typesModel)
+        assertNotNull(def.transformModel)
+        assertNotNull(def.crossReferenceModel)
+        assertNotNull(def.styleModel)
+        assertTrue(def.styleModel!!.isEmpty)
+        assertNotNull(def.formatter)
         assertTrue(sut.issues.isEmpty())
     }
 
@@ -138,12 +165,12 @@ class test_LanguageDefinitionDefault {
             println("Grammar changed: $s1, $s2")
         }
 
-        sut.grammarString = GrammarString("something new")
+        sut.update( GrammarString("something new"))
     }
 
     @Test
     fun grammarStr_change_null_to_null() {
-        sut.grammarString = null
+        sut.update(grammarString =  null)
         assertNull(sut.grammarString)
         assertNull(sut.targetGrammar)
         assertNull(sut.processor)
@@ -162,7 +189,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_null_to_value_invalid_parse() {
         val g = GrammarString("xxxxx")
-        sut.grammarString = g
+        sut. update(grammarString = g)
         assertEquals(g, sut.grammarString)
         assertNull(sut.targetGrammar)
         assertNull(sut.processor)
@@ -172,7 +199,7 @@ class test_LanguageDefinitionDefault {
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1: List<Pair<GrammarModel, GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
+        val exp1: List<Pair<GrammarModel?, GrammarModel?>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -186,7 +213,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_null_to_value_invalid_syn() {
         val g = GrammarString("namespace ns grammar Test : XX { S = 'b'; }")
-        sut.grammarString = g
+        sut.update(grammarString = g)
         assertEquals(g, sut.grammarString)
         assertNull(sut.targetGrammar) // should be a grammar...though it is invalid
         assertNull(sut.processor)
@@ -203,7 +230,7 @@ class test_LanguageDefinitionDefault {
         )
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1: List<Pair<GrammarModel, GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
+        val exp1: List<Pair<GrammarModel?, GrammarModel?>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -217,7 +244,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_null_to_value_invalid_sem() {
         val g = GrammarString("namespace ns grammar Test { S = b; }")
-        sut.grammarString = g
+        sut.update(grammarString = g)
         assertEquals(g, sut.grammarString)
         assertNull(sut.targetGrammar)
         assertNull(sut.processor)
@@ -231,7 +258,7 @@ class test_LanguageDefinitionDefault {
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
-        val exp1: List<Pair<GrammarModel, GrammarModel>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
+        val exp1: List<Pair<GrammarModel?, GrammarModel?>> = listOf(Pair(GrammarModelDefault(SimpleName("test")), GrammarModelDefault(SimpleName("Error"))))
         assertEquals(exp1, grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
@@ -245,7 +272,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_null_to_value() {
         val g = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g
+        sut.update(grammarString = g)
 
         assertEquals(g, sut.grammarString)
         assertNotNull(sut.targetGrammar)
@@ -254,7 +281,7 @@ class test_LanguageDefinitionDefault {
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
         assertEquals(
-            listOf(Pair<GrammarModel, GrammarModel>(GrammarModelDefault(SimpleName("test")), sut.grammarModel)),
+            listOf(Pair<GrammarModel?, GrammarModel?>(GrammarModelDefault(SimpleName("test")), sut.grammarModel)),
             grammarObserverCalled
         )
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
@@ -269,11 +296,11 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_value_to_null() {
         val g = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g
+        sut.update(grammarString = g)
         val oldGrammar = sut.grammarModel
         val oldProc = sut.processor
         this.reset()
-        sut.grammarString = null
+        sut.update(grammarString = null)
 
         assertNull(sut.grammarString)
         assertNull(sut.targetGrammar)
@@ -281,7 +308,7 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<GrammarModel, GrammarModel>(oldGrammar, GrammarModelDefault(SimpleName("test")))), grammarObserverCalled)
+        assertEquals(listOf(Pair<GrammarModel?, GrammarModel?>(oldGrammar, GrammarModelDefault(SimpleName("test")))), grammarObserverCalled)
         assertEquals(emptyList(), crossReferenceModelStrObserverCalled)
         assertEquals(emptyList(), crossReferenceModelCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
@@ -291,15 +318,17 @@ class test_LanguageDefinitionDefault {
         assertEquals(emptyList(), formatterObserverCalled)
     }
 
+
+
     @Test
     fun grammarStr_change_value_to_same_value() {
         val g1 = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         val oldGrammar = sut.targetGrammar
         val oldProc = sut.processor
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g2
+        sut.update(grammarString = g2)
 
         assertEquals(g2, sut.grammarString)
         assertNotNull(sut.targetGrammar)
@@ -320,12 +349,12 @@ class test_LanguageDefinitionDefault {
     @Test
     fun grammarStr_change_value_to_diff_value() {
         val g1 = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         val oldGrammar = sut.grammarModel
         val oldProc = sut.processor
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
-        sut.grammarString = g2
+        sut.update(grammarString = g2)
 
         assertEquals(g2, sut.grammarString)
         assertNotNull(sut.targetGrammar)
@@ -351,13 +380,13 @@ class test_LanguageDefinitionDefault {
     @Test
     fun update_grammarStr_change_empty_to_diff_value_and_set_defaultGoalRule() {
         val g1 = GrammarString("")
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         val oldGrammar = sut.grammarModel
         val oldProc = sut.processor
         this.reset()
         val g2 = GrammarString("namespace ns grammar Test { S = 'c'; }")
         sut.update(g2, null, null,null,null)
-        sut.defaultGoalRule = GrammarRuleName("statement")
+//        sut.defaultGoalRule = GrammarRuleName("statement")
 
         assertEquals(g2, sut.grammarString)
         assertNotNull(sut.targetGrammar)
@@ -383,7 +412,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun update_grammarStr_change_value_to_diff_value() {
         val g1 = GrammarString("namespace ns grammar Test { S = 'b'; }")
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         val oldGrammar = sut.grammarModel
         val oldProc = sut.processor
         this.reset()
@@ -429,7 +458,7 @@ class test_LanguageDefinitionDefault {
             }
         """
         )
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         assertEquals(g1, sut.grammarString)
         val cm1 = CrossReferenceString(
             """
@@ -437,7 +466,7 @@ class test_LanguageDefinitionDefault {
                 identify R by n
         """
         )
-        sut.crossReferenceString = cm1
+        sut.update(crossReferenceString = cm1)
         assertEquals(cm1, sut.crossReferenceString)
         assertEquals("R", sut.crossReferenceModel!!.allDefinitions.get(0).scopeDefinition.values.first().identifiables.get(0).typeName.value)
         assertTrue(sut.crossReferenceModel!!.allDefinitions.get(0).references.isEmpty())
@@ -456,7 +485,7 @@ class test_LanguageDefinitionDefault {
                 }
         """
         )
-        sut.crossReferenceString = cm2
+        sut.update(crossReferenceString = cm2)
         assertEquals(cm2, sut.crossReferenceString)
         assertEquals("D", sut.crossReferenceModel!!.allDefinitions.get(0).scopeDefinition.values.first().identifiables.get(0).typeName.value)
         assertTrue(1 == sut.crossReferenceModel!!.allDefinitions.get(0).references.size)
@@ -498,7 +527,7 @@ class test_LanguageDefinitionDefault {
             }
         """
         )
-        sut.grammarString = g1
+        sut.update(grammarString = g1)
         assertEquals(g1, sut.grammarString)
 
         val cm1 = CrossReferenceString(
@@ -515,43 +544,43 @@ class test_LanguageDefinitionDefault {
 
     @Test
     fun targetGrammar_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun defaultGoalRule_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun style_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun format_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun syntaxAnalyserResolver_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun semanticAnalyserResolver_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
     @Test
     fun aglOptions_change_null_to_value() {
-        sut.grammarString = null
+        sut.update(grammarString = null)
         TODO()
     }
 
@@ -601,9 +630,8 @@ class test_LanguageDefinitionDefault {
             }
         """.trimIndent()
 
-        sut.grammarString = grammarStr
-        sut.crossReferenceString = scopeStr
-        val typeModel = sut.typeModel
+        sut.update(grammarString = grammarStr, crossReferenceString = scopeStr)
+        val typeModel = sut.typesModel
         val crossReferenceModel = sut.crossReferenceModel
         assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
 

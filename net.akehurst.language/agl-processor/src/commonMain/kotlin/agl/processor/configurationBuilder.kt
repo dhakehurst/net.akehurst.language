@@ -39,12 +39,12 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     val base: LanguageProcessorConfiguration<AsmType, ContextType>
 ) {
 
-    private var _grammarString: GrammarString? = null
-    private var _typesString: TypesString? = null
-    private var _transformString: TransformString? = null
-    private var _crossReferenceString: CrossReferenceString? = null
-    private var _styleString: StyleString? = null
-    private var _formatString: FormatString? = null
+    private var _grammarString: GrammarString? = base.grammarString
+    private var _typesString: TypesString? = base.typesString
+    private var _transformString: TransformString? = base.transformString
+    private var _crossReferenceString: CrossReferenceString? = base.crossReferenceString
+    private var _styleString: StyleString? = base.styleString
+    private var _formatString: FormatString? = base.formatString
 
     private var _regexEngineKind: RegexEngineKind = base.regexEngineKind
     private var _scannerKind: ScannerKind = base.scannerKind
