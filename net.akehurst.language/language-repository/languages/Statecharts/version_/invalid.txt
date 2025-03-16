@@ -1,0 +1,10 @@
+//# StatechartSpecification
+interface: in event after
+interface: in event always
+interface: in event oncycle
+interface: in event exit
+interface: in event entry
+interface: in event every
+
+
+

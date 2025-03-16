@@ -1,0 +1,3 @@
+dependencies {
+    commonMainImplementation(project(":collections"))
+}

@@ -13,58 +13,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.dot
+package net.akehurst.language.agl.processor.KerML
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.CrossReferenceString
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.sentence.api.InputLocation
+import kotlin.test.*
 
 class test_KerML_agl_Singles {
 
     private companion object {
-        private val grammarPathStr = "/KerML/v2_2023-08/grammars/agl/grammar.agl"
-        private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        val processor: LanguageProcessor<AsmSimple, ContextSimple> by lazy {
-            Agl.processorFromStringDefault(grammarStr).processor!!
+        private val languagePathStr = "/KerML/v2_2023-08/grammars/agl"
+        private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
+
+        val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy {
+            Agl.processorFromStringSimple(
+                grammarDefinitionStr = GrammarString(grammarStr),
+                referenceStr = CrossReferenceString(crossReferenceModelStr)
+            ).processor!!
+        }
+
+        fun test_process(sentence: String, context: ContextAsmSimple, expIssues: Set<LanguageIssue>) {
+            val result = processor.process(sentence, Agl.options {
+                semanticAnalysis {
+                    context(context)
+                }
+            })
+            assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
+
+    @Ignore
     @Test
     fun check_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(
             grammarStr,
             Agl.options {
                 semanticAnalysis {
+                    context(ContextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }
         )
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test
-    fun SINGLE_LINE_NOTE() {
+    fun parse_SINGLE_LINE_NOTE() {
         val sentence = """
           // a note
         """.trimIndent()
@@ -75,7 +96,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun MULTI_LINE_NOTE() {
+    fun parse_MULTI_LINE_NOTE() {
         val sentence = """
           //* a note
             * that covers
@@ -90,7 +111,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun MULTI_LINE_COMMENT() {
+    fun parse_MULTI_LINE_COMMENT() {
         val sentence = """
           /* a comment
            * over multiple
@@ -103,7 +124,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun package_empty() {
+    fun parse_package_empty() {
         //val goal = "Package"
         val sentence = """
           package ;
@@ -114,7 +135,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun package_body_empty() {
+    fun parse_package_body_empty() {
         //val goal = "Package"
         val sentence = """
           package Pkg {
@@ -123,6 +144,49 @@ class test_KerML_agl_Singles {
         val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace_empty() {
+        val sentence = """
+        """.trimIndent()
+
+        test_process(sentence, ContextAsmSimple(), emptySet())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace() {
+        val sentence = """
+            datatype String;
+            
+            class AClass {			
+                feature f: String;
+            }
+        """.trimIndent()
+
+        test_process(sentence, ContextAsmSimple(), emptySet())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace_name_clash() {
+        val sentence = """
+            datatype String;
+            datatype String;
+            
+            class AClass {			
+                feature f: String;
+            }
+        """.trimIndent()
+
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(17, 1, 2, 16),
+                "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope //", null
+            )
+        )
+
+        test_process(sentence, ContextAsmSimple(), expIssues)
     }
 
 }

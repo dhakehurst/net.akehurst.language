@@ -1,0 +1,384 @@
+/*******************************************************************************
+* Copyright (c) 2023 itemis AG (http://www.itemis.de).
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* 2023-12-08: Dr. D. H. Akehurst
+* Adapted from original XText grammar.
+* 2012-01-16: Klaus Birken (initial version)
+*******************************************************************************/
+namespace org.franca.core.dsl
+
+grammar CommonTerminals {
+    skip leaf WS = "\s+" ;
+    skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
+    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+
+    leaf ID = "[a-zA-Z_][a-zA-Z0-9_]*" ;
+    leaf INT = "[0-9]+" ;
+    leaf STRING = '"' "[^\"]*" '"' ;
+}
+
+
+grammar FrancaIDL : CommonTerminals {
+
+// **************************************************************
+// model root
+
+FModel = 'package' FQN Import* PackageElement* ;
+PackageElement = FTypeCollection | FInterface ;
+
+// **************************************************************
+// type collection and interface
+
+FTypeCollection = FAnnotationBlock?
+	'typeCollection' ID?
+	'{'
+		('version' FVersion)?
+		( FConstantDef | FType )*
+	'}'
+;
+
+Extends = 'extends' FQN ;
+
+FInterface = FAnnotationBlock?
+	'interface' ID
+		Extends?
+		('manages' [FQN / ',']+)?
+	'{'
+		('version' FVersion)?
+		(
+			FAttribute |
+			FMethod |
+			FBroadcast |
+			FConstantDef |
+			FType
+		)*
+		(
+			FContract
+			// we allow constant and type definitions after the contract.
+			// this is for backward compatibility (0.9.0 or earlier)
+			// this will be marked as deprecated in 0.9.1 or later
+			(FConstantDef | FType)*
+		)?
+    '}'
+;
+
+FVersion = '{' 'major' INT 'minor' INT '}' ;
+
+
+// **************************************************************
+// attributes
+
+FAttribute = FAnnotationBlock?
+	'attribute'	FTypeRefOrInterval ('[' ']')? ID
+	FAttributeCharacteristic* // should be only one of each, but AGL has no '&' operator
+	;
+FAttributeCharacteristic = 'readonly' | 'noRead' | 'noSubscriptions' ;
+
+// **************************************************************
+// methods / broadcasts
+
+FMethod = FAnnotationBlock?
+	'method' ID (':' ID)? 'fireAndForget'?
+	'{'
+		('in' '{' FArgument* '}' )?
+		('out' '{' FArgument* '}' )?
+		(
+			FAnnotationBlock?
+			'error' ( FQN | FEnumerationTypeBody )
+		)?
+    '}';
+
+
+FBroadcast = FAnnotationBlock?
+	'broadcast' ID (':' ID)? 'selective'?
+	'{'
+		('out' '{' FArgument* '}' )?
+    '}';
+
+FArgument = FAnnotationBlock? FTypeRefOrInterval ('[' ']')? ID ;
+
+// **************************************************************
+// type system
+
+FTypeRefOrInterval = FTypeRef | FIntegerInterval ;
+FTypeRef = FQN ;
+
+/* why hard code these ?
+FBasicTypeId
+ = 'undefined'
+ | 'Int8'
+ | 'UInt8'
+ | 'Int16'
+ | 'UInt16'
+ | 'Int32'
+ | 'UInt32'
+ | 'Int64'
+ | 'UInt64'
+ | 'Boolean'
+ | 'String'
+ | 'Float'
+ | 'Double'
+ | 'ByteBuffer'
+ ;
+*/
+
+FIntegerInterval = 'Integer' ('(' (INTERVAL_BOUND | 'minInt') ',' (INTERVAL_BOUND | 'maxInt') ')')?
+;
+
+INTERVAL_BOUND = '-'? INT ;
+
+FType
+ = FArrayType
+ | FEnumerationType
+ | FStructType
+ | FUnionType
+ | FMapType
+ | FTypeDef
+ ;
+
+FArrayType = FAnnotationBlock? 'public'? 'array' ID 'of' FTypeRefOrInterval ;
+FTypeDef = FAnnotationBlock? 'public'? 'typedef' ID 'is' FTypeRefOrInterval ;
+
+FStructType =
+FAnnotationBlock? 'public'? 'struct' ID ( Extends | 'polymorphic' )? '{'
+    FField*
+'}'
+;
+
+FUnionType = FAnnotationBlock? 'public'? 'union' ID Extends? '{'
+    FField*
+'}'
+;
+
+FEnumerationType = FAnnotationBlock? 'public'? 'enumeration' ID Extends? '{'
+    [ FEnumerator / OPT_COMMA ]*
+'}'
+;
+leaf OPT_COMMA = ','? ;
+
+FEnumerationTypeBody = Extends? '{'
+    [ FEnumerator / OPT_COMMA ]*
+'}'
+;
+
+FEnumerator = FAnnotationBlock?
+	ID ('=' AdditiveExpression)?
+;
+
+FMapType = FAnnotationBlock? 'public'? 'map' ID '{'
+    FTypeRefOrInterval 'to' FTypeRefOrInterval
+'}'
+;
+
+FField = FAnnotationBlock? FTypeRefOrInterval ('[' ']')? ID;
+FDeclaration = FTypeRefOrInterval ('[' ']')? ID ('=' FInitializerExpression)? ;
+
+FTypedElement
+ = FField
+ | FAttribute
+ | FArgument
+ | FDeclaration
+ | FConstantDef
+ ;
+
+
+// **************************************************************
+// constant definitions and initializers
+
+FConstantDef = FAnnotationBlock? 'const' FTypeRefOrInterval ('[' ']')? ID '='
+    FInitializerExpression
+;
+
+FInitializerExpression
+ = LogicalOrExpression
+ | FInitializer
+ ;
+
+FInitializer
+ = FCompoundInitializer
+ | FBracketInitializer
+ ;
+
+// this is used for struct and union types
+FCompoundInitializer = '{'
+    [ FFieldInitializer / ',' ]*
+'}'
+;
+
+FFieldInitializer = ID ':' FInitializerExpression ;
+
+// this is used for array and map types
+FBracketInitializer = '['
+    [ FElementInitializer / ',' ]*
+']'
+;
+
+// for array type initializers, the second element is omitted
+FElementInitializer = FInitializerExpression ('=>' FInitializerExpression)? ;
+
+
+// **************************************************************
+// interface contract
+
+FContract = 'contract' '{'
+    ('vars' '{' (FDeclaration ';'?)* '}')?
+    'PSM' FStateGraph
+'}'
+;
+
+FStateGraph = '{'
+    'initial' ID
+	FState*
+'}'
+;
+
+FState = FAnnotationBlock? 'state' ID '{'
+    FTransition*
+'}'
+;
+
+FTransition = 'on' FTrigger FGuard? '->' ID FBlock? ;
+
+FTrigger
+ = FTriggerCall
+ | FTriggerRespond
+ | FTriggerError
+ | FTriggerSignal
+ | FTriggerSet
+ | FTriggerUpdate
+ ;
+
+FTriggerCall = 'call' FMethod|ID_WITH_SELECTOR ;
+FTriggerRespond = 'respond' ID_WITH_SELECTOR ;
+FTriggerError = 'error' ID_WITH_SELECTOR ;
+FTriggerSignal = 'signal' ID_WITH_SELECTOR ;
+FTriggerSet = 'set' ID ;
+FTriggerUpdate = 'update' ID ;
+
+FGuard = '[' LogicalOrExpression ']' ;
+
+FStatement = FAssignment | FIfStatement | FBlock ;
+
+FIfStatement = 'if' '(' LogicalOrExpression ')' FStatement ('else' FStatement)? ;
+
+FAssignment = FQualifiedElementRef '=' LogicalOrExpression ;
+
+FBlock = '{'
+    FStatement*
+'}'
+;
+
+Expression
+ = LogicalOrExpression
+ | LogicalAndExpression
+ | EqualityExpression
+ | RelationalExpression
+ | AdditiveExpression
+ | MultiplicativeExpression
+ | PrimaryExpression
+ ;
+
+LogicalOrExpression = [ Expression / OperatorOr ]2+ ;
+LogicalAndExpression = [ Expression / OperatorAnd ]2+ ;
+EqualityExpression = [ Expression / OperatorEquality ]2+ ;
+RelationalExpression = [ Expression / OperatorRelational ]2+ ;
+AdditiveExpression = [ Expression / OperatorAdditive ]2+ ;
+MultiplicativeExpression = [ Expression / OperatorMultiplicative ]2+ ;
+PrimaryExpression
+  = FUnaryOperation
+  | SimplePrimaryExpression
+  ;
+
+SimplePrimaryExpression
+ = FQualifiedElementRef
+ | FCurrentError
+ | FMethodErrorEnumRef
+ | FConstant
+ | GroupedExpression
+ ;
+
+GroupedExpression = '(' LogicalOrExpression ')' ;
+
+FUnaryOperation = OperatorUnary SimplePrimaryExpression ;
+
+FCurrentError = ErrorReferenceTerminal ;
+
+ErrorReferenceTerminal = 'errorval' ;
+
+FMethodErrorEnumRef = 'errordef' '.' ID ;
+
+FQualifiedElementRef = FQN '->' ID* ;
+
+FConstant
+ = FFloatConstant
+ | FDoubleConstant
+ | FIntegerConstant
+ | FBooleanConstant
+ | FStringConstant
+ ;
+
+FDoubleConstant = E_DOUBLE_OBJECT ;
+FFloatConstant = E_FLOAT_OBJECT ;
+FIntegerConstant = E_BigInteger ;
+FBooleanConstant = EBoolean ;
+FStringConstant = STRING ;
+
+OperatorOr = '||' ;
+OperatorAnd = '&&' ;
+OperatorEquality = '==' | '!=' ;
+OperatorRelational = '<' | '<=' | '>=' | '>' ;
+OperatorAdditive = '+' | '-' ;
+OperatorMultiplicative = '*' | '/' ;
+OperatorUnary = '!'| '-' ;
+
+// **************************************************************
+// annotations
+
+FAnnotationBlock = '<**' FAnnotation+ '**>' ;
+
+FAnnotation = ANNOTATION_STRING ;
+
+
+// **************************************************************
+// basic types
+
+EBoolean = 'false' | 'true' ;
+
+E_BigInteger = INT | HEX | BINARY ;
+
+leaf E_DOUBLE_OBJECT = INT '.' INT ('e' '-'? INT)? 'd' ;
+leaf E_FLOAT_OBJECT = INT '.' INT ('e' '-'? INT)? 'f' ;
+leaf HEX = ('0x'|'0X')(("[0-9]")|("[a-f]")|("[A-F]"))+ ;
+leaf BINARY = ('0b'|'0B')('0'|'1')+ ;
+
+leaf ANNOTATION_STRING =
+	'@' (("[a-z]")|'-')+ (' '|'\t')* ':'
+	( ('\\' ('b'|'t'|'n'|'f'|'r'|'u'|'"'|'\''|'\\')) | ('\\*'|'\\@') | "[^\\*@]" )*
+;
+
+
+// **************************************************************
+// general
+
+// HOWTO: use a combination of URI global scopes and namespace aware local scope provider
+// this is configured in the work flow by
+//			fragment = scoping.ImportURIScopingFragment {}
+// and by overriding configureIScopeProviderDelegate in the runtime module with
+//			ImportedNamespaceAwareLocalScopeProvider
+// the attribute 'importedNamespace' is picked up by the ImportedNamespaceAwareLocalScopeProvider
+// the attribute 'importURI' is picked up by the ImportUriGlobalScopeProvider
+// THANKS to www.eclipse.org/etrice for this solution!
+Import = 'import' (ImportedFQN 'from' | 'model') STRING ;
+ImportedFQN = FQN ('.' '*')? ;
+FQN = [ ID / '.' ]+ ;
+
+// this is used for overloaded FMethod and FBroadcast
+ID_WITH_SELECTOR = ID (':' ID)? ;
+
+
+// **************************************************************
+}

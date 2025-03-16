@@ -15,10 +15,10 @@
  *
  */
 
-package agl.processor
+package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.test_ProcessorAbstract
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.Test
 
 class test_Expr : test_ProcessorAbstract() {
@@ -41,7 +41,7 @@ grammar Test {
 }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test
@@ -49,10 +49,10 @@ grammar Test {
         val text = "a"
 
         val expected = """
-             expr|1 { var { NAME : 'a' } }
+             expr { var { NAME : 'a' } }
         """.trimIndent()
 
-        super.test(processor,"expr", text, expected)
+        super.test(processor, "expr", text, expected)
     }
 
 }

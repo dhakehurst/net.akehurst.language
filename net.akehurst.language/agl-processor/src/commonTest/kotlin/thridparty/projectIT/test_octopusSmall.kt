@@ -17,7 +17,9 @@
 
 package thridparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -347,7 +349,7 @@ class test_octopusSmall {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         const val goal = "UmlPart"
     }
 
@@ -433,7 +435,7 @@ class test_octopusSmall {
             
             <endpackage>
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -464,7 +466,7 @@ class test_octopusSmall {
             + Wagon.pred[0..1] <-> + Wagon.succ[0..1];
             <endpackage> 
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -498,7 +500,7 @@ class test_octopusSmall {
              + Artist.artist [0..*]    <->  + Clip.clips [0..*]   ;
             <endpackage>
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -538,7 +540,7 @@ class test_octopusSmall {
              + Dvd.dvd [0..*]    <->  + catalog::Clip.clips [1..*]   ;
             <endpackage>
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

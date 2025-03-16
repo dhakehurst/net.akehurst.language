@@ -17,7 +17,8 @@
 
 package thridparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 
 class test_ExpressionLibraryGrammar {
@@ -63,7 +64,7 @@ class test_ExpressionLibraryGrammar {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
         const val goal = "LibUnit"
     }
 
@@ -85,7 +86,7 @@ class test_ExpressionLibraryGrammar {
                 | 4567 | ;
                 | ( true - false + "aap" ) | ;
         """.trimIndent()
-        processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
     }
 
 }

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,128 +26,130 @@ class test_Concatination_with_skip {
         val grammarStr = """
             namespace test
             grammar Test {
-                skip WS = "\\s+" ;
+                skip WS = "\s+" ;
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
     }
 
     @Test
-    fun v_empty() {
+    fun empty_p0() {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun v_W() {
+    fun WS_p0() {
         val sentence = " "
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun W_v() {
+    fun WS_p1() {
         val sentence = " "
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun v_a() {
+    fun a_p0() {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun v_Wa() {
+    fun WSa_p0() {
         val sentence = " a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
+
     @Test
-    fun W_v_a() {
+    fun WSa_p1() {
         val sentence = " a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun W_a_v() {
+    fun WSa_p2() {
         val sentence = " a"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a"
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
+
     @Test
-    fun a_v() {
+    fun a_p1() {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "b"
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun a_v_b() {
+    fun ab_p1() {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "b"
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun ab_v() {
+    fun ab_p2() {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "c"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 }

@@ -1,0 +1,14 @@
+namespace net.akehurst.kotlin.composite.api {
+  primitive String
+  primitive Int
+  collection List<E>
+  collection Set<E>
+  collection Map<K,V>
+
+  datatype TestDatatype {
+        reference-val id : List<String>
+        composite-var prop1 : Set<String>
+        reference-var prop2 : Map<Int,String>
+  }
+
+}

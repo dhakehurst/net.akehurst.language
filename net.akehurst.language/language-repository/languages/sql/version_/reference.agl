@@ -1,0 +1,25 @@
+namespace net.akehurst.language.example.SQL
+    identify TableDefinition by table-id
+    scope TableDefinition {
+        identify ColumnDefinition by column-id
+    }
+    references {
+        in Select {
+            property tableRef.ref refers-to TableDefinition
+            forall columns of-type ColumnRef {
+                property ref refers-to ColumnDefinition from tableRef.ref
+            }
+        }
+        in Update {
+            property tableRef.ref refers-to TableDefinition
+            forall columnValueList {
+                property columnRef.ref refers-to ColumnDefinition from tableRef.ref
+            }
+        }
+        in Insert {
+            property tableRef.ref refers-to TableDefinition
+            forall columns of-type ColumnRef {
+                property ref refers-to ColumnDefinition from tableRef.ref
+            }
+        }
+    }

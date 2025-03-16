@@ -15,7 +15,9 @@
  */
 package net.akehurst.language.agl.processor.sql
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -32,12 +34,12 @@ class test_SQLValid(val data: Data) {
 
     companion object {
 
-        private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
+        private val grammarStr = test_SQLValid::class.java.getResource("/sql/version_/grammar.agl").readText()
         val processor by lazy {
-            Agl.processorFromStringDefault(grammarStr).processor!!
+            Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         }
 
-        var sourceFiles = arrayOf("/sql/valid.txt")
+        var sourceFiles = arrayOf("/sql/version_/valid/valid.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -77,8 +79,8 @@ class test_SQLValid(val data: Data) {
     @Test(timeout = 1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val goal = "terminated-statement"
-        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        val goal = "terminatedStatement"
+        val result = processor.parse(queryStr, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asSentence

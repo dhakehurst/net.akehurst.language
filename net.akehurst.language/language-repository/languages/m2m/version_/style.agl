@@ -1,0 +1,18 @@
+$keyword {
+    foreground: darkred;
+    font-style: bold;
+}
+
+COMMENT_MULTI_LINE, COMMENT_SINGLE_LINE {
+    foreground: grey;
+    font-style: italic;
+}
+
+REF {
+    foreground: green;
+    font-style: italic;
+}
+
+type {
+    foreground: blue;
+}

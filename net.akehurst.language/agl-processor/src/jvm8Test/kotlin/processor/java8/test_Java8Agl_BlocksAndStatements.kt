@@ -16,8 +16,9 @@
 
 package net.akehurst.language.agl.processor.java8
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -34,14 +35,15 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
+        private val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
 
         val processor by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration(Agl.configurationDefault()) { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") },
+                Agl.configuration(Agl.configurationSimple()) { targetGrammarName(("BlocksAndStatements")); defaultGoalRuleName("Block") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
@@ -103,8 +105,8 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         val result = processor.process(this.data.text)
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty())
-        val resultStr = result.asm!!.asString(" ", "")
+        val resultStr = result.asm!!.asString("", " ")
         //assertEquals(this.data.text, resultStr)
-        assertEquals(1, result.asm?.rootElements?.size)
+        assertEquals(1, result.asm?.root?.size)
     }
 }

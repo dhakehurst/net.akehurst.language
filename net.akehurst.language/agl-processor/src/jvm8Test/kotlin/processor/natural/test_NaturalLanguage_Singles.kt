@@ -15,7 +15,9 @@
  */
 package net.akehurst.language.agl.processor.natural
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -30,7 +32,7 @@ class test_NaturalLanguage_Singles {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() = Agl.processorFromStringDefault(grammarStr).processor!!
+        fun processor() = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
@@ -39,7 +41,7 @@ class test_NaturalLanguage_Singles {
         val goal = "subject"
         val sentence = "my name"
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asSentence

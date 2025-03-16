@@ -54,7 +54,7 @@ grammar Template {
     leaf literal = "[^\\\$\]\|]+" ;
 }
 
-grammar PiEditGrammar extends Expressions {
+grammar PiEditGrammar : Expressions {
 
     projectionGroup = 'editor' var ('precedence' number)?
           standardBooleanProjection?

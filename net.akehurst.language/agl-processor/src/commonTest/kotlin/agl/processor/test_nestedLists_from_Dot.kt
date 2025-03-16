@@ -16,12 +16,14 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 
 class test_nestedLists_from_Dot {
 
     companion object {
-        val grammarStr="""
+        val grammarStr = """
 namespace test
 grammar Dot  {
     skip leaf WHITESPACE = "\s+" ;
@@ -57,14 +59,14 @@ grammar Dot  {
 }
         """.trimIndent()
 
-        val proc = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val proc = Agl.processorFromString<Any, Any>(grammarStr).processor!!
     }
 
     @Test
     fun t() {
         val goal = "stmt_list"
-        val sentence =  "graph[a=a ]; node [b=b c=c]; edge[];"
-        proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
+        proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
     }
 
 }

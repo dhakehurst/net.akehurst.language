@@ -16,9 +16,10 @@
 
 package net.akehurst.language.agl.processor.java8
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.processor.test.utils.notWidth
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,14 +37,15 @@ class test_Java8Agl_Types(val data: Data) {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
+        private val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
 
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration { targetGrammarName("Types"); defaultGoalRuleName("TypeReference") },
+                Agl.configuration { targetGrammarName(("Types")); defaultGoalRuleName("TypeReference") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

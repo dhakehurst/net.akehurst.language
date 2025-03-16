@@ -18,13 +18,13 @@
 package net.akehurst.language.typemodel.api
 
 abstract class AnyValue(
-    open val type: TypeDefinition
+    open val type: TypeDeclaration
 ) {
     abstract val asValue: Any?
 }
 
 abstract class PrimitiveValueAbstract(
-    override val type: TypeDefinition
+    override val type: TypeDeclaration
 ) : AnyValue(type) {
 }
 /*

@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.agl.default_
+
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.base.api.DefinitionBlock
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.asm.TypeModelSimple
+
+object TypeModelFromAsmTransform {
+
+    fun build(grammarList: DefinitionBlock<Grammar>, asmTransformList: List<TransformModel>): ProcessResult<TypeModel> {
+        val grmrTypeModel = TypeModelSimple(asmTransformList.last().name)
+        grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+        check(grammarList.allDefinitions.size == asmTransformList.size) { "Must pass in same number of Grammars and AsmTransforms" }
+        for (i in asmTransformList.indices) {
+            val trm = asmTransformList[i]
+            val grm = grammarList.allDefinitions[i]
+            val ns = buildNamespace(grm, trm)
+            grmrTypeModel.addNamespace(ns)
+        }
+        grmrTypeModel.resolveImports()
+        val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
+        return ProcessResultDefault(grmrTypeModel, issues)
+    }
+
+    fun buildNamespace(grammar: Grammar, trm: TransformModel): GrammarTypeNamespace {
+        val nsFromGrmr = GrammarTypeNamespaceFromGrammar(grammar)
+        val ns = GrammarTypeNamespaceSimple(
+            qualifiedName = trm.qualifiedName,
+            imports = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
+        )
+        // create types
+        for (tr in trm.createObjectRules) {
+            //TODO: allow non-owned types to be used
+            val dt = ns.findOwnedOrCreateDataTypeNamed(tr.qualifiedTypeName)
+            ns.allRuleNameToType[tr.grammarRuleName] = dt.type()
+        }
+        // create properties
+        for (tr in trm.rules.values) {
+            val dt = ns.findOwnedTypeNamed(tr.qualifiedTypeName) ?: error("No type named ${tr.qualifiedTypeName}")
+//            for (ass in tr.modifyStatements) {
+//                val grmRule = grammar.findAllResolvedGrammarRule(tr.grammarRuleName) ?: error("No rule found with name ${tr.grammarRuleName}")
+//                val defaultType = nsFromGrmr.typeForGrammarRule(grmRule)
+//                dt.appendPropertyPrimitive(
+//                    name = ass.lhsPropertyName,
+//                    typeInstance = ass.rhs.typeOfExpressionFor(defaultType) ?: error("should not happen"),
+//                    description = ""
+//                )
+//            }
+        }
+        return ns
+    }
+
+}

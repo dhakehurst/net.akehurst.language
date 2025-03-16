@@ -16,22 +16,41 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.grammar.api.Concatenation
+import net.akehurst.language.grammar.api.GrammarRule
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.grammar.api.TangibleItem
 
 enum class CompletionItemKind {
-    LITERAL,
     PATTERN,
-    SEGMENT
+    LITERAL,
+    SEGMENT,
+    REFERRED,
 }
 
 data class CompletionItem(
     val kind: CompletionItemKind,
-    val text: String,
-    val name: String
+    val label: String,
+    val text: String
 ) {
     var description: String = ""
 }
 
-interface CompletionProvider<in AsmType, in ContextType> {
-    fun provide(nextExpected: Set<RuleItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
+interface SpineNode {
+    val rule: GrammarRule
+    val nextChildNumber: Int
+    val nextExpectedItems: Set<RuleItem>
+    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    val nextExpectedConcatenation: Set<Concatenation>
+}
+
+interface Spine {
+    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    val expectedNextRuleItems: Set<RuleItem>
+    val elements: List<SpineNode>
+    val nextChildNumber: Int
+}
+
+interface CompletionProvider<AsmType : Any, ContextType : Any> {
+    fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem>
 }

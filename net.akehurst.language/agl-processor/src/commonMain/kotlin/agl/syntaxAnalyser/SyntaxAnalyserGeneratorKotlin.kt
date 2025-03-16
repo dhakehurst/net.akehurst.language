@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.agl.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarRule
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarRule
 
 class SyntaxAnalyserGeneratorKotlin {
 
@@ -30,11 +30,11 @@ class SyntaxAnalyserGeneratorKotlin {
         val register = grammar.grammarRule.joinToString(separator = lineSep) {
             val fName = functionNameFor(it)
             when {
-                fName == it.name -> "super.register(this::${functionNameFor(it)})"
+                fName == it.name.value -> "super.register(this::${functionNameFor(it)})"
                 else -> "super.registerFor(\"${it.name}\", this::${functionNameFor(it)})"
             }
         }
-        val functions = grammar.grammarRule.joinToString(separator = lineSep) {
+        val functions = grammar.grammarRule.joinToString(separator = "$lineSep$lineSep") {
             val fName = functionNameFor(it)
             val type = "Any"
             """
@@ -46,11 +46,11 @@ class SyntaxAnalyserGeneratorKotlin {
         return """
 package ${grammar.namespace.qualifiedName}
 
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 
-class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
+class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AsmType>() {
 
     override fun registerHandlers() {
 $register
@@ -62,7 +62,7 @@ $functions
     }
 
     private fun functionNameFor(rule: GrammarRule): String {
-        return rule.name.replace("[^a-zA-Z0-9_]", "_")
+        return rule.name.value.replace("[^a-zA-Z0-9_]", "_")
     }
 
 }

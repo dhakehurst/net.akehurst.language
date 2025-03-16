@@ -15,12 +15,17 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
+import net.akehurst.language.regex.agl.RegexEnginePlatform
+import net.akehurst.language.scanner.common.ScannerOnDemand
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,7 +36,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
@@ -47,7 +52,7 @@ class test_Dot_Singles {
           // a comment
           graph { }
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
@@ -60,7 +65,7 @@ class test_Dot_Singles {
           /* a comment */
           graph { }
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -72,7 +77,7 @@ class test_Dot_Singles {
           #a pre proc
           graph { }
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -84,7 +89,7 @@ class test_Dot_Singles {
         val sentence = """
         < <xml >xxxx</xml> >
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty())
         //println(result.sppt!!.toStringAll)
@@ -102,7 +107,7 @@ class test_Dot_Singles {
                   §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
                   §startTag§opt2 { WS { "\s+" : ' ' } }
-                  §startTag§multi3 { §empty }
+                  §startTag§multi1 { <EMPTY_LIST> }
                   '>'
                 }
                 content { §content§choice1 { CHARDATA { "[^<]+" : 'xxxx' } } }
@@ -131,7 +136,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         """
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -143,7 +148,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         ]"""
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -154,7 +159,7 @@ class test_Dot_Singles {
         val sentence = """
             edge [ ]
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -173,7 +178,7 @@ class test_Dot_Singles {
             edge [
             ];
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -198,7 +203,7 @@ class test_Dot_Singles {
             ];
             }
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
@@ -208,7 +213,7 @@ class test_Dot_Singles {
     fun stmt_list__1() {
         val goal = "stmt_list"
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -217,7 +222,7 @@ class test_Dot_Singles {
     fun attr_list__2s() {
         val goal = "attr_list"
         val sentence = "[x = x; y=y]"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -227,7 +232,7 @@ class test_Dot_Singles {
     fun attr_list__2n() {
         val goal = "attr_list"
         val sentence = "[x = x y=y]"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -239,7 +244,7 @@ class test_Dot_Singles {
         val sentence = """
             "001"
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -251,7 +256,7 @@ class test_Dot_Singles {
             [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -263,7 +268,7 @@ class test_Dot_Singles {
             "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
 
@@ -274,8 +279,13 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar!!)
-        val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+        val converters = processor.grammarModel!!.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet().map { ConverterToRuntimeRules(it) }
+        val grmToRrs = converters.associateBy({ it.grammar }, { it.runtimeRuleSet })
+        converters.forEach { c -> c.resolveEmbedded(grmToRrs) }
+
+        val targetRrs = grmToRrs[processor.targetGrammar!!]!!
+        val scanner = ScannerOnDemand(RegexEnginePlatform, targetRrs.terminals)
+        val parser = LeftCornerParser(scanner, targetRrs)
 
         //fails at season 9 with edge_list
         val result = parser.parseForGoal(goal, sentence)
@@ -288,7 +298,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -303,7 +313,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -412,7 +422,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -531,7 +541,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
             }
             """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -543,7 +553,7 @@ class test_Dot_Singles {
             ""
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -555,7 +565,7 @@ class test_Dot_Singles {
             node[style=filled,label=""]
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -666,7 +676,7 @@ digraph G {
 }
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -961,8 +971,73 @@ digraph G {
 }
         """.trimIndent()
 
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
+    }
+
+    @Test
+    fun dot__style() {
+
+        val sentence = """
+namespace DOT
+C_PREPROCESSOR {
+  foreground: gray;
+  font-style: italic;
+}
+SINGLE_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+MULTI_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+STRICT {
+  foreground: purple;
+  font-style: bold;
+}
+GRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+DIGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+SUBGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+NODE {
+  foreground: purple;
+  font-style: bold;
+}
+EDGE {
+  foreground: purple;
+  font-style: bold;
+}
+ALPHABETIC_ID {
+  foreground: red;
+  font-style: italic;
+}
+HTML {
+  background: LemonChiffon;
+}
+NAME {
+    foreground: green;
+}
+        """.trimIndent()
+
+        val styleProc = Agl.registry.agl.style.processor!!
+        val result = styleProc.process(
+            sentence,
+            Agl.options {
+                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammarModel!!)) }
+            })
+
+        assertNotNull(result.asm)
+        assertEquals(13, result.asm!!.allDefinitions.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 }

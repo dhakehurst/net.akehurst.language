@@ -15,8 +15,11 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
+import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -67,49 +70,73 @@ grammar Mdl {
 }
     """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
     @Test
     fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Mdl", "File") {
-            //file = section+ ;
-            dataType("file", "File") {
-                propertyListTypeOf("section", "Section", false, 0)
-            }
-            //section = IDENTIFIER '{' content* '}' ;
-            dataType("section", "Section") {
-                propertyPrimitiveType("identifier", "String", false, 0)
-                propertyListTypeOf("content", "Content", false, 1)
-            }
-            //content = section | parameter ;
-            dataType("content", "Content") {
-                subtypes("Section", "Parameter")
-            }
-            //parameter = IDENTIFIER value ;
-            dataType("parameter", "Parameter") {
-                propertyPrimitiveType("identifier", "String", false, 0)
-                propertyDataTypeOf("value", "Value", false, 1)
-            }
-            //value = stringList | matrix | identifier | literal ;
-            dataType("value", "Value") {
-                subtypes("StringList", "Matrix", "Identifier", "Literal")
-            }
-            //identifier = IDENTIFIER ;
-            dataType("identifier", "Identifier") {
-                propertyPrimitiveType("identifier", "String", false, 0)
-            }
-            //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-            //row = [literal / ',']+ | literal+ ;
+        val expected = typeModel("FromGrammarParsedGrammarUnit",true) {
+            grammarTypeNamespace("test.Mdl") {
+                //file = section+ ;
+                dataType("file", "File") {
+                    propertyListTypeOf("section", "Section", false, 0)
+                }
+                //section = IDENTIFIER '{' content* '}' ;
+                dataType("section", "Section") {
+                    supertypes("Content")
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                    propertyListTypeOf("content", "Content", false, 2)
+                }
+                //content = section | parameter ;
+                dataType("content", "Content") {
+                    subtypes("Section", "Parameter")
+                }
+                //parameter = IDENTIFIER value ;
+                dataType("parameter", "Parameter") {
+                    supertypes("Content")
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                    propertyUnionTypeOf("value", "Value",false, 1)
+                }
+                //value = stringList | matrix | identifier | literal ;
+                unionType("value","Value") {
+                    typeRef("StringList")
+                    typeRef("Matrix")
+                    typeRef("Identifier")
+                    typeRef("String")
+                }
+                //identifier = IDENTIFIER ;
+                dataType("identifier", "Identifier") {
+                    propertyPrimitiveType("identifier", "String", false, 0)
+                }
+                //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+                dataType("matrix", "Matrix") {
+                    propertyListType("row", false, 1) {
+                        ref("Row")
+                    }
+                }
+                //row = [literal / ',']+ | literal+ ;
+                unionType("row","Row") {
+                    listSeparatedType(false) { ref("String");ref("String") }
+                    listType(false) { ref("String") }
+                }
 
-            //stringList = DOUBLE_QUOTE_STRING+ ;
-            dataType("stringList", "StringList") {
-                propertyListType("double_quoted_string", false, 0) { primitiveRef("String") }
+                //stringList = DOUBLE_QUOTE_STRING+ ;
+                dataType("stringList", "StringList") {
+                    propertyListType("double_quote_string", false, 0) { ref("String") }
+                }
+
+                // literal = BOOLEAN < INTEGER < REAL < DOUBLE_QUOTE_STRING  ;
+                stringTypeFor("literal")
+
+                stringTypeFor("IDENTIFIER")
+                stringTypeFor("BOOLEAN")
+                stringTypeFor("INTEGER")
+                stringTypeFor("REAL")
+                stringTypeFor("DOUBLE_QUOTE_STRING")
             }
         }
-
         GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 

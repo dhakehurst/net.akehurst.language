@@ -14,34 +14,51 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.expressions.processor.ObjectGraph
+import net.akehurst.language.expressions.processor.TypedObject
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeInstance
+import kotlin.js.JsExport
 
-interface ScopeModel {
+/**
+ * stateless set of functions that construct elements of an ASM
+ */
+interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph<AsmValueType> {
 
-    /**
-     * Is the property inTypeName.propertyName a reference ?
-     *
-     * @param inTypeName name of the asm type in which contains the property
-     * @param propertyName name of the property that might be a reference
-     */
-    fun isReference(inTypeName: String, propertyName: String): Boolean
+    fun constructAsm(): AsmType
+    fun rootList(asm: AsmType): List<AsmValueType>
+    fun addRoot(asm: AsmType, root: AsmValueType)
+    fun removeRoot(asm: AsmType, root: AsmValueType)
 
-    /**
-     *
-     * Find the name of the type referred to by the property inTypeName.referringPropertyName
-     *
-     * @param inTypeName name of the asm type in which the property is a reference
-     * @param referringPropertyName name of the property that is a reference
-     */
-    fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String>
+    //fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
+    //fun nothingValue(): AsmValueType
+    //fun anyValue(value: Any): AsmValueType
+    //fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
+    //fun listOfValues(elements: List<AsmValueType>): AsmValueType
+   // fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
+
+    //fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
+    //fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
+
+}
+
+interface AsmWalker<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType, PropertyType, ListValueType> {
+    fun beforeRoot(root: AsmValueType)
+    fun afterRoot(root: AsmValueType)
+    fun onNothing(owningProperty: PropertyType?, value: AsmValueType)
+    fun onPrimitive(owningProperty: PropertyType?, value: AsmValueType)
+    fun beforeStructure(owningProperty: PropertyType?, value: AsmStructureType)
+    fun onProperty(owner: AsmStructureType, property: PropertyType)
+    fun afterStructure(owningProperty: PropertyType?, value: AsmStructureType)
+    fun beforeList(owningProperty: PropertyType?, value: ListValueType)
+    fun afterList(owningProperty: PropertyType?, value: ListValueType)
 }
 
 /**
@@ -51,7 +68,7 @@ interface ScopeModel {
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument here maybe!
 
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called
@@ -59,19 +76,25 @@ interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argume
     val locationMap: Map<Any, InputLocation>
 
     /**
-     * map of Embedded GrammarName -> SyntaxAnalyser for Embedded Language
+     * map of Extends GrammarName -> SyntaxAnalyser for extended Language
      */
-    val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmType>>
+    val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>>
+
+    /**
+     * map of Embedded GrammarName -> SyntaxAnalyser for embedded Language
+     */
+    val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>>
 
     /**
      * reset the sppt2ast, clearing any cached values
      */
-    fun clear()
+    // SyntaxAnalyser<*> not exportable - * projections not exportable? TODO: check this
+    fun <T:Any> clear(done:Set<SyntaxAnalyser<T>> = emptySet())
 
     /**
      * configure the SyntaxAnalyser
      */
-    fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any> = emptyMap()): List<LanguageIssue>
+    //fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any> = emptyMap()): List<LanguageIssue>
 
     /**
      * map the tree into an instance of the targetType

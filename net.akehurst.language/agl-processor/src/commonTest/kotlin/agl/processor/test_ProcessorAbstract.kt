@@ -17,13 +17,14 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 abstract class test_ProcessorAbstract {
 
     fun <AsmType : Any, ContextType : Any> test(processor: LanguageProcessor<AsmType, ContextType>, goal: String, sentence: String, vararg expectedTrees: String) {
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
 
         val sppt = processor.spptParser
         expectedTrees.forEach { sppt.parse(it, true) }

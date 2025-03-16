@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -31,7 +31,7 @@ class test_Multi_2to5 {
                 b = 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
     }
 
     @Test
@@ -39,11 +39,11 @@ class test_Multi_2to5 {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -51,11 +51,11 @@ class test_Multi_2to5 {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -63,11 +63,11 @@ class test_Multi_2to5 {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -75,11 +75,11 @@ class test_Multi_2to5 {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -87,11 +87,11 @@ class test_Multi_2to5 {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -99,11 +99,11 @@ class test_Multi_2to5 {
         val sentence = "aa"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -111,11 +111,11 @@ class test_Multi_2to5 {
         val sentence = "aa"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -123,11 +123,11 @@ class test_Multi_2to5 {
         val sentence = "aaa"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -135,12 +135,12 @@ class test_Multi_2to5 {
         val sentence = "aaa"
         val position = 3
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a",
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -148,12 +148,12 @@ class test_Multi_2to5 {
         val sentence = "aaab"
         val position = 3
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a",
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -161,11 +161,11 @@ class test_Multi_2to5 {
         val sentence = "aaab"
         val position = 4
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "<EOT>"
+
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -173,12 +173,12 @@ class test_Multi_2to5 {
         val sentence = "aaaa"
         val position = 3
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a",
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -186,12 +186,12 @@ class test_Multi_2to5 {
         val sentence = "aaaa"
         val position = 4
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a",
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -199,12 +199,12 @@ class test_Multi_2to5 {
         val sentence = "aaaaa"
         val position = 4
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a",
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -212,10 +212,10 @@ class test_Multi_2to5 {
         val sentence = "aaaaa"
         val position = 5
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 }

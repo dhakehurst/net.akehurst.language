@@ -1,0 +1,2 @@
+RETURN 1                                  // must provide name for the column, e.g. RETURN 1 AS value
+MATCH A NOT (LINKED TO B) LINKED TO C     // NOT expression can only be at the end of a path

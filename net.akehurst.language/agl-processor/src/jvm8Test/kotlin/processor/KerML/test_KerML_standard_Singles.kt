@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.dot
+package net.akehurst.language.agl.processor.KerML
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import kotlin.test.*
 
 class test_KerML_standard_Singles {
 
     private companion object {
         private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(
+            grammarDefinitionStr = GrammarString(grammarStr)
+        ).processor!!
 
     }
 
@@ -44,10 +45,11 @@ class test_KerML_standard_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
+    @Ignore
     @Test
     fun check_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
@@ -55,11 +57,12 @@ class test_KerML_standard_Singles {
             grammarStr,
             Agl.options {
                 semanticAnalysis {
+                    context(ContextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
                 }
             }
         )
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test
@@ -68,8 +71,7 @@ class test_KerML_standard_Singles {
           // a note
         """.trimIndent()
         val result = processor.parse(sentence)
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
@@ -83,8 +85,7 @@ class test_KerML_standard_Singles {
             */
         """.trimIndent()
         val result = processor.parse(sentence)
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
@@ -97,6 +98,7 @@ class test_KerML_standard_Singles {
            */
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

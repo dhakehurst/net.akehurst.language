@@ -15,7 +15,9 @@
  */
 package net.akehurst.language.agl.processor.natural
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.sentence.common.SentenceDefault
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -37,7 +39,7 @@ class test_NaturalLanguage(val data: Data) {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() = Agl.processorFromStringDefault(grammarStr).processor!!
+        fun processor() = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -79,11 +81,11 @@ class test_NaturalLanguage(val data: Data) {
 
     @Test
     fun test() {
-
-        val scan = processor.scan(this.data.sentence)
+        val sentence = SentenceDefault(this.data.sentence)
+        val scan = processor.scan(sentence.text).allTokens
         scan.forEach { l ->
             if (l.name == "undefined") {
-                throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
+                throw RuntimeException("Found unknown words '${sentence.textAt(l.position,l.length)}', at ${sentence.locationFor(l.position, l.length)}")
             }
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })

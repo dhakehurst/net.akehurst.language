@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -38,7 +38,7 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -50,7 +50,7 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -62,7 +62,7 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "b"
         )
@@ -74,7 +74,7 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "b"
         )
@@ -86,7 +86,7 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, ).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )

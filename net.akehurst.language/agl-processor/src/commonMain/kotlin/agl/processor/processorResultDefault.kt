@@ -16,21 +16,17 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.sentence.api.InputLocation
 
-class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
+class LanguageProcessorResult<AsmType:Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,
     val issues: IssueCollection<LanguageIssue>
 )
 
-data class ParseResultDefault(
-    override val sppt: SharedPackedParseTree?,
-    override val issues: IssueCollection<LanguageIssue>
-) : ParseResult
-
-data class SyntaxAnalysisResultDefault<AsmType : Any>(
+data class SyntaxAnalysisResultDefault<AsmType:Any>(
     override val asm: AsmType?,
     override val issues: IssueCollection<LanguageIssue>,
     override val locationMap: Map<Any, InputLocation>
@@ -40,7 +36,7 @@ data class SemanticAnalysisResultDefault(
     override val issues: IssueCollection<LanguageIssue>
 ) : SemanticAnalysisResult
 
-data class ProcessResultDefault<AsmType : Any>(
+data class ProcessResultDefault<AsmType:Any>(
     override val asm: AsmType?,
     override val issues: IssueCollection<LanguageIssue>
 ) : ProcessResult<AsmType>

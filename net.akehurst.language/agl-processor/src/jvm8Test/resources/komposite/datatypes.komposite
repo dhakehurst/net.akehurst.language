@@ -1,0 +1,16 @@
+namespace net.akehurst.kotlin.composite.api {
+  primitive String
+  primitive Int
+  datatype TestDatatype {
+        reference-val id : String
+        composite-var prop1 : String
+        reference-var prop2 : Int
+        dis prop4 : String
+        composite-val id2 : Int
+  }
+
+  datatype TestDatatype2 : TestDatatype {
+
+  }
+
+}

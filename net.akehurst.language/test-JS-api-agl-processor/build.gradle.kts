@@ -1,29 +1,39 @@
+plugins {
+    alias(libs.plugins.jsIntegration)
+}
+
 dependencies {
-    "jsTestImplementation"(project(":agl-processor"))
+    jsTestImplementation(project(":agl-processor"))
 }
 
 configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
-    //sourceSets{
-    //    val jsTest by getting {
-    //        resources.srcDir("src/test/javascript")
-    //    }
-    //}
     js("js", IR) {
-
-        nodejs {
-
-            testTask {
-                //this.testFrameworkSettings
-                //inputFileProperty.set(file("src/test/javascript/test.js"))
-            }
+        binaries.library()
+        generateTypeScriptDefinitions()
+        compilerOptions {
+            target.set("es2015")
         }
-        browser {
-            testTask {
-                //inputFileProperty.set(file("src/test/javascript/test.js"))
-            }
-        }
+        nodejs()
+        browser()
     }
 }
+
+val jsSrcDir = project.layout.buildDirectory.dir("dist/js/developmentLibrary")
+val jsOutDir = project.layout.buildDirectory.dir("dist/rollup")
+
+jsIntegration {
+    nodeSrcDirectoryDev.set(jsSrcDir)
+    nodeOutDirectoryDev.set(jsOutDir)
+    nodeSrcDirectoryProd.set(jsSrcDir)
+    nodeOutDirectoryProd.set(jsOutDir)
+
+    productionCommand.set(mapOf("prod" to "run build"))
+    developmentCommand.set(mapOf("dev" to "run build"))
+}
+
+
+
+
 //tasks.named<Copy>("jsTestTestDevelopmentExecutableCompileSync") {
 //    duplicatesStrategy = DuplicatesStrategy.WARN
 //}

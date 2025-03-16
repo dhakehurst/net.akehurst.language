@@ -17,7 +17,9 @@
 
 package thridparty.projectIT
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -111,7 +113,7 @@ class test_MetaTyperLanguage {
                         
             }
         """.trimIndent()
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         const val goal = "PiTyperDef"
     }
 
@@ -232,7 +234,7 @@ UnitOfMeasurement {
 //    }
 //}
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }

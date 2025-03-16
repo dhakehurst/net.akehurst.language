@@ -22,11 +22,14 @@ import io.kotest.datatest.withData
 import korlibs.io.file.VfsFile
 import korlibs.io.file.extension
 import korlibs.io.file.std.localCurrentDirVfs
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 val rootFs = localCurrentDirVfs["languages"].jail()
+val filterBy = { n:String -> true }
+//val filterBy = { n:String -> n == "_private" }
 
 @IsStableType
 data class TestData(
@@ -43,7 +46,7 @@ class GrammarData(
 ) {
     constructor(vfsFile: VfsFile) : this(vfsFile.path, vfsFile)
 
-    suspend fun grammarStr() = vfsFile.readString()
+    suspend fun grammarStr() = GrammarString(vfsFile.readString())
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
@@ -158,7 +161,7 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
             }
         }
 
-        else -> error("No '$sentenceKind' sentence file or directory")
+        else -> error("No '$sentenceKind' sentence file or directory in ${langDir.path}")
     }
 
     return sentences
@@ -202,20 +205,25 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
 private suspend fun fetchTestData(): List<TestData> {
     val testData = mutableListOf<TestData>()
     println("languages ${rootFs.listNames()}")
-    rootFs.listNames().forEach { lang ->
-        rootFs[lang].listNames().forEach { ver ->
-            //val grammarPath = "$lang/$ver"
-            val grammars = fetchGrammars(rootFs[lang][ver])
-            println("grammars for $lang/$ver: ${grammars.joinToString { it.name }}")
-            val validSentences = fetchSentences(rootFs[lang][ver], "valid")
-            //println("validSentences ${validSentences.joinToString { it.name }}")
-            val invalidSentences = fetchSentences(rootFs[lang][ver], "invalid")
-            grammars.forEach { grammarData ->
-                validSentences.forEach { sentenceData ->
-                    testData.add(TestData(grammarData, sentenceData, true))
-                }
-                invalidSentences.forEach { sentenceData ->
-                    testData.add(TestData(grammarData, sentenceData, false))
+    rootFs.listNames().filter(filterBy)
+        .forEach { lang ->
+        if (lang.startsWith(".")) {
+            //do nothing, avoid dirs such as .DS_Store
+        } else {
+            rootFs[lang].listNames().forEach { ver ->
+                //val grammarPath = "$lang/$ver"
+                val grammars = fetchGrammars(rootFs[lang][ver])
+                println("grammars for $lang/$ver: ${grammars.joinToString { it.name }}")
+                val validSentences = fetchSentences(rootFs[lang][ver], "valid")
+                //println("validSentences ${validSentences.joinToString { it.name }}")
+                val invalidSentences = fetchSentences(rootFs[lang][ver], "invalid")
+                grammars.forEach { grammarData ->
+                    validSentences.forEach { sentenceData ->
+                        testData.add(TestData(grammarData, sentenceData, true))
+                    }
+                    invalidSentences.forEach { sentenceData ->
+                        testData.add(TestData(grammarData, sentenceData, false))
+                    }
                 }
             }
         }
@@ -234,7 +242,7 @@ class test_AllLanguages : FunSpec({
     }
     context("parse") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringDefault(testData.grammar.grammarStr())
+            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
             val parseResult = when {
@@ -252,7 +260,7 @@ class test_AllLanguages : FunSpec({
     }
     context("process") {
         withData(tests) { testData ->
-            val aglRes = Agl.processorFromStringDefault(testData.grammar.grammarStr())
+            val aglRes = Agl.processorFromStringSimple(testData.grammar.grammarStr())
             assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
             val processor = aglRes.processor!!
 

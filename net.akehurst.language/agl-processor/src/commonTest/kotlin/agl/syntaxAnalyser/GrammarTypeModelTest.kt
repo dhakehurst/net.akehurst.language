@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.test.TypeModelTest
@@ -33,10 +33,12 @@ object GrammarTypeModelTest {
             expected == null -> fail()
             actual == null -> fail()
             else -> {
-                kotlin.test.assertEquals(expected.allNamespace.size, actual.allNamespace.size, "number of namespaces in model is different")
-                for (k in expected.allNamespace.indices) {
-                    val expEl = expected.allNamespace[k]
-                    val actEl = actual.allNamespace[k]
+                kotlin.test.assertEquals(expected.namespace.size, actual.namespace.size, "number of namespaces in model is different")
+                val expSorted = expected.namespace.sortedBy { it.qualifiedName.value }
+                val actSorted = expected.namespace.sortedBy { it.qualifiedName.value }
+                for (k in expSorted.indices) {
+                    val expEl = expSorted[k]
+                    val actEl = actSorted[k]
                     when {
                         expEl is GrammarTypeNamespace && actEl is GrammarTypeNamespace -> GrammarTypeModelTest.tmAssertEquals(expEl, actEl, "GrammarTypeNamespace")
                         else -> TypeModelTest.tmAssertEquals(expEl, actEl, "TypeNamespace")

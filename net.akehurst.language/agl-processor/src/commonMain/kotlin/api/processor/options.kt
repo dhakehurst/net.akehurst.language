@@ -16,86 +16,71 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.style.AglStyleModel
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.issues.api.LanguageIssueKind
+import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.scanner.api.ScanOptions
+import net.akehurst.language.sentence.api.InputLocation
 
 /**
- * Options to configure the building of a language processor
- * @param targetGrammarName name of one of the grammars in the grammarDefinitionString to generate parser for (if null use last grammar found)
- * @param goalRuleName name of the default goal rule to use, it must be one of the rules in the target grammar or its super grammars (if null use first non-skip rule found in target grammar)
- * @param syntaxAnalyser a syntax analyser (if null use SyntaxAnalyserSimple)
- * @param semanticAnalyser a semantic analyser (if null use SemanticAnalyserSimple)
- * @param formatter a formatter
+ * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)
  */
+interface SyntaxAnalysisOptions<AsmType : Any> {
+    var enabled: Boolean
 
-//typealias GrammarResolver = () -> ProcessResult<Grammar>
-typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
-typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
-typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
-typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
-typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>
-typealias StyleResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglStyleModel>
-typealias CompletionProviderResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
-
-interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
-    //val grammarResolver: GrammarResolver?
-    val targetGrammarName: String?
-    val defaultGoalRuleName: String?
-    val typeModelResolver: TypeModelResolver<AsmType, ContextType>?
-    val scopeModelResolver: ScopeModelResolver<AsmType, ContextType>?
-    val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-    val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-    val formatterResolver: FormatterResolver<AsmType, ContextType>?
-    val styleResolver: StyleResolver<AsmType, ContextType>?
-    val completionProvider: CompletionProviderResolver<AsmType, ContextType>?
-}
-
-/**
- * Options to configure the parsing of a sentence
- */
-interface ParseOptions {
-    var goalRuleName: String?
-    val automatonKind: AutomatonKind
-    val reportErrors: Boolean
-    val reportGrammarAmbiguities: Boolean
-    val cacheSkip: Boolean
-}
-
-/**
- * Options to configure the syntax analysis of an Shared Packed Parse Tree (SPPT)
- */
-interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
-    var active: Boolean
+    fun clone(): SyntaxAnalysisOptions<AsmType>
 }
 
 /**
  * Options to configure the semantic analysis of an Abstract Syntax Model (ASM)
  */
-interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
-    var active: Boolean
+interface SemanticAnalysisOptions<ContextType : Any> {
+    var enabled: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
+    var buildScope: Boolean
+
+    /**
+     * whether or not to replace items that already exist in the scope
+     * true -> replace with new item
+     * false -> do not replace, leave old item
+     */
+    var replaceIfItemAlreadyExistsInScope: Boolean
+
+    /**
+     * Report this kind of LanguageIssue if item already exists in scope.
+     * If null, do not report replacements as an issue.
+     */
+    var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?
+
     var checkReferences: Boolean
     var resolveReferences: Boolean
     val other: Map<String, Any>
+
+    fun clone(): SemanticAnalysisOptions<ContextType>
 }
 
-interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {
+interface CompletionProviderOptions<ContextType : Any> {
     var context: ContextType?
-    val options: Map<String, Any>
+
+    /**
+     * depth of nested rules to search when constructing possible completions
+     **/
+    var depth: Int
+
+    val other: Map<String, Any>
+
+    fun clone(): CompletionProviderOptions<ContextType>
 }
 
 /**
  * Options to configure the processing of a sentence
  */
 interface ProcessOptions<AsmType : Any, ContextType : Any> {
+    val scan: ScanOptions
     val parse: ParseOptions
-    val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType>
-    val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType>
-    val completionProvider: CompletionProviderOptions<AsmType, ContextType>
+    val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
+    val semanticAnalysis: SemanticAnalysisOptions<ContextType>
+    val completionProvider: CompletionProviderOptions<ContextType>
+
+    fun clone(): ProcessOptions<AsmType, ContextType>
 }

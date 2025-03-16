@@ -33,9 +33,7 @@ pluginManagement {
 rootProject.name = file(".").name
 
 fileTree(".") {
-    include("**/build.gradle")
     include("**/build.gradle.kts")
-    exclude("build.gradle") // Exclude the root _build file.
     exclude("build.gradle.kts") // Exclude the root _build file.
 }.forEach {
     val prj = it.parentFile.name

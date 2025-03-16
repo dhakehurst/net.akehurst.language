@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.dot
+package net.akehurst.language.agl.processor.SysML
 
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -27,33 +30,33 @@ import kotlin.test.assertTrue
 class test_SysML_Singles {
 
     private companion object {
-
-        private val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        const val grammarPath = "/SysML/v2_2023-11/grammars/standard/grammar.agl"
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
+        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
+        val grammarStr = this::class.java.getResource(grammarPath).readText()
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun SINGLE_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           // a comment
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
@@ -61,11 +64,11 @@ class test_SysML_Singles {
 
     @Test
     fun MULTI_LINE_COMMENT() {
-        val goal = "graph"
+        val goal = "RootNamespace"
         val sentence = """
           /* a comment */
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -76,7 +79,7 @@ class test_SysML_Singles {
         val sentence = """
           package ;
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

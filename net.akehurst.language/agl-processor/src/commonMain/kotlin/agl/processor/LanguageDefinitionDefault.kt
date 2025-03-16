@@ -16,145 +16,169 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.api.processor.LanguageProcessorConfigurationDefault
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.ProcessOptions
+import net.akehurst.language.agl.*
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.processor.AglGrammar.formatStr
+import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.typemodel.asm.TypeModelSimple
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
-    override val identity: String,
-    grammarStrArg: String?,
-    private val aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+    override val identity: LanguageIdentity,
+    private val aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    null,
-    buildForDefaultGoal,
-    initialConfiguration
+    GrammarModelDefault(SimpleName(identity.last)),
+    buildForDefaultGoal
 ) {
 
     private var _doObservableUpdates = true
 
     override val isModifiable: Boolean = true
 
+    private var _configuration: LanguageProcessorConfiguration<AsmType, ContextType> = initialConfiguration
     override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
-        get() = LanguageProcessorConfigurationDefault(
-            targetGrammarName = this.targetGrammarName,
-            defaultGoalRuleName = this.defaultGoalRule,
-            typeModelResolver = this._typeModelResolver,
-            scopeModelResolver = this._scopeModelResolver,
-            syntaxAnalyserResolver = this._syntaxAnalyserResolver,
-            semanticAnalyserResolver = this._semanticAnalyserResolver,
-            formatterResolver = this._formatterResolver,
-            styleResolver = this._styleResolver, //not used to create processor
-            completionProvider = this._completionProviderResolver
-        )
+        get() = _configuration
         set(value) {
-            this.updateConfiguration(value)
-            super._processor_cache.reset()
+            this.updateFromConfigurationWithoutNotification(value)
         }
 
-    override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateGrammarStr(oldValue, newValue)
-        }
-    }
+    override var grammarString: GrammarString? = null; private set
 
-    override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateScopeModelStr(oldValue, newValue)
-        }
-    }
+    override var typesString: TypesString? = null; private set
 
-    /*
-        override var formatStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-            if (oldValue != newValue) {
-                super._formatterResolver = {
-                    if (null==newValue) {
-                        ProcessResultDefault(null, emptyList())
-                    } else {
-                        Agl.registry.agl.formatter.processor!!.process(newValue)
-                    }
-                }
-            }
-        }
-    */
-    override var styleStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (_doObservableUpdates) {
-            updateStyleStr(oldValue, newValue)
-        }
-    }
+    override var transformString: TransformString? = null; private set
+
+    override var crossReferenceString: CrossReferenceString? = null; private set
+
+    override var styleString: StyleString? = null; private set
+
+    override var formatString: FormatString? = null; private set
 
     init {
-        grammarStr = grammarStrArg
+        updateFromConfigurationWithoutNotification(initialConfiguration)
     }
 
-    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
-        this._doObservableUpdates = false
-        val oldGrammarStr = this.grammarStr
-        val oldScopeModelStr = this.scopeModelStr
-        val oldStyleStr = this.styleStr
-        this.grammarStr = grammarStr
-        this.scopeModelStr = scopeModelStr
-        this.styleStr = styleStr
-        updateGrammarStr(oldGrammarStr, grammarStr)
-        updateScopeModelStr(oldScopeModelStr, scopeModelStr)
-        updateStyleStr(oldStyleStr, styleStr)
-        this._doObservableUpdates = true
+    override fun update(grammarString: GrammarString?, typesString: TypesString?,transformString: TransformString?, crossReferenceString: CrossReferenceString?, styleString: StyleString?, formatString: FormatString?) {
+        val oldGrammarStr = this.grammarString
+        val oldTypeModelStr = this.typesString
+        val oldTransformStr = this.transformString
+        val oldCrossReferenceStr = this.crossReferenceString
+        val oldStyleStr = this.styleString
+        val oldFormatStr = this.formatString
+
+        val newConfig = Agl.configuration(base = this.configuration) {
+            grammarString?.let { grammarString(it) }
+            typesString?.let { typesString(it) }
+            transformString?.let { transformString(it) }
+            crossReferenceString?.let { crossReferenceString(it) }
+            styleString?.let { styleString(it) }
+            formatString?.let { formatString(it) }
+        }
+        updateFromConfigurationWithoutNotification(newConfig)
+
+        notifyGrammarStringObservers(oldGrammarStr,this.grammarString)
+        notifyTypesStringObservers(oldTypeModelStr, this.typesString)
+        notifyTransformStringObservers(oldTransformStr, this.transformString)
+        notifyCrossReferenceStringObservers(oldCrossReferenceStr, this.crossReferenceString)
+        notifyStyleStringObservers(oldStyleStr, this.styleString)
+        notifyFormatStringObservers(oldFormatStr, this.formatString)
     }
 
-    private fun updateConfiguration(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
+    fun updateFromConfigurationWithoutNotification(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
         this._doObservableUpdates = false
+        this._issues.clear()
+        this._configuration = configuration
+
+        val oldGrammarStr = this.grammarString
+
         this.targetGrammarName = configuration.targetGrammarName
         this.defaultGoalRule = configuration.defaultGoalRuleName
-        this._typeModelResolver = configuration.typeModelResolver
-        this._scopeModelResolver = configuration.scopeModelResolver
+
+        this._regexEngineKind = configuration.regexEngineKind
+        this._scannerKind = configuration.scannerKind
+
+        this.grammarString = configuration.grammarString
+        this.typesString = configuration.typesString
+        this.transformString = configuration.transformString
+        this.crossReferenceString = configuration.crossReferenceString
+        this.styleString = configuration.styleString
+        this.formatString = configuration.formatString
+
+        this._scannerResolver = configuration.scannerResolver
+        this._parserResolver = configuration.parserResolver
+        this._typeModelResolver = configuration.typesResolver
+        this._asmTransformModelResolver = configuration.transformResolver
+        this._crossReferenceModelResolver = configuration.crossReferenceResolver
         this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
         this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
-        this._formatterResolver = configuration.formatterResolver
+
         this._styleResolver = configuration.styleResolver
-        this._completionProviderResolver = configuration.completionProvider
+        this._formatterResolver = configuration.formatResolver
+        this._completionProviderResolver = configuration.completionProviderResolver
+
+        updateGrammarModel(oldGrammarStr, configuration.grammarString)
+
         this._doObservableUpdates = true
+        super._processor_cache.reset()
     }
 
-    private fun updateGrammarStr(oldValue: String?, newValue: String?) {
+    private fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
-            this._issues.addAll(res.issues)
-            this.grammar = when {
-                res.issues.errors.isNotEmpty() -> null
-                null == targetGrammarName -> res.asm?.lastOrNull()
-                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
+            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue?.value, aglOptions)
+            this._issues.addAllFrom(res.issues)
+            this.grammarModel = when {
+                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
+                else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
             }
+        }
+    }
+
+    private fun notifyGrammarStringObservers(oldValue: GrammarString?, newValue: GrammarString?) {
+        if (oldValue != newValue) {
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
-    private fun updateScopeModelStr(oldValue: String?, newValue: String?) {
+    private fun notifyTypesStringObservers(oldValue: TypesString?, newValue: TypesString?) {
         if (oldValue != newValue) {
-            super._scopeModelResolver = {
-                if (null == newValue) {
-                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    Agl.registry.agl.scopes.processor!!.process(newValue)
-                }
-            }
+            typeModelStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
-    private fun updateStyleStr(oldValue: String?, newValue: String?) {
+    private fun notifyTransformStringObservers(oldValue: TransformString?, newValue: TransformString?) {
         if (oldValue != newValue) {
-            super._styleResolver = {
-                if (null == newValue) {
-                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    Agl.registry.agl.style.processor!!.process(newValue)
-                }
-            }
+            asmTransformStrObservers.forEach { it.invoke(oldValue, newValue) }
+        }
+    }
+
+    private fun notifyCrossReferenceStringObservers(oldValue: CrossReferenceString?, newValue: CrossReferenceString?) {
+        if (oldValue != newValue) {
+            crossReferenceStrObservers.forEach { it.invoke(oldValue, newValue) }
+        }
+    }
+
+    private fun notifyStyleStringObservers(oldValue: StyleString?, newValue: StyleString?) {
+        if (oldValue != newValue) {
+            styleStrObservers.forEach { it.invoke(oldValue, newValue) }
+        }
+    }
+
+    private fun notifyFormatStringObservers(oldValue: FormatString?, newValue: FormatString?) {
+        if (oldValue != newValue) {
+            formatterStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 }

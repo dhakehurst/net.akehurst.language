@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -48,10 +48,10 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextSimple> {
             val bytes = Java8_compare_Test_aglSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val res = Agl.processorFromString<AsmSimple, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextSimple>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

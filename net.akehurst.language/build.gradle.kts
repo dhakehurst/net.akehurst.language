@@ -14,40 +14,18 @@
  * limitations under the License.
  */
 
-import com.github.gmazzo.gradle.plugins.BuildConfigExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
+import com.github.gmazzo.buildconfig.BuildConfigExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.9.10") apply false
-    id("org.jetbrains.dokka") version ("1.9.0") apply false
-    id("com.github.gmazzo.buildconfig") version ("4.1.2") apply false
-    id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.10") apply false
+    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.buildconfig) apply false
+    alias(libs.plugins.credentials) apply true
+    alias(libs.plugins.exportPublic) apply false
 }
-val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
-val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
-val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 allprojects {
-    val version_project: String by project
-    val group_project = rootProject.name
-
-    group = group_project
-    version = version_project
-
-    project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
-}
-
-subprojects {
-
-    apply(plugin = "org.jetbrains.kotlin.multiplatform")
-    apply(plugin = "maven-publish")
-    apply(plugin = "signing")
-    apply(plugin = "org.jetbrains.dokka")
-    apply(plugin = "com.github.gmazzo.buildconfig")
-    apply(plugin = "net.akehurst.kotlin.gradle.plugin.exportPublic")
-
     repositories {
         mavenLocal {
             content {
@@ -56,6 +34,24 @@ subprojects {
         }
         mavenCentral()
     }
+
+    group = rootProject.name
+    version = rootProject.libs.versions.project.get()
+
+    project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
+}
+
+subprojects {
+    val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
+    val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
+    val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+
+    apply(plugin = "org.jetbrains.kotlin.multiplatform")
+    apply(plugin = "maven-publish")
+    apply(plugin = "signing")
+    apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "com.github.gmazzo.buildconfig")
+    apply(plugin = "net.akehurst.kotlin.gradle.plugin.exportPublic")
 
     configure<BuildConfigExtension> {
         useKotlinOutput {
@@ -74,30 +70,32 @@ subprojects {
     }
 
     configure<KotlinMultiplatformExtension> {
+        applyDefaultHierarchyTemplate()
         jvm("jvm8") {
             compilations {
                 val main by getting {
-                    compilerOptions.configure {
-                        languageVersion.set(kotlin_languageVersion)
-                        apiVersion.set(kotlin_apiVersion)
-                        jvmTarget.set(jvmTargetVersion)
+                    compileTaskProvider.configure {
+                        compilerOptions {
+                            languageVersion.set(kotlin_languageVersion)
+                            apiVersion.set(kotlin_apiVersion)
+                            jvmTarget.set(jvmTargetVersion)
+                        }
                     }
                 }
                 val test by getting {
-                    compilerOptions.configure {
-                        languageVersion.set(kotlin_languageVersion)
-                        apiVersion.set(kotlin_apiVersion)
-                        jvmTarget.set(jvmTargetVersion)
+                    compileTaskProvider.configure {
+                        compilerOptions {
+                            languageVersion.set(kotlin_languageVersion)
+                            apiVersion.set(kotlin_apiVersion)
+                            jvmTarget.set(jvmTargetVersion)
+                        }
                     }
                 }
             }
         }
-        js("js", IR) {
-            useEsModules()
-            tasks.withType<KotlinJsCompile>().configureEach {
-                kotlinOptions {
-                    useEsClasses = true
-                }
+        js("js") {
+            compilerOptions {
+                target.set("es2015")
             }
             nodejs {
                 testTask {
@@ -118,8 +116,20 @@ subprojects {
             }
         }
 
-        //macosX64("macosX64") {
-        //}
+//        androidTarget {
+//            publishLibraryVariants("release", "debug")
+//        }
+
+
+        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+        wasmJs() {
+            binaries.library()
+            browser()
+        }
+
+       // macosArm64 {
+       //     binaries.sharedLib()
+       // }
 
         sourceSets {
             all {
@@ -145,7 +155,7 @@ subprojects {
     fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
     val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD") as String?
+    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD")
         ?: getProjectProperty("SONATYPE_PASSWORD")
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
@@ -190,16 +200,38 @@ subprojects {
     }
 
     configure<SigningExtension> {
+        setRequired( {  gradle.taskGraph.hasTask("uploadArchives") })
         useGpgCmd()
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }
+    val signTasks = arrayOf(
+        "signKotlinMultiplatformPublication",
+        "signJvm8Publication",
+        "signJsPublication",
+        "signWasmJsPublication",
+//         "signMacosArm64Publication"
+    )
 
-    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
-    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.forEach {
+        when {
+            it.name.matches(Regex("publish(.)+PublicationToMavenLocal")) -> {
+                println("${it.name}.mustRunAfter(${signTasks.toList()})")
+                it.mustRunAfter(*signTasks)
+            }
+        }
+    }
+
+
+
+//    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+//    tasks.named("publishWasmJsPublicationToMavenLocal").get().mustRunAfter(*signTasks)
+
+//    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
+//    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 
 }

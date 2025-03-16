@@ -28,18 +28,12 @@ grammar AtomBasic {
 
     binary-operator
      = 'AND'
-     | ''
+     | 'OR'
      ;
 
     built-in-function-name
      = 'ABS'
      | 'ACS'
-     | ''
-     | ''
-     | ''
-     | ''
-     | ''
-     | ''
      ;
 
     name = ID ;

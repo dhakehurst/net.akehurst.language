@@ -1,0 +1,70 @@
+namespace com.itemis.create.Expressions
+    references {
+        in TypeSpecifier {
+            property fqn refers-to BuiltInType
+        }
+        in TypeCastExpression {
+            property typeSpecifier.fqn refers-to BuiltInType
+        }
+        in FunctionCall {
+            property id refers-to com.itemis.create.Global.OperationDeclaration
+            forall argumentList.arguments {
+                property argumentId.id refers-to Parameter from $self.id  // id should be a reference to an OperationDeclaration at this point
+            }
+        }
+    }
+
+namespace com.itemis.create.Global
+    import external  //imports types AnnotationType, RegularState, BuiltInType
+
+    identify Interface by id
+    identify ImportedName by string
+    identify VariableDeclaration by id
+    identify EventDeclaration by id
+    identify AliasDeclaration by id
+    identify OperationDeclaration by id
+    scope Interface {
+        identify VariableDeclaration by id
+        identify EventDeclaration by id
+        identify AliasDeclaration by id
+        identify OperationDeclaration by id
+    }
+    scope OperationDeclaration {
+        identify Parameter by id
+    }
+    references {
+        in Annotation {
+            property fqn refers-to AnnotationType
+        }
+        //in SimpleFeatureCall {
+        //    property first refers-to Declaration
+        //}
+        in ActiveStateReferenceExpression {
+            property fqn refers-to RegularState
+        }
+
+    }
+
+namespace com.itemis.create.States
+
+
+namespace com.itemis.create.Transitions
+
+
+namespace com.itemis.create.Statechart
+    //identify Region by name
+    identify State by name
+    //scope Region {
+    //    identify State by name
+    //}
+    //scope State {
+    //    identify Region by name
+   // }
+    references {
+        in Statechart {
+            forall transitions.transition {
+                property name refers-to State //from regions->{name=='main region'}
+                property name2 refers-to State
+            }
+        }
+    }

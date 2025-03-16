@@ -11,11 +11,11 @@ dependencies {
 
 kotlin {
 
-    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-    wasm("wasm") {
-        binaries.library()
-        browser()
-    }
+    //@OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+    // wasmJs {
+    //    binaries.library()
+    //     browser()
+    // }
 
     sourceSets {
         commonTest.configure {

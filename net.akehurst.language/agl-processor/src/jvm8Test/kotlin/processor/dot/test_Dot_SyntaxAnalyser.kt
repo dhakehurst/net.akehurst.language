@@ -16,13 +16,14 @@
 package net.akehurst.language.processor.dot
 
 
-import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
+import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,13 +34,13 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test
     fun dotTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot", "Graph") {
+        val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
             dataType("graph", "Graph") {
                 propertyPrimitiveType("STRICT", "String", true, 0)
@@ -141,8 +142,8 @@ class test_Dot_SyntaxAnalyser {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
-                    propertyDataTypeOf("expression", "expression", false, 1)
+                    typeRef(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true)
+                    typeRef("expression", "expression", false)
                 }
             }
             dataType("", "literalExpression") {
@@ -182,10 +183,10 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(ContextSimple()) }
+            semanticAnalysis { context(ContextAsmSimple()) }
         })
-        val actual = result.asm?.rootElements?.firstOrNull()
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        val actual = result.asm?.root?.firstOrNull()
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(actual)
 
         val expected = asmSimple {
@@ -206,7 +207,7 @@ class test_Dot_SyntaxAnalyser {
                 }
             }
         }
-        assertEquals(expected.asString(" "), result.asm?.asString(" "))
+        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
 
     @Test
@@ -219,11 +220,11 @@ class test_Dot_SyntaxAnalyser {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options {
-            semanticAnalysis { context(ContextSimple()) }
+            semanticAnalysis { context(ContextAsmSimple()) }
         })
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -234,7 +235,7 @@ graph {
 }
         """.trimIndent()
         val result = processor.process(sentence)
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -243,7 +244,7 @@ graph {
     fun ID_html() {
         val sentence = "<<x></x>>"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName("ID") } })
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }

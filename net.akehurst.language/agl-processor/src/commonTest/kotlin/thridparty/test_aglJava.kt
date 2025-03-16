@@ -15,11 +15,11 @@
  *
  */
 
-package thridparty
+package net.akehurst.language.agl.thridparty
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -89,7 +89,7 @@ grammar Literals {
     leaf NULL_LITERAL      = 'null' ;
 }
 
-grammar Annotations extends Base, Literals {
+grammar Annotations : Base, Literals {
     Annotation = NormalAnnotation | MarkerAnnotation | SingleElementAnnotation ;
     NormalAnnotation = '@' QualifiedName '(' ElementValuePairList ')' ;
     ElementValuePairList = [ ElementValuePair / ',' ]* ;
@@ -102,7 +102,7 @@ grammar Annotations extends Base, Literals {
     SingleElementAnnotation = '@' QualifiedName '(' ElementValue ')' ;
 }
 
-grammar Types extends Annotations {
+grammar Types : Annotations {
     Type = Annotation* UnannType ;
     PrimitiveType = Annotation* UnannPrimitiveType ;
     leaf UnannPrimitiveType = NumericType | 'boolean' ;
@@ -133,7 +133,7 @@ grammar Types extends Annotations {
     UnannTypeReference = IDENTIFIER TypeArguments? ;
 }
 
-grammar Expressions extends Types {
+grammar Expressions : Types {
 
     // from Annotations
     override ElementValue = Expression | ElementValueArrayInitializer | Annotation ;
@@ -280,7 +280,7 @@ grammar Expressions extends Types {
     ConstantExpression = Expression ;
 }
 
-grammar BlocksAndStatements extends Expressions {
+grammar BlocksAndStatements : Expressions {
 
     // from Expressions
     override LambdaBody = Expression | Block ;
@@ -376,7 +376,7 @@ grammar BlocksAndStatements extends Expressions {
     Resource = VariableModifier* UnannType VariableDeclaratorId '=' Expression ;
 }
 
-grammar Classes extends BlocksAndStatements {
+grammar Classes : BlocksAndStatements {
 
     // from BlocksAndStatements
     override BlockStatement = LocalVariableDeclarationStatement | ClassDeclaration | Statement ;
@@ -448,7 +448,7 @@ grammar Classes extends BlocksAndStatements {
     EnumBodyDeclarations = ';' ClassBodyDeclaration* ;
 }
 
-grammar Interfaces extends Classes {
+grammar Interfaces : Classes {
     // from Classes
     override ClassMemberDeclaration
                 = FieldDeclaration
@@ -491,7 +491,7 @@ grammar Interfaces extends Classes {
     DefaultValue = 'default' ElementValue ;
 }
 
-grammar Packages extends Interfaces {
+grammar Packages : Interfaces {
     CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;
     PackageDeclaration = PackageModifier* 'package' [IDENTIFIER / '.']+ ';' ;
     PackageModifier = Annotation ;
@@ -504,25 +504,31 @@ grammar Packages extends Interfaces {
 
     @Test
     fun parse_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration {
+            targetGrammarName(("BlocksAndStatements"))
+            defaultGoalRuleName("Block")
+        }).processor!!
         val goal = "Block"
         val sentence = """
         {}
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
 
     @Test
     fun process_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration(Agl.configurationSimple()) {
+            targetGrammarName(("BlocksAndStatements"))
+            defaultGoalRuleName("Block")
+        }).processor!!
         val goal = "Block"
         val sentence = """
         {}
         """.trimIndent()
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 }

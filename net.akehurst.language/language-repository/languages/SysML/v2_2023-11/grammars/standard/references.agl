@@ -1,0 +1,86 @@
+namespace net.akehurst.language.sysML.SysMLv2_0
+
+    identify AliasMember by name
+//    identify SimpleClassifier by classifierDeclaration.identification.name
+//    identify DataType by classifierDeclaration.identification.name
+//    identify Class by classifierDeclaration.identification.name
+//    identify Structure by classifierDeclaration.identification.name
+//    identify Association by classifierDeclaration.identification.name
+//    identify AssociationStructure by classifierDeclaration.identification.name
+    identify PartDefinition by definition.definitionDeclaration.identification.declaredName.name
+
+    identify Package by packageDeclaration.identification.declaredName
+    identify LibraryPackage by packageDeclaration.identification.declaredName
+
+
+    scope Package {
+        identify AliasMember by name
+//        identify SimpleClassifier by classifierDeclaration.identification.name
+//        identify DataType by classifierDeclaration.identification.name
+//        identify Class by classifierDeclaration.identification.name
+//        identify Structure by classifierDeclaration.identification.name
+//        identify Association by classifierDeclaration.identification.name
+//        identify AssociationStructure by classifierDeclaration.identification.name
+        identify PartDefinition by definition.definitionDeclaration.identification.declaredName.name
+
+        identify Package by packageDeclaration.identification.declaredName.name
+        identify LibraryPackage by packageDeclaration.identification.declaredName.name
+    }
+/*
+    references {
+        in DependencyDeclaration {
+            foreach qn in qualifiedName1 {
+                property self refers-to ?
+            }
+            foreach qn in qualifiedName2 {
+                property self refers-to ?
+            }
+        }
+        in Annotation {
+            property qualifiedName refers-to ?
+        }
+        in AliasMember {
+            property qualifiedName refers-to ?
+        }
+        in ImportedNamespace {
+            property qualifiedName refers-to ?
+        }
+        in OwnedSubclassification {
+            property qualifiedName refers-to ?
+        }
+        in OwnedFeatureTyping {
+            property qualifiedName refers-to ?
+        }
+        in OwnedSubsetting {
+            property qualifiedName refers-to ?
+        }
+        in OwnedReferenceSubsetting {
+            property qualifiedName refers-to ?
+        }
+        in OwnedRedefinition {
+            property qualifiedName refers-to ?
+        }
+        in OwnedFeatureChaining {
+            property qualifiedName refers-to ?
+        }
+        in ConjugatedPortTyping {
+            property qualifiedName refers-to PortDefinition
+        }
+        in FlowEndSubsetting {
+            property qualifiedName refers-to ?
+        }
+        in FlowFeatureRedefinition {
+            property qualifiedName refers-to ?
+        }
+        in InitialNodeMember {
+            property qualifiedName refers-to ?
+        }
+        in FeatureChainMember {
+            property qualifiedName refers-to ?
+        }
+
+        in FeatureReference {
+            property qualifiedName refers-to Classifier
+        }
+    }
+*/

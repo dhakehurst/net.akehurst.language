@@ -16,18 +16,33 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.parser.api.RuleSet
 
-internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
-    override val grammar: Grammar,
-    override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
-) : LanguageProcessorAbstract<AsmType, ContextType>() {
+internal class LanguageProcessorDefault<AsmType:Any, ContextType : Any>(
+    override val grammarModel: GrammarModel,
+    override val configuration: LanguageProcessorConfiguration<AsmType,  ContextType>,
+) : LanguageProcessorAbstract<AsmType,  ContextType>() {
 
-    private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(grammar) }
-    override val runtimeRuleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
-    override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._converterToRuntimeRules.originalRuleItemFor(ruleSetNumber, ruleNumber) }
+    override val targetRuleSet get() = this.targetGrammar?.let { _runtimeRuleSet[it.qualifiedName.value] }
+    override val mapToGrammar: (Int, Int) -> RuleItem? = { ruleSetNumber, ruleNumber -> this._originalRuleMap[Pair(ruleSetNumber, ruleNumber)] }
 
+    private var _originalRuleMap: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
+    private var _runtimeRuleSet: MutableMap<String,RuleSet> = mutableMapOf()
+
+    init {
+        val allGrammars = grammarModel.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet()
+        val converters = allGrammars.map  { ConverterToRuntimeRules(it) }
+        val grmToRrs = converters.associateBy({ it.grammar}, { it.runtimeRuleSet })
+        converters.forEach {c ->
+            c.resolveEmbedded(grmToRrs)
+            val rrs = c.runtimeRuleSet
+            val orm = c.originalRuleItemMap
+            _originalRuleMap.putAll(orm)
+            _runtimeRuleSet[rrs.qualifiedName] = rrs
+        }
+    }
 }

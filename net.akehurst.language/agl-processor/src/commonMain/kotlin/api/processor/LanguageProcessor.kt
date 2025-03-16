@@ -16,30 +16,49 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.automaton.Automaton
-import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.SPPTParser
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.automaton.api.Automaton
+import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.parser.api.Parser
+import net.akehurst.language.parser.api.RuleSet
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.scanner.api.ScanOptions
+import net.akehurst.language.scanner.api.ScanResult
+import net.akehurst.language.scanner.api.Scanner
+import net.akehurst.language.sppt.api.SPPTParser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.api.TransformRuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**
- * A LanguageProcessor is used to process a sentence using a given grammar.
+ * A LanguageProcessor is immutable and used to process a sentence using a given grammar.
  * In this context, the stages in processing a language are defined as:
  *   - scan: produce list of tokens / leaves
  *   - parse: produce a SharedPackedParseTree
  *   - syntaxAnalysis: produce an abstract syntax tree
  *   - semanticAnalysis: produce a list of SemanticAnalyserIssue to indicate errors and warnings about the semantics of the sentence
  */
-interface LanguageProcessor<AsmType : Any, ContextType : Any> {
+interface LanguageProcessor<AsmType:Any, ContextType : Any> {
+
+    val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     val issues: IssueCollection<LanguageIssue>
 
-    val grammar: Grammar?
+    val grammarModel: GrammarModel?
+
+    val targetGrammar:Grammar?
+
+    val targetRuleSet: RuleSet?
+
+    val scanner: Scanner?
 
     /**
      * An SPPT parser for this language,
@@ -48,17 +67,34 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      */
     val spptParser: SPPTParser
 
+    val parser: Parser?
+
     /**
-     * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     * Access to the TypeModel possibly before the AsmTransform has been resolved.
+     * After resolving the AsmTransform this value will be the same as typeModel
+     */
+    val baseTypeModel: TypeModel
+
+    /**
+     * Model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     * After resolving the AsmTransform, which may modify the original baseTypeModel
      */
     val typeModel: TypeModel
 
-    /*
-     * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
+    /**
+     * The transformation from parse-tree to ASM
+     * Evaluating this may or may not modify the typeModel depending on the specifics of the TransformModel
      */
-    val scopeModel: ScopeModel
+    val asmTransformModel: TransformModel
 
-    val formatterModel: AglFormatterModel?
+    val targetAsmTransformRuleSet: TransformRuleSet
+
+    /**
+     * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor
+     */
+    val crossReferenceModel: CrossReferenceModel
+
+    val formatModel: AglFormatModel?
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 
@@ -81,7 +117,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * get the default options for this language processor
      */
-    fun optionsDefault(): ProcessOptions<AsmType, ContextType>
+    fun optionsDefault(): ProcessOptions<AsmType,ContextType>
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
@@ -93,7 +129,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar
      */
-    fun scan(sentence: String): List<LeafData>
+    fun scan(sentence: String, options: ScanOptions?=null): ScanResult
 
     /**
      * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.
@@ -137,17 +173,19 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      *
      * @param sentence text to parse
      * @param position position in the text (from reader) at which to provide expectations
-     * @param desiredDepth depth of nested rules to search when constructing possible completions
      * @param goalRuleName name of a rule in the grammar that is the goal rule
      * @return list of possible completion items
      * @throws ParseFailedException
      * @throws ParseTreeException
      */
-    fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
+    fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
     /**
-     * returns list of expected items according to the given completionProvider, or list of terminalItems if no completion provider given
+     * returns
+     * list of expected items according to the given completionProvider, or
+     * list of terminalItems if no completion provider given, or
+     * emptyList if no context given and there is a completion provider
      */
-    fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
+    fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
 }

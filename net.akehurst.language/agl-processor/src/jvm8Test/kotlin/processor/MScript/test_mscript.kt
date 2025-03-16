@@ -16,28 +16,26 @@
  */
 package net.akehurst.language.agl.processor.MScript
 
-import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.sentence.api.InputLocation
+import testFixture.utils.parseError
 import kotlin.test.*
 
 class test_mscript {
     private companion object {
         private val grammarStr = this::class.java.getResource("/MScript/version_/grammar.agl").readText()
-        val sut = Agl.processorFromStringDefault(grammarStr).processor!!
+        val sut = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test
     fun mscript_typeModel() {
         val actual = sut.typeModel
-        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript", "Script") {
+        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript") {
             dataType("script", "Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)
@@ -140,8 +138,8 @@ class test_mscript {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
-                    propertyDataTypeOf("expression", "Expression", false, 1)
+                    typeRef(Grammar2TransformRuleSet.UNNAMED_PRIMITIVE_PROPERTY_NAME.value, "String", true)
+                    typeRef("expression", "Expression", false)
                 }
             }
             dataType("", "LiteralExpression") {
@@ -330,14 +328,10 @@ class test_mscript {
     fun process_REAL_1_fails() {
 
         val text = "1"
-        val ex = ParseFailedException::class
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         val expIssues = listOf(
-            LanguageIssue(
-                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^1",
-                setOf("REAL")
-            )
+            parseError(InputLocation(0, 1, 1, 1), text, setOf("<GOAL>"), setOf("REAL"))
         )
         assertNull(result.sppt)
         assertEquals(expIssues, result.issues.errors)
@@ -704,9 +698,9 @@ class test_mscript {
             }
         }
 
+        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty())
-        assertEquals(expected.asString(" "), result.asm?.asString(" "))
+        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
 
     @Test
@@ -714,10 +708,10 @@ class test_mscript {
 
         val text = "x=1"
         val parseResult = sut.parse(text, Agl.parseOptions { goalRuleName("assignment") })
-        assertTrue(parseResult.issues.errors.isEmpty())
+        assertTrue(parseResult.issues.errors.isEmpty(),parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -730,7 +724,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
     }
 
     @Test
@@ -741,7 +735,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -767,7 +761,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
     }
 
     @Test

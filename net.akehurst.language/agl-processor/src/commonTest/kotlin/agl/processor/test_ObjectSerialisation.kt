@@ -16,14 +16,15 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-internal class test_ObjectSerialisation {
+class test_ObjectSerialisation {
 
     private companion object {
-        const val goal = "conceptDefinition"
         val grammarStr = """
         namespace test
         grammar Test {
@@ -37,8 +38,8 @@ internal class test_ObjectSerialisation {
 
             property = NAME ':' value ;
             value = object | STRING | list ;
-            list = '[' item* ']' ;
-            item = object | STRING ;
+            list = '[' value* ']' ;
+            //item = object | STRING ;
 
             // other chars NOT : or whitespace
             leaf NAME = "([^: \t\n\x0B\f\r]|\\.)+" ;
@@ -46,12 +47,12 @@ internal class test_ObjectSerialisation {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
         fun testParse(sentence: String) {
             val res = processor.parse(sentence)
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
-            assertTrue(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeDataIsEmpty)
+            assertTrue(((processor as LanguageProcessorDefault).parser as LeftCornerParser).runtimeDataIsEmpty)
         }
     }
 
@@ -63,7 +64,7 @@ internal class test_ObjectSerialisation {
                prop: ''
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -75,7 +76,7 @@ internal class test_ObjectSerialisation {
                list: ['' '' '' '']
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -91,7 +92,7 @@ internal class test_ObjectSerialisation {
                }]
               }
             }
-        """
+        """.trimIndent()
         testParse(sentence)
     }
 
@@ -164,7 +165,7 @@ internal class test_ObjectSerialisation {
                 l:''
             }
         }
-"""
+""".trimIndent()
         testParse(sentence)
     }
 }

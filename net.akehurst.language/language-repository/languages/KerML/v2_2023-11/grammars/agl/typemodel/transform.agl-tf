@@ -1,0 +1,13 @@
+namespace com.itemis.kerml.cst
+
+import com.itemis.kerml.**
+
+grammar Base {
+
+  Identification : { Element ->
+    it.declaredShortName = self.name
+    it.declaredName = self.name2
+  }
+
+
+}

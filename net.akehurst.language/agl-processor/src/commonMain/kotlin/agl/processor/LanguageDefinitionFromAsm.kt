@@ -16,19 +16,18 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.grammar.api.GrammarModel
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
-    override val identity: String,
-    grammar: Grammar,
+    override val identity: LanguageIdentity,
+    grammarModel: GrammarModel,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    grammar,
-    buildForDefaultGoal,
-    initialConfiguration
+    grammarModel,
+    buildForDefaultGoal
 ) {
     private val _configuration = initialConfiguration
     override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -37,34 +36,27 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
             error("Cannot set the configuration of a LanguageDefinitionFromAsm")
         }
 
-    override var grammarStr: String?
-        get() = this.grammar.toString() //TODO:
-        set(value) {
-            error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
-        }
+    override val grammarString: GrammarString?
+        get() = this.grammarModel?.asString()?.let { GrammarString(it) }
+
     override val isModifiable: Boolean = false
 
-    override var scopeModelStr: String?
-        get() = this.scopeModel.toString() //TODO:
-        set(value) {
-            error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
-        }
+    override val typesString: TypesString?
+        get() = this.typesModel?.asString()?.let { TypesString(it) }
 
-    override var styleStr: String?
-        get() = this.style.toString() //TODO:
-        set(value) {
-            error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
-        }
-    /*
-        override var formatStr: String?
-            get() = this.grammar.toString() //TODO:
-            set(value) {
-                error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
-            }
+    override val transformString: TransformString?
+        get() = this.transformModel?.asString()?.let { TransformString(it) }
 
-     */
+    override val crossReferenceString: CrossReferenceString?
+        get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
 
-    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
-        error("Cannot update a LanguageDefinitionFromAsm using Strings")
+    override val styleString: StyleString?
+        get() = this.styleModel?.asString()?.let { StyleString(it) }
+
+    override val formatString: FormatString?
+        get() = FormatString(this.formatter?.formatModel?.asString() ?:"")
+
+    override fun update(grammarStr: GrammarString?, typeModelStr: TypesString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?,  formatStr: FormatString?) {
+        error("Cannot update a LanguageDefinitionFromAsm")
     }
 }

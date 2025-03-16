@@ -1,12 +1,20 @@
 plugins {
-
+    alias(libs.plugins.reflex)
 }
 
 dependencies {
-    commonMainApi(project(":type-model"))
+    commonMainApi(project(":agl-parser"))
+    commonMainApi(project(":agl-regex"))
+    commonMainApi(project(":collections")) //TODO merge with kotlinx collections
+
+    commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+    }
+
     js("js") {
         binaries.library()
         generateTypeScriptDefinitions()
@@ -25,12 +33,7 @@ kotlin {
         }
     }
 
-    // too many issues in wasm for this to work yet
-//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-//    wasm("wasm") {
-//        binaries.library()
-//        browser()
-//    }
+   // macosArm64()
 
     sourceSets {
         commonTest.configure {
@@ -40,51 +43,61 @@ kotlin {
     }
 }
 
-exportPublic {
-    exportPatterns.set(
+//  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done
+// thus we get each module to generate KotlinxReflect for itself - to fix in future FIXME
+kotlinxReflect {
+    forReflectionMain.set(
         listOf(
-            "net.akehurst.language.api.**",
-            "net.akehurst.language.agl.regex.**",
+            "net.akehurst.language.base.**",
+            "net.akehurst.language.grammar.**",
+            "net.akehurst.language.style.**",
+            "net.akehurst.language.typemodel.**",
+            "net.akehurst.language.grammarTypemodel.**",
+            "net.akehurst.language.asm.**",
+            "net.akehurst.language.expressions.**",
+            "net.akehurst.language.reference.**",
+            "net.akehurst.language.scope.**",
+            "net.akehurst.language.api.semanticAnalyser.SentenceContext",
+
+            "net.akehurst.language.api.processor.**",
             "net.akehurst.language.agl.processor.**",
-            "net.akehurst.language.agl.grammar.**",
-            "net.akehurst.language.agl.syntaxAnalyser.**",
-            "net.akehurst.language.agl.sppt.**",
+            "net.akehurst.language.agl.simple.ContextAsmSimple",
+            "net.akehurst.language.agl.semanticAnalyser.**"
         )
     )
 }
 
-tasks.forEach {
-    if (it.name.startsWith("publish")) {
-        it.doFirst {
-            check(file("src/commonMain/kotlin/util/debug.kt").readText().contains("const val CHECK = false")) { "To publish, must set Debug.CHECK = false" }
-        }
-    }
-}
-
 /*
-tasks.named<Copy>("jsProductionLibraryCompileSync") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
+exportPublic {
+    exportPatterns.set(
+        listOf(
+            "net.akehurst.language.agl.Agl",
+            "net.akehurst.language.api.**",
+            "net.akehurst.language.base.api.**",
+            "net.akehurst.language.base.asm.**",
+            "net.akehurst.language.grammar.api.**",
+            "net.akehurst.language.grammar.asm.**",
+            "net.akehurst.language.style.api.**",
+            "net.akehurst.language.style.asm.**",
 
-tasks.named<Copy>("jsDevelopmentLibraryCompileSync") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
-kt2ts {
-    jvmTargetName.set("jvm8")
-    jsTargetName.set("js")
-    classPatterns.set(listOf(
-            "net.akehurst.language.api.syntaxAnalyser.*",
-            "net.akehurst.language.api.semanticAnalyser.*",
-            "net.akehurst.language.api.grammar.*",
-            "net.akehurst.language.api.parser.*",
-            "net.akehurst.language.api.processor.*",
-            "net.akehurst.language.api.sppt.*",
-            "net.akehurst.language.api.style.*",
-            "net.akehurst.language.agl.processor.Agl"
-    ))
+            "net.akehurst.language.typemodel.api.**",
+            "net.akehurst.language.agl.regex.**",
+            "net.akehurst.language.agl.scanner.**",
+            "net.akehurst.language.agl.processor.**",
+            "net.akehurst.language.agl.language.**",
+            "net.akehurst.language.typemodel.simple.**",
+            "net.akehurst.language.asm.simple.**",
+            "net.akehurst.language.agl.syntaxAnalyser.**",
+            "net.akehurst.language.agl.semanticAnalyser.**",
+            "net.akehurst.language.agl.sppt.**",
+            "net.akehurst.language.agl.grammarTypeModel.**"
+//            "net.akehurst.language.agl.default.**"
+        )
+    )
 }
 */
+
+
 /*
 jacoco {
     toolVersion = "0.8.5"

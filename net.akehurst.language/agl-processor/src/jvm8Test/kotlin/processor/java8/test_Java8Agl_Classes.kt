@@ -21,9 +21,10 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -40,14 +41,15 @@ class test_Java8Agl_Classes(val data: Data) {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
+        private val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
 
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration { targetGrammarName("Classes"); defaultGoalRuleName("ClassDeclaration") },
+                Agl.configuration { targetGrammarName(("Classes")); defaultGoalRuleName("ClassDeclaration") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

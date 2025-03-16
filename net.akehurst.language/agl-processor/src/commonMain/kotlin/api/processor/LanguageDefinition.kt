@@ -16,20 +16,52 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.Namespace
-import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.PublicValueType
+import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.issues.api.IssueCollection
+import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.typemodel.api.TypeModel
+import kotlin.jvm.JvmInline
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)
-    fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar?
+    fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
 }
+
+@JvmInline
+value class LanguageIdentity(override val value: String) : PublicValueType {
+    val last: String get() = value.split(".").last()
+}
+
+@JvmInline
+value class GrammarString(override val value: String) : PublicValueType
+
+@JvmInline
+value class TypesString(override val value: String) : PublicValueType
+
+@JvmInline
+value class TransformString(override val value: String) : PublicValueType
+
+@JvmInline
+value class CrossReferenceString(override val value: String) : PublicValueType
+
+@JvmInline
+value class StyleString(override val value: String) : PublicValueType
+
+@JvmInline
+value class FormatString(override val value: String) : PublicValueType
 
 interface LanguageRegistry : GrammarRegistry {
 
@@ -39,64 +71,84 @@ interface LanguageRegistry : GrammarRegistry {
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(
-        identity: String,
-        grammarStr: String?,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        identity: LanguageIdentity,
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
 
-    fun unregister(identity: String)
+    fun unregister(identity: LanguageIdentity)
 
-    fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>?
+    fun <AsmType : Any, ContextType : Any> findOrNull(identity: LanguageIdentity): LanguageDefinition<AsmType, ContextType>?
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
-        identity: String,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
-        configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
+        identity: LanguageIdentity,
+        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = null,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }
 
+/**
+ * mutable, you can change the language components for a definition
+ */
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
-    val identity: String
+    val identity: LanguageIdentity
     val isModifiable: Boolean
 
-    var grammarStr: String?
-    var grammar: Grammar?
-    var targetGrammarName: String?
-    var defaultGoalRule: String?
+    val grammarString: GrammarString?
+    val grammarModel: GrammarModel?
+    val targetGrammar: Grammar?
+    val targetGrammarName: SimpleName?
+    val defaultGoalRule: GrammarRuleName?
 
-    var scopeModelStr: String?
-    var scopeModel: ScopeModel?
+    val typesString: TypesString?
+    val typesModel: TypeModel?
+
+    val transformString: TransformString?
+    val transformModel: TransformModel?
+
+    val crossReferenceString: CrossReferenceString?
+    val crossReferenceModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    //var formatStr: String?
+    val formatString: FormatString?
     //val formatterModel:AglFormatterModel?
     val formatter: Formatter<AsmType>?
 
     /** the options for parsing/processing the grammarStr for this language */
-    //var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+    //var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
     val processor: LanguageProcessor<AsmType, ContextType>?
 
-    var styleStr: String?
-    var style: AglStyleModel?
+    val styleString: StyleString?
+    val styleModel: AglStyleModel?
 
     val issues: IssueCollection<LanguageIssue>
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
-    val grammarStrObservers: MutableList<(String?, String?) -> Unit>
-    val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
-    val scopeStrObservers: MutableList<(String?, String?) -> Unit>
-    val scopeModelObservers: MutableList<(ScopeModel?, ScopeModel?) -> Unit>
-    val formatterStrObservers: MutableList<(String?, String?) -> Unit>
-    val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
-    val styleStrObservers: MutableList<(String?, String?) -> Unit>
-    val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
+    val grammarStrObservers: MutableList<(GrammarString?, GrammarString?) -> Unit>
+    val grammarObservers: MutableList<(GrammarModel?, GrammarModel?) -> Unit>
+    val typeModelStrObservers: MutableList<(TypesString?, TypesString?) -> Unit>
+    val asmTransformStrObservers: MutableList<(TransformString?, TransformString?) -> Unit>
+    val crossReferenceStrObservers: MutableList<(CrossReferenceString?, CrossReferenceString?) -> Unit>
 
-    fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?)
+    //val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
+    val formatterStrObservers: MutableList<(FormatString?, FormatString?) -> Unit>
+
+    //val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
+    val styleStrObservers: MutableList<(StyleString?, StyleString?) -> Unit>
+    //val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
+
+    fun update(
+        grammarString: GrammarString?=null,
+        typesString: TypesString?=null,
+        transformString: TransformString?=null,
+        crossReferenceString: CrossReferenceString?=null,
+        styleString: StyleString?=null,
+        formatString: FormatString?=null,
+    )
 }

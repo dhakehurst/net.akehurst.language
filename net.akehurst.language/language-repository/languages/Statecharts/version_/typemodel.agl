@@ -1,0 +1,9 @@
+namespace external {
+  datatype AnnotationType
+  datatype RegularState
+  datatype BuiltInType
+}
+
+namespace com.itemis.create.Global {
+    import external
+}

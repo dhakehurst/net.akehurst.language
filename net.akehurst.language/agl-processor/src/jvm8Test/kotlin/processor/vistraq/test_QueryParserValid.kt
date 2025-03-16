@@ -15,7 +15,9 @@
  */
 package net.akehurst.language.agl.processor.vistraq
 
-import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,14 +34,14 @@ class test_QueryParserValid(val data: Data) {
 
     private companion object {
 
-        // val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
+        val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
 
-        val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
+        //val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor = tgqlprocessor()
 
-        var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
+        var sourceFiles = arrayOf("/vistraq/version_/valid/examples.txt")
 
-        fun tgqlprocessor() = Agl.processorFromStringDefault(grammarStr).processor!!
+        fun tgqlprocessor() = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -81,9 +83,9 @@ class test_QueryParserValid(val data: Data) {
     fun parse() {
         val queryStr = this.data.queryStr
         val goal = "query"
-        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt)
+        val result = processor.parse(queryStr, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
         val resultStr = result.sppt!!.asSentence
         Assert.assertEquals(queryStr, resultStr)
     }
@@ -93,7 +95,7 @@ class test_QueryParserValid(val data: Data) {
         val queryStr = this.data.queryStr
         val goal = "query"
         val result = processor.process(queryStr, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm)
     }
 }

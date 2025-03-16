@@ -1,0 +1,31 @@
+[versions]
+project = "4.2.1.20-RC2"
+
+kotlin = "2.1.20-RC2"
+dokka = "2.0.0"
+buildconfig = "5.5.1"
+credentials = "3.0"
+exportPublic = "2.1.20-RC2"
+nak-kotlinx = "2.1.20-RC2"
+jsIntegration = "2.1.20-RC2"
+
+korlibs = "6.0.1"
+kotest = "5.9.1"
+
+[libraries]
+korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
+
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+exportPublic = { id = "net.akehurst.kotlin.gradle.plugin.exportPublic", version.ref = "exportPublic" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
+credentials = { id = "nu.studer.credentials", version.ref = "credentials" }
+reflex = { id ="net.akehurst.kotlinx.kotlinx-reflect-gradle-plugin", version.ref="nak-kotlinx" }
+jsIntegration =  { id = "net.akehurst.kotlin.gradle.plugin.jsIntegration", version.ref = "jsIntegration" }

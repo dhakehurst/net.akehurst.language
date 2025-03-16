@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.agl.processor.atom_basic
 
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessorException
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.GrammarString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -25,7 +25,6 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -46,7 +45,7 @@ class test_AtomBasic(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/atom-basic/Grammar.agl")?.readText() ?: error("File not found")
 
-        var processor = Agl.processorFromStringDefault(grammarStr).let {
+        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).let {
             it.processor ?: error("Unable to parse '/atom-basic/Grammar.agl'\n${it.issues}")
         }
         const val validSourceFilesFolderName = "/atom-basic/valid"
@@ -85,9 +84,8 @@ class test_AtomBasic(val data: Data) {
             val resultStr = result.sppt!!.asSentence
             assertEquals(this.data.text, resultStr)
         } else {
-            assertFailsWith<LanguageProcessorException>("$data") {
-                processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
-            }
+            val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
+            assertTrue(result.issues.isNotEmpty())
         }
     }
 

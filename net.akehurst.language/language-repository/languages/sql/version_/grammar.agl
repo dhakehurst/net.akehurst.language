@@ -1,0 +1,63 @@
+namespace net.akehurst.language.example
+
+grammar SQL {
+    skip WS = "\s+" ;
+    skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
+    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+
+    statementList = terminatedStatement+ ;
+
+    terminatedStatement = statement ';' ;
+    statement
+        = select
+        | update
+        | delete
+        | insert
+        | tableDefinition
+        ;
+
+    select = SELECT columns FROM tableRef ;
+    update = UPDATE tableRef SET columnValueList ;
+    delete = DELETE FROM tableRef  ;
+    insert = INSERT INTO tableRef '(' columns ')' VALUES '(' values ')' ;
+
+    columns = [columnRefOrAny / ',']+ ;
+    columnValueList = [columnValue/ ',']+ ;
+    columnValue = columnRef '=' value ;
+
+    values = [value /',']+ ;
+    value
+        = INTEGER
+        | STRING
+        ;
+
+    tableDefinition = CREATE TABLE table-id '(' columnDefinitionList ')' ;
+    columnDefinitionList = [columnDefinition / ',']+ ;
+    columnDefinition = column-id datatype-ref datatype-size? ;
+    datatype-size = '(' INTEGER ')' ;
+
+    columnRefOrAny = columnAny | columnRef ;
+
+    tableRef = REF ;
+    columnRef = REF ;
+    columnAny = '*' ;
+
+    leaf table-id = ID ;
+    leaf column-id = ID ;
+    leaf REF = ID ;
+    leaf datatype-ref = ID ;
+    leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+    leaf INTEGER = "[0-9]+" ;
+    leaf STRING = "'[^']*'";
+
+    leaf CREATE = "create|CREATE" ;
+    leaf TABLE  = "table|TABLE" ;
+    leaf SELECT = "select|SELECT" ;
+    leaf UPDATE = "update|UPDATE" ;
+    leaf DELETE = "delete|DELETE" ;
+    leaf INSERT = "insert|INSERT" ;
+    leaf INTO   = "into|INTO"   ;
+    leaf SET    = "set|SET"   ;
+    leaf FROM   = "from|FROM"   ;
+    leaf VALUES = "values|VALUES"   ;
+}

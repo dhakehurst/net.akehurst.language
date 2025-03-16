@@ -17,33 +17,47 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.agl.sppt.TreeDataComplete
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.sppt.Sentence
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptDataNode
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.RuleItem
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.SharedPackedParseTree
+import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.TreeData
+import net.akehurst.language.sppt.treedata.SPPTFromTreeData
+import net.akehurst.language.sppt.treedata.locationForNode
 
-val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
-//fun SpptDataNode.locationIn(sentence: Sentence) = sentence.locationFor(this)
-//fun SpptDataNode.matchedTextNoSkip(sentence: Sentence) = sentence.matchedTextNoSkip(this)
 
-abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
+abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyser<AsmType> {
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     abstract val asm: AsmType
 
-    override fun clear() {
-        this.locationMap.clear()
-        this.issues.clear()
+    override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf()
+
+    fun setEmbeddedSyntaxAnalyser(qualifiedName: QualifiedName, sa: SyntaxAnalyser<AsmType>) {
+        (embeddedSyntaxAnalyser as MutableMap).set(qualifiedName, sa)
+    }
+
+    override fun <T:Any> clear(done: Set<SyntaxAnalyser<T>>) {
+        when {
+            done.contains(this as SyntaxAnalyser<T>) -> Unit
+            else -> {
+                this.locationMap.clear()
+                this.issues.clear()
+                val newDone = done+this
+                extendsSyntaxAnalyser.values.forEach { it.clear(newDone)  }
+                embeddedSyntaxAnalyser.values.forEach { it.clear(newDone)  }
+            }
+        }
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AsmType> {
@@ -51,7 +65,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
         val treeData = (sppt as SPPTFromTreeData).treeData
         this.walkTree(sentence, treeData, false)
         this.embeddedSyntaxAnalyser.values.forEach {
-            this.issues.addAll((it as SyntaxAnalyserFromTreeDataAbstract).issues)
+            this.issues.addAllFrom((it as SyntaxAnalyserFromTreeDataAbstract).issues)
         }
         return SyntaxAnalysisResultDefault(asm, issues, locationMap)
     }
@@ -59,5 +73,12 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     /**
      * implement this to walk the tree and set the 'asm' property
      */
-    abstract fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean)
+    abstract fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean)
+
+    /**
+     * convenience function for use from typescript
+     */
+    fun locationForNode(sentence: Sentence, node: SpptDataNode): InputLocation {
+        return sentence.locationForNode(node)
+    }
 }
