@@ -39,14 +39,14 @@ data class CompletionItem(
 interface SpineNode {
     val rule: GrammarRule
     val nextChildNumber: Int
-    val nextExpectedItem: RuleItem
+    val nextExpectedItems: Set<RuleItem>
     val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
     val nextExpectedConcatenation: Set<Concatenation>
 }
 
 interface Spine {
     val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
-    val expectedNextRuleItem: RuleItem
+    val expectedNextRuleItems: Set<RuleItem>
     val elements: List<SpineNode>
     val nextChildNumber: Int
 }

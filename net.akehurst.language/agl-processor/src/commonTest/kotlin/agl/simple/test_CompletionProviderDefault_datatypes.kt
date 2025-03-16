@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 class test_CompletionProviderDefault_datatypes {
 
     private companion object {
-        val grammarStr = """
+        val GRAMMAR = """
             namespace test
             grammar Test {
                 skip leaf WS = "\s+" ;
@@ -56,7 +56,7 @@ class test_CompletionProviderDefault_datatypes {
                 leaf TYPE = ID;
             }
         """
-        val crossReferencesStr = """
+        val CROSS_REFERENCE = """
             namespace test.Test
                 identify Primitive by id
                 identify Datatype by id
@@ -77,7 +77,7 @@ class test_CompletionProviderDefault_datatypes {
         )
 
         fun test(data: TestData) {
-            val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(grammarStr), referenceStr = CrossReferenceString(crossReferencesStr))
+            val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(GRAMMAR), referenceStr = CrossReferenceString(CROSS_REFERENCE))
 
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
@@ -100,14 +100,12 @@ class test_CompletionProviderDefault_datatypes {
 
         val testSuit = testSuit {
             testData("no reference model, depth==1") {
-                grammarStr(grammarStr)
+                grammarStr(GRAMMAR)
                 processOptions(Agl.options { completionProvider { depth(1) } })
                 sentencePass("") {
                     context(contextAsmSimple {  })
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "datatype", "class <ID> { <property> }"),
-                        CompletionItem(CompletionItemKind.SEGMENT, "primitive", "primitive <ID>"),
-                        CompletionItem(CompletionItemKind.SEGMENT, "collection", "collection <ID> <typeParameters>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "declaration", "<declaration>"),
                         CompletionItem(CompletionItemKind.LITERAL, "'class'", "class"),
                         CompletionItem(CompletionItemKind.LITERAL, "'primitive'", "primitive"),
                         CompletionItem(CompletionItemKind.LITERAL, "'collection'", "collection")
@@ -248,7 +246,7 @@ class test_CompletionProviderDefault_datatypes {
                 }
             }
             testData("no reference model, depth==2") {
-                grammarStr(grammarStr)
+                grammarStr(GRAMMAR)
                 processOptions(Agl.options { completionProvider { depth(2) } })
                 sentencePass("") {
                     context(contextAsmSimple {  })
@@ -343,6 +341,36 @@ class test_CompletionProviderDefault_datatypes {
                     ))
                 }
             }
+            testData("with reference model") {
+                grammarStr(GRAMMAR)
+                referenceStr(CROSS_REFERENCE)
+                processOptions(Agl.options { completionProvider { depth(1) } })
+                sentencePass("class A { prop :", "Nothing in scope") {
+                    context(contextAsmSimple { })
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
+                        CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                    ))
+                }
+                sentencePass("class A { prop :", "external item in scope") {
+                    context(contextAsmSimple {
+                        item("ExternalType","test.Test.Primitive","itemInScope?")
+                    })
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
+                        CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                    ))
+                }
+                sentencePass("primitive InternalType class A { prop :", "local item in scope") {
+                    context(contextAsmSimple {  })
+                    expectedCompletionItems(listOf(
+                        CompletionItem(CompletionItemKind.REFERRED, "Primitive", "InternalType"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
+                        CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
+                    ))
+                }
+            }
         }
 
         val tests = listOf(
@@ -358,6 +386,6 @@ class test_CompletionProviderDefault_datatypes {
     fun testAll() = executeTestSuit(testSuit)
 
     @Test
-    fun single() = doTest(testSuit["no reference model, depth==2"],2)
+    fun single() = doTest(testSuit["with reference model"],1)
 
 }

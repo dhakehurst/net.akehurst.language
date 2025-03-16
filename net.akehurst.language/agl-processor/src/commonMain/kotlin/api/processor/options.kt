@@ -26,6 +26,8 @@ import net.akehurst.language.sentence.api.InputLocation
  */
 interface SyntaxAnalysisOptions<AsmType : Any> {
     var enabled: Boolean
+
+    fun clone(): SyntaxAnalysisOptions<AsmType>
 }
 
 /**
@@ -35,7 +37,7 @@ interface SemanticAnalysisOptions<ContextType : Any> {
     var enabled: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
-    var buildScope:Boolean
+    var buildScope: Boolean
 
     /**
      * whether or not to replace items that already exist in the scope
@@ -53,6 +55,8 @@ interface SemanticAnalysisOptions<ContextType : Any> {
     var checkReferences: Boolean
     var resolveReferences: Boolean
     val other: Map<String, Any>
+
+    fun clone(): SemanticAnalysisOptions<ContextType>
 }
 
 interface CompletionProviderOptions<ContextType : Any> {
@@ -61,9 +65,11 @@ interface CompletionProviderOptions<ContextType : Any> {
     /**
      * depth of nested rules to search when constructing possible completions
      **/
-    var depth:Int
+    var depth: Int
 
     val other: Map<String, Any>
+
+    fun clone(): CompletionProviderOptions<ContextType>
 }
 
 /**
@@ -75,4 +81,6 @@ interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
     val semanticAnalysis: SemanticAnalysisOptions<ContextType>
     val completionProvider: CompletionProviderOptions<ContextType>
+
+    fun clone(): ProcessOptions<AsmType, ContextType>
 }

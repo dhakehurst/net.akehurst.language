@@ -34,11 +34,23 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
     override val semanticAnalysis: SemanticAnalysisOptions<ContextType> = SemanticAnalysisOptionsDefault(),
     override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault()
-) : ProcessOptions<AsmType, ContextType>
+) : ProcessOptions<AsmType, ContextType> {
+    override fun clone()= ProcessOptionsDefault<AsmType, ContextType>(
+        scan = scan.clone(),
+        parse = parse.clone(),
+        syntaxAnalysis = syntaxAnalysis.clone(),
+        semanticAnalysis = semanticAnalysis.clone(),
+        completionProvider = completionProvider.clone()
+    )
+}
 
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var enabled: Boolean = true
-) : SyntaxAnalysisOptions<AsmType>
+) : SyntaxAnalysisOptions<AsmType> {
+    override fun clone()= SyntaxAnalysisOptionsDefault<AsmType>(
+        enabled = this.enabled
+    )
+}
 
 class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var enabled: Boolean = true,
@@ -50,10 +62,28 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var checkReferences: Boolean = true,
     override var resolveReferences: Boolean = true,
     override val other: Map<String, Any> = mutableMapOf()
-) : SemanticAnalysisOptions<ContextType>
+) : SemanticAnalysisOptions<ContextType> {
+    override fun clone()= SemanticAnalysisOptionsDefault<ContextType>(
+        enabled = this.enabled,
+        locationMap = this.locationMap,
+        context = this.context,
+        buildScope = this.buildScope,
+        replaceIfItemAlreadyExistsInScope = this.replaceIfItemAlreadyExistsInScope,
+        ifItemAlreadyExistsInScopeIssueKind = this.ifItemAlreadyExistsInScopeIssueKind,
+        checkReferences = this.checkReferences,
+        resolveReferences = this.resolveReferences,
+        other = this.other
+    )
+}
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
     override var depth: Int = 1,
     override val other: Map<String, Any> = mutableMapOf()
-) : CompletionProviderOptions<ContextType>
+) : CompletionProviderOptions<ContextType> {
+    override fun clone() = CompletionProviderOptionsDefault<ContextType>(
+        context = this.context,
+        depth = this.depth,
+        other = other
+    )
+}

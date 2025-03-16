@@ -282,7 +282,7 @@ class test_AllDefault {
         ) {
             leafStringRule("a")
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
         }
         test(
@@ -375,7 +375,7 @@ class test_AllDefault {
         ) {
             leafStringRule("v")
             createObject("S", "S") {
-                assignment("v", "child[0]")
+                assignment("v", null, "child[0]")
             }
         }
         test(
@@ -433,9 +433,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("b", "child[1]")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("b", null, "child[1]")
+                assignment("c", null, "child[2]")
             }
             createObject("A", "A")
             createObject("B", "B")
@@ -497,9 +497,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("b", "child[2]")
-                assignment("c", "child[4]")
+                assignment("a", null, "child[0]")
+                assignment("b", null, "child[2]")
+                assignment("c", null, "child[4]")
             }
             createObject("A", "A")
             createObject("B", "B")
@@ -633,16 +633,16 @@ class test_AllDefault {
         ) {
             subtypeRule("S", "S")
             createObject("A", "A") {
-                assignment("a", "child[0]")
-                assignment("x", "child[1]")
+                assignment("a", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             createObject("B", "B") {
-                assignment("b", "child[0]")
-                assignment("x", "child[1]")
+                assignment("b", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             createObject("C", "C") {
-                assignment("c", "child[0]")
-                assignment("x", "child[1]")
+                assignment("c", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -769,16 +769,16 @@ class test_AllDefault {
                 }
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             createObject("B", "B") {
-                assignment("b", "child[0]")
+                assignment("b", null, "child[0]")
             }
             createObject("C", "C") {
-                assignment("c", "child[0]")
+                assignment("c", null, "child[0]")
             }
             createObject("D", "D") {
-                assignment("d", "child[0]")
+                assignment("d", null, "child[0]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -1068,17 +1068,17 @@ class test_AllDefault {
         ) {
             subtypeRule("S", "S")
             createObject("A", "A") {
-                assignment("a", "child[0]")
-                assignment("x", "child[1]")
+                assignment("a", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             subtypeRule("B", "B")
             createObject("C", "C") {
-                assignment("c", "child[0]")
-                assignment("x", "child[1]")
+                assignment("c", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             createObject("D", "D") {
-                assignment("d", "child[0]")
-                assignment("x", "child[1]")
+                assignment("d", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             leafStringRule("a")
             leafStringRule("c")
@@ -1181,14 +1181,14 @@ class test_AllDefault {
             true
         ) {
             createObject("A", "A") {
-                assignment("a", "child[0]")
-                assignment("x", "child[1]")
+                assignment("a", null, "child[0]")
+                assignment("x", null, "child[1]")
             }
             createObject("C", "C") {
-                assignment("c", "child[0]")
+                assignment("c", null, "child[0]")
             }
             createObject("D", "D") {
-                assignment("d", "child[0]")
+                assignment("d", null, "child[0]")
             }
             leafStringRule("a")
             leafStringRule("c")
@@ -1312,8 +1312,8 @@ class test_AllDefault {
                 }
             }
             createObject("BC", "BC") {
-                assignment("b", "child[0]")
-                assignment("c", "child[1]")
+                assignment("b", null, "child[0]")
+                assignment("c", null, "child[1]")
             }
             leafStringRule("b")
             leafStringRule("c")
@@ -1418,11 +1418,11 @@ class test_AllDefault {
                 }
             }
             createObject("BC", "BC") {
-                assignment("b", "child[0]")
-                assignment("c", "child[1]")
+                assignment("b", null, "child[0]")
+                assignment("c", null, "child[1]")
             }
             createObject("D", "D") {
-                assignment("d", "child[0]")
+                assignment("d", null, "child[0]")
             }
             leafStringRule("b")
             leafStringRule("c")
@@ -1537,8 +1537,8 @@ class test_AllDefault {
                 typeRef("S1")
             }
             createObject("S1", "S1") {
-                assignment("s", "child[0]")
-                assignment("a", "child[1]")
+                assignment("s", null, "child[0]")
+                assignment("a", null, "child[1]")
             }
             leafStringRule("a")
         }
@@ -1667,7 +1667,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
         }
@@ -1730,8 +1730,8 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("c", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("c")
@@ -1800,9 +1800,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("b", "with(child[1]) with(child[0]) \$self")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("b", null, "with(child[1]) with(child[0]) \$self")
+                assignment("c", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -1870,10 +1870,10 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
         }
@@ -1942,11 +1942,11 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("b", "child[0]")
-                assignment("a", "with(child[1]) with(child[0]) \$self")
+                assignment("b", null, "child[0]")
+                assignment("a", null, "with(child[1]) with(child[0]) \$self")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -2018,13 +2018,13 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("oA", "child[0]")
+                assignment("oA", null, "child[0]")
             }
             createObject("oA", "OA") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
         }
@@ -2151,8 +2151,8 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("c", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("c")
@@ -2230,7 +2230,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "children")
+                assignment("a", null, "children")
             }
             leafStringRule("a")
         }
@@ -2310,9 +2310,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("b", "with(child[1]) children")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("b", null, "with(child[1]) children")
+                assignment("c", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -2398,10 +2398,10 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "children")
+                assignment("a", null, "children")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
         }
@@ -2490,12 +2490,12 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("b", "child[0]")
-                assignment("a", "with(child[1]) children")
-                assignment("c", "child[2]")
+                assignment("b", null, "child[0]")
+                assignment("a", null, "with(child[1]) children")
+                assignment("c", null, "child[2]")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -2652,10 +2652,10 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("as", "child[0].a")
+                assignment("as", null, "child[0].a")
             }
             createObject("as", "As") {
-                assignment("a", "children")
+                assignment("a", null, "children")
             }
             leafStringRule("a")
         }
@@ -2737,13 +2737,13 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("as", "child[0].ao")
+                assignment("as", null, "child[0].ao")
             }
             createObject("as", "As") {
-                assignment("ao", "children")
+                assignment("ao", null, "children")
             }
             createObject("ao", "Ao") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             leafStringRule("a")
         }
@@ -2846,17 +2846,17 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("abs", "child[0].ab")
+                assignment("abs", null, "child[0].ab")
             }
             createObject("abs", "Abs") {
-                assignment("ab", "children")
+                assignment("ab", null, "children")
             }
             subtypeRule("AB", "AB")
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             createObject("B", "B") {
-                assignment("b", "child[0]")
+                assignment("b", null, "child[0]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -3021,14 +3021,14 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("e", "child[0]")
+                assignment("e", null, "child[0]")
             }
             subtypeRule("E", "E")
             createObject("A", "A") {
-                assignment("e", "children")
+                assignment("e", null, "children")
             }
             createObject("V", "V") {
-                assignment("n", "child[0]")
+                assignment("n", null, "child[0]")
             }
             leafStringRule("N")
         }
@@ -3201,8 +3201,8 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("c", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("c", null, "child[2]")
             }
             createObject("bs", "Bs")
             leafStringRule("a")
@@ -3293,10 +3293,10 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("as", "child[0].a")
+                assignment("as", null, "child[0].a")
             }
             createObject("as", "As") {
-                assignment("a", "children.items")
+                assignment("a", null, "children.items")
             }
             leafStringRule("a")
         }
@@ -3403,16 +3403,16 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("abs", "child[0].ab")
+                assignment("abs", null, "child[0].ab")
             }
             createObject("abs", "Abs") {
-                assignment("ab", "children.items")
+                assignment("ab", null, "children.items")
             }
             createObject("A", "A") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
             }
             createObject("B", "B") {
-                assignment("b", "child[0]")
+                assignment("b", null, "child[0]")
             }
             subtypeRule("AB", "AB")
             leafStringRule("a")
@@ -3567,7 +3567,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("b", "with(child[1]) with(child[0]) \$self")
+                assignment("b", null, "with(child[1]) with(child[0]) \$self")
             }
             createObject("A", "A") {}
             createObject("B", "B") {}
@@ -3664,11 +3664,11 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("as", "child[0].a")
-                assignment("b", "with(child[1]) with(child[0]) \$self")
+                assignment("as", null, "child[0].a")
+                assignment("b", null, "with(child[1]) with(child[0]) \$self")
             }
             createObject("As", "As") {
-                assignment("a", "children.items")
+                assignment("a", null, "children.items")
             }
             leafStringRule("A")
             leafStringRule("B")
@@ -3772,13 +3772,13 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("ass", "child[0].as")
+                assignment("ass", null, "child[0].as")
             }
             createObject("ass", "Ass") {
-                assignment("as", "children.items")
+                assignment("as", null, "children.items")
             }
             createObject("as", "As") {
-                assignment("a", "children")
+                assignment("a", null, "children")
             }
             createObject("a", "A")
         }
@@ -4002,7 +4002,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("\$group", "with(child[0]) tuple{ b:=child[0] c:=child[1] d:=child[2] }")
+                assignment("\$group", null, "with(child[0]) tuple{ b:=child[0] c:=child[1] d:=child[2] }")
             }
             leafStringRule("b")
             leafStringRule("c")
@@ -4063,8 +4063,8 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("e", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("e")
@@ -4135,9 +4135,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
-                assignment("e", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("\$group", null, "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4222,10 +4222,10 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("\$group", "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
-                assignment("\$group2", "with(child[2]) tuple { b:=child[0] a:=child[1] c:=child[2] }")
-                assignment("e", "child[3]")
+                assignment("a", null, "child[0]")
+                assignment("\$group", null, "with(child[1]) tuple { b:=child[0] c:=child[1] d:=child[2] }")
+                assignment("\$group2", null, "with(child[2]) tuple { b:=child[0] a:=child[1] c:=child[2] }")
+                assignment("e", null, "child[3]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4301,9 +4301,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("\$group", "with(child[1]) tuple{ b:=child[0] }")
-                assignment("e", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("\$group", null, "with(child[1]) tuple{ b:=child[0] }")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4381,9 +4381,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$group", """
+                    "\$group", null, """
                     with(child[1])
                       tuple {
                         b:=child[0]
@@ -4393,7 +4393,7 @@ class test_AllDefault {
                     
                 """.trimMargin()
                 )
-                assignment("e", "child[2]")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4474,9 +4474,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("\$choice", "with(child[1]) child[0]")
-                assignment("e", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("\$choice", null, "with(child[1]) child[0]")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4575,9 +4575,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) when {
                        0==$alternative -> tuple { b:=child[0] c:=child[1] }
                        1==$alternative -> with(child[0]) $self
@@ -4585,7 +4585,7 @@ class test_AllDefault {
                     }
                 """
                 )
-                assignment("e", "child[2]")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4684,15 +4684,17 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("\$choice", $$"""
-                    with(child[1]) when {
-                      0==$alternative -> tuple { b:=child[0] c:=child[1] }
-                      1==$alternative -> tuple { d:=child[0] e:=child[1] }
-                      else -> $nothing
-                    }
-                """)
-                assignment("f", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment(
+                    "\$choice", null, $$"""
+                        with(child[1]) when {
+                          0==$alternative -> tuple { b:=child[0] c:=child[1] }
+                          1==$alternative -> tuple { d:=child[0] e:=child[1] }
+                          else -> $nothing
+                        }
+                    """
+                )
+                assignment("f", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4799,9 +4801,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) when {
                       0==$alternative -> tuple { b:=child[1] c:=child[2] }
                       1==$alternative -> tuple { d:=child[0] e:=child[1] }
@@ -4809,7 +4811,7 @@ class test_AllDefault {
                     }
                 """.trimMargin().replace("§", "$")
                 )
-                assignment("f", "child[2]")
+                assignment("f", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -4913,9 +4915,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) with(child[0]) when {
                        0==$alternative -> tuple { b:=child[0] c:=child[1] }
                        1==$alternative -> tuple { d:=child[0] e:=child[1] }
@@ -4923,7 +4925,7 @@ class test_AllDefault {
                     }
                 """.trimIndent().replace("§", "$")
                 )
-                assignment("f", "child[2]")
+                assignment("f", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5020,16 +5022,16 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$group", """
+                    "\$group", null, """
                     with(child[1]) tuple {
                       b:=with(child[0]) with(child[0]) §self
                       c:=child[1]
                     }
                 """.trimMargin().replace("§", "$")
                 )
-                assignment("e", "child[2]")
+                assignment("e", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5128,9 +5130,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$group", """
+                    "\$group", null, """
                     with(child[1]) tuple {
                        §choice := with(child[0]) child[0]
                        §group := with(child[1]) tuple { d := child[0] }
@@ -5138,7 +5140,7 @@ class test_AllDefault {
                     }
                 """.trimMargin().replace("§", "$")
                 )
-                assignment("f", "child[2]")
+                assignment("f", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5275,9 +5277,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) when {
                        0 == $alternative -> with(child[0]) $self
                        1 == $alternative -> with(child[0]) children
@@ -5285,11 +5287,11 @@ class test_AllDefault {
                     }
                 """.trimMargin()
                 )
-                assignment("e", "child[2]")
+                assignment("e", null, "child[2]")
             }
             createObject("BC", "BC") {
-                assignment("b", "child[0]")
-                assignment("c", "child[1]")
+                assignment("b", null, "child[0]")
+                assignment("c", null, "child[1]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5405,9 +5407,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
+                assignment("a", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) with(child[0]) when {
                        0 == $alternative -> with(child[0]) $self
                        1 == $alternative -> with(child[0]) children
@@ -5415,11 +5417,11 @@ class test_AllDefault {
                     }
                 """.trimMargin()
                 )
-                assignment("e", "child[2]")
+                assignment("e", null, "child[2]")
             }
             createObject("BC", "BC") {
-                assignment("b", "child[0]")
-                assignment("c", "child[1]")
+                assignment("b", null, "child[0]")
+                assignment("c", null, "child[1]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5887,9 +5889,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("x", "child[0]")
+                assignment("x", null, "child[0]")
                 assignment(
-                    "\$choice", $$"""
+                    "\$choice", null, $$"""
                     with(child[1]) when {
                       0 == $alternative -> tuple { a := child[0] b:= child[1] }
                       1 == $alternative -> tuple { c := child[0] d:= child[1] e:= child[2] }
@@ -5897,7 +5899,7 @@ class test_AllDefault {
                     }
                     """.trimIndent().replace("§", "\$")
                 )
-                assignment("y", "child[2]")
+                assignment("y", null, "child[2]")
             }
             leafStringRule("a")
             leafStringRule("b")
@@ -5999,7 +6001,7 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("ch", "child[0]")
+                assignment("ch", null, "child[0]")
             }
             unionRule(
                 "CH", "CH",$$"""
@@ -6129,9 +6131,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("x", "child[0]")
-                assignment("ch", "child[1]")
-                assignment("y", "child[2]")
+                assignment("x", null, "child[0]")
+                assignment("ch", null, "child[1]")
+                assignment("y", null, "child[2]")
             }
             unionRule(
                 "CH", "CH",$$"""
@@ -6292,9 +6294,9 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("a", "child[0]")
-                assignment("x", "with(child[1]) with(child[0]) \$self")
-                assignment("e", "child[2]")
+                assignment("a", null, "child[0]")
+                assignment("x", null, "with(child[1]) with(child[0]) \$self")
+                assignment("e", null, "child[2]")
             }
             unionRule(
                 "R", "R",$$"""
@@ -6495,8 +6497,8 @@ class test_AllDefault {
                         typeRef("S1")
                     }
                     createObject("S1", "S1") {
-                        assignment("s", "child[0]")
-                        assignment("a", "child[1]")
+                        assignment("s", null, "child[0]")
+                        assignment("a", null, "child[1]")
                     }
                     leafStringRule("a")
                 }
@@ -6515,8 +6517,8 @@ class test_AllDefault {
                         typeRef("S1")
                     }
                     createObject("S1", "S1") {
-                        assignment("b", "child[0]")
-                        assignment("s", "child[1]")
+                        assignment("b", null, "child[0]")
+                        assignment("s", null, "child[1]")
                     }
                     unionRule(
                         "B", "B",$$"""
@@ -6682,11 +6684,11 @@ class test_AllDefault {
                     importTypes("test.I")
                     subtypeRule("S", "S")
                     createObject("SA", "SA") {
-                        assignment("s", "child[0]")
-                        assignment("a", "child[1]")
+                        assignment("s", null, "child[0]")
+                        assignment("a", null, "child[1]")
                     }
                     createObject("A", "A") {
-                        assignment("a", "child[0]")
+                        assignment("a", null, "child[0]")
                     }
                     leafStringRule("a")
                 }
@@ -6694,15 +6696,15 @@ class test_AllDefault {
                     importTypes("test.O")
                     subtypeRule("S", "S")
                     createObject("SBC", "SBC") {
-                        assignment("s", "child[0]")
-                        assignment("bc", "child[1]")
+                        assignment("s", null, "child[0]")
+                        assignment("bc", null, "child[1]")
                     }
                     subtypeRule("BC", "BC")
                     createObject("B", "B") {
-                        assignment("s", "with(child[1]) \$self")
+                        assignment("s", null, "with(child[1]) \$self")
                     }
                     createObject("C", "C") {
-                        assignment("s", "with(child[1]) \$self")
+                        assignment("s", null, "with(child[1]) \$self")
                     }
                 }
             }
@@ -6881,17 +6883,17 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("type", "child[0]")
+                assignment("type", null, "child[0]")
             }
             createObject("type", "Type") {
-                assignment("name", "child[0]")
-                assignment("typeArgs", "with(child[1]) with(child[0]) \$self")
+                assignment("name", null, "child[0]")
+                assignment("typeArgs", null, "with(child[1]) with(child[0]) \$self")
             }
             createObject("typeArgList", "TypeArgList") {
-                assignment("type", "children.items")
+                assignment("type", null, "children.items")
             }
             createObject("typeArgs", "TypeArgs") {
-                assignment("typeArgList", "child[1].type")
+                assignment("typeArgList", null, "child[1].type")
             }
             leafStringRule("NAME")
         }
@@ -7314,8 +7316,8 @@ class test_AllDefault {
             true
         ) {
             createObject("S", "S") {
-                assignment("id", "child[0]")
-                assignment("\$choiceList", "with (child[1]) children.map(){ with(it) child[0] }") //TODO: remove '()' from map call
+                assignment("id", null, "child[0]")
+                assignment("\$choiceList", null, "with (child[1]) children.map(){ with(it) child[0] }") //TODO: remove '()' from map call
             }
             leafStringRule("ID")
             leafStringRule("NAME")
@@ -7635,10 +7637,10 @@ class test_AllDefault {
 
             }
             createObject("as", "As") {
-                assignment("a", "children")
+                assignment("a", null, "children")
             }
             createObject("bs", "Bs") {
-                assignment("b", "children.items")
+                assignment("b", null, "children.items")
             }
             unionRule("cs", "CS","child[0]") {
                 typeRef("String")
@@ -7709,10 +7711,10 @@ class test_AllDefault {
                     extends("Base")
                     importTypes("test.Base","test.Test")
                     createObject("S","S") {
-                        assignment("a","child[0]")
+                        assignment("a", null, "child[0]")
                     }
                     createObject("A","A") {
-                        assignment("a","child[0]")
+                        assignment("a", null, "child[0]")
                     }
                 }
             }
@@ -7778,7 +7780,7 @@ class test_AllDefault {
                 transform("Base") {
                     importTypes("test.Base")
                     createObject("A","A") {
-                        assignment("a","child[0]")
+                        assignment("a", null, "child[0]")
                     }
                     leafStringRule("a")
                 }
@@ -7786,7 +7788,7 @@ class test_AllDefault {
                     extends("Base")
                     importTypes("test.Base", "test.Test")
                     createObject("S","S") {
-                        assignment("a","child[0]")
+                        assignment("a", null, "child[0]")
                     }
                 }
             }

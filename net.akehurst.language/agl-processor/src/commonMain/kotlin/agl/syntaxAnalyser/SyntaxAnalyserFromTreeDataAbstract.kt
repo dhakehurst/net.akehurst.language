@@ -47,9 +47,9 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyse
         (embeddedSyntaxAnalyser as MutableMap).set(qualifiedName, sa)
     }
 
-    override fun clear(done: Set<SyntaxAnalyser<*>>) {
+    override fun <T:Any> clear(done: Set<SyntaxAnalyser<T>>) {
         when {
-            done.contains(this) -> Unit
+            done.contains(this as SyntaxAnalyser<T>) -> Unit
             else -> {
                 this.locationMap.clear()
                 this.issues.clear()

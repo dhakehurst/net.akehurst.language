@@ -26,6 +26,7 @@ import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -86,6 +87,22 @@ class CompletionProviderSimple(
         return when (prop) {
             null -> emptyList()
             else -> {
+                var strProp: PropertyDeclaration = prop
+                while(strProp.typeInstance != StdLibDefault.String) {
+                    strProp = firstPropertyOf(strProp.typeInstance)
+                }
+                val refTypeNames = crossReferenceModel.referenceForProperty(strProp.typeInstance.qualifiedTypeName, strProp.name.value)
+                val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                val items = refTypes.flatMap { refType ->
+                    context.rootScope.findItemsConformingTo {
+                        val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                        itemType.conformsTo(refType)
+                    }
+                }
+                items.map {
+                    CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
+                }
+
                 val firstTangibles = firstSpineNode.expectedNextLeafNonTerminalOrTerminal
                 val compItems = firstTangibles.mapNotNull { ti ->
                     val ni2 = when {
@@ -110,6 +127,42 @@ class CompletionProviderSimple(
             }
         }
     }
+
+    private fun provideForType2(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
+        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+        //TODO: lists ?
+        return when (prop) {
+            null -> emptyList()
+            else -> {
+                val firstTangibles = firstSpineNode.expectedNextLeafNonTerminalOrTerminal
+                val compItems = firstTangibles.mapNotNull { ti ->
+                    val ni2 = when {
+                        ti.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), ti.owningRule.name)
+                        else -> ti
+                    }
+                    val tiType = StdLibDefault.String.resolvedDeclaration
+                    val pn = grammar2TypeModel.propertyNameFor(targetGrammar, ni2, tiType)
+                    val refTypeNames = crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, pn.value)
+                    val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                    val items = refTypes.flatMap { refType ->
+                        context.rootScope.findItemsConformingTo {
+                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            itemType.conformsTo(refType)
+                        }
+                    }
+                    items.map {
+                        CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
+                    }
+                }
+                compItems.flatten()
+            }
+        }
+    }
+
+    private fun firstPropertyOf(type: TypeInstance): PropertyDeclaration {
+        return type.allResolvedProperty.values.minBy { it.index }
+    }
+
     /*
         private fun provideForTerminal(item: Terminal, desiredDepth: Int, context: ContextAsmSimple?): List<CompletionItem> {
             val owningRule = item.owningRule

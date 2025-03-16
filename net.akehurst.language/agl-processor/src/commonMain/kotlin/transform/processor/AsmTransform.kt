@@ -43,13 +43,15 @@ grammar AsmTransform : Base {
     statement
       = assignmentStatement
       ;
-    assignmentStatement = propertyName ':=' expression ;
+    assignmentStatement = propertyName grammarRuleIndex? ':=' expression ;
     propertyName = IDENTIFIER ;
     expression = Expression::expression ;
    
     grammarRuleName = IDENTIFIER ;
+    grammarRuleIndex = '$' POSITIVE_INTEGER ;
     possiblyQualifiedTypeName = possiblyQualifiedName ;
 
+    leaf POSITIVE_INTEGER = "[0-9]+" ;
 }
     """
 
@@ -93,12 +95,14 @@ grammar AsmTransform : Base {
             lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
         }
         concatenation("assignmentStatement") {
-            ref("propertyName"); lit(":="); ref("expression")
+            ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
         }
         concatenation("propertyName") { ref("IDENTIFIER") }
         concatenation("grammarRuleName") { ref("IDENTIFIER") }
         concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
         concatenation("expression") { ebd(AglExpressions.grammar.selfReference, "expression") }
+        concatenation("grammarRuleIndex"){ lit("$"); ref("POSITIVE_INTEGER") }
+        concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
     }
 
 

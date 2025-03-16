@@ -1188,7 +1188,7 @@ internal class Grammar2TransformRuleSet(
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
         val pd = et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
         //(trRule as TransformationRuleAbstract).appendAssignment(lhsPropertyName = uniqueName, rhs = rhsExpression)
-        return AssignmentStatementDefault(lhsPropertyName = uniqueName.value, rhs = rhsExpression)
+        return AssignmentStatementDefault(lhsPropertyName = uniqueName.value, lhsGrammarRuleIndex = childIndex, rhs = rhsExpression)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: PropertyName): PropertyName {

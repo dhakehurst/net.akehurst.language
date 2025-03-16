@@ -25,6 +25,7 @@ import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.typemodel.api.TypeInstance
+import kotlin.js.JsExport
 
 /**
  * stateless set of functions that construct elements of an ASM
@@ -87,7 +88,8 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
     /**
      * reset the sppt2ast, clearing any cached values
      */
-    fun clear(done:Set<SyntaxAnalyser<*>> = emptySet())
+    // SyntaxAnalyser<*> not exportable - * projections not exportable? TODO: check this
+    fun <T:Any> clear(done:Set<SyntaxAnalyser<T>> = emptySet())
 
     /**
      * configure the SyntaxAnalyser

@@ -61,6 +61,8 @@ interface ScanOptions {
     var resultsByLine:Boolean
     var startAtPosition: Int
     var offsetPosition: Int
+
+    fun clone(): ScanOptions
 }
 
 enum class MatchableKind { EOT, LITERAL, REGEX }

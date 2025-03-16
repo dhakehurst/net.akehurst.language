@@ -164,6 +164,8 @@ interface ParseOptions {
     var reportErrors: Boolean
     var reportGrammarAmbiguities: Boolean
     var cacheSkip: Boolean
+
+    fun clone(): ParseOptions
 }
 
 interface ParseResult {

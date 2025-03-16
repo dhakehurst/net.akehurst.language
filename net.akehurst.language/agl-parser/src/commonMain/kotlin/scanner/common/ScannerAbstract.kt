@@ -36,7 +36,14 @@ class ScanOptionsDefault(
     override var resultsByLine:Boolean = false,
     override var startAtPosition: Int = 0,
     override var offsetPosition: Int = 0
-) : ScanOptions
+) : ScanOptions {
+    override fun clone() = ScanOptionsDefault(
+        enabled = enabled,
+        resultsByLine = resultsByLine,
+        startAtPosition = startAtPosition,
+        offsetPosition = offsetPosition
+    )
+}
 
 
 data class ScanResultDefault(

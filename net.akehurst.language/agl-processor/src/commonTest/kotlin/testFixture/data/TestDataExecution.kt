@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
-    println("'${sd.sentence}'")
+    println("Testing - $sd")
     when (sd) {
         is TestDataProcessorSentencePass -> when {
             null != sd.expectedAsm && null != sd.expectedCompletionItem -> error("Currently only supports testing either process or autocomplete, not both")

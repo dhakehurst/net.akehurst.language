@@ -1,5 +1,6 @@
 package testFixture.data
 
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessOptionsDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.api.processor.CompletionItem
@@ -72,19 +73,22 @@ interface TestDataProcessorSentence : TestDataParserSentence {
 
 class TestDataProcessorSentencePass(
     override val sentence: String,
+    val description:String?,
     override val options: ProcessOptions<Asm, ContextAsmSimple>,
     val expectedAsm: Asm?,
     val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
-
+    override fun toString(): String = "Pass: ${description ?:""} $sentence"
 }
 
 class TestDataProcessorSentenceFail(
     override val sentence: String,
+    val description:String?,
     override val options: ProcessOptions<Asm, ContextAsmSimple>,
     val expected: List<LanguageIssue>
 ) : TestDataProcessorSentence {
 
+    override fun toString(): String = "Fail: ${description ?:""} $sentence"
 }
 
 fun testSuit(init: TestSuitBuilder.() -> Unit): TestSuit {
@@ -141,8 +145,8 @@ class TestDataBuilder(
         _options = value
     }
 
-    fun sentencePass(sentence: String, init: TestDataSentenceBuilder.() -> Unit) {
-        val b = TestDataSentenceBuilder(true, _options, sentence)
+    fun sentencePass(sentence: String, description:String? = null, init: TestDataSentenceBuilder.() -> Unit) {
+        val b = TestDataSentenceBuilder(true, _options, sentence, description)
         b.init()
         val td = b.build()
         _sentences.add(td)
@@ -162,9 +166,10 @@ class TestDataBuilder(
 class TestDataSentenceBuilder(
     val pass: Boolean,
     val baseOptions: ProcessOptions<Asm, ContextAsmSimple>,
-    val sentence: String
+    val sentence: String,
+    val description:String?
 ) {
-    private var _options: ProcessOptions<Asm, ContextAsmSimple> = baseOptions
+    private var _options: ProcessOptions<Asm, ContextAsmSimple> = Agl.options(baseOptions){}
     private var _context: ContextAsmSimple? = null
     private var _expectedAsm: Asm? = null
     private var _expectedCompletionItems: List<CompletionItem>? = null
@@ -194,6 +199,7 @@ class TestDataSentenceBuilder(
     fun build() = when (pass) {
         true -> TestDataProcessorSentencePass(
             sentence,
+            description,
             _options,
             _expectedAsm,
             _expectedCompletionItems
@@ -201,6 +207,7 @@ class TestDataSentenceBuilder(
 
         false -> TestDataProcessorSentenceFail(
             sentence,
+            description,
             _options,
             _expectedIssues
         )

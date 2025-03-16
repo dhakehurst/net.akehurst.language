@@ -200,7 +200,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val opts = defaultOptions(options)
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SyntaxAnalyser")
-        sa.clear()
+        sa.clear<AsmType>()
         return sa.transform(sppt, this.mapToGrammar) as SyntaxAnalysisResult<AsmType>
     }
 

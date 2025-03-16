@@ -28,7 +28,7 @@ interface CrossReferenceModel : Model<CrossReferenceNamespace, DeclarationsForNa
 
     fun isScopeDefinedFor(possiblyQualifiedTypeName: PossiblyQualifiedName): Boolean
     fun referencesFor(possiblyQualifiedTypeName: PossiblyQualifiedName): List<ReferenceExpression>
-    fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName>
+    fun referenceForProperty(typeQualifiedName: QualifiedName, propertyName: String): List<QualifiedName> //TODO: strProp: PropertyName
     fun identifyingExpressionFor(scopeForTypeName: SimpleName, possiblyQualifiedTypeName: PossiblyQualifiedName): Expression?
 }
 

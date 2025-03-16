@@ -47,9 +47,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
                 TODO("not implemented")
             }
 
-            override fun itemForChild(childNumber: Int): RuleItem? {
-                TODO("not implemented")
-            }
+            override fun itemsForChild(childNumber: Int): Set<RuleItem>  = emptySet()
 
         }
 

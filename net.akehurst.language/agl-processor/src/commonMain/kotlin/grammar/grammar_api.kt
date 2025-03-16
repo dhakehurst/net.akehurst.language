@@ -235,7 +235,7 @@ interface RuleItem {
      */
     fun subItem(index: Int): RuleItem
 
-    fun itemForChild(childNumber: Int): RuleItem?
+    fun itemsForChild(childNumber: Int): Set<RuleItem>
 
     fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
 }

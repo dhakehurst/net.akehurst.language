@@ -50,6 +50,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::assignmentList)
         super.register(this::assignment)
         super.register(this::propertyName)
+        super.register(this::grammarRuleIndex)
         super.register(this::with)
         super.registerFor("when", this::when_)
         super.register(this::whenOption)
@@ -162,16 +163,21 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     private fun assignmentList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
         children as List<AssignmentStatement>
 
-    // assignment = propertyName ':=' expression ;
+    // assignment = propertyName  grammarRuleIndex? ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
-        val rhs = children[2] as Expression
-        return AssignmentStatementDefault(lhsPropertyName, rhs)
+        val  lhsGrammarRuleIndex = children[1] as Int?
+        val rhs = children[3] as Expression
+        return AssignmentStatementDefault(lhsPropertyName, lhsGrammarRuleIndex, rhs)
     }
 
     // propertyName = IDENTIFIER | SPECIAL
     private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
         children[0] as String
+
+    // grammarRuleIndex = '$' POSITIVE_INTEGER ;
+    private fun grammarRuleIndex(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
+        (children[1] as String).toInt()
 
     // with = 'with' '(' expression ')' expression ;
     private fun with(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): WithExpression {

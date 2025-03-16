@@ -41,7 +41,15 @@ class ParseOptionsDefault(
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true
-) : ParseOptions
+) : ParseOptions {
+    override fun clone() = ParseOptionsDefault(
+        enabled = enabled,
+        goalRuleName = goalRuleName,
+        reportErrors = reportErrors,
+        reportGrammarAmbiguities = reportGrammarAmbiguities,
+        cacheSkip = cacheSkip
+    )
+}
 
 data class ParseResultDefault(
     override val sppt: SharedPackedParseTree?,

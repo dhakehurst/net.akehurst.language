@@ -196,6 +196,7 @@ data class IndexOperationDefault(
 
 class AssignmentStatementDefault(
     override val lhsPropertyName: String,
+    override val lhsGrammarRuleIndex: Int?,
     override val rhs: Expression
 ) : AssignmentStatement {
 

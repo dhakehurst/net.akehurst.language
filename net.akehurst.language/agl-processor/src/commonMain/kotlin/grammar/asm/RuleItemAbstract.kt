@@ -65,7 +65,7 @@ class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstrac
         return this.items.get(index)
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = this.items.getOrNull(childNumber)
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = this.items.getOrNull(childNumber)?.let { setOf(it) } ?: emptySet()
 
     override fun toString(): String = this.items.joinToString(separator = " ")
 
@@ -106,7 +106,10 @@ sealed class ChoiceAbstract(
         return this.alternative.get(index)
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = error("Cannot get itemForChild of a choice")
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when(childNumber) {
+        0 -> alternative.toSet()
+        else -> emptySet()
+    }
 
     override fun toString(): String = this.alternative.joinToString(separator = " | ")
 
@@ -144,9 +147,9 @@ class OptionalItemDefault(
         return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = when (childNumber) {
-        0 -> item
-        else -> null
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when (childNumber) {
+        0 -> setOf(item)
+        else -> emptySet()
     }
 
     override fun toString(): String = when (item) {
@@ -187,9 +190,9 @@ class GroupDefault(
         return if (0 == index) this.groupedContent else error("subitem ${index} not found")
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = when (childNumber) {
-        0 -> groupedContent
-        else -> null
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when (childNumber) {
+        0 -> setOf(groupedContent)
+        else -> emptySet()
     }
 
     override fun toString(): String = "( $groupedContent )"
@@ -198,7 +201,7 @@ class GroupDefault(
 sealed class TangibleItemAbstract() : SimpleItemAbstract(), TangibleItem {
     override val firstTangible: Set<TangibleItem> get() = setOf(this)
 
-    override fun itemForChild(childNumber: Int): RuleItem? = null
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = emptySet()
 }
 
 class EmptyRuleDefault : TangibleItemAbstract(), EmptyRule {
@@ -255,7 +258,7 @@ class TerminalDefault(
         error("subitem ${index} not found")
     }
 
-    override fun toString(): String = if (isPattern) "\"${value.replace("\"","\\\"")}\"" else "'${value.replace("'","\\'")}'"
+    override fun toString(): String = if (isPattern) "\"${value.replace("\"", "\\\"")}\"" else "'${value.replace("'", "\\'")}'"
 }
 
 class NonTerminalDefault(
@@ -375,9 +378,9 @@ class SimpleListDefault(
         return if (0 == index) this.item else error("subitem ${index} not found")
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = when {
-        -1 != max && childNumber > max -> null
-        else -> item
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when {
+        -1 != max && childNumber > max -> emptySet()
+        else -> setOf(item)
     }
 
     override fun toString(): String {
@@ -422,11 +425,11 @@ class SeparatedListDefault(
         }
     }
 
-    override fun itemForChild(childNumber: Int): RuleItem? = when {
-        -1 != max && childNumber > max -> null
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when {
+        -1 != max && childNumber > max -> emptySet()
         else -> when (childNumber % 2) {
-            0 -> item
-            1 -> separator
+            0 -> setOf(item)
+            1 -> setOf(separator)
             else -> error("Internal error: should not happen!")
         }
     }

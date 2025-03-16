@@ -113,11 +113,11 @@ class test_transformLanguage {
                 """.trimIndent()
             ),
             TestData(
-                testName = "single create rule, no args, with one assignment",
+                testName = "single create rule, no args, with one assignment including grammarRuleIndex",
                 sentence = """
                     namespace test
                     transform Test {
-                        rule1 : Type() { prop1 := nonTerminal }
+                        rule1 : Type() { prop1 $3 := nonTerminal }
                     }
                 """.trimIndent()
             ),

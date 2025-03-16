@@ -30,11 +30,10 @@ internal abstract class SpineNodeAbstract(
     override val nextChildNumber: Int
 ) : SpineNode {
     override val rule: GrammarRule get() = ruleItem.owningRule
-    override val nextExpectedItem: RuleItem
-        get() = ruleItem.itemForChild(nextChildNumber)
-            ?: error("should never happen")
-    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItem.firstTangibleRecursive
-    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItem.firstConcatenationRecursive
+    override val nextExpectedItems: Set<RuleItem>
+        get() = ruleItem.itemsForChild(nextChildNumber)
+    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
+    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItems.flatMap {it.firstConcatenationRecursive}.toSet()
 
     override fun toString(): String = "($ruleItem)[$nextChildNumber]"
 }
@@ -44,9 +43,9 @@ internal class SpineNodeRoot(
 ) : SpineNode {
     override val nextChildNumber: Int get() = 0
     override val rule: GrammarRule get() = _rootRuleItem.owningRule
-    override val nextExpectedItem: RuleItem get() = _rootRuleItem
-    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItem.firstTangibleRecursive
-    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItem.firstConcatenationRecursive
+    override val nextExpectedItems: Set<RuleItem> get() = setOf(_rootRuleItem)
+    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
+    override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItems.flatMap {it.firstConcatenationRecursive}.toSet()
     override fun toString(): String = "GOAL"
 }
 
@@ -70,8 +69,8 @@ internal class SpineDefault(
         }.toSet()
     }
 
-    override val expectedNextRuleItem: RuleItem by lazy {
-        elements[0].nextExpectedItem
+    override val expectedNextRuleItems: Set<RuleItem> by lazy {
+        elements[0].nextExpectedItems
     }
 
     override val elements: List<SpineNode> by lazy {
@@ -130,7 +129,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         }
 
         fun provideDefault(depth: Int, spine: Spine): List<CompletionItem> {
-            return provideForRuleItem(depth, spine.expectedNextRuleItem) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
+            return provideForRuleItem(depth, spine.expectedNextRuleItems) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
         }
 
         fun provideForConcatenations(depth: Int, concatenations: Set<Concatenation>): List<CompletionItem> = when (depth) {
@@ -145,13 +144,16 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
         }
 
-        fun provideForRuleItem(depth: Int, ruleItem: RuleItem): List<CompletionItem> {
-            val expanded = expand(depth, ruleItem)
-            return expanded.map {
-                val label = it.name ?: ruleItem.owningRule.name.value
-                val text = it.list//.joinToString(separator = " ") { textFor(it) }
-                CompletionItem(CompletionItemKind.SEGMENT, label, text)
-            }
+        fun provideForRuleItem(depth: Int, ruleItems: Set<RuleItem>): List<CompletionItem> {
+            return ruleItems.map{ ri ->
+                 val expanded = expand(depth, ri)
+                 expanded.map {
+                     val label = it.name ?: ri.owningRule.name.value
+                     val text = it.list//.joinToString(separator = " ") { textFor(it) }
+                     CompletionItem(CompletionItemKind.SEGMENT, label, text)
+                 }
+             }.flatten().toSet().toList()
+
         }
 
         fun expand(depth: Int, item: RuleItem): List<Expansion> = when (depth) {

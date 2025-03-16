@@ -78,6 +78,7 @@ interface IndexOperation : NavigationPart {
 
 interface AssignmentStatement {
     val lhsPropertyName: String
+    val lhsGrammarRuleIndex: Int?
     val rhs: Expression
 
     fun asString(indent: Indent, imports: List<Import> = emptyList()): String

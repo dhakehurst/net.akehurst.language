@@ -71,8 +71,9 @@ grammar Expression extends Base {
     tuple = 'tuple' assignmentBlock ;
     assignmentBlock = '{' assignmentList  '}' ;
     assignmentList = assignment* ;
-    assignment = propertyName ':=' expression ;
+    assignment = propertyName grammarRuleIndex? ':=' expression ;
     propertyName = SPECIAL | IDENTIFIER ;
+    grammarRuleIndex = '$' POSITIVE_INTEGER ;
         
     with = 'with' '(' expression ')' expression ;
     
@@ -171,12 +172,13 @@ grammar Expression extends Base {
             ref("assignment")
         }
         concatenation("assignment") {
-            ref("propertyName"); lit(":="); ref("expression")
+            ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
         }
         choice("propertyName") {
             ref("SPECIAL")
             ref("IDENTIFIER")
         }
+        concatenation("grammarRuleIndex"){ lit("$"); ref("POSITIVE_INTEGER") }
         concatenation("with") {
             lit("with"); lit("("); ref("expression"); lit(")"); ref("expression")
         }
@@ -231,6 +233,7 @@ grammar Expression extends Base {
         concatenation("INTEGER", isLeaf = true) { pat("[0-9]+") }
         concatenation("REAL", isLeaf = true) { pat("[0-9]+[.][0-9]+") }
         concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
+        concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
         // If we have an 'expression'
         // ideally graft it into a 'whenOption'

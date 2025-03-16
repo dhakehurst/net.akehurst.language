@@ -93,11 +93,11 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any>(
     base: ProcessOptions<AsmType, ContextType>
 ) {
 
-    private var _scan: ScanOptions = base.scan
-    private var _parse: ParseOptions = base.parse
-    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = base.syntaxAnalysis
-    private var _semanticAnalyser: SemanticAnalysisOptions<ContextType> = base.semanticAnalysis
-    private var _completionProvider: CompletionProviderOptions<ContextType> = base.completionProvider
+    private var _scan: ScanOptions = base.scan.clone()
+    private var _parse: ParseOptions = base.parse.clone()
+    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = base.syntaxAnalysis.clone()
+    private var _semanticAnalyser: SemanticAnalysisOptions<ContextType> = base.semanticAnalysis.clone()
+    private var _completionProvider: CompletionProviderOptions<ContextType> = base.completionProvider.clone()
 
     fun scan(init: ScanOptionsBuilder.() -> Unit) {
         val b = ScanOptionsBuilder(_scan)

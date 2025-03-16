@@ -106,7 +106,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
-    override fun clear(done: Set<SyntaxAnalyser<*>>) {
+    override fun <T:Any> clear(done: Set<SyntaxAnalyser<T>>) {
         super.clear(done)
         this._trf.clear()
         this._asm = null

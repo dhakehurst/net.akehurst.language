@@ -201,9 +201,18 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
             // need a grammarTypeNamespace
             val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
             val t = gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
-            gtns.setTypeForGrammarRule(trr.grammarRuleName, t.type())
+            // no need to setTypeForGrammarRule, it is done later
+            // gtns.setTypeForGrammarRule(trr.grammarRuleName, t.type())
             t
         }
+        // if type was cloned (in findInOrCloneTo), it will not have had the tyoe for grammar rule set
+        when (clonedTypeDeclOrCreated.namespace) {
+            is GrammarTypeNamespace -> {
+                //TODO: should really use clone of type from original!
+                (clonedTypeDeclOrCreated.namespace as GrammarTypeNamespace).setTypeForGrammarRule(trr.grammarRuleName, clonedTypeDeclOrCreated.type())
+            }
+        }
+
         return clonedTypeDeclOrCreated
     }
 
@@ -287,22 +296,27 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                                 }
                                 val existingProp = t.findOwnedPropertyOrNull(propName)
                                 when {
-                                    null==existingProp -> {
+                                    null == existingProp -> {
                                         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-                                        t.appendPropertyStored(propName, propType, characteristics)
+                                        t.appendPropertyStored(propName, propType, characteristics, ass.lhsGrammarRuleIndex?: -1)
                                     }
+
                                     else -> when {
                                         existingProp.typeInstance == propType -> {
                                             //all ok
                                         }
-                                        propType.conformsTo( existingProp.typeInstance) -> {
+
+                                        propType.conformsTo(existingProp.typeInstance) -> {
                                             // also OK
                                         }
-                                       // existingProp.typeInstance.conformsTo(propType) -> {
-                                       //     // need to change type of prop to propType
-                                       //     //TODO
-                                       // }
-                                        else -> _issues.error(null, "Trying to create missing property '${propName}: ${propType.qualifiedTypeName}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${existingProp.typeInstance.qualifiedTypeName}'.")
+                                        // existingProp.typeInstance.conformsTo(propType) -> {
+                                        //     // need to change type of prop to propType
+                                        //     //TODO
+                                        // }
+                                        else -> _issues.error(
+                                            null,
+                                            "Trying to create missing property '${propName}: ${propType.qualifiedTypeName}', '${t.qualifiedName}' already contains incompatible property '${existingProp.name}: ${existingProp.typeInstance.qualifiedTypeName}'."
+                                        )
                                     }
                                 }
                             }

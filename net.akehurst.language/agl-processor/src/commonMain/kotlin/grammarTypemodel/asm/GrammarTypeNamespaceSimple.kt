@@ -36,7 +36,7 @@ class GrammarTypeNamespaceSimple(
     import: List<Import>
 ) : GrammarTypeNamespaceAbstract(options, import) {
     companion object {
-        fun findOrCreateGrammarNamespace(typeModel:TypeModel, qualifiedName: QualifiedName) =
+        fun findOrCreateGrammarNamespace(typeModel: TypeModel, qualifiedName: QualifiedName) =
             typeModel.findNamespaceOrNull(qualifiedName) as GrammarTypeNamespaceSimple?
                 ?: let {
                     val imports = listOf(Import(StdLibDefault.qualifiedName.value))
@@ -55,7 +55,10 @@ class GrammarTypeNamespaceSimple(
                 this.qualifiedName,
                 this.options,
                 this.import
-            ).also { other.addNamespace(it) }
+            ).also {
+                it.allRuleNameToType = this.allRuleNameToType
+                other.addNamespace(it)
+            }
 
 }
 
@@ -73,7 +76,14 @@ abstract class GrammarTypeNamespaceAbstract(
     override val allTypesByRuleName: Collection<Pair<GrammarRuleName, TypeInstance>>
         get() = allRuleNameToType.entries.map { Pair(it.key, it.value) }
 
-    override fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance? = allRuleNameToType[ruleName]
+    override fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance? =
+        allRuleNameToType[ruleName]
+            ?: _importedNamespaces.values.firstNotNullOfOrNull {
+                when (it) {
+                    is GrammarTypeNamespace -> it.findTypeForRule(ruleName)
+                    else -> null
+                }
+            }
 
     override fun asString(indent: Indent): String {
         val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }

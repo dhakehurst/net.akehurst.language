@@ -26,6 +26,7 @@ import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
+import kotlin.js.JsExport
 import kotlin.reflect.KFunction3
 
 typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, T?>

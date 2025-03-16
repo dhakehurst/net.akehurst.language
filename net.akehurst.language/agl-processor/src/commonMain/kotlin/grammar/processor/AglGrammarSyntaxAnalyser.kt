@@ -44,7 +44,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarModel>> = emptyMap()
 
-    override fun clear(done: Set<SyntaxAnalyser<*>>) {
+    override fun <T:Any> clear(done: Set<SyntaxAnalyser<T>>) {
         super.clear(done)
         this._localStore.clear()
     }
