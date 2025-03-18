@@ -55,7 +55,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'x'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'x'"))
             ), issues.errors
         )
     }
@@ -85,7 +85,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("'x'"))
+                parseError(InputLocation(2, 3, 1, 1, null), sentence, setOf("S"), setOf("'x'"))
             ), issues.errors
         )
     }
@@ -115,7 +115,7 @@ class test_Wikipedia_PEG : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(4, 5, 1, 1), sentence, setOf("S"), setOf("'x'"))
+                parseError(InputLocation(4, 5, 1, 1, null), sentence, setOf("S"), setOf("'x'"))
             ), issues.errors
         )
     }

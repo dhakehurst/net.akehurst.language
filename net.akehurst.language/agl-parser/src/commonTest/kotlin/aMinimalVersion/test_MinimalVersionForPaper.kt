@@ -42,7 +42,7 @@ class test_MinimalVersionForPaper {
             println(sut.automaton.usedAutomatonToString(true))
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
-            val walker = SpptWalkerToString(SentenceDefault(s), "  ")
+            val walker = SpptWalkerToString(SentenceDefault(s, null), "  ")
             actual.traverseTreeDepthFirst(walker, true)
             val out = walker.output
             println(out.substring(0, min(maxOut, out.length)))

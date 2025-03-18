@@ -51,7 +51,7 @@ class test_TreeDataComplete {
             val actual = tree.childrenFor(parent)
 
             //then
-            println(tree.asString(SentenceDefault(sentence)))
+            println(tree.asString(SentenceDefault(sentence, null)))
             assertEquals(expected, actual)
         }
     }

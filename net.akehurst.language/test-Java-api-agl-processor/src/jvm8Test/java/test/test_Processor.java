@@ -86,7 +86,7 @@ public class test_Processor {
     @Test
     public void scan() {
         for(String s: sentences) {
-            Sentence sentence = new SentenceDefault(s);
+            Sentence sentence = new SentenceDefault(s, null);
             assert proc != null;
             ScanResult result = proc.scan(sentence.getText());
 

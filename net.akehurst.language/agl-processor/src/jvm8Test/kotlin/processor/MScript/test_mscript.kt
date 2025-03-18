@@ -331,7 +331,7 @@ class test_mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         val expIssues = listOf(
-            parseError(InputLocation(0, 1, 1, 1), text, setOf("<GOAL>"), setOf("REAL"))
+            parseError(InputLocation(0, 1, 1, 1, null), text, setOf("<GOAL>"), setOf("REAL"))
         )
         assertNull(result.sppt)
         assertEquals(expIssues, result.issues.errors)

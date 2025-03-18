@@ -57,7 +57,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -74,7 +74,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -91,7 +91,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'b'"))
             ), issues.errors
         )
     }
@@ -108,7 +108,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("<EOT>"))
+                parseError(InputLocation(2, 3, 1, 1, null), sentence, setOf("S"), setOf("<EOT>"))
             ), issues.errors
         )
     }
@@ -126,7 +126,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(8, 9, 1, 1), sentence, setOf("S"), setOf("<EOT>"))
+                parseError(InputLocation(8, 9, 1, 1, null), sentence, setOf("S"), setOf("<EOT>"))
             ), issues.errors
         )
     }
@@ -148,7 +148,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(4, 1, 3, 1), sentence, setOf("S"), setOf("<EOT>"))
+                parseError(InputLocation(4, 1, 3, 1, null), sentence, setOf("S"), setOf("<EOT>"))
             ), issues.errors
         )
     }
@@ -167,7 +167,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-               parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+               parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -186,7 +186,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -205,7 +205,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
             ), issues.errors
         )
     }
@@ -224,7 +224,7 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(5, 6, 1, 1), sentence, setOf("'a'"), setOf("<EOT>"))
+                parseError(InputLocation(5, 6, 1, 1, null), sentence, setOf("'a'"), setOf("<EOT>"))
             ), issues.errors
         )
     }

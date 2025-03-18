@@ -80,7 +80,7 @@ class test_choice_empty_OR_a : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         // fails because a? matches empty and then is no longer an option when parsing with no lookahead for error situation
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'","<EOT>"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'a'","<EOT>"))
         ),issues.errors)
     }
 

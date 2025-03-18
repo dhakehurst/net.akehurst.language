@@ -161,6 +161,7 @@ interface RuntimeSpine {
 interface ParseOptions {
     var enabled:Boolean
     var goalRuleName: String?
+    var sentenceIdentity: ()->Any?
     var reportErrors: Boolean
     var reportGrammarAmbiguities: Boolean
     var cacheSkip: Boolean

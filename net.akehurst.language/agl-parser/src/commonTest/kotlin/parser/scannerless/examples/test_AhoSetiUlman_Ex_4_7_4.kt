@@ -61,7 +61,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'d'","'b'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'d'","'b'"))
         ),issues.errors)
     }
 
@@ -72,7 +72,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'a'","'c'"))
+            parseError(InputLocation(1, 2, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'a'","'c'"))
         ),issues.errors)
     }
 

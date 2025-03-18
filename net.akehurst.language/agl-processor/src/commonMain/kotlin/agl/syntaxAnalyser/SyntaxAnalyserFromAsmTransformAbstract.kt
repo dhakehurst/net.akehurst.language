@@ -172,7 +172,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> asmFactory.nothing()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
-                value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
+                value?.let { locationMap[it.self] = sentence.locationForNode(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }

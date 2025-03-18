@@ -35,7 +35,8 @@ import kotlin.test.assertTrue
 class test_SemanticAnalyserSimple_datatypes {
 
     private companion object {
-        val grammarStr = GrammarString("""
+        val grammarStr = GrammarString(
+            """
             namespace test
             
             grammar Test {
@@ -57,8 +58,10 @@ class test_SemanticAnalyserSimple_datatypes {
                 leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
                 leaf type = ID;
             }
-        """.trimIndent())
-        val crossReferenceModelStr = CrossReferenceString("""
+        """.trimIndent()
+        )
+        val crossReferenceModelStr = CrossReferenceString(
+            """
             namespace test.Test
                 identify Primitive by id
                 identify Datatype by id
@@ -69,7 +72,8 @@ class test_SemanticAnalyserSimple_datatypes {
                       property type refers-to Primitive|Datatype|Collection
                     }
                 }
-        """.trimIndent())
+        """.trimIndent()
+        )
         val processor = Agl.processorFromStringSimple(
             grammarDefinitionStr = grammarStr,
             referenceStr = crossReferenceModelStr
@@ -187,11 +191,11 @@ class test_SemanticAnalyserSimple_datatypes {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(21, 9, 2, 7),
+                InputLocation(21, 9, 2, 7, null),
                 "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference[/0/declaration/0/property/0/typeReference]'"
             )
         )
-println(result.asm!!.asString())
+        println(result.asm!!.asString())
         assertEquals(expected.asString(), result.asm!!.asString())
         assertEquals(expItems, result.issues.errors)
     }
@@ -239,6 +243,62 @@ println(result.asm!!.asString())
         }
 
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+
+    }
+
+    @Test
+    fun reprocess_with_same_context__pass() {
+        val sentence = "primitive String"
+        val context = ContextAsmSimple(
+            createScopedItem = {ref, item, loc -> Pair(item, loc?.sentenceIdentity) }
+        )
+
+        // process once to fill context
+        val result1 = processor.process(sentence = sentence, Agl.options {
+            parse { sentenceIdentity { 1 } }
+            semanticAnalysis { context(context) }
+        })
+
+        assertTrue(result1.issues.isEmpty(), result1.issues.toString())
+        assertNotNull(result1.asm)
+
+        // process again, should not have semantic error because same definition is found
+        val result2 = processor.process(sentence = sentence, Agl.options {
+            parse { sentenceIdentity { 2 } }
+            semanticAnalysis { context(context) }
+        })
+        assertTrue(result2.issues.isEmpty(), result2.issues.toString())
+        assertNotNull(result2.asm)
+
+    }
+
+    @Test
+    fun reprocess_with_same_context__fail() {
+        val sentence = "primitive String"
+        val context = ContextAsmSimple()
+
+        // process once to fill context
+        val result1 = processor.process(sentence = sentence, Agl.options {
+            parse { sentenceIdentity {
+                1
+            } }
+            semanticAnalysis { context(context) }
+        })
+
+        assertTrue(result1.issues.isEmpty(), result1.issues.toString())
+        assertNotNull(result1.asm)
+
+        // process again, should not have semantic error because same definition is found
+        val result2 = processor.process(sentence = sentence, Agl.options {
+            parse { sentenceIdentity { 1 } }
+            semanticAnalysis { context(context) }
+        })
+
+        val expected = setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 1),"'String' with type 'test.Test.Primitive' already exists in scope //"),
+        )
+
+        assertEquals(expected, result2.issues.all)
 
     }
 }

@@ -22,7 +22,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
 
 fun contextAsmSimple(
-    createScopedItem: CreateScopedItem<AsmStructure, Any> = {  ref, item -> item },
+    createScopedItem: CreateScopedItem<AsmStructure, Any> = {  ref, item, location -> item },
     resolveScopedItem: ResolveScopedItem< AsmStructure, Any> = {  ref -> ref as AsmStructure },
     init: ScopeBuilder<Any>.() -> Unit
 ): ContextAsmSimple {

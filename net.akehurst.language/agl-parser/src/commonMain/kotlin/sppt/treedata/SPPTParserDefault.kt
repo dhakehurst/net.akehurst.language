@@ -16,7 +16,6 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -140,7 +139,7 @@ class SPPTParserDefault(
         }
         val td = tp.parse(rootRuntimeRuleSet, oldTree)
         this._oldTreeData = td
-        this.tree = SPPTFromTreeData(td, SentenceDefault(tp.sentence), -1, -1)
+        this.tree = SPPTFromTreeData(td, SentenceDefault(tp.sentence, null), -1, -1)
         return this.tree
     }
 

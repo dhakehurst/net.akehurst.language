@@ -160,7 +160,7 @@ class test_SysML_agl_Singles {
         """.trimIndent()
 
         val expIssues = setOf(
-            parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf())
+            parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf())
         )
 
         test_parse(sentence, expIssues)
@@ -201,7 +201,7 @@ class test_SysML_agl_Singles {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(17, 1, 2, 16),
+                InputLocation(17, 1, 2, 16, null),
                 "(String,net.akehurst.language.sysML.SysMLv2_0.PartDefinition) already exists in scope", null
             )
         )

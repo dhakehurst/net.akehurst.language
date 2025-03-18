@@ -58,7 +58,7 @@ class test_SharedPackedParseTree_tokensByLine {
 
     @Test
     fun all_on_one_line() {
-        val sentence = SentenceDefault("aaa bbb ccc")
+        val sentence = SentenceDefault("aaa bbb ccc", null)
         val result = parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
@@ -82,7 +82,8 @@ class test_SharedPackedParseTree_tokensByLine {
             aaa
             bbb
             ccc
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(sentence)
         assertNotNull(result.sppt)
@@ -115,7 +116,8 @@ class test_SharedPackedParseTree_tokensByLine {
             aaa..
             ..bbb
             ccc
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(sentence)
         assertNotNull(result.sppt)
@@ -150,7 +152,8 @@ class test_SharedPackedParseTree_tokensByLine {
             """
             /* comment */
             aaa bbb ccc
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(sentence)
         assertNotNull(result.sppt)
@@ -183,7 +186,8 @@ class test_SharedPackedParseTree_tokensByLine {
             /* comment
              over two lines */
             aaa bbb ccc
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(sentence)
         assertNotNull(result.sppt)
@@ -223,7 +227,8 @@ class test_SharedPackedParseTree_tokensByLine {
              second line
              third line */
             aaa bbb ccc
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(sentence)
         assertNotNull(result.sppt)

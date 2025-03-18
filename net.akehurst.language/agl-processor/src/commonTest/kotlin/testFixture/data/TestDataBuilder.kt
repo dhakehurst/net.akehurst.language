@@ -16,7 +16,7 @@ interface TestDataParserSentence {
 }
 
 fun parseError(pos: Int, col: Int, row: Int, len: Int, tryingFor: Set<String>, nextExpected: Set<String>) =
-    TestDataParseIssue(InputLocation(pos, col, row, len), tryingFor, nextExpected)
+    TestDataParseIssue(InputLocation(pos, col, row, len, null), tryingFor, nextExpected)
 
 data class TestDataParseIssue(
     val location: InputLocation,

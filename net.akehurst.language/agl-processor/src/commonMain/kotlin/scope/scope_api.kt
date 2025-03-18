@@ -58,7 +58,7 @@ interface Scope<ItemInScopeType> {
 
     val isEmpty: Boolean
 
-    fun contains(referableName: String, typeName: QualifiedName, conformsToFunc: (itemTypeName: QualifiedName, requiredTypeName: QualifiedName) -> Boolean): Boolean
+    fun contains(referableName: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): Boolean
 
     /**
      * find all items in this scope with the given <name>, return list of pairs (item,its-typeName)

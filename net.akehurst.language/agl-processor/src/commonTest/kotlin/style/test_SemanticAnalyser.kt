@@ -101,7 +101,7 @@ class test_SemanticAnalyser {
         val expected = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(31, 3, 3, 1),
+                InputLocation(31, 3, 3, 1, null),
                 "Grammar Rule 'X' not found for style rule",
                 null
             )
@@ -142,7 +142,7 @@ class test_SemanticAnalyser {
             }
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3), "Terminal Literal 'x' not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3, null), "Terminal Literal 'x' not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }
@@ -180,7 +180,7 @@ class test_SemanticAnalyser {
             }
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3), "Terminal Pattern \"x\" not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3, null), "Terminal Pattern \"x\" not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }

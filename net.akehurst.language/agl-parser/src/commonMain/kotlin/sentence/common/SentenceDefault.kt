@@ -21,8 +21,9 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 
 class SentenceDefault(
-    override val text: String
-) : SentenceAbstract() {
+    override val text: String,
+    identity: Any?,
+) : SentenceAbstract(identity) {
 
     companion object {
         val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
@@ -35,7 +36,9 @@ class SentenceDefault(
 
 }
 
-abstract class SentenceAbstract() : Sentence {
+abstract class SentenceAbstract(
+    val identity: Any?,
+) : Sentence {
 
     companion object {
         const val contextSize = 10
@@ -62,19 +65,19 @@ abstract class SentenceAbstract() : Sentence {
             eolPositions.size < line -> error("Number of lines in this text is ${eolPositions.size}, requested line number was $line")
             else -> {
                 val col = position - positionOfLine(line) + 1
-                InputLocation(position, col, line + 1, length)
+                InputLocation(position, col, line + 1, length, identity)
             }
         }
     }
 
     override fun locationFor(position: Int, length: Int): InputLocation {
         return when {
-            0 == position -> InputLocation(position, 1, 1, length)
-            eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
+            0 == position -> InputLocation(position, 1, 1, length, identity)
+            eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length, identity)
             else -> {
                 val line = eolPositions.indexOfLast { it < position }
                 when (line) {
-                    -1 -> InputLocation(position, position + 1, 1, length)
+                    -1 -> InputLocation(position, position + 1, 1, length, identity)
                     else -> locationInLine(line + 1, position, length)
                 }
             }

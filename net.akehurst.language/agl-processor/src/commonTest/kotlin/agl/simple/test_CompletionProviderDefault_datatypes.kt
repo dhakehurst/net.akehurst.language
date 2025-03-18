@@ -133,14 +133,14 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A {") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                         CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
                     ))
                 }
                 sentencePass("class A { ") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                         CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
                     ))
@@ -187,7 +187,7 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A { prop : B<") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
                     ))
                 }

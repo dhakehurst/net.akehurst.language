@@ -352,7 +352,7 @@ class test_SemanticAnalyserSimple {
         val expected = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 1, 1, 5),
+                InputLocation(0, 1, 1, 5, null),
                 "Cannot create a local reference in '//' for item with type 'test.Test.S' because there is no scope defined for the type, although its identifying expression evaluates to a List<String>"
             )
         )
@@ -389,7 +389,7 @@ class test_SemanticAnalyserSimple {
         val expected = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 1, 1, 5),
+                InputLocation(0, 1, 1, 5, null),
                 "Cannot create a local reference in '//' for item with type 'test.Test.S' because the type has no identifying expression in the scope (which should evaluate to a List<String>)"
             )
         )
@@ -426,7 +426,7 @@ class test_SemanticAnalyserSimple {
         val expected = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 1, 1, 5),
+                InputLocation(0, 1, 1, 5, null),
                 "Cannot create a local reference in '//' for item with type 'test.Test.S' because the identifying expression is different in the scope and the parent scope"
             )
         )

@@ -81,7 +81,7 @@ class test_NaturalLanguage(val data: Data) {
 
     @Test
     fun test() {
-        val sentence = SentenceDefault(this.data.sentence)
+        val sentence = SentenceDefault(this.data.sentence, null)
         val scan = processor.scan(sentence.text).allTokens
         scan.forEach { l ->
             if (l.name == "undefined") {

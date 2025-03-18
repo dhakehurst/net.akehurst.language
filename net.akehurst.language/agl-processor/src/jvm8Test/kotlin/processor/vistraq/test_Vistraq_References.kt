@@ -165,12 +165,12 @@ class test_Vistraq_References {
         val expectedIssues = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(62, 5, 4, 21),
+                InputLocation(62, 5, 4, 21, null),
                 "No target of type(s) [NodeType] found for referring value 'C' in scope of element ':LinkType[/0/linkList/0]'", null
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(62, 5, 4, 21),
+                InputLocation(62, 5, 4, 21, null),
                 "No target of type(s) [NodeType] found for referring value 'D' in scope of element ':LinkType[/0/linkList/0]'", null
             )
         )
@@ -217,7 +217,7 @@ class test_Vistraq_References {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(6, 7, 1, 1),
+                InputLocation(6, 7, 1, 1, null),
                 "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
                 null
             )
@@ -246,7 +246,7 @@ class test_Vistraq_References {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(6, 7, 1, 1),
+                InputLocation(6, 7, 1, 1, null),
                 "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/singleQuery/0/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
                 null
             )

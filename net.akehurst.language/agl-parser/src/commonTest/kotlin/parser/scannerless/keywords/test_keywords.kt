@@ -19,9 +19,6 @@ package net.akehurst.language.parser.leftcorner.keywords
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.scanner.api.ScannerKind
-import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.parser.leftcorner.test_LeftCornerParserAbstract
@@ -112,7 +109,7 @@ class test_keywords : test_LeftCornerParserAbstract() {
 
         val expectedIssues = listOf(
             parseError(//TODO: should this be SCAN error?
-                InputLocation(6, 7, 1, 1), sentence, setOf("<GOAL>"), setOf("NAME")
+                InputLocation(6, 7, 1, 1, null), sentence, setOf("<GOAL>"), setOf("NAME")
             )
         )
 

@@ -64,7 +64,7 @@ class test_LanguageProcessor_scan {
     @Test
     fun pattern_empty_a() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = \"[x]*\"; }")
-        val sentence = SentenceDefault("ab")
+        val sentence = SentenceDefault("ab", null)
         val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -81,7 +81,7 @@ class test_LanguageProcessor_scan {
     @Test
     fun a_a() {
         val pr = Agl.processorFromStringSimple(GrammarString("namespace test grammar Test { a = 'a';}"))
-        val sentence = SentenceDefault("a")
+        val sentence = SentenceDefault("a", null)
         val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -120,7 +120,7 @@ class test_LanguageProcessor_scan {
     @Test
     fun ab_aba() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
-        val sentence = SentenceDefault("aba")
+        val sentence = SentenceDefault("aba", null)
         val tokens = pr.processor!!.scan(sentence.text).allTokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")

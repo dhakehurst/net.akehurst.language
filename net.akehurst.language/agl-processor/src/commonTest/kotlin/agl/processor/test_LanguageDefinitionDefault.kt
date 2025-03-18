@@ -24,7 +24,6 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
@@ -195,7 +194,7 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "Failed to match {<GOAL>} at: ^xxxxx", setOf("'namespace'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1, null), "Failed to match {<GOAL>} at: ^xxxxx", setOf("'namespace'"))
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)
@@ -222,7 +221,7 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(26, 27, 1, 4),
+                    InputLocation(26, 27, 1, 4, null),
                     "Grammar 'XX' not found",
                     null
                 )
@@ -252,7 +251,7 @@ class test_LanguageDefinitionDefault {
             setOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'",
+                    InputLocation(32, 33, 1, 1, null), "GrammarRule 'b' not found in grammar 'Test'",
                     null
                 )
             ), sut.issues.all

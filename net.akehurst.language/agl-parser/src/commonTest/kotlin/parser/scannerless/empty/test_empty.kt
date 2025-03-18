@@ -55,7 +55,7 @@ class test_empty : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("<EOT>"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("<EOT>"))
         ),issues.errors)
     }
 

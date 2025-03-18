@@ -393,7 +393,7 @@ grammar SQL {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(83, 8, 7, 4),
+                InputLocation(83, 8, 7, 4, null),
                 "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef[/0/terminatedStatement/1/statement/columns/0]'"
             )
         )

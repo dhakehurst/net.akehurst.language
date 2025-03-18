@@ -50,7 +50,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -63,7 +63,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -146,7 +146,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("Opts"), setOf("'c'", "'t'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("Opts"), setOf("'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -205,7 +205,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'c'", "'t'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'b'", "'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -218,7 +218,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("Opts"), setOf("'c'", "'t'"))
+                parseError(InputLocation(2, 3, 1, 1, null), sentence, setOf("Opts"), setOf("'c'", "'t'"))
             ), issues.errors
         )
     }
@@ -231,7 +231,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3, 4, 1, 1), sentence, setOf("Opts"), setOf("'t'"))
+                parseError(InputLocation(3, 4, 1, 1, null), sentence, setOf("Opts"), setOf("'t'"))
             ), issues.errors
         )
     }
@@ -315,7 +315,7 @@ class test_nested_aObOcO : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("Opts"), setOf("'t'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("Opts"), setOf("'t'"))
             ), issues.errors
         )
     }

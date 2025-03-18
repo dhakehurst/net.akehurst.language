@@ -1,6 +1,0 @@
-namespace net::akehurst::lanaguge::processor;
-
-grammar Comments {
-	SINGLE_LINE_C_COMMENT : "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-	MULTI_LINE_C_COMMENT : "//.*?$" ;
-}

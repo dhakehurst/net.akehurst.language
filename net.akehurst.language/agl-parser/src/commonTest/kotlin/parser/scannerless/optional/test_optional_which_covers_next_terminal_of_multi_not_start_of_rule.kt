@@ -43,7 +43,7 @@ class test_optional_which_covers_next_terminal_of_multi_not_start_of_rule : test
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'b'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'b'"))
         ),issues.errors)
     }
 

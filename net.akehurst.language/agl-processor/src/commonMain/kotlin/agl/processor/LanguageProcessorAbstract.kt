@@ -182,7 +182,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun scan(sentence: String, options: ScanOptions?): ScanResult {
-        return this.scanner?.scan(SentenceDefault(sentence), options)?.also { scanner?.reset() }
+        return this.scanner?.scan(SentenceDefault(sentence, null), options)?.also { scanner?.reset() } //TODO: check do we need a sentenceID ?
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Scanner")
     }
 

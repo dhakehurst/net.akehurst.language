@@ -48,7 +48,7 @@ class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCorn
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'b'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'b'"))
         ),issues.errors)
     }
 
@@ -59,7 +59,7 @@ class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCorn
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("v"))
+            parseError(InputLocation(1, 2, 1, 1, null),sentence, setOf("<GOAL>"),setOf("v"))
         ),issues.errors)
     }
 

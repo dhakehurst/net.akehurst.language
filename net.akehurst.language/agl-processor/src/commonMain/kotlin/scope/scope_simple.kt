@@ -62,8 +62,8 @@ class ScopeSimple<ItemInScopeType>(
 
     override val isEmpty: Boolean get() = items.isEmpty() && childScopes.isEmpty()
 
-    override fun contains(referableName: String, typeName: QualifiedName, conformsToFunc: (itemTypeName: QualifiedName, requiredTypeName: QualifiedName) -> Boolean): Boolean =
-        this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key, typeName) } ?: false
+    override fun contains(referableName: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): Boolean =
+        this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key) } ?: false
 
     override fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemInScopeType>? {
         return this._childScopes[childScopeIdentityInThis]

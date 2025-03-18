@@ -81,7 +81,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_LeftCornerParserAbs
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("var","'true'","'false'","'('"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("var","'true'","'false'","'('"))
         ),issues.errors)
     }
 

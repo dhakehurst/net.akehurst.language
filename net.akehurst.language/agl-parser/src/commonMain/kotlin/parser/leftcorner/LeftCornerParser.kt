@@ -36,8 +36,9 @@ import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import kotlin.math.max
 
 class ParseOptionsDefault(
-    override var enabled:Boolean = true,
+    override var enabled: Boolean = true,
     override var goalRuleName: String? = null,
+    override var sentenceIdentity: () -> Any? = { null },
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true
@@ -45,6 +46,7 @@ class ParseOptionsDefault(
     override fun clone() = ParseOptionsDefault(
         enabled = enabled,
         goalRuleName = goalRuleName,
+        sentenceIdentity = sentenceIdentity,
         reportErrors = reportErrors,
         reportGrammarAmbiguities = reportGrammarAmbiguities,
         cacheSkip = cacheSkip
@@ -110,7 +112,7 @@ class LeftCornerParser(
 
     override fun parse(sentenceText: String, options: ParseOptions): ParseResult {
         check(sentenceText.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentenceText.length}" }
-        val sentence = SentenceDefault(sentenceText)
+        val sentence = SentenceDefault(sentenceText, options.sentenceIdentity())
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val reportErrors = options.reportErrors
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
@@ -150,14 +152,14 @@ class LeftCornerParser(
             val sppt = SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         } else {
-            createParseIssuesFromFailures(sentence,options,rp)
+            createParseIssuesFromFailures(sentence, options, rp)
 
             val sppt = null//TODO: provide best effort - SPPTFromTreeData(match, sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         }
     }
 
-    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp:RuntimeParser) {
+    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParser) {
         if (options.reportErrors) {
             // need to include the 'startSkipFailures',
             val map = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -202,6 +204,7 @@ class LeftCornerParser(
 
     private fun findNextExpectedAfterError3(
         sentence: Sentence,
+        options: ParseOptions,
         failedParseReasons: List<FailedParseReason>,
         automatonKind: AutomatonKind,
         stateSet: ParserStateSet,
@@ -263,7 +266,7 @@ class LeftCornerParser(
                     // if these skip terms are not part of the embedded 'normal' terms...remove them
                     val embeddedRhs = fr.transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
                     val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind)
-                    val x = findNextExpectedAfterError3(sentence, fr.embededFailedParseReasons, automatonKind, embeddedStateSet, failedAtPosition)
+                    val x = findNextExpectedAfterError3(sentence, options, fr.embededFailedParseReasons, automatonKind, embeddedStateSet, failedAtPosition)
                     val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
                     val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind).usedTerminalRules
                     val skipTerms = runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
@@ -274,7 +277,7 @@ class LeftCornerParser(
         }
         val y = x.groupBy { it.first.position }
         return y[failedAtPosition]?.let { Pair(it.first().first, it.map { it.second }.toSet()) }
-            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1), emptySet())
+            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1,options.sentenceIdentity()), emptySet())
 
     }
 
@@ -283,7 +286,7 @@ class LeftCornerParser(
         val cacheSkip = options.cacheSkip
         val usedText = sentenceText.substring(0, position) // parse from start (0) to position - ignore rest of text
         scanner.reset()
-        val rp = createRuntimeParser(SentenceDefault(usedText), goalRuleName, scanner, automatonKind, cacheSkip)
+        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity()), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
@@ -320,7 +323,7 @@ class LeftCornerParser(
             //val nextExpected = this.findNextExpectedAfterError3(scanner.sentence, map, rp.stateSet.automatonKind, rp.stateSet, position)
             //nextExpected.second
             val validFailReasons = map[map.keys.max()]?.flatMap {
-                when(it) {
+                when (it) {
                     is FailedParseReasonEmbedded -> it.embededFailedParseReasons.filter { it.skipFailure.not() && it.failedAtPosition == position }
                     else -> when {
                         it.skipFailure.not() && it.failedAtPosition == position -> listOf(it)

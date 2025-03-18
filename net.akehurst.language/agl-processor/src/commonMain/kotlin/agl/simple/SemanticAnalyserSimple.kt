@@ -124,13 +124,12 @@ class SemanticAnalyserSimple(
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
-                val createFunc = { ref: String, item: AsmStructure -> context.createScopedItem.invoke(ref, item) }
                 val scopeCreator = ScopeCreator(
                     typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
                     options.replaceIfItemAlreadyExistsInScope,
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     this::identifyingValueInFor,
-                    createFunc,
+                    context.createScopedItem,
                     _locationMap, _issues
                 )
                 asm.traverseDepthFirst(scopeCreator)

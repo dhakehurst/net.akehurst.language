@@ -65,7 +65,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'c'"))
             ), issues.errors
         )
     }
@@ -78,7 +78,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'c'"))
             ), issues.errors
         )
     }
@@ -91,7 +91,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'", "'b'"))
             ), issues.errors
         )
     }
@@ -104,7 +104,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S1","S3"), setOf("'d'", "'e'"))
+                parseError(InputLocation(2, 3, 1, 1, null), sentence, setOf("S1","S3"), setOf("'d'", "'e'"))
             ), issues.errors
         )
     }

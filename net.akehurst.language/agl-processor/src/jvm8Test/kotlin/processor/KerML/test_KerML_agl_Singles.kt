@@ -181,7 +181,7 @@ class test_KerML_agl_Singles {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(17, 1, 2, 16),
+                InputLocation(17, 1, 2, 16, null),
                 "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope //", null
             )
         )

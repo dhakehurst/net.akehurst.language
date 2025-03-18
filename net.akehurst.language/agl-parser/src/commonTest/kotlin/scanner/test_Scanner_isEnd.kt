@@ -29,7 +29,7 @@ class test_Scanner_isEnd {
     companion object {
 
         fun test(text: String, rrs: RuntimeRuleSet, position: Int, expected: Boolean) {
-            val sentence = SentenceDefault(text)
+            val sentence = SentenceDefault(text, null)
             val terms = rrs.terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
             val scanners = listOf(
                 ScannerOnDemand(RegexEnginePlatform, terms),
@@ -57,7 +57,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_empty_after_start() {
-        val sentence = SentenceDefault("")
+        val sentence = SentenceDefault("", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 1)
@@ -67,7 +67,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_full_at_start() {
-        val sentence = SentenceDefault("abcdefg")
+        val sentence = SentenceDefault("abcdefg", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 0)
@@ -77,7 +77,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_full_after_start() {
-        val sentence = SentenceDefault("abcdefg")
+        val sentence = SentenceDefault("abcdefg", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 1)
@@ -87,7 +87,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_full_before_end() {
-        val sentence = SentenceDefault("abcdefg")
+        val sentence = SentenceDefault("abcdefg", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 5)
@@ -97,7 +97,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_full_at_end() {
-        val sentence = SentenceDefault("abcdefg")
+        val sentence = SentenceDefault("abcdefg", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 6)
@@ -107,7 +107,7 @@ class test_Scanner_isEnd {
 
     @Test
     fun isEnd_full_after_end() {
-        val sentence = SentenceDefault("abcdefg")
+        val sentence = SentenceDefault("abcdefg", null)
         val sut = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
         val actual = sut.isEnd(sentence, 7)

@@ -32,7 +32,7 @@ class test_ParseGraph {
         val text = ""
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
 
-        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
+        val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         assertNotNull(sut)
     }
@@ -42,7 +42,7 @@ class test_ParseGraph {
         val goalRule = RuntimeRule(0, 0, "a", false, false)
         val text = ""
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
-        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
+        val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         val actual = sut.canGrow
 
@@ -54,7 +54,7 @@ class test_ParseGraph {
         val userGoalRule = RuntimeRule(0, 0, "a", false, false)
         val text = "a"
         val scanner = ScannerOnDemand(RegexEnginePlatform, emptyList())
-        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
+        val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
         //    val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState

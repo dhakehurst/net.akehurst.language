@@ -127,7 +127,7 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
         return (children[1] as List<Any>).filterNotNull().toSeparatedList<Any, TypeRefInfo, String>().items
     }
 
-    // property = characteristic NAME : typeReference ;
+    // property = characteristic NAME : typeReference ; //TODO: grammarIndex !
     private fun property(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (StructuredType) -> PropertyDeclaration {
         val characteristics: List<PropertyCharacteristic> = children[0] as List<PropertyCharacteristic>
         val name = PropertyName(children[1] as String)

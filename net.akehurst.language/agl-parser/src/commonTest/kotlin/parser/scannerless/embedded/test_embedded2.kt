@@ -66,7 +66,7 @@ class test_embedded2 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'s'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'s'"))
             ), issues.errors
         )
     }
@@ -79,7 +79,7 @@ class test_embedded2 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'s'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'s'"))
             ), issues.errors
         )
     }
@@ -92,7 +92,7 @@ class test_embedded2 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'{'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'{'"))
             ), issues.errors
         )
     }
@@ -105,7 +105,7 @@ class test_embedded2 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), sentence, setOf("S"), setOf("ID", "'/'", "'#'", "'}'"))
+                parseError(InputLocation(2, 3, 1, 1, null), sentence, setOf("S"), setOf("ID", "'/'", "'#'", "'}'"))
             ), issues.errors
         )
     }

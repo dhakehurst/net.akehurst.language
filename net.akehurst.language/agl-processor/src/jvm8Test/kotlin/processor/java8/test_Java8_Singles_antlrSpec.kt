@@ -136,7 +136,7 @@ class test_Java8_Singles_antlrSpec {
         assertEquals(
             listOf(
                 LanguageIssue(
-                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1),
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1, null),
                     "0b01^2",
                     setOf(
                         "'.'",
@@ -198,7 +198,7 @@ public class BadBinaryLiterals {
         assertEquals(
             listOf(
                 LanguageIssue(
-                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1),
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1, null),
                     "...t1 = 0b01.^01;  // no...",
                     setOf("'new'", "'<'", "Identifier")
                 )

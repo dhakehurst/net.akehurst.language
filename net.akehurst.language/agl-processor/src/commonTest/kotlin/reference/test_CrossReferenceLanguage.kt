@@ -221,7 +221,7 @@ class test_CrossReferenceLanguage {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(30, 11, 2, 5),
+                InputLocation(30, 11, 2, 5, null),
                 "Scope type 'RuleX' not found"
             )
         )
@@ -287,7 +287,7 @@ class test_CrossReferenceLanguage {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(55, 18, 3, 5),
+                InputLocation(55, 18, 3, 5, null),
                 "Type to identify 'RuleX' not found"
             )
         )
@@ -332,7 +332,7 @@ class test_CrossReferenceLanguage {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(64, 27, 3, 5),
+                InputLocation(64, 27, 3, 5, null),
                 "In scope for type 'Rule1', 'ruleX' not found for identifying property of 'Rule2'"
             )
         )
@@ -404,7 +404,7 @@ class test_CrossReferenceLanguage {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(48, 12, 3, 5),
+                InputLocation(48, 12, 3, 5, null),
                 "Referring type 'RuleX' not found"
             )
         )
@@ -475,12 +475,12 @@ class test_CrossReferenceLanguage {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 0, 0, 0),
+                InputLocation(0, 0, 0, 0, null),
                 "For references in 'Rule2', referred to type 'AnExternalType1' not found"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(0, 0, 0, 0),
+                InputLocation(0, 0, 0, 0, null),
                 "For references in 'Rule2', referred to type 'AnExternalType2' not found"
             )
         )

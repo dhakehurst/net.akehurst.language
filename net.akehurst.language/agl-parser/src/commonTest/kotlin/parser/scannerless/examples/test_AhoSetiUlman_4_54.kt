@@ -49,7 +49,7 @@ class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
             ), issues.errors
         )
     }
@@ -62,7 +62,7 @@ class test_AhoSetiUlman_4_54 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'c'", "'d'"))
             ), issues.errors
         )
     }

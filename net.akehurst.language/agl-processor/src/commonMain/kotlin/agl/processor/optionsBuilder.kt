@@ -57,6 +57,7 @@ class ParseOptionsBuilder(
 ) {
     private var _enabled: Boolean = true
     private var _goalRuleName: String? = base.goalRuleName
+    private  var _sentenceIdentity = base.sentenceIdentity
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
@@ -67,6 +68,10 @@ class ParseOptionsBuilder(
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
+    }
+
+    fun sentenceIdentity(func: ()->Any?) {
+        _sentenceIdentity = func
     }
 
     fun reportErrors(value: Boolean) {
@@ -83,7 +88,7 @@ class ParseOptionsBuilder(
 
     fun build(): ParseOptions {
         return ParseOptionsDefault(
-            _enabled, _goalRuleName, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+            _enabled, _goalRuleName, _sentenceIdentity, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
         )
     }
 }

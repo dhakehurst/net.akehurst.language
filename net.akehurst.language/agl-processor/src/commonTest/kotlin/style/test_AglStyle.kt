@@ -233,7 +233,7 @@ class test_AglStyle {
             setOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(31, 3, 3, 3),
+                    InputLocation(31, 3, 3, 3, null),
                     "Grammar Rule 'xxx' not found for style rule",
                     null
                 )

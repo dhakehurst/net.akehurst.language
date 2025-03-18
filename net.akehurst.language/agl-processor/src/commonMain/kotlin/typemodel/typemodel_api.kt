@@ -199,6 +199,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     override val namespace: TypeNamespace
 
     val supertypes: List<TypeInstance>
+    val subtypes: List<TypeInstance>
 
     val typeParameters: List<TypeParameter>
 
@@ -318,7 +319,7 @@ interface ValueType : StructuredType {
 }
 
 interface InterfaceType : StructuredType {
-    val subtypes: MutableList<TypeInstance>
+    override val subtypes: List<TypeInstance>
 
     fun addSubtype(typeInstance: TypeInstance)
 }
@@ -326,7 +327,7 @@ interface InterfaceType : StructuredType {
 interface DataType : StructuredType {
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: MutableList<TypeInstance>
+    override val subtypes: List<TypeInstance>
 
     val constructors: List<ConstructorDeclaration>
 

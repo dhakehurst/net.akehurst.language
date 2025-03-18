@@ -53,7 +53,7 @@ class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"Failed to match {<GOAL>} at: ^",setOf("'a'","'b'"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1, null),"Failed to match {<GOAL>} at: ^",setOf("'a'","'b'"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)
@@ -79,7 +79,7 @@ class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^b", setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1, null),"Failed to match {<GOAL>} at: a^b", setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)
@@ -92,7 +92,7 @@ class test_aObcLiteral : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"Failed to match {<GOAL>} at: a^bc",setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1, null),"Failed to match {<GOAL>} at: a^bc",setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues.errors)

@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 
 class test_TreeData {
 
-    private val graph = ParseGraph(SentenceDefault(""), ScannerOnDemand(RegexEnginePlatform, emptyList()), 0)
+    private val graph = ParseGraph(SentenceDefault("", null), ScannerOnDemand(RegexEnginePlatform, emptyList()), 0)
 
     @Test
     fun construct() {
@@ -79,7 +79,7 @@ class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence, null), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -135,7 +135,7 @@ class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete2, SentenceDefault(sentence, null), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

@@ -65,7 +65,7 @@ class test_da_sList_root_choicePriority : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"), setOf("'v'"))
+                parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"), setOf("'v'"))
             ), issues.errors)
     }
 

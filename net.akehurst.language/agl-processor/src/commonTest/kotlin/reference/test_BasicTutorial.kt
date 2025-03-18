@@ -121,7 +121,7 @@ class test_BasicTutorial {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(76, 7, 7, 6),
+                InputLocation(76, 7, 7, 6, null),
                 "No target of type(s) [TargetDef] found for referring value 'Ann' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
             )
         )

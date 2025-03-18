@@ -61,7 +61,7 @@ class test_ifThenElse_Priority : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError( InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("var", "'if'"))
+                parseError( InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("var", "'if'"))
             ), issues.errors
         )
     }

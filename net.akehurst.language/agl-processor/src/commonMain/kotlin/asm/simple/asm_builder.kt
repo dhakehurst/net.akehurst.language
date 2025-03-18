@@ -176,7 +176,7 @@ class AsmElementSimpleBuilder(
             if (null!=_context && _crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
                 val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
                     ?: _element.typeName.value
-                val itemInScope = _context.createScopedItem.invoke(refInParent,_element)
+                val itemInScope = _context.createScopedItem.invoke(refInParent,_element, null)
                 val newScope = _parentScope.createOrGetChildScope(refInParent as String, _element.qualifiedTypeName, itemInScope)
                 _scopeMap[_asmPath] = newScope
                 newScope

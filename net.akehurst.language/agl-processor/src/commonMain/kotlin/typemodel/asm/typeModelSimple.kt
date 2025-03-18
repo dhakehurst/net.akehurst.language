@@ -830,6 +830,7 @@ abstract class TypeDefinitionSimpleAbstract(
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
 
     override val supertypes: List<TypeInstance> = mutableListOf()
+    override val subtypes: List<TypeInstance>  = emptyList()
 
     override val typeParameters: List<TypeParameter> = mutableListOf() //make implementation mutable for serialisation
 
