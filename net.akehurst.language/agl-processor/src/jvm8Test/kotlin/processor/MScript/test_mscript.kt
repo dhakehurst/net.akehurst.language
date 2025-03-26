@@ -34,7 +34,7 @@ class test_mscript {
 
     @Test
     fun mscript_typeModel() {
-        val actual = sut.typeModel
+        val actual = sut.typesModel
         val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript") {
             dataType("script", "Script") {
                 // script = statementList ;

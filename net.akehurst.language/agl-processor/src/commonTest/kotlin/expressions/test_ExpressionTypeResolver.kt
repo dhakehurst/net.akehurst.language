@@ -34,7 +34,7 @@ class test_ExpressionTypeResolver {
 
         val tm = typeModel("Test", true) {
             namespace("test") {
-                dataType("Test") {
+                data("Test") {
                     propertyListType("list", false, 0) {
                         this.ref("String")
                     }
@@ -56,7 +56,7 @@ class test_ExpressionTypeResolver {
 
         val tm = typeModel("Test", true) {
             namespace("test") {
-                dataType("Test") {
+                data("Test") {
                     propertyListType("list", false, 0) {
                         this.ref("String")
                     }
@@ -79,7 +79,7 @@ class test_ExpressionTypeResolver {
 
         val tm = typeModel("Test", true) {
             namespace("test") {
-                dataType("Test") {
+                data("Test") {
                     propertyListType("list", false, 0) {
                         this.ref("String")
                     }
@@ -102,7 +102,7 @@ class test_ExpressionTypeResolver {
 
         val tm = typeModel("Test", true) {
             namespace("test") {
-                dataType("Test") {
+                data("Test") {
                     propertyListType("list", false, 0) {
                         this.ref("String")
                     }

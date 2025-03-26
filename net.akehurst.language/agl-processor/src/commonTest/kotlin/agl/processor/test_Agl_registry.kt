@@ -31,7 +31,7 @@ class test_Agl_registry_agl {
             assertNotNull(processor.targetGrammar)
             assertNotNull(processor.baseTypeModel)
             assertNotNull(processor.asmTransformModel)
-            assertNotNull(processor.typeModel)
+            assertNotNull(processor.typesModel)
             assertNotNull(processor.crossReferenceModel)
             assertNotNull(processor.spptParser)
             assertNotNull(processor.targetRuleSet)

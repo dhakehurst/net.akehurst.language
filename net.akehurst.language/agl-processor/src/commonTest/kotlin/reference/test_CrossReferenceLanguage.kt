@@ -75,7 +75,7 @@ class test_CrossReferenceLanguage {
 
     @Test
     fun check_typeModel() {
-        val actual = aglProc.typeModel
+        val actual = aglProc.typesModel
         val expected = grammarTypeModel("net.akehurst.language.agl.language", "References") {
             // declarations = rootIdentifiables scopes references?
             dataType("declarations", "Declarations") {
@@ -502,8 +502,8 @@ class test_CrossReferenceLanguage {
 
         val additionalTypeModel = typeModel("externals", true) {
             namespace("external") {
-                dataType("AnExternalType1")
-                dataType("AnExternalType2")
+                data("AnExternalType1")
+                data("AnExternalType2")
             }
         }
 

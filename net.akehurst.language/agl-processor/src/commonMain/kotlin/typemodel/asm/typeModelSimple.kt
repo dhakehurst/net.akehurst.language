@@ -41,7 +41,6 @@ class TypeModelSimple(
                 typesString.value.isBlank() -> ProcessResultDefault( typeModel(name.value,true) {  }, IssueHolder(LanguageProcessorPhase.ALL) )
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
-                    proc.process(typesString.value)
                     proc.process(
                         sentence = typesString.value,
                         options = Agl.options { semanticAnalysis { context(context) } }

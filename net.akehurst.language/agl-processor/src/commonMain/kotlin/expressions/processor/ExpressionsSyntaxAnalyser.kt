@@ -137,16 +137,16 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val pqn = children[0] as PossiblyQualifiedName
-        val args = children[1] as List<Expression>
+        val args = children[1] as List<AssignmentStatement>
         val propertyAssignments = children[2] as List<AssignmentStatement>?
         val exp = CreateObjectExpressionDefault(pqn, args)
         exp.propertyAssignments = propertyAssignments ?: emptyList()
         return exp
     }
 
-    // constructorArguments = '(' argumentList ')' ;
-    private fun constructorArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> =
-        children[1] as List<Expression> //TODO: maybe should also be assignments ?
+    // constructorArguments = '(' assignmentList ')' ;
+    private fun constructorArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
+        children[1] as List<AssignmentStatement> //TODO: maybe should also be assignments ?
 
 
     // tuple = 'tuple' assignmentBlock ;

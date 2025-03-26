@@ -130,7 +130,7 @@ grammar SQL {
             grammarDefinitionStr = (grammarStr),
             referenceStr = (crossReferenceModelStr)
         ).processor!!
-        val typeModel = processor.typeModel
+        val typeModel = processor.typesModel
         val crossReferenceModel = processor.crossReferenceModel
 
         operator fun AsmStructure.get(value:String) = this.getProperty(PropertyValueName(value))
@@ -207,7 +207,7 @@ grammar SQL {
 
     @Test
     fun check_crossReferenceModel() {
-        val context = ContextFromTypeModel(processor.typeModel)
+        val context = ContextFromTypeModel(processor.typesModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }

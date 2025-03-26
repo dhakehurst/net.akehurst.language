@@ -28,13 +28,13 @@ import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 
-data class EvaluationContext<SelfType>(
+data class EvaluationContext<SelfType:Any>(
     val parent: EvaluationContext<SelfType>?,
     val namedValues: Map<String, TypedObject<SelfType>>
 ) {
     companion object {
-        fun <SelfType> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionDefault.SELF.name to self))
+        fun <SelfType:Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
+        fun <SelfType:Any> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionDefault.SELF.name to self))
     }
 
     val self = namedValues[RootExpressionDefault.SELF.name]
@@ -59,13 +59,13 @@ data class EvaluationContext<SelfType>(
     }
 }
 
-interface TypedObject<out SelfType> {
+interface TypedObject<out SelfType:Any> {
     val self: SelfType
     val type: TypeInstance
     fun asString(): String
 }
 
-interface ObjectGraph<SelfType> {
+interface ObjectGraph<SelfType:Any> {
     var typeModel: TypeModel
 
     fun typeFor(obj: SelfType?): TypeInstance
@@ -99,7 +99,7 @@ interface ObjectGraph<SelfType> {
 //        else -> error("Not possible to convert ${this::class.simpleName} to AsmValue")
 //    }
 
-open class ExpressionsInterpreterOverTypedObject<SelfType>(
+open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
     val objectGraph: ObjectGraph<SelfType>,
     val issues: IssueHolder
 ) {
@@ -346,16 +346,39 @@ open class ExpressionsInterpreterOverTypedObject<SelfType>(
         val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
             ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
 //        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
-        val args = expression.arguments.map { evaluateExpression(evc, it) }
-        val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
-        if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
-        val constructorArgs = consProps.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.associate { it }
-        val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
-        expression.propertyAssignments.forEach {
-            val value = evaluateExpression(evc, it.rhs)
-            objectGraph.setProperty(obj, it.lhsPropertyName, value)
+        return when (typeDecl) {
+            is DataType, is ValueType -> {
+                val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
+                val constructorArgs = when {
+                    args.isNotEmpty() -> {
+                        val constructors = when(typeDecl) {
+                            is DataType -> typeDecl.constructors
+                            is ValueType -> typeDecl.constructors
+                            else -> error("Type '${typeDecl.qualifiedName.value}' has no constructors")
+                        }
+                        val constructor = constructors.firstOrNull { cons ->
+                            cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> a.type.conformsTo(p.typeInstance) }
+                        } ?: error("Constructor not found for '${typeDecl.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
+
+                        // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
+                        // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
+
+                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.associate { it }
+                    }
+                    else -> emptyMap()
+                }
+
+                val obj = objectGraph.createStructureValue(expression.possiblyQualifiedTypeName, constructorArgs)
+                expression.propertyAssignments.forEach {
+                    val value = evaluateExpression(evc, it.rhs)
+                    objectGraph.setProperty(obj, it.lhsPropertyName, value)
+                }
+                return obj
+            }
+            else -> error("Cannot create an object of type '${typeDecl.qualifiedName.value}'")
         }
-        return obj
+
+
     }
 
     private fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {

@@ -14,6 +14,6 @@ kotlin {
     }
 }
 
-tasks.withType<PublishToMavenLocal> {
+tasks.withType<AbstractPublishToMaven> {
     onlyIf { false }
 }

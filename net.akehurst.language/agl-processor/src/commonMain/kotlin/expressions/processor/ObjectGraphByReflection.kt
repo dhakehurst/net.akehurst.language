@@ -18,21 +18,13 @@
 package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.reflect.reflect
-import net.akehurst.language.asm.api.AsmLambda
-import net.akehurst.language.asm.api.AsmList
-import net.akehurst.language.asm.api.AsmListSeparated
-import net.akehurst.language.asm.api.AsmPrimitive
-import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.simple.AsmListSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
-import net.akehurst.language.asm.simple.raw
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.StdLibPrimitiveExecutions
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.CollectionType
@@ -95,16 +87,17 @@ object StdLibPrimitiveExecutionsForReflection {
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
                 check(self is List<*>) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 self.associate {
-                    val el = when(it) {
+                    val el = when (it) {
                         is TypedObject<*> -> it.self
                         else -> it
                     }
-                    when(el) {
-                        is Pair<*,*> -> el
-                        is Map<*,*> -> when {
-                            el.containsKey("key") && el.containsKey("value") -> Pair(el["key"],el["value"])
+                    when (el) {
+                        is Pair<*, *> -> el
+                        is Map<*, *> -> when {
+                            el.containsKey("key") && el.containsKey("value") -> Pair(el["key"], el["value"])
                             else -> error("To convert a List<Map> via 'asMap' there must be a 'key' and a 'value' entry")
                         }
+
                         else -> error("To convert a List via 'asMap' the elements must be either Pairs or Maps with key and value entries")
                     }
                 }
@@ -149,10 +142,10 @@ object StdLibPrimitiveExecutionsForReflection {
     )
 }
 
-class TypedObjectByReflection(
+class TypedObjectAny<SelfType : Any>(
     override val type: TypeInstance,
-    override val self: Any
-) : TypedObject<Any> {
+    override val self: SelfType
+) : TypedObject<SelfType> {
 
     override fun asString(): String = self.toString()
 
@@ -165,14 +158,14 @@ class TypedObjectByReflection(
     override fun toString(): String = "$self : ${type.qualifiedTypeName}"
 }
 
-open class ObjectGraphByReflection(
+open class ObjectGraphByReflection<SelfType : Any>(
     override var typeModel: TypeModel,
     val issues: IssueHolder
-) : ObjectGraph<Any> {
+) : ObjectGraph<SelfType> {
 
     //fun Any.toTypedObject(type: TypeInstance) = TypedObjectByReflection(type, this)
 
-    override fun typeFor(obj: Any?): TypeInstance {
+    override fun typeFor(obj: SelfType?): TypeInstance {
         return when (obj) {
             null -> StdLibDefault.NothingType
             is Boolean -> StdLibDefault.Boolean
@@ -186,7 +179,7 @@ open class ObjectGraphByReflection(
                     null -> StdLibDefault.Map.type(listOf(StdLibDefault.AnyType.asTypeArgument, StdLibDefault.AnyType.asTypeArgument))
                     else -> when (me.key) {
                         is String -> {
-                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v)) }
+                            val ttargs = obj.map { (k, v) -> TypeArgumentNamedSimple(PropertyName(k as String), typeFor(v as SelfType)) }
                             StdLibDefault.TupleType.type(ttargs)
                         }
 
@@ -209,30 +202,30 @@ open class ObjectGraphByReflection(
         }
     }
 
-    override fun toTypedObject(obj: Any?): TypedObject<Any> = when {
-        obj is TypedObject<*> -> obj as TypedObject<Any>
-        else -> obj?.let { TypedObjectByReflection(typeFor(obj), obj) } ?: nothing()
+    override fun toTypedObject(obj: SelfType?): TypedObject<SelfType> = when {
+        obj is TypedObject<*> -> obj as TypedObject<SelfType>
+        else -> obj?.let { TypedObjectAny(typeFor(obj), obj) } ?: nothing()
     }
 
-    override fun nothing() = TypedObjectByReflection(StdLibDefault.NothingType, Unit)
-    override fun any(value: Any) = TypedObjectByReflection(StdLibDefault.AnyType, value)
+    override fun nothing(): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.NothingType, Unit) as TypedObject<SelfType>
+    override fun any(value: Any): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.AnyType, value) as TypedObject<SelfType>
 
-    override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value)
+    override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = toTypedObject(value as SelfType?)
 
-    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<Any> {
+    override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<SelfType> {
         val tupleType = StdLibDefault.TupleType
         val tuple = mutableMapOf<String, Any>()
-        return TypedObjectByReflection(tupleType.type(typeArgs), tuple)
+        return TypedObjectAny(tupleType.type(typeArgs), tuple) as TypedObject<SelfType>
     }
 
-    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<Any>>): TypedObject<Any> {
+    override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType> {
         val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
             is StructuredType -> when (typeDef) {
-                is DataType -> typeDef.constructDataType(*constructorArgs.values.toTypedArray())
-                is ValueType -> typeDef.constructValueType(constructorArgs.values.first()) //TODO: special method
+                is DataType -> typeDef.constructDataType(*(constructorArgs.values.map{it.self}.toTypedArray<Any>()))
+                is ValueType -> typeDef.constructValueType(constructorArgs.values.map{it.self}.first()) //TODO: special method
                 is CollectionType -> error("use 'createCollection' for CollectionType")
                 is InterfaceType -> error("Should not create an instance of a InterfaceType")
                 else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
@@ -245,28 +238,28 @@ open class ObjectGraphByReflection(
             is UnionType -> error("Should not create an instance of a UnionType")
             else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
         }
-        return TypedObjectByReflection(typeDef.type(), obj)
+        return TypedObjectAny(typeDef.type(), obj) as TypedObject<SelfType>
     }
 
-    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<Any>>): TypedObject<Any> {
+    override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<SelfType>>): TypedObject<SelfType> {
         return when (qualifiedTypeName) {
             StdLibDefault.List.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
                 val type = StdLibDefault.List.type(listOf(elType.asTypeArgument))
-                TypedObjectByReflection(type, collection.toList())
+                TypedObjectAny(type, collection.toList()) as TypedObject<SelfType>
             }
 
             StdLibDefault.ListSeparated.qualifiedName -> {
                 val list = collection.toList()
                 val elType = list.getOrNull(0)?.type ?: StdLibDefault.AnyType
                 val sepType = list.getOrNull(1)?.type ?: StdLibDefault.AnyType
-                TypedObjectByReflection(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)), list.toSeparatedList())
+                TypedObjectAny(StdLibDefault.ListSeparated.type(listOf(elType.asTypeArgument, sepType.asTypeArgument)), list.toSeparatedList()) as TypedObject<SelfType>
             }
 
             StdLibDefault.Set.qualifiedName -> {
                 val elType = collection.firstOrNull()?.type ?: StdLibDefault.AnyType //TODO: should really take comon supertype !
                 val type = StdLibDefault.Set.type(listOf(elType.asTypeArgument))
-                TypedObjectByReflection(type, collection.toList())
+                TypedObjectAny(type, collection.toList()) as TypedObject<SelfType>
             }
 
             StdLibDefault.Map.qualifiedName -> {
@@ -274,22 +267,22 @@ open class ObjectGraphByReflection(
                 val keyType = fstElType.typeArguments[0]
                 val valType = fstElType.typeArguments[1]
                 val map = collection.associate { it as Pair<Any, Any> }
-                TypedObjectByReflection(StdLibDefault.Map.type(listOf(keyType, valType)), map)
+                TypedObjectAny(StdLibDefault.Map.type(listOf(keyType, valType)), map) as TypedObject<SelfType>
             }
 
             else -> error("Unsupported collection type: '${qualifiedTypeName.value}'")
         }
     }
 
-    override fun createLambdaValue(lambda: (it: TypedObject<Any>) -> TypedObject<Any>): TypedObject<Any> {
+    override fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType> {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb = { it: Any -> lambda.invoke(toTypedObject(it)).self }
-        return TypedObjectByReflection(lambdaType, lmb)
+        val lmb = { it: Any -> lambda.invoke(toTypedObject(it as SelfType)).self }
+        return TypedObjectAny(lambdaType, lmb) as TypedObject<SelfType>
     }
 
-    override fun valueOf(value: TypedObject<Any>): Any = value.self
+    override fun valueOf(value: TypedObject<SelfType>): Any = value.self
 
-    override fun getIndex(tobj: TypedObject<Any>, index: Any): TypedObject<Any> {
+    override fun getIndex(tobj: TypedObject<SelfType>, index: Any): TypedObject<SelfType> {
         val idx = when (index) {
             is TypedObject<*> -> {
                 index.self
@@ -308,7 +301,7 @@ open class ObjectGraphByReflection(
                             nothing()
                         }
 
-                        else -> toTypedObject(el)
+                        else -> toTypedObject(el as SelfType)
 
                     }
                 }
@@ -326,13 +319,13 @@ open class ObjectGraphByReflection(
         }
     }
 
-    override fun getProperty(tobj: TypedObject<Any>, propertyName: String): TypedObject<Any> {
+    override fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType> {
         return when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 when (tobj.self) {
                     is Map<*, *> -> {
                         val value = (tobj.self as Map<String, Any>)[propertyName]
-                        value?.let { toTypedObject(it) } ?: nothing()
+                        value?.let { toTypedObject(it as SelfType?) } ?: nothing()
                     }
 
                     else -> nothing()
@@ -345,7 +338,7 @@ open class ObjectGraphByReflection(
                     null -> {
                         val obj = tobj.self
                         val value = obj.reflect().getProperty(propertyName)
-                        value?.let { toTypedObject(it) } ?: nothing()
+                        value?.let { toTypedObject(it as SelfType?) } ?: nothing()
                     }
 
                     else -> when (propRes.original) {
@@ -356,13 +349,13 @@ open class ObjectGraphByReflection(
                                 ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                             val propExec = typeProps[propRes.original]
                                 ?: error("StdLibPrimitiveExecutionsForReflection not found for property '${propertyName}' of TypeDeclaration '${type.qualifiedName}'")
-                            toTypedObject(propExec.invoke(tobj.self, propRes))
+                            toTypedObject(propExec.invoke(tobj.self, propRes) as SelfType?)
                         }
 
                         is PropertyDeclarationStored -> {
                             val obj = tobj.self
                             val value = obj.reflect().getProperty(propertyName)
-                            value?.let { toTypedObject(it) } ?: nothing()
+                            value?.let { toTypedObject(it as SelfType?) } ?: nothing()
                         }
 
                         else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
@@ -372,7 +365,7 @@ open class ObjectGraphByReflection(
         }
     }
 
-    override fun setProperty(tobj: TypedObject<Any>, propertyName: String, value: TypedObject<Any>) {
+    override fun setProperty(tobj: TypedObject<SelfType>, propertyName: String, value: TypedObject<SelfType>) {
         when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 when (tobj.self) {
@@ -389,15 +382,15 @@ open class ObjectGraphByReflection(
         }
     }
 
-    override fun executeMethod(tobj: TypedObject<Any>, methodName: String, args: List<TypedObject<Any>>): TypedObject<Any> {
+    override fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType> {
         val obj = tobj.self
         val arguments = args.map { it.self }
         val value = obj.reflect().call(methodName, arguments)
-        return value?.let { toTypedObject(it) } ?: nothing()
+        return value?.let { toTypedObject(it as SelfType?) } ?: nothing()
     }
 
-    override fun cast(tobj: TypedObject<Any>, newType: TypeInstance): TypedObject<Any> {
-        return TypedObjectByReflection(newType, tobj.self)
+    override fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType> {
+        return TypedObjectAny(newType, tobj.self)
     }
 
 }

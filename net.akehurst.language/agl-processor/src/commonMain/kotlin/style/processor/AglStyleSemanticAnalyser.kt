@@ -37,7 +37,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
 
     companion object {
         private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typeModel
+        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
         private val aglGrammarNamespace: GrammarTypeNamespace
             get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
@@ -51,6 +51,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: AglStyleModel,
         locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions<ContextFromGrammar>

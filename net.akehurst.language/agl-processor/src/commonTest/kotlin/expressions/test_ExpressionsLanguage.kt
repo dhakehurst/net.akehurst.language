@@ -112,7 +112,7 @@ class test_ExpressionsLanguage {
     @Test
     fun check_typeModel() {
         val proc = Agl.registry.agl.expressions.processor!!
-        val actual = proc.typeModel
+        val actual = proc.typesModel
         assertTrue(Agl.registry.agl.expressions.issues.errors.isEmpty(), Agl.registry.agl.expressions.issues.toString())
 
         val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions") {

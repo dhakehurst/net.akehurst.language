@@ -286,7 +286,7 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            item("test.Test.S", "test.Test.S", "/0")
+            item("test.Test.S", "test.Test.S", null, "/0")
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -315,7 +315,7 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            item("a", "test.Test.S", "/0")
+            item("a", "test.Test.S", null, "/0")
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -461,9 +461,9 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            scopedItem("a", "test.Test.S", "/0") {
-                scopedItem("a", "test.Test.S", "/0") {
-                    scopedItem("a", "test.Test.S", "/0") {
+            scopedItem("a", "test.Test.S", null, "/0") {
+                scopedItem("a", "test.Test.S", null,"/0") {
+                    scopedItem("a", "test.Test.S", null,"/0") {
                     }
                 }
             }

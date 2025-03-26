@@ -39,7 +39,7 @@ interface LiteralExpression : Expression {
 
 interface CreateObjectExpression : Expression {
     val possiblyQualifiedTypeName: PossiblyQualifiedName
-    val arguments: List<Expression>
+    val constructorArguments: List<AssignmentStatement>
     val propertyAssignments: List<AssignmentStatement>
 }
 

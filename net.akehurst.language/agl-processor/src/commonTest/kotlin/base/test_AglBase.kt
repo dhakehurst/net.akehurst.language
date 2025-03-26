@@ -25,7 +25,7 @@ class test_AglBase {
 
         val tm = typeModel("Test",true,actual.namespace) {
             namespace("test") {
-                dataType("TestDefinition")
+                data("TestDefinition")
             }
         }
         val tDef = tm.findFirstDefinitionByNameOrNull(SimpleName("TestDefinition"))

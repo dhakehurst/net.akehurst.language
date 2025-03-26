@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -32,10 +33,11 @@ import net.akehurst.language.typemodel.api.TypeModel
 /**
  * Creates scopes and sets semantic Path on AsmStructures, based on scopes and identifying expressions from CrossReference definitions
  */
-class ScopeCreator<ItemInScopeType>(
+class ScopeCreator<ItemInScopeType:Any>(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel,
-    val rootScope: Scope<ItemInScopeType>,
+    val context: ContextWithScope<AsmStructure, ItemInScopeType>, //TODO: use interface or something more abstract
+    val sentenceIdentity:Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
@@ -44,8 +46,7 @@ class ScopeCreator<ItemInScopeType>(
     val issues: IssueHolder
 ) : AsmTreeWalker {
 
-
-    val currentScope = mutableStackOf(rootScope)
+    val currentScope = mutableStackOf(context.newScopeForSentence(sentenceIdentity))
 
     override fun beforeRoot(root: AsmValue) {
     }
@@ -199,14 +200,15 @@ class ScopeCreator<ItemInScopeType>(
 
     private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
         val scopeItem = createItemInScopeFunction.invoke(referableName, el,this.locationMap[el])
-        val existingItems = scope.findItemsNamedConformingTo(referableName) { itemTypeName ->
+        val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typeModel.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
             val requireType = typeModel.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")
             itemType.conformsTo(requireType)
         }
+        val notSameLocation = existingItems.filter { it.location != this.locationMap[el]?.sentenceIdentity }
         when {
-            existingItems.isEmpty() -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
-            existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
+            notSameLocation.isEmpty() -> scope.addToScope(referableName, el.qualifiedTypeName, this.locationMap[el]?.sentenceIdentity, scopeItem, replaceIfItemAlreadyExistsInScope)
+            //existingItems.all { it.item != scopeItem } -> scope.addToScope(referableName, el.qualifiedTypeName, scopeItem, replaceIfItemAlreadyExistsInScope)
             else -> {
                 this.ifItemAlreadyExistsInScopeIssueKind?.let {
                     issues.raise(

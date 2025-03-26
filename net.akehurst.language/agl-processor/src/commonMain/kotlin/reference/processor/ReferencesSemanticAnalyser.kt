@@ -55,9 +55,10 @@ class ReferencesSemanticAnalyser(
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: CrossReferenceModel,
         locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< ContextFromTypeModel>
+        options: SemanticAnalysisOptions<ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         _context = options.context
@@ -196,8 +197,9 @@ class ReferencesSemanticAnalyser(
         }
         val collTypeInstance = _typeResolver!!.typeFor(refExpr.expression, contextType.type())
         when (collTypeInstance.resolvedDeclaration) {
-            StdLibDefault.NothingType -> {
-                TODO()
+            is SpecialType -> when {
+                StdLibDefault.NothingType == collTypeInstance.resolvedDeclaration -> Unit
+                else -> TODO()
             }
 
             is CollectionType -> {

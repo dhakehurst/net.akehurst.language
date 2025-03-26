@@ -49,7 +49,7 @@ data class CreateTupleExpressionDefault(
 
 data class CreateObjectExpressionDefault(
     override val possiblyQualifiedTypeName: PossiblyQualifiedName,
-    override val arguments: List<Expression>
+    override val constructorArguments: List<AssignmentStatement>
 ) : ExpressionAbstract(), CreateObjectExpression {
 
     override var propertyAssignments: List<AssignmentStatement> = emptyList()

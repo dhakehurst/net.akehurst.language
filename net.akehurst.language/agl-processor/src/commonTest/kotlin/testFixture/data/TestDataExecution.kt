@@ -53,7 +53,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val proc = procRes.processor!!
 
     println("--- TypeDomain ---")
-    println(proc.typeModel.asString())
+    println(proc.typesModel.asString())
     println("--- Asm Transform ---")
     println(proc.asmTransformModel.asString())
 

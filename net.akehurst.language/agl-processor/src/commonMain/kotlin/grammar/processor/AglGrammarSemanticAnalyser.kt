@@ -61,6 +61,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: GrammarModel,
         locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions< ContextFromGrammarRegistry>

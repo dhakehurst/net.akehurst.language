@@ -39,7 +39,7 @@ fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(),
         val opts = SemanticAnalysisOptionsDefault(
             context = ContextFromGrammarRegistry(gr)
         )
-        sa.analyse(gm,emptyMap(), opts)
+        sa.analyse(null,gm, emptyMap(), opts)
     }
     return gm
 }

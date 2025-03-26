@@ -39,7 +39,7 @@ class test_Dot_SyntaxAnalyser {
 
     @Test
     fun dotTypeModel() {
-        val actual = processor.typeModel
+        val actual = processor.typesModel
         val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
             dataType("graph", "Graph") {

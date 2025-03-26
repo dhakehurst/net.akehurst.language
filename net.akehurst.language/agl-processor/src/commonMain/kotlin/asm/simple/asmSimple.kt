@@ -39,17 +39,9 @@ class AsmFactorySimple(
 
     override fun constructAsm(): Asm = AsmSimple()
 
-    override fun rootList(asm: Asm): List<AsmValue> {
-        return asm.root
-    }
-
-    override fun addRoot(asm: Asm, root: AsmValue) {
-        (asm as AsmSimple).addRoot(root)
-    }
-
-    override fun removeRoot(asm: Asm, root: AsmValue) {
-        (asm as AsmSimple).removeRoot(root)
-    }
+    override fun rootList(asm: Asm): List<AsmValue> = asm.root
+    override fun addRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
+    override fun removeRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
 }
 
 class AsmPathSimple(
@@ -109,13 +101,8 @@ open class AsmSimple() : Asm {
     override val root: List<AsmValue> = mutableListOf()
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
 
-    fun addRoot(root: AsmValue) {
-        (this.root as MutableList).add(root)
-    }
-
-    fun removeRoot(root: Any) {
-        (this.root as MutableList).remove(root)
-    }
+    fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
+    fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
 
     fun createStructure(asmPath: AsmPath, typeName: QualifiedName): AsmStructureSimple {
         val el = AsmStructureSimple(asmPath, typeName)

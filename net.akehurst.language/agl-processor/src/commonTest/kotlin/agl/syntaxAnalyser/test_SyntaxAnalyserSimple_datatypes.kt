@@ -87,7 +87,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
     @Test
     fun checkTypeModel() {
-        val actual = processor.typeModel
+        val actual = processor.typesModel
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 //unit = declaration* ;

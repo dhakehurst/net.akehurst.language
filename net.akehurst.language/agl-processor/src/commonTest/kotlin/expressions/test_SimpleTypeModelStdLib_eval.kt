@@ -46,7 +46,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_size__empty() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", "std.String", false, 0)
                 }
             }
@@ -65,7 +65,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_size() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -83,7 +83,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_size__missing_prop_name() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -101,7 +101,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_first() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -119,7 +119,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_last() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -137,7 +137,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_back() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -155,7 +155,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_front() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -173,7 +173,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_join() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }

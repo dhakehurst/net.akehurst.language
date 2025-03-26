@@ -59,14 +59,14 @@ class test_Vistraq_References {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 //typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
+                        SyntaxAnalyserSimple(p.typesModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 //formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 //completionProvider { p ->
@@ -136,9 +136,9 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
-            item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
-            item("AB", "vistraq.query.TIM.LinkType", "/0/linkList/0")
+            item("A", "vistraq.query.TIM.NodeType", null, "/0/nodeList/0")
+            item("B", "vistraq.query.TIM.NodeType", null, "/0/nodeList/1")
+            item("AB", "vistraq.query.TIM.LinkType", null, "/0/linkList/0")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext)
@@ -157,9 +157,9 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
-            item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
-            item("CD", "vistraq.query.TIM.LinkType", "/0/linkList/0")
+            item("A", "vistraq.query.TIM.NodeType", null, "/0/nodeList/0")
+            item("B", "vistraq.query.TIM.NodeType", null, "/0/nodeList/1")
+            item("CD", "vistraq.query.TIM.LinkType", null, "/0/linkList/0")
         }
 
         val expectedIssues = listOf(
@@ -191,7 +191,7 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            item("A", "vistraq.query.TIM.NodeType", null, "/0/model/model/nodeList/0")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -210,7 +210,7 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            item("A", "vistraq.query.TIM.NodeType", null, "/0/model/model/nodeList/0")
         }
 
         val expectedIssues = listOf(
@@ -239,7 +239,7 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            item("A", "vistraq.query.TIM.NodeType", null, "/0/model/model/nodeList/0")
         }
 
         val expectedIssues = listOf(

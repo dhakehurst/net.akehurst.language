@@ -102,7 +102,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
     }
 
-    override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
+    override val typesModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
 
     override val asmTransformModel: TransformModel by lazy {
         val res = configuration.transformResolver?.invoke(this)
@@ -147,7 +147,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             this.issues.addAllFrom(res.issues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typeModel, this.issues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesModel, this.issues) as Formatter<AsmType>
             }
         }
     }
@@ -209,8 +209,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
         semAnalyser.clear()
+        val sentenceId = opts.parse.sentenceIdentity()
         val lm = opts.semanticAnalysis.locationMap
-        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis)
+        return semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
     }
 
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {

@@ -35,26 +35,26 @@ interface Scope {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
         typeModel("Scope", true, AglBase.typeModel.namespace) {
             namespace("net.akehurst.language.scope.api", listOf("std", "net.akehurst.language.base.api")) {
-                interfaceType("Scope") {
+                interface_("Scope") {
                     typeParameters("ItemType")
 
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "childScopes", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "childScopes", "Map", false) {
                         typeArgument("String")
                         typeArgument("Scope")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "items", "Map", false) {
                         typeArgument("String")
                         typeArgument("Map") {
                             typeArgument("QualifiedName")
                             typeArgument("ItemType")
                         }
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "scopeMap", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "scopeMap", "Map", false) {
                         typeArgument("ItemType")
                         typeArgument("Scope")
                     }
                 }
-                dataType("ScopedItem") {
+                data("ScopedItem") {
                     typeParameters("ItemType")
 
                     constructor_ {
@@ -62,13 +62,13 @@ interface Scope {
                         parameter("qualifiedTypeName", "QualifiedName", false)
                         parameter("item", "ItemType", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "item", "ItemType", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "referableName", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "item", "ItemType", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "referableName", "String", false)
                 }
             }
             namespace("net.akehurst.language.scope.asm", listOf("net.akehurst.language.scope.api", "std", "net.akehurst.language.base.api")) {
-                dataType("ScopeSimple") {
+                data("ScopeSimple") {
                     typeParameters("ItemType")
                     supertype("Scope") { ref("ItemType") }
                     constructor_ {
@@ -76,24 +76,24 @@ interface Scope {
                         parameter("scopeIdentityInParent", "String", false)
                         parameter("forTypeName", "QualifiedName", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "childScopes", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "childScopes", "Map", false) {
                         typeArgument("String")
                         typeArgument("ScopeSimple")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "forTypeName", "QualifiedName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "Map", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "forTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "items", "Map", false) {
                         typeArgument("String")
                         typeArgument("Map") {
                             typeArgument("QualifiedName")
                             typeArgument("ItemType")
                         }
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "parent", "ScopeSimple", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "parent", "ScopeSimple", false) {
                         typeArgument("ItemType")
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "scopeIdentity", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "scopeIdentityInParent", "String", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "scopeMap", "Map", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "scopeIdentity", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "scopeIdentityInParent", "String", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "scopeMap", "Map", false) {
                         typeArgument("ItemType")
                         typeArgument("ScopeSimple")
                     }

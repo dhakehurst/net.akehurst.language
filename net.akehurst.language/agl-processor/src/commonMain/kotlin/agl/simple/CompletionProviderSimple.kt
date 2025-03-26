@@ -107,7 +107,7 @@ class CompletionProviderSimple(
                     val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
                     val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                     val items = refTypes.flatMap { refType ->
-                        context.rootScope.findItemsConformingTo {
+                        context.findItemsConformingTo {
                             val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(refType)
                         }
@@ -137,7 +137,7 @@ class CompletionProviderSimple(
                     val refTypeNames = crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, pn.value)
                     val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                     val items = refTypes.flatMap { refType ->
-                        context.rootScope.findItemsConformingTo {
+                        context.findItemsConformingTo {
                             val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(refType)
                         }

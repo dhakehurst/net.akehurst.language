@@ -118,8 +118,8 @@ class test_AllDefault {
             assertEquals(testData.expectedRrs.toString(), rrs.toString(), "Different RRS by string")
             assertTrue(testData.expectedRrs.matches(rrs), "Different RRS by match")
 
-            assertEquals(testData.expectedTm.asString(), proc.typeModel.asString(), "Different TypeModel by string")
-            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typeModel)
+            assertEquals(testData.expectedTm.asString(), proc.typesModel.asString(), "Different TypeModel by string")
+            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typesModel)
 
             assertEquals(testData.expectedTr.asString(), proc.asmTransformModel.asString(), "Different AsmTransform by string")
             AsmTransformModelTest.trAssertEquals(testData.expectedTr, proc.asmTransformModel)

@@ -82,7 +82,7 @@ object ExpressionsTest {
 
     fun exAssertEquals(expected: CreateObjectExpression, actual: CreateObjectExpression) {
         assertEquals(expected.possiblyQualifiedTypeName, actual.possiblyQualifiedTypeName, "possiblyQualifiedTypeName")
-        exAssertEqualsExprList(expected.arguments, actual.arguments, "arguments")
+        exAssertEquals(expected.constructorArguments, actual.constructorArguments, "constructorArguments")
         exAssertEquals(expected.propertyAssignments, actual.propertyAssignments, "propertyAssignments")
     }
 

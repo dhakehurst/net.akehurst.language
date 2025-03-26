@@ -29,6 +29,7 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammar
@@ -59,27 +60,29 @@ object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
       ;
     singletonDefinition = 'singleton' IDENTIFIER ;
     primitiveDefinition = 'primitive' IDENTIFIER ;
-    enumDefinition = 'enum' IDENTIFIER ;
+    enumDefinition = 'enum' IDENTIFIER enumLiterals? ;
+    enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
     valueDefinition = 'value' IDENTIFIER ;
     collectionDefinition = 'collection' IDENTIFIER '<' typeParameterList '>' ;
-    dataDefinition = 'data' IDENTIFIER supertypes? '{' property* '}' ;
-    interfaceDefinition = 'interface' IDENTIFIER supertypes? '{' property* '}' ;
     unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
+    interfaceDefinition = 'interface' IDENTIFIER supertypes? interfaceBody? ;
+    interfaceBody = '{' property* '}' ;
+    dataDefinition =
+      'data' IDENTIFIER supertypes? '{'
+        constructor*
+        property*
+      '}'
+    ;
     alternatives = [typeReference / '|']+ ;
-    
-    typeParameterList = [ IDENTIFIER / ',']+ ;
-    supertypes = ':' [ typeReference / ',']+ ;
-    property = characteristic IDENTIFIER ':' typeReference ;
+    typeParameterList = [IDENTIFIER / ',']+ ;
+    supertypes = ':' [typeReference / ',']+ ;
+    constructor = 'constructor' '(' constructorParameter* ')' ;
+    constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
+    property = cmp_ref? val_var IDENTIFIER ':' typeReference ;
     typeReference = possiblyQualifiedName typeArgumentList? '?'?;
     typeArgumentList = '<' [ typeReference / ',']+ '>' ;
-    characteristic
-       = 'reference-val'    // reference, constructor argument
-       | 'reference-var'    // reference mutable property
-       | 'composite-val'    // composite, constructor argument
-       | 'composite-var'    // composite mutable property
-       | 'dis'    // disregard / ignore
-       ;
-
+    cmp_ref = 'cmp' | 'ref' ;
+    val_var = 'val' | 'var' ;
   }"""
     override val kompositeString = """namespace net.akehurst.language.typemodel.api
     interface TypeInstance {
@@ -136,7 +139,7 @@ namespace net.akehurst.language.grammarTypemodel.api
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
-                    choice("definition") {
+                    choice("definition", overrideKind = OverrideKind.REPLACE) {
                         ref("singletonDefinition")
                         ref("primitiveDefinition")
                         ref("enumDefinition")
@@ -148,24 +151,34 @@ namespace net.akehurst.language.grammarTypemodel.api
                     }
                     concatenation("singletonDefinition") { lit("singleton"); ref("IDENTIFIER") }
                     concatenation("primitiveDefinition") { lit("primitive"); ref("IDENTIFIER") }
-                    concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER") }
+                    concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER"); opt { ref("enumLiterals") } }
+                    concatenation("enumLiterals") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit("}") }
                     concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER") }
                     concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER"); lit("<"); ref("typeParameterList"); lit(">") }
-                    concatenation("dataDefinition") { lit("data"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{"); lst(0, -1) { ref("property") }; lit("}") }
-                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{"); lst(0, -1) { ref("property") }; lit("}") }
+                    concatenation("dataDefinition") {
+                        lit("data"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{");
+                        lst(0, -1) { ref("constructor") };
+                        lst(0, -1) { ref("property") };
+                        lit("}")
+                    }
+                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("supertypes") }; opt { ref("interfaceBody") } }
+                    concatenation("interfaceBody") { lit("{"); lst(0, -1) { ref("property") }; lit("}") }
                     concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER"); lit("{"); ref("alternatives"); lit("}") }
                     separatedList("alternatives", 1, -1) { ref("typeReference"); lit("|") }
                     separatedList("typeParameterList", 1, -1) { ref("IDENTIFIER"); lit(",") }
                     concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
-                    concatenation("property") { ref("characteristic"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("constructor") { lit("constructor"); lit("("); lst(0, -1) { ref("constructorParameter") }; lit(")") }
+                    concatenation("constructorParameter") { opt { ref("cmp_ref") }; opt { ref("val_var") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("property") { opt { ref("cmp_ref") }; ref("val_var"); ref("IDENTIFIER"); lit(":"); ref("typeReference") }
                     concatenation("typeReference") { ref("possiblyQualifiedName"); opt { ref("typeArgumentList") }; opt { lit("?") } }
                     concatenation("typeArgumentList") { lit("<"); spLst(1, -1) { ref("typeReference"); lit(",") }; lit(">") }
-                    choice("characteristic") {
-                        lit("reference-val")
-                        lit("reference-var")
-                        lit("composite-val")
-                        lit("composite-var")
-                        lit("dis")
+                    choice("cmp_ref") {
+                        lit("cmp")
+                        lit("ref")
+                    }
+                    choice("val_var") {
+                        lit("val")
+                        lit("var")
                     }
                 }
             }
@@ -175,144 +188,144 @@ namespace net.akehurst.language.grammarTypemodel.api
     override val typeModel by lazy {
         typeModel("Typemodel", true, AglGrammar.typeModel.namespace) {
             namespace("net.akehurst.language.typemodel.api", listOf("std", "net.akehurst.language.base.api")) {
-                enumType("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
-                valueType("PropertyName") {
+                enum("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
+                value("PropertyName") {
 
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
                 }
-                valueType("ParameterName") {
+                value("ParameterName") {
 
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
                 }
-                valueType("MethodName") {
+                value("MethodName") {
 
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
                 }
-                interfaceType("ValueType") {
+                interface_("ValueType") {
                     supertype("StructuredType")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
                 }
-                interfaceType("UnnamedSupertypeType") {
+                interface_("UnnamedSupertypeType") {
                     supertype("TypeDeclaration")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "subtypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
                 }
-                interfaceType("TypeParameter") {
+                interface_("TypeParameter") {
 
                 }
-                interfaceType("TypeNamespace") {
+                interface_("TypeNamespace") {
                     supertype("Namespace") { ref("TypeDeclaration") }
                 }
-                interfaceType("TypeModel") {
+                interface_("TypeModel") {
                     supertype("Model") { ref("TypeNamespace"); ref("TypeDeclaration") }
                 }
-                interfaceType("TypeInstance") {
+                interface_("TypeInstance") {
 
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
                 }
-                interfaceType("TypeDeclaration") {
+                interface_("TypeDeclaration") {
                     supertype("Definition") { ref("TypeDeclaration") }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "supertypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "supertypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "typeParameters", "List", false) {
                         typeArgument("TypeParameter")
                     }
                 }
-                interfaceType("TypeArgumentNamed") {
+                interface_("TypeArgumentNamed") {
                     supertype("TypeArgument")
                 }
-                interfaceType("TypeArgument") {
+                interface_("TypeArgument") {
 
                 }
-                interfaceType("TupleTypeInstance") {
+                interface_("TupleTypeInstance") {
                     supertype("TypeInstance")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgumentNamed")
                     }
                 }
-                interfaceType("TupleType") {
+                interface_("TupleType") {
                     supertype("TypeDeclaration")
                 }
-                interfaceType("StructuredType") {
+                interface_("StructuredType") {
                     supertype("TypeDeclaration")
                 }
-                interfaceType("SingletonType") {
+                interface_("SingletonType") {
                     supertype("TypeDeclaration")
                 }
-                interfaceType("PropertyDeclarationResolved") {
+                interface_("PropertyDeclarationResolved") {
                     supertype("PropertyDeclaration")
                 }
-                interfaceType("PropertyDeclaration") {
+                interface_("PropertyDeclaration") {
 
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                interfaceType("PrimitiveType") {
+                interface_("PrimitiveType") {
                     supertype("TypeDeclaration")
                 }
-                interfaceType("ParameterDeclaration") {
+                interface_("ParameterDeclaration") {
 
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                interfaceType("MethodDeclaration") {
+                interface_("MethodDeclaration") {
 
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "parameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                 }
-                interfaceType("InterfaceType") {
+                interface_("InterfaceType") {
                     supertype("StructuredType")
                 }
-                interfaceType("EnumType") {
+                interface_("EnumType") {
                     supertype("TypeDeclaration")
                 }
-                interfaceType("DataType") {
+                interface_("DataType") {
                     supertype("StructuredType")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
                 }
-                interfaceType("ConstructorDeclaration") {
+                interface_("ConstructorDeclaration") {
 
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "parameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                 }
-                interfaceType("CollectionType") {
+                interface_("CollectionType") {
                     supertype("StructuredType")
                 }
             }
             namespace("net.akehurst.language.typemodel.asm", listOf("net.akehurst.language.typemodel.api", "net.akehurst.language.base.api", "std", "net.akehurst.language.base.asm")) {
                 singleton("TypeParameterMultiple")
                 singleton("SimpleTypeModelStdLib")
-                dataType("ValueTypeSimple") {
+                data("ValueTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("ValueType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
                 }
-                dataType("UnnamedSupertypeTypeSimple") {
+                data("UnnamedSupertypeTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("UnnamedSupertypeType")
                     constructor_ {
@@ -320,14 +333,14 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("id", "Integer", false)
                         parameter("subtypes", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "id", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "subtypes", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "id", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
                 }
-                dataType("UnnamedSupertypeTypeInstance") {
+                data("UnnamedSupertypeTypeInstance") {
                     supertype("TypeInstanceAbstract")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
@@ -335,21 +348,21 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("typeArguments", "List", false)
                         parameter("isNullable", "Boolean", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "declaration", "UnnamedSupertypeType", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isNullable", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "declaration", "UnnamedSupertypeType", false)
+                    propertyOf(setOf(VAL, REF, STORED), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
                 }
-                dataType("TypeParameterSimple") {
+                data("TypeParameterSimple") {
                     supertype("TypeParameter")
                     constructor_ {
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
                 }
-                dataType("TypeParameterReference") {
+                data("TypeParameterReference") {
                     supertype("TypeInstanceAbstract")
                     supertype("TypeInstance")
                     constructor_ {
@@ -357,53 +370,53 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("typeParameterName", "SimpleName", false)
                         parameter("isNullable", "Boolean", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "context", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isNullable", "Boolean", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "context", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STORED), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "typeOrNull", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeParameterName", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "typeOrNull", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeParameterName", "SimpleName", false)
                 }
-                dataType("TypeNamespaceSimple") {
+                data("TypeNamespaceSimple") {
                     supertype("TypeNamespaceAbstract")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedName", "QualifiedName", false)
                 }
-                dataType("TypeNamespaceAbstract") {
+                data("TypeNamespaceAbstract") {
                     supertype("TypeNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.typemodel.api.TypeDeclaration") }
                     constructor_ {
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "import", "List", false) {
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "ownedTupleTypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "ownedTupleTypes", "List", false) {
                         typeArgument("TupleType")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "ownedUnnamedSupertypeType", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "ownedUnnamedSupertypeType", "List", false) {
                         typeArgument("UnnamedSupertypeType")
                     }
                 }
-                dataType("TypeModelSimpleAbstract") {
+                data("TypeModelSimpleAbstract") {
                     supertype("TypeModel")
                     constructor_ {}
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "namespace", "List", false) {
                         typeArgument("TypeNamespace")
                     }
                 }
-                dataType("TypeModelSimple") {
+                data("TypeModelSimple") {
                     supertype("TypeModelSimpleAbstract")
                     constructor_ {
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
                 }
-                dataType("TypeInstanceSimple") {
+                data("TypeInstanceSimple") {
                     supertype("TypeInstanceAbstract")
                     constructor_ {
                         parameter("contextQualifiedTypeName", "QualifiedName", false)
@@ -412,69 +425,69 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("typeArguments", "List", false)
                         parameter("isNullable", "Boolean", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "contextQualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isNullable", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedOrImportedTypeName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "contextQualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedOrImportedTypeName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
                     }
                 }
-                dataType("TypeInstanceAbstract") {
+                data("TypeInstanceAbstract") {
                     supertype("TypeInstance")
                     constructor_ {}
                 }
-                dataType("TypeDeclarationSimpleAbstract") {
+                data("TypeDeclarationSimpleAbstract") {
                     supertype("TypeDeclaration")
                     constructor_ {}
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "metaInfo", "Map", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "metaInfo", "Map", false) {
                         typeArgument("String")
                         typeArgument("String")
                     }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "method", "List", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "method", "List", false) {
                         typeArgument("MethodDeclaration")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "propertyByIndex", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "propertyByIndex", "Map", false) {
                         typeArgument("Integer")
                         typeArgument("PropertyDeclaration")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "supertypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "supertypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "typeParameters", "List", false) {
                         typeArgument("TypeParameter")
                     }
                 }
-                dataType("TypeArgumentSimple") {
+                data("TypeArgumentSimple") {
                     supertype("TypeArgument")
                     constructor_ {
                         parameter("type", "TypeInstance", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "type", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "type", "TypeInstance", false)
                 }
-                dataType("TypeArgumentNamedSimple") {
+                data("TypeArgumentNamedSimple") {
                     supertype("TypeArgumentNamed")
                     constructor_ {
                         parameter("name", "PropertyName", false)
                         parameter("type", "TypeInstance", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "type", "TypeInstance", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "type", "TypeInstance", false)
                 }
-                dataType("TupleTypeSimple") {
+                data("TupleTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("TupleType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeParameters", "List", false) {
                         typeArgument("TypeParameterMultiple")
                     }
                 }
-                dataType("TupleTypeInstanceSimple") {
+                data("TupleTypeInstanceSimple") {
                     supertype("TypeInstanceAbstract")
                     supertype("TupleTypeInstance")
                     constructor_ {
@@ -482,37 +495,37 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("typeArguments", "List", false)
                         parameter("isNullable", "Boolean", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isNullable", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "typeArguments", "List", false) {
                         typeArgument("TypeArgumentNamed")
                     }
                 }
-                dataType("StructuredTypeSimpleAbstract") {
+                data("StructuredTypeSimpleAbstract") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("StructuredType")
                     constructor_ {}
                 }
-                dataType("SpecialTypeSimple") {
+                data("SpecialTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
                 }
-                dataType("SingletonTypeSimple") {
+                data("SingletonTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("SingletonType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
                 }
-                dataType("PropertyDeclarationStored") {
+                data("PropertyDeclarationStored") {
                     supertype("PropertyDeclarationAbstract")
                     constructor_ {
                         parameter("owner", "StructuredType", false)
@@ -521,16 +534,16 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("characteristics", "Set", false)
                         parameter("index", "Integer", false)
                     }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "characteristics", "Set", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "characteristics", "Set", false) {
                         typeArgument("PropertyCharacteristic")
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "description", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "index", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "StructuredType", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "description", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "index", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "StructuredType", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                dataType("PropertyDeclarationResolvedSimple") {
+                data("PropertyDeclarationResolvedSimple") {
                     supertype("PropertyDeclarationAbstract")
                     supertype("PropertyDeclarationResolved")
                     constructor_ {
@@ -540,15 +553,15 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("characteristics", "Set", false)
                         parameter("description", "String", false)
                     }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "characteristics", "Set", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "characteristics", "Set", false) {
                         typeArgument("PropertyCharacteristic")
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "description", "String", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "description", "String", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                dataType("PropertyDeclarationPrimitive") {
+                data("PropertyDeclarationPrimitive") {
                     supertype("PropertyDeclarationAbstract")
                     constructor_ {
                         parameter("owner", "TypeDeclaration", false)
@@ -557,13 +570,13 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("description", "String", false)
                         parameter("index", "Integer", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "description", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "index", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "description", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "index", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                dataType("PropertyDeclarationDerived") {
+                data("PropertyDeclarationDerived") {
                     supertype("PropertyDeclarationAbstract")
                     constructor_ {
                         parameter("owner", "TypeDeclaration", false)
@@ -573,43 +586,43 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("expression", "String", false)
                         parameter("index", "Integer", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "description", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "expression", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "index", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "description", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "expression", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "index", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                dataType("PropertyDeclarationAbstract") {
+                data("PropertyDeclarationAbstract") {
                     supertype("PropertyDeclaration")
                     constructor_ {}
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "metaInfo", "Map", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "metaInfo", "Map", false) {
                         typeArgument("String")
                         typeArgument("String")
                     }
                 }
-                dataType("PrimitiveTypeSimple") {
+                data("PrimitiveTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("PrimitiveType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
                 }
-                dataType("ParameterDefinitionSimple") {
+                data("ParameterDefinitionSimple") {
                     supertype("ParameterDeclaration")
                     constructor_ {
                         parameter("name", "ParameterName", false)
                         parameter("typeInstance", "TypeInstance", false)
                         parameter("defaultValue", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "defaultValue", "String", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "ParameterName", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeInstance", "TypeInstance", false)
+                    propertyOf(setOf(VAL, REF, STORED), "defaultValue", "String", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "ParameterName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "typeInstance", "TypeInstance", false)
                 }
-                dataType("MethodDeclarationDerived") {
+                data("MethodDeclarationDerived") {
                     supertype("MethodDeclaration")
                     constructor_ {
                         parameter("owner", "TypeDeclaration", false)
@@ -618,28 +631,28 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("description", "String", false)
                         parameter("body", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "body", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "description", "String", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "MethodName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "parameters", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "body", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "description", "String", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "MethodName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                 }
-                dataType("InterfaceTypeSimple") {
+                data("InterfaceTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("InterfaceType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "subtypes", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, REF, STORED), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
                 }
-                dataType("EnumTypeSimple") {
+                data("EnumTypeSimple") {
                     supertype("TypeDeclarationSimpleAbstract")
                     supertype("EnumType")
                     constructor_ {
@@ -647,40 +660,40 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("name", "SimpleName", false)
                         parameter("literals", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "literals", "List", false) {
+                    propertyOf(setOf(VAR, REF, STORED), "literals", "List", false) {
                         typeArgument("String")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
                 }
-                dataType("DataTypeSimple") {
+                data("DataTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("DataType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "subtypes", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, REF, STORED), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
                 }
-                dataType("ConstructorDeclarationSimple") {
+                data("ConstructorDeclarationSimple") {
                     supertype("ConstructorDeclaration")
                     constructor_ {
                         parameter("owner", "TypeDeclaration", false)
                         parameter("parameters", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "parameters", "List", false) {
+                    propertyOf(setOf(VAL, REF, STORED), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "parameters", "List", false) {
                         typeArgument("ParameterDeclaration")
                     }
                 }
-                dataType("CollectionTypeSimple") {
+                data("CollectionTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("CollectionType")
                     constructor_ {
@@ -688,17 +701,17 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("name", "SimpleName", false)
                         parameter("typeParameters", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "typeParameters", "List", false) {
                         typeArgument("TypeParameter")
                     }
                 }
             }
             namespace("net.akehurst.language.grammarTypemodel.api", listOf("net.akehurst.language.typemodel.api", "std", "net.akehurst.language.grammar.api")) {
-                interfaceType("GrammarTypeNamespace") {
+                interface_("GrammarTypeNamespace") {
                     supertype("TypeNamespace")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "allRuleNameToType", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "allRuleNameToType", "Map", false) {
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
                     }
@@ -715,21 +728,21 @@ namespace net.akehurst.language.grammarTypemodel.api
                     "net.akehurst.language.typemodel.api"
                 )
             ) {
-                dataType("GrammarTypeNamespaceSimple") {
+                data("GrammarTypeNamespaceSimple") {
                     supertype("GrammarTypeNamespaceAbstract")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedName", "QualifiedName", false)
                 }
-                dataType("GrammarTypeNamespaceAbstract") {
+                data("GrammarTypeNamespaceAbstract") {
                     supertype("TypeNamespaceAbstract")
                     supertype("GrammarTypeNamespace")
                     constructor_ {
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "allRuleNameToType", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "allRuleNameToType", "Map", false) {
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
                     }

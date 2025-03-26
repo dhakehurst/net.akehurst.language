@@ -20,6 +20,8 @@ package net.akehurst.language.scope.asm
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
+import net.akehurst.language.sentence.api.InputLocation
+import kotlin.collections.component1
 
 class ScopeSimple<ItemInScopeType>(
     val parent: ScopeSimple<ItemInScopeType>?,
@@ -43,7 +45,7 @@ class ScopeSimple<ItemInScopeType>(
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemInScopeType>>()
 
     // referableName -> (typeName, item)
-    private val _items: MutableMap<String, MutableMap<QualifiedName, ItemInScopeType>> = mutableMapOf()
+    private val _items: MutableMap<String, MutableMap<QualifiedName, Pair<Any?, ItemInScopeType>>> = mutableMapOf()
 
     override val rootScope: ScopeSimple<ItemInScopeType> by lazy {
         var s = this
@@ -58,9 +60,14 @@ class ScopeSimple<ItemInScopeType>(
     /**
      * referableName -> typeName -> item
      */
-    override val items: Map<String, Map<QualifiedName, ItemInScopeType>> get() = _items
+    override val items: Map<String, Map<QualifiedName, Pair<Any?, ItemInScopeType>>> get() = _items
 
     override val isEmpty: Boolean get() = items.isEmpty() && childScopes.isEmpty()
+
+    override fun clear() {
+        _childScopes.clear()
+        _items.clear()
+    }
 
     override fun contains(referableName: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): Boolean =
         this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key) } ?: false
@@ -79,11 +86,11 @@ class ScopeSimple<ItemInScopeType>(
         return child
     }
 
-    override fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, itemInScope: ItemInScopeType, replaceIfAlreadyExists:Boolean): Boolean {
+    override fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, location:Any?, itemInScope: ItemInScopeType, replaceIfAlreadyExists:Boolean): Boolean {
         val map = this._items[referableName]
         return when (map) {
             null -> {
-                val m = mutableMapOf(qualifiedTypeName to itemInScope)
+                val m = mutableMapOf(qualifiedTypeName to Pair(location,itemInScope))
                 this._items[referableName] = m
                 true
             }
@@ -91,27 +98,41 @@ class ScopeSimple<ItemInScopeType>(
             else -> when {
                 replaceIfAlreadyExists.not() && map.containsKey(qualifiedTypeName) -> false
                 else -> {
-                    map[qualifiedTypeName] = itemInScope
+                    map[qualifiedTypeName] = Pair(location, itemInScope)
                     true
                 }
             }
         }
     }
 
+    override fun removeItemsWithLocation(location: Any) {
+        _items.forEach { (k,v) ->
+            val toGo = v.filter { it.value.first == location }
+            toGo.forEach { v.remove(it.key) }
+        }
+    }
+
+   override fun removeItemsIf(func:(item:ItemInScope<ItemInScopeType>) -> Boolean) {
+        _items.forEach { (referableName, map) ->
+            val toGo = map.filter { (typeName, p) -> func.invoke(ItemInScope(referableName, typeName, p.first, p.second)) }
+            toGo.forEach { map.remove(it.key) }
+        }
+    }
+
     override fun findItemsNamed(name: String): Set<ItemInScope<ItemInScopeType>> =
-        this.items[name]?.map { (typeName, item) -> ItemInScope(name, typeName, item) }?.toSet() ?: emptySet()
+        this.items[name]?.map { (typeName, p) -> ItemInScope(name, typeName, p.first, p.second) }?.toSet() ?: emptySet()
 
     override fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> =
         items.entries.flatMap { (referableName, map) ->
             map.entries.filter { (typeName, _) ->
                 conformsToFunc.invoke(typeName)
-            }.map { (typeName, item) -> ItemInScope(referableName, typeName, item) }
+            }.map { (typeName, p) -> ItemInScope(referableName, typeName, p.first, p.second) }
         }
 
     override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> =
         items[name]?.filter { (typeName, _) ->
             conformsToFunc.invoke(typeName)
-        }?.map { (typeName, item) -> ItemInScope(name, typeName, item) }
+        }?.map { (typeName, p) -> ItemInScope(name, typeName, p.first, p.second) }
             ?: this.parent?.findItemsNamedConformingTo(name, conformsToFunc)
             ?: emptyList()
 

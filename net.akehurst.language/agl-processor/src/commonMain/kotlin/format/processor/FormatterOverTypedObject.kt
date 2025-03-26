@@ -30,7 +30,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
-class FormatterOverTypedObject<SelfType>(
+class FormatterOverTypedObject<SelfType:Any>(
     override val formatModel: AglFormatModel,
     objectGraph: ObjectGraph<SelfType>,
     issues: IssueHolder

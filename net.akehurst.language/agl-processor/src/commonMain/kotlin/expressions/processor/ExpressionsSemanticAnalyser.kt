@@ -43,6 +43,7 @@ class ExpressionsSemanticAnalyser(
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: Expression,
         locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions< SentenceContext>

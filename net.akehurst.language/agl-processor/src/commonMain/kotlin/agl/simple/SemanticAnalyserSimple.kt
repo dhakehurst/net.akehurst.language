@@ -48,7 +48,7 @@ class SemanticAnalyserSimple(
                         null -> null
                         else -> {
                             val elType = interpreter.typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
-                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType,self)), exp).self
+                            val value = interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), exp).self
                             when {
                                 value is AsmPrimitive && value.isStdString -> value.value as String
                                 value is AsmList && value.elements.all { it is AsmPrimitive && it.isStdString } -> value.elements.map { (it as AsmPrimitive).value as String }
@@ -64,31 +64,31 @@ class SemanticAnalyserSimple(
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private lateinit var _locationMap: Map<Any, InputLocation>
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues),_issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues), _issues)
 
     override fun clear() {
         _issues.clear()
     }
 
     override fun analyse(
+        sentenceIdentity: Any?,
         asm: Asm,
         locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions<ContextAsmSimple>
     ): SemanticAnalysisResult {
         val context = options.context
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-
         when {
             null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis or provide a context.")
             else -> {
-                this.buildScope(options, asm, context)
-                checkAndResolveReferences(options, asm, _locationMap, context)
+                buildScope(options, sentenceIdentity, asm, context)
+                checkAndResolveReferences(options, sentenceIdentity, asm, _locationMap, context)
             }
         }
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
+    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextAsmSimple>, sentenceIdentity: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
@@ -99,33 +99,45 @@ class SemanticAnalyserSimple(
                     _issues.info(null, "Semantic Analysis option 'resolveReferences' is off, references checked but not resolved.")
                     false
                 }
-                this.walkReferences(asm, _locationMap, context, resolve)
+                this.walkReferences(sentenceIdentity, asm, _locationMap, context, resolve)
             }
         }
     }
 
-    private fun walkReferences(asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
+    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
             { ref -> context.resolveScopedItem.invoke(ref) }
         } else {
             null
         }
-        asm.traverseDepthFirst(
-            ReferenceResolverSimple(
-                typeModel, crossReferenceModel, context.rootScope,
-                this::identifyingValueInFor,
-                resFunc,
-                locationMap, _issues
+        val sentenceScope = context.getScopeForSentenceOrNull(sentenceId)
+        if(null!=sentenceScope) {
+            asm.traverseDepthFirst(
+                ReferenceResolverSimple(
+                    typeModel,
+                    crossReferenceModel,
+                    context,
+                    sentenceId,
+                    this::identifyingValueInFor,
+                    resFunc,
+                    locationMap, _issues
+                )
             )
-        )
+        } else {
+            _issues.info(null, "Scope for sentence with Identity '${sentenceId}' not found, so cannot resolve references.")
+            false
+        }
     }
 
-    private fun buildScope(options: SemanticAnalysisOptions<ContextAsmSimple>, asm: Asm, context: ContextAsmSimple) {
+    private fun buildScope(options: SemanticAnalysisOptions<ContextAsmSimple>, sentenceIdentity: Any?, asm: Asm, context: ContextAsmSimple) {
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
                 val scopeCreator = ScopeCreator(
-                    typeModel, crossReferenceModel as CrossReferenceModelDefault, context.rootScope,
+                    typeModel,
+                    crossReferenceModel as CrossReferenceModelDefault,
+                    context,
+                    sentenceIdentity,
                     options.replaceIfItemAlreadyExistsInScope,
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     this::identifyingValueInFor,

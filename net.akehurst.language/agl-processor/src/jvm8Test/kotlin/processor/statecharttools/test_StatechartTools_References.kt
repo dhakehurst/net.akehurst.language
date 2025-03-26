@@ -57,16 +57,16 @@ class test_StatechartTools_References {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
+                        SyntaxAnalyserSimple(p.typesModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
+                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
@@ -157,8 +157,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'B'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
+            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            item("'B'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -180,7 +180,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
+            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -208,10 +208,10 @@ class test_StatechartTools_References {
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/0/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
-            item("'E'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
+            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/0/states/0")
+            item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
+            item("'E'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -239,9 +239,9 @@ class test_StatechartTools_References {
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
+            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
+            item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -264,12 +264,12 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("'S1'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'S2'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
+            item("'S1'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            item("'S2'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
+            typeModel = processors[grammar]!!.typesModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextAsmSimple()
         ) {
@@ -317,7 +317,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
+            scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
             }
         }
 
@@ -334,8 +334,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
-                item("v", "com.itemis.create.Global.VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
+            scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
+                item("v", "com.itemis.create.Global.VariableDeclaration", null, "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
             }
         }
 
@@ -354,9 +354,9 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("\"x\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
-            item("\"y\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
-            item("\"z\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
+            item("\"x\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/0")
+            item("\"y\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/1")
+            item("\"z\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/2")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -372,7 +372,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("O", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
+            scopedItem("O", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
         }
 
         test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
@@ -437,11 +437,11 @@ StatechartSpecification {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            scopedItem("func", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
+            scopedItem("func", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
+            typeModel = processors[grammar]!!.typesModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextAsmSimple()
         ) {
@@ -503,15 +503,15 @@ StatechartSpecification {
         """.trimIndent()
 
         // add to type-model for things externally added to context
-        val ns = processors[grammar]!!.typeModel.findOrCreateNamespace(QualifiedName("external"), emptyList())
+        val ns = processors[grammar]!!.typesModel.findOrCreateNamespace(QualifiedName("external"), emptyList())
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("BuiltInType"))
 
         val expectedContext = contextAsmSimple {
-            item("integer", "external.BuiltInType", "")
+            item("integer", "external.BuiltInType", null, "")
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
+            typeModel = processors[grammar]!!.typesModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = expectedContext
         ) {
@@ -542,7 +542,7 @@ StatechartSpecification {
         }
 
         val context = contextAsmSimple {
-            item("integer", bit.qualifiedName.value, "")
+            item("integer", bit.qualifiedName.value, null, "")
         }
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }

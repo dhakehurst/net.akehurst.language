@@ -124,115 +124,115 @@ interface AglStyleRule {
     val typeModel by lazy {
         typeModel("Style", true, AglBase.typeModel.namespace) {
             namespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
-                enumType("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
-                interfaceType("StyleSetReference") {
+                enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
+                interface_("StyleSetReference") {
 
                 }
-                interfaceType("StyleSet") {
+                interface_("StyleSet") {
                     supertype("Definition") { ref("StyleSet") }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "extends", "List", false) {
                         typeArgument("StyleSetReference")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rules", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "rules", "List", false) {
                         typeArgument("AglStyleRule")
                     }
                 }
-                interfaceType("StyleNamespace") {
+                interface_("StyleNamespace") {
                     supertype("Namespace") { ref("StyleSet") }
                 }
-                interfaceType("AglStyleRule") {
+                interface_("AglStyleRule") {
                     supertype("Formatable")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "declaration", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "declaration", "Map", false) {
                         typeArgument("String")
                         typeArgument("AglStyleDeclaration")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "selector", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "selector", "List", false) {
                         typeArgument("AglStyleSelector")
                     }
                 }
-                interfaceType("AglStyleModel") {
+                interface_("AglStyleModel") {
                     supertype("Model") { ref("StyleNamespace"); ref("StyleSet") }
                 }
-                dataType("AglStyleSelector") {
+                data("AglStyleSelector") {
 
                     constructor_ {
                         parameter("value", "String", false)
                         parameter("kind", "AglStyleSelectorKind", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "kind", "AglStyleSelectorKind", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "kind", "AglStyleSelectorKind", false)
+                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
                 }
-                dataType("AglStyleDeclaration") {
+                data("AglStyleDeclaration") {
 
                     constructor_ {
                         parameter("name", "String", false)
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "name", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "name", "String", false)
+                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
                 }
             }
             namespace("net.akehurst.language.style.asm", listOf("net.akehurst.language.style.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
-                dataType("StyleSetReferenceDefault") {
+                data("StyleSetReferenceDefault") {
                     supertype("StyleSetReference")
                     constructor_ {
                         parameter("localNamespace", "StyleNamespace", false)
                         parameter("nameOrQName", "PossiblyQualifiedName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "localNamespace", "StyleNamespace", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "nameOrQName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "resolved", "StyleSet", false)
+                    propertyOf(setOf(VAL, REF, STORED), "localNamespace", "StyleNamespace", false)
+                    propertyOf(setOf(VAL, REF, STORED), "nameOrQName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, REF, STORED), "resolved", "StyleSet", false)
                 }
-                dataType("StyleNamespaceDefault") {
+                data("StyleNamespaceDefault") {
                     supertype("StyleNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "import", "List", false) {
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedName", "QualifiedName", false)
                 }
-                dataType("AglStyleSetDefault") {
+                data("AglStyleSetDefault") {
                     supertype("StyleSet")
                     constructor_ {
                         parameter("namespace", "StyleNamespace", false)
                         parameter("name", "SimpleName", false)
                         parameter("extends", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "extends", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "extends", "List", false) {
                         typeArgument("StyleSetReference")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "StyleNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rules", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STORED), "namespace", "StyleNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "rules", "List", false) {
                         typeArgument("AglStyleRule")
                     }
                 }
-                dataType("AglStyleRuleDefault") {
+                data("AglStyleRuleDefault") {
                     supertype("AglStyleRule")
                     constructor_ {
                         parameter("selector", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "declaration", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "declaration", "Map", false) {
                         typeArgument("String")
                         typeArgument("AglStyleDeclaration")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "selector", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STORED), "selector", "List", false) {
                         typeArgument("AglStyleSelector")
                     }
                 }
-                dataType("AglStyleModelDefault") {
+                data("AglStyleModelDefault") {
                     supertype("AglStyleModel")
                     supertype("ModelAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
                         parameter("namespace", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
+                    propertyOf(setOf(VAR, CMP, STORED), "namespace", "List", false) {
                         typeArgument("StyleNamespace")
                     }
                 }

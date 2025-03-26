@@ -78,14 +78,14 @@ class test_SemanticAnalyserSimple_datatypes {
             grammarDefinitionStr = grammarStr,
             referenceStr = crossReferenceModelStr
         ).processor!!
-        val typeModel = processor.typeModel
+        val typeModel = processor.typesModel
         val crossReferenceModel = processor.crossReferenceModel
 
     }
 
     @Test
     fun check_scopeModel() {
-        val context = ContextFromTypeModel(processor.typeModel)
+        val context = ContextFromTypeModel(processor.typesModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
@@ -247,7 +247,7 @@ class test_SemanticAnalyserSimple_datatypes {
     }
 
     @Test
-    fun reprocess_with_same_context__pass() {
+    fun reprocess_with_same_context_same_def_same_sentence__pass() {
         val sentence = "primitive String"
         val context = ContextAsmSimple(
             createScopedItem = {ref, item, loc -> Pair(item, loc?.sentenceIdentity) }
@@ -262,9 +262,9 @@ class test_SemanticAnalyserSimple_datatypes {
         assertTrue(result1.issues.isEmpty(), result1.issues.toString())
         assertNotNull(result1.asm)
 
-        // process again, should not have semantic error because same definition is found
+        // process again, should not have semantic error because same definition is found, but in same location
         val result2 = processor.process(sentence = sentence, Agl.options {
-            parse { sentenceIdentity { 2 } }
+            parse { sentenceIdentity { 1 } }
             semanticAnalysis { context(context) }
         })
         assertTrue(result2.issues.isEmpty(), result2.issues.toString())
@@ -273,7 +273,7 @@ class test_SemanticAnalyserSimple_datatypes {
     }
 
     @Test
-    fun reprocess_with_same_context__fail() {
+    fun reprocess_with_same_context_same_def_diff_sentence__fail() {
         val sentence = "primitive String"
         val context = ContextAsmSimple()
 
@@ -288,14 +288,14 @@ class test_SemanticAnalyserSimple_datatypes {
         assertTrue(result1.issues.isEmpty(), result1.issues.toString())
         assertNotNull(result1.asm)
 
-        // process again, should not have semantic error because same definition is found
+        // process again, should have semantic error because same definition is found in different location
         val result2 = processor.process(sentence = sentence, Agl.options {
-            parse { sentenceIdentity { 1 } }
+            parse { sentenceIdentity { 2 } }
             semanticAnalysis { context(context) }
         })
 
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 1),"'String' with type 'test.Test.Primitive' already exists in scope //"),
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 2),"'String' with type 'test.Test.Primitive' already exists in scope //"),
         )
 
         assertEquals(expected, result2.issues.all)

@@ -81,7 +81,7 @@ class test_SyntaxAnalyserSimple {
         }
 
         fun checkTypeModel(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: TypeModel) {
-            GrammarTypeModelTest.tmAssertEquals(expected, proc.typeModel)
+            GrammarTypeModelTest.tmAssertEquals(expected, proc.typesModel)
         }
     }
 

@@ -76,7 +76,7 @@ class test_StatechartTools_CodeCompletion {
                         }*/
             val cfg = Agl.configuration(Agl.configurationSimple()) {
                 targetGrammarName(grmName)
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), CrossReferenceString( crossReferenceModelStr)) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), CrossReferenceString( crossReferenceModelStr)) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }
@@ -155,7 +155,7 @@ class test_StatechartTools_CodeCompletion {
               var x:
         """.trimIndent()
         val context = contextAsmSimple {
-            item("int", "external.BultInType", "int")
+            item("int", "external.BultInType", null, "int")
         }
         val actual = processors[(grammar)].expectedItemsAt(sentence, sentence.length,  Agl.options {
             parse {

@@ -3,7 +3,7 @@ plugins {
 }
 
 // do not publish
-tasks.withType<PublishToMavenLocal> { onlyIf { false } }
+tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
 
 dependencies {
 

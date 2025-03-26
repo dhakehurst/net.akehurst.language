@@ -81,7 +81,7 @@ class test_AglGrammarSemanticAnalyser {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
             val context = ContextFromGrammarRegistry(Agl.registry)
             options.semanticAnalysis.context = context
-            return semanticAnalyser.analyse(asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
+            return semanticAnalyser.analyse(null,asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
         }
 
         fun test(

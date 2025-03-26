@@ -146,7 +146,7 @@ class test_AglFormat {
 
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.format.processor!!.typeModel
+        val actual = Agl.registry.agl.format.processor!!.typesModel
         val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;

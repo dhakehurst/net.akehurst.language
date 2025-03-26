@@ -143,7 +143,7 @@ class test_transformLanguage {
 
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.transform.processor!!.typeModel
+        val actual = Agl.registry.agl.transform.processor!!.typesModel
         val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;

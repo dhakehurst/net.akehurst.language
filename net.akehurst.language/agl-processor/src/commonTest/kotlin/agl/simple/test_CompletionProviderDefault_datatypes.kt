@@ -82,9 +82,9 @@ class test_CompletionProviderDefault_datatypes {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespaceAndResolveImports(it.namespace)
+                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typeModel
+            proc.typesModel
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
@@ -354,7 +354,7 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A { prop :", "external item in scope") {
                     context(contextAsmSimple {
-                        item("ExternalType","test.Test.Primitive","itemInScope?")
+                        item("ExternalType", "test.Test.Primitive", null, "itemInScope?")
                     })
                     expectedCompletionItems(listOf(
                         CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),

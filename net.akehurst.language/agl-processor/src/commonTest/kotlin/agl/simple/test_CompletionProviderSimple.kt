@@ -48,9 +48,9 @@ class test_CompletionProviderSimple {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespaceAndResolveImports(it.namespace)
+                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typeModel
+            proc.typesModel
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
@@ -226,12 +226,12 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
         val additionalTypeModel = typeModel("External", true) {
             namespace(externalNsName) {
-                dataType("TypeDef")
+                data("TypeDef")
             }
         }
 
         val context = ContextAsmSimple()
-        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), "int", false)
+        context.newScopeForSentence(null).addToScope("int", QualifiedName("$externalNsName.TypeDef"), null, "int", false)
 
 
         val expected = listOf(

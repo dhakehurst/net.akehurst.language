@@ -32,11 +32,11 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 
     companion object {
         private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typeModel
+        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
         private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
         private val aglStyleQualifiedName get() = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
-        private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typeModel
+        private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typesModel
         private val aglStyleNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")
 
         private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName

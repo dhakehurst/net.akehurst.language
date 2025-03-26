@@ -70,7 +70,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    override val typesModel: TypeModel? get() = this.processor?.typeModel
+    override val typesModel: TypeModel? get() = this.processor?.typesModel
     override val transformModel: TransformModel? get() = this.processor?.asmTransformModel
     override val crossReferenceModel: CrossReferenceModel? get() = this.processor?.crossReferenceModel
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = this.processor?.syntaxAnalyser

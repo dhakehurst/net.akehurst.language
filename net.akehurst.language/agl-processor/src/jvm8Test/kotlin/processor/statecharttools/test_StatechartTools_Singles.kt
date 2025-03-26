@@ -84,16 +84,16 @@ class test_StatechartTools_Singles {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
+                        SyntaxAnalyserSimple(p.typesModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), formatterStr) }
 //TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(

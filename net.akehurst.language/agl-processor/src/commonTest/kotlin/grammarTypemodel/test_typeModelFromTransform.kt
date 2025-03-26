@@ -40,7 +40,7 @@ class test_typemodelFromTransform {
                 referenceStr = null
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
-            val actualTm = res.processor!!.typeModel
+            val actualTm = res.processor!!.typesModel
             assertTrue(res.processor!!.issues.isEmpty(), res.processor!!.issues.toString())
             assertEquals(expected.asString(), actualTm.asString())
         }
@@ -92,7 +92,7 @@ class test_typemodelFromTransform {
 
         val typesModel = typeModel("", true) {
             namespace("types") {
-                dataType("S2") {
+                data("S2") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
             }
@@ -132,7 +132,7 @@ class test_typemodelFromTransform {
 
         val typesModel = typeModel("", true) {
             namespace("types") {
-                dataType("S2") {
+                data("S2") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
             }

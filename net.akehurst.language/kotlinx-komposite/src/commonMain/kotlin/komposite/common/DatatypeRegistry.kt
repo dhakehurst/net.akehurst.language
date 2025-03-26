@@ -55,30 +55,30 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
 
         val KOTLIN_STD_MODEL = typeModel("kotlin-std",false, emptyList()) {
             namespace("kotlin", emptyList()) {
-                primitiveType("Boolean")
-                primitiveType("Byte")
-                primitiveType("Short")
-                primitiveType("Int")
-                primitiveType("Long")
-                primitiveType("Float")
-                primitiveType("Double")
-                primitiveType("String")
-                dataType("Any") {
+                primitive("Boolean")
+                primitive("Byte")
+                primitive("Short")
+                primitive("Int")
+                primitive("Long")
+                primitive("Float")
+                primitive("Double")
+                primitive("String")
+                data("Any") {
 
                 }
             }
             namespace("kotlin.collections", emptyList()) {
-                collectionType("Array", listOf("E"))
-                collectionType("Collection", listOf("E"))
-                collectionType("List", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
-                collectionType("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
-                collectionType("Map", listOf("K", "V"))
-                collectionType("EmptySet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
-                collectionType("EmptyList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
+                collection("Array", listOf("E"))
+                collection("Collection", listOf("E"))
+                collection("List", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
+                collection("Set", listOf("E")).also { it.addSupertype_dep("Collection".asPossiblyQualifiedName) }
+                collection("Map", listOf("K", "V"))
+                collection("EmptySet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collection("EmptyList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
                 //TODO: need a java -> kotlin name mapping really, this is class java.util.SingletonList
-                collectionType("SingletonList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
-                collectionType("HashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
-                collectionType("LinkedHashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collection("SingletonList", emptyList()).also { it.addSupertype_dep("List".asPossiblyQualifiedName) }
+                collection("HashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
+                collection("LinkedHashSet", emptyList()).also { it.addSupertype_dep("Set".asPossiblyQualifiedName) }
             }
         }
         //val TypeDeclaration.isKotlinArray get() = this.qualifiedName.value=="kotlin.collections.Array"

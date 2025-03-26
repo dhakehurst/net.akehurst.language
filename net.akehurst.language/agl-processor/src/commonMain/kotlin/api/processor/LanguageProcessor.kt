@@ -79,7 +79,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      * Model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      * After resolving the AsmTransform, which may modify the original baseTypeModel
      */
-    val typeModel: TypeModel
+    val typesModel: TypeModel
 
     /**
      * The transformation from parse-tree to ASM

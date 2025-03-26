@@ -106,7 +106,7 @@ class test_Processor {
 
             override fun clear() { }
 
-            override fun analyse(asm: Value, locationMap: Map<Any, InputLocation>?,  options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
+            override fun analyse(sentenceIdentity:Any?,asm: Value, locationMap: Map<Any, InputLocation>?,  options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
                 analyseValue(asm, options.context)
                 return SemanticAnalysisResultDefault(issues)
             }

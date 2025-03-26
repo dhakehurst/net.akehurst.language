@@ -24,7 +24,11 @@ import kotlin.test.assertEquals
 object TestContextSimple {
 
     fun assertMatches(expected: ContextAsmSimple, actual: ContextAsmSimple) {
-        assertMatches(expected.rootScope, actual.rootScope)
+        assertEquals(expected.scopeForSentence.size, actual.scopeForSentence.size)
+        assertEquals(expected.scopeForSentence.keys, actual.scopeForSentence.keys)
+        for (k in expected.scopeForSentence.keys) {
+            assertMatches(expected.scopeForSentence[k]!!, actual.scopeForSentence[k]!!)
+        }
     }
 
     fun assertMatches(expected: ScopeSimple<Any>, actual: ScopeSimple<Any>) {

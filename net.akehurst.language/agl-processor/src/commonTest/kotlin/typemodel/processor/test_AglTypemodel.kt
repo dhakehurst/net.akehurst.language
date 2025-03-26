@@ -22,7 +22,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_AglTypemodel_typemodel {
+class test_AglTypemodel {
+
+    @Test
+    fun grammarModel() {
+        val actual = AglTypemodel.grammarModel
+
+        assertNotNull(actual)
+        assertEquals(AglTypemodel.grammarString, actual.asString())
+    }
 
     @Test
     fun typemodel() {

@@ -77,25 +77,28 @@ class TypeNamespaceBuilder(
         imports.forEach { _namespace.addImport(Import(it)) }
     }
 
-    fun primitiveType(typeName: String): PrimitiveType =
+    fun singleton(typeName: String): SingletonType =
+        _namespace.findOwnedOrCreateSingletonTypeNamed(SimpleName(typeName))
+
+    fun primitive(typeName: String): PrimitiveType =
         _namespace.findOwnedOrCreatePrimitiveTypeNamed(SimpleName(typeName))
 
-    fun valueType(typeName: String, init: ValueTypeBuilder.() -> Unit = {}) {
+    fun value(typeName: String, init: ValueTypeBuilder.() -> Unit = {}) {
         val b = ValueTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         b.build()
     }
 
-    fun interfaceType(typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
+    fun interface_(typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
         val b = InterfaceTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         b.build()
     }
 
-    fun enumType(typeName: String, literals: List<String>): EnumType =
+    fun enum(typeName: String, literals: List<String>): EnumType =
         _namespace.findOwnedOrCreateEnumTypeNamed(SimpleName(typeName), literals)
 
-    fun collectionType(typeName: String, typeParams: List<String>): CollectionType =
+    fun collection(typeName: String, typeParams: List<String>): CollectionType =
         _namespace.findOwnedOrCreateCollectionTypeNamed(SimpleName(typeName)).also {
             (it.typeParameters as MutableList).addAll(typeParams.map { tp -> TypeParameterSimple(SimpleName(tp)) })
         }
@@ -122,14 +125,14 @@ class TypeNamespaceBuilder(
         }
     */
 
-    fun dataType(typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+    fun data(typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
         val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
         val et = b.build()
         return et
     }
 
-    fun unionType(typeName: String, init: SubtypeListBuilder.() -> Unit): UnionType {
+    fun union(typeName: String, init: SubtypeListBuilder.() -> Unit): UnionType {
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
@@ -137,8 +140,6 @@ class TypeNamespaceBuilder(
         stu.forEach { t.addAlternative(it) }
         return t
     }
-
-    fun singleton(typeName: String) = _namespace.findOwnedOrCreateSingletonTypeNamed(SimpleName(typeName))
 
     fun build(): TypeNamespace {
         return _namespace
@@ -155,11 +156,11 @@ abstract class StructuredTypeBuilder(
     val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
     val IDENTITY = PropertyCharacteristic.IDENTITY
 
-    val COMPOSITE = PropertyCharacteristic.COMPOSITE
-    val REFERENCE = PropertyCharacteristic.REFERENCE
+    val CMP = PropertyCharacteristic.COMPOSITE
+    val REF = PropertyCharacteristic.REFERENCE
 
-    val READ_ONLY = PropertyCharacteristic.READ_ONLY
-    val READ_WRITE = PropertyCharacteristic.READ_WRITE
+    val VAL = PropertyCharacteristic.READ_ONLY
+    val VAR = PropertyCharacteristic.READ_WRITE
 
     val STORED = PropertyCharacteristic.STORED
     val DERIVED = PropertyCharacteristic.DERIVED
@@ -437,6 +438,11 @@ class ConstructorBuilder(
     private val _type: TypeDefinition,
     private val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
+    val CMP = PropertyCharacteristic.COMPOSITE
+    val REF = PropertyCharacteristic.REFERENCE
+
+    val VAL = PropertyCharacteristic.READ_ONLY
+    val VAR = PropertyCharacteristic.READ_WRITE
 
     private val _paramList = mutableListOf<ParameterDeclaration>()
 

@@ -76,7 +76,7 @@ grammar Mdl {
 
     @Test
     fun mdlTypeModel() {
-        val actual = processor.typeModel
+        val actual = processor.typesModel
         val expected = typeModel("FromGrammarParsedGrammarUnit",true) {
             grammarTypeNamespace("test.Mdl") {
                 //file = section+ ;

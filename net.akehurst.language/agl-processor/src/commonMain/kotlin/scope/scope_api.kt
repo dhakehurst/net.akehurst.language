@@ -18,10 +18,12 @@
 package net.akehurst.language.scope.api
 
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.sentence.api.InputLocation
 
 data class ItemInScope<ItemInScopeType>(
     val referableName: String,
     val qualifiedTypeName: QualifiedName,
+    val location: Any?,
     val item: ItemInScopeType
 )
 
@@ -38,15 +40,15 @@ interface Scope<ItemInScopeType> {
     val forTypeName: QualifiedName
 
     val scopeIdentity: String
-    val scopePath:List<String>
+    val scopePath: List<String>
 
     /**
      * item.name -> item.type -> item
      */
-    val items: Map<String, Map<QualifiedName, ItemInScopeType>>
+    val items: Map<String, Map<QualifiedName, Pair<Any?, ItemInScopeType>>>
 
     //TODO: don't want this here..see implementation
-   // val scopeMap:Map<ItemType, Scope<ItemInScopeType>>
+    // val scopeMap:Map<ItemType, Scope<ItemInScopeType>>
 
 
     /**
@@ -57,6 +59,8 @@ interface Scope<ItemInScopeType> {
     val rootScope: Scope<ItemInScopeType>
 
     val isEmpty: Boolean
+
+    fun clear()
 
     fun contains(referableName: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): Boolean
 
@@ -88,7 +92,11 @@ interface Scope<ItemInScopeType> {
      * adds Pair(item, typeName) to this scope
      * return true if added, false if the pair is already in the scope
      */
-    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, item: ItemInScopeType, replaceIfAlreadyExists:Boolean): Boolean
+    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, location: Any?, item: ItemInScopeType, replaceIfAlreadyExists: Boolean): Boolean
+
+    fun removeItemsWithLocation(location: Any)
+
+    fun removeItemsIf(func:(item:ItemInScope<ItemInScopeType>) -> Boolean)
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

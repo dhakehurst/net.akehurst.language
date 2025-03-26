@@ -137,6 +137,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             //override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
 
             override fun analyse(
+                sentenceIdentity:Any?,
                 asm: String,
                 locationMap: Map<Any, InputLocation>?,
                 options: SemanticAnalysisOptions<ContextAsmSimple>
@@ -150,7 +151,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.crossReferenceModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesModel!!, p.crossReferenceModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         )

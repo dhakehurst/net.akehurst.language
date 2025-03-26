@@ -64,6 +64,7 @@ class AsmSimpleBuilder(
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
 ) {
+    private val _sentenceScope = _context?.getScopeForSentenceOrNull(null) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(_typeModel, _issues),_issues)
     private val _asm = AsmSimple()
@@ -78,7 +79,7 @@ class AsmSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, path, typeName, true, _context?.rootScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, path, typeName, true, _sentenceScope)
         b.init()
         return b.build()
     }
@@ -96,7 +97,7 @@ class AsmSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, path, _context?.rootScope,_identifyingValueInFor)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _defaultNamespace, _crossReferenceModel, _context, _scopeMap, this._asm, path, _sentenceScope,_identifyingValueInFor)
         b.init()
         val list = b.build()
         _asm.addRoot(list)
@@ -104,10 +105,13 @@ class AsmSimpleBuilder(
     }
 
     fun build(): AsmSimple {
-        if (resolveReferences && null != _context) {
+        if (resolveReferences && null != _context && null!=_sentenceScope) {
             // Build Scope
             val scopeCreator = ScopeCreator(
-                _typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope,
+                _typeModel,
+                _crossReferenceModel as CrossReferenceModelDefault,
+                _context,
+                null, //TODO: sentenceId
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
                 _context.createScopedItem,
@@ -118,7 +122,10 @@ class AsmSimpleBuilder(
             // resolve refs
             _asm.traverseDepthFirst(
                 ReferenceResolverSimple(
-                    _typeModel, _crossReferenceModel, _context.rootScope,
+                    _typeModel,
+                    _crossReferenceModel,
+                    _context,
+                    null, //TODO: sentenceId
                     _identifyingValueInFor,
                     _context.resolveScopedItem,
                     emptyMap(), _issues

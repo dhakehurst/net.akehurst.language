@@ -34,15 +34,15 @@ interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph<AsmValueTy
 
     fun constructAsm(): AsmType
     fun rootList(asm: AsmType): List<AsmValueType>
-    fun addRoot(asm: AsmType, root: AsmValueType)
-    fun removeRoot(asm: AsmType, root: AsmValueType)
+    fun addRoot(asm: AsmType, root: AsmValueType): Boolean
+    fun removeRoot(asm: AsmType, root: AsmValueType): Boolean
 
     //fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
     //fun nothingValue(): AsmValueType
     //fun anyValue(value: Any): AsmValueType
     //fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
     //fun listOfValues(elements: List<AsmValueType>): AsmValueType
-   // fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
+    // fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
 
     //fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
     //fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
@@ -89,7 +89,7 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
      * reset the sppt2ast, clearing any cached values
      */
     // SyntaxAnalyser<*> not exportable - * projections not exportable? TODO: check this
-    fun <T:Any> clear(done:Set<SyntaxAnalyser<T>> = emptySet())
+    fun <T : Any> clear(done: Set<SyntaxAnalyser<T>> = emptySet())
 
     /**
      * configure the SyntaxAnalyser

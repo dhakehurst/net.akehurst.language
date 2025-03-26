@@ -30,7 +30,7 @@ class ContextFromGrammar(
 ) : SentenceContext {
     companion object {
         fun createContextFrom(grammars: GrammarModel): ContextFromGrammar {
-            val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
+            val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typesModel
             val namespace: GrammarTypeNamespace =
                 aglGrammarTypeModel.findNamespaceOrNull(Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName) as GrammarTypeNamespace? ?: error("should not happen")
             val context = ContextFromGrammar()
@@ -38,14 +38,14 @@ class ContextFromGrammar(
             grammars.allDefinitions.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
                     val rType = namespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
-                    scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, it.name.value, false)
+                    scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value,  false)
                 }
                 g.allResolvedTerminal.forEach {
                     val rTypeName = when {
                         it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
                         else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
                     }
-                    scope.addToScope(it.id, QualifiedName(rTypeName), it.value, false)
+                    scope.addToScope(it.id, QualifiedName(rTypeName), null, it.value, false)
                 }
             }
             context.rootScope = scope

@@ -47,6 +47,7 @@ import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.transform.asm.TransformationRuleDefault
 import net.akehurst.language.transform.asm.transformationRule
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.ParameterDefinitionSimple
 import net.akehurst.language.typemodel.asm.PropertyDeclarationStored
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.util.cached
@@ -56,6 +57,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     companion object {
         const val OPTION_CREATE_TYPES = "create-missing-types"
         const val OPTION_OVERRIDE_DEFAULT = "override-default-transform"
+
+        private val OptionHolder.createTypes get() = this[OPTION_CREATE_TYPES] == "true"
+        private val OptionHolder.overrideDefault get() = this[OPTION_OVERRIDE_DEFAULT] == "true"
+
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
@@ -80,6 +85,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: TransformModel,
         locationMap: Map<Any, InputLocation>?,
         options: SemanticAnalysisOptions<ContextFromGrammarAndTypeModel>
@@ -122,9 +128,6 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         return SemanticAnalysisResultDefault(_issues)
     }
 
-    private val OptionHolder.createTypes get() = this[OPTION_CREATE_TYPES] == "true"
-    private val OptionHolder.overrideDefault get() = this[OPTION_OVERRIDE_DEFAULT] == "true"
-
     /**
      * converts nonTerm: TypeRef  =>  nonTerm: TypeRef() { ... <prop assignments from default> ...  }
      */
@@ -144,7 +147,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                     val defExpr = defRule.expression
                     val newExpr = when (defExpr) {
                         is CreateObjectExpression -> {
-                            CreateObjectExpressionDefault(pqn, defExpr.arguments).also { it.propertyAssignments = defExpr.propertyAssignments }
+                            CreateObjectExpressionDefault(pqn, defExpr.constructorArguments).also { it.propertyAssignments = defExpr.propertyAssignments }
                         }
 
                         else -> error("Unsupported ${defExpr::class.simpleName}")
@@ -288,6 +291,17 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                             val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
                             val exprTypeResolver = ExpressionTypeResolver(_typeModel, gtns, _issues)
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
+
+                            val params = expr.constructorArguments.map { ass ->
+                                val pName = net.akehurst.language.typemodel.api.ParameterName(ass.lhsPropertyName)
+                                var pType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
+                                if (pType == StdLibDefault.NothingType) {
+                                    pType = StdLibDefault.AnyType
+                                }
+                                ParameterDefinitionSimple(pName,pType, null)
+                            }
+                            t.addConstructor(params)
+
                             expr.propertyAssignments.forEach { ass ->
                                 val propName = PropertyName(ass.lhsPropertyName)
                                 var propType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)

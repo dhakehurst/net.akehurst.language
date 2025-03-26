@@ -7,3 +7,8 @@ kotlin {
         }
     }
 }
+
+
+tasks.withType<AbstractPublishToMaven> {
+    onlyIf { false }
+}

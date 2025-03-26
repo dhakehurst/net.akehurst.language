@@ -37,7 +37,7 @@ class test_SemanticAnalyser {
         override fun clear() {
         }
 
-        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?,options: SemanticAnalysisOptions< Any>): SemanticAnalysisResult {
+        override fun analyse(sentenceIdentity:Any?,asm: Any, locationMap: Map<Any, InputLocation>?,options: SemanticAnalysisOptions< Any>): SemanticAnalysisResult {
             val ih = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
             when (asm) {
                 "error" -> ih.error(null, "error")
@@ -52,7 +52,7 @@ class test_SemanticAnalyser {
     fun warning() {
         val asm = "warning"
         val sut = TestSemanticAnalyser()
-        val sares = sut.analyse(asm, options = SemanticAnalysisOptionsDefault())
+        val sares = sut.analyse(null,asm, options = SemanticAnalysisOptionsDefault())
         assertFalse(sares.issues.isEmpty())
         val expected = listOf(
             LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS,null,"warning")
@@ -64,7 +64,7 @@ class test_SemanticAnalyser {
     fun error() {
         val asm = "error"
         val sut = TestSemanticAnalyser()
-        val sares = sut.analyse(asm, options = SemanticAnalysisOptionsDefault())
+        val sares = sut.analyse(null,asm, options = SemanticAnalysisOptionsDefault())
         assertFalse(sares.issues.isEmpty())
         val expected = listOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,null,"error")

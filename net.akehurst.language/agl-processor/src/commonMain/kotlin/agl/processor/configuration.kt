@@ -37,9 +37,7 @@ import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.builder.typeModel
 
 
 internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : Any>(
@@ -110,12 +108,12 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceResolver: CrossReferenceResolver<AsmType, ContextType>? = { p ->
-        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatResolver: FormatResolver<AsmType, ContextType>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.formatString ?: FormatString(""))
+        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
@@ -163,29 +161,29 @@ internal class LanguageProcessorConfigurationSimple(
         } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceResolver: CrossReferenceResolver<Asm, ContextAsmSimple>? = { p ->
-        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetAsmTransformRuleSet.qualifiedName), //FIXME
+            SyntaxAnalyserSimple(p.typesModel, p.asmTransformModel, p.targetAsmTransformRuleSet.qualifiedName), //FIXME
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
     override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel),
+            SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
     override var formatResolver: FormatResolver<Asm, ContextAsmSimple>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.formatString ?: FormatString(""))
+        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->
         AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<Asm, ContextAsmSimple>? = { p ->
         ProcessResultDefault(
-            CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typeModel, p.crossReferenceModel),
+            CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesModel, p.crossReferenceModel),
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     }

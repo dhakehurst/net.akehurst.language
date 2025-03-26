@@ -121,9 +121,12 @@ object TypeModelTest {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is SpecialTypeSimple && actual is SpecialTypeSimple -> tmAssertEquals(expected, actual)
+            expected is SingletonType && actual is SingletonType -> tmAssertEquals(expected, actual)
             expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)
             expected is EnumType && actual is EnumType -> tmAssertEquals(expected, actual)
+            expected is ValueType && actual is ValueType -> tmAssertEquals(expected, actual)
             expected is UnionType && actual is UnionType -> tmAssertEquals(expected, actual)
+            expected is InterfaceType && actual is InterfaceType -> tmAssertEquals(expected, actual)
             expected is DataType && actual is DataType -> tmAssertEquals(expected, actual)
             expected is CollectionType && actual is CollectionType -> tmAssertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
@@ -140,9 +143,17 @@ object TypeModelTest {
         assertEquals(expected.name, actual.name)
     }
 
+    private fun tmAssertEquals(expected: SingletonType, actual: SingletonType) {
+        assertEquals(expected.name, actual.name)
+    }
+
     private fun tmAssertEquals(expected: EnumType, actual: EnumType) {
         assertEquals(expected.name, actual.name)
-        TODO("literals")
+        assertEquals(expected.literals, actual.literals)
+    }
+
+    private fun tmAssertEquals(expected: ValueType, actual: ValueType) {
+        assertEquals(expected.name, actual.name)
     }
 
     private fun tmAssertEquals(expected: UnionType, actual: UnionType) {
@@ -154,13 +165,37 @@ object TypeModelTest {
         }
     }
 
+    private fun tmAssertEquals(expected: InterfaceType, actual: InterfaceType) {
+        assertEquals(expected.name, actual.name)
+        //TODO: typeArgs
+        assertEquals(expected.supertypes.size, actual.supertypes.size, "Wrong number of supertypes for '${expected.name}'")
+        assertEquals(expected.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet(), actual.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet())
+        assertEquals(expected.subtypes.size, actual.subtypes.size, "Wrong number of subtypes for '${expected.name}'")
+        assertEquals(expected.subtypes.map { it.qualifiedTypeName }.toSet(), actual.subtypes.map { it.qualifiedTypeName }.toSet())
+
+        assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
+        for (i in expected.property.indices) {
+            val expEl = expected.property[i]
+            val actEl = actual.property[i]
+            assertNotNull(
+                actEl,
+                "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name.value }}]"
+            )
+            tmAssertEquals(expEl, actEl)
+        }
+
+        //TODO: methods
+    }
+
     private fun tmAssertEquals(expected: DataType, actual: DataType) {
         assertEquals(expected.name, actual.name)
         assertEquals(expected.supertypes.size, actual.supertypes.size, "Wrong number of supertypes for '${expected.name}'")
         assertEquals(expected.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet(), actual.supertypes.map { it.resolvedDeclaration.qualifiedName }.toSet())
-
         assertEquals(expected.subtypes.size, actual.subtypes.size, "Wrong number of subtypes for '${expected.name}'")
         assertEquals(expected.subtypes.map { it.qualifiedTypeName }.toSet(), actual.subtypes.map { it.qualifiedTypeName }.toSet())
+
+        assertEquals(expected.constructors.size, actual.constructors.size, "Wrong number of constructors for '${expected.name}'")
+
 
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (i in expected.property.indices) {
