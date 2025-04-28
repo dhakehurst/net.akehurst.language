@@ -23,20 +23,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class test_optional__with_keyword_covered_by_preceeding_list : test_LeftCornerParserAbstract() {
+class test_optional__with_var_covered_by_preceeding_list : test_LeftCornerParserAbstract() {
 
-    // S = 'b' vList kwOpt ;
+    // S = 'b' vList optV ;
     // vList = v*;
-    // v = [a-z] ;
-    // kwlOpt = kwl?;
-    // kwl = 'k' vList ;
+    // optV = v?;
+    // v = [a-z]
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("b"); ref("vList"); ref("kwlOpt") }
+            concatenation("S") { literal("b"); ref("vList"); ref("kvlOpt") }
+            optional("kvlOpt", "kvl")
+            concatenation("kvl") { literal("k"); ref("vList")  }
             multi("vList",0,-1,"v")
             pattern("v","[a-z]")
-            optional("kwlOpt", "kwl")
-            concatenation("kwl") { literal("k"); ref("vList")  }
         }
         val goal = "S"
     }
@@ -57,7 +56,7 @@ class test_optional__with_keyword_covered_by_preceeding_list : test_LeftCornerPa
         val sentence = "b"
 
         val expected = """
-            S { 'b' vList {<EMPTY_LIST>} kwlOpt{<EMPTY>} }
+            S { 'b' vList {<EMPTY_LIST>} kvlOpt{<EMPTY>} }
         """.trimIndent()
 
         super.test_pass(rrs, goal, sentence, 1, expected)
@@ -68,7 +67,7 @@ class test_optional__with_keyword_covered_by_preceeding_list : test_LeftCornerPa
         val sentence = "ba"
 
         val expected = """
-            S { 'b' vList {v:'a'} kwlOpt{<EMPTY>} }
+            S { 'b' vList {v:'a'} kvlOpt{<EMPTY>} }
         """.trimIndent()
 
         super.test_pass(rrs, goal, sentence, 1, expected)
@@ -79,21 +78,10 @@ class test_optional__with_keyword_covered_by_preceeding_list : test_LeftCornerPa
         val sentence = "baa"
 
         val expected = """
-            S { 'b' vList {v:'a' v:'a'} kwlOpt{<EMPTY>} }
+            S { 'b' vList {v:'a' v:'a'} kvlOpt{<EMPTY>} }
         """.trimIndent()
 
         super.test_pass(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun bk() {
-        val sentence = "bk"
-
-        val expected = """
-            S { 'b' vList {<EMPTY_LIST>} kwlOpt{ 'k' vList {<EMPTY_LIST>} }
-        """.trimIndent()
-
-        super.test_pass(rrs, goal, sentence, 2, expected)
     }
 
     @Test

@@ -81,7 +81,8 @@ interface ObjectGraph<SelfType:Any> {
 
     fun valueOf(value: TypedObject<SelfType>): Any
 
-    fun getIndex(tobj: TypedObject<SelfType>, index: Any): TypedObject<SelfType>
+    // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
+    fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists
@@ -212,8 +213,8 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
                             idx.type.conformsTo(StdLibDefault.Integer) -> {
                                 val listElementType = obj.type.typeArguments.getOrNull(0)?.type
                                     ?: StdLibDefault.AnyType
-                                val i = objectGraph.valueOf(idx) as Int
-                                val elem = objectGraph.getIndex(obj, i)
+                                val i = objectGraph.valueOf(idx) as Long
+                                val elem = objectGraph.getIndex(obj, i.toInt())
                                 when {
                                     objectGraph.nothing() == elem -> objectGraph.nothing()
                                     else -> {

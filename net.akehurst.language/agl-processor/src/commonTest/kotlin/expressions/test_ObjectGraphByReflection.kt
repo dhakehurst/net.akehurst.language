@@ -72,10 +72,10 @@ class test_ObjectGraphByReflection {
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
 
         val actual = og.createTupleValue(listOf())
-        og.setProperty(actual, "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1))
+        og.setProperty(actual, "a", og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1L))
         og.setProperty(actual, "b", og.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, true))
         val expected = mapOf(
-            "a" to 1,
+            "a" to 1L,
             "b" to true
         )
         assertEquals(expected, actual.self)
@@ -86,21 +86,21 @@ class test_ObjectGraphByReflection {
         val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
         val list = TypedObjectAny(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), listOf("Adam","Betty","Charles"))
 
-        val actual1 = og.getIndex(list, og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 0))
+        val actual1 = og.getIndex(list, 0)
         assertEquals("Adam", actual1.self)
 
-        val actual2 = og.getIndex(list, og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 1))
+        val actual2 = og.getIndex(list, 1)
         assertEquals("Betty", actual2.self)
 
-        val actual3 = og.getIndex(list, og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 2))
+        val actual3 = og.getIndex(list, 2)
         assertEquals("Charles", actual3.self)
 
-        val actual4 = og.getIndex(list, og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, -1))
+        val actual4 = og.getIndex(list, -1)
         assertEquals(Unit, actual4.self)
         assertEquals(1, og.issues.size)
         assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '-1 : std.Integer' out of range",null)), og.issues.toString())
 
-        val actual5 = og.getIndex(list, og.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, 5))
+        val actual5 = og.getIndex(list, 5)
         assertEquals(Unit, actual5.self)
         assertEquals(2, og.issues.size)
         assertTrue(og.issues.contains(LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.INTERPRET,null,"In getIndex argument index '5 : std.Integer' out of range",null)), og.issues.toString())
@@ -152,7 +152,27 @@ class test_ObjectGraphByReflection {
     }
 
     @Test
-    fun executeMethod() {
+    fun executeMethod_Primitive_map() {
+        //given
+        val og = ObjectGraphByReflection<Any>(testTypeModel, IssueHolder(LanguageProcessorPhase.INTERPRET))
+        val tObj =  TypedObjectAny<Any>(StdLibDefault.List.type(listOf(StdLibDefault.Integer.asTypeArgument)), listOf(
+            TypedObjectAny(StdLibDefault.Integer,1L),
+            TypedObjectAny(StdLibDefault.Integer,2L),
+            TypedObjectAny(StdLibDefault.Integer,3L)
+        ))
+        val lambda = TypedObjectAny<Any>(StdLibDefault.Lambda, { it:Any ->
+            it.toString()
+        })
+        //when
+        val actual = og.executeMethod(tObj, "map", listOf(lambda))
+
+        //then
+        assertTrue(actual.self is List<*>)
+        assertEquals(listOf("1","2","3"), actual.self)
+    }
+
+    @Test
+    fun executeMethod_notInLib() {
         TODO()
     }
 

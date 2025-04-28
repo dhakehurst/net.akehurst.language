@@ -585,7 +585,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         val asmMatchedText = asmFactory.createPrimitiveValue(StdLibDefault.String.qualifiedTypeName,sentence.matchedTextNoSkip(target.node))
 
         val asmPath = asmFactory.any(downData.path)
-        val alternative = asmFactory.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value)
+        val alternative = asmFactory.createPrimitiveValue(StdLibDefault.Integer.qualifiedTypeName, target.alt.option.value.toLong())
         val selfType = when {
             // target.node.rule.isTerminal -> AsmTransformInterpreter.PARSE_NODE_TYPE_LEAF
             target.node.rule.isListSeparated -> AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SEPARATED
@@ -593,11 +593,11 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
 //        val self = asmFactory.createStructureValue(selfType.qualifiedTypeName, mapOf(AsmTransformInterpreter.PATH.value to asmPath))
         val self = asmFactory.createTupleValue(listOf(
-            TypeArgumentNamedSimple(AsmTransformInterpreter.PATH, StdLibDefault.AnyType),
-            TypeArgumentNamedSimple(AsmTransformInterpreter.ALTERNATIVE, StdLibDefault.Integer),
-            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILDREN, StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))),
-            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILD, StdLibDefault.AnyType),
-            TypeArgumentNamedSimple(AsmTransformInterpreter.MATCHED_TEXT, StdLibDefault.String),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.PATH, asmPath.type),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.ALTERNATIVE, alternative.type),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILDREN, childrenAsmList.type), //StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.CHILD, childrenAsmList.type),
+            TypeArgumentNamedSimple(AsmTransformInterpreter.MATCHED_TEXT, asmMatchedText.type),
         ))
         asmFactory.setProperty(self, AsmTransformInterpreter.PATH.value, asmPath)
         asmFactory.setProperty(self, AsmTransformInterpreter.ALTERNATIVE.value, alternative)

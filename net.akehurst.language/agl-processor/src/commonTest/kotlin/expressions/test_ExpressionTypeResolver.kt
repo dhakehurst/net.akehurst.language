@@ -45,8 +45,8 @@ class test_ExpressionTypeResolver {
 
         val expression = "list"
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
-        val actual = typeResolver.typeOfExpressionStr(expression,dt)
+        val typeResolver = ExpressionTypeResolver(tm, StdLibDefault, issues)
+        val actual = typeResolver.typeOfExpressionStr(expression, dt)
 
         assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
     }
@@ -68,8 +68,8 @@ class test_ExpressionTypeResolver {
         val expression = "list.front"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
-        val actual = typeResolver.typeOfExpressionStr(expression,dt)
+        val typeResolver = ExpressionTypeResolver(tm, StdLibDefault, issues)
+        val actual = typeResolver.typeOfExpressionStr(expression, dt)
 
         assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)), actual)
     }
@@ -91,8 +91,8 @@ class test_ExpressionTypeResolver {
         val expression = "list.front.join"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
-        val actual = typeResolver.typeOfExpressionStr(expression,dt)
+        val typeResolver = ExpressionTypeResolver(tm, StdLibDefault, issues)
+        val actual = typeResolver.typeOfExpressionStr(expression, dt)
 
         assertEquals(StdLibDefault.String, actual)
     }
@@ -114,10 +114,34 @@ class test_ExpressionTypeResolver {
         val expression = "list.join as String"
 
         val issues = IssueHolder(LanguageProcessorPhase.ALL)
-        val typeResolver = ExpressionTypeResolver(tm,StdLibDefault,issues)
-        val actual = typeResolver.typeOfExpressionStr(expression,dt)
+        val typeResolver = ExpressionTypeResolver(tm, StdLibDefault, issues)
+        val actual = typeResolver.typeOfExpressionStr(expression, dt)
 
         assertEquals(StdLibDefault.String, actual)
+    }
+
+    @Test
+    fun typeOfExpressionStr__list_list_string() {
+
+        val tm = typeModel("Test", true) {
+            namespace("test") {
+                data("Test") {
+                    propertyOf(setOf(CMP, VAL), "listOfList", "List", false) {
+                        this.typeArgument("List") {
+                            this.typeArgument("String")
+                        }
+                    }
+                }
+            }
+        }
+        val dt = tm.findFirstDefinitionByNameOrNull(SimpleName("Test"))!!
+
+        val expression = "listOfList"
+        val issues = IssueHolder(LanguageProcessorPhase.ALL)
+        val typeResolver = ExpressionTypeResolver(tm, StdLibDefault, issues)
+        val actual = typeResolver.typeOfExpressionStr(expression, dt)
+
+        assertEquals(StdLibDefault.List.type(listOf(StdLibDefault.List.type(listOf(StdLibDefault.String.asTypeArgument)).asTypeArgument)), actual)
     }
 
 }

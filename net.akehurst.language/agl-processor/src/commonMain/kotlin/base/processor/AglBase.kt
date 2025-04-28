@@ -30,9 +30,11 @@ import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
@@ -215,9 +217,17 @@ namespace net.akehurst.language.base.asm
         }
     }
 
-    override val asmTransformModel: TransformModel get() = TODO("not implemented")
+    override val asmTransformModel: TransformModel by lazy {
+        asmTransform(NAME, typeModel, false) {
+            TODO("not implemented")
+        }
+    }
 
-    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+    override val crossReferenceModel: CrossReferenceModel by lazy {
+        crossReferenceModel() {
+            ("not implemented")
+        }
+    }
 
     override val formatModel: AglFormatModel by lazy {
         formatModel(NAME) {

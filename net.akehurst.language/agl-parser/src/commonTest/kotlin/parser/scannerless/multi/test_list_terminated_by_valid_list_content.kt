@@ -47,7 +47,7 @@ class test_list_terminated_by_valid_list_content : test_LeftCornerParserAbstract
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("A","'a'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 

@@ -212,7 +212,7 @@ class AsmPrimitiveSimple(
     companion object {
         fun stdString(value: String) = AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, value)
         fun stdBoolean(value: Boolean) = AsmPrimitiveSimple(StdLibDefault.Boolean.qualifiedTypeName, value)
-        fun stdInteger(value: Int) = AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, value)
+        fun stdInteger(value: Long) = AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, value)
         fun stdReal(value: Double) = AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, value)
     }
 

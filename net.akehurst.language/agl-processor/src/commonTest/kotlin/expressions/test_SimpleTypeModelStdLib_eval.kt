@@ -76,7 +76,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.size", AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, 4))
+        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger( 4L))
     }
 
     @Test
@@ -112,7 +112,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.first", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "A"))
+        test(tm, self, "list.first", AsmPrimitiveSimple.stdString("A"))
     }
 
     @Test
@@ -130,7 +130,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.last", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "D"))
+        test(tm, self, "list.last", AsmPrimitiveSimple.stdString("D"))
     }
 
     @Test
@@ -148,7 +148,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, it) }))
+        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
     }
 
     @Test
@@ -166,7 +166,7 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, it) }))
+        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it)}))
     }
 
     @Test
@@ -184,6 +184,6 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.join", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "ABCD"))
+        test(tm, self, "list.join", AsmPrimitiveSimple.stdString("ABCD"))
     }
 }

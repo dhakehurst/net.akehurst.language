@@ -103,6 +103,7 @@ internal class GrammarModel2TransformModel(
             val g2n = getOrCreate(exg)
             _map[exg.qualifiedName] = g2n
         }
+        //FIXME: fixe recursion of embedded grammars here
         grammar.allResolvedEmbeddedGrammars.forEach { ebg ->
             val g2n = getOrCreate(ebg)
             _map[ebg.qualifiedName] = g2n
@@ -208,13 +209,13 @@ internal class Grammar2TransformRuleSet(
 
         fun EXPRESSION_CHILD(childIndex: Int) = NavigationExpressionDefault(
             start = RootExpressionDefault("child"),
-            parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, childIndex))))
+            parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, childIndex.toLong()))))
         )
 
         fun EXPRESSION_CHILD_i_prop(childIndex: Int, pName: PropertyName) = NavigationExpressionDefault(
             start = RootExpressionDefault("child"),
             parts = listOf(
-                IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, childIndex))),
+                IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, childIndex.toLong()))),
                 PropertyCallDefault(pName.value)
             )
         )
@@ -433,7 +434,7 @@ internal class Grammar2TransformRuleSet(
                             val options = subtypeTransforms.mapIndexed { idx, it ->
                                 WhenOptionDefault(
                                     condition = InfixExpressionDefault(
-                                        listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx), RootExpressionDefault("\$alternative")),
+                                        listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx.toLong()), RootExpressionDefault("\$alternative")),
                                         listOf("==")
                                     ),
                                     expression = it.expression
@@ -454,7 +455,7 @@ internal class Grammar2TransformRuleSet(
                         val options = subtypeTransforms.mapIndexed { idx, it ->
                             WhenOptionDefault(
                                 condition = InfixExpressionDefault(
-                                    listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx), RootExpressionDefault("\$alternative")),
+                                    listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx.toLong()), RootExpressionDefault("\$alternative")),
                                     listOf("==")
                                 ),
                                 expression = it.expression
@@ -665,7 +666,7 @@ internal class Grammar2TransformRuleSet(
                 val options = subtypeTransforms.mapIndexed { idx, it ->
                     WhenOptionDefault(
                         condition = InfixExpressionDefault(
-                            listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx), RootExpressionDefault("\$alternative")),
+                            listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, idx.toLong()), RootExpressionDefault("\$alternative")),
                             listOf("==")
                         ),
                         expression = it.expression

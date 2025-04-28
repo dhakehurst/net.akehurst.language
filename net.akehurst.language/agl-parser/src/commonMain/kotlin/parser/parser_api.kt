@@ -135,6 +135,8 @@ interface RulePosition {
         val OPTION_OPTIONAL_ITEM = OptionNum(-2)
         val OPTION_OPTIONAL_EMPTY = OptionNum(-3)
 
+        // Option is used to compute priority in choice and dynamic priority
+        // EMPTY should be the lowest priority so that full is preferred - for greedy lists TODO: maybe add lazy lists where this is different!
         val OPTION_MULTI_ITEM = OptionNum(-4)
         val OPTION_MULTI_EMPTY = OptionNum(-5)
 

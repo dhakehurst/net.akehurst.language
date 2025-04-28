@@ -25,7 +25,9 @@ import kotlin.test.assertNull
 
 class test_optional_covered_by_list_nonTerm_not_at_start_of_rule : test_LeftCornerParserAbstract() {
 
-    // S = 'b' as 'a'? ; vs = v | v vs ; v = [a-z]
+    // S = 'b' as 'a'? ;
+    // vs = v | v vs ;
+    // v = [a-z]
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("b");  ref("vs"); ref("oa") }

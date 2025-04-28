@@ -478,6 +478,7 @@ value class MethodName(override val value: String) : PublicValueType
 interface MethodDeclaration {
     val owner: TypeDefinition
     val name: MethodName
+    //TODO: Method TypeArgs
     val parameters: List<ParameterDeclaration>
     val returnType: TypeInstance
     val description: String

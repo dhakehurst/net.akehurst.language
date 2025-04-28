@@ -32,6 +32,8 @@ import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.EnumType
 import net.akehurst.language.typemodel.api.InterfaceType
 import net.akehurst.language.typemodel.api.MethodDeclaration
+import net.akehurst.language.typemodel.api.MethodDeclarationDerived
+import net.akehurst.language.typemodel.api.MethodDeclarationPrimitive
 import net.akehurst.language.typemodel.api.MethodName
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
@@ -57,7 +59,7 @@ object StdLibPrimitiveExecutionsForReflection {
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdInteger(self.size)
+                AsmPrimitiveSimple.stdInteger(self.size.toLong())
             },
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -116,28 +118,63 @@ object StdLibPrimitiveExecutionsForReflection {
     )
 
     val method = mapOf<TypeDefinition, Map<MethodDeclaration, ((Any, MethodDeclaration, List<TypedObject<Any>>) -> Any)>>(
-        StdLibDefault.List to mapOf(
-            StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
-                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
-                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
-                check(args[0].self is Int) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
-                val idx = args[0].self as Int
-                self[idx] as Any
+        StdLibDefault.String.resolvedDeclaration to mapOf(
+            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toBoolean"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toBooleanStrictOrNull() ?: Unit
             },
+            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toInteger"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toLongOrNull() ?: Unit
+            },
+            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("toReal"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.toDoubleOrNull() ?: Unit
+            },
+            StdLibDefault.String.resolvedDeclaration.findAllMethodOrNull(MethodName("removeSurrounding"))!! to { self, meth, args ->
+                check(self is String) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                val arg1 = args[0].self as String
+                self.removeSurrounding(arg1)
+            }
+        ),
 
-            /*
+        StdLibDefault.Collection to mapOf(
             StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
                 check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
-                check(args[0].self is Function<*>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
-                val lambda = args[0].self as Function<*>
+                check(args[0].self is Function1<*, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
+                val lambda = args[0].self as Function1<Any, *>
                 (self as List<Any>).map {
-                    val args = mapOf("it" to it)
-                    lambda.invoke(args)
+                    //val args = mapOf("it" to it)
+                    lambda.invoke(it)
                 }
             }
-             */
+        ),
+
+        StdLibDefault.List to mapOf(
+            StdLibDefault.List.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' takes 1 lambda argument got ${args.size} arguments." }
+                check(args[0].self is Function1<*, *>) { "Method '${meth.name}' first argument must be a lambda, got '${args[0].self::class.simpleName}'." }
+                val lambda = args[0].self as Function1<Any, *>
+                (self as List<Any>).map {
+                    //val args = mapOf("it" to it)
+                    lambda.invoke(it)
+                }
+            },
+            StdLibDefault.List.findAllMethodOrNull(MethodName("get"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(1 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 1, received ${args.size}" }
+                check(args[0].self is Long) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
+                val idx = args[0].self as Long
+                self[idx.toInt()] as Any
+            },
+            StdLibDefault.List.findAllMethodOrNull(MethodName("separate"))!! to { self, meth, args ->
+                check(self is List<*>) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
+                check(0 == args.size) { "Method '${meth.name}' has wrong number of argument, expecting 0, received ${args.size}" }
+                self.toSeparatedList()
+            },
         ),
     )
 }
@@ -165,11 +202,30 @@ open class ObjectGraphByReflection<SelfType : Any>(
 
     //fun Any.toTypedObject(type: TypeInstance) = TypedObjectByReflection(type, this)
 
+    fun untyped(typedObj: TypedObject<SelfType>): Any {
+        val obj = typedObj.self
+        return when (obj) {
+            is List<*> -> obj.map { untypedAny(it) }
+            is Map<*, *> -> obj.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
+            else -> obj
+        }
+    }
+
+    fun untypedAny(possiblyTypedObject: Any?): Any {
+        return when (possiblyTypedObject) {
+            null -> Unit
+            is TypedObject<*> -> untyped(possiblyTypedObject as TypedObject<SelfType>)
+            is List<*> -> possiblyTypedObject.map { untypedAny(it) }
+            is Map<*, *> -> possiblyTypedObject.entries.associate { Pair(untypedAny(it.key), untypedAny(it.value)) }
+            else -> possiblyTypedObject
+        }
+    }
+
     override fun typeFor(obj: SelfType?): TypeInstance {
         return when (obj) {
             null -> StdLibDefault.NothingType
             is Boolean -> StdLibDefault.Boolean
-            is Int -> StdLibDefault.Integer
+            is Long -> StdLibDefault.Integer
             is String -> StdLibDefault.String
             is Double -> StdLibDefault.Real
             is List<*> -> StdLibDefault.List.type(listOf(StdLibDefault.AnyType.asTypeArgument))
@@ -224,8 +280,8 @@ open class ObjectGraphByReflection<SelfType : Any>(
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()
             is StructuredType -> when (typeDef) {
-                is DataType -> typeDef.constructDataType(*(constructorArgs.values.map{it.self}.toTypedArray<Any>()))
-                is ValueType -> typeDef.constructValueType(constructorArgs.values.map{it.self}.first()) //TODO: special method
+                is DataType -> typeDef.constructDataType(*(constructorArgs.values.map { untyped(it) }.toTypedArray<Any>()))
+                is ValueType -> typeDef.constructValueType(constructorArgs.values.map { untyped(it) }.first()) //TODO: special method
                 is CollectionType -> error("use 'createCollection' for CollectionType")
                 is InterfaceType -> error("Should not create an instance of a InterfaceType")
                 else -> error("Unsupported subtype of StructuredType: '${typeDef::class.simpleName}'")
@@ -276,39 +332,24 @@ open class ObjectGraphByReflection<SelfType : Any>(
 
     override fun createLambdaValue(lambda: (it: TypedObject<SelfType>) -> TypedObject<SelfType>): TypedObject<SelfType> {
         val lambdaType = StdLibDefault.Lambda //TODO: typeargs like tuple
-        val lmb = { it: Any -> lambda.invoke(toTypedObject(it as SelfType)).self }
+        val lmb = { it: Any -> untyped(lambda.invoke(toTypedObject(it as SelfType))) }
         return TypedObjectAny(lambdaType, lmb) as TypedObject<SelfType>
     }
 
-    override fun valueOf(value: TypedObject<SelfType>): Any = value.self
+    override fun valueOf(value: TypedObject<SelfType>): Any = untyped(value)
 
-    override fun getIndex(tobj: TypedObject<SelfType>, index: Any): TypedObject<SelfType> {
-        val idx = when (index) {
-            is TypedObject<*> -> {
-                index.self
-            }
-
-            else -> index
-        }
-        val self = tobj.self
+    override fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType> {
+        val self = untyped(tobj)
         return when (self) {
-            is List<*> -> when (idx) {
-                is Int -> {
-                    val el = self.getOrNull(idx)
-                    when (el) {
-                        null -> {
-                            issues.error(null, "In getIndex argument index '$index' out of range")
-                            nothing()
-                        }
-
-                        else -> toTypedObject(el as SelfType)
-
+            is List<*> -> {
+                val el = self.getOrNull(index.toInt())
+                when (el) {
+                    null -> {
+                        issues.error(null, "In getIndex argument index '$index' out of range")
+                        nothing()
                     }
-                }
 
-                else -> {
-                    issues.error(null, "In getIndex argument 'index' must be an Int for Lists")
-                    nothing()
+                    else -> toTypedObject(el as SelfType)
                 }
             }
 
@@ -322,9 +363,10 @@ open class ObjectGraphByReflection<SelfType : Any>(
     override fun getProperty(tobj: TypedObject<SelfType>, propertyName: String): TypedObject<SelfType> {
         return when {
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
-                when (tobj.self) {
+                val obj = untyped(tobj)
+                when (obj) {
                     is Map<*, *> -> {
-                        val value = (tobj.self as Map<String, Any>)[propertyName]
+                        val value = (obj as Map<String, Any>)[propertyName]
                         value?.let { toTypedObject(it as SelfType?) } ?: nothing()
                     }
 
@@ -349,7 +391,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
                                 ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                             val propExec = typeProps[propRes.original]
                                 ?: error("StdLibPrimitiveExecutionsForReflection not found for property '${propertyName}' of TypeDeclaration '${type.qualifiedName}'")
-                            toTypedObject(propExec.invoke(tobj.self, propRes) as SelfType?)
+                            toTypedObject(propExec.invoke(untyped(tobj), propRes) as SelfType?)
                         }
 
                         is PropertyDeclarationStored -> {
@@ -370,23 +412,46 @@ open class ObjectGraphByReflection<SelfType : Any>(
             StdLibDefault.TupleType == tobj.type.resolvedDeclaration -> {
                 when (tobj.self) {
                     is MutableMap<*, *> -> {
-                        (tobj.self as MutableMap<String, Any>)[propertyName] = value.self
+                        (tobj.self as MutableMap<String, Any>)[propertyName] = untyped(value)
                     }
                 }
             }
 
             else -> {
                 val obj = tobj.self
-                obj.reflect().setProperty(propertyName, value.self)
+                obj.reflect().setProperty(propertyName, untyped(value))
             }
         }
     }
 
     override fun executeMethod(tobj: TypedObject<SelfType>, methodName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType> {
-        val obj = tobj.self
-        val arguments = args.map { it.self }
-        val value = obj.reflect().call(methodName, arguments)
-        return value?.let { toTypedObject(it as SelfType?) } ?: nothing()
+        val meth = tobj.type.allResolvedMethod[MethodName(methodName)]
+        return when (meth) {
+            null -> {
+                //try reflection on untyped object
+                val obj = untyped(tobj)
+                val arguments = args.map { untyped(it) }
+                val value = obj.reflect().call(methodName, arguments)
+                value?.let { toTypedObject(it as SelfType?) } ?: nothing()
+            }
+
+            else -> {
+                when (meth.original) {
+                    is MethodDeclarationDerived -> TODO()
+                    is MethodDeclarationPrimitive -> {
+                        val type = tobj.type.resolvedDeclaration
+                        val methProps = StdLibPrimitiveExecutionsForReflection.method[type]
+                            ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
+                        val methExec = methProps[meth.original]
+                            ?: error("StdLibPrimitiveExecutionsForReflection not found for method '${methodName}' of TypeDeclaration '${type.qualifiedName}'")
+                        val res = methExec.invoke(untyped(tobj), meth, args)
+                        toTypedObject(res as SelfType?)
+                    }
+
+                    else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
+                }
+            }
+        }
     }
 
     override fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType> {
