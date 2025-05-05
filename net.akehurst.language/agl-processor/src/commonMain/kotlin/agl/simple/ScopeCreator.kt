@@ -94,9 +94,9 @@ class ScopeCreator<ItemInScopeType:Any>(
                 }
                 // String
                 refInParent is String -> {
-                    val ref = refInParent
-                    val scopeItem = createItemInScopeFunction.invoke(ref, el, locationMap[el])
-                    parentScope.createOrGetChildScope(ref, el.qualifiedTypeName, scopeItem)
+                    val qref = parentScope.scopePath + refInParent
+                    val scopeItem = createItemInScopeFunction.invoke(qref, el, locationMap[el])
+                    parentScope.createOrGetChildScope(refInParent, el.qualifiedTypeName, scopeItem)
                 }
                 // List<String>
                 refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String } -> {
@@ -182,7 +182,7 @@ class ScopeCreator<ItemInScopeType:Any>(
                         var nextScope = scope
                         for (ref in refList) {
                             addToScopeAs(nextScope, el, ref)
-                            val itemInScope = createItemInScopeFunction.invoke(ref, el, locationMap[el])
+                            val itemInScope = createItemInScopeFunction.invoke(scope.scopePath+ref, el, locationMap[el])
                             nextScope = nextScope.createOrGetChildScope(ref, el.qualifiedTypeName, itemInScope)
                         }
                     }
@@ -199,7 +199,7 @@ class ScopeCreator<ItemInScopeType:Any>(
     }
 
     private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
-        val scopeItem = createItemInScopeFunction.invoke(referableName, el,this.locationMap[el])
+        val scopeItem = createItemInScopeFunction.invoke(scope.scopePath+referableName, el,this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typeModel.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
             val requireType = typeModel.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")

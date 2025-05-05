@@ -43,6 +43,7 @@ fun asmSimple(
     typeModel: TypeModel = typeModel("StdLib", false) {},
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference")),
+    sentenceId:Any? = null,
     context: ContextAsmSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
@@ -50,7 +51,7 @@ fun asmSimple(
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
     val defNs = typeModel.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
-    val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, context, resolveReferences, failIfIssues)
+    val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, sentenceId, context, resolveReferences, failIfIssues)
     b.init()
     return b.build()
 }
@@ -60,6 +61,7 @@ class AsmSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
+    private val _sentenceId:Any?,
     private val _context: ContextAsmSimple?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
@@ -111,7 +113,7 @@ class AsmSimpleBuilder(
                 _typeModel,
                 _crossReferenceModel as CrossReferenceModelDefault,
                 _context,
-                null, //TODO: sentenceId
+                _sentenceId,
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
                 _context.createScopedItem,
@@ -125,7 +127,7 @@ class AsmSimpleBuilder(
                     _typeModel,
                     _crossReferenceModel,
                     _context,
-                    null, //TODO: sentenceId
+                    _sentenceId,
                     _identifyingValueInFor,
                     _context.resolveScopedItem,
                     emptyMap(), _issues
@@ -183,7 +185,7 @@ class AsmElementSimpleBuilder(
             if (null!=_context && _crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
                 val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
                     ?: _element.typeName.value
-                val itemInScope = _context.createScopedItem.invoke(refInParent,_element, null)
+                val itemInScope = _context.createScopedItem.invoke(_parentScope.scopePath+refInParent,_element, null)
                 val newScope = _parentScope.createOrGetChildScope(refInParent as String, _element.qualifiedTypeName, itemInScope)
                 _scopeMap[_asmPath] = newScope
                 newScope

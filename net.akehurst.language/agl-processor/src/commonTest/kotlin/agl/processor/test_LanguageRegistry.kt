@@ -49,7 +49,7 @@ class test_LanguageRegistry {
         )
 
         assertEquals(identity, languageDefinition.identity)
-        assertTrue(languageDefinition.issues.isNotEmpty())
+        assertTrue(languageDefinition.issues.isNotEmpty(), languageDefinition.issues.toString())
         assertNull(languageDefinition.processor)
     }
 

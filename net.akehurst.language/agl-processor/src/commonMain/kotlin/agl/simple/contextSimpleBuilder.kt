@@ -29,7 +29,19 @@ fun contextAsmSimple(
 ): ContextAsmSimple {
     val context = ContextAsmSimple(createScopedItem, resolveScopedItem)
     val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
-    val b = ScopeBuilder(scope, createScopedItem, resolveScopedItem)
+    val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
+    b.init()
+    return context
+}
+
+fun contextAsmSimpleWithAsmPath(
+    map: MutableMap<String, AsmStructure> = mutableMapOf(),
+    sentenceId:Any? = null,
+    init: ScopeBuilder<Any>.() -> Unit
+): ContextAsmSimpleWithScopePath {
+    val context = ContextAsmSimpleWithScopePath(map)
+    val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
+    val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
     b.init()
     return context
 }

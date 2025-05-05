@@ -163,7 +163,7 @@ class test_SemanticAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimple())
+                    context(ContextAsmSimpleWithScopePath())
                 }
             }
         )
@@ -192,7 +192,7 @@ class test_SemanticAnalyserSimple_datatypes {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(21, 9, 2, 7, null),
-                "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference[/0/declaration/0/property/0/typeReference]'"
+                "Reference 'String' not resolved, to type(s) [Primitive, Datatype, Collection] in scope of element '/A/a'"
             )
         )
         println(result.asm!!.asString())

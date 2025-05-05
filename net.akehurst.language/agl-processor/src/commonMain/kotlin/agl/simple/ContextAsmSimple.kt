@@ -1,7 +1,6 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
@@ -11,7 +10,7 @@ import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.collections.set
 
-typealias CreateScopedItem<ItemType, ItemInScopeType> = (referableName: String, item: ItemType, location: InputLocation?) -> ItemInScopeType
+typealias CreateScopedItem<ItemType, ItemInScopeType> = (referableName: List<String>, item: ItemType, location: InputLocation?) -> ItemInScopeType
 typealias ResolveScopedItem<ItemType, ItemInScopeType> = (itemInScope: ItemInScopeType) -> ItemType?
 
 open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
@@ -60,6 +59,10 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         return scopeForSentence.flatMap { it.value.findItemsNamedConformingTo(name, conformsToFunc) }
     }
 
+    fun findItemsByQualifiedNameConformingTo(qname: List<String>, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
+        return scopeForSentence.flatMap { it.value.findItemsByQualifiedNameConformingTo(qname, conformsToFunc) }
+    }
+
     fun asString(): String = "context scope ${scopeForSentence.entries.joinToString("\n") { (k, v) -> "$k = ${v.asString()}" }}"
 
     override fun hashCode(): Int = scopeForSentence.hashCode()
@@ -79,9 +82,9 @@ open class ContextAsmSimple(
 ) : ContextWithScope<AsmStructure, Any>(createScopedItem, resolveScopedItem)
 
 //FIXME: this does not work as currently AsmPath is incorrectly calculated by SyntaxAnalyserFromAsmTransformAbstract
-class ContextAsmSimpleWithAsmPath(
+class ContextAsmSimpleWithScopePath(
     map: MutableMap<String, AsmStructure> = mutableMapOf(),
 ) : ContextAsmSimple(
-    { referableName, item, location -> map[item.parsePath.value] = item; item.parsePath.value },
+    { referableName, item, location -> val path ="/${referableName.joinToString("/")}"; map[path] = item; path },
     { itemInScope -> map[itemInScope] }
 )

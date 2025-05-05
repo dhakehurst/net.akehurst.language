@@ -273,9 +273,9 @@ grammar SQL {
             SELECT col1 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimpleWithScopePath()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimpleWithScopePath()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -338,7 +338,7 @@ grammar SQL {
             SELECT col7 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimpleWithScopePath()) } })
 
         val expected = asmSimple(
             typeModel = typeModel,
@@ -394,7 +394,7 @@ grammar SQL {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(83, 8, 7, 4, null),
-                "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef[/0/terminatedStatement/1/statement/columns/0]'"
+                "Reference 'col7' not resolved, to type(s) [ColumnDefinition] in scope of element '/'"
             )
         )
 
