@@ -225,7 +225,7 @@ namespace net.akehurst.language.base.asm
 
     override val crossReferenceModel: CrossReferenceModel by lazy {
         crossReferenceModel() {
-            ("not implemented")
+            //TODO
         }
     }
 

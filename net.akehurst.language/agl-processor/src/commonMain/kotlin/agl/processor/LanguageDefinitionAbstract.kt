@@ -159,7 +159,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     //}.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
 
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
-    protected var _style: AglStyleModel = AglStyleModelDefault(SimpleName("<empty>"))
+    protected var _style: AglStyleModel? = null//AglStyleModelDefault(SimpleName("<empty>"))
 
     protected var _regexEngineKind: RegexEngineKind by Delegates.observable(RegexEngineKind.AGL) { _, oldValue, newValue ->
         if (oldValue != newValue) {

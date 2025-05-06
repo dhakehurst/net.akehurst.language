@@ -56,6 +56,29 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val formatString: FormatString?
         get() = FormatString(this.formatter?.formatModel?.asString() ?:"")
 
+    init {
+        this._issues.clear()
+
+        this.targetGrammarName = configuration.targetGrammarName
+        this.defaultGoalRule = configuration.defaultGoalRuleName
+
+        this._regexEngineKind = configuration.regexEngineKind
+        this._scannerKind = configuration.scannerKind
+
+        this._scannerResolver = configuration.scannerResolver
+        this._parserResolver = configuration.parserResolver
+        this._typeModelResolver = configuration.typesResolver
+        this._asmTransformModelResolver = configuration.transformResolver
+        this._crossReferenceModelResolver = configuration.crossReferenceResolver
+        this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
+        this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
+
+        this._styleResolver = configuration.styleResolver
+        this._formatterResolver = configuration.formatResolver
+        this._completionProviderResolver = configuration.completionProviderResolver
+        super._processor_cache.reset()
+    }
+
     override fun update(grammarStr: GrammarString?, typeModelStr: TypesString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?,  formatStr: FormatString?) {
         error("Cannot update a LanguageDefinitionFromAsm")
     }

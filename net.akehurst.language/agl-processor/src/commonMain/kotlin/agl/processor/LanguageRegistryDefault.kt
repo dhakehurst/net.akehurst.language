@@ -217,6 +217,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     initialConfiguration = Agl.configuration {
                         targetGrammarName(AglStyle.grammar.name.value)
                         defaultGoalRuleName(AglStyle.goalRuleName)
+                        styleString(StyleString(AglStyle.styleStr))
                         //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -269,6 +270,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 initialConfiguration = Agl.configuration {
                     targetGrammarName(languageObject.defaultTargetGrammar.name.value)
                     defaultGoalRuleName(languageObject.defaultTargetGoalRule)
+                    styleString(StyleString(languageObject.styleString))
                     // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                     //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
 //                    typesResolver { ProcessResultDefault(languageObject.typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }

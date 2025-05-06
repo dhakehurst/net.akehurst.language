@@ -31,6 +31,7 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
@@ -975,9 +976,9 @@ interface Embedded {
                 )
                 transform(NAME) {
                     //TODO: currently the types are not found in the typemodel
-                //    createObject("unit", "DefinitionBlock") {
-                //        assignment("definitions", "child[1]")
-                //    }
+                    //    createObject("unit", "DefinitionBlock") {
+                    //        assignment("definitions", "child[1]")
+                    //    }
                     /*
                     createObject("grammar", "Grammar") {
                         assignment("namespace", "child[1]")
@@ -1016,7 +1017,11 @@ interface Embedded {
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+    override val crossReferenceModel: CrossReferenceModel by lazy {
+        crossReferenceModel {
+            //TODO
+        }
+    }
 
     override val formatModel: AglFormatModel by lazy {
         formatModel(AglBase.NAME) {
