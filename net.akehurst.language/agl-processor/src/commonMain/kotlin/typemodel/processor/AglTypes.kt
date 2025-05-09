@@ -39,9 +39,9 @@ import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglTypemodel : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
+object AglTypes : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
-    const val NAME = "Typemodel"
+    const val NAME = "Types"
     const val goalRuleName = "unit"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
@@ -133,6 +133,11 @@ namespace net.akehurst.language.grammarTypemodel.api
     }
 
 """
+
+    override val styleString: String = """namespace net.akehurst.language
+        styles $NAME {
+        }
+    """
 
     override val grammarModel: GrammarModel by lazy {
         grammarModel(NAME) {

@@ -36,12 +36,11 @@ import net.akehurst.language.typemodel.api.TypeModel
 class ScopeCreator<ItemInScopeType:Any>(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel,
-    val context: ContextWithScope<AsmStructure, ItemInScopeType>, //TODO: use interface or something more abstract
+    val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity:Any?,
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
-    val createItemInScopeFunction: CreateScopedItem<AsmStructure,ItemInScopeType>, //((referableName: String, item: AsmStructure, location:InputLocation) -> ItemInScopeType),
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
 ) : AsmTreeWalker {
@@ -94,9 +93,7 @@ class ScopeCreator<ItemInScopeType:Any>(
                 }
                 // String
                 refInParent is String -> {
-                    val qref = parentScope.scopePath + refInParent
-                    val scopeItem = createItemInScopeFunction.invoke(qref, el, locationMap[el])
-                    parentScope.createOrGetChildScope(refInParent, el.qualifiedTypeName, scopeItem)
+                    parentScope.createOrGetChildScope(refInParent, el.qualifiedTypeName)
                 }
                 // List<String>
                 refInParent is List<*> && refInParent.isNotEmpty() && refInParent.all { it is String } -> {
@@ -182,8 +179,7 @@ class ScopeCreator<ItemInScopeType:Any>(
                         var nextScope = scope
                         for (ref in refList) {
                             addToScopeAs(nextScope, el, ref)
-                            val itemInScope = createItemInScopeFunction.invoke(scope.scopePath+ref, el, locationMap[el])
-                            nextScope = nextScope.createOrGetChildScope(ref, el.qualifiedTypeName, itemInScope)
+                            nextScope = nextScope.createOrGetChildScope(ref, el.qualifiedTypeName)
                         }
                     }
                 }
@@ -199,7 +195,7 @@ class ScopeCreator<ItemInScopeType:Any>(
     }
 
     private fun addToScopeAs(scope: Scope<ItemInScopeType>, el: AsmStructure, referableName: String) {
-        val scopeItem = createItemInScopeFunction.invoke(scope.scopePath+referableName, el,this.locationMap[el])
+        val scopeItem = context.createScopedItem.invoke(scope.scopePath+referableName, el,this.locationMap[el])
         val existingItems = context.findItemsNamedConformingTo(referableName) { itemTypeName ->
             val itemType = typeModel.findByQualifiedNameOrNull(itemTypeName) ?: error("Type not found '${itemTypeName.value}'")
             val requireType = typeModel.findByQualifiedNameOrNull(el.qualifiedTypeName) ?: error("Type not found '${el.qualifiedTypeName.value}'")

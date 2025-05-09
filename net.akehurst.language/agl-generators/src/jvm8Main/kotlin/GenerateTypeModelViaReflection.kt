@@ -437,8 +437,6 @@ class GenerateTypeModelViaReflection(
                             else -> DataType::class //currently DataType used for other class types
                         }
                     }
-
-                    else -> foundType::class
                 }
             }
 

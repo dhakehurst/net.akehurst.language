@@ -18,7 +18,7 @@
 package net.akehurst.language.test.processor.tutorial
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.TransformString
@@ -40,7 +40,7 @@ class test_Tutorial {
     )
 
     companion object {
-        fun test(testData: List<TestData>, proc: LanguageProcessor<Asm, ContextAsmSimple>) {
+        fun test(testData: List<TestData>, proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>) {
             for (td in testData) {
                 println(td.sentence)
                 val res = proc.process(td.sentence)

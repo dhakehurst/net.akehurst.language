@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.Namespace
@@ -57,7 +58,18 @@ import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
 import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
-import net.akehurst.language.typemodel.processor.AglTypemodel
+import net.akehurst.language.typemodel.processor.AglTypes
+
+fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): ContextWithScope<Any, Any> {
+    val context = ContextWithScope<Any, Any>(
+        createScopedItem = { ref, item, location -> },
+        resolveScopedItem = { item -> Any() }
+    )
+    registry.grammars.forEach {
+        context.addToScope(1, it.qualifiedName.parts.map { it.value }, QualifiedName("GrammarNamespace"), null, it)
+    }
+    return context
+}
 
 interface AglLanguages {
     val baseLanguageIdentity: LanguageIdentity
@@ -71,7 +83,7 @@ interface AglLanguages {
 
     val base: LanguageDefinition<Any, SentenceContext>
     val expressions: LanguageDefinition<Expression, SentenceContext>
-    val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry>
+    val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>>
     val types: LanguageDefinition<TypeModel, ContextFromGrammar>
     val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
@@ -86,11 +98,15 @@ class LanguageRegistryDefault : LanguageRegistry {
     //private val _registryLock = Mutex
     private val _registry = mutableMapOf<LanguageIdentity, LanguageDefinition<*, *>>()
 
+    override val languages: Map<LanguageIdentity, LanguageDefinition<*, *>> get() = _registry
+
+    override val grammars: List<Grammar> get() = languages.flatMap { it.value.grammarModel!!.allDefinitions.toList() }
+
     override val agl: AglLanguages = object : AglLanguages {
         override val baseLanguageIdentity: LanguageIdentity get() = AglBase.identity
         override val expressionsLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglExpressions.grammar.qualifiedName.value) }
         override val grammarLanguageIdentity: LanguageIdentity get() = AglGrammar.identity
-        override val typesLanguageIdentity: LanguageIdentity get() = AglTypemodel.identity
+        override val typesLanguageIdentity: LanguageIdentity get() = AglTypes.identity
         override val asmTransformLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AsmTransform.grammar.qualifiedName.value) }
         override val styleLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglStyle.grammar.qualifiedName.value) }
         override val formatLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglFormat.targetGrammar.qualifiedName.value) }
@@ -124,14 +140,14 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val grammar: LanguageDefinition<GrammarModel, ContextFromGrammarRegistry> by lazy {
+        override val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglGrammar)
         }
 
         override val types: LanguageDefinition<TypeModel, ContextFromGrammar> by lazy {
             base //ensure base is instantiated
-            this@LanguageRegistryDefault.registerFromLanguageObject(AglTypemodel)
+            this@LanguageRegistryDefault.registerFromLanguageObject(AglTypes)
         }
 
         override val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel> by lazy {
@@ -247,7 +263,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
@@ -274,9 +290,14 @@ class LanguageRegistryDefault : LanguageRegistry {
                     // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
                     //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
 //                    typesResolver { ProcessResultDefault(languageObject.typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    typesResolver {p-> ProcessResultDefault(typeModel(p.grammarModel!!.name.value,true){}, IssueHolder(LanguageProcessorPhase.ALL)) } //TODO: above, needs languageobject to contain typemodel with grammar mapping
+                    typesResolver { p ->
+                        ProcessResultDefault(
+                            typeModel(p.grammarModel!!.name.value, true) {},
+                            IssueHolder(LanguageProcessorPhase.ALL)
+                        )
+                    } //TODO: above, needs languageobject to contain typemodel with grammar mapping
 //                    transformResolver { ProcessResultDefault(languageObject.asmTransformModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    transformResolver { p-> TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel) } //TODO: above
+                    transformResolver { p -> TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel) } //TODO: above
 
                     crossReferenceResolver { ProcessResultDefault(languageObject.crossReferenceModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                     syntaxAnalyserResolver { ProcessResultDefault(languageObject.syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -289,7 +310,6 @@ class LanguageRegistryDefault : LanguageRegistry {
             registerFromDefinition(definition) as LanguageDefinition<AsmType, ContextType>
         }
     }
-
 
     override fun unregister(identity: LanguageIdentity) {
         val definition = this._registry.remove(identity)
@@ -322,7 +342,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     fun <AsmType : Any, ContextType : Any> createLanguageDefinition(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> = LanguageDefinitionDefault<AsmType, ContextType>(
         identity = identity,
@@ -333,7 +353,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
@@ -351,7 +371,6 @@ class LanguageRegistryDefault : LanguageRegistry {
         when (nameOrQName) {
             is QualifiedName -> findGrammarOrNullByQualifiedName(nameOrQName)
             is SimpleName -> findGrammarOrNullByQualifiedName(nameOrQName.asQualifiedName(localNamespace.qualifiedName))
-            else -> error("Unsupported")
         }
 
     override fun registerGrammar(grammar: Grammar) {

@@ -105,7 +105,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
             (decl.scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME.last]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
             referencesOpt?.let { decl.references.addAll(referencesOpt) }
-            decl
+            decl.also { setLocationFor(it,nodeInfo,sentence) }
         }
     }
 

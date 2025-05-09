@@ -20,6 +20,7 @@ package net.akehurst.language.agl.generators
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
@@ -110,7 +111,7 @@ class GenerateGrammarModelBuild(
             sentence = grammarString.value,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry())
                 }
             }
         )

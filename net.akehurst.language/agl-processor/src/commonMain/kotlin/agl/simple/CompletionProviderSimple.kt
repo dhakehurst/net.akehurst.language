@@ -51,12 +51,12 @@ class CompletionProviderSimple(
     val grammar2TypeModel: Grammar2TypeModelMapping,
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
-) : CompletionProviderAbstract<Asm, ContextAsmSimple>() {
+) : CompletionProviderAbstract<Asm, ContextWithScope<Any, Any>>() {
 
     val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextAsmSimple>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
         val depth = options.depth
         val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
@@ -84,7 +84,7 @@ class CompletionProviderSimple(
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {
@@ -120,7 +120,7 @@ class CompletionProviderSimple(
         }
     }
 
-    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
+    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {

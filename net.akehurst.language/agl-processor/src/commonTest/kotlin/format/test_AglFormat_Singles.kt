@@ -2,6 +2,7 @@ package format
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.format.processor.AglFormat
@@ -11,7 +12,7 @@ import kotlin.test.assertTrue
 
 class test_AglFormat_Singles {
     private companion object {
-        fun processor(targetGrammar: String): LanguageProcessor<Asm, ContextAsmSimple> {
+        fun processor(targetGrammar: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
             Agl.registry.agl.expressions
             return Agl.processorFromGrammar(
                 AglFormat.grammarModel,

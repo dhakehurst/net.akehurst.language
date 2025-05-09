@@ -26,15 +26,15 @@ class test_AglTypemodel {
 
     @Test
     fun grammarModel() {
-        val actual = AglTypemodel.grammarModel
+        val actual = AglTypes.grammarModel
 
         assertNotNull(actual)
-        assertEquals(AglTypemodel.grammarString, actual.asString())
+        assertEquals(AglTypes.grammarString, actual.asString())
     }
 
     @Test
     fun typemodel() {
-        val actual = AglTypemodel.typeModel
+        val actual = AglTypes.typeModel
 
         assertNotNull(actual)
     }
@@ -42,7 +42,7 @@ class test_AglTypemodel {
 
     @Test
     fun domainTypes() {
-        val td = AglTypemodel.typeModel.findFirstDefinitionByNameOrNull(SimpleName("TypeModel"))
+        val td = AglTypes.typeModel.findFirstDefinitionByNameOrNull(SimpleName("TypeModel"))
         assertNotNull(td)
         assertEquals("TypeModel", td.name.value)
         assertEquals("Model", td.supertypes[0].typeName.value)

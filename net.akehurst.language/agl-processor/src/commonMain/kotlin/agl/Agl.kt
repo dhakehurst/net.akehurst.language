@@ -21,6 +21,7 @@ import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
@@ -50,7 +51,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> configurationBase(): LanguageProcessorConfiguration<AsmType, ContextType> = LanguageProcessorConfigurationBase()
 
-    fun configurationSimple(): LanguageProcessorConfiguration<Asm, ContextAsmSimple> = LanguageProcessorConfigurationSimple()
+    fun configurationSimple(): LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = LanguageProcessorConfigurationSimple()
 
     /**
      * build a configuration for a language processor
@@ -115,12 +116,12 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
-    ): LanguageProcessorResult<Asm, ContextAsmSimple> {
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+    ): LanguageProcessorResult<Asm, ContextWithScope<Any, Any>> {
         val config = Agl.configuration(configurationBase) {
             if (null != typeStr) {
-                typesResolver { p: LanguageProcessor<Asm, ContextAsmSimple> ->
+                typesResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> ->
                     TypeModelSimple.fromString(
                         SimpleName("FromGrammar" + p.grammarModel!!.name.value),
                         ContextFromGrammar.createContextFrom(p.grammarModel!!),
@@ -129,16 +130,16 @@ object Agl {
                 }
             }
             if (null != transformStr) {
-                transformResolver { p: LanguageProcessor<Asm, ContextAsmSimple> -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), transformStr) }
+                transformResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), transformStr) }
             }
             if (null != referenceStr) {
-                crossReferenceResolver { p: LanguageProcessor<Asm, ContextAsmSimple> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), referenceStr) }
+                crossReferenceResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), referenceStr) }
             }
             if (null != styleStr) {
-                styleResolver { p: LanguageProcessor<Asm, ContextAsmSimple> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
+                styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
-                formatResolver { p: LanguageProcessor<Asm, ContextAsmSimple> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), formatterModelStr) }
+                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), formatterModelStr) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
@@ -155,8 +156,8 @@ object Agl {
         crossReferenceModelStr: String? = null,
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),
         typeModelStr?.let { TypesString(it) },
@@ -178,10 +179,10 @@ object Agl {
     fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = configurationBase(),
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
-            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(
+            val res = Agl.grammarFromString<GrammarModel, ContextWithScope<Any,Any>>(
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
@@ -216,7 +217,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): ProcessResult<GrammarModel> {
         return if (null == sentence) {
             ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
@@ -235,7 +236,7 @@ object Agl {
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<AsmType, ContextType> = configurationBase(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
     ): LanguageDefinition<AsmType, ContextType> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)
@@ -273,9 +274,9 @@ object Agl {
         referenceStr: CrossReferenceString? = null,
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
-        configurationBase: LanguageProcessorConfiguration<Asm, ContextAsmSimple> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
-    ): LanguageDefinition<Asm, ContextAsmSimple> {
+        configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+    ): LanguageDefinition<Asm, ContextWithScope<Any, Any>> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)
             typesString(typeStr)

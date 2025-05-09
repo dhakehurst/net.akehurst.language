@@ -67,7 +67,6 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     override fun findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn: PossiblyQualifiedName): DT? = when(pqn) {
         is QualifiedName -> findDefinitionByQualifiedNameOrNull(pqn)
         is SimpleName -> findFirstDefinitionByNameOrNull(pqn)
-        else -> error("Unsupported subtype of PossiblyQualifiedName ${pqn::class.simpleName}")
     }
 
     override fun findDefinitionByQualifiedNameOrNull(qualifiedName: QualifiedName) =
@@ -87,7 +86,6 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
         val res = when (reference.nameOrQName) {
             is QualifiedName -> findDefinitionByQualifiedNameOrNull(reference.nameOrQName as QualifiedName)
             is SimpleName -> findDefinitionByQualifiedNameOrNull(reference.nameOrQName.asQualifiedName(reference.localNamespace.qualifiedName))
-            else -> error("Unsupported")
         }
         return if (null != res) {
             reference.resolveAs(res)

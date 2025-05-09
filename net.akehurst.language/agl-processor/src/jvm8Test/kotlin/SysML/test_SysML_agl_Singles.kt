@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -37,7 +38,7 @@ class test_SysML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy {
+        val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
@@ -51,7 +52,7 @@ class test_SysML_agl_Singles {
             assertEquals(expIssues, result.issues.all, result.issues.toString())
         }
 
-        fun test_process(sentence: String, context: ContextAsmSimple, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: ContextWithScope<Any, Any>, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)

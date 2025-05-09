@@ -27,13 +27,13 @@ object AglStyle {
     //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "rules"))
     //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
-    const val grammarStr = """namespace net.akehurst.language.agl.language
+    const val grammarStr = $$$"""namespace net.akehurst.language
 grammar Style : Base {
     unit = namespace styleSet* ;
     styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
     rule = metaRule | tagRule ;
-    metaRule = '${'$'}${'$'}' PATTERN '{' styleList '}' ;
+    metaRule = '$$' PATTERN '{' styleList '}' ;
     tagRule = selectorExpression '{' styleList '}' ;
     selectorExpression
      = selectorAndComposition
@@ -240,9 +240,9 @@ interface AglStyleRule {
         }
     }
 
-    const val styleStr = $$"""namespace net.akehurst.language
+    const val styleStr = $$$"""namespace net.akehurst.language
 styles Style {
-    $keyword {
+    $$ "'([^']+)'" {
       foreground: darkgreen;
       font-style: bold;
     }

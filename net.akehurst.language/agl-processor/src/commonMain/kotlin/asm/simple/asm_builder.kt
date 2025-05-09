@@ -44,7 +44,7 @@ fun asmSimple(
     defaultNamespace: QualifiedName = StdLibDefault.qualifiedName,
     crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(SimpleName("CrossReference")),
     sentenceId:Any? = null,
-    context: ContextAsmSimple? = null,
+    context: ContextWithScope<Any, Any>? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
@@ -62,7 +62,7 @@ class AsmSimpleBuilder(
     private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
     private val _sentenceId:Any?,
-    private val _context: ContextAsmSimple?,
+    private val _context: ContextWithScope<Any, Any>?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
 ) {
@@ -116,8 +116,8 @@ class AsmSimpleBuilder(
                 _sentenceId,
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
-                _context.createScopedItem,
-                emptyMap(), _issues
+                emptyMap(),
+                _issues
             )
             _asm.traverseDepthFirst(scopeCreator)
 
@@ -148,7 +148,7 @@ class AsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
-    private val _context: ContextAsmSimple?,
+    private val _context: ContextWithScope<Any, Any>?,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
     private val _asm: AsmSimple,
     private val _identifyingValueInFor: (inTypeName:SimpleName, item:AsmStructure) -> Any?,
@@ -173,8 +173,6 @@ class AsmElementSimpleBuilder(
                         ?: _defaultNamespace.qualifiedName.append(SimpleName(_typeName))
                 }
             }
-
-            else -> error("Unsupported")
         }
     }
     private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
@@ -185,8 +183,7 @@ class AsmElementSimpleBuilder(
             if (null!=_context && _crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
                 val refInParent = _identifyingValueInFor(_parentScope.forTypeName.last, _element) as String?
                     ?: _element.typeName.value
-                val itemInScope = _context.createScopedItem.invoke(_parentScope.scopePath+refInParent,_element, null)
-                val newScope = _parentScope.createOrGetChildScope(refInParent as String, _element.qualifiedTypeName, itemInScope)
+                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.qualifiedTypeName)
                 _scopeMap[_asmPath] = newScope
                 newScope
             } else {
@@ -284,7 +281,7 @@ class ListAsmElementSimpleBuilder(
     private val _typeModel: TypeModel,
     private val _defaultNamespace: TypeNamespace,
     private val _crossReferenceModel: CrossReferenceModel,
-    private val _context: ContextAsmSimple?,
+    private val _context: ContextWithScope<Any, Any>?,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<Any>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,

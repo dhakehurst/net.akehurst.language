@@ -94,7 +94,7 @@ class test_AllDefault {
             }
         )
 
-        fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataForSentenceParse) {
+        fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataForSentenceParse) {
             println("'${sd.sentence}'")
             val spptRes = proc.parse(sd.sentence)
             assertTrue(spptRes.issues.errors.isEmpty(), spptRes.issues.toString())

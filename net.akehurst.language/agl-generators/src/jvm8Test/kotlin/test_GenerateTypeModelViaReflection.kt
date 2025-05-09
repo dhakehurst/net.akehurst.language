@@ -12,7 +12,7 @@ import net.akehurst.language.scope.processor.AglScope
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.processor.AglTypemodel
+import net.akehurst.language.typemodel.processor.AglTypes
 import kotlin.test.Test
 
 class test_GenerateTypeModelViaReflection {
@@ -76,7 +76,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Typemodel"),
             grammar.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglTypemodel.kompositeString)
+            listOf(AglBase.kompositeString, AglTypes.kompositeString)
         )
         gen.addPackage("net.akehurst.language.typemodel.api")
         gen.addPackage("net.akehurst.language.typemodel.asm")

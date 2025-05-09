@@ -17,12 +17,15 @@
 package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -30,11 +33,16 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromGrammarRegistry> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithScope<Any,Any>> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
         const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
+
+        fun findGrammarOrNull(context: ContextWithScope<Any, Any>, localNamespace: QualifiedName, grammarNameOrQName: PossiblyQualifiedName): Grammar =
+            context.findItemsByQualifiedNameConformingTo(grammarNameOrQName.asQualifiedName(localNamespace).parts.map { it.value }) { itemTypeName ->
+                true
+            }.firstOrNull()?.item as Grammar
     }
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
@@ -64,7 +72,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
         sentenceIdentity:Any?,
         asm: GrammarModel,
         locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< ContextFromGrammarRegistry>
+        options: SemanticAnalysisOptions< ContextWithScope<Any,Any>>
     ): SemanticAnalysisResult {
         val context = options.context
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
@@ -72,19 +80,23 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
 
         if (null == context) {
             issueWarn(null, "No ContextFromGrammarRegistry supplied, grammar references cannot be resolved", null)
-        }
-
-        asm.namespace.forEach { ns ->
-            ns.definition.forEach {
-                context?.grammarRegistry?.registerGrammar(it)
+        } else {
+            asm.allDefinitions.forEach {
+                context.addToScope(sentenceIdentity,it.qualifiedName.parts.map { it.value }, QualifiedName("Grammar"),null, it)
             }
         }
+
+//        asm.namespace.forEach { ns ->
+//            ns.definition.forEach {
+//                context?.grammarRegistry?.registerGrammar(it)
+//            }
+//        }
 
         checkGrammar(context, asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: GrammarModel, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: ContextWithScope<Any,Any>?, grammarList: GrammarModel, automatonKind: AutomatonKind) {
         grammarList.namespace.forEach { ns ->
             ns.definition.forEach { grammar ->
                 this.resolveGrammarRefs(context, grammar)
@@ -99,19 +111,19 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
         }
     }
 
-    private fun resolveGrammarRefs(context: ContextFromGrammarRegistry?, grammar: Grammar) {
+    private fun resolveGrammarRefs(context: ContextWithScope<Any,Any>?, grammar: Grammar) {
         checkGrammarExistsAndResolve(context, grammar.extends)
         checkGrammarExistsAndResolve(context, grammar.allGrammarReferencesInRules)
     }
 
-    private fun checkGrammarExistsAndResolve(context: ContextFromGrammarRegistry?, refs: List<GrammarReference>) {
+    private fun checkGrammarExistsAndResolve(context: ContextWithScope<Any,Any>?, refs: List<GrammarReference>) {
         for (it in refs) {
             checkGrammarExistsAndResolve(context, it)
         }
     }
 
-    private fun checkGrammarExistsAndResolve(context: ContextFromGrammarRegistry?, ref: GrammarReference) {
-        val g = context?.grammarRegistry?.findGrammarOrNull(ref.localNamespace, ref.nameOrQName)
+    private fun checkGrammarExistsAndResolve(context: ContextWithScope<Any,Any>?, ref: GrammarReference) {
+        val g = context?.let{findGrammarOrNull(it,ref.localNamespace.qualifiedName, ref.nameOrQName)}
         if (null == g) {
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
         } else {
@@ -133,7 +145,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
         set.add(rule)
     }
 
-    private fun analyseGrammar(context: ContextFromGrammarRegistry?, grammar: Grammar) {
+    private fun analyseGrammar(context: ContextWithScope<Any,Any>?, grammar: Grammar) {
         _unusedRules[grammar] = mutableSetOf()
         // default usage is unused for all rules in this grammar
         grammar.grammarRule.forEach {
@@ -224,7 +236,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextFromG
         }
     }
 
-    private fun analyseRuleItem(context: ContextFromGrammarRegistry?, grammar: Grammar, rhs: RuleItem) {
+    private fun analyseRuleItem(context: ContextWithScope<Any,Any>?, grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> Unit
             is Terminal -> Unit

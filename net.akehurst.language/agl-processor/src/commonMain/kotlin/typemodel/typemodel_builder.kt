@@ -475,8 +475,6 @@ class TypeInstanceArgBuilder(
                     else -> TypeParameterReference(context, tp.name)
                 }
             }
-
-            else -> error("Unsupported")
         }
         _args.add(ti.asTypeArgument)
     }
@@ -563,8 +561,6 @@ class TypeArgumentBuilder(
                     else -> TypeParameterReference(_context, tp.name)
                 }
             }
-
-            else -> error("Unsupported")
         }
         list.add(ti.asTypeArgument)
     }

@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -38,7 +39,7 @@ import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextFromGrammarRegistry>() {
+object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
     const val OPTION_defaultGoalRule = "defaultGoalRule"
@@ -46,9 +47,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextFromGrammarRegis
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
     override val grammarString = """
-        namespace net.akehurst.language
-          grammar Grammar : Base {
-            override unit = namespace grammar+ ;
+        namespace $NAMESPACE_NAME
+          grammar $NAME : Base {
+            override namespace = 'namespace' possiblyQualifiedName option* import* grammar* ;
             grammar = 'grammar' IDENTIFIER extends? '{' option* rule+ '}' ;
             extends = ':' [possiblyQualifiedName / ',']+ ;
             rule = grammarRule | overrideRule | preferenceRule ;
@@ -137,8 +138,8 @@ interface Embedded {
 }
 """;
 
-    override val styleString: String = """namespace net.akehurst.language
-  styles Grammar {
+    override val styleString: String = """namespace $NAMESPACE_NAME
+  styles $NAME {
     'namespace', 'grammar', 'extends', 'override', 'skip', 'leaf' {
       foreground: darkgreen;
       font-style: bold;
@@ -163,8 +164,11 @@ interface Embedded {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
-                    concatenation("unit", overrideKind = OverrideKind.REPLACE) {
-                        ref("namespace"); lst(1, -1) { ref("grammar") }
+                    concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+                        lit("namespace"); ref("possiblyQualifiedName")
+                        lst(0, -1) { ref("option") }
+                        lst(0, -1) { ref("import") }
+                        lst(0, -1) { ref("grammar") }
                     }
                     concatenation("grammar") {
                         lit("grammar"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{")
@@ -972,9 +976,13 @@ interface Embedded {
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 imports(
+                    "net.akehurst.language.grammar.api",
                     "net.akehurst.language.grammar.asm"
                 )
                 transform(NAME) {
+                    createObject("unit", "GrammarModel") {
+
+                    }
                     //TODO: currently the types are not found in the typemodel
                     //    createObject("unit", "DefinitionBlock") {
                     //        assignment("definitions", "child[1]")
@@ -1020,6 +1028,7 @@ interface Embedded {
     override val crossReferenceModel: CrossReferenceModel by lazy {
         crossReferenceModel {
             //TODO
+
         }
     }
 
@@ -1084,8 +1093,8 @@ namespace net.akehurst.language.Grammar {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<GrammarModel> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextFromGrammarRegistry> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarModel, ContextFromGrammarRegistry> by lazy { AglGrammarCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarCompletionProvider() }
 
     //TODO: gen this from the ASM
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"

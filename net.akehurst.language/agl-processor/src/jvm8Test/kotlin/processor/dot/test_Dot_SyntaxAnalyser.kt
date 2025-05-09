@@ -18,6 +18,7 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -34,7 +35,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
     }
 
     @Test

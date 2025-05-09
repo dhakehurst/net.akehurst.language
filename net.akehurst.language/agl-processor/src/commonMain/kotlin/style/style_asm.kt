@@ -88,6 +88,10 @@ class AglStyleSetDefault(
     override val metaRules: List<AglStyleMetaRule> get() = rules.filterIsInstance<AglStyleMetaRule>()
     override val tagRules: List<AglStyleTagRule> get() = rules.filterIsInstance<AglStyleTagRule>()
 
+    init {
+        namespace.addDefinition(this)
+    }
+
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
         sb.append("styles ${name.value} {\n")

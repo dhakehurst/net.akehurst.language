@@ -2,13 +2,14 @@ package testFixture.data
 
 import net.akehurst.language.agl.*
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
+fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataParserSentence) {
     println("Testing - $sd")
     when (sd) {
         is TestDataProcessorSentencePass -> when {

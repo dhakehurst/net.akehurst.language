@@ -1,7 +1,7 @@
 package net.akehurst.language.agl.generators
 
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.typemodel.processor.AglTypemodel
+import net.akehurst.language.typemodel.processor.AglTypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,14 +11,14 @@ class test_GenerateGrammarModelBuild {
     fun generte_AglTypemodel_grammarString() {
         val gen = GenerateGrammarModelBuild()
 
-        val actual = gen.generateFromString(GrammarString(AglTypemodel.grammarString))
+        val actual = gen.generateFromString(GrammarString(AglTypes.grammarString))
         println(actual)
     }
 
     @Test
     fun AglTypemodel_grammarString_assert() {
-        val actual = AglTypemodel.grammarModel.asString()
-        val expected = AglTypemodel.grammarString
+        val actual = AglTypes.grammarModel.asString()
+        val expected = AglTypes.grammarString
         assertEquals(expected, actual)
     }
 

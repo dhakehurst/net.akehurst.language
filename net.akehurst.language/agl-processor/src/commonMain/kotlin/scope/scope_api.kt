@@ -21,7 +21,9 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.sentence.api.InputLocation
 
 data class ItemInScope<ItemInScopeType>(
+    /** identity of the item in this scope */
     val referableName: String,
+    /** type of the scoped item */
     val qualifiedTypeName: QualifiedName,
     val location: Any?,
     val item: ItemInScopeType
@@ -34,7 +36,7 @@ data class ItemInScope<ItemInScopeType>(
 interface Scope<ItemInScopeType> {
 
     /**
-     * unqualified TypeName from the ScopeDefinition,
+     * qualified TypeName from the ScopeDefinition,
      * i.e., the identity of the ScopeDefinition
      */
     val forTypeName: QualifiedName
@@ -86,7 +88,7 @@ interface Scope<ItemInScopeType> {
 
     fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemInScopeType>?
 
-    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName, item: ItemInScopeType): Scope<ItemInScopeType>
+    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName): Scope<ItemInScopeType>
 
     /**
      * adds Pair(item, typeName) to this scope

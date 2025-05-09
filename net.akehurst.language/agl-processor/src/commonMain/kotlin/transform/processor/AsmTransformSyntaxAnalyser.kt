@@ -122,7 +122,7 @@ class AsmTransformSyntaxAnalyser(
             val asm = TransformRuleSetDefault(namespace, name, extendRefs, optHolder, rules)
             typeImports.forEach { asm.addImportType(it) }
             rules.forEach { asm.setRule(it) }
-            asm
+            asm.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 

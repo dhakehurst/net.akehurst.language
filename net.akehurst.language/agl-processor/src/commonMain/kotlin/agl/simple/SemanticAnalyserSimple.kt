@@ -36,7 +36,7 @@ import net.akehurst.language.typemodel.asm.StdLibDefault
 class SemanticAnalyserSimple(
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
-) : SemanticAnalyser<Asm, ContextAsmSimple> {
+) : SemanticAnalyser<Asm, ContextWithScope<Any, Any>> {
 
     companion object {
         fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceModel: CrossReferenceModel, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
@@ -74,7 +74,7 @@ class SemanticAnalyserSimple(
         sentenceIdentity: Any?,
         asm: Asm,
         locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions<ContextAsmSimple>
+        options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
         val context = options.context
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
@@ -88,7 +88,7 @@ class SemanticAnalyserSimple(
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextAsmSimple>, sentenceIdentity: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple) {
+    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextWithScope<Any, Any>) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
@@ -104,9 +104,9 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextAsmSimple, resolve: Boolean) {
+    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextWithScope<Any, Any>, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
-            { ref -> context.resolveScopedItem.invoke(ref) }
+            { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
         } else {
             null
         }
@@ -129,7 +129,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun buildScope(options: SemanticAnalysisOptions<ContextAsmSimple>, sentenceIdentity: Any?, asm: Asm, context: ContextAsmSimple) {
+    private fun buildScope(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, context: ContextWithScope<Any, Any>) {
         when {
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
@@ -141,7 +141,6 @@ class SemanticAnalyserSimple(
                     options.replaceIfItemAlreadyExistsInScope,
                     options.ifItemAlreadyExistsInScopeIssueKind,
                     this::identifyingValueInFor,
-                    context.createScopedItem,
                     _locationMap, _issues
                 )
                 asm.traverseDepthFirst(scopeCreator)

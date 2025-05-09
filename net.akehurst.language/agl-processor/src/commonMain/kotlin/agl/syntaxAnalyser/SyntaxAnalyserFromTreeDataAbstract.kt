@@ -28,6 +28,7 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.SpptDataNode
+import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import net.akehurst.language.sppt.treedata.locationForNode
@@ -42,6 +43,10 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyse
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf()
+
+    fun setLocationFor(obj:Any, nodeInfo: SpptDataNodeInfo, sentence:Sentence) {
+        locationMap[obj] = sentence.locationForNode(nodeInfo.node)
+    }
 
     fun setEmbeddedSyntaxAnalyser(qualifiedName: QualifiedName, sa: SyntaxAnalyser<AsmType>) {
         (embeddedSyntaxAnalyser as MutableMap).set(qualifiedName, sa)

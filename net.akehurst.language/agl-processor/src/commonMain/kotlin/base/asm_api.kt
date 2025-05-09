@@ -30,7 +30,7 @@ val String.asPossiblyQualifiedName: PossiblyQualifiedName
 val String.isQualifiedName: Boolean get() = this.contains(".")
 val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
 
-interface PossiblyQualifiedName {
+sealed interface PossiblyQualifiedName {
     companion object {
         //FIXME: from here - see above
     }

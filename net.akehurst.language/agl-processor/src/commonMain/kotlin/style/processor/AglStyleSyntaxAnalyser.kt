@@ -79,7 +79,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val rules: List<AglStyleTagRule> = children[4] as List<AglStyleTagRule>
         return { ns ->
             val ss = AglStyleSetDefault(ns, name, extends)
-            ns.addDefinition(ss)
+                .also { setLocationFor(it, nodeInfo, sentence) }
             (ss.rules as MutableList).addAll(rules)
         }
     }

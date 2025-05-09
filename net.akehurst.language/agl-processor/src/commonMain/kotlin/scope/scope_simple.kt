@@ -39,9 +39,6 @@ class ScopeSimple<ItemInScopeType>(
         if (null == parent) emptyList() else parent.scopePath + scopeIdentityInParent
     }
 
-    //should only be used for rootScope
-   // override val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
-
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemInScopeType>>()
 
     // referableName -> (typeName, item)
@@ -49,7 +46,7 @@ class ScopeSimple<ItemInScopeType>(
 
     override val rootScope: ScopeSimple<ItemInScopeType> by lazy {
         var s = this
-        while (null != s.parent) s = s.parent!!
+        while (null != s.parent) s = s.parent
         s
     }
 
@@ -76,13 +73,12 @@ class ScopeSimple<ItemInScopeType>(
         return this._childScopes[childScopeIdentityInThis]
     }
 
-    override fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName, itemInScope: ItemInScopeType): ScopeSimple<ItemInScopeType> {
+    override fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName): ScopeSimple<ItemInScopeType> {
         var child = this._childScopes[childScopeIdentityInThis]
         if (null == child) {
             child = ScopeSimple(this, childScopeIdentityInThis, forTypeName)
             this._childScopes[childScopeIdentityInThis] = child
         }
-     //   this.rootScope.scopeMap[item] = child
         return child
     }
 

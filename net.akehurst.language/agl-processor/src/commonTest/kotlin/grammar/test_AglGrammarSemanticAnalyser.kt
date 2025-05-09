@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
@@ -76,7 +77,7 @@ class test_AglGrammarSemanticAnalyser {
 
         fun semanticAnalysis(
             asmRes: SyntaxAnalysisResult<GrammarModel>,
-            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>
+            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
             val context = ContextFromGrammarRegistry(Agl.registry)
@@ -87,7 +88,7 @@ class test_AglGrammarSemanticAnalyser {
         fun test(
             grammarStr: String,
             expected: Set<LanguageIssue>,
-            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry> = Agl.options { }
+            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>> = Agl.options { }
         ): ProcessResult<GrammarModel> {
             val sppt = parse(grammarStr)
             val asmRes = syntaxAnalysis(sppt)

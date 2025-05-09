@@ -20,6 +20,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
@@ -75,7 +76,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = CrossReferenceModelDefault(grammar.primary!!.name)
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
-        val processor = Agl.processorFromString<Asm, ContextAsmSimple>(
+        val processor = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
             grammarStr,
             Agl.configuration {
                 crossReferenceResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }

@@ -44,7 +44,7 @@ class test_SyntaxAnalyserSimple {
     private companion object {
         fun processor(grammarStr: String) = Agl.processorFromStringSimple(GrammarString(grammarStr))
 
-        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextAsmSimple> {
+        fun testProc(grammarStr: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.toString())
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -58,7 +58,7 @@ class test_SyntaxAnalyserSimple {
 
         fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> Asm) = this.add(TestData(sentence, expected()))
 
-        fun test(proc: LanguageProcessor<Asm, ContextAsmSimple>, data: TestData) {
+        fun test(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -68,19 +68,19 @@ class test_SyntaxAnalyserSimple {
             assertEquals(data.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "))
         }
 
-        fun testAll(proc: LanguageProcessor<Asm, ContextAsmSimple>, tests: List<TestData>) {
+        fun testAll(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, tests: List<TestData>) {
             for (data in tests) {
                 test(proc, data)
             }
         }
 
-        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: RuleSet) {
+        fun checkRuntimeGrammar(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, expected: RuleSet) {
             val actual = (proc as LanguageProcessorAbstract).targetRuleSet as RuntimeRuleSet
             assertEquals(expected.toString(), actual.toString())
             assertTrue(expected.matches(actual))
         }
 
-        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextAsmSimple>, expected: TypeModel) {
+        fun checkTypeModel(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, expected: TypeModel) {
             GrammarTypeModelTest.tmAssertEquals(expected, proc.typesModel)
         }
     }

@@ -128,8 +128,6 @@ class AsmTransformRuleSetBuilder internal constructor(
                     }
                     td
                 }
-
-                else -> error("Unsupported")
             }
         } else {
             val ns = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName)!!

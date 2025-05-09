@@ -97,7 +97,6 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
         return when (typeName) {
             is QualifiedName -> findNamespaceOrNull(typeName.front)?.findOwnedTypeNamed(typeName.last)
             is SimpleName -> findFirstDefinitionByNameOrNull(typeName)
-            else -> error("Unsupported")
         }
     }
 
@@ -383,8 +382,6 @@ class TypeInstanceSimple(
                 is QualifiedName -> qualifiedOrImportedTypeName
                 is SimpleName -> context?.namespace?.qualifiedName?.append(qualifiedOrImportedTypeName)
                     ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
-
-                else -> error("Unsupported")
             }
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
@@ -647,8 +644,6 @@ abstract class TypeNamespaceAbstract(
                         (tns as TypeNamespace?)?.findOwnedTypeNamed(tn)
                     }
             }
-
-            else -> error("Unsupported")
         }
     }
 
@@ -757,19 +752,9 @@ abstract class TypeNamespaceAbstract(
         typeArguments: List<TypeArgument>,
         isNullable: Boolean
     ): TypeInstance {
-        //when (qualifiedOrImportedTypeName) {
-        //    is QualifiedName -> this._requiredNamespaces[qualifiedOrImportedTypeName.front] = null
-        //    is SimpleName -> Unit
-        //    else -> error("Unsupported")
-        //}
         return TypeInstanceSimple(contextQualifiedTypeName, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
     }
 
-    /*
-        override fun createUnnamedSupertypeTypeInstance(declaration: UnionType, typeArguments: List<TypeArgument>, nullable: Boolean): TypeInstance {
-            return UnnamedSupertypeTypeInstance(this, declaration, typeArguments, nullable)
-        }
-    */
     override fun createTupleTypeInstance(typeArguments: List<TypeArgumentNamed>, nullable: Boolean): TupleTypeInstance {
         return TupleTypeInstanceSimple(this, typeArguments, nullable)
     }

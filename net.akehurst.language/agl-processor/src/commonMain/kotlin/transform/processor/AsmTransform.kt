@@ -61,10 +61,7 @@ grammar AsmTransform : Base {
     ) {
         extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 
-        concatenation("unit") {
-            lst(0, -1) { ref("option") }
-            lst(0, -1) { ref("namespace") }
-        }
+        concatenation("unit") { lst(0, -1) { ref("option") }; lst(0, -1) { ref("namespace") } }
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("option") }

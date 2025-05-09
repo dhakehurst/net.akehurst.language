@@ -137,7 +137,11 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                         null -> stack.push(reverseChildren)
                         else -> {
                             val obj = handler.invoke(nodeInfo, reverseChildren, sentence)
-                            obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                            when (obj) {
+                                null -> Unit
+                                is Function<*> -> Unit // no point setting location for function/lambda
+                                else -> setLocationFor(obj,nodeInfo,sentence)
+                            }
                             stack.push(obj)
                         }
                     }

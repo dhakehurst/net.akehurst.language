@@ -17,6 +17,7 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.processor.AglLanguages
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Namespace
@@ -36,6 +37,8 @@ import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.jvm.JvmInline
 
 interface GrammarRegistry {
+    val grammars:List<Grammar>
+
     fun registerGrammar(grammar: Grammar)
     fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
 }
@@ -67,12 +70,14 @@ interface LanguageRegistry : GrammarRegistry {
 
     val agl: AglLanguages
 
+    val languages:Map<LanguageIdentity,LanguageDefinition<*, *>>
+
     /**
      * create and register a LanguageDefinition as specified
      */
     fun <AsmType : Any, ContextType : Any> register(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
@@ -83,7 +88,7 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: LanguageIdentity,
-        aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>? = null,
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>? = null,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageDefinition<AsmType, ContextType>
 }

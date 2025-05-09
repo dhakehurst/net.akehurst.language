@@ -92,34 +92,10 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 */
     //abstract override var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
 
-    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
-
     override val issues: IssueCollection<LanguageIssue> get() = _issues
 
-    override val styleModel: AglStyleModel?
-        get() {
-            return if (null == _style) {
-                _styleResolver?.let {
-                    val p = this.processor
-                    if (null == p) {
-                        null
-                    } else {
-                        val r = it.invoke(p)
-                        _issues.addAllFrom(r.issues)
-                        r.asm
-                    }
-                }
-            } else {
-                _style
-            }
-        }
-//        set(value) {
-//            val oldValue = _style
-//            if (oldValue != value) {
-//                _styleResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-//                styleObservers.forEach { it(oldValue, value) }
-//            }
-//        }
+    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
+    override val styleModel: AglStyleModel? get() = this._style_cache.value
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
@@ -152,20 +128,28 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
 
-    //private var _grammar_cache: CachedValue<Grammar?> = cached {
-    //    val res = this._grammarResolver?.invoke()
-    //    this._issues.addAll(res?.issues?: emptyList())
-    //    res?.asm
-    //}.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
+    // style is not part of the processor...only used by editors
+    protected val _style_cache: CachedValue<AglStyleModel?> = cached {
+        _styleResolver?.let {
+            val p = this.processor
+            if (null == p) {
+                null
+            } else {
+                val r = it.invoke(p)
+                _issues.addAllFrom(r.issues)
+                r.asm
+            }
+        }
+    }
 
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
-    protected var _style: AglStyleModel? = null//AglStyleModelDefault(SimpleName("<empty>"))
-
+/*
     protected var _regexEngineKind: RegexEngineKind by Delegates.observable(RegexEngineKind.AGL) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _scannerKind : ScannerKind by Delegates.observable(ScannerKind.OnDemand) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
@@ -220,15 +204,17 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
+    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+*/
+
     protected var _styleResolver: StyleResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-        }
-    }
 }

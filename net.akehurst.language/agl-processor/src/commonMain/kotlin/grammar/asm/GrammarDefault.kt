@@ -59,8 +59,8 @@ class GrammarNamespaceDefault(
 class GrammarDefault(
     namespace: GrammarNamespace,
     name: SimpleName,
-    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-) : GrammarAbstract(namespace, name) {
+    options: OptionHolder
+) : GrammarAbstract(namespace, name,options) {
 
     companion object {
         fun fromString() {
@@ -86,7 +86,8 @@ data class GrammarReferenceDefault(
 
 abstract class GrammarAbstract(
     final override val namespace: GrammarNamespace,
-    final override val name: SimpleName
+    final override val name: SimpleName,
+    override val options: OptionHolder,
 ) : Grammar {
 
     private companion object {
@@ -116,6 +117,10 @@ abstract class GrammarAbstract(
                 }
             }
         }
+    }
+
+    init {
+        namespace.addDefinition(this)
     }
 
     override val selfReference by lazy {

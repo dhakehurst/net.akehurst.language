@@ -73,7 +73,7 @@ class BaseSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Any>() {
     //definition = 'definition' IDENTIFIER ;
     private fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (NamespaceDefault) -> DefinitionDefault {
         val id = SimpleName(children[1] as String)
-        return { ns -> DefinitionDefault(ns,id) }
+        return { ns -> DefinitionDefault(ns,id).also { setLocationFor(it, nodeInfo, sentence) } }
     }
 
     // option = '#' IDENTIFIER (':' IDENTIFIER)? ;

@@ -10,7 +10,7 @@ import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.collections.set
 
-typealias CreateScopedItem<ItemType, ItemInScopeType> = (referableName: List<String>, item: ItemType, location: InputLocation?) -> ItemInScopeType
+typealias CreateScopedItem<ItemType, ItemInScopeType> = (qualifiedName: List<String>, item: ItemType, location: InputLocation?) -> ItemInScopeType
 typealias ResolveScopedItem<ItemType, ItemInScopeType> = (itemInScope: ItemInScopeType) -> ItemType?
 
 open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
@@ -30,7 +30,7 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     //var rootScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     val scopeForSentence = mutableMapOf<Any, ScopeSimple<ItemInScopeType>>()
 
-    val isEmpty: Boolean get() = scopeForSentence.all { (k,v) -> v.isEmpty }
+    val isEmpty: Boolean get() = scopeForSentence.all { (k, v) -> v.isEmpty }
 
     fun clear() {
         scopeForSentence.clear()
@@ -49,6 +49,15 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         } else {
             scopeForSentence[sentenceIdentity]
         }
+    }
+
+    fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item:ItemInScopeType) {
+        val rootScope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
+        var scope =rootScope
+        for(n in qualifiedName.dropLast(1)) {
+            scope = scope.createOrGetChildScope(n, QualifiedName("<unknown>"))
+        }
+        scope.addToScope(qualifiedName.last(), itemTypeName, location, item, false)
     }
 
     fun findItemsConformingTo(conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): List<ItemInScope<ItemInScopeType>> {
@@ -77,14 +86,13 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
 }
 
 open class ContextAsmSimple(
-    createScopedItem: CreateScopedItem<AsmStructure, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
-    resolveScopedItem: ResolveScopedItem<AsmStructure, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure }
-) : ContextWithScope<AsmStructure, Any>(createScopedItem, resolveScopedItem)
+    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
+    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure }
+) : ContextWithScope<Any, Any>(createScopedItem, resolveScopedItem)
 
-//FIXME: this does not work as currently AsmPath is incorrectly calculated by SyntaxAnalyserFromAsmTransformAbstract
 class ContextAsmSimpleWithScopePath(
-    map: MutableMap<String, AsmStructure> = mutableMapOf(),
-) : ContextAsmSimple(
-    { referableName, item, location -> val path ="/${referableName.joinToString("/")}"; map[path] = item; path },
+    map: MutableMap<String, Any> = mutableMapOf(),
+) : ContextWithScope<Any, Any>(
+    { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path },
     { itemInScope -> map[itemInScope] }
 )
