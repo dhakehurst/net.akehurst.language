@@ -18,17 +18,19 @@
 package net.akehurst.language.style.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
+import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract.Companion.defaultSortAndFilter
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.typemodel.api.TypeInstance
 
-class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFromGrammar> {
+class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWithScope<Any,Any>> {
 
     companion object {
         private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
@@ -54,17 +56,17 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
 //        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
     }
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextFromGrammar>): List<CompletionItem> {
+    override fun provide(spines: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
         val context = options.context
         return if (null == context) {
             emptyList()
         } else {
-            val items = nextExpected.flatMap { it.expectedNextLeafNonTerminalOrTerminal.flatMap { provideForTerminalItem(it, context) } }
-            items
+            val items = spines.flatMap { spine -> spine.expectedNextLeafNonTerminalOrTerminal.flatMap { provideForTerminalItem(options.depth, spine, it, context) } }
+            defaultSortAndFilter(items)
         }
     }
 
-    private fun provideForTerminalItem(nextExpected: RuleItem, context: ContextFromGrammar): List<CompletionItem> {
+    private fun provideForTerminalItem(depth: Int, spine: Spine, nextExpected: RuleItem, context: ContextWithScope<Any, Any>): List<CompletionItem> {
         val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
             ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
             ?: error("Should not be null")
@@ -78,43 +80,43 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
             GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, context)
             GrammarRuleName("rule") -> rule(nextExpected, itemType, context)
             GrammarRuleName("style") -> style(nextExpected, itemType, context)
-            else -> emptyList()
+            else -> CompletionProviderAbstract.provideDefaultForSpine(depth,spine)
         }
     }
 
-    private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
-        val scopeItems = context.rootScope.findItemsConformingTo { it.value == "LITERAL" }
+    private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+        val scopeItems = context.findItemsConformingTo { it.value == "LITERAL" }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", it.referableName).also {
+            CompletionItem(CompletionItemKind.REFERRED, "LITERAL", it.referableName).also {
                 it.description = "Reference to a literal value used in the grammar. Literals are enclosed in single quotes or leaf rules."
             }
         }
     }
 
-    private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
-        val scopeItems = context.rootScope.findItemsConformingTo { it.value == "PATTERN" }
+    private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+        val scopeItems = context.findItemsConformingTo { it.value == "PATTERN" }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, "PATTERN", it.referableName).also {
+            CompletionItem(CompletionItemKind.REFERRED, "PATTERN", it.referableName).also {
                 it.description = "Reference to a pattern value (regular expression) used in the grammar. Patterns are enclosed in double quotes or leaf rules."
             }
         }
     }
 
-    private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
-        val scopeItems = context.rootScope.findItemsConformingTo { it == grammarRule.resolvedDeclaration.qualifiedName }
+    private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
+        val scopeItems = context.findItemsConformingTo { it == grammarRule.resolvedDeclaration.qualifiedName }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, grammarRule.resolvedDeclaration.name.value, it.referableName)
+            CompletionItem(CompletionItemKind.REFERRED, grammarRule.resolvedDeclaration.name.value, it.referableName)
         }
     }
 
-    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
             CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.NO_STYLE_ID.value)
         )
     }
 
-    private fun STYLE_ID(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun STYLE_ID(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
@@ -123,7 +125,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
         )
     }
 
-    private fun STYLE_VALUE(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun STYLE_VALUE(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
@@ -131,13 +133,13 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
         )
     }
 
-    private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return listOf(
             CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
         )
     }
 
-    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.value) {
                 "'{'" -> listOf(
@@ -153,7 +155,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextFr
         }
     }
 
-    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: ContextFromGrammar): List<CompletionItem> {
+    private fun style(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.value) {
                 "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ":"))

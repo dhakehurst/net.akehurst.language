@@ -60,18 +60,18 @@ class CompletionProviderSimple(
         val depth = options.depth
         val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideDefault(depth, sp) }.toSet()
+            nextExpected.flatMap { sp -> provideDefaultForSpine(depth, sp) }.toSet()
                 .toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val firstSpineNode = sp.elements.firstOrNull()
                 when (firstSpineNode) {
-                    null -> provideDefault(depth, sp)
+                    null -> provideDefaultForSpine(depth, sp)
                     else -> {
                         val type = typeFor(firstSpineNode.rule)
                         when (type) {
-                            null -> provideDefault(depth, sp)
-                            else -> provideForType(type, firstSpineNode, context) + provideDefault(depth, sp)
+                            null -> provideDefaultForSpine(depth, sp)
+                            else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(depth, sp)
                         }
                     }
                 }

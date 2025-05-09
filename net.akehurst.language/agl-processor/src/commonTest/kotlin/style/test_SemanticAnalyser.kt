@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -39,7 +39,7 @@ class test_SemanticAnalyser {
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(testGrammar)
+            val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
@@ -52,7 +52,7 @@ class test_SemanticAnalyser {
 
         fun testFail(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(testGrammar)
+            val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)

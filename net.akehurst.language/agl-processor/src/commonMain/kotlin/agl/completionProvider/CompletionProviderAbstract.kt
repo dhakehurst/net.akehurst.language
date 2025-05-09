@@ -128,7 +128,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             return sorted
         }
 
-        fun provideDefault(depth: Int, spine: Spine): List<CompletionItem> {
+        fun provideDefaultForSpine(depth: Int, spine: Spine): List<CompletionItem> {
             return provideForRuleItem(depth, spine.expectedNextRuleItems) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal)
         }
 
@@ -292,7 +292,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
     }
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-        val items = nextExpected.flatMap { sp -> provideDefault(options.depth, sp) }
+        val items = nextExpected.flatMap { sp -> provideDefaultForSpine(options.depth, sp) }
         return defaultSortAndFilter(items)
     }
 

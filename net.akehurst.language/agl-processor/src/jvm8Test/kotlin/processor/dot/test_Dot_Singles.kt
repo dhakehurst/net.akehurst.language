@@ -20,8 +20,8 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -1033,7 +1033,7 @@ NAME {
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammarModel!!)) }
+                semanticAnalysis { context(contextFromGrammar(processor.grammarModel!!)) }
             })
 
         assertNotNull(result.asm)

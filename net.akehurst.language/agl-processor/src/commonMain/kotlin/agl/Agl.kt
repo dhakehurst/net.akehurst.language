@@ -29,8 +29,8 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
@@ -124,7 +124,7 @@ object Agl {
                 typesResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> ->
                     TypeModelSimple.fromString(
                         SimpleName("FromGrammar" + p.grammarModel!!.name.value),
-                        ContextFromGrammar.createContextFrom(p.grammarModel!!),
+                        contextFromGrammar(p.grammarModel!!),
                         typeStr
                     )
                 }
@@ -136,7 +136,7 @@ object Agl {
                 crossReferenceResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), referenceStr) }
             }
             if (null != styleStr) {
-                styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), styleStr) }
+                styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
                 formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), formatterModelStr) }

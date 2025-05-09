@@ -18,6 +18,7 @@
 package net.akehurst.language.typemodel.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.typemodel.processor.TypesSyntaxAnalyser
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -32,14 +33,13 @@ import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglTypes : LanguageObjectAbstract<TypeModel, ContextFromGrammar>() {
+object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any,Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Types"
     const val goalRuleName = "unit"
@@ -772,7 +772,7 @@ namespace net.akehurst.language.grammarTypemodel.api
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypesSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextFromGrammar> by lazy { TypemodelSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<TypeModel, ContextFromGrammar> by lazy { TypemodelCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> by lazy { TypemodelSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypeModel, ContextWithScope<Any,Any>> by lazy { TypemodelCompletionProvider() }
 
 }

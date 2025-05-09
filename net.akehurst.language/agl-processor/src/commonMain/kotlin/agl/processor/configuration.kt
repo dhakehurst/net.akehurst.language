@@ -24,7 +24,7 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -99,7 +99,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         )
     },
     override var typesResolver: TypesResolver<AsmType, ContextType>? = { p ->
-        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), ContextFromGrammar.createContextFrom(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
+        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), contextFromGrammar(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
@@ -116,7 +116,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
-        AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
+        AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null,
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -152,7 +152,7 @@ internal class LanguageProcessorConfigurationSimple(
         )
     },
     override var typesResolver: TypesResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
-        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), ContextFromGrammar.createContextFrom(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
+        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), contextFromGrammar(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val transformResolver: TransformResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
@@ -179,7 +179,7 @@ internal class LanguageProcessorConfigurationSimple(
         AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
-        AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
+        AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(

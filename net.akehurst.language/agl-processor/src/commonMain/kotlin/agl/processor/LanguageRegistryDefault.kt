@@ -61,12 +61,9 @@ import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.processor.AglTypes
 
 fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): ContextWithScope<Any, Any> {
-    val context = ContextWithScope<Any, Any>(
-        createScopedItem = { ref, item, location -> },
-        resolveScopedItem = { item -> Any() }
-    )
+    val context = ContextWithScope<Any, Any>()
     registry.grammars.forEach {
-        context.addToScope(1, it.qualifiedName.parts.map { it.value }, QualifiedName("GrammarNamespace"), null, it)
+        context.addToScope(registry, it.qualifiedName.parts.map { it.value }, QualifiedName("GrammarNamespace"), null, it)
     }
     return context
 }
@@ -84,10 +81,10 @@ interface AglLanguages {
     val base: LanguageDefinition<Any, SentenceContext>
     val expressions: LanguageDefinition<Expression, SentenceContext>
     val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>>
-    val types: LanguageDefinition<TypeModel, ContextFromGrammar>
+    val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>>
     val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
-    val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
+    val style: LanguageDefinition<AglStyleModel, ContextWithScope<Any,Any>>
     val format: LanguageDefinition<AglFormatModel, SentenceContext>
 }
 
@@ -145,7 +142,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglGrammar)
         }
 
-        override val types: LanguageDefinition<TypeModel, ContextFromGrammar> by lazy {
+        override val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglTypes)
         }
@@ -223,7 +220,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         }
 
-        override val style: LanguageDefinition<AglStyleModel, ContextFromGrammar> by lazy {
+        override val style: LanguageDefinition<AglStyleModel, ContextWithScope<Any,Any>> by lazy {
             base //ensure base is instantiated
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(

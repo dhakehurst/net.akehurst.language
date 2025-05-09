@@ -19,11 +19,11 @@ package net.akehurst.language.typemodel.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
@@ -36,7 +36,7 @@ class TypeModelSimple(
 ) : TypeModelSimpleAbstract() {
 
     companion object {
-        fun fromString(name: SimpleName, context: ContextFromGrammar, typesString: TypesString): ProcessResult<TypeModel> {
+        fun fromString(name: SimpleName, context: ContextWithScope<Any,Any>, typesString: TypesString): ProcessResult<TypeModel> {
             return when {
                 typesString.value.isBlank() -> ProcessResultDefault( typeModel(name.value,true) {  }, IssueHolder(LanguageProcessorPhase.ALL) )
                 else -> {

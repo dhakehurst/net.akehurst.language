@@ -14,8 +14,8 @@ typealias CreateScopedItem<ItemType, ItemInScopeType> = (qualifiedName: List<Str
 typealias ResolveScopedItem<ItemType, ItemInScopeType> = (itemInScope: ItemInScopeType) -> ItemType?
 
 open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
-    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType>,
-    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType>
+    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = { ref, item, location -> item as ItemInScopeType},
+    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = { itemInScope -> itemInScope as ItemType }
 ) : SentenceContext {
 
     companion object {

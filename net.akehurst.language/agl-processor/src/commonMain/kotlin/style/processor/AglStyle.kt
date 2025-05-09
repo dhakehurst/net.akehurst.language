@@ -47,7 +47,7 @@ grammar Style : Base {
     
     leaf LITERAL = "'([^'\\]|\\.)+'" ;
     leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
-    leaf SPECIAL_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
+    leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
     leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
     leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;

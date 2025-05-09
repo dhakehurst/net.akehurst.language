@@ -16,23 +16,12 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.*
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.processor.AglGrammar.formatStr
-import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimple
-import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(

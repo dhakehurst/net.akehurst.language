@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -64,7 +64,7 @@ class test_AglStyleLanguage {
         fun process(sentence: String) = aglProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(ContextFromGrammar.createContextFrom(testGrammar)) }
+                semanticAnalysis { context(contextFromGrammar(testGrammar)) }
             })
     }
 
