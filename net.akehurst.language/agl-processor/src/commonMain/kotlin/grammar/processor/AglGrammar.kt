@@ -31,18 +31,21 @@ import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,Any>>() {
+    const val OPTION_defaultGoalRule = "defaultGoalRule"
+
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Grammar"
-    const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
@@ -96,47 +99,48 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
           }
         """.trimIndent()
 
-    override val kompositeString = """namespace net.akehurst.language.grammar.api
-interface Grammar {
-    cmp extends
-    cmp options
-    cmp grammarRule
-    cmp preferenceRule
-}
-interface GrammarRule {
-    cmp rhs
-}
-interface OverrideRule {
-    cmp overridenRhs
-}
-interface PreferenceRule {
-    cmp optionList
-}
-interface Choice {
-    cmp alternative
-}
-interface Concatenation {
-    cmp items
-}
-interface OptionalItem {
-    cmp item
-}
-interface ListOfItems {
-    cmp item
-}
-interface SeparatedList {
-    cmp separator
-}
-interface Group {
-    cmp groupedContent
-}
-interface NonTerminal {
-    cmp targetGrammar
-}
-interface Embedded {
-    cmp embeddedGrammarReference
-}
-""";
+    override val kompositeString = """
+        namespace $NAMESPACE_NAME.grammar.api
+            interface Grammar {
+                cmp extends
+                cmp options
+                cmp grammarRule
+                cmp preferenceRule
+            }
+            interface GrammarRule {
+                cmp rhs
+            }
+            interface OverrideRule {
+                cmp overridenRhs
+            }
+            interface PreferenceRule {
+                cmp optionList
+            }
+            interface Choice {
+                cmp alternative
+            }
+            interface Concatenation {
+                cmp items
+            }
+            interface OptionalItem {
+                cmp item
+            }
+            interface ListOfItems {
+                cmp item
+            }
+            interface SeparatedList {
+                cmp separator
+            }
+            interface Group {
+                cmp groupedContent
+            }
+            interface NonTerminal {
+                cmp targetGrammar
+            }
+            interface Embedded {
+                cmp embeddedGrammarReference
+            }
+        """.trimIndent()
 
     override val styleString: String = """namespace $NAMESPACE_NAME
   styles $NAME {
@@ -306,15 +310,14 @@ interface Embedded {
     }
 
     /** implemented as kotlin classes **/
-    override val typeModel: TypeModel by lazy {
+    override val typesModel: TypeModel by lazy {
         //TODO: GrammarTypeNamespace?
-        typeModel("Grammar", true, AglBase.typeModel.namespace) {
-            namespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
+        typeModel("Grammar", true, AglBase.typesModel.namespace) {
+            grammarTypeNamespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
                 enum("Associativity", listOf("LEFT", "RIGHT"))
                 value("GrammarRuleName") {
-
                     constructor_ {
                         parameter("value", "String", false)
                     }
@@ -370,7 +373,7 @@ interface Embedded {
                     supertype("SimpleItem")
                     propertyOf(setOf(VAL, CMP, STORED), "groupedContent", "RuleItem", false)
                 }
-                interface_("GrammarRule") {
+                interfaceFor("grammarRule","GrammarRule") {
                     supertype("GrammarItem")
                     propertyOf(setOf(VAL, CMP, STORED), "rhs", "RuleItem", false)
                 }
@@ -971,15 +974,15 @@ interface Embedded {
     override val asmTransformModel: TransformModel by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typeModel,
+            typeModel = typesModel,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                imports(
-                    "net.akehurst.language.grammar.api",
-                    "net.akehurst.language.grammar.asm"
-                )
                 transform(NAME) {
+                    importTypes(
+                        "net.akehurst.language.grammar.api",
+                        "net.akehurst.language.grammar.asm"
+                    )
                     createObject("unit", "GrammarModel") {
 
                     }
@@ -1026,7 +1029,7 @@ interface Embedded {
     }
 
     override val crossReferenceModel: CrossReferenceModel by lazy {
-        crossReferenceModel {
+        crossReferenceModel(NAME) {
             //TODO
 
         }
@@ -1034,14 +1037,34 @@ interface Embedded {
 
     override val formatModel: AglFormatModel by lazy {
         formatModel(AglBase.NAME) {
-            TODO("not implemented")
+//            TODO("not implemented")
         }
     }
 
     override val styleModel: AglStyleModel by lazy {
-        val res = Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), styleString)
-        check(res.issues.errors.isEmpty()) { res.issues.toString() }
-        res.asm!!
+        styleModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    metaRule("'([^']+)'") {
+                        declaration("foreground","darkgreen")
+                        declaration("font-style","bold")
+                    }
+                    tagRule("LITERAL") {
+                        declaration("foreground","blue")
+                    }
+                    tagRule("PATTERN") {
+                        declaration("foreground","darkblue")
+                    }
+                    tagRule("IDENTIFIER") {
+                        declaration("foreground","darkred")
+                        declaration("font-style","italic")
+                    }
+                    tagRule("SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT") {
+                        declaration("foreground","LightSlateGrey")
+                    }
+                }
+            }
+        }
     }
 
     val formatStr = $$"""
@@ -1096,7 +1119,6 @@ namespace net.akehurst.language.Grammar {
     override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarSemanticAnalyser() }
     override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarCompletionProvider() }
 
-    //TODO: gen this from the ASM
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 
 }

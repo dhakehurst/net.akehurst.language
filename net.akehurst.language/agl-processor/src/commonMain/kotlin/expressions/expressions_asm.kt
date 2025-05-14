@@ -60,7 +60,8 @@ data class CreateObjectExpressionDefault(
             imports.any { it.value == possiblyQualifiedTypeName.asQualifiedName(null).front.value } -> possiblyQualifiedTypeName.simpleName.value
             else -> possiblyQualifiedTypeName.value
         }
-        sb.append("$pqn {\n")
+        val cArgs = constructorArguments.joinToString(separator = ", ") { it.asString(Indent(), imports) }
+        sb.append("$pqn($cArgs) {\n")
         val ni = indent.inc
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
         sb.append("${props}\n")

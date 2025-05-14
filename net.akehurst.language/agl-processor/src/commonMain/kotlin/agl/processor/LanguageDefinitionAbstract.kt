@@ -29,10 +29,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.regex.api.RegexEngineKind
-import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
@@ -71,7 +68,7 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
     }
 
     override val typesModel: TypeModel? get() = this.processor?.typesModel
-    override val transformModel: TransformModel? get() = this.processor?.asmTransformModel
+    override val transformModel: TransformModel? get() = this.processor?.transformModel
     override val crossReferenceModel: CrossReferenceModel? get() = this.processor?.crossReferenceModel
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = this.processor?.syntaxAnalyser
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this.processor?.semanticAnalyser

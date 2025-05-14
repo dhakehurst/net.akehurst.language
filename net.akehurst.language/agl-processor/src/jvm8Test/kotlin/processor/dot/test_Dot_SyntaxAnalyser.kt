@@ -43,7 +43,7 @@ class test_Dot_SyntaxAnalyser {
         val actual = processor.typesModel
         val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
-            dataType("graph", "Graph") {
+            dataFor("graph", "Graph") {
                 propertyPrimitiveType("STRICT", "String", true, 0)
                 propertyPrimitiveType("type", "String", false, 1)
                 propertyPrimitiveType("ID", "String", true, 2)
@@ -52,7 +52,7 @@ class test_Dot_SyntaxAnalyser {
             // stmt_list = stmt1 * ;
             listTypeOf("stmt_list", "Stmt1")
             // stmt1 = stmt  ';'? ;
-            dataType("stmt1", "Stmt1") {
+            dataFor("stmt1", "Stmt1") {
                 propertyDataTypeOf("stmt", "Stmt", false, 0)
             }
             // 	stmt
@@ -62,24 +62,24 @@ class test_Dot_SyntaxAnalyser {
             //      | ID '=' ID
             //      | subgraph
             //      ;
-            dataType("stmt", "Stmt") {
+            dataFor("stmt", "Stmt") {
                 subtypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
             }
             // node_stmt = node_id attr_lists? ;
-            dataType("node_stmt", "Node_stmt") {
+            dataFor("node_stmt", "Node_stmt") {
                 propertyDataTypeOf("node_id", "Node_id", false, 1)
                 propertyDataTypeOf("attr_lists", "Attr_lists", true, 1)
             }
             // node_id = ID port? ;
-            dataType("node_id", "Node_id") {
+            dataFor("node_id", "Node_id") {
                 propertyDataTypeOf("id", "Id", false, 0)
                 propertyDataTypeOf("port", "Port", true, 1)
             }
-            dataType("", "expressionStatement") {
+            dataFor("", "expressionStatement") {
                 // expressionStatement = expression ;
                 propertyDataTypeOf("expression", "expression", false, 0)
             }
-            dataType("", "expression") {
+            dataFor("", "expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -91,24 +91,24 @@ class test_Dot_SyntaxAnalyser {
                 //   ;
                 subtypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
             }
-            dataType("", "groupExpression") {
+            dataFor("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
                 propertyDataTypeOf("expression", "expression", false, 1)
             }
-            dataType("", "functionCallOrIndex") {
+            dataFor("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 propertyPrimitiveType("NAME", "String", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "argument", "String", false, 2)
             }
-            dataType("argumentList", "argumentList") {
+            dataFor("argumentList", "argumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "argument", "String", false, 0)
             }
-            dataType("argument", "argument") {
+            dataFor("argument", "argument") {
                 // argument = expression | colonOperator ;
                 subtypes("expression", "colonOperator")
             }
-            dataType("", "prefixExpression") {
+            dataFor("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
                 propertyDataTypeOf("expression", "expression", false, 1)
@@ -118,7 +118,7 @@ class test_Dot_SyntaxAnalyser {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            dataType("", "infixExpression") {
+            dataFor("", "infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "expression", "String", false, 0)
             }
@@ -132,14 +132,14 @@ class test_Dot_SyntaxAnalyser {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            dataType("", "colonOperator") {
+            dataFor("", "colonOperator") {
                 propertyPrimitiveType("COLON", "String", false, 0)
             }
-            dataType("", "matrix") {
+            dataFor("", "matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "row", "String", false, 1)
             }
-            dataType("", "row") {
+            dataFor("", "row") {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
@@ -147,7 +147,7 @@ class test_Dot_SyntaxAnalyser {
                     typeRef("expression", "expression", false)
                 }
             }
-            dataType("", "literalExpression") {
+            dataFor("", "literalExpression") {
                 propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("literalValue")
@@ -160,7 +160,7 @@ class test_Dot_SyntaxAnalyser {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            dataType("", "rootVariable") {
+            dataFor("", "rootVariable") {
                 // rootVariable = NAME ;
                 propertyPrimitiveType("NAME", "String", false, 0)
             }

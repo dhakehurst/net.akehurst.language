@@ -22,6 +22,6 @@ import net.akehurst.language.expressions.processor.AglExpressions
 
 fun main() {
 
-    val str = SyntaxAnalyserGeneratorKotlin().generateFor(AglExpressions.grammar)
+    val str = SyntaxAnalyserGeneratorKotlin().generateFor(AglExpressions.defaultTargetGrammar)
     println(str)
 }

@@ -60,7 +60,7 @@ grammar CrossReferences extends Expressions {
         namespace = "net.akehurst.language",
         name = "CrossReferences"
     ) {
-        extendsGrammar(AglExpressions.grammar.selfReference)
+        extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("import") }
@@ -133,7 +133,7 @@ interface ReferenceExpressionCollection {
 """
 
     val typeModel by lazy {
-        typeModel("CrossReferences", true, AglExpressions.typeModel.namespace) {
+        typeModel("CrossReferences", true, AglExpressions.typesModel.namespace) {
             namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api", "net.akehurst.language.reference.asm")) {
                 interface_("ScopeDefinition") {
                     supertype("Formatable")

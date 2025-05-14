@@ -79,7 +79,7 @@ interface AglLanguages {
     val formatLanguageIdentity: LanguageIdentity
 
     val base: LanguageDefinition<Any, SentenceContext>
-    val expressions: LanguageDefinition<Expression, SentenceContext>
+    val expressions: LanguageDefinition<Expression, ContextWithScope<Any,Any>>
     val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>>
     val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>>
     val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
@@ -101,7 +101,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     override val agl: AglLanguages = object : AglLanguages {
         override val baseLanguageIdentity: LanguageIdentity get() = AglBase.identity
-        override val expressionsLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglExpressions.grammar.qualifiedName.value) }
+        override val expressionsLanguageIdentity: LanguageIdentity get() = AglExpressions.identity
         override val grammarLanguageIdentity: LanguageIdentity get() = AglGrammar.identity
         override val typesLanguageIdentity: LanguageIdentity get() = AglTypes.identity
         override val asmTransformLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AsmTransform.grammar.qualifiedName.value) }
@@ -113,28 +113,9 @@ class LanguageRegistryDefault : LanguageRegistry {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
         }
 
-        override val expressions: LanguageDefinition<Expression, SentenceContext> by lazy {
+        override val expressions: LanguageDefinition<Expression, ContextWithScope<Any,Any>> by lazy {
             base //ensure base is instantiated
-            this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm<Expression, SentenceContext>(
-                    identity = expressionsLanguageIdentity,
-                    AglExpressions.grammar.asGrammarModel(),
-                    buildForDefaultGoal = false,
-                    initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglExpressions.grammar.name.value)
-                        defaultGoalRuleName(AglExpressions.goalRuleName)
-                        //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(ExpressionsSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        semanticAnalyserResolver { ProcessResultDefault(ExpressionsSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), AglExpressions.styleStr) }
-                        completionProvider { ProcessResultDefault(ExpressionsCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    }
-                )
-            )
+            this@LanguageRegistryDefault.registerFromLanguageObject(AglExpressions)
         }
 
         override val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>> by lazy {
@@ -280,29 +261,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 identity = languageObject.identity,
                 grammarModel = languageObject.grammarModel,
                 buildForDefaultGoal = false,
-                initialConfiguration = Agl.configuration {
-                    targetGrammarName(languageObject.defaultTargetGrammar.name.value)
-                    defaultGoalRuleName(languageObject.defaultTargetGoalRule)
-                    styleString(StyleString(languageObject.styleString))
-                    // scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
-//                    typesResolver { ProcessResultDefault(languageObject.typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    typesResolver { p ->
-                        ProcessResultDefault(
-                            typeModel(p.grammarModel!!.name.value, true) {},
-                            IssueHolder(LanguageProcessorPhase.ALL)
-                        )
-                    } //TODO: above, needs languageobject to contain typemodel with grammar mapping
-//                    transformResolver { ProcessResultDefault(languageObject.asmTransformModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    transformResolver { p -> TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel) } //TODO: above
-
-                    crossReferenceResolver { ProcessResultDefault(languageObject.crossReferenceModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    syntaxAnalyserResolver { ProcessResultDefault(languageObject.syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    semanticAnalyserResolver { ProcessResultDefault(languageObject.semanticAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                    styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), languageObject.styleString) }
-                    completionProvider { ProcessResultDefault(languageObject.completionProvider, IssueHolder(LanguageProcessorPhase.ALL)) }
-                }
+                initialConfiguration = Agl.configurationFromLanguageObject(languageObject)
             )
             registerFromDefinition(definition) as LanguageDefinition<AsmType, ContextType>
         }

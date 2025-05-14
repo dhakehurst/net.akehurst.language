@@ -122,7 +122,7 @@ interface AglStyleRule {
 """
 
     val typeModel by lazy {
-        typeModel("Style", true, AglBase.typeModel.namespace) {
+        typeModel("Style", true, AglBase.typesModel.namespace) {
             namespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
                 interface_("StyleSetReference") {

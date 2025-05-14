@@ -64,7 +64,7 @@ class test_typemodelFromTransform {
 
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S2") {
+                dataFor("S", "S2") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
             }
@@ -98,7 +98,7 @@ class test_typemodelFromTransform {
             }
         }
         val expected = grammarTypeModel("test", "Test", imports = listOf(StdLibDefault, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
-            dataType("S", "S2") {
+            dataFor("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }
@@ -138,7 +138,7 @@ class test_typemodelFromTransform {
             }
         }
         val expected = grammarTypeModel("test", "Test", imports = listOf(StdLibDefault, typesModel.findNamespaceOrNull(QualifiedName("types"))!!)) {
-            dataType("S", "S2") {
+            dataFor("S", "S2") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
         }

@@ -234,6 +234,7 @@ class GenerateTypeModelViaReflection(
                             sbQn.last
                         }
                     }
+                    is SimpleName -> TODO()
                 }
                 targetNamespace.createTypeInstance(context.qualifiedName, subName, targs, false)
             }
@@ -437,6 +438,8 @@ class GenerateTypeModelViaReflection(
                             else -> DataType::class //currently DataType used for other class types
                         }
                     }
+
+                    else -> TODO()
                 }
             }
 

@@ -26,7 +26,7 @@ interface AsmListSeparated {
 """
 
     val typeModel: TypeModel by lazy {
-        typeModel("Asm", true, AglBase.typeModel.namespace) {
+        typeModel("Asm", true, AglBase.typesModel.namespace) {
             namespace("net.akehurst.language.asm.api", listOf("std", "net.akehurst.language.base.api", "net.akehurst.language.collections")) {
                 value("PropertyValueName") {
 

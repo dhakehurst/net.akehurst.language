@@ -57,7 +57,7 @@ object AglFormat {
                     concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
                 }
                 grammar("Format") {
-                    extendsGrammar(AglExpressions.grammar.selfReference)
+                    extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
                     concatenation("definition", OverrideKind.REPLACE) { ref("format") }
                     concatenation("format") {
                         lit("format"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");

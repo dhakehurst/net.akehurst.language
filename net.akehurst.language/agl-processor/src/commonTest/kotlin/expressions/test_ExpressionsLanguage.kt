@@ -125,9 +125,9 @@ class test_ExpressionsLanguage {
             stringTypeFor("STRING")
             stringTypeFor("root")
             stringTypeFor("literal")
-            dataType("navigation", "Navigation")
-            dataType("propertyReference", "")
-            dataType("qualifiedName", "")
+            dataFor("navigation", "Navigation")
+            dataFor("propertyReference", "")
+            dataFor("qualifiedName", "")
         }
         TypeModelTest.tmAssertEquals(expected, actual)
     }

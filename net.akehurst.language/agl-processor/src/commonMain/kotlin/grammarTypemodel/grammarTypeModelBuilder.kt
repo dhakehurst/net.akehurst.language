@@ -24,6 +24,7 @@ import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 import net.akehurst.language.typemodel.builder.*
 
 fun TypeModelBuilder.grammarTypeNamespace(
@@ -61,27 +62,24 @@ class GrammarTypeNamespaceBuilder(
     namespaceQualifiedName: QualifiedName,
     imports: MutableList<Import>,
     resolveImports:Boolean
-) {
-    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, import =  imports).also {
+)  : TypeNamespaceBuilder(namespaceQualifiedName,imports) {
+    override val _namespace:TypeNamespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, import =  imports).also {
         if(resolveImports) {
             it.resolveImports(typeModel as Model<Namespace<TypeDefinition>, TypeDefinition>)
         }
     }
+    private val _grammarNamespace get() = _namespace as GrammarTypeNamespace
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDeclaration as PrimitiveType
 
-    fun imports(vararg imports:String) {
-        imports.forEach { _namespace.addImport(Import(it)) }
-    }
-
     fun stringTypeFor(grammarRuleName: String, isNullable: Boolean = false) {
-        _namespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), if (isNullable) StdLibDefault.String.nullable() else StdLibDefault.String)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), if (isNullable) StdLibDefault.String.nullable() else StdLibDefault.String)
     }
 
     fun listTypeFor(grammarRuleName: String, elementType: TypeDefinition): TypeInstance {
         val t = StdLibDefault.List.type(listOf(elementType.type().asTypeArgument))
-        _namespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t)
         return t
     }
 
@@ -92,7 +90,7 @@ class GrammarTypeNamespaceBuilder(
 
     fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeInstance, separatorType: TypeInstance) {
         val t = StdLibDefault.ListSeparated.type(listOf(itemType.asTypeArgument, separatorType.asTypeArgument))
-        _namespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t)
     }
 
     fun listSeparatedTypeFor(grammarRuleName: String, itemType: TypeDefinition, separatorType: TypeDefinition) =
@@ -109,30 +107,21 @@ class GrammarTypeNamespaceBuilder(
         listSeparatedTypeFor(grammarRuleName, itemType, separatorType)
     }
 
-    fun dataType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
-        val b = DataTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
-        b.init()
-        val et = b.build()
-        _namespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), et.type())
-        return et
+    fun interfaceFor(grammarRuleName: String, typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
+        val tp = super.interface_(typeName, init)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
     }
 
-    fun unionType(grammarRuleName: String, typeName: String, init: SubtypeListBuilder.() -> Unit): UnionType {
-        val t = unionTypeNotMapped(typeName,init)
-        _namespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t.type())
+    fun dataFor(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+        val tp = super.data(typeName,init)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), tp.type())
+        return tp
+    }
+
+    fun unionFor(grammarRuleName: String, typeName: String, init: SubtypeListBuilder.() -> Unit): UnionType {
+        val t = super.union(typeName, init)
+        _grammarNamespace.setTypeForGrammarRule(GrammarRuleName(grammarRuleName), t.type())
         return t
     }
 
-    fun unionTypeNotMapped(typeName: String, init: SubtypeListBuilder.() -> Unit): UnionType {
-        val b = SubtypeListBuilder(_namespace, _typeReferences)
-        b.init()
-        val stu = b.build()
-        val t = _namespace.findOwnedOrCreateUnionTypeNamed(SimpleName(typeName)) {_->}
-        stu.forEach { t.addAlternative(it) }
-        return t
-    }
-
-    fun build(): GrammarTypeNamespace {
-        return _namespace
-    }
 }

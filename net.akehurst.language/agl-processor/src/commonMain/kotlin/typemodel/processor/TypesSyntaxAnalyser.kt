@@ -48,6 +48,7 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
         super.register(this::interfaceDefinition)
         super.register(this::interfaceBody)
         super.register(this::dataDefinition)
+        super.register(this::typeParameterList)
         super.register(this::supertypes)
         super.register(this::constructor)
         super.register(this::constructorParameter)
@@ -134,20 +135,26 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
         return list.toSeparatedList().items
     }
 
-    // valueDefinition = 'value' IDENTIFIER ;
+    // 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
     private fun valueDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> ValueType {
         val name = SimpleName(children[1] as String)
+        val supertypes = children[2] as List<TypeRefInfo>? ?: emptyList()
+        val cParam = children[4] as (TypeDefinition) -> ParameterDeclaration
         return { namespace: TypeNamespace ->
-            ValueTypeSimple(namespace, name).also { setLocationFor(it, nodeInfo, sentence) }
+            ValueTypeSimple(namespace, name).also { vt ->
+                setLocationFor(vt, nodeInfo, sentence)
+                supertypes.forEach { vt.addSupertype_dep(it.name) }
+                vt.addConstructor(listOf(cParam.invoke(vt)))
+            }
         }
     }
 
-    // collectionDefinition = 'collection' IDENTIFIER '<' typeParameterList '>' ;
+    // collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
     private fun collectionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> CollectionType {
         val name = SimpleName(children[1] as String)
-        val params = (children[3] as List<String>).map { TypeParameterSimple(SimpleName((it))) }
+        val tParams = (children[2] as List<String>).map { TypeParameterSimple(SimpleName((it))) }
         return { namespace: TypeNamespace ->
-            CollectionTypeSimple(namespace, name, params).also { setLocationFor(it, nodeInfo, sentence) }
+            CollectionTypeSimple(namespace, name, tParams).also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 
@@ -165,16 +172,18 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
         }
     }
 
-    // interfaceDefinition = 'interface' IDENTIFIER supertypes? interfaceBody? ;
+    // interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
     private fun interfaceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> InterfaceType {
         val name = SimpleName(children[1] as String)
-        val supertypes = children[2] as List<TypeRefInfo>? ?: emptyList()
-        val property = children[3] as List<((InterfaceType) -> PropertyDeclaration)>? ?: emptyList()
+        val tParams = children[2] as List<String>? ?: emptyList()
+        val supertypes = children[3] as List<TypeRefInfo>? ?: emptyList()
+        val property = children[4] as List<((InterfaceType) -> PropertyDeclaration)>? ?: emptyList()
         return { namespace: TypeNamespace ->
             InterfaceTypeSimple(namespace, name).also { ift ->
+                tParams.forEach { tp -> ift.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
                 supertypes.forEach { ift.addSupertype_dep(it.name) }
                 property.forEach {
-                    it.invoke(ift).also { p -> setResolvers(p.typeInstance as TypeInstanceSimple, ift) }
+                    it.invoke(ift).also { p -> setResolvers(p.typeInstance, ift) }
                 }
             }.also { setLocationFor(it, nodeInfo, sentence) }
         }
@@ -184,25 +193,26 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
     private fun interfaceBody(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<((InterfaceType) -> PropertyDeclaration)> =
         children[1] as List<((InterfaceType) -> PropertyDeclaration)>
 
-
     /*
      dataDefinition =
-       'data' IDENTIFIER supertypes? '{'
+       'data' IDENTIFIER typeParameterList? supertypes? '{'
           constructor*
           property*
        '}'
     ;*/
     private fun dataDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> DataType {
         val name = SimpleName(children[1] as String)
-        val supertypes = children[2] as List<TypeRefInfo>? ?: emptyList()
-        val constructors = children[4] as List<List<(DataType) -> ParameterDeclaration>>
-        val property = children[5] as List<((DataType) -> PropertyDeclaration)>
+        val tParams = children[2] as List<String>? ?: emptyList()
+        val supertypes = children[3] as List<TypeRefInfo>? ?: emptyList()
+        val constructors = children[5] as List<List<(TypeDefinition) -> ParameterDeclaration>>
+        val property = children[6] as List<((DataType) -> PropertyDeclaration)>
 
         return { ns: TypeNamespace ->
             val dt = DataTypeSimple(ns, name)
+            tParams.forEach { tp -> dt.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
             supertypes.forEach {
-                dt.addSupertype_dep(it.name)
-                //(it.type as DataType).addSubtype(dt.name)
+                val ti = createTypeInstance(ns,dt,it)
+                dt.addSupertype(ti)
             }
             constructors.forEach { cons ->
                 val consParams = cons.map { it.invoke(dt) }
@@ -210,15 +220,19 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
             }
             property.forEach {
                 val p = it.invoke(dt)
-                setResolvers(p.typeInstance as TypeInstanceSimple, dt)
+                setResolvers(p.typeInstance, dt)
             }
             dt.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 
-    private fun setResolvers(ti: TypeInstanceSimple, dt: TypeDefinition) {
+    // typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
+    private fun typeParameterList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        (children[1] as List<String>).toSeparatedList<String,String,String>().items
+
+    private fun setResolvers(ti: TypeInstance, dt: TypeDefinition) {
         //ti.namespace = dt.namespace
-        ti.typeArguments.forEach { setResolvers(it as TypeInstanceSimple, dt) }
+        ti.typeArguments.forEach { setResolvers(it.type, dt) }
     }
 
     // supertypes = ':' [ typeReference / ',']+ ;
@@ -227,20 +241,20 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
     }
 
     // constructor = 'constructor' '(' constructorParameter* ')' ;
-    private fun constructor(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(DataType) -> ParameterDeclaration> =
-        children[2] as List<(DataType) -> ParameterDeclaration>
+    private fun constructor(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(TypeDefinition) -> ParameterDeclaration> =
+        children[2] as List<(TypeDefinition) -> ParameterDeclaration>
 
     // constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
-    private fun constructorParameter(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DataType) -> ParameterDeclaration {
+    private fun constructorParameter(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TypeDefinition) -> ParameterDeclaration {
         val cmpRef = children[0] as PropertyCharacteristic?
         val valVar = children[1] as PropertyCharacteristic?
         val name = net.akehurst.language.typemodel.api.ParameterName(children[2] as String)
         val typeRef = children[4] as TypeRefInfo
 
         val characteristics = (cmpRef?.let { setOf(it) } ?: emptySet()) + (valVar?.let { setOf(it) } ?: emptySet())
-        return { owner: DataType ->
+        return { owner: TypeDefinition ->
             val tp = typeRef.toTypeInstance(owner)
-            if (characteristics.isNotEmpty()) {
+            if (characteristics.isNotEmpty() && owner is StructuredType) {
                 owner.appendPropertyStored(PropertyName(name.value), tp, characteristics)
             }
             ParameterDefinitionSimple(name, tp, null) //TODO: default value
@@ -294,4 +308,9 @@ class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel
         return list
     }
 
+    private fun createTypeInstance(ns: TypeNamespace, contextType: TypeDefinition, tInfo:TypeRefInfo) : TypeInstance {
+        val targs = tInfo.args.map { createTypeInstance(ns,contextType, it).asTypeArgument }
+        val ti = ns.createTypeInstance(contextType.qualifiedName, tInfo.name, targs, false)
+        return ti
+    }
 }

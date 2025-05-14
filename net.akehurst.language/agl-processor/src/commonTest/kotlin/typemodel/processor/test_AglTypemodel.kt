@@ -34,7 +34,7 @@ class test_AglTypemodel {
 
     @Test
     fun typemodel() {
-        val actual = AglTypes.typeModel
+        val actual = AglTypes.typesModel
 
         assertNotNull(actual)
     }
@@ -42,7 +42,7 @@ class test_AglTypemodel {
 
     @Test
     fun domainTypes() {
-        val td = AglTypes.typeModel.findFirstDefinitionByNameOrNull(SimpleName("TypeModel"))
+        val td = AglTypes.typesModel.findFirstDefinitionByNameOrNull(SimpleName("TypeModel"))
         assertNotNull(td)
         assertEquals("TypeModel", td.name.value)
         assertEquals("Model", td.supertypes[0].typeName.value)

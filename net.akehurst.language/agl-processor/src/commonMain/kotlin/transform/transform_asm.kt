@@ -207,7 +207,7 @@ class TransformRuleSetDefault(
                 " : ${refsStr.joinToString(separator = ", ") { it }}" //TODO import affect!
             }
         }
-        sb.append("grammar-transform $name$extStr{\n")
+        sb.append("transform $name$extStr{\n")
         val newIndent = indent.inc
         if (importTypes.isNotEmpty()) {
             val importStr = importTypes

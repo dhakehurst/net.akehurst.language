@@ -311,20 +311,20 @@ class test_SyntaxAnalyserSimple {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("NAME")
                 // S = type ;
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("type", "Type", false, 0)
                 }
                 // type = NAME typeArgs? ;
-                dataType("type", "Type") {
+                dataFor("type", "Type") {
                     propertyPrimitiveType("name", "String", false, 0)
                     propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
                 }
                 // typeArgs = '<' typeArgList '>' ;
-                dataType("typeArgs", "TypeArgs") {
+                dataFor("typeArgs", "TypeArgs") {
                     propertyListTypeOf("typeArgList", "Type", false, 1)
                 }
                 // typeArgList = [type / ',']+ ;
-                dataType("typeArgList", "TypeArgList") {
+                dataFor("typeArgList", "TypeArgList") {
                     propertyListTypeOf("type", "Type", false, 0)
                 }
             }

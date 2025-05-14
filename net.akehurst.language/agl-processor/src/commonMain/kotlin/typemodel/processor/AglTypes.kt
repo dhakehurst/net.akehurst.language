@@ -34,20 +34,23 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any,Any>>() {
+object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Types"
     const val goalRuleName = "unit"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    override val grammarString = """namespace net.akehurst.language
-  grammar Typemodel : Base {
+    override val grammarString = """namespace $NAMESPACE_NAME
+  grammar $NAME : Base {
     override definition
       = singletonDefinition
       | primitiveDefinition
@@ -62,19 +65,19 @@ object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any,Any>>()
     primitiveDefinition = 'primitive' IDENTIFIER ;
     enumDefinition = 'enum' IDENTIFIER enumLiterals? ;
     enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
-    valueDefinition = 'value' IDENTIFIER ;
-    collectionDefinition = 'collection' IDENTIFIER '<' typeParameterList '>' ;
+    valueDefinition = 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
+    collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
     unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
-    interfaceDefinition = 'interface' IDENTIFIER supertypes? interfaceBody? ;
+    interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
     interfaceBody = '{' property* '}' ;
     dataDefinition =
-      'data' IDENTIFIER supertypes? '{'
+      'data' IDENTIFIER typeParameterList? supertypes? '{'
         constructor*
         property*
       '}'
     ;
     alternatives = [typeReference / '|']+ ;
-    typeParameterList = [IDENTIFIER / ',']+ ;
+    typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
     supertypes = ':' [typeReference / ',']+ ;
     constructor = 'constructor' '(' constructorParameter* ')' ;
     constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
@@ -134,7 +137,7 @@ namespace net.akehurst.language.grammarTypemodel.api
 
 """
 
-    override val styleString: String = """namespace net.akehurst.language
+    override val styleString: String = """namespace $NAMESPACE_NAME
         styles $NAME {
         }
     """
@@ -158,19 +161,19 @@ namespace net.akehurst.language.grammarTypemodel.api
                     concatenation("primitiveDefinition") { lit("primitive"); ref("IDENTIFIER") }
                     concatenation("enumDefinition") { lit("enum"); ref("IDENTIFIER"); opt { ref("enumLiterals") } }
                     concatenation("enumLiterals") { lit("{"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit("}") }
-                    concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER") }
-                    concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER"); lit("<"); ref("typeParameterList"); lit(">") }
+                    concatenation("valueDefinition") { lit("value"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("("); ref("constructorParameter"); lit(")") }
+                    concatenation("collectionDefinition") { lit("collection"); ref("IDENTIFIER"); ref("typeParameterList") }
                     concatenation("dataDefinition") {
-                        lit("data"); ref("IDENTIFIER"); opt { ref("supertypes") }; lit("{");
+                        lit("data"); ref("IDENTIFIER"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; lit("{");
                         lst(0, -1) { ref("constructor") };
                         lst(0, -1) { ref("property") };
                         lit("}")
                     }
-                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("supertypes") }; opt { ref("interfaceBody") } }
+                    concatenation("interfaceDefinition") { lit("interface"); ref("IDENTIFIER"); opt { ref("typeParameterList") }; opt { ref("supertypes") }; opt { ref("interfaceBody") } }
                     concatenation("interfaceBody") { lit("{"); lst(0, -1) { ref("property") }; lit("}") }
                     concatenation("unionDefinition") { lit("union"); ref("IDENTIFIER"); lit("{"); ref("alternatives"); lit("}") }
                     separatedList("alternatives", 1, -1) { ref("typeReference"); lit("|") }
-                    separatedList("typeParameterList", 1, -1) { ref("IDENTIFIER"); lit(",") }
+                    concatenation("typeParameterList") { lit("<"); spLst(1, -1) { ref("IDENTIFIER"); lit(",") }; lit(">"); }
                     concatenation("supertypes") { lit(":"); spLst(1, -1) { ref("typeReference"); lit(",") } }
                     concatenation("constructor") { lit("constructor"); lit("("); lst(0, -1) { ref("constructorParameter") }; lit(")") }
                     concatenation("constructorParameter") { opt { ref("cmp_ref") }; opt { ref("val_var") }; ref("IDENTIFIER"); lit(":"); ref("typeReference") }
@@ -190,8 +193,8 @@ namespace net.akehurst.language.grammarTypemodel.api
         }
     }
 
-    override val typeModel by lazy {
-        typeModel("Typemodel", true, AglGrammar.typeModel.namespace) {
+    override val typesModel by lazy {
+        typeModel("Typemodel", true, AglGrammar.typesModel.namespace) {
             namespace("net.akehurst.language.typemodel.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
                 value("PropertyName") {
@@ -756,14 +759,31 @@ namespace net.akehurst.language.grammarTypemodel.api
         }
     }
 
-    override val asmTransformModel: TransformModel get() = TODO("not implemented")
+    override val asmTransformModel: TransformModel by lazy {
+        asmTransform(NAME, typesModel, false) {
+            namespace(NAMESPACE_NAME) {
 
-    override val crossReferenceModel: CrossReferenceModel get() = TODO("not implemented")
+            }
+        }
+    }
+
+    override val crossReferenceModel: CrossReferenceModel by lazy {
+        crossReferenceModel(NAME) {
+
+        }
+    }
 
     override val styleModel: AglStyleModel by lazy {
-        val res = Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), styleString)
-        check(res.issues.errors.isEmpty()) { res.issues.toString() }
-        res.asm!!
+        styleModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    metaRule("'([^']+)'") {
+                        declaration("", "")
+                        declaration("", "")
+                    }
+                }
+            }
+        }
     }
 
     override val formatModel: AglFormatModel get() = TODO("not implemented")
@@ -772,7 +792,7 @@ namespace net.akehurst.language.grammarTypemodel.api
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypesSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> by lazy { TypemodelSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<TypeModel, ContextWithScope<Any,Any>> by lazy { TypemodelCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextWithScope<Any, Any>> by lazy { TypemodelSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypeModel, ContextWithScope<Any, Any>> by lazy { TypemodelCompletionProvider() }
 
 }

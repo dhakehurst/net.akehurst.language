@@ -58,16 +58,18 @@ class AsmTransformModelBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val namespaces = mutableListOf<TransformNamespace>()
+    private val _namespaces = mutableListOf<TransformNamespace>()
 
     fun namespace(qualifiedName: String, init: AsmTransformNamespaceBuilder.() -> Unit) {
         val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
         b.init()
         val v = b.build()
-        namespaces.add(v)
+        _namespaces.add(v)
     }
 
-    fun build(): TransformModel = TransformDomainDefault(name, namespace = namespaces).also { it.typeModel = typeModel }
+    fun build(): TransformModel = TransformDomainDefault(name, namespace = _namespaces).also {
+        it.typeModel = typeModel
+    }
 }
 
 @AsmTransformModelDslMarker
@@ -130,8 +132,10 @@ class AsmTransformRuleSetBuilder internal constructor(
                 }
             }
         } else {
-            val ns = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName)!!
-            val qt = ns.findTypeNamed(pqt) ?: error("Type '$pqt' not found")
+            val defaultNs = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName) ?: null
+            val importedNs = _importTypes.mapNotNull { typeModel.findNamespaceOrNull(it.asQualifiedName) }
+            val nss = ( defaultNs?.let { listOf(it) } ?: emptyList() ) + importedNs
+            val qt = nss.firstNotNullOfOrNull { it.findTypeNamed(pqt) } ?: error("Type '$pqt' not found")
             return qt
         }
     }

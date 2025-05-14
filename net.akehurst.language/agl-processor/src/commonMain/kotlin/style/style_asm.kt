@@ -59,7 +59,7 @@ class AglStyleModelDefault(
 class StyleNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null,emptyMap()),
-    import: List<Import>
+    import: List<Import> = emptyList(),
 ) : StyleNamespace, NamespaceAbstract<StyleSet>(options, import) {
 
     override val styleSet: List<StyleSet>  get() = super.definition

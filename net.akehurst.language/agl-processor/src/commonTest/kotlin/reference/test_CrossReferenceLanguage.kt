@@ -78,61 +78,61 @@ class test_CrossReferenceLanguage {
         val actual = aglProc.typesModel
         val expected = grammarTypeModel("net.akehurst.language.agl.language", "References") {
             // declarations = rootIdentifiables scopes references?
-            dataType("declarations", "Declarations") {
+            dataFor("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
                 propertyListTypeOf("scopes", "Scope", false, 1)
                 propertyListTypeOf("references", "ReferenceDefinition", true, 2)
             }
             // rootIdentifiables = identifiable*
-            dataType("rootIdentifiables", "RootIdentifiables") {
+            dataFor("rootIdentifiables", "RootIdentifiables") {
                 propertyListTypeOf("identifiables", "Identifiable", false, 0)
             }
             // scopes = scope*
-            dataType("scopes", "Scopes") {
+            dataFor("scopes", "Scopes") {
                 propertyListTypeOf("scope", "Scope", false, 0)
             }
             // scope = 'scope' typeReference '{' identifiables '}
-            dataType("scope", "Scope") {
+            dataFor("scope", "Scope") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            dataType("identifiables", "Identifiables") {
+            dataFor("identifiables", "Identifiables") {
                 propertyListTypeOf("identifiable", "Identifiable", false, 0)
             }
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-            dataType("identifiable", "Identifiable") {
+            dataFor("identifiable", "Identifiable") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyPrimitiveType("propertyReferenceOrNothing", "String", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
-            dataType("references", "References") {
+            dataFor("references", "References") {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            dataType("referenceDefinitions", "ReferenceDefinitions") {
+            dataFor("referenceDefinitions", "ReferenceDefinitions") {
                 propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
             }
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            dataType("referenceDefinition", "ReferenceDefinition") {
+            dataFor("referenceDefinition", "ReferenceDefinition") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyDataTypeOf("propertyReference", "PropertyReference", false, 1)
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            dataType("typeReferences", "TypeReferences") {
+            dataFor("typeReferences", "TypeReferences") {
                 propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 0)
             }
             // propertyReferenceOrNothing = '§nothing' | propertyReference
-            dataType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
+            dataFor("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
 
             }
             // typeReference = IDENTIFIER     // same as grammar rule name
-            dataType("typeReference", "TypeReference") {
+            dataFor("typeReference", "TypeReference") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             // propertyReference = IDENTIFIER // same as grammar rule name
-            dataType("propertyReference", "PropertyReference") {
+            dataFor("propertyReference", "PropertyReference") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
@@ -189,7 +189,7 @@ class test_CrossReferenceLanguage {
                 scope Rule1 { }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                 }
@@ -213,7 +213,7 @@ class test_CrossReferenceLanguage {
                 scope RuleX { }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 scope("RuleX") { }
             }
@@ -247,7 +247,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("Rule2", "rule3")
@@ -276,7 +276,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("RuleX", "rule3")
@@ -315,7 +315,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("Rule2", "ruleX")
@@ -361,7 +361,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 reference("Rule2") {
                     property("rule3", listOf("Rule1"), null)
@@ -393,7 +393,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 reference("RuleX") {
                     property("ruleY", listOf("RuleZ", "RuleW"), null)
@@ -433,7 +433,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 reference("Rule1") {
                     property("rule2", listOf("Rule1", "Rule2", "Rule3"), null)
@@ -465,7 +465,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 reference("Rule2") {
                     property("rule3", listOf("AnExternalType1", "AnExternalType2"), null)
@@ -517,7 +517,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel {
+        val expected = crossReferenceModel("Test") {
             declarationsFor("test.Test") {
                 import("external")
                 reference("Rule2") {

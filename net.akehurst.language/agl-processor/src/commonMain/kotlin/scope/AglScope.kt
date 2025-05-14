@@ -33,7 +33,7 @@ interface Scope {
 
     val typeModel: TypeModel by lazy {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
-        typeModel("Scope", true, AglBase.typeModel.namespace) {
+        typeModel("Scope", true, AglBase.typesModel.namespace) {
             namespace("net.akehurst.language.scope.api", listOf("std", "net.akehurst.language.base.api")) {
                 interface_("Scope") {
                     typeParameters("ItemType")

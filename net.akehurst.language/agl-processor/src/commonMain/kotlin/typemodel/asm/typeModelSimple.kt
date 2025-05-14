@@ -36,9 +36,9 @@ class TypeModelSimple(
 ) : TypeModelSimpleAbstract() {
 
     companion object {
-        fun fromString(name: SimpleName, context: ContextWithScope<Any,Any>, typesString: TypesString): ProcessResult<TypeModel> {
+        fun fromString(name: SimpleName, context: ContextWithScope<Any, Any>, typesString: TypesString): ProcessResult<TypeModel> {
             return when {
-                typesString.value.isBlank() -> ProcessResultDefault( typeModel(name.value,true) {  }, IssueHolder(LanguageProcessorPhase.ALL) )
+                typesString.value.isBlank() -> ProcessResultDefault(typeModel(name.value, true) { }, IssueHolder(LanguageProcessorPhase.ALL))
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
                     proc.process(
@@ -139,9 +139,10 @@ abstract class TypeModelSimpleAbstract() : TypeModel {
     // -- Formatable ---
     override fun asString(indent: Indent): String {
         val ns = this.namespace
+            .filterNot { it == StdLibDefault } // Don't show the stdlib details
             .sortedBy { it.qualifiedName.value }
             .joinToString(separator = "\n") { it.asString() }
-        return "typemodel '$name'\n$ns"
+        return "$ns"
     }
 
     // --- Any ---
@@ -292,7 +293,7 @@ class TypeParameterReference(
         TODO("not implemented")
     }
 
-    override fun signature(context: TypeNamespace?, currentDepth: Int): String = "&${typeParameterName.value}"
+    override fun signature(context: TypeNamespace?, currentDepth: Int): String = "${typeParameterName.value}"
 
     override fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance =
         context.typeParameters.firstOrNull { it.name == typeParameterName }
@@ -317,7 +318,7 @@ class TypeParameterReference(
         else -> true
     }
 
-    override fun toString(): String = "&${typeParameterName.value}"
+    override fun toString(): String = "${typeParameterName.value}"
 }
 
 data class TypeArgumentSimple(
@@ -762,13 +763,13 @@ abstract class TypeNamespaceAbstract(
     // --- Formatable ---
     override fun asString(indent: Indent): String {
         val types = this.ownedTypesByName.entries //.sortedBy { it.key.value }
-            .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> {it.value::class.simpleName}.thenBy{it.value.name.value})
+            .sortedWith(compareBy<Map.Entry<SimpleName, TypeDefinition>> { it.value::class.simpleName }.thenBy { it.value.name.value })
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asStringInContext(this) }
-        val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}.*" }
-        val s = """namespace '$qualifiedName' {
+        val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
+        val s = """namespace $qualifiedName
 $importstr
 $types
-}""".trimIndent()
+""".trimIndent()
         return s
     }
 
@@ -814,7 +815,7 @@ abstract class TypeDefinitionSimpleAbstract(
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
 
     override val supertypes: List<TypeInstance> = mutableListOf()
-    override val subtypes: List<TypeInstance>  = emptyList()
+    override val subtypes: List<TypeInstance> = emptyList()
 
     override val typeParameters: List<TypeParameter> = mutableListOf() //make implementation mutable for serialisation
 
@@ -1151,7 +1152,7 @@ class UnionTypeSimple(
     override fun asStringInContext(context: TypeNamespace): String {
         val alts = alternatives.joinToString(separator = " | ") { it.signature(context, 0) }
         return when {
-            alts.length < 80 ->"union ${signature(context)} { $alts }"
+            alts.length < 80 -> "union ${signature(context)} { $alts }"
             else -> {
                 val altsnl = alternatives.joinToString(separator = "\n    | ") { it.signature(context, 0) }
                 "union ${signature(context)} {\n   ${altsnl}\n  }"
@@ -1311,13 +1312,38 @@ class ValueTypeSimple(
 
     override fun asStringInContext(context: TypeNamespace): String {
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
+        val cargs = this.property
+            .joinToString(separator = ", ") {
+                val psig = it.typeInstance.signature(context, 0)
+                val cmp_ref = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val val_var = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val chrs = when {
+                    cmp_ref.isBlank() -> val_var
+                    else -> "$cmp_ref $val_var"
+                }
+                "$chrs ${it.name}:$psig"
+            }
+
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
-                "${it.name}:$psig $chrs"
+                val cmp_ref = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val val_var = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val chrs = when {
+                    cmp_ref.isBlank() -> val_var
+                    else -> "$cmp_ref $val_var"
+                }
+                "$chrs ${it.name}:$psig"
             }
-        return "value ${name}${sups} {\n    $props\n  }"
+        return "value ${name}${sups} ( $cargs )"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1364,14 +1390,28 @@ class InterfaceTypeSimple(
     }
 
     override fun asStringInContext(context: TypeNamespace): String {
+        val targs = if (this.typeParameters.isEmpty()) {
+            ""
+        } else {
+            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+        }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
-                "${it.name}:$psig $chrs"
+                val cmp_ref = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val val_var = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val chrs = when {
+                    cmp_ref.isBlank() -> val_var
+                    else -> "$cmp_ref $val_var"
+                }
+                "$chrs ${it.name}:$psig"
             }
-        return "interface ${name}${sups} {\n    $props\n  }"
+        return "interface ${name}${targs}${sups} {\n    $props\n  }"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1422,6 +1462,7 @@ class DataTypeSimple(
                     }
             }
 
+    @Deprecated("Create a TypeInstance and use addSubtype(TypeInstance)")
     override fun addSubtype_dep(qualifiedTypeName: PossiblyQualifiedName) {
         val ti = namespace.createTypeInstance(this.qualifiedName, qualifiedTypeName, emptyList(), false)
         this.addSubtype(ti)
@@ -1436,14 +1477,28 @@ class DataTypeSimple(
     }
 
     override fun asStringInContext(context: TypeNamespace): String {
+        val targs = if (this.typeParameters.isEmpty()) {
+            ""
+        } else {
+            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+        }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
         val props = this.property
             .joinToString(separator = "\n    ") {
                 val psig = it.typeInstance.signature(context, 0)
-                val chrs = it.characteristics.joinToString(prefix = "{", postfix = "}") { ch -> ch.asString() }
-                "${it.name}: $psig $chrs"
+                val cmp_ref = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.REFERENCE).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val val_var = it.characteristics
+                    .filter { setOf(PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.READ_ONLY).contains(it) }
+                    .joinToString(separator = " ") { ch -> ch.asString() }
+                val chrs = when {
+                    cmp_ref.isBlank() -> val_var
+                    else -> "$cmp_ref $val_var"
+                }
+                "$chrs ${it.name}: $psig"
             }
-        return "datatype ${name}${sups} {\n    $props\n  }"
+        return "data ${name}${targs}${sups} {\n    $props\n  }"
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
@@ -1484,7 +1539,14 @@ class CollectionTypeSimple(
                     .also { clone -> super.findInOrCloneTo(other, clone as TypeDefinitionSimpleAbstract) }
             }
 
-    override fun asStringInContext(context: TypeNamespace): String = "collection ${signature(context)}"
+    override fun asStringInContext(context: TypeNamespace): String {
+        val targs = if (this.typeParameters.isEmpty()) {
+            ""
+        } else {
+            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+        }
+        return "collection ${signature(context)}$targs"
+    }
 }
 
 class ConstructorDeclarationSimple(

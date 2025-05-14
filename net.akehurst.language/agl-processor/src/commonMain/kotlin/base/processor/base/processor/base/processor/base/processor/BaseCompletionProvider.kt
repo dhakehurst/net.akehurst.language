@@ -1,55 +1,47 @@
-/*
- * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/**
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *          http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package net.akehurst.language.expressions.processor
+package net.akehurst.language.base.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.automaton.api.AutomatonKind
+import net.akehurst.language.automaton.api.ParseAction
+import net.akehurst.language.automaton.leftcorner.ParserStateSet
+import net.akehurst.language.base.api.PossiblyQualifiedName
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 
-class ExpressionsSemanticAnalyser(
-) : SemanticAnalyser<Expression, ContextWithScope<Any,Any>> {
 
-    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private var _locationMap: Map<Any, InputLocation> = emptyMap()
+class BaseCompletionProvider() : CompletionProvider<Any, SentenceContext> {
 
-    private var _grammarNamespace: GrammarTypeNamespace? = null
-
-    override fun clear() {
-        _grammarNamespace = null
-        _locationMap = emptyMap()
-        issues.clear()
-    }
-
-    override fun analyse(
-        sentenceIdentity:Any?,
-        asm: Expression,
-        locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< ContextWithScope<Any,Any>>
-    ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(issues)
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+        TODO("not implemented")
     }
 
 }

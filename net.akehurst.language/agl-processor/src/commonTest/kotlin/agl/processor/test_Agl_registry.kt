@@ -17,40 +17,70 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.LanguageDefinition
+import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.base.processor.AglBase
+import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.grammar.processor.AglGrammar
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_Agl_registry_agl {
 
     companion object {
-        fun checkProcessor(processor: LanguageProcessor<*,*>?) {
+        fun <AsmType : Any, ContextType : Any> checkLanguageDefinition(expected: LanguageObject<AsmType, ContextType>, actual: LanguageDefinition<AsmType, ContextType>) {
+            assertEquals(expected.identity.value, actual.identity.value)
+            assertEquals(Agl.registry.agl.grammar.processor!!.process(expected.grammarString).asm!!.asString(), actual.grammarModel!!.asString())
+            assertEquals(expected.grammarModel.asString(), Agl.registry.agl.grammar.processor!!.process(actual.grammarString!!.value).asm!!.asString())
+            assertEquals((expected.typesString), actual.typesString?.value)
+            assertEquals((expected.asmTransformString), actual.transformString?.value)
+            assertEquals((expected.crossReferenceString), actual.crossReferenceString?.value)
+            assertEquals((expected.styleString), actual.styleString?.value)
+            assertEquals((expected.formatString), actual.formatString?.value)
+            //TODO
+        }
+
+        fun checkProcessor(processor: LanguageProcessor<*, *>?) {
             assertNotNull(processor)
+            assertNotNull(processor.configuration)
             assertTrue(processor.issues.isEmpty())
+            assertNotNull(processor.grammarModel)
             assertNotNull(processor.targetGrammar)
-            assertNotNull(processor.baseTypeModel)
-            assertNotNull(processor.asmTransformModel)
-            assertNotNull(processor.typesModel)
-            assertNotNull(processor.crossReferenceModel)
-            assertNotNull(processor.spptParser)
             assertNotNull(processor.targetRuleSet)
-            assertNotNull(processor.targetAsmTransformRuleSet)
+            assertNotNull(processor.scanner)
+            assertNotNull(processor.spptParser)
+            assertNotNull(processor.parser)
+            assertNotNull(processor.baseTypeModel)
+            assertNotNull(processor.typesModel)
+            assertNotNull(processor.transformModel)
+            assertNotNull(processor.targetTransformRuleSet)
+            assertNotNull(processor.crossReferenceModel)
+            assertNotNull(processor.formatModel)
+            assertNotNull(processor.syntaxAnalyser)
+            assertNotNull(processor.semanticAnalyser)
+            assertNotNull(processor.formatter)
+            assertNotNull(processor.completionProvider)
         }
     }
 
     @Test
     fun test_Agl_registry_agl_base() {
+        checkLanguageDefinition(AglBase, Agl.registry.agl.base)
         checkProcessor(Agl.registry.agl.base.processor)
     }
 
     @Test
     fun test_Agl_registry_agl_grammar() {
+        checkLanguageDefinition(AglGrammar, Agl.registry.agl.grammar)
         checkProcessor(Agl.registry.agl.grammar.processor)
     }
 
     @Test
     fun test_Agl_registry_agl_expressions() {
+        checkLanguageDefinition(AglExpressions, Agl.registry.agl.expressions)
         checkProcessor(Agl.registry.agl.expressions.processor)
     }
 

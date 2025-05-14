@@ -30,13 +30,12 @@ import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 class GenerateGrammarModelBuild(
-    val grammarTypeModel: TypeModel = AglGrammar.typeModel
+    val grammarTypeModel: TypeModel = AglGrammar.typesModel
 ) {
 
     companion object {
@@ -122,7 +121,7 @@ class GenerateGrammarModelBuild(
 
     fun generateFromAsm(grammarModel: GrammarModel): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection<Any>(AglGrammar.typeModel, issues)
+        val og = ObjectGraphByReflection<Any>(AglGrammar.typesModel, issues)
         val formatter = FormatterOverTypedObject<Any>(formatModel, og,issues)
 
         val tp = grammarTypeModel.findFirstDefinitionByNameOrNull(SimpleName("GrammarModel"))!!.type()

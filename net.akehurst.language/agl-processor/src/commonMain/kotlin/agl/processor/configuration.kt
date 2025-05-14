@@ -165,7 +165,7 @@ internal class LanguageProcessorConfigurationSimple(
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(
-            SyntaxAnalyserSimple(p.typesModel, p.asmTransformModel, p.targetAsmTransformRuleSet.qualifiedName), //FIXME
+            SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetTransformRuleSet.qualifiedName), //FIXME
             IssueHolder(LanguageProcessorPhase.ALL)
         )
     },

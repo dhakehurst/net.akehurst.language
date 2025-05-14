@@ -92,34 +92,34 @@ class test_SyntaxAnalyserSimple_datatypes {
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 //unit = declaration* ;
-                dataType("unit", "Unit") {
+                dataFor("unit", "Unit") {
                     propertyListTypeOf("declaration", "Declaration", false, 0)
                 }
                 // primitive = 'primitive' ID ;
-                dataType("primitive", "Primitive") {
+                dataFor("primitive", "Primitive") {
                     propertyPrimitiveType("id", "String", false, 1)
                 }
                 // datatype = 'datatype' ID '{' property* '}' ;
-                dataType("datatype", "Datatype") {
+                dataFor("datatype", "Datatype") {
                     propertyPrimitiveType("id", "String", false, 1)
                     propertyListTypeOf("property", "Property", false, 3)
                 }
                 // declaration = datatype | primitive ;
-                dataType("declaration", "Declaration") {
+                dataFor("declaration", "Declaration") {
                     subtypes("Datatype", "Primitive")
                 }
                 // property = ID ':' typeReference ;
-                dataType("property", "Property") {
+                dataFor("property", "Property") {
                     propertyPrimitiveType("id", "String", false, 0)
                     propertyDataTypeOf("typeReference", "TypeReference", false, 2)
                 }
                 // typeReference = type typeArguments? ;
-                dataType("typeReference", "TypeReference") {
+                dataFor("typeReference", "TypeReference") {
                     propertyPrimitiveType("type", "String", false, 0)
                     propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
                 }
                 // typeArguments = '<' [typeReference / ',']+ '>' ;
-                dataType("typeArguments", "TypeArguments") {
+                dataFor("typeArguments", "TypeArguments") {
                     propertyListTypeOf("typeReference", "TypeReference", false, 1)
                 }
                 stringTypeFor("ID")

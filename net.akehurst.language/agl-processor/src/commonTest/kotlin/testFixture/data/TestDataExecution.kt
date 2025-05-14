@@ -1,7 +1,6 @@
 package testFixture.data
 
 import net.akehurst.language.agl.*
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
@@ -56,7 +55,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     println("--- TypeDomain ---")
     println(proc.typesModel.asString())
     println("--- Asm Transform ---")
-    println(proc.asmTransformModel.asString())
+    println(proc.transformModel.asString())
 
     println("****** ${testData.description} Sentences ******")
     if (null == sentenceIndex) {

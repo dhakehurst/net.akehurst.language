@@ -65,12 +65,12 @@ class TypeModelBuilder(
 }
 
 @TypeModelDslMarker
-class TypeNamespaceBuilder(
+open class TypeNamespaceBuilder(
     val qualifiedName: QualifiedName,
     imports: List<Import>
 ) {
 
-    private val _namespace = TypeNamespaceSimple(qualifiedName, import = imports)
+    protected open val _namespace:TypeNamespace = TypeNamespaceSimple(qualifiedName, import = imports)
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     fun imports(vararg imports: String) {
@@ -89,10 +89,10 @@ class TypeNamespaceBuilder(
         b.build()
     }
 
-    fun interface_(typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}) {
+    fun interface_(typeName: String, init: InterfaceTypeBuilder.() -> Unit = {}): InterfaceType {
         val b = InterfaceTypeBuilder(_namespace, _typeReferences, SimpleName(typeName))
         b.init()
-        b.build()
+        return b.build()
     }
 
     fun enum(typeName: String, literals: List<String>): EnumType =
@@ -141,7 +141,7 @@ class TypeNamespaceBuilder(
         return t
     }
 
-    fun build(): TypeNamespace {
+    open fun build(): TypeNamespace {
         return _namespace
     }
 }

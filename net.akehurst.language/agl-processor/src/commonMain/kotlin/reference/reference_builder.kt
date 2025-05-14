@@ -31,15 +31,15 @@ import net.akehurst.language.reference.asm.*
 @DslMarker
 annotation class CrossReferenceModelBuilderMarker
 
-fun crossReferenceModel(init: CrossReferenceModelBuilder.() -> Unit): CrossReferenceModel {
-    val b = CrossReferenceModelBuilder()
+fun crossReferenceModel(name:String, init: CrossReferenceModelBuilder.() -> Unit): CrossReferenceModel {
+    val b = CrossReferenceModelBuilder(name)
     b.init()
     return b.build()
 }
 
 @CrossReferenceModelBuilderMarker
 class CrossReferenceModelBuilder(
-
+    private val _name:String,
 ) {
 
     private var _namespaces = mutableListOf<CrossReferenceNamespaceDefault>()
@@ -54,7 +54,7 @@ class CrossReferenceModelBuilder(
     }
 
     fun build(): CrossReferenceModel {
-        val result = CrossReferenceModelDefault(SimpleName("CrossReference"), namespace =  _namespaces)
+        val result = CrossReferenceModelDefault(SimpleName(_name), namespace =  _namespaces)
         return result
     }
 }

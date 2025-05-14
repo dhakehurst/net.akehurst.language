@@ -102,9 +102,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
     }
 
-    override val typesModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
+    override val typesModel: TypeModel get() = this.transformModel.typeModel ?: error("Should not happen")
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val transformModel: TransformModel by lazy {
         val res = configuration.transformResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.issues) }
         res?.asm
@@ -112,8 +112,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: error("should not happen")
     }
 
-    override val targetAsmTransformRuleSet: TransformRuleSet by lazy {
-        targetGrammar?.let { asmTransformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
+    override val targetTransformRuleSet: TransformRuleSet by lazy {
+        targetGrammar?.let { transformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
             ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
     }
 

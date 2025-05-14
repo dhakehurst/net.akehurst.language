@@ -17,7 +17,6 @@
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.LanguageObjectAbstract
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.runtime.structure.ruleSet
 import net.akehurst.language.agl.simple.ContextWithScope
@@ -32,7 +31,6 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.aut
-import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
@@ -66,10 +64,10 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
     """
 
     override val grammarModel: GrammarModel get() = TODO("not implemented")
-    override val typeModel: TypeModel = typeModel("test", true) {
+    override val typesModel: TypeModel = typeModel("test", true) {
         TODO("build type model")
     }
-    override val kompositeModel: TypeModel get() = typeModel
+    override val kompositeModel: TypeModel get() = typesModel
     override val asmTransformModel: TransformModel get() = TODO()
     override val crossReferenceModel: CrossReferenceModel get() = TODO("builder for cross reference model")
     override val styleModel: AglStyleModel get() = TODO("not implemented")
@@ -102,10 +100,10 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
     override val syntaxAnalyser: SyntaxAnalyser<Asm> get() = TODO()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
-    override val semanticAnalyser: SemanticAnalyser<Asm, ContextWithScope<Any, Any>> = SemanticAnalyserSimple(typeModel, crossReferenceModel)
+    override val semanticAnalyser: SemanticAnalyser<Asm, ContextWithScope<Any, Any>> = SemanticAnalyserSimple(typesModel, crossReferenceModel)
     override val completionProvider: CompletionProvider<Asm, ContextWithScope<Any, Any>>?
         get() = TODO("not implemented")
-    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typeModel, this.issues)
+    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typesModel, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

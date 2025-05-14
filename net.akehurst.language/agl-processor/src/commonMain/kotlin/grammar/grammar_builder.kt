@@ -44,6 +44,7 @@ fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(),
     return gm
 }
 
+@Deprecated("use 'grammarModel' instead")
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
     val ns = GrammarNamespaceDefault(QualifiedName(namespace))
     val b = GrammarBuilder(ns, SimpleName(name))

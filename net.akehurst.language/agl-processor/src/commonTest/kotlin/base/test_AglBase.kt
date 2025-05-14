@@ -14,7 +14,7 @@ class test_AglBase {
 
     @Test
     fun test_typeModel() {
-        val actual = AglBase.typeModel
+        val actual = AglBase.typesModel
 
         assertNotNull(actual)
         val ns = actual.findFirstDefinitionByNameOrNull(SimpleName("NamespaceDefault"))

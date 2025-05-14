@@ -50,7 +50,7 @@ class AsmTransformSyntaxAnalyser(
     )
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
-        AglExpressions.grammar.qualifiedName to ExpressionsSyntaxAnalyser()
+        AglExpressions.defaultTargetGrammar.qualifiedName to ExpressionsSyntaxAnalyser()
     )
 
     override fun registerHandlers() {
