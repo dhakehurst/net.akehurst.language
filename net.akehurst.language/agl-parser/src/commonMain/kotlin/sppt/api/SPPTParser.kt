@@ -27,8 +27,8 @@ package net.akehurst.language.sppt.api
             branch : NAME '{'  nodes '}' ;
             leaf : LITERAL | pattern ;
             pattern : PATTERN ':' LITERAL ;
-            PATTERN : "\"([^\"\\]|\\.)*\"" ;
-            LITERAL : "'([^'\\]|\\.)*'" ;
+            PATTERN : "\"([^\"\\\\]|\\.)*\"" ;
+            LITERAL : "'([^'\\\\]|\\.)*'" ;
             EMPTY : '§empty' ;
 
             NAME : "[a-zA-Z_][a-zA-Z_0-9]*" ;  //same as IDENTIFIER from OGL.ogl

@@ -29,6 +29,7 @@ import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
@@ -113,7 +114,7 @@ namespace net.akehurst.language.base.asm
     override val typesModel: TypeModel by lazy {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
         typeModel(NAME, true, listOf(StdLibDefault)) {
-            namespace("net.akehurst.language.base.api", listOf("std")) {
+            grammarTypeNamespace("net.akehurst.language.base.api", listOf("std")) {
                 interface_("PublicValueType") {}
                 value("SimpleName") {
                     supertype("PossiblyQualifiedName")

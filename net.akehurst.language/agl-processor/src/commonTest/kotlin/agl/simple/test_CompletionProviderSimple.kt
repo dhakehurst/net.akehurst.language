@@ -37,7 +37,7 @@ class test_CompletionProviderSimple {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmSimple? = ContextAsmSimple(),
+            val context: ContextWithScope<Any,Any>? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -230,7 +230,7 @@ class test_CompletionProviderSimple {
             }
         }
 
-        val context = ContextAsmSimple()
+        val context = contextAsmSimple()
         context.newScopeForSentence(null).addToScope("int", QualifiedName("$externalNsName.TypeDef"), null, "int", false)
 
 

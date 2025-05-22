@@ -84,7 +84,7 @@ internal class ConverterToRuntimeRules(
     private fun terminalRule(name: String?, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip, false).also {
             if (isPattern) {
-                val unescaped = RuntimeRuleRhsPattern.unescape(value)
+                val unescaped = value //RuntimeRuleRhsPattern.unescape(value)
                 it.setRhs(RuntimeRuleRhsPattern(it, unescaped))
             } else {
                 val unescaped = RuntimeRuleRhsLiteral.unescape(value)

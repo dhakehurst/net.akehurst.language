@@ -71,7 +71,7 @@ class test_CompletionProviderDefault_datatypes {
 
         data class TestData(
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmSimple? = ContextAsmSimple(),
+            val context: ContextWithScope<Any,Any>? = contextAsmSimple(),
             val sentence: String,
             val expected: List<CompletionItem>
         )

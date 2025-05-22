@@ -19,9 +19,9 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
@@ -195,7 +195,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                 }
             }
         )
@@ -239,14 +239,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(crossReferenceModel = scopeModel, context = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

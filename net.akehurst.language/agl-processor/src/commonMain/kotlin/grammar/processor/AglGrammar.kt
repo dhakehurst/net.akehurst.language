@@ -16,7 +16,6 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
@@ -85,8 +84,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
             nonTerminal = possiblyQualifiedName ;
             embedded = possiblyQualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
-            leaf LITERAL = "'([^'\\]|\\.)+'" ;
-            leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
+            leaf LITERAL = "'([^'\\\\]|\\\\.)+'" ;
+            leaf PATTERN = "\"([^\"\\\\]|\\\\.)+\"" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
             leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
             preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;
@@ -142,26 +141,28 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
             }
         """.trimIndent()
 
-    override val styleString: String = """namespace $NAMESPACE_NAME
-  styles $NAME {
-    'namespace', 'grammar', 'extends', 'override', 'skip', 'leaf' {
-      foreground: darkgreen;
-      font-style: bold;
-    }
-    LITERAL {
-      foreground: blue;
-    }
-    PATTERN {
-      foreground: darkblue;
-    }
-    IDENTIFIER {
-      foreground: darkred;
-      font-style: italic;
-    }
-    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
-      foreground: LightSlateGrey;
-    }
-  }"""
+    override val styleString: String = """
+        namespace $NAMESPACE_NAME
+          styles $NAME {
+            $$ "'[^']+'" {
+              foreground: darkgreen;
+              font-style: bold;
+            }
+            LITERAL {
+              foreground: blue;
+            }
+            PATTERN {
+              foreground: darkblue;
+            }
+            IDENTIFIER {
+              foreground: darkred;
+              font-style: italic;
+            }
+            SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
+              foreground: LightSlateGrey;
+            }
+          }
+      """.trimIndent()
 
     override val grammarModel: GrammarModel by lazy {
         grammarModel(NAME) {
@@ -1045,7 +1046,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'([^']+)'") {
+                    metaRule("'[^']+'") {
                         declaration("foreground","darkgreen")
                         declaration("font-style","bold")
                     }

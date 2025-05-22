@@ -2,7 +2,6 @@ package testFixture.data
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessOptionsDefault
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.ProcessOptions
@@ -171,7 +170,7 @@ class TestDataSentenceBuilder(
     val description:String?
 ) {
     private var _options: ProcessOptions<Asm, ContextWithScope<Any, Any>> = Agl.options(baseOptions){}
-    private var _context: ContextAsmSimple? = null
+    private var _context: ContextWithScope<Any,Any>? = null
     private var _expectedAsm: Asm? = null
     private var _expectedCompletionItems: List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
@@ -180,7 +179,7 @@ class TestDataSentenceBuilder(
         _options = value
     }
 
-    fun context(value: ContextAsmSimple) {
+    fun context(value: ContextWithScope<Any,Any>) {
         _options.semanticAnalysis.context = value
         _options.completionProvider.context = value
     }

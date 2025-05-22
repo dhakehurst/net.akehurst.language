@@ -20,7 +20,6 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -84,9 +83,9 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: ContextAsmSimple,
+            context: ContextWithScope<Any,Any>,
             resolveReferences: Boolean,
-            expectedContext: ContextAsmSimple,
+            expectedContext: ContextWithScope<Any,Any>,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {
@@ -142,7 +141,7 @@ class test_Vistraq_References {
             item("AB", "vistraq.query.TIM.LinkType", null, "/0/linkList/0")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext)
     }
 
     @Test
@@ -176,7 +175,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -195,7 +194,7 @@ class test_Vistraq_References {
             item("A", "vistraq.query.TIM.NodeType", null, "/0/model/model/nodeList/0")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -224,7 +223,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -253,7 +252,7 @@ class test_Vistraq_References {
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext, null, expectedIssues)
     }
 
 

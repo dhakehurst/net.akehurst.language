@@ -20,19 +20,16 @@ package net.akehurst.language.automaton.leftcorner
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.automaton.api.AutomatonKind
 
+//internal data class FirstOfResult(val needsFirstOfParentNext: Boolean, val result: LookaheadSetPart) {
+//    fun union(other: FirstOfResult) = FirstOfResult(this.needsFirstOfParentNext || other.needsFirstOfParentNext, this.result.union(other.result))
+//    fun endResult(firstOfParentNext: LookaheadSetPart) = when {
+//        needsFirstOfParentNext -> result.union(firstOfParentNext)
+//        else -> result
+//    }
+//}
+
 internal class FirstOf(
 ) {
-
-    companion object {
-        data class FirstOfResult(val needsFirstOfParentNext: Boolean, val result: LookaheadSetPart) {
-            fun union(other: FirstOfResult) = FirstOfResult(this.needsFirstOfParentNext || other.needsFirstOfParentNext, this.result.union(other.result))
-            fun endResult(firstOfParentNext: LookaheadSetPart) = when {
-                needsFirstOfParentNext -> result.union(firstOfParentNext)
-                else -> result
-            }
-        }
-
-    }
 
     // index by RuntimeRule.number
     private val _firstOfNotEmpty = hashMapOf<Int, FirstOfResult>()

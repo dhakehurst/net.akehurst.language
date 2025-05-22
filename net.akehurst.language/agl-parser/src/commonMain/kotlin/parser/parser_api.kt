@@ -160,6 +160,7 @@ interface RuntimeSpine {
  * Options to configure the parsing of a sentence
  * there is no separate scanner, so scanner options are passed to the parser
  */
+// cannot have targetGrammar as an option because the grammar converted to rule set is needed to construct the parser TODO: change this, it could be possible
 interface ParseOptions {
     var enabled:Boolean
     var goalRuleName: String?

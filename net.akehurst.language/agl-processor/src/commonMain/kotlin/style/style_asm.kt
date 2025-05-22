@@ -115,7 +115,7 @@ data class AglStyleMetaRuleDefault(
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
         val sel = this.pattern.pattern
-        sb.append("$sel {\n")
+        sb.append("$$ \"$sel\" {\n")
         val newIndent = indent.inc
         val decls = declaration.values // do not sort, order matters
             .joinToString(separator = "\n") { "$newIndent${it.name}: ${it.value};" }

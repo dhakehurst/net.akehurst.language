@@ -16,7 +16,7 @@ import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
 
-data class TypeRefInfo(
+internal data class TypeRefInfo(
     val name: PossiblyQualifiedName,
     val args: List<TypeRefInfo>,
     val isNullable: Boolean
@@ -27,7 +27,7 @@ data class TypeRefInfo(
     }
 }
 
-class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
+internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         QualifiedName("Base") to BaseSyntaxAnalyser()

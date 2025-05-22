@@ -655,7 +655,7 @@ leaf ExponentPart
     ;
 
 leaf EscapeSequence
-    = '\\' "[btnfr\"'\\]"
+    = '\\' "[btnfr\"'\\\\]"
     | '\\' ("[0-3]?" "[0-7]")? "[0-7]"
     | '\\' 'u'+ HexDigit HexDigit HexDigit HexDigit
     ;

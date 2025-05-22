@@ -55,7 +55,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_nothing() {
-        val expression = "\$nothing"
+        val expression = $$"$nothing"
         val tm = typeModel("test", true) {
             namespace("ns") {
                 data("Test") {
@@ -75,7 +75,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_self() {
-        val expression = "\$self"
+        val expression = $$"$self"
         val tm = typeModel("test", true) {
             namespace("ns") {
                 data("Test") {

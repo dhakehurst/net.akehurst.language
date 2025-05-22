@@ -17,7 +17,7 @@
 
 package net.akehurst.language.typemodel.processor
 
-import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.format.builder.formatModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.typemodel.processor.TypesSyntaxAnalyser
 import net.akehurst.language.api.processor.CompletionProvider
@@ -27,17 +27,11 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.formatter.api.AglFormatModel
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
@@ -47,46 +41,49 @@ object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any, Any>>(
     const val NAME = "Types"
     const val goalRuleName = "unit"
 
-    override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+    override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    override val grammarString = """namespace $NAMESPACE_NAME
-  grammar $NAME : Base {
-    override definition
-      = singletonDefinition
-      | primitiveDefinition
-      | enumDefinition
-      | valueDefinition
-      | collectionDefinition
-      | dataDefinition
-      | interfaceDefinition
-      | unionDefinition
-      ;
-    singletonDefinition = 'singleton' IDENTIFIER ;
-    primitiveDefinition = 'primitive' IDENTIFIER ;
-    enumDefinition = 'enum' IDENTIFIER enumLiterals? ;
-    enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
-    valueDefinition = 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
-    collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
-    unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
-    interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
-    interfaceBody = '{' property* '}' ;
-    dataDefinition =
-      'data' IDENTIFIER typeParameterList? supertypes? '{'
-        constructor*
-        property*
-      '}'
-    ;
-    alternatives = [typeReference / '|']+ ;
-    typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
-    supertypes = ':' [typeReference / ',']+ ;
-    constructor = 'constructor' '(' constructorParameter* ')' ;
-    constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
-    property = cmp_ref? val_var IDENTIFIER ':' typeReference ;
-    typeReference = possiblyQualifiedName typeArgumentList? '?'?;
-    typeArgumentList = '<' [ typeReference / ',']+ '>' ;
-    cmp_ref = 'cmp' | 'ref' ;
-    val_var = 'val' | 'var' ;
-  }"""
+    override val grammarString = """
+        namespace $NAMESPACE_NAME
+          grammar $NAME : Base {
+            override definition
+              = singletonDefinition
+              | primitiveDefinition
+              | enumDefinition
+              | valueDefinition
+              | collectionDefinition
+              | dataDefinition
+              | interfaceDefinition
+              | unionDefinition
+              ;
+            singletonDefinition = 'singleton' IDENTIFIER ;
+            primitiveDefinition = 'primitive' IDENTIFIER ;
+            enumDefinition = 'enum' IDENTIFIER enumLiterals? ;
+            enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
+            valueDefinition = 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
+            collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
+            unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
+            interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
+            interfaceBody = '{' property* '}' ;
+            dataDefinition =
+              'data' IDENTIFIER typeParameterList? supertypes? '{'
+                constructor*
+                property*
+              '}'
+            ;
+            alternatives = [typeReference / '|']+ ;
+            typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
+            supertypes = ':' [typeReference / ',']+ ;
+            constructor = 'constructor' '(' constructorParameter* ')' ;
+            constructorParameter = cmp_ref? val_var? IDENTIFIER ':' typeReference ;
+            property = cmp_ref? val_var IDENTIFIER ':' typeReference ;
+            typeReference = possiblyQualifiedName typeArgumentList? '?'?;
+            typeArgumentList = '<' [ typeReference / ',']+ '>' ;
+            cmp_ref = 'cmp' | 'ref' ;
+            val_var = 'val' | 'var' ;
+          }
+      """.trimIndent()
+
     override val kompositeString = """namespace net.akehurst.language.typemodel.api
     interface TypeInstance {
         cmp typeArguments
@@ -137,12 +134,17 @@ namespace net.akehurst.language.grammarTypemodel.api
 
 """
 
-    override val styleString: String = """namespace $NAMESPACE_NAME
-        styles $NAME {
-        }
+    override val styleString = """
+        namespace ${NAMESPACE_NAME}
+          styles ${NAME} {
+            $$ "'[^']+'" {
+              foreground: darkgreen;
+              font-style: bold;
+            }
+          }        
     """
 
-    override val grammarModel: GrammarModel by lazy {
+    override val grammarModel by lazy {
         grammarModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
@@ -759,40 +761,50 @@ namespace net.akehurst.language.grammarTypemodel.api
         }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
-        asmTransform(NAME, typesModel, false) {
-            namespace(NAMESPACE_NAME) {
-
+    override val asmTransformModel by lazy {
+        asmTransform(
+            name = NAME,
+            typeModel = typesModel,
+            createTypes = false
+        ) {
+            namespace(qualifiedName = NAMESPACE_NAME) {
+                transform(NAME) {
+                    //TODO
+                }
             }
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
+    override val crossReferenceModel by lazy {
         crossReferenceModel(NAME) {
 
         }
     }
 
-    override val styleModel: AglStyleModel by lazy {
+    override val styleModel by lazy {
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'([^']+)'") {
-                        declaration("", "")
-                        declaration("", "")
+                    metaRule("'[^']+'") {
+                        declaration("foreground", "darkgreen")
+                        declaration("font-style", "bold")
                     }
                 }
             }
         }
     }
 
-    override val formatModel: AglFormatModel get() = TODO("not implemented")
+    override val formatModel by lazy {
+        formatModel(NAME) {
+//            TODO("not implemented")
+        }
+    }
 
-    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
-    override val defaultTargetGoalRule: String = "unit"
+    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<TypeModel> by lazy { TypesSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextWithScope<Any, Any>> by lazy { TypemodelSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<TypeModel, ContextWithScope<Any, Any>> by lazy { TypemodelCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<TypeModel, ContextWithScope<Any, Any>>? by lazy { TypemodelSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<TypeModel, ContextWithScope<Any, Any>>? by lazy { TypemodelCompletionProvider() }
 
 }

@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
@@ -635,9 +635,9 @@ class test_LanguageDefinitionDefault {
         val crossReferenceModel = sut.crossReferenceModel
         assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
 
-        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel!!, crossReferenceModel = crossReferenceModel!!, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel!!, crossReferenceModel = crossReferenceModel!!, context = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

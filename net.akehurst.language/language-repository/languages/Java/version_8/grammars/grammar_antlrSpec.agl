@@ -1598,7 +1598,7 @@ StringCharacter
 // §3.10.6 Escape Sequences for Character and String Literals
 leaf
 EscapeSequence
-	=	'\\' "[btnfr\"'\\]"
+	=	'\\' "[btnfr\"'\\\\]"
 	|	OctalEscape
     |   UnicodeEscape // This is not in the spec but prevents having to preprocess the input
 	;

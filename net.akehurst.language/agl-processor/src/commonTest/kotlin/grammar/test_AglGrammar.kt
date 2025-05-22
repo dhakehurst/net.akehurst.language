@@ -2,7 +2,6 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.simple.ContextAsmSimpleWithScopePath
 import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
@@ -44,7 +43,7 @@ class test_AglGrammar {
             AglGrammar.typesString, // this is created from asString on the model, thus base namespace is already included!
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimpleWithScopePath())
+                    context(contextAsmSimpleWithAsmPath())
                 }
             }
         )

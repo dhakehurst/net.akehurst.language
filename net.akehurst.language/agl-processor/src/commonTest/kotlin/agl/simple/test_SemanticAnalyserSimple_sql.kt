@@ -224,7 +224,7 @@ grammar SQL {
 
         val result = processor.process(sentence)
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -273,9 +273,9 @@ grammar SQL {
             SELECT col1 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimpleWithScopePath()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimpleWithScopePath()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimpleWithAsmPath()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -338,11 +338,11 @@ grammar SQL {
             SELECT col7 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimpleWithScopePath()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
         val expected = asmSimple(
             typeModel = typeModel,
-            crossReferenceModel = crossReferenceModel, context = ContextAsmSimple(),
+            crossReferenceModel = crossReferenceModel, context = contextAsmSimple(),
             failIfIssues = false //there are failing references expected
         ) {
             element("StatementList") {
@@ -414,7 +414,7 @@ grammar SQL {
             SELECT * FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
@@ -431,9 +431,9 @@ grammar SQL {
             SELECT col1,col2,col3 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {

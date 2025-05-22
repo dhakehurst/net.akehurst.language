@@ -51,7 +51,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
 
-    override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+    override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -132,7 +132,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             leaf BOOLEAN = "true|false" ;
             leaf INTEGER = "[0-9]+" ;
             leaf REAL = "[0-9]+[.][0-9]+" ;
-            leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;
+            leaf STRING = "'([^'\\\\]|\\\\.)*'" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
           }
       """.trimIndent()
@@ -177,7 +177,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             }
         """.trimIndent()
 
-    override val styleString = $$$"""
+    override val styleString = """
         namespace $NAMESPACE_NAME
           styles $NAME {
             $$ "'[^']+'" {
@@ -187,7 +187,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           }
         """.trimIndent()
 
-    override val grammarModel: GrammarModel by lazy {
+    override val grammarModel by lazy {
         grammarModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
@@ -309,7 +309,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                     concatenation("BOOLEAN", isLeaf = true) { pat("true|false") }
                     concatenation("INTEGER", isLeaf = true) { pat("[0-9]+") }
                     concatenation("REAL", isLeaf = true) { pat("[0-9]+[.][0-9]+") }
-                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
+                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
 
                     // If we have an 'expression'
@@ -559,7 +559,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val asmTransformModel by lazy {
         asmTransform(
             name = NAME,
             typeModel = typesModel,
@@ -573,39 +573,39 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
+    override val crossReferenceModel by lazy {
         crossReferenceModel(NAME) {
             //TODO
 
         }
     }
 
-    override val formatModel: AglFormatModel by lazy {
-        formatModel(AglBase.NAME) {
+    override val formatModel by lazy {
+        formatModel(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val styleModel: AglStyleModel by lazy {
+    override val styleModel by lazy {
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'([^']+)'") {
-                        declaration("","")
-                        declaration("","")
+                    metaRule("'[^']+'") {
+                        declaration("foreground","darkgreen")
+                        declaration("font-style","bold")
                     }
                 }
             }
         }
     }
 
-    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
-    override val defaultTargetGoalRule: String = "unit"
+    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule = "expression"
 
-    override val syntaxAnalyser: SyntaxAnalyser<Expression> by lazy { ExpressionsSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<Expression, ContextWithScope<Any, Any>> by lazy { ExpressionsSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<Expression, ContextWithScope<Any, Any>> by lazy { ExpressionsCompletionProvider() }
+    override val syntaxAnalyser by lazy { ExpressionsSyntaxAnalyser() }
+    override val semanticAnalyser by lazy { ExpressionsSemanticAnalyser() }
+    override val completionProvider by lazy { ExpressionsCompletionProvider() }
 
 
-    override fun toString(): String = "${AglGrammar.NAMESPACE_NAME}.${AglGrammar.NAME}"
+    override fun toString() = "${AglGrammar.NAMESPACE_NAME}.${AglGrammar.NAME}"
 }

@@ -52,7 +52,7 @@ skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
 // the predefined basic types
 leaf identifier          = "[a-zA-Z_][a-zA-Z0-9_]*" ;
 /* see https://stackoverflow.com/questions/37032620/regex-for-matching-a-string-literal-in-java */
-leaf stringLiteral       = '"' "([^'\\]|\\'|\\\\)*" '"' ;
+leaf stringLiteral       = '"' "([^'\\\\]|\\'|\\\\)*" '"' ;
 leaf numberLiteral       = "[0-9]+";
 leaf booleanLiteral      = 'false' | 'true';
 

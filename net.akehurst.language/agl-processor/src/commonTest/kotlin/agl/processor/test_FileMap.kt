@@ -1,14 +1,10 @@
 package agl.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.TransformString
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -25,7 +21,7 @@ class test_FileMap {
                 unit = entry* ;
                 entry = GLOB ':' value ';' ;
                 value = PATH | QUALIFIED_NAME ;
-                leaf GLOB = "([a-zA-Z0-9_*/.?{},\[\]-]|\\.)+" ;
+                leaf GLOB = "([a-zA-Z0-9_*/.?{},\\[\\]-]|\\.)+" ;
                 QUALIFIED_NAME = [ID / '.']+ ;
                 PATH = '/' [ID / '/']+ ;
                 leaf ID = "[a-zA-Z._][a-zA-Z0-9._-]*" ;

@@ -439,8 +439,12 @@ internal class AglGrammarSyntaxAnalyser(
             else -> true
         }
         val mt = children[0] as String
-        val escaped = mt.substring(1, mt.length - 1)
-        return { TerminalDefault(escaped, isPattern).also { setLocationFor(it, target, sentence) } }
+        val value = mt.substring(1, mt.length - 1)
+        val unescaped = when (isPattern) {
+            false -> value.replace("\\'", "'").replace("\\\\","\\")
+            true -> value.replace("\\\"", "\"").replace("\\\\","\\")
+        }
+        return { TerminalDefault(unescaped, isPattern).also { setLocationFor(it, target, sentence) } }
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;

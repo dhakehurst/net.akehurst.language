@@ -18,24 +18,31 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.scope.asm.ScopeSimple
+import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeModel
+
+fun TypeModel.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
+    return this.namespace.firstNotNullOfOrNull { ns ->
+        when(ns) {
+            is GrammarTypeNamespace -> ns.findTypeForRule(ruleName)
+            else -> null
+        }
+    }
+}
 
 fun contextFromGrammar(grammars: GrammarModel): ContextWithScope<Any,Any> {
-    val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typesModel
-    val namespace: GrammarTypeNamespace =
-        aglGrammarTypeModel.findNamespaceOrNull(Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName) as GrammarTypeNamespace? ?: error("should not happen")
+    val proc = Agl.registry.agl.grammar.processor!!
+    val aglGrammarTypeModel = proc.typesModel
     val context = ContextWithScope<Any,Any>()
     //val scope = ScopeSimple<String>(null, grammars.primary!!.name.value, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     grammars.allDefinitions.forEach { g ->
         val scope = context.newScopeForSentence(g)
         g.allResolvedGrammarRule.forEach {
-            val rType = namespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
+            val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
             scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value,  false)
         }
         g.allResolvedTerminal.forEach {

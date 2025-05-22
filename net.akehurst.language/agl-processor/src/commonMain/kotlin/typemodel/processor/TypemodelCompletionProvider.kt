@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.typemodel.api.TypeModel
 
-class TypemodelCompletionProvider: CompletionProviderAbstract<TypeModel, ContextWithScope<Any,Any>>() {
+internal class TypemodelCompletionProvider: CompletionProviderAbstract<TypeModel, ContextWithScope<Any,Any>>() {
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
         return super.provide(nextExpected, options)

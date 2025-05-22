@@ -19,7 +19,6 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -78,7 +77,7 @@ class test_StatechartTools_References {
             Agl.processorFromGrammar(grm, cfg)
         }
 
-        fun test(grammar: String, goal: String, sentence: String, context: ContextAsmSimple, resolveReferences: Boolean, expectedContext: ContextAsmSimple, expectedAsm: Asm? = null) {
+        fun test(grammar: String, goal: String, sentence: String, context: ContextWithScope<Any,Any>, resolveReferences: Boolean, expectedContext: ContextWithScope<Any,Any>, expectedAsm: Asm? = null) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis {
@@ -141,7 +140,7 @@ class test_StatechartTools_References {
             // only states are recorded, there are none
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -162,7 +161,7 @@ class test_StatechartTools_References {
             item("'B'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -184,7 +183,7 @@ class test_StatechartTools_References {
             item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -215,7 +214,7 @@ class test_StatechartTools_References {
             item("'E'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -245,7 +244,7 @@ class test_StatechartTools_References {
             item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -272,7 +271,7 @@ class test_StatechartTools_References {
         val expectedAsm = asmSimple(
             typeModel = processors[grammar]!!.typesModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = ContextAsmSimple()
+            context = contextAsmSimple()
         ) {
             element("Statechart") {
                 propertyString("name", "'Test'")
@@ -306,7 +305,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, expectedAsm)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext, expectedAsm)
     }
 
     @Test
@@ -322,7 +321,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -340,7 +339,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -360,7 +359,7 @@ class test_StatechartTools_References {
             item("\"z\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/2")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -376,7 +375,7 @@ class test_StatechartTools_References {
             scopedItem("O", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expected)
     }
 
     @Test
@@ -444,7 +443,7 @@ StatechartSpecification {
         val expectedAsm = asmSimple(
             typeModel = processors[grammar]!!.typesModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = ContextAsmSimple()
+            context = contextAsmSimple()
         ) {
             element("StatechartSpecification") {
                 propertyNothing("namespace")
@@ -491,7 +490,7 @@ StatechartSpecification {
             }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, expectedAsm)
+        test(grammar, goal, sentence, contextAsmSimple(), true, expectedContext, expectedAsm)
     }
 
     @Test

@@ -21,6 +21,7 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeNamespace
 
+//TODO: why is this needed..the grammar->Type mapping should be in the transform !
 interface GrammarTypeNamespace : TypeNamespace {
     /**
      * grammarRuleName -> TypeUsage

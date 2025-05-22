@@ -104,11 +104,15 @@ class test_AglTypemodel_processor {
     fun value() {
         val typesStr = $$"""
             namespace test
-              value Value
+              value Value(val value:String)
         """
         val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
-                value("Value")
+                value("Value") {
+                    constructor_ {
+                        parameter("value", "String", false)
+                    }
+                }
             }
         }
         testPass(typesStr, expected)

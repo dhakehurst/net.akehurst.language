@@ -36,7 +36,7 @@ class test_Processor {
                 
                 leaf BOOLEAN = "true|false";
                 leaf REAL = "[0-9]+[.][0-9]+";
-                leaf STRING = "'([^'\\]|\\'|\\\\)*'";
+                leaf STRING = "'([^'\\\\]|\\'|\\\\)*'";
                 leaf INTEGER = "[0-9]+";
                 leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
             }

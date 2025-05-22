@@ -72,6 +72,6 @@ grammar Mscript {
     BOOLEAN             = 'true' | 'false' ;
     INTEGER             = "([+]|[-])?[0-9]+" ;
     REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    SINGLE_QUOTE_STRING = "'([^'\\]|\\.)*'" ;
-    DOUBLE_QUOTE_STRING = "\"([^\"\\]|\\.)*\"" ;
+    SINGLE_QUOTE_STRING = "'([^'\\\\]|\\.)*'" ;
+    DOUBLE_QUOTE_STRING = "\"([^\"\\\\]|\\.)*\"" ;
 }

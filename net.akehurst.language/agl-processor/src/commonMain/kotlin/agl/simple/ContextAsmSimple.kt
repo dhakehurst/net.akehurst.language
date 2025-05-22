@@ -84,15 +84,3 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
 
     override fun toString(): String = "ContextWithScope"
 }
-
-open class ContextAsmSimple(
-    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
-    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure }
-) : ContextWithScope<Any, Any>(createScopedItem, resolveScopedItem)
-
-class ContextAsmSimpleWithScopePath(
-    map: MutableMap<String, Any> = mutableMapOf(),
-) : ContextWithScope<Any, Any>(
-    { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path },
-    { itemInScope -> map[itemInScope] }
-)

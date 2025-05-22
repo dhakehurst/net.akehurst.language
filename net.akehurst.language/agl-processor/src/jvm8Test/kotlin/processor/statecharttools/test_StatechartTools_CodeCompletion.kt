@@ -17,7 +17,6 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
@@ -85,7 +84,7 @@ class test_StatechartTools_CodeCompletion {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[(grammar)].process(sentence, Agl.options {
                 parse { goalRuleName(goal)}
-                semanticAnalysis { context(ContextAsmSimple()) }
+                semanticAnalysis { context(contextAsmSimple()) }
             })
             assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             val resultStr = processors[(grammar)].formatAsm(result.asm!!).sentence
@@ -139,7 +138,7 @@ class test_StatechartTools_CodeCompletion {
                 //reportErrors(false)
             }
             completionProvider {
-                context(ContextAsmSimple())
+                context(contextAsmSimple())
             }
         }).items.map { it.text }.toSet().sorted()
 

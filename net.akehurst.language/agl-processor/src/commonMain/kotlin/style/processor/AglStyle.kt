@@ -16,98 +16,155 @@
 
 package net.akehurst.language.style.processor
 
+import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.CompletionProvider
+import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglStyle {
+object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, Any>>() {
+    const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
+    const val NAME = "Style"
     const val goalRuleName = "unit"
 
-    //override val options = listOf(GrammarOptionDefault(AglGrammar.OPTION_defaultGoalRule, "rules"))
-    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
+    override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-    const val grammarStr = $$$"""namespace net.akehurst.language
-grammar Style : Base {
-    unit = namespace styleSet* ;
-    styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
-    extends = ':' [possiblyQualifiedName / ',']+ ;
-    rule = metaRule | tagRule ;
-    metaRule = '$$' PATTERN '{' styleList '}' ;
-    tagRule = selectorExpression '{' styleList '}' ;
-    selectorExpression
-     = selectorAndComposition
-     | selectorSingle
-     ; //TODO
-    selectorAndComposition = [selectorSingle /',']2+ ;
-    selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
-    styleList = style* ;
-    style = STYLE_ID ':' styleValue ';' ;
-    styleValue = STYLE_VALUE | STRING ;
-    
-    leaf LITERAL = "'([^'\\]|\\.)+'" ;
-    leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
-    leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
-    leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
-    leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
-    leaf STRING = "'([^'\\]|\\'|\\\\)*'" ;
-}
-"""
+    override val grammarString = """
+        namespace $NAMESPACE_NAME
+            grammar $NAME : Base {
+                override unit = namespace styleSet* ;
+                styleSet = 'styles' IDENTIFIER extends? '{' rule* '}' ;
+                extends = ':' [possiblyQualifiedName / ',']+ ;
+                rule = metaRule | tagRule ;
+                metaRule = '$$' PATTERN '{' styleList '}' ;
+                tagRule = selectorExpression '{' styleList '}' ;
+                selectorExpression
+                 = selectorAndComposition
+                 | selectorSingle
+                 ; //TODO
+                selectorAndComposition = [selectorSingle /',']2+ ;
+                selectorSingle = LITERAL | PATTERN | IDENTIFIER | SPECIAL_IDENTIFIER ;
+                styleList = style* ;
+                style = STYLE_ID ':' styleValue ';' ;
+                styleValue = STYLE_VALUE | STRING ;
+                
+                leaf LITERAL = "'([^'\\\\]|\\.)+'" ;
+                leaf PATTERN = "\"([^\"\\\\]|\\.)+\"" ;
+                leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
+                leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
+                leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
+                leaf STRING = "'([^'\\\\]|\\'|\\\\)*'" ;
+            }
+        """.trimIndent()
 
-    val grammar = grammar(
-        namespace = "net.akehurst.language",
-        name = "Style"
-    ) {
-        extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+    override val crossReferenceString = """
+        namespace net.akehurst.language
+          references {
+            in scope property typeReference refers-to GrammarRule
+            in identifiable property typeReference refers-to GrammarRule
+            in referenceDefinition property typeReference refers-to GrammarRule
+            in referenceDefinition property propertyReference refers-to GrammarRule
+          }
+    """.trimIndent()
 
-        concatenation("unit", overrideKind = OverrideKind.REPLACE) {
-            ref("namespace"); lst(0, -1) { ref("styleSet") }
-        }
-        concatenation("styleSet") {
-            lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
-            lst(0, -1) { ref("rule") }
-            lit("}")
-        }
-        concatenation("extends") {
-            lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
-        }
-        choice("rule") {
-            ref("metaRule")
-            ref("tagRule")
-        }
-        concatenation("metaRule") {
-            lit("$$"); ref("PATTERN"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
-        }
-        concatenation("tagRule") {
-            ref("selectorExpression"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
-        }
-        choice("selectorExpression") {
-            ref("selectorAndComposition")
-            ref("selectorSingle")
-        }
-        separatedList("selectorAndComposition", 2, -1) { ref("selectorSingle"); lit(",") }
-        choice("selectorSingle") {
-            ref("LITERAL")
-            ref("PATTERN")
-            ref("IDENTIFIER")
-            ref("SPECIAL_IDENTIFIER")
-        }
-        // these must match what is in the AglGrammarGrammar
-        concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
-        concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)*\"") }
+    override val styleString ="""
+        namespace net.akehurst.language
+            styles Style {
+                $$ "'([^']+)'" {
+                  foreground: darkgreen;
+                  font-style: bold;
+                }
+                SPECIAL_IDENTIFIER {
+                  foreground: orange;
+                  font-style: bold;
+                }
+                IDENTIFIER {
+                  foreground: blue;
+                  font-style: bold;
+                }
+                LITERAL {
+                  foreground: blue;
+                  font-style: bold;
+                }
+                PATTERN {
+                  foreground: darkblue;
+                  font-style: bold;
+                }
+                STYLE_ID {
+                  foreground: darkred;
+                  font-style: italic;
+                }
+            }
+        """.trimIndent()
 
-        concatenation("SPECIAL_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
+    override val grammarModel by lazy {
+        grammarModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                grammar(NAME) {
+                    extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 
-        concatenation("style") {
-            ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
+                    concatenation("unit", overrideKind = OverrideKind.REPLACE) {
+                        ref("namespace"); lst(0, -1) { ref("styleSet") }
+                    }
+                    concatenation("styleSet") {
+                        lit("styles"); ref("IDENTIFIER"); opt { ref("extends") }; lit("{");
+                        lst(0, -1) { ref("rule") }
+                        lit("}")
+                    }
+                    concatenation("extends") {
+                        lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") }
+                    }
+                    choice("rule") {
+                        ref("metaRule")
+                        ref("tagRule")
+                    }
+                    concatenation("metaRule") {
+                        lit("$$"); ref("PATTERN"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
+                    }
+                    concatenation("tagRule") {
+                        ref("selectorExpression"); lit("{"); lst(0, -1) { ref("style") }; lit("}")
+                    }
+                    choice("selectorExpression") {
+                        ref("selectorAndComposition")
+                        ref("selectorSingle")
+                    }
+                    separatedList("selectorAndComposition", 2, -1) { ref("selectorSingle"); lit(",") }
+                    choice("selectorSingle") {
+                        ref("LITERAL")
+                        ref("PATTERN")
+                        ref("IDENTIFIER")
+                        ref("SPECIAL_IDENTIFIER")
+                    }
+                    // these must match what is in the AglGrammarGrammar
+                    concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
+                    concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)*\"") }
+
+                    concatenation("SPECIAL_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
+
+                    concatenation("style") {
+                        ref("STYLE_ID"); lit(":"); ref("styleValue"); lit(";")
+                    }
+                    choice("styleValue") {
+                        ref("STYLE_ID")
+                        ref("STRING")
+                    }
+                    concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
+                    concatenation("STYLE_VALUE", isLeaf = true) { pat("[^;: \\t\\n\\x0B\\f\\r]+") }
+                    concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
+                }
+            }
         }
-        choice("styleValue") {
-            ref("STYLE_ID")
-            ref("STRING")
-        }
-        concatenation("STYLE_ID", isLeaf = true) { pat("[-a-zA-Z_][-a-zA-Z_0-9]*") }
-        concatenation("STYLE_VALUE", isLeaf = true) { pat("[^;: \\t\\n\\x0B\\f\\r]+") }
-        concatenation("STRING", isLeaf = true) { pat("'([^'\\\\]|\\\\'|\\\\\\\\)*'") }
     }
 
     const val komposite = """namespace net.akehurst.language.style.api
@@ -121,7 +178,7 @@ interface AglStyleRule {
 }
 """
 
-    val typeModel by lazy {
+    override val typesModel by lazy {
         typeModel("Style", true, AglBase.typesModel.namespace) {
             namespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
@@ -240,45 +297,51 @@ interface AglStyleRule {
         }
     }
 
-    const val styleStr = $$$"""namespace net.akehurst.language
-styles Style {
-    $$ "'([^']+)'" {
-      foreground: darkgreen;
-      font-style: bold;
+    override val asmTransformModel by lazy {
+        asmTransform(
+            name = NAME,
+            typeModel = typesModel,
+            createTypes = false
+        ) {
+            namespace(qualifiedName = NAMESPACE_NAME) {
+                transform(NAME) {
+                    //TODO
+                }
+            }
+        }
     }
-    SPECIAL_IDENTIFIER {
-      foreground: orange;
-      font-style: bold;
-    }
-    IDENTIFIER {
-      foreground: blue;
-      font-style: bold;
-    }
-    LITERAL {
-      foreground: blue;
-      font-style: bold;
-    }
-    PATTERN {
-      foreground: darkblue;
-      font-style: bold;
-    }
-    STYLE_ID {
-      foreground: darkred;
-      font-style: italic;
-    }
-}"""
 
-    const val scopeModelStr = """
-references {
-    in scope property typeReference refers-to GrammarRule
-    in identifiable property typeReference refers-to GrammarRule
-    in referenceDefinition property typeReference refers-to GrammarRule
-    in referenceDefinition property propertyReference refers-to GrammarRule
-}
-    """
+    override val crossReferenceModel by lazy {
+        crossReferenceModel(NAME) {
+            //TODO
+        }
+    }
 
-    //TODO: gen this from the ASM
-    override fun toString(): String = grammarStr
+    override val styleModel by lazy {
+        styleModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    metaRule("'[^']+'") {
+                        declaration("foreground","darkgreen")
+                        declaration("font-style","bold")
+                    }
+                }
+            }
+        }
+    }
+
+    override val formatModel by lazy {
+        formatModel(NAME) {
+//            TODO("not implemented")
+        }
+    }
+
+    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule = "unit"
+
+    override val syntaxAnalyser:SyntaxAnalyser<AglStyleModel>? by lazy { AglStyleSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<AglStyleModel, ContextWithScope<Any, Any>>? by lazy { AglStyleSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglStyleModel, ContextWithScope<Any, Any>>? by lazy { AglStyleCompletionProvider() }
 }
 
 

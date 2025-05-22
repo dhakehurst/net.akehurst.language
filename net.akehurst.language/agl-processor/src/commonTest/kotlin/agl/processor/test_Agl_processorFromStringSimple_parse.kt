@@ -112,7 +112,7 @@ class test_Agl_processorFromStringSimple_parse {
         val grammarStr = """
             namespace test
             grammar Test {
-                EscapeSequence = '\\' "[btnfr'\\]" ;
+                EscapeSequence = '\\' "[btnfr'\\\\]" ;
             }
         """.trimIndent()
 
@@ -124,7 +124,7 @@ class test_Agl_processorFromStringSimple_parse {
             """
              EscapeSequence {
                 '\\'
-                "[btnfr'\\]" : 'b'
+                "[btnfr'\\\\]" : 'b'
              }
         """
         )

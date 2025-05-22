@@ -29,7 +29,7 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
-class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> {
+internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> {
 
     companion object {
         const val OPTION_INCLUDE_STD = "include-std"

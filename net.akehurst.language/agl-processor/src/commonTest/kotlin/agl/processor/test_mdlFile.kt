@@ -66,7 +66,7 @@ grammar Mdl {
     leaf BOOLEAN             = 'on' | 'off' ;
     leaf INTEGER             = "([+]|[-])?[0-9]+" ;
     leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?|[-+]?[0-9]*[eE][-+]?[0-9]+" ;
-    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\]|\\.)*\"";
+    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\\\]|\\.)*\"";
 }
     """.trimIndent()
 

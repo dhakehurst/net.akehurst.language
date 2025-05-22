@@ -300,7 +300,7 @@ class test_piLanguages {
                     
             // the predefined basic types   
             leaf identifier          = "[a-zA-Z_][a-zA-Z0-9_]*" ;
-            leaf stringLiteral       = "\"([^\"\\]|\\.)*\"";
+            leaf stringLiteral       = "\"([^\"\\\\]|\\.)*\"";
             leaf numberLiteral       = "[0-9]+";
             leaf booleanLiteral      = 'false' | 'true';       
             }

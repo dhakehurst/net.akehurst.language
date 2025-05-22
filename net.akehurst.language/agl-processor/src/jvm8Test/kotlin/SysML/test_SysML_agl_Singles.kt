@@ -16,8 +16,8 @@
 package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -172,7 +172,7 @@ class test_SysML_agl_Singles {
         val sentence = """
         """.trimIndent()
 
-        test_process(sentence, ContextAsmSimple(), emptySet())
+        test_process(sentence, contextAsmSimple(), emptySet())
     }
 
     @Test
@@ -185,7 +185,7 @@ class test_SysML_agl_Singles {
             }
         """.trimIndent()
 
-        test_process(sentence, ContextAsmSimple(), emptySet())
+        test_process(sentence, contextAsmSimple(), emptySet())
     }
 
     @Test
@@ -207,7 +207,7 @@ class test_SysML_agl_Singles {
             )
         )
 
-        test_process(sentence, ContextAsmSimple(), expIssues)
+        test_process(sentence, contextAsmSimple(), expIssues)
     }
 
 }

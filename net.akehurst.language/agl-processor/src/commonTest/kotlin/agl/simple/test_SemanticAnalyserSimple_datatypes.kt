@@ -98,7 +98,7 @@ class test_SemanticAnalyserSimple_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextAsmSimple())
+                context(contextAsmSimple())
             }
         })
         assertTrue(result.issues.isEmpty(), result.issues.toString())
@@ -127,7 +127,7 @@ class test_SemanticAnalyserSimple_datatypes {
 
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis {
-                context(ContextAsmSimple())
+                context(contextAsmSimple())
             }
         })
         assertNotNull(result.asm)
@@ -163,7 +163,7 @@ class test_SemanticAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimpleWithScopePath())
+                    context(contextAsmSimpleWithAsmPath())
                 }
             }
         )
@@ -213,14 +213,14 @@ class test_SemanticAnalyserSimple_datatypes {
             sentence = sentence,
             Agl.options {
                 semanticAnalysis {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                 }
             }
         )
         assertNotNull(result.asm)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {
@@ -249,7 +249,7 @@ class test_SemanticAnalyserSimple_datatypes {
     @Test
     fun reprocess_with_same_context_same_def_same_sentence__pass() {
         val sentence = "primitive String"
-        val context = ContextAsmSimple(
+        val context = contextAsmSimple(
             createScopedItem = {ref, item, loc -> Pair(item, loc?.sentenceIdentity) }
         )
 
@@ -275,7 +275,7 @@ class test_SemanticAnalyserSimple_datatypes {
     @Test
     fun reprocess_with_same_context_same_def_diff_sentence__fail() {
         val sentence = "primitive String"
-        val context = ContextAsmSimple()
+        val context = contextAsmSimple()
 
         // process once to fill context
         val result1 = processor.process(sentence = sentence, Agl.options {

@@ -22,12 +22,12 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
 
 fun contextAsmSimple(
-    createScopedItem: CreateScopedItem<Any, Any> = { ref, item, location -> item },
-    resolveScopedItem: ResolveScopedItem<Any, Any> = { ref -> ref as AsmStructure },
+    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
+    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
     sentenceId:Any? = null,
-    init: ScopeBuilder<Any>.() -> Unit
-): ContextAsmSimple {
-    val context = ContextAsmSimple(createScopedItem, resolveScopedItem)
+    init: ScopeBuilder<Any>.() -> Unit = {}
+): ContextWithScope<Any,Any> {
+    val context = ContextWithScope(createScopedItem, resolveScopedItem)
     val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
     val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
     b.init()
@@ -37,9 +37,12 @@ fun contextAsmSimple(
 fun contextAsmSimpleWithAsmPath(
     map: MutableMap<String, Any> = mutableMapOf(),
     sentenceId:Any? = null,
-    init: ScopeBuilder<Any>.() -> Unit
-): ContextAsmSimpleWithScopePath {
-    val context = ContextAsmSimpleWithScopePath(map)
+    init: ScopeBuilder<Any>.() -> Unit = {}
+): ContextWithScope<Any,Any> {
+    val context = ContextWithScope<Any,Any>(
+        { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path },
+        { itemInScope -> map[itemInScope] }
+    )
     val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
     val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
     b.init()
