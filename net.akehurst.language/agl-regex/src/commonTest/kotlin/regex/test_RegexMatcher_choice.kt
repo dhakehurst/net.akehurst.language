@@ -40,8 +40,8 @@ class test_RegexMatcher_choice {
 
     @Test
     fun choice_fails() {
-        val m = regexMatcher("c")
-        val actual = m.match("ac", 0)
+        val m = regexMatcher("a|b")
+        val actual = m.match("c", 0)
         val expected = null
         assertEquals(expected, actual)
     }
