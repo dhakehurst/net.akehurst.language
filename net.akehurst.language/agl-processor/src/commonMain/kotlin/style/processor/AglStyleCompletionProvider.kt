@@ -61,26 +61,26 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
         return if (null == context) {
             emptyList()
         } else {
-            val items = spines.flatMap { spine -> spine.expectedNextLeafNonTerminalOrTerminal.flatMap { provideForTerminalItem(options.depth, spine, it, context) } }
+            val items = spines.flatMap { spine -> spine.expectedNextLeafNonTerminalOrTerminal.flatMap { provideForTerminalItem(spine, it, options) } }
             defaultSortAndFilter(items)
         }
     }
 
-    private fun provideForTerminalItem(depth: Int, spine: Spine, nextExpected: RuleItem, context: ContextWithScope<Any, Any>): List<CompletionItem> {
+    private fun provideForTerminalItem(spine: Spine, nextExpected: RuleItem,options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
         val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
             ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
             ?: error("Should not be null")
         return when (nextExpected.owningRule.name) {
-            GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, context)
-            GrammarRuleName("PATTERN") -> PATTERN(nextExpected, itemType, context)
-            GrammarRuleName("IDENTIFIER") -> IDENTIFIER(nextExpected, itemType, context)
-            GrammarRuleName("META_IDENTIFIER") -> META_IDENTIFIER(nextExpected, itemType, context)
-            GrammarRuleName("STYLE_ID") -> STYLE_ID(nextExpected, itemType, context)
-            GrammarRuleName("STYLE_VALUE") -> STYLE_VALUE(nextExpected, itemType, context)
-            GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, context)
-            GrammarRuleName("rule") -> rule(nextExpected, itemType, context)
-            GrammarRuleName("style") -> style(nextExpected, itemType, context)
-            else -> CompletionProviderAbstract.provideDefaultForSpine(depth,spine)
+            GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, options.context!!)
+            GrammarRuleName("PATTERN") -> PATTERN(nextExpected, itemType, options.context!!)
+            GrammarRuleName("IDENTIFIER") -> IDENTIFIER(nextExpected, itemType, options.context!!)
+            GrammarRuleName("META_IDENTIFIER") -> META_IDENTIFIER(nextExpected, itemType, options.context!!)
+            GrammarRuleName("STYLE_ID") -> STYLE_ID(nextExpected, itemType, options.context!!)
+            GrammarRuleName("STYLE_VALUE") -> STYLE_VALUE(nextExpected, itemType, options.context!!)
+            GrammarRuleName("selectorAndComposition") -> selectorAndComposition(nextExpected, itemType, options.context!!)
+            GrammarRuleName("rule") -> rule(nextExpected, itemType, options.context!!)
+            GrammarRuleName("style") -> style(nextExpected, itemType, options.context!!)
+            else -> CompletionProviderAbstract.provideDefaultForSpine(spine, options)
         }
     }
 

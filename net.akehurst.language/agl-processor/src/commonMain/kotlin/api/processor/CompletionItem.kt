@@ -33,6 +33,7 @@ data class CompletionItem(
     val label: String,
     val text: String
 ) {
+    var id: Int? = 0
     var description: String = ""
 }
 

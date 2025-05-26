@@ -60,9 +60,23 @@ class RegexValueProvider(
     fun provide(): String {
         var currentStates = arrayOf<State>()
         currentStates = this.startStates
+        var lastState: State? = null
+        //TODO: find shorted path to goal - better algorithm required
         while (currentStates.isNotEmpty()) {
-            val st = currentStates.first()
-            val outgoing = st.outgoing.firstOrNull { it.isToGoal } ?: st.outgoing.firstOrNull()
+            // pick state by
+            // - is Goal
+            // - has a transition to goal
+            // - not the last state
+            // - first one
+            lastState = currentStates.firstOrNull { it.isGoal}
+                ?: currentStates.firstOrNull { it.outgoing.any { it.isToGoal } }
+                ?: currentStates.firstOrNull { it != lastState }
+                ?: currentStates.first()
+            // pick the transition by
+            // - goes to goal
+            // - first one
+            val outgoing = lastState.outgoing.firstOrNull { it.isToGoal }
+                ?: lastState.outgoing.firstOrNull()
             if (null == outgoing) {
                 currentStates = arrayOf()
             } else {

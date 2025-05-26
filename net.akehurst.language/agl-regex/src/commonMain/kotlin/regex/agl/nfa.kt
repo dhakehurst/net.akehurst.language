@@ -71,7 +71,7 @@ internal class CharacterMatcher(
     val min = literal
 
     // for negated
-    val matcher: CharacterMatcher = options[0]
+    val matcher: CharacterMatcher get() = options[0]
 
     //abstract fun matches(text: CharSequence, pos: Int): Boolean =
 

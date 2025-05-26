@@ -67,6 +67,12 @@ interface CompletionProviderOptions<ContextType : Any> {
      **/
     var depth: Int
 
+    var path: List<Pair<Int,Int>>
+
+    var showOptionalItems:Boolean
+
+    var provideValuesForPatternTerminals:Boolean
+
     val other: Map<String, Any>
 
     fun clone(): CompletionProviderOptions<ContextType>

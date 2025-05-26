@@ -231,6 +231,9 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     private var _context: ContextType? = base.context
     private var _depth: Int = base.depth
+    private var _path: List<Pair<Int,Int>> = base.path
+    private var _showOptionalItems = base.showOptionalItems
+    private var _provideValuesForPatternTerminals = base.provideValuesForPatternTerminals
     private val _options = base.other.toMutableMap()
 
     fun context(value: ContextType?) {
@@ -241,11 +244,30 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
         _depth = value
     }
 
+    fun path(value:List<Pair<Int,Int>>) {
+        _path = value
+    }
+
+    fun showOptionalItems(value:Boolean) {
+        _showOptionalItems = value
+    }
+
+    fun provideValuesForPatternTerminals(value: Boolean) {
+        _provideValuesForPatternTerminals = value
+    }
+
     fun option(key: String, value: Any) {
         _options[key] = value
     }
 
     fun build(): CompletionProviderOptions<ContextType> {
-        return CompletionProviderOptionsDefault<ContextType>(_context, _depth, _options)
+        return CompletionProviderOptionsDefault<ContextType>(
+            context = _context,
+            depth = _depth,
+            path = _path,
+            showOptionalItems = _showOptionalItems,
+            provideValuesForPatternTerminals = _provideValuesForPatternTerminals,
+            other = _options
+        )
     }
 }

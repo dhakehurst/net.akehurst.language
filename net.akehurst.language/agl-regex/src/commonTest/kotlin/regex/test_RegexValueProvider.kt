@@ -25,6 +25,7 @@ class test_RegexValueProvider {
 
     private companion object {
         fun test(pattern:String, anyChar:Char = 'X', expected:String) {
+            println("Testing: $pattern")
             val provider = RegexValueProvider(pattern, anyChar)
             val actual = provider.provide()
             assertEquals(expected, actual)
@@ -113,5 +114,25 @@ class test_RegexValueProvider {
     fun multi0n() {
         test("a*",'X',"")
         test("a*b",'X',"b")
+        test("a*b*c",'X',"c")
+        test("a*b*c*d",'X',"d")
+    }
+
+    @Test
+    fun multi1n() {
+       test("a+",'X',"a")
+       test("a+b",'X',"ab")
+       test("a+b*c",'X',"ac")
+       test("a*b+c",'X',"abc") //TODO: currently gives 'abc' (not 'bc') because shortest path not found
+    }
+
+    @Test
+    fun repetition() {
+        test("a{0}b",'X',"b")
+        test("a{1}b",'X',"ab")
+        test("a{2}b",'X',"aab")
+        test("a{5}",'X',"aaaaa")
+        test("a{3,}b",'X',"aaab")
+        test("a{2,5}b",'X',"aab")
     }
 }

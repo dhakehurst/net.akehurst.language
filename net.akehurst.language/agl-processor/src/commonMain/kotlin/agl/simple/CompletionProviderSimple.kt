@@ -57,21 +57,20 @@ class CompletionProviderSimple(
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
-        val depth = options.depth
         val context = options.context
         val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideDefaultForSpine(depth, sp) }.toSet()
+            nextExpected.flatMap { sp -> provideDefaultForSpine(sp,options) }.toSet()
                 .toList() //TODO: can we remove duplicates earlier!
         } else {
             val items = nextExpected.flatMap { sp ->
                 val firstSpineNode = sp.elements.firstOrNull()
                 when (firstSpineNode) {
-                    null -> provideDefaultForSpine(depth, sp)
+                    null -> provideDefaultForSpine(sp,options)
                     else -> {
                         val type = typeFor(firstSpineNode.rule)
                         when (type) {
-                            null -> provideDefaultForSpine(depth, sp)
-                            else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(depth, sp)
+                            null -> provideDefaultForSpine(sp,options)
+                            else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(sp,options)
                         }
                     }
                 }

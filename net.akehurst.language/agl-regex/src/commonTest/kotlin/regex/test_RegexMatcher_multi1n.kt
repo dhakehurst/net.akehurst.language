@@ -16,6 +16,40 @@
 
 package net.akehurst.language.regex.agl
 
+import net.akehurst.language.regex.api.RegexMatcher
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
 class test_RegexMatcher_multi1n {
+
+    private companion object {
+        fun test(pattern:String, str:String) {
+            val m = regexMatcher(pattern)
+            val actual = m.match(str, 0)
+            val expected = RegexMatcher.MatchResultAgl(str)
+            assertEquals(expected, actual)
+        }
+    }
+
+    @Test
+    fun a1n() {
+        test("a+", "a")
+    }
+
+    @Test
+    fun a0n_b1n() {
+        test("a*b+", "b")
+        test("a*b+", "ab")
+        test("a*b+", "aab")
+        test("a*b+", "aabb")
+    }
+
+    @Test
+    fun a0n_b1n_c() {
+        test("a*b+c", "bc")
+        test("a*b+c", "bbc")
+        test("a*b+c", "aabc")
+        test("a*b+c", "aabbc")
+    }
 
 }

@@ -79,11 +79,17 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
     override var depth: Int = 1,
+    override var path: List<Pair<Int, Int>> = emptyList(),
+    override var showOptionalItems: Boolean = true,
+    override var provideValuesForPatternTerminals: Boolean = false,
     override val other: Map<String, Any> = mutableMapOf()
 ) : CompletionProviderOptions<ContextType> {
     override fun clone() = CompletionProviderOptionsDefault<ContextType>(
         context = this.context,
         depth = this.depth,
+        path = this.path,
+        showOptionalItems = this.showOptionalItems,
+        provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
         other = other
     )
 }
