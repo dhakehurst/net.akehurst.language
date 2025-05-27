@@ -132,57 +132,48 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             return sorted
         }
 
-        fun <ContextType : Any> provideDefaultForSpine(spine: Spine, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-            return provideForRuleItem(spine.expectedNextRuleItems, options) + when {
-                options.path.isEmpty() -> provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal, options)
-                else -> emptyList()
+        fun expansionToCompletionItem(expansions: List<Expansion>): List<CompletionItem> = expansions.mapIndexed { idx, exp ->
+            val label = exp.name ?: "???"
+            val text = exp.list//.joinToString(separator = " ") { textFor(it) }
+            CompletionItem(CompletionItemKind.SEGMENT, label, text).also {
+                it.id = idx
             }
+        }.toSet().toList()
+
+        fun <ContextType : Any> provideDefaultForSpine(spine: Spine, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
+            val exps = provideForRuleItems(spine.expectedNextRuleItems, options)
+            val cis = expansionToCompletionItem(exps) + provideForTangibles(spine.expectedNextLeafNonTerminalOrTerminal, options)
+            return cis
         }
 
-        fun <ContextType : Any> provideForConcatenations(concatenations: Set<Concatenation>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> = when (options.depth) {
+        fun <ContextType : Any> provideExpansionsForSpine(spine: Spine, options: CompletionProviderOptions<ContextType>): List<Expansion> {
+            return provideForRuleItems(spine.expectedNextRuleItems, options)
+        }
+
+        fun <ContextType : Any> provideForConcatenations(concatenations: Set<Concatenation>, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (options.depth) {
             0 -> emptyList()
             else -> concatenations.flatMap { concat ->
-                val expanded = expand(options.depth, concat, options)
-                expanded.map {
-                    val label = it.name ?: concat.owningRule.name.value
-                    val text = it.list//.joinToString(separator = " ") { textFor(it) }
-                    CompletionItem(CompletionItemKind.SEGMENT, label, text)
-                }
+                expand(options.depth, concat, options)
             }
         }
 
-        fun <ContextType : Any> provideForRuleItem(ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-            return ruleItems.map { ri ->
-                val expanded = expand(options.depth, ri, options)
-                val citems = expanded.mapIndexed {idx,it ->
-                    val label = it.name ?: ri.owningRule.name.value
-                    val text = it.list//.joinToString(separator = " ") { textFor(it) }
-                    CompletionItem(CompletionItemKind.SEGMENT, label, text).also { it.id = idx }
-                }
-                citems
-            }.flatten().toSet().toList()
+        fun <ContextType : Any> provideForRuleItems(ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>): List<Expansion> =
+            provideExpansionsForRuleItem(options.depth, ruleItems, options)
 
-        }
-
-        fun <ContextType : Any> expand(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> = when {
-            options.path.isEmpty() ->  expandItem(curDepth,item,options)
-            else -> {
-                var pthItem = item
-                var lastItems = emptyList<Expansion>()
-                for (i in options.path.indices) {
-                    val pthStep = options.path[i]
-                    var pthDpth = pthStep.first
-                    var pthIdx = pthStep.second
-                    lastItems = expandItem(pthDpth, pthItem, options)
-                    val ni = lastItems.getOrNull(pthIdx)?.ruleItem
-                    if (ni == null) {
-                        break
-                    }
-                    pthItem = ni
-                }
-                lastItems
+        fun <ContextType : Any> provideExpansionsForRuleItem(curDepth: Int, ruleItems: Set<RuleItem>, options: CompletionProviderOptions<ContextType>): List<Expansion> =
+            ruleItems.flatMap { ri ->
+                expand(curDepth, ri, options)
             }
-        }
+
+        fun <ContextType : Any> expand(curDepth: Int, ri: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> =
+            expandItem(curDepth, ri, options).map { exp ->
+                if (null == exp.name) {
+                    Expansion(exp.ruleItem, ri.owningRule.name.value, exp.list)
+                } else {
+                    exp
+                }
+            }
+
 
         fun <ContextType : Any> expandItem(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (curDepth) {
             //0 -> emptyList()
@@ -196,6 +187,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
                 else -> listOf(textFor(item, options))
             }
+
             else -> when (item) {
                 is Choice -> item.alternative.flatMap { expandItem(curDepth, it, options) }
                 is Concatenation -> {
@@ -268,10 +260,13 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         is Terminal -> when {
                             item.owningRule.isLeaf -> Expansion(item, null, "<${item.owningRule.name}>")
                             item.isPattern -> when {
-                                options.provideValuesForPatternTerminals -> {
+                                options.provideValuesForPatternTerminals -> try {
                                     val p = RegexValueProvider(item.value, 'X') //TODO: pass in the 'any value'
                                     val txt = p.provide()
                                     Expansion(item, null, txt)
+                                } catch (t: Throwable) {
+                                    t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
+                                    Expansion(item, null, "<${item.value}>")
                                 }
 
                                 else -> Expansion(item, null, "<${item.value}>")
@@ -319,10 +314,13 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                     }
                     when {
                         tangibleItem.isPattern -> when {
-                            options.provideValuesForPatternTerminals -> {
+                            options.provideValuesForPatternTerminals -> try {
                                 val p = RegexValueProvider(tangibleItem.value, 'X') //TODO: pass in the 'any value'
                                 val txt = p.provide()
                                 listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, txt))
+                            } catch (t: Throwable) {
+                                t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, "<$name>"))
                             }
 
                             else -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, "<$name>"))
@@ -338,7 +336,9 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
     }
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
-        val items = nextExpected.flatMap { sp -> provideDefaultForSpine(sp, options) }
+        val items = nextExpected.flatMap { sp ->
+            provideDefaultForSpine(sp, options)
+        }
         return defaultSortAndFilter(items)
     }
 

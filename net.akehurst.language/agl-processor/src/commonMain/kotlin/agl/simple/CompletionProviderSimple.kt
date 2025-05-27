@@ -58,26 +58,57 @@ class CompletionProviderSimple(
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
         val context = options.context
-        val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideDefaultForSpine(sp,options) }.toSet()
-                .toList() //TODO: can we remove duplicates earlier!
-        } else {
-            val items = nextExpected.flatMap { sp ->
-                val firstSpineNode = sp.elements.firstOrNull()
-                when (firstSpineNode) {
-                    null -> provideDefaultForSpine(sp,options)
-                    else -> {
-                        val type = typeFor(firstSpineNode.rule)
-                        when (type) {
-                            null -> provideDefaultForSpine(sp,options)
-                            else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(sp,options)
+
+        return when {
+            options.path.isEmpty() -> {
+                val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
+                    val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                    val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                    expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                } else {
+                    val items = nextExpected.flatMap { sp ->
+                        val firstSpineNode = sp.elements.firstOrNull()
+                        when (firstSpineNode) {
+                            null -> provideDefaultForSpine(sp, options)
+                            else -> {
+                                val type = typeFor(firstSpineNode.rule)
+                                when (type) {
+                                    null -> provideDefaultForSpine(sp, options)
+                                    else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(sp, options)
+                                }
+                            }
                         }
                     }
+                    items.toSet().toList() //TODO: can we remove duplicates earlier!
                 }
+                defaultSortAndFilter(result)
             }
-            items.toSet().toList() //TODO: can we remove duplicates earlier!
+
+            else -> {
+                val path = options.path
+                val (pthDepth0, pthExpIdx0) = path.first()
+                val initExpansions = nextExpected.flatMap { sp ->
+                    provideExpansionsForRuleItem(pthDepth0, sp.expectedNextRuleItems, options)
+                }
+                val expansions = when (path.size) {
+                    1 -> initExpansions
+                    else -> {
+                        var lastItems = initExpansions
+                        var pthItem = lastItems[pthExpIdx0]!!.ruleItem
+                        for (i in 1 until path.size) {
+                            val (pthDepth, pthExpIdx) = path[i]
+                            lastItems = expand(pthDepth, pthItem, options)
+                            val ni = lastItems.getOrNull(pthExpIdx)?.ruleItem
+                            if (ni == null) break
+                            pthItem = ni
+                        }
+                        lastItems
+                    }
+                }
+                val cis = expansionToCompletionItem(expansions)
+                defaultSortAndFilter(cis)
+            }
         }
-        return defaultSortAndFilter(result)
     }
 
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)

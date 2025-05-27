@@ -67,6 +67,9 @@ interface CompletionProviderOptions<ContextType : Any> {
      **/
     var depth: Int
 
+    /**
+     * list of (depth, ruleName) pairs
+     */
     var path: List<Pair<Int,Int>>
 
     var showOptionalItems:Boolean

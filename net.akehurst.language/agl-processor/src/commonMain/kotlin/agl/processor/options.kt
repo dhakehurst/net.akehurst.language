@@ -78,7 +78,7 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
-    override var depth: Int = 1,
+    override var depth: Int = 0,
     override var path: List<Pair<Int, Int>> = emptyList(),
     override var showOptionalItems: Boolean = true,
     override var provideValuesForPatternTerminals: Boolean = false,
