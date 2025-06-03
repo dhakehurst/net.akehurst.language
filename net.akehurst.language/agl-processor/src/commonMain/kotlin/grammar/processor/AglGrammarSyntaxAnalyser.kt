@@ -407,7 +407,7 @@ internal class AglGrammarSyntaxAnalyser(
                     val localNamespace = grm.namespace
                     val nonTerminalRef = GrammarRuleName(pqn.last.value)
                     val grammarRef = pqn.front.asPossiblyQualified
-                    val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationForNode(target.node) }
+                    val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { setLocationFor(it, target, sentence) }
                     val nt = NonTerminalDefault(gr, nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
                     nt
                 }

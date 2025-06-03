@@ -22,6 +22,7 @@ import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -87,7 +88,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     override fun analyse(
         sentenceIdentity:Any?,
         asm: TransformModel,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextFromGrammarAndTypeModel>
     ): SemanticAnalysisResult {
         _context = options.context

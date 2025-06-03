@@ -17,10 +17,12 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -54,7 +56,7 @@ class SyntaxAnalysisOptionsDefault<AsmType : Any>(
 
 class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var enabled: Boolean = true,
-    override var locationMap: Map<Any, InputLocation> = emptyMap(),
+    override var locationMap: LocationMap = LocationMapDefault(),
     override var context: ContextType? = null,
     override var buildScope: Boolean = true,
     override var replaceIfItemAlreadyExistsInScope: Boolean = false,

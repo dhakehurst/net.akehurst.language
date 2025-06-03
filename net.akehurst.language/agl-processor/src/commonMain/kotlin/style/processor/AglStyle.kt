@@ -83,23 +83,23 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
             styles Style {
                 $$ "'([^']+)'" {
                   foreground: darkgreen;
-                  font-style: bold;
+                  font-weight: bold;
                 }
                 SPECIAL_IDENTIFIER {
                   foreground: orange;
-                  font-style: bold;
+                  font-weight: bold;
                 }
                 IDENTIFIER {
                   foreground: blue;
-                  font-style: bold;
+                  font-weight: bold;
                 }
                 LITERAL {
                   foreground: blue;
-                  font-style: bold;
+                  font-weight: bold;
                 }
                 PATTERN {
                   foreground: darkblue;
-                  font-style: bold;
+                  font-weight: bold;
                 }
                 STYLE_ID {
                   foreground: darkred;
@@ -323,7 +323,7 @@ interface AglStyleRule {
                 styles(NAME) {
                     metaRule("'[^']+'") {
                         declaration("foreground","darkgreen")
-                        declaration("font-style","bold")
+                        declaration("font-weight","bold")
                     }
                 }
             }

@@ -21,6 +21,7 @@ import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -177,7 +178,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
         _enabled = value
     }
 
-    fun locationMap(value: Map<Any, InputLocation>) {
+    fun locationMap(value: LocationMap) {
         _locationMap = value
     }
 

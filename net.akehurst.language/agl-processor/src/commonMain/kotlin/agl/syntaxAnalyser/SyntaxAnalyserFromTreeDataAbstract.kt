@@ -19,13 +19,16 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.SpptDataNode
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
@@ -33,10 +36,43 @@ import net.akehurst.language.sppt.api.TreeData
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import net.akehurst.language.sppt.treedata.locationForNode
 
+class LocationMapDefault() : LocationMap {
+    private val _map = mutableMapOf<Any, MutableMap<ParsePath, InputLocation>>()
+    override fun clear() {
+        _map.clear()
+    }
+
+    override fun get(obj: Any?): InputLocation? {
+        var ppm = _map[obj]
+       return when {
+            null == ppm -> null
+            ppm.isEmpty() -> null
+            else -> ppm.values.firstOrNull()
+        }
+    }
+
+    override fun getByPath(obj: Any?, path: ParsePath): InputLocation? {
+        var ppm = _map[obj]
+        return when {
+            null == ppm -> null
+            ppm.isEmpty() -> null
+            else -> ppm[path]
+        }
+    }
+
+    override fun add(path: ParsePath, obj: Any, location: InputLocation) {
+        var ppm = _map[obj]
+        if (null == ppm) {
+            ppm = mutableMapOf()
+            _map[obj] = ppm
+        }
+        ppm[path] = location
+    }
+}
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyser<AsmType> {
 
-    override val locationMap = mutableMapOf<Any, InputLocation>()
+    override val locationMap = LocationMapDefault()
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     abstract val asm: AsmType
@@ -44,23 +80,23 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyse
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf()
 
-    fun setLocationFor(obj:Any, nodeInfo: SpptDataNodeInfo, sentence:Sentence) {
-        locationMap[obj] = sentence.locationForNode(nodeInfo.node)
+    fun setLocationFor(obj: Any, nodeInfo: SpptDataNodeInfo, sentence: Sentence) {
+        locationMap.add(nodeInfo.path, obj, sentence.locationForNode(nodeInfo.node))
     }
 
     fun setEmbeddedSyntaxAnalyser(qualifiedName: QualifiedName, sa: SyntaxAnalyser<AsmType>) {
         (embeddedSyntaxAnalyser as MutableMap).set(qualifiedName, sa)
     }
 
-    override fun <T:Any> clear(done: Set<SyntaxAnalyser<T>>) {
+    override fun <T : Any> clear(done: Set<SyntaxAnalyser<T>>) {
         when {
             done.contains(this as SyntaxAnalyser<T>) -> Unit
             else -> {
                 this.locationMap.clear()
                 this.issues.clear()
-                val newDone = done+this
-                extendsSyntaxAnalyser.values.forEach { it.clear(newDone)  }
-                embeddedSyntaxAnalyser.values.forEach { it.clear(newDone)  }
+                val newDone = done + this
+                extendsSyntaxAnalyser.values.forEach { it.clear(newDone) }
+                embeddedSyntaxAnalyser.values.forEach { it.clear(newDone) }
             }
         }
     }

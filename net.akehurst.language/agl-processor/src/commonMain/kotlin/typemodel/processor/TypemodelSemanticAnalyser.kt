@@ -22,6 +22,7 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -42,7 +43,7 @@ internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWi
     override fun clear() {
     }
 
-    override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: Map<Any, InputLocation>?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
+    override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
         if(asm.options.includeStd) {
             asm.addNamespace(StdLibDefault)
         }

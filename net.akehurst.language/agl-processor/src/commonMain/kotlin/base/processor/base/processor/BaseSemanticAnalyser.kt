@@ -22,6 +22,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
@@ -40,7 +41,7 @@ class BaseSemanticAnalyser() : SemanticAnalyser<Any, SentenceContext> {
         TODO("not implemented")
     }
 
-    override fun analyse(sentenceIdentity: Any?, asm: Any, locationMap: Map<Any, InputLocation>?, options: SemanticAnalysisOptions<SentenceContext>): SemanticAnalysisResult {
+    override fun analyse(sentenceIdentity: Any?, asm: Any, locationMap: LocationMap?, options: SemanticAnalysisOptions<SentenceContext>): SemanticAnalysisResult {
         TODO("not implemented")
     }
 

@@ -165,7 +165,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
 
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
-                value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
+                value?.let { setLocationFor(it, nodeInfo, sentence) }
                 stack.push(ChildDataAny(nodeInfo, value))
                 // path = path.parent!!
             }

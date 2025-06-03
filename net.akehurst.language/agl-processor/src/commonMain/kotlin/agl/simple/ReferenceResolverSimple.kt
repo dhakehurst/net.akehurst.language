@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
@@ -56,7 +57,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
     val resolveFunction: ((ref: ItemInScopeType) -> Any?)?,
-    private val _locationMap: Map<Any, InputLocation>,
+    private val _locationMap: LocationMap,
     private val _issues: IssueHolder
 ) : AsmTreeWalker {
 

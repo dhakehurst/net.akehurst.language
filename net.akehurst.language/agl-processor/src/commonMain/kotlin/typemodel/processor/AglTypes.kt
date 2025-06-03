@@ -139,7 +139,7 @@ namespace net.akehurst.language.grammarTypemodel.api
           styles ${NAME} {
             $$ "'[^']+'" {
               foreground: darkgreen;
-              font-style: bold;
+              font-weight: bold;
             }
           }        
     """
@@ -787,7 +787,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                 styles(NAME) {
                     metaRule("'[^']+'") {
                         declaration("foreground", "darkgreen")
-                        declaration("font-style", "bold")
+                        declaration("font-weight", "bold")
                     }
                 }
             }

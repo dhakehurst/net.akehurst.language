@@ -202,7 +202,7 @@ grammar SQL {
 
         //check paths
         val asmRoot = result.asm!!.root[0] as AsmStructure
-        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.value)
+        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.toString())
     }
 
     @Test

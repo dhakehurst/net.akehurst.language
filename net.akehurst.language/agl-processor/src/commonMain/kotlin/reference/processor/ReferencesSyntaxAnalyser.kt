@@ -34,6 +34,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.CrossReferenceNamespace
 import net.akehurst.language.reference.asm.*
 import net.akehurst.language.sentence.api.Sentence
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
 class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceModel>() {
@@ -123,7 +124,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val identifiables = children[3] as List<IdentifiableDefault>
         val scope = ScopeDefinitionDefault(simpleTypeName)
         scope.identifiables.addAll(identifiables)
-        locationMap[PropertyValue(scope, "typeReference")] = locationMap[simpleTypeName]!!
+        locationMap.add(ParsePath(), PropertyValue(scope, "typeReference"), locationMap[simpleTypeName]!!)
         return scope
     }
 
@@ -136,8 +137,10 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val simpleTypeName = children[1] as SimpleName
         val expression = children[3] as Expression
         val identifiable = IdentifiableDefault(simpleTypeName, expression)
-        locationMap[PropertyValue(identifiable, "simpleTypeName")] = locationMap[simpleTypeName]!!
-        locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
+        locationMap.add(ParsePath(), PropertyValue(identifiable, "simpleTypeName"), locationMap[simpleTypeName]!!)
+        locationMap.add(ParsePath(), PropertyValue(identifiable, "expression"), locationMap[expression]!!)
+//        locationMap[PropertyValue(identifiable, "simpleTypeName")] = locationMap[simpleTypeName]!!
+//        locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
         return identifiable
     }
 
@@ -158,7 +161,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val inTypeName = children[1] as SimpleName
         val referenceExpressionList = children[3] as List<ReferenceExpressionAbstract>
         val def = ReferenceDefinitionDefault(inTypeName, referenceExpressionList)
-        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
+//        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
+        locationMap.add(ParsePath(), PropertyValue(def, "in"), locationMap[inTypeName]!!)
         // locationMap[PropertyValue(def, "propertyReference")] = locationMap[referringPropertyName]!!
         //typeReferences.forEachIndexed { i, n ->
         //    locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
@@ -190,7 +194,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         }
         return ReferenceExpressionPropertyDefault(navigation, typeReferences, from).also {
             typeReferences.forEachIndexed { i, n ->
-                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
+//                locationMap[PropertyValue(it, "typeReferences[$i]")] = locationMap[n]!!
+                locationMap.add(ParsePath(), PropertyValue(it, "typeReferences[$i]"), locationMap[n]!!)
             }
         }
     }

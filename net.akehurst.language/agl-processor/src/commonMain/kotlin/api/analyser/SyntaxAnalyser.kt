@@ -18,14 +18,11 @@ package net.akehurst.language.api.syntaxAnalyser
 
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import net.akehurst.language.typemodel.api.TypeInstance
-import kotlin.js.JsExport
 
 /**
  * stateless set of functions that construct elements of an ASM
@@ -61,6 +58,13 @@ interface AsmWalker<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmVal
     fun afterList(owningProperty: PropertyType?, value: ListValueType)
 }
 
+interface LocationMap {
+    fun clear()
+    fun add(path: ParsePath, obj: Any, location: InputLocation)
+    operator fun get(obj: Any?): InputLocation?
+    fun getByPath(obj: Any?, path: ParsePath): InputLocation?
+}
+
 /**
  *
  * A Syntax Analyser converts a Parse Tree (in this case a SharedPackedParseTree) into a "Syntax Tree/Model".
@@ -73,7 +77,7 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called
      */
-    val locationMap: Map<Any, InputLocation>
+    val locationMap: LocationMap
 
     /**
      * map of Extends GrammarName -> SyntaxAnalyser for extended Language

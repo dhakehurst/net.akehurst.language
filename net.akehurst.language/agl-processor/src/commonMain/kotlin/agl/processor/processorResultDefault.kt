@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sentence.api.InputLocation
@@ -29,7 +30,7 @@ class LanguageProcessorResult<AsmType:Any, ContextType : Any>(
 data class SyntaxAnalysisResultDefault<AsmType:Any>(
     override val asm: AsmType?,
     override val issues: IssueCollection<LanguageIssue>,
-    override val locationMap: Map<Any, InputLocation>
+    override val locationMap: LocationMap
 ) : SyntaxAnalysisResult<AsmType>
 
 data class SemanticAnalysisResultDefault(

@@ -29,6 +29,7 @@ import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
@@ -133,7 +134,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValueType>, path: AsmPath, trRule: TransformationRule): TypedObject<AsmValueType> {
+    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: TransformationRule): TypedObject<AsmValueType> {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm

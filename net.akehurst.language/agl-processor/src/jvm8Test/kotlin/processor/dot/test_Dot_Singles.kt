@@ -995,27 +995,27 @@ MULTI_LINE_COMMENT {
 }
 STRICT {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 GRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 DIGRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 SUBGRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 NODE {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 EDGE {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 ALPHABETIC_ID {
   foreground: red;

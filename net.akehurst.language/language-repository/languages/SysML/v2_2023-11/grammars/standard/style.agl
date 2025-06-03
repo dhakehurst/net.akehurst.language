@@ -3,7 +3,7 @@ namespace net.akehurst.language.sysML
 styles SysML {
     $keyword, DEFINED_BY, SPECIALIZES, SUBSETS, REFERENCES, REDEFINES {
         foreground: blue;
-        font-style: bold;
+        font-weight: bold;
     }
 
     SINGLE_LINE_NOTE, MULTILINE_NOTE {

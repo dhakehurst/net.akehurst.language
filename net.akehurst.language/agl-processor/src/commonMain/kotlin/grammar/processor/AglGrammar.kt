@@ -146,7 +146,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
           styles $NAME {
             $$ "'[^']+'" {
               foreground: darkgreen;
-              font-style: bold;
+              font-weight: bold;
             }
             LITERAL {
               foreground: blue;
@@ -1048,7 +1048,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 styles(NAME) {
                     metaRule("'[^']+'") {
                         declaration("foreground","darkgreen")
-                        declaration("font-style","bold")
+                        declaration("font-weight","bold")
                     }
                     tagRule("LITERAL") {
                         declaration("foreground","blue")

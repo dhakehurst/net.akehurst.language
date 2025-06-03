@@ -175,20 +175,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
 
 
-        fun <ContextType : Any> expandItem(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (curDepth) {
-            //0 -> emptyList()
-            0 -> when (item) {
-                is Choice ->
-                    when {
-                        item.alternative.any { it is NonTerminal } -> item.alternative.map { textFor(it, options) }
-                        item.alternative.all { it is TangibleItem } -> listOf(Expansion(item, null, "<${item.alternative.joinToString(separator = "|") { textFor(it, options).list }}>"))
-                        else -> item.alternative.map { textFor(it, options) }
-                    }
-
-                else -> listOf(textFor(item, options))
-            }
-
-            else -> when (item) {
+        fun <ContextType : Any> expandItem(curDepth: Int, item: RuleItem, options: CompletionProviderOptions<ContextType>): List<Expansion> = when (item) {
                 is Choice -> item.alternative.flatMap { expandItem(curDepth, it, options) }
                 is Concatenation -> {
                     //FIXME: SPACE may not be valid skip rule !
@@ -216,7 +203,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 }
 
                 is ConcatenationItem -> when (item) {
-                    is OptionalItem -> expandItem(curDepth, item.item, options).map { Expansion(item, it.name, "${it.list}?") }
+                    is OptionalItem -> expandItem(curDepth, item.item, options) + Expansion(item, null, "")
                     is ListOfItems -> expandItem(curDepth, item.item, options)
                     is SimpleItem -> when (item) {
                         is Group -> expandItem(curDepth, item.groupedContent, options)
@@ -224,12 +211,15 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                             is EmptyRule -> listOf(textFor(item, options))
                             is Terminal -> listOf(textFor(item, options))
                             is Embedded -> listOf(textFor(item, options)) //TODO: could expand this !
-                            is NonTerminal -> {
-                                val refRule = item.referencedRule(item.owningRule.grammar)
-                                when {
-                                    refRule.isLeaf -> listOf(textFor(item, options))
-                                    else -> {
-                                        expandItem(curDepth - 1, refRule.rhs, options).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
+                            is NonTerminal -> when (curDepth) {
+                                0 -> listOf(textFor(item, options))
+                                else -> {
+                                    val refRule = item.referencedRule(item.owningRule.grammar)
+                                    when {
+                                        refRule.isLeaf -> listOf(textFor(item, options))
+                                        else -> {
+                                            expandItem(curDepth - 1, refRule.rhs, options).map { Expansion(it.ruleItem, it.name ?: item.ruleReference.value, it.list) }
+                                        }
                                     }
                                 }
                             }
@@ -245,7 +235,6 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
 
                 else -> error("Unsupported subtype of RuleItem: ${item::class.simpleName}")
             }
-        }
 
         fun <ContextType : Any> textFor(item: RuleItem, options: CompletionProviderOptions<ContextType>): Expansion = when (item) {
             is Choice -> Expansion(item, null, "<${item.alternative.joinToString(separator = "|") { textFor(it, options).list }}>")

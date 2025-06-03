@@ -182,7 +182,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           styles $NAME {
             $$ "'[^']+'" {
               foreground: darkgreen;
-              font-style: bold;
+              font-weight: bold;
             }
           }
         """.trimIndent()
@@ -592,7 +592,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 styles(NAME) {
                     metaRule("'[^']+'") {
                         declaration("foreground","darkgreen")
-                        declaration("font-style","bold")
+                        declaration("font-weight","bold")
                     }
                 }
             }

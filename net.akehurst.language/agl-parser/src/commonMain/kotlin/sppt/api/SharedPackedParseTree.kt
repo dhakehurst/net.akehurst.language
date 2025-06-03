@@ -40,7 +40,16 @@ data class AltInfo(
     val totalMatched: Int
 )
 
+data class ParsePath(
+    val segments:List<String> = emptyList()
+) {
+    operator fun plus(segment:String) = ParsePath(this.segments + segment)
+
+    override fun toString(): String =this.segments.joinToString(prefix = "/", separator = "/")
+}
+
 interface SpptDataNodeInfo {
+    val path: ParsePath
     val node: SpptDataNode
 
     val parentAlt: AltInfo

@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -37,7 +38,7 @@ class test_SemanticAnalyser {
         override fun clear() {
         }
 
-        override fun analyse(sentenceIdentity:Any?,asm: Any, locationMap: Map<Any, InputLocation>?,options: SemanticAnalysisOptions< Any>): SemanticAnalysisResult {
+        override fun analyse(sentenceIdentity:Any?,asm: Any, locationMap: LocationMap?,options: SemanticAnalysisOptions< Any>): SemanticAnalysisResult {
             val ih = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
             when (asm) {
                 "error" -> ih.error(null, "error")

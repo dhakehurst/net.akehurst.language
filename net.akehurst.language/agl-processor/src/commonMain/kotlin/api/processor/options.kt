@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.scanner.api.ScanOptions
@@ -35,7 +36,7 @@ interface SyntaxAnalysisOptions<AsmType : Any> {
  */
 interface SemanticAnalysisOptions<ContextType : Any> {
     var enabled: Boolean
-    var locationMap: Map<Any, InputLocation>
+    var locationMap: LocationMap
     var context: ContextType?
     var buildScope: Boolean
 

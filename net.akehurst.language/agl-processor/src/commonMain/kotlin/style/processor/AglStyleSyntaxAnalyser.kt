@@ -91,7 +91,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val sl = extendNameList.toSeparatedList<Any, PossiblyQualifiedName, String>()
         val extended = sl.items.map {
             // need to manually add the Reference as it is not seen by the super class
-            StyleSetReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationForNode(nodeInfo.node) }
+            StyleSetReferenceDefault(localNamespace, it).also { setLocationFor(it, nodeInfo, sentence) }
         }
         return extended
     }

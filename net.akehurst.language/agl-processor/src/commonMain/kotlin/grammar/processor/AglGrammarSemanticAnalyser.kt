@@ -18,9 +18,11 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.api.ParseAction
 import net.akehurst.language.automaton.leftcorner.ParserStateSet
@@ -46,7 +48,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
     }
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private var _locationMap: Map<*, InputLocation>? = null
+    private var _locationMap: LocationMap? = null
     private var _analyseAmbiguities = true
 
     // Grammar -> Set<Rules>, used rules have an entry in the set
@@ -71,11 +73,11 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
     override fun analyse(
         sentenceIdentity: Any?,
         asm: GrammarModel,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
         val context = options.context
-        this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
+        this._locationMap = locationMap ?: LocationMapDefault()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
         if (null == context) {

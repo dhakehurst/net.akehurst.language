@@ -19,9 +19,11 @@ package net.akehurst.language.reference.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
@@ -40,7 +42,7 @@ class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private var _locationMap: Map<Any, InputLocation> = emptyMap()
+    private var _locationMap: LocationMap = LocationMapDefault()
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
 
@@ -49,7 +51,7 @@ class ReferencesSemanticAnalyser(
 
     override fun clear() {
         _grammarNamespace = null
-        _locationMap = emptyMap()
+        _locationMap.clear()
         _context = null
         issues.clear()
     }
@@ -57,10 +59,10 @@ class ReferencesSemanticAnalyser(
     override fun analyse(
         sentenceIdentity:Any?,
         asm: CrossReferenceModel,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextFromTypeModel>
     ): SemanticAnalysisResult {
-        this._locationMap = locationMap ?: mapOf()
+        this._locationMap = locationMap ?: LocationMapDefault()
         _context = options.context
 
 

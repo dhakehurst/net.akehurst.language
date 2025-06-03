@@ -131,7 +131,7 @@ open class ObjectGraphAsmSimple(
     override fun toTypedObject(obj: AsmValue?): TypedObject<AsmValue> = obj?.toTypedObject() ?: nothing()
 
     override fun nothing() = AsmNothingSimple.toTypedObject()
-    override fun any(value: Any) = AsmAnySimple(object{}).toTypedObject()
+    override fun any(value: Any) = AsmAnySimple(value).toTypedObject()
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = when (qualifiedTypeName) {
         StdLibDefault.Boolean.qualifiedTypeName -> AsmPrimitiveSimple.stdBoolean(value as Boolean).toTypedObject()
@@ -143,15 +143,15 @@ open class ObjectGraphAsmSimple(
 
     override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<AsmValue> {
         val tupleType = StdLibDefault.TupleType
-        val tuple = AsmStructureSimple(AsmPathSimple(""), tupleType.qualifiedName)
+        val tuple = AsmStructureSimple(tupleType.qualifiedName)
         return TypedObjectAsmValue(tupleType.type(typeArgs), tuple)
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<AsmValue>>): TypedObject<AsmValue> {
         val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
-        val asmPath = AsmPathSimple("??") //TODO:
-        val obj = AsmStructureSimple(asmPath, typeDecl.qualifiedName)
+        //val asmPath = AsmPathSimple("??") //TODO:
+        val obj = AsmStructureSimple( typeDecl.qualifiedName)
         constructorArgs.forEach { (k, v) -> obj.setProperty(PropertyValueName(k), v.self, obj.property.size) }
         return TypedObjectAsmValue(typeDecl.type(), obj)
     }

@@ -16,15 +16,14 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.sentence.api.InputLocation
-
 
 interface SyntaxAnalysisResult<out AsmType : Any> {
     val asm: AsmType?
     val issues: IssueCollection<LanguageIssue>
-    val locationMap: Map<Any, InputLocation>
+    val locationMap: LocationMap
 }
 
 interface SemanticAnalysisResult {

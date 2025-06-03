@@ -18,9 +18,11 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.isStdString
 import net.akehurst.language.base.api.SimpleName
@@ -62,7 +64,7 @@ class SemanticAnalyserSimple(
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private lateinit var _locationMap: Map<Any, InputLocation>
+    private lateinit var _locationMap: LocationMap
 
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues), _issues)
 
@@ -73,11 +75,11 @@ class SemanticAnalyserSimple(
     override fun analyse(
         sentenceIdentity: Any?,
         asm: Asm,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
         val context = options.context
-        this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
+        this._locationMap = locationMap ?: LocationMapDefault()
         when {
             null == context -> _issues.info(null, "No context provided, references not built, checked or resolved, switch off semanticAnalysis or provide a context.")
             else -> {
@@ -88,7 +90,7 @@ class SemanticAnalyserSimple(
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextWithScope<Any, Any>) {
+    private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: ContextWithScope<Any, Any>) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
             crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
@@ -104,7 +106,7 @@ class SemanticAnalyserSimple(
         }
     }
 
-    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: Map<Any, InputLocation>, context: ContextWithScope<Any, Any>, resolve: Boolean) {
+    private fun walkReferences(sentenceId: Any?, asm: Asm, locationMap: LocationMap, context: ContextWithScope<Any, Any>, resolve: Boolean) {
         val resFunc: ((ref: Any) -> AsmStructure?)? = if (resolve) {
             { ref -> context.resolveScopedItem.invoke(ref) as AsmStructure }
         } else {

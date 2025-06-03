@@ -18,6 +18,7 @@
 package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.GrammarRegistry
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
@@ -39,7 +40,7 @@ fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(),
         val opts = SemanticAnalysisOptionsDefault(
             context = ContextFromGrammarRegistry(gr)
         )
-        sa.analyse(null,gm, emptyMap(), opts)
+        sa.analyse(null,gm, LocationMapDefault(), opts)
     }
     return gm
 }

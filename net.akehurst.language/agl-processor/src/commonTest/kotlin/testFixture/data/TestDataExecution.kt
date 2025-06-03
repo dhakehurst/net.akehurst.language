@@ -23,8 +23,8 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: T
             null != sd.expectedCompletionItem -> {
                 val actual = proc.expectedItemsAt(sd.sentence, sd.sentence.length, sd.options)
                 assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-                assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
-                assertEquals(sd.expectedCompletionItem.toSet(), actual.items.toSet(),actual.items.joinToString(separator = "\n"))
+                //assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
+                assertEquals(sd.expectedCompletionItem.joinToString(separator = "\n"), actual.items.joinToString(separator = "\n"))
             }
             else -> error("Must provide either an expectedAsm or expectedCompletionItems")
         }

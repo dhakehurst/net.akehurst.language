@@ -18,6 +18,7 @@
 package net.akehurst.language.asm.builder
 
 import net.akehurst.language.agl.simple.*
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
@@ -31,6 +32,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.scope.asm.ScopeSimple
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -116,7 +118,7 @@ class AsmSimpleBuilder(
                 _sentenceId,
                 false, LanguageIssueKind.ERROR,
                 _identifyingValueInFor,
-                emptyMap(),
+                LocationMapDefault(),
                 _issues
             )
             _asm.traverseDepthFirst(scopeCreator)
@@ -130,7 +132,8 @@ class AsmSimpleBuilder(
                     _sentenceId,
                     _identifyingValueInFor,
                     _context.resolveScopedItem,
-                    emptyMap(), _issues
+                    LocationMapDefault(),
+                    _issues
                 )
             )
         }
@@ -175,7 +178,8 @@ class AsmElementSimpleBuilder(
             }
         }
     }
-    private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
+    private val _element = _asm.createStructure(ParsePath(),_elementQualifiedTypeName).also {
+        it.semanticPath = _asmPath
         if (_isRoot) _asm.addRoot(it)
     }
     private val _elementScope by lazy {
@@ -240,7 +244,7 @@ class AsmElementSimpleBuilder(
 
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
-        val newPath = _element.parsePath + name
+        val newPath = _element.semanticPath!!.plus(name)
         val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
         val b = AsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel, _context, _scopeMap, this._asm, _identifyingValueInFor, newPath, typeName, false, _elementScope)
@@ -256,7 +260,7 @@ class AsmElementSimpleBuilder(
         this.propertyListOfElement(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, init)
 
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
-        val newPath = _element.parsePath + name
+        val newPath = _element.semanticPath!! + name
         val ns = _typeModel.findNamespaceOrNull(_elementQualifiedTypeName.front)
             ?: _defaultNamespace
         val b = ListAsmElementSimpleBuilder(_typeModel, ns, _crossReferenceModel,_context, _scopeMap, this._asm, newPath, _elementScope,_identifyingValueInFor)

@@ -73,8 +73,17 @@ class CompletionProviderSimple(
                             else -> {
                                 val type = typeFor(firstSpineNode.rule)
                                 when (type) {
-                                    null -> provideDefaultForSpine(sp, options)
-                                    else -> provideForType(type, firstSpineNode, context) + provideDefaultForSpine(sp, options)
+                                    null -> {
+                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                                    }
+                                    else -> {
+                                        val forTypes = provideForType(type, firstSpineNode, context)
+                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                                        forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                                    }
                                 }
                             }
                         }

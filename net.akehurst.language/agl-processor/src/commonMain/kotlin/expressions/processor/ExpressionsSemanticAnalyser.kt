@@ -19,10 +19,12 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -33,20 +35,20 @@ class ExpressionsSemanticAnalyser(
 ) : SemanticAnalyser<Expression, ContextWithScope<Any,Any>> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private var _locationMap: Map<Any, InputLocation> = emptyMap()
+    private var _locationMap: LocationMap = LocationMapDefault()
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
 
     override fun clear() {
         _grammarNamespace = null
-        _locationMap = emptyMap()
+        _locationMap.clear()
         issues.clear()
     }
 
     override fun analyse(
         sentenceIdentity:Any?,
         asm: Expression,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions< ContextWithScope<Any,Any>>
     ): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(issues)

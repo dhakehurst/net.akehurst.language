@@ -162,15 +162,24 @@ class LeftCornerParser(
     private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParser) {
         if (options.reportErrors) {
             // need to include the 'startSkipFailures',
-            val map = rp.failedReasons //no need to clone it as it will not be modified after this point
+            val map1 = rp.failedReasons //no need to clone it as it will not be modified after this point
             //         startSkipFailures.forEach {
             //             val l = map[it.key] ?: mutableListOf()
             //             l.addAll(it.value)
             //             map[it.key] = l
             //         }
-            if (map.isNotEmpty()) {
-                val failedAtPosition = map.keys.max()
-                val nextExpected = map[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
+
+            // find embedded failures
+            val map2 = map1.values.flatten().flatMap { v ->
+                when(v) {
+                    is FailedParseReasonEmbedded -> v.embededFailedParseReasons.map { it }
+                    else -> listOf(v)
+                }
+            }.groupBy { it.failedAtPosition }
+
+            if (map2.isNotEmpty()) {
+                val failedAtPosition = map2.keys.max()
+                val nextExpected = map2[failedAtPosition]?.filter { it.skipFailure.not() }?.map { it.spine } ?: emptyList()
                 val loc = sentence.locationFor(failedAtPosition, 0)
                 addParseIssue(sentence, loc, nextExpected)
             }

@@ -20,7 +20,9 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.*
@@ -53,7 +55,7 @@ class test_AglGrammarSemanticAnalyser {
                 SyntaxAnalysisResultDefault(
                     gm,
                     IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),
-                    emptyMap()
+                    LocationMapDefault()
                 ),
                 Agl.options { }
             )

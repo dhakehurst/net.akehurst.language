@@ -25,6 +25,7 @@ import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
@@ -104,14 +105,15 @@ open class AsmSimple() : Asm {
     fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
     fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
 
-    fun createStructure(asmPath: AsmPath, typeName: QualifiedName): AsmStructureSimple {
-        val el = AsmStructureSimple(asmPath, typeName)
+    fun createStructure(parsePath: ParsePath, typeName: QualifiedName): AsmStructureSimple {
+        val el = AsmStructureSimple(typeName)
+        el.parsePath = parsePath
         //this.elementIndex[asmPath] = el
         return el
     }
 
     override fun addToIndex(value: AsmStructure) {
-        this.elementIndex[value.parsePath] = value
+        this.elementIndex[AsmPathSimple(value.parsePath.toString())] = value //FIXME: should use asmPath !
     }
 
     override fun traverseDepthFirst(callback: AsmTreeWalker) {
@@ -266,7 +268,7 @@ class AsmReferenceSimple(
 
     override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.parsePath.value}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.parsePath.toString()}' : ${value!!.typeName}}"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {
@@ -284,17 +286,17 @@ class AsmReferenceSimple(
 
     override fun toString(): String = when (value) {
         null -> "<unresolved> &$reference"
-        else -> "&{'${value!!.semanticPath?.value ?: value!!.parsePath.value}' : ${value!!.typeName}}"
+        else -> "&{'${value!!.semanticPath?.value ?: value!!.parsePath.toString()}' : ${value!!.typeName}}"
     }
 }
 
 class AsmStructureSimple(
-    override val parsePath: AsmPath,
     override val qualifiedTypeName: QualifiedName
 ) : AsmValueAbstract(), AsmStructure {
 
     private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
 
+    override var parsePath: ParsePath = ParsePath(listOf("??"))
     override var semanticPath: AsmPath? = null
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties
@@ -379,7 +381,7 @@ class AsmStructureSimple(
         else -> false
     }
 
-    override fun toString(): String = ":$typeName[${semanticPath?.value ?: parsePath.value}] { ${this.property.values.joinToString()}} }"
+    override fun toString(): String = ":$typeName[${semanticPath?.value ?: parsePath.toString()}] { ${this.property.values.joinToString()}} }"
 
 }
 

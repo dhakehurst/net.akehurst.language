@@ -20,9 +20,11 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
@@ -50,11 +52,11 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
     override fun analyse(
         sentenceIdentity:Any?,
         asm: AglStyleModel,
-        locationMap: Map<Any, InputLocation>?,
+        locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>
     ): SemanticAnalysisResult {
         val context = options.context
-        val locMap = locationMap ?: mapOf()
+        val locMap = locationMap ?: LocationMapDefault()
         if (null != context) {
             asm.allDefinitions.forEach { ss ->
                 ss.rules.forEach { rule ->
@@ -69,10 +71,10 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: Map<Any, InputLocation>, context: ContextWithScope<Any,Any>) {
+    private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, context: ContextWithScope<Any,Any>) {
     }
 
-    private fun analyseTagRule(rule: AglStyleTagRule, locMap: Map<Any, InputLocation>, context: ContextWithScope<Any,Any>) {
+    private fun analyseTagRule(rule: AglStyleTagRule, locMap: LocationMap, context: ContextWithScope<Any,Any>) {
         rule.selector.forEach { sel ->
             val loc = locMap[sel]
             // TODO: user types

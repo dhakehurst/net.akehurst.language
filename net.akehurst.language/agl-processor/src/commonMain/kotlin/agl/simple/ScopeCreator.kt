@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.SimpleName
@@ -41,7 +42,7 @@ class ScopeCreator<ItemInScopeType:Any>(
     var replaceIfItemAlreadyExistsInScope: Boolean,
     var ifItemAlreadyExistsInScopeIssueKind: LanguageIssueKind?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
-    val locationMap: Map<Any, InputLocation>,
+    val locationMap: LocationMap,
     val issues: IssueHolder
 ) : AsmTreeWalker {
 

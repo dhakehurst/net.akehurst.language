@@ -228,4 +228,54 @@ class test_ErrorLocation : test_LeftCornerParserAbstract() {
             ), issues.errors
         )
     }
+
+    @Test
+    fun embedded_at_sStart() {
+        // B = b ;
+        val B = runtimeRuleSet("test.B") {
+            concatenation("B") { literal("b") }
+        }
+
+        // S = a gB c ;
+        // gB = B::B ;
+        val S = runtimeRuleSet("test.S") {
+            concatenation("S") { literal("a"); ref("gB"); literal("c"); }
+            embedded("gB", B, "B")
+        }
+        val goal = "S"
+        val sentence = ""
+
+        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'"))
+            ), issues.errors
+        )
+    }
+
+    @Test
+    fun embedded_after_a() {
+        // B = b ;
+        val B = runtimeRuleSet("test.B") {
+            concatenation("B") { literal("b") }
+        }
+
+        // S = a gB c ;
+        // gB = B::B ;
+        val S = runtimeRuleSet("test.S") {
+            concatenation("S") { literal("a"); ref("gB"); literal("c"); }
+            embedded("gB", B, "B")
+        }
+        val goal = "S"
+        val sentence = "a"
+
+        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'b'"))
+            ), issues.errors
+        )
+    }
 }
