@@ -41,6 +41,7 @@ interface FormatResult {
 }
 
 interface ExpectedAtResult {
+    val offset: Int
     val items: List<CompletionItem>
     val issues: IssueCollection<LanguageIssue>
 }

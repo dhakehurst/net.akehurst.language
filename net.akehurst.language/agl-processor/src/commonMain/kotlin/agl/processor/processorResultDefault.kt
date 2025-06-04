@@ -48,6 +48,7 @@ data class FormatResultDefault(
 ) : FormatResult
 
 data class ExpectedAtResultDefault(
+    override val offset: Int,
     override val items: List<CompletionItem>,
     override val issues: IssueCollection<LanguageIssue>
 ) : ExpectedAtResult

@@ -281,7 +281,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }.flatten()
-        return ExpectedAtResultDefault(terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(0, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -290,9 +290,17 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val opts = defaultOptions(options)
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-                val spines = parserExpected.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                val spines = parserExpected.spines.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
                 val items = completionProvider!!.provide(spines, opts.completionProvider)
-                ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
+                if (parserExpected.usedPosition == position) {
+                    ExpectedAtResultDefault(0, items, IssueHolder(LanguageProcessorPhase.ALL))
+                } else {
+                    val prefix = sentence.substring(parserExpected.usedPosition, position)
+                    val filtered = items.filter {
+                        it.text.startsWith(prefix)
+                    }
+                    ExpectedAtResultDefault(position - parserExpected.usedPosition, filtered, IssueHolder(LanguageProcessorPhase.ALL))
+                }
             }
 
             else -> expectedTerminalsAt(sentence, position, options)

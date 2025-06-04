@@ -156,6 +156,11 @@ interface RuntimeSpine {
     val nextChildNumber: Int
 }
 
+interface ExpectedAtResult {
+    val usedPosition: Int
+    val spines: Set<RuntimeSpine>
+}
+
 /**
  * Options to configure the parsing of a sentence
  * there is no separate scanner, so scanner options are passed to the parser
@@ -207,7 +212,7 @@ interface Parser {
      * list of non-terminal or terminal runtime rules expected at the position
      *
      **/
-    fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpine>
+    fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult
 
     /*
      * List of terminal rules expected at the position

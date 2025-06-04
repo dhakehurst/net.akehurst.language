@@ -124,38 +124,43 @@ class CompletionProviderSimple(
 
 
     private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
-        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
-        //TODO: lists ?
-        return when (prop) {
-            null -> emptyList()
-            else -> {
-                var strProps: Set<PropertyDeclaration> = setOf(prop)
-                while (strProps.isNotEmpty() && strProps.all { it.typeInstance != StdLibDefault.String }) {
-                    strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
-                            strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
-                                val type = prp.typeInstance
-                                val td = type.resolvedDeclaration
-                                when (td) {
-                                    is CollectionType -> firstPropertyOf(type.typeArguments[0].type)
-                                    is StructuredType -> firstPropertyOf(type)
-                                    else -> emptyList()
-                                }
-                            }.toSet()
-                }
-                strProps.flatMap { prp ->
-                    val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
-                    val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
-                    val items = refTypes.flatMap { refType ->
-                        context.findItemsConformingTo {
-                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
-                            itemType.conformsTo(refType)
-                        }
+        try {
+            val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+            //TODO: lists ?
+            return when (prop) {
+                null -> emptyList()
+                else -> {
+                    var strProps: Set<PropertyDeclaration> = setOf(prop)
+                    while (strProps.isNotEmpty() && strProps.all { it.typeInstance != StdLibDefault.String }) {
+                        strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
+                                strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
+                                    val type = prp.typeInstance
+                                    val td = type.resolvedDeclaration
+                                    when (td) {
+                                        is CollectionType -> firstPropertyOf(type.typeArguments[0].type)
+                                        is StructuredType -> firstPropertyOf(type)
+                                        else -> emptyList()
+                                    }
+                                }.toSet()
                     }
-                    items.map {
-                        CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
+                    strProps.flatMap { prp ->
+                        val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
+                        val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                        val items = refTypes.flatMap { refType ->
+                            context.findItemsConformingTo {
+                                val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                                itemType.conformsTo(refType)
+                            }
+                        }
+                        items.map {
+                            CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
+                        }
                     }
                 }
             }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            return emptyList()
         }
     }
 

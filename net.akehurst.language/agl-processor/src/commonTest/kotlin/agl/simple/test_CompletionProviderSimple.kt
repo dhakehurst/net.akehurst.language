@@ -37,7 +37,7 @@ class test_CompletionProviderSimple {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextWithScope<Any,Any>? = contextAsmSimple(),
+            val context: ContextWithScope<Any, Any>? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -249,6 +249,68 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = sentence.length,
                 expected = expected
+            )
+        )
+    }
+
+    @Test
+    fun keyword_completion() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                S = ('This' | "That") 'is' 'a' 'sentence' '.' ;
+            }
+        """
+        val sentence = "This is a sentence ."
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 0,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 1,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 2,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = 3,
+                expected = listOf(
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                )
             )
         )
     }
