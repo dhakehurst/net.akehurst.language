@@ -2,6 +2,8 @@ namespace vistraq.query.TIM
     identify NodeType by name
     identify LinkType by linkTypeId.name
 
+    scope LinkType {}
+
     references {
         in LinkType {
             property name refers-to NodeType

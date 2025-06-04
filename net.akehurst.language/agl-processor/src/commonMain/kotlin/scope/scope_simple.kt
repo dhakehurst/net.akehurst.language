@@ -17,6 +17,7 @@
 
 package net.akehurst.language.scope.asm
 
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
@@ -33,7 +34,11 @@ class ScopeSimple<ItemInScopeType>(
         const val ROOT_ID = ""
     }
 
-    override val scopeIdentity: String = "${parent?.scopeIdentity ?: ""}/$scopeIdentityInParent"
+    override val scopeIdentity: String = when {
+        null==parent -> "/$scopeIdentityInParent"
+        "/" == parent.scopeIdentity -> "/$scopeIdentityInParent"
+        else -> "${parent.scopeIdentity}/$scopeIdentityInParent"
+    }
 
     override val scopePath: List<String> by lazy {
         if (null == parent) emptyList() else parent.scopePath + scopeIdentityInParent
@@ -41,7 +46,7 @@ class ScopeSimple<ItemInScopeType>(
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemInScopeType>>()
 
-    // referableName -> (typeName, item)
+    // referableName -> (typeName, (location,item))
     private val _items: MutableMap<String, MutableMap<QualifiedName, Pair<Any?, ItemInScopeType>>> = mutableMapOf()
 
     override val rootScope: ScopeSimple<ItemInScopeType> by lazy {
@@ -151,31 +156,37 @@ class ScopeSimple<ItemInScopeType>(
             }
         }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String {
-        val scopeIndent = currentIndent + indentIncrement
+    override fun asString(indent: Indent): String {
+        val scopeIndent = indent.inc
         val content = items.entries.joinToString(separator = "\n") { me ->
             val itemName = me.key
             val itemTypeMap = me.value
-            val itemTypeIndent = scopeIndent + indentIncrement
+            val itemTypeIndent = scopeIndent.inc
             val itemContent = itemTypeMap.entries.joinToString(separator = "\n") {
                 val item = it.value
                 val itemType = it.key
                 val scope = when {
                     this.childScopes.containsKey(itemName) -> {
                         val chScope = this.childScopes[itemName]!!
-                        " ${chScope.asString(itemTypeIndent, indentIncrement)}"
+                        " ${chScope.asString(itemTypeIndent)}"
                     }
 
                     else -> ""
                 }
-                "$itemTypeIndent${itemName}: $itemType -> $item$scope"
+                "$itemTypeIndent'${itemName}': $itemType -> $item$scope"
             }
 
-            "${scopeIndent}item $itemName {\n$itemContent\n$scopeIndent}"
+            "${scopeIndent}item '$itemName' {\n$itemContent\n$scopeIndent}"
+        }
+        val childScopes = this.childScopes.entries.joinToString(separator = "\n") { (k,v) ->
+            val cs = v.asString(scopeIndent)
+            "${scopeIndent}scope '$k' $cs"
         }
         return when {
-            items.entries.isEmpty() -> "{ }"
-            else -> "{\n$content\n$currentIndent}"
+            items.isEmpty() && childScopes.isEmpty() -> "{ }"
+            items.isEmpty() -> "{\n$childScopes\n$indent}"
+            childScopes.isEmpty() -> "{\n$content\n$indent}"
+            else -> "{\n$content\n$childScopes\n$indent}"
         }
     }
 
@@ -189,8 +200,6 @@ class ScopeSimple<ItemInScopeType>(
         else -> true
     }
 
-    override fun toString(): String = when {
-        null == parent -> "/$scopeIdentity"
-        else -> "$parent/$scopeIdentity"
-    }
+    override fun toString(): String = scopeIdentity
+
 }

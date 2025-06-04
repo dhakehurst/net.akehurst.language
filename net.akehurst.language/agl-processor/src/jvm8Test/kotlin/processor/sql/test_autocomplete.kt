@@ -60,7 +60,9 @@ class test_autocomplete {
                 grammarStr(grammarStr)
                 sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
-                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
+                        forSentence(null) {
+                            item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -70,7 +72,9 @@ class test_autocomplete {
                 }
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
-                        item("col1", "net.akehurst.language.sql.Column", null, "")
+                        forSentence(null) {
+                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -85,8 +89,10 @@ class test_autocomplete {
                 referenceStr(referenceStr)
                 sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
-                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
-                        item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
+                        forSentence(null) {
+                            item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -97,7 +103,9 @@ class test_autocomplete {
                 }
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
-                        item("col1", "net.akehurst.language.sql.Column", null, "")
+                        forSentence(null) {
+                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(

@@ -208,7 +208,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                                 is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName.last, self)
                                 else -> self.toString()
                             }
-                            raiseError(self, "Reference '$referringStr' not resolved, to type(s) ${refExpr.refersToTypeName} in scope of element '$selfId'")
+                            raiseError(self, "Reference '$referringStr' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${scope.scopeIdentity}'")//of element '$selfId'")
                             //raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringStr' in scope of element '$self'")
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
                             referringProperty.convertToReferenceTo(null)
@@ -274,7 +274,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                                 is AsmStructure -> identifyingValueInFor.invoke(scope.forTypeName.last, self)
                                 else -> self.toString()
                             }
-                            raiseError(self, "Reference '$qname' not resolved, to type(s) ${refExpr.refersToTypeName} in scope of element '$selfId'")
+                            raiseError(self, "Reference '$qname' not resolved, to type(s) ${refExpr.refersToTypeName} in scope '${scope.scopeIdentity}'")//of element '$selfId'")
                             //raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${list}' in scope of element '$self'")
                             val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
                             referringProperty.convertToReferenceTo(null)

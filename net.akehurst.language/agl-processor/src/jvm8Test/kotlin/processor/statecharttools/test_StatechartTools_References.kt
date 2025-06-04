@@ -157,8 +157,10 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
-            item("'B'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
+            forSentence(null) {
+                item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+                item("'B'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -180,7 +182,9 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            forSentence(null) {
+                item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -208,10 +212,12 @@ class test_StatechartTools_References {
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/0/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
-            item("'E'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
+            forSentence(null) {
+                item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+                item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/0/states/0")
+                item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
+                item("'E'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -239,9 +245,11 @@ class test_StatechartTools_References {
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextAsmSimple {
-            item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
+            forSentence(null) {
+                item("'A'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+                item("'C'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/0")
+                item("'D'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0/regions/1/states/1")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -264,8 +272,10 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("'S1'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
-            item("'S2'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
+            forSentence(null) {
+                item("'S1'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/0")
+                item("'S2'", "com.itemis.create.Statechart.State", null, "/0/regions/0/states/1")
+            }
         }
 
         val expectedAsm = asmSimple(
@@ -317,7 +327,9 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
+            forSentence(null) {
+                scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
+                }
             }
         }
 
@@ -334,8 +346,10 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
-                item("v", "com.itemis.create.Global.VariableDeclaration", null, "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
+            forSentence(null) {
+                scopedItem("I", "com.itemis.create.Global.Interface", null, "/0/statechartLevelDeclaration/0") {
+                    item("v", "com.itemis.create.Global.VariableDeclaration", null, "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
+                }
             }
         }
 
@@ -354,9 +368,11 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("\"x\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/0")
-            item("\"y\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/1")
-            item("\"z\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/2")
+            forSentence(null) {
+                item("\"x\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/0")
+                item("\"y\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/1")
+                item("\"z\"", "com.itemis.create.Global.ImportedName", null, "/0/statechartLevelDeclaration/0/importedName/2")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -372,7 +388,9 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            scopedItem("O", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+            forSentence(null) {
+                scopedItem("O", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+            }
         }
 
         test(grammar, goal, sentence, contextAsmSimple(), true, expected)
@@ -437,7 +455,9 @@ StatechartSpecification {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            scopedItem("func", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+            forSentence(null) {
+                scopedItem("func", "com.itemis.create.Global.OperationDeclaration", null, "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+            }
         }
 
         val expectedAsm = asmSimple(
@@ -507,7 +527,9 @@ StatechartSpecification {
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("BuiltInType"))
 
         val expectedContext = contextAsmSimple {
-            item("integer", "external.BuiltInType", null, "")
+            forSentence(null) {
+                item("integer", "external.BuiltInType", null, "")
+            }
         }
 
         val expectedAsm = asmSimple(
@@ -542,7 +564,9 @@ StatechartSpecification {
         }
 
         val context = contextAsmSimple {
-            item("integer", bit.qualifiedName.value, null, "")
+            forSentence(null) {
+                item("integer", bit.qualifiedName.value, null, "")
+            }
         }
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }

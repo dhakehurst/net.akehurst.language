@@ -394,7 +394,7 @@ grammar SQL {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(83, 8, 7, 4, null),
-                "Reference 'col7' not resolved, to type(s) [ColumnDefinition] in scope of element '/'"
+                "Reference 'col7' not resolved, to type(s) [ColumnDefinition] in scope '/table1'"
             )
         )
 

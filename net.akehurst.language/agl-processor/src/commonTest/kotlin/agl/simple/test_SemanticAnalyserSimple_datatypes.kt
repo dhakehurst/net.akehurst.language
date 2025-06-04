@@ -67,6 +67,11 @@ class test_SemanticAnalyserSimple_datatypes {
                 identify Datatype by id
                 identify Collection by id
 
+                scope Datatype {
+                    identify Property by id
+                }
+                scope Property {}
+
                 references {
                     in TypeReference {
                       property type refers-to Primitive|Datatype|Collection
@@ -192,7 +197,7 @@ class test_SemanticAnalyserSimple_datatypes {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(21, 9, 2, 7, null),
-                "Reference 'String' not resolved, to type(s) [Primitive, Datatype, Collection] in scope of element '/A/a'"
+                "Reference 'String' not resolved, to type(s) [Primitive, Datatype, Collection] in scope '/A/a'"
             )
         )
         println(result.asm!!.asString())
@@ -295,7 +300,7 @@ class test_SemanticAnalyserSimple_datatypes {
         })
 
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 2),"'String' with type 'test.Test.Primitive' already exists in scope //"),
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 2),"'String' with type 'test.Test.Primitive' already exists in scope /"),
         )
 
         assertEquals(expected, result2.issues.all)

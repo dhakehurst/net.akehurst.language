@@ -354,7 +354,9 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A { prop :", "external item in scope") {
                     context(contextAsmSimple {
-                        item("ExternalType", "test.Test.Primitive", null, "itemInScope?")
+                        forSentence(null) {
+                            item("ExternalType", "test.Test.Primitive", null, "itemInScope?")
+                        }
                     })
                     expectedCompletionItems(listOf(
                         CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),

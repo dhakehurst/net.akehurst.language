@@ -17,6 +17,7 @@
 
 package net.akehurst.language.scope.api
 
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.sentence.api.InputLocation
 
@@ -100,5 +101,5 @@ interface Scope<ItemInScopeType> {
 
     fun removeItemsIf(func:(item:ItemInScope<ItemInScopeType>) -> Boolean)
 
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun asString(indent: Indent): String
 }

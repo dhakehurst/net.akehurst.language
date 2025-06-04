@@ -1,7 +1,25 @@
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.scope.api.ItemInScope
@@ -51,6 +69,7 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         }
     }
 
+    //TODO: location carries sentenceIdentity ! remove duplication
     fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item:ItemInScopeType) {
         val rootScope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
         var scope =rootScope
@@ -72,9 +91,16 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
         return scopeForSentence.flatMap { it.value.findItemsByQualifiedNameConformingTo(qname, conformsToFunc) }
     }
 
-    fun asString(): String = "context scope ${scopeForSentence.entries.joinToString("\n") { (k, v) -> "$k = ${v.asString()}" }}"
+    fun asString(indent: Indent = Indent()): String {
+        val scopeIndent = indent.inc
+        val scopes = scopeForSentence.entries.joinToString("\n") { (k, v) -> "${scopeIndent}sentence $k = ${v.asString(scopeIndent)}" }
+        return when {
+            scopeForSentence.isEmpty() -> "context { }"
+            else -> "context {\n$scopes\n}"
+        }
+    }
 
-    override fun hashCode(): Int = scopeForSentence.hashCode()
+    override fun hashCode(): Int = 0 //scopeForSentence.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
         other !is ContextWithScope<*, *> -> false

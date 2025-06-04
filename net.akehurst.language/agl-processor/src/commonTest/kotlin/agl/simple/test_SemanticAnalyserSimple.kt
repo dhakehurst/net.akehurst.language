@@ -115,7 +115,7 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-
+            forSentence(null)
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -172,7 +172,7 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-
+            forSentence(null)
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -228,7 +228,7 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-
+            forSentence(null)
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -257,7 +257,9 @@ class test_SemanticAnalyserSimple {
             }
         }
 
-        val expected = contextAsmSimple { }
+        val expected = contextAsmSimple {
+            forSentence(null)
+        }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
 
@@ -285,7 +287,9 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            item("\$nothing", "test.Test.S", null, "/0") //TODO:
+            forSentence(null) {
+                item("\$nothing", "test.Test.S", null, "/0") //TODO:
+            }
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -314,7 +318,9 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            item("a", "test.Test.S", null, "/a")
+            forSentence(null) {
+                item("a", "test.Test.S", null, "/a")
+            }
         }
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
@@ -352,7 +358,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5, null),
-                "Cannot create a local reference in '//' for item with type 'test.Test.S' because there is no scope defined for the type, although its identifying expression evaluates to a List<String>"
+                "Cannot create a local reference in '/' for item with type 'test.Test.S' because there is no scope defined for the type, although its identifying expression evaluates to a List<String>"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -389,7 +395,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5, null),
-                "Cannot create a local reference in '//' for item with type 'test.Test.S' because the type has no identifying expression in the scope (which should evaluate to a List<String>)"
+                "Cannot create a local reference in '/' for item with type 'test.Test.S' because the type has no identifying expression in the scope (which should evaluate to a List<String>)"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -426,7 +432,7 @@ class test_SemanticAnalyserSimple {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(0, 1, 1, 5, null),
-                "Cannot create a local reference in '//' for item with type 'test.Test.S' because the identifying expression is different in the scope and the parent scope"
+                "Cannot create a local reference in '/' for item with type 'test.Test.S' because the identifying expression is different in the scope and the parent scope"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)
@@ -460,9 +466,11 @@ class test_SemanticAnalyserSimple {
         }
 
         val expected = contextAsmSimple {
-            scopedItem("a", "test.Test.S", null, "/a") {
-                scopedItem("a", "test.Test.S", null,"/a/a") {
-                    scopedItem("a", "test.Test.S", null,"/a/a/a") {
+            forSentence(null) {
+                scopedItem("a", "test.Test.S", null, "/a") {
+                    scopedItem("a", "test.Test.S", null, "/a/a") {
+                        scopedItem("a", "test.Test.S", null, "/a/a/a") {
+                        }
                     }
                 }
             }

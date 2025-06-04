@@ -21,18 +21,18 @@ import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
 
-fun contextAsmSimple(
-    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
-    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
-    sentenceId:Any? = null,
-    init: ScopeBuilder<Any>.() -> Unit = {}
-): ContextWithScope<Any,Any> {
-    val context = ContextWithScope(createScopedItem, resolveScopedItem)
-    val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
-    val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
-    b.init()
-    return context
-}
+//fun contextAsmSimple(
+//    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
+//    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
+//    sentenceId:Any? = null,
+//    init: ScopeBuilder<Any>.() -> Unit = {}
+//): ContextWithScope<Any,Any> {
+//    val context = ContextWithScope(createScopedItem, resolveScopedItem)
+//    val scope = context.newScopeForSentence(sentenceId) as ScopeSimple
+//    val b = ScopeBuilder(scope, context.createScopedItem, context.resolveScopedItem)
+//    b.init()
+//    return context
+//}
 
 fun contextAsmSimpleWithAsmPath(
     map: MutableMap<String, Any> = mutableMapOf(),
@@ -49,8 +49,46 @@ fun contextAsmSimpleWithAsmPath(
     return context
 }
 
+fun contextAsmSimple(
+    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
+    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
+    init: ContextBuilder.() -> Unit = {}
+): ContextWithScope<Any,Any> {
+    val b = ContextBuilder(createScopedItem,resolveScopedItem)
+    b.init()
+    return b.build()
+}
+
+fun contextAsmSimpleWithAsmPath(
+    map: MutableMap<String, Any> = mutableMapOf(),
+    init: ContextBuilder.() -> Unit = {}
+): ContextWithScope<Any,Any> {
+    val createScopedItem:CreateScopedItem<Any,Any> = { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
+    val resolveScopedItem: ResolveScopedItem<Any,Any> =  { itemInScope -> map[itemInScope] }
+    val b = ContextBuilder(createScopedItem, resolveScopedItem)
+    b.init()
+    return b.build()
+}
+
 @DslMarker
 annotation class ContextSimpleDslMarker
+
+@ContextSimpleDslMarker
+class ContextBuilder(
+    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
+    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
+) {
+
+    private val _context = ContextWithScope(createScopedItem, resolveScopedItem)
+
+    fun forSentence(id:Any?,init: ScopeBuilder<Any>.() -> Unit = {}) {
+        val scope = _context.newScopeForSentence(id) as ScopeSimple
+        val b = ScopeBuilder(scope, _context.createScopedItem, _context.resolveScopedItem)
+        b.init()
+    }
+
+    fun build(): ContextWithScope<Any, Any>  = _context
+}
 
 @ContextSimpleDslMarker
 class ScopeBuilder<ItemInScopeType : Any>(
@@ -63,7 +101,7 @@ class ScopeBuilder<ItemInScopeType : Any>(
         _scope.addToScope(id, QualifiedName(qualifiedTypeName), location, itemInScope, false)
     }
 
-    fun scope(forReferenceInParent: String, forTypeName: String, itemInScope: ItemInScopeType, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
+    fun scope(forReferenceInParent: String, forTypeName: String, init: ScopeBuilder<ItemInScopeType>.() -> Unit = {}) {
         // val path = AsmPathSimple(pathStr)
         // val itemInScope = _createScopedItem.invoke(forReferenceInParent, item)
         val chScope = _scope.createOrGetChildScope(forReferenceInParent, QualifiedName(forTypeName))
