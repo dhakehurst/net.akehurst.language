@@ -129,8 +129,8 @@ class test_AglFormat {
 
         private fun test_process(data: TestData) {
             val result = Agl.registry.agl.format.processor!!.process(data.sentence)
-            assertNotNull(result.asm, result.issues.toString())
-            assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
+            assertNotNull(result.asm, result.allIssues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), "'${data.sentence}'\n${result.allIssues}")
             data.expectedAsm?.let {
                 FormatModelTest.assertEqual(it, result.asm)
             }

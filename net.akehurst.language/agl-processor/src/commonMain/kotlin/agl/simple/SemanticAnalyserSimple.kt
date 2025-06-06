@@ -19,6 +19,7 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -64,11 +65,13 @@ class SemanticAnalyserSimple(
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
 
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues), _issues)
 
     override fun clear() {
+        _resolvedReferences.clear()
         _issues.clear()
     }
 
@@ -87,7 +90,7 @@ class SemanticAnalyserSimple(
                 checkAndResolveReferences(options, sentenceIdentity, asm, _locationMap, context)
             }
         }
-        return SemanticAnalysisResultDefault(this._issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
     private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: ContextWithScope<Any, Any>) {
@@ -114,17 +117,17 @@ class SemanticAnalyserSimple(
         }
         val sentenceScope = context.getScopeForSentenceOrNull(sentenceId)
         if(null!=sentenceScope) {
-            asm.traverseDepthFirst(
-                ReferenceResolverSimple(
-                    typeModel,
-                    crossReferenceModel,
-                    context,
-                    sentenceId,
-                    this::identifyingValueInFor,
-                    resFunc,
-                    locationMap, _issues
-                )
+            val resolver = ReferenceResolverSimple(
+                typeModel,
+                crossReferenceModel,
+                context,
+                sentenceId,
+                this::identifyingValueInFor,
+                resFunc,
+                locationMap, _issues
             )
+            asm.traverseDepthFirst(resolver)
+            _resolvedReferences = resolver.resolvedReferences
         } else {
             _issues.info(null, "Scope for sentence with Identity '${sentenceId}' not found, so cannot resolve references.")
             false

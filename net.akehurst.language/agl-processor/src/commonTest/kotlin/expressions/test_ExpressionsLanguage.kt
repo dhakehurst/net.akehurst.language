@@ -148,7 +148,7 @@ class test_ExpressionsLanguage {
         for (s in sentences) {
             println("Processing '$s'")
             val result = processor.process(s)
-            assertTrue(result.issues.errors.isEmpty(), "'$s'\n${result.issues}")
+            assertTrue(result.allIssues.errors.isEmpty(), "'$s'\n${result.allIssues}")
         }
     }
 }

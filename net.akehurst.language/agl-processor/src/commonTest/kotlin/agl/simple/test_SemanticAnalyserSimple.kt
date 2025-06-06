@@ -47,7 +47,7 @@ class test_SemanticAnalyserSimple {
             }
             assertEquals(processor.targetGrammar!!.qualifiedName, processor.crossReferenceModel.declarationsForNamespace.keys.first())
             val result = processor.process(sentence, options)
-            assertTrue(result.issues.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
             assertEquals(expected.asString(), options.semanticAnalysis.context!!.asString())
         }
@@ -60,7 +60,7 @@ class test_SemanticAnalyserSimple {
             ).processor!!
             val result = processor.process(sentence, options)
 
-            assertEquals(expected, result.issues.all.toList())
+            assertEquals(expected, result.allIssues.all.toList())
         }
     }
 

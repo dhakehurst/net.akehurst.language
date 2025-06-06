@@ -58,7 +58,7 @@ class test_CrossReferenceLanguage {
                 }
             )
 
-            assertEquals(expIssues, result.issues.all, result.issues.toString())
+            assertEquals(expIssues, result.allIssues.all, result.allIssues.toString())
             val actual = result.asm!!
             println(actual.asString())
             assertEquals(expected.asString(), actual.asString())
@@ -154,7 +154,7 @@ class test_CrossReferenceLanguage {
         val expected = CrossReferenceModelDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
     }
 
     @Test
@@ -172,7 +172,7 @@ class test_CrossReferenceLanguage {
         val expected = CrossReferenceModelDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
     }
 
     @Test

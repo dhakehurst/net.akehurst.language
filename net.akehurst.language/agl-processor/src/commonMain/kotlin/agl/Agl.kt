@@ -34,8 +34,6 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.processor.contextFromGrammar
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceModel
@@ -69,14 +67,14 @@ object Agl {
             crossReferenceString = CrossReferenceString(languageObject.crossReferenceString),
             styleString = StyleString(languageObject.styleString),
             formatString = FormatString(languageObject.formatString),
-            typesResolver = { p -> ProcessResultDefault<TypeModel>(languageObject.typesModel, IssueHolder(LanguageProcessorPhase.ALL)) },
-            transformResolver = { p -> ProcessResultDefault<TransformModel>(languageObject.asmTransformModel, IssueHolder(LanguageProcessorPhase.ALL)) },
-            crossReferenceResolver = { p -> ProcessResultDefault<CrossReferenceModel>(languageObject.crossReferenceModel, IssueHolder(LanguageProcessorPhase.ALL)) },
-            syntaxAnalyserResolver = { p -> ProcessResultDefault<SyntaxAnalyser<AsmType>>(languageObject.syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) },
-            semanticAnalyserResolver = { p -> ProcessResultDefault<SemanticAnalyser<AsmType, ContextType>>(languageObject.semanticAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) },
-            formatResolver = { p -> ProcessResultDefault<AglFormatModel>(languageObject.formatModel, IssueHolder(LanguageProcessorPhase.ALL)) },
-            styleResolver = { p -> ProcessResultDefault<AglStyleModel>(languageObject.styleModel, IssueHolder(LanguageProcessorPhase.ALL)) },
-            completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider, IssueHolder(LanguageProcessorPhase.ALL)) },
+            typesResolver = { p -> ProcessResultDefault<TypeModel>(languageObject.typesModel) },
+            transformResolver = { p -> ProcessResultDefault<TransformModel>(languageObject.asmTransformModel) },
+            crossReferenceResolver = { p -> ProcessResultDefault<CrossReferenceModel>(languageObject.crossReferenceModel) },
+            syntaxAnalyserResolver = { p -> ProcessResultDefault<SyntaxAnalyser<AsmType>>(languageObject.syntaxAnalyser) },
+            semanticAnalyserResolver = { p -> ProcessResultDefault<SemanticAnalyser<AsmType, ContextType>>(languageObject.semanticAnalyser) },
+            formatResolver = { p -> ProcessResultDefault<AglFormatModel>(languageObject.formatModel) },
+            styleResolver = { p -> ProcessResultDefault<AglStyleModel>(languageObject.styleModel) },
+            completionProviderResolver = { p -> ProcessResultDefault<CompletionProvider<AsmType, ContextType>>(languageObject.completionProvider) },
         )
 
     fun configurationSimple(): LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = LanguageProcessorConfigurationSimple()
@@ -220,14 +218,14 @@ object Agl {
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
             if (null == res.asm || res.asm!!.isEmpty) {
-                LanguageProcessorResult(null, res.issues)
+                LanguageProcessorResult(null, res.allIssues)
             } else {
                 val grammarModel = res.asm ?: error("Unable to create processor for $grammarDefinitionStr")
                 val proc = processorFromGrammar(
                     grammarModel,
                     configuration
                 )
-                LanguageProcessorResult(proc, res.issues)
+                LanguageProcessorResult(proc, res.allIssues)
             }
         } catch (e: Throwable) {
             throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)
@@ -253,10 +251,10 @@ object Agl {
         aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): ProcessResult<GrammarModel> {
         return if (null == sentence) {
-            ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
+            ProcessResultDefault(null)
         } else {
             val res = Agl.registry.agl.grammar.processor!!.process(sentence, aglOptions)
-            ProcessResultDefault(res.asm ?: GrammarModelDefault(SimpleName("fromString-error")), res.issues)
+            ProcessResultDefault(res.asm ?: GrammarModelDefault(SimpleName("fromString-error")), res.parse, res.syntaxAnalysis, res.semanticAnalysis)
         }
     }
 

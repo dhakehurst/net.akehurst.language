@@ -4,13 +4,14 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import kotlin.test.Test
@@ -103,12 +104,13 @@ class test_Processor {
 
         class MySemanticAnalyser : SemanticAnalyser<Value, MyContext> {
             val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+            private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
             override fun clear() { }
 
-            override fun analyse(sentenceIdentity:Any?,asm: Value, locationMap: Map<Any, InputLocation>?,  options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
+            override fun analyse(sentenceIdentity: Any?, asm: Value, locationMap: LocationMap?, options: SemanticAnalysisOptions<MyContext>): SemanticAnalysisResult {
                 analyseValue(asm, options.context)
-                return SemanticAnalysisResultDefault(issues)
+                return SemanticAnalysisResultDefault(_resolvedReferences,issues)
             }
 
             private fun analyseValue(asm: Value, context: MyContext?) {
@@ -156,7 +158,7 @@ class test_Processor {
             val pres = processor.process(sentence, Agl.options {
                 semanticAnalysis { context(context) }
             })
-            assertTrue(pres.issues.errors.isEmpty(), pres.issues.toString())
+            assertTrue(pres.allIssues.errors.isEmpty(), pres.allIssues.toString())
             println("  ${pres.asm}")
         }
 

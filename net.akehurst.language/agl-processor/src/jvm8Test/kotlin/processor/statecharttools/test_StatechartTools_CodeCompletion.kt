@@ -86,7 +86,7 @@ class test_StatechartTools_CodeCompletion {
                 parse { goalRuleName(goal)}
                 semanticAnalysis { context(contextAsmSimple()) }
             })
-            assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertTrue(result.allIssues.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
             val resultStr = processors[(grammar)].formatAsm(result.asm!!).sentence
             assertEquals(sentence, resultStr)
         }

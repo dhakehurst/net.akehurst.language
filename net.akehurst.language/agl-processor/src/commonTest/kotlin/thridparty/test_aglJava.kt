@@ -529,6 +529,6 @@ grammar Packages : Interfaces {
         """.trimIndent()
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.allIssues.errors.isEmpty())
     }
 }

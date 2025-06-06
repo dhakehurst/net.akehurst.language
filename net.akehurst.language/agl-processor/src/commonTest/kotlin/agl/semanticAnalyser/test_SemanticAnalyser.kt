@@ -45,7 +45,7 @@ class test_SemanticAnalyser {
                 "warning" -> ih.warn(null, "warning")
                 else -> throw RuntimeException("Test Error")
             }
-            return SemanticAnalysisResultDefault(ih)
+            return SemanticAnalysisResultDefault(emptyList(),ih)
         }
     }
 

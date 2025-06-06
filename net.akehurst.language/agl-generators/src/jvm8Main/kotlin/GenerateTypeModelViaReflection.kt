@@ -112,7 +112,7 @@ class GenerateTypeModelViaReflection(
     private val _typeModel = TypeModelSimple(typeModelName)
     private val _komposite = kompositeStr.map {
         Komposite.process(it).let {
-            assert(it.issues.errors.isEmpty()) { it.issues.errors.toString() }
+            assert(it.allIssues.errors.isEmpty()) { it.allIssues.errors.toString() }
             it.asm!!
         }
     }.fold(TypeModelSimple(SimpleName("Komposite"))) { acc, km ->

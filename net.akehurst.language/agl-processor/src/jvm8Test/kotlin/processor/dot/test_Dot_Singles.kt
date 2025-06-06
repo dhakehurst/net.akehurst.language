@@ -1038,6 +1038,6 @@ NAME {
 
         assertNotNull(result.asm)
         assertEquals(13, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }
 }

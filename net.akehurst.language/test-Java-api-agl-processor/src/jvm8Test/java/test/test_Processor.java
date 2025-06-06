@@ -162,7 +162,7 @@ public class test_Processor {
     public void process_noOptions() {
         ProcessResult<Asm> result = proc.process("{ a:false b:1 c:3.141 d:'bob' e:var2 }", null);
         Assert.assertNotNull(result.getAsm());
-        Assert.assertNotNull(result.getIssues());
+        Assert.assertNotNull(result.getAllIssues());
     }
 
     @Test
@@ -171,6 +171,6 @@ public class test_Processor {
         options.getParse().setGoalRuleName("value");
         ProcessResult<Asm> result = proc.process("{ a:false b:1 c:3.141 d:'bob' e:var2 }", options);
         Assert.assertNotNull(result.getAsm());
-        Assert.assertNotNull(result.getIssues());
+        Assert.assertNotNull(result.getAllIssues());
     }
 }

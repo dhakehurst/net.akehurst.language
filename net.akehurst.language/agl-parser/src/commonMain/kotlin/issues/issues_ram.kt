@@ -30,10 +30,11 @@ operator fun IssueCollection<LanguageIssue>.plus(other: IssueCollection<Language
 }
 
 class IssueHolder(
-    private val defaultPhase: LanguageProcessorPhase
+    private val defaultPhase: LanguageProcessorPhase = LanguageProcessorPhase.ALL,
+    issues: Iterable<LanguageIssue> = emptyList()
 ) : IssueCollection<LanguageIssue> {
 
-    private val _issues = mutableSetOf<LanguageIssue>()
+    private val _issues = issues.toMutableSet()
 
     override val all: Set<LanguageIssue> get() = _issues
     override val errors: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.ERROR }
@@ -50,7 +51,6 @@ class IssueHolder(
 
     fun info(location: InputLocation?, message: String, data: Any? = null) =
         raise(LanguageIssueKind.INFORMATION, defaultPhase, location, message, data)
-
 
     fun warn(location: InputLocation?, message: String, data: Any? = null) =
         raise(LanguageIssueKind.WARNING, defaultPhase, location, message, data)

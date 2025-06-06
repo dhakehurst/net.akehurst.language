@@ -19,6 +19,7 @@ package net.akehurst.language.typemodel.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -39,15 +40,19 @@ internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWi
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
+
 
     override fun clear() {
+        _issues.clear()
+        _resolvedReferences.clear()
     }
 
     override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
         if(asm.options.includeStd) {
             asm.addNamespace(StdLibDefault)
         }
-        return SemanticAnalysisResultDefault(_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
 }

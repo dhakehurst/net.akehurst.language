@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -32,7 +33,6 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 
 
 class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithScope<Any, Any>> {
@@ -47,7 +47,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
             }.firstOrNull()?.item as Grammar
     }
 
-    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
     private var _locationMap: LocationMap? = null
     private var _analyseAmbiguities = true
 
@@ -56,17 +57,18 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
 
     private fun issueWarn(item: Any?, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
-        issues.warn(location, message, data)
+        _issues.warn(location, message, data)
     }
 
     private fun issueError(item: Any, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
-        issues.error(location, message, data)
+        _issues.error(location, message, data)
     }
 
     override fun clear() {
         _unusedRules.clear()
-        this.issues.clear()
+        _issues.clear()
+        _resolvedReferences.clear()
         _locationMap = null
     }
 
@@ -78,7 +80,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
     ): SemanticAnalysisResult {
         val context = options.context
         this._locationMap = locationMap ?: LocationMapDefault()
-        this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
+        this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? == true
 
         if (null == context) {
             issueWarn(null, "No ContextFromGrammarRegistry supplied, grammar references cannot be resolved", null)
@@ -95,7 +97,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
 //        }
 
         checkGrammar(context, asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
-        return SemanticAnalysisResultDefault(issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
     private fun checkGrammar(context: ContextWithScope<Any, Any>?, grammarList: GrammarModel, automatonKind: AutomatonKind) {
@@ -106,7 +108,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
                 this.checkRuleUsage(grammar)
                 this.checkForDuplicates(grammar)
                 this.checkPreferenceRules(grammar)
-                if (issues.errors.isEmpty() && _analyseAmbiguities) {
+                if (this@AglGrammarSemanticAnalyser._issues.errors.isEmpty() && _analyseAmbiguities) {
                     this.checkForAmbiguities(grammar, automatonKind)
                 }
             }
@@ -134,7 +136,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
     }
 
     private fun checkRuleUsage(grammar: Grammar) {
-        _unusedRules[grammar]!!.forEach {
+        _unusedRules[grammar]?.forEach {
             when {
                 it is OverrideRule -> Unit // don't report it may be overriding something used in a base rule, TODO: check this
                 else -> issueWarn(it, "Rule '${it.name}' is not used in grammar ${grammar.name}.", null)
@@ -143,8 +145,8 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
     }
 
     private fun recordUnusedRule(grammar: Grammar, rule: GrammarRule) {
-        val set = this._unusedRules[grammar]!!
-        set.add(rule)
+        val set = this._unusedRules[grammar]
+        set?.add(rule)
     }
 
     private fun analyseGrammar(context: ContextWithScope<Any, Any>?, grammar: Grammar) {
@@ -157,7 +159,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
             }
         }
         // first rule is default goal rule //TODO: adjust for 'option defaultGoalRule'
-        this._unusedRules[grammar]!!.remove(grammar.grammarRule.first { it.isSkip.not() })
+        this._unusedRules[grammar]?.remove(grammar.grammarRule.first { it.isSkip.not() })
 
         grammar.grammarRule.forEach {
             when (it) {
@@ -266,7 +268,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
                     }
 
                     else -> {
-                        this._unusedRules[grammar]!!.remove(rule)
+                        this._unusedRules[grammar]?.remove(rule)
                     }
                 }
             }

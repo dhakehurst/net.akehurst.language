@@ -31,13 +31,13 @@ class test_AglStyle {
     fun grammarStr() {
         val combined = AglBase.grammarString +"\n"+AglStyle.grammarString
         val res = Agl.registry.agl.grammar.processor!!.process(combined, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry()) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test
     fun styleStr() {
         val res = Agl.registry.agl.style.processor!!.process(AglStyle.styleString)
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test

@@ -22,7 +22,6 @@ import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.*
@@ -96,7 +95,7 @@ class test_AglGrammarSemanticAnalyser {
             val asmRes = syntaxAnalysis(sppt)
             val res = semanticAnalysis(asmRes, options)
             assertEquals(expected, res.issues.all)
-            return ProcessResultDefault(asmRes.asm, res.issues)
+            return ProcessResultDefault(asmRes.asm, processIssues=res.issues)
         }
 
     }

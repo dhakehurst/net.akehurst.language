@@ -15,7 +15,7 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: T
             null != sd.expectedAsm && null != sd.expectedCompletionItem -> error("Currently only supports testing either process or autocomplete, not both")
             null != sd.expectedAsm -> {
                 val asmRes = proc.process(sd.sentence, sd.options)
-                assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
+                assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
                 val actual = asmRes.asm!!
                 assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
             }

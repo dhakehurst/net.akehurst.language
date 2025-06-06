@@ -38,7 +38,7 @@ class TypeModelSimple(
     companion object {
         fun fromString(name: SimpleName, context: ContextWithScope<Any, Any>, typesString: TypesString): ProcessResult<TypeModel> {
             return when {
-                typesString.value.isBlank() -> ProcessResultDefault(typeModel(name.value, true) { }, IssueHolder(LanguageProcessorPhase.ALL))
+                typesString.value.isBlank() -> ProcessResultDefault(typeModel(name.value, true) { })
                 else -> {
                     val proc = Agl.registry.agl.types.processor ?: error("Types language not found!")
                     proc.process(

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -92,7 +93,7 @@ class test_SemanticAnalyserSimple_datatypes {
     fun check_scopeModel() {
         val context = ContextFromTypeModel(processor.typesModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
     }
 
     @Test
@@ -106,7 +107,7 @@ class test_SemanticAnalyserSimple_datatypes {
                 context(contextAsmSimple())
             }
         })
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
 
         val expected = asmSimple {
@@ -136,7 +137,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         })
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
 
         val expected = asmSimple {
             element("Unit") {
@@ -202,7 +203,7 @@ class test_SemanticAnalyserSimple_datatypes {
         )
         println(result.asm!!.asString())
         assertEquals(expected.asString(), result.asm!!.asString())
-        assertEquals(expItems, result.issues.errors)
+        assertEquals(expItems, result.allIssues.errors)
     }
 
     @Test
@@ -223,9 +224,10 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
+        val expectedResolvedList = mutableListOf<ResolvedReference>()
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple(), resolvedReferences = expectedResolvedList) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {
@@ -248,7 +250,15 @@ class test_SemanticAnalyserSimple_datatypes {
         }
 
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
-
+        val expectedResolved = listOf(
+            ResolvedReference(
+                source = expectedResolvedList[0].source,
+                sourceLocation = InputLocation(38,9,3,6,null),
+                target = expectedResolvedList[0].target,
+                targetLocation = InputLocation(0,1,1,16,null)
+            )
+        )
+        assertEquals(expectedResolved, result.semanticAnalysis?.resolvedReferences)
     }
 
     @Test
@@ -264,7 +274,7 @@ class test_SemanticAnalyserSimple_datatypes {
             semanticAnalysis { context(context) }
         })
 
-        assertTrue(result1.issues.isEmpty(), result1.issues.toString())
+        assertTrue(result1.allIssues.isEmpty(), result1.allIssues.toString())
         assertNotNull(result1.asm)
 
         // process again, should not have semantic error because same definition is found, but in same location
@@ -272,7 +282,7 @@ class test_SemanticAnalyserSimple_datatypes {
             parse { sentenceIdentity { 1 } }
             semanticAnalysis { context(context) }
         })
-        assertTrue(result2.issues.isEmpty(), result2.issues.toString())
+        assertTrue(result2.allIssues.isEmpty(), result2.allIssues.toString())
         assertNotNull(result2.asm)
 
     }
@@ -284,13 +294,11 @@ class test_SemanticAnalyserSimple_datatypes {
 
         // process once to fill context
         val result1 = processor.process(sentence = sentence, Agl.options {
-            parse { sentenceIdentity {
-                1
-            } }
+            parse { sentenceIdentity { 1 } }
             semanticAnalysis { context(context) }
         })
 
-        assertTrue(result1.issues.isEmpty(), result1.issues.toString())
+        assertTrue(result1.allIssues.isEmpty(), result1.allIssues.toString())
         assertNotNull(result1.asm)
 
         // process again, should have semantic error because same definition is found in different location
@@ -303,7 +311,7 @@ class test_SemanticAnalyserSimple_datatypes {
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 16, 2),"'String' with type 'test.Test.Primitive' already exists in scope /"),
         )
 
-        assertEquals(expected, result2.issues.all)
+        assertEquals(expected, result2.allIssues.all)
 
     }
 }

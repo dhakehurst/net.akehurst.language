@@ -19,6 +19,8 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
+import net.akehurst.language.parser.api.ParseResult
+import net.akehurst.language.sentence.api.InputLocation
 
 interface SyntaxAnalysisResult<out AsmType : Any> {
     val asm: AsmType?
@@ -26,13 +28,25 @@ interface SyntaxAnalysisResult<out AsmType : Any> {
     val locationMap: LocationMap
 }
 
+data class ResolvedReference(
+    val source:Any?,
+    val sourceLocation: InputLocation?,
+    val target: Any?,
+    val targetLocation: InputLocation?
+)
+
 interface SemanticAnalysisResult {
+    val resolvedReferences:List<ResolvedReference>
     val issues: IssueCollection<LanguageIssue>
 }
 
 interface ProcessResult<out AsmType:Any> {
     val asm: AsmType?
-    val issues: IssueCollection<LanguageIssue>
+    val parse: ParseResult?
+    val syntaxAnalysis: SyntaxAnalysisResult<AsmType>?
+    val semanticAnalysis: SemanticAnalysisResult?
+    val processIssues: IssueCollection<LanguageIssue>
+    val allIssues: IssueCollection<LanguageIssue>
 }
 
 interface FormatResult {

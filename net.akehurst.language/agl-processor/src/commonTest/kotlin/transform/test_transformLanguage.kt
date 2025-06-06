@@ -125,8 +125,8 @@ class test_transformLanguage {
 
         private fun test_process(data: TestData) {
             val result = Agl.registry.agl.transform.processor!!.process(data.sentence)
-            assertNotNull(result.asm, result.issues.toString())
-            assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
+            assertNotNull(result.asm, result.allIssues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), "'${data.sentence}'\n${result.allIssues}")
             data.expectedAsm.forEachIndexed { idx, it ->
                 AsmTransformModelTest.trAssertEquals(it, result.asm!!)
             }

@@ -17,20 +17,17 @@
 
 package net.akehurst.language.style.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.style.api.AglStyleMetaRule
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.api.AglStyleSelectorKind
@@ -43,10 +40,12 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
         private val grammarRuleQualifiedName = QualifiedName("net.akehurst.language.grammar.api.GrammarRule")
     }
 
-    val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
     override fun clear() {
-        issues.clear()
+        _issues.clear()
+        _resolvedReferences.clear()
     }
 
     override fun analyse(
@@ -68,7 +67,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
             }
         }
 
-        return SemanticAnalysisResultDefault(issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
     private fun analyseMetaRule(rule: AglStyleMetaRule, locMap: LocationMap, context: ContextWithScope<Any,Any>) {
@@ -81,19 +80,19 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
             when (sel.kind) {
                 AglStyleSelectorKind.LITERAL -> {
                     if (context.findItemsNamedConformingTo(sel.value) { it.value == "LITERAL" }.isEmpty()) {
-                        issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
+                        _issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                     }
                 }
 
                 AglStyleSelectorKind.PATTERN -> {
                     if (context.findItemsNamedConformingTo(sel.value) { it.value == "PATTERN" }.isEmpty()) {
-                        issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
+                        _issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
                     }
                 }
 
                 AglStyleSelectorKind.RULE_NAME -> {
                     if (context.findItemsNamedConformingTo(sel.value) { it == grammarRuleQualifiedName }.isEmpty()) {
-                        issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
+                        _issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                     }
                 }
 

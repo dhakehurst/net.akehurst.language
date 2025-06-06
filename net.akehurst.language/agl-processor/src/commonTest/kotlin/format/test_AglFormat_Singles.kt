@@ -32,8 +32,8 @@ class test_AglFormat_Singles {
                     }
                 }
             )
-            assertNotNull(result.asm, result.issues.toString())
-            assertTrue(result.issues.errors.isEmpty(), "'${sentence}'\n${result.issues}")
+            assertNotNull(result.asm, result.allIssues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), "'${sentence}'\n${result.allIssues}")
             expectedAsm?.let {
                 TODO()
             }

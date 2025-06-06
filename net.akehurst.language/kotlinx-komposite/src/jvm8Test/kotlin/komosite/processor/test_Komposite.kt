@@ -71,7 +71,7 @@ class test_Komposite(val data: Data) {
     @Test
     fun process() {
         val result = processor.process(this.data.fileContent)
-        assertNotNull(result.asm,result.issues.joinToString(separator = "\n"){"$it"})
+        assertNotNull(result.asm,result.allIssues.joinToString(separator = "\n"){"$it"})
         //val resultStr = result.asString
         //assertEquals(original, resultStr)
     }

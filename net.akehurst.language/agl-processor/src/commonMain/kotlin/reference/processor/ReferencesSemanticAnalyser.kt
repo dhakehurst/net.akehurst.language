@@ -20,6 +20,7 @@ package net.akehurst.language.reference.processor
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -34,14 +35,14 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.*
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
 class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceModel, ContextFromTypeModel> {
 
-    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
     private var _locationMap: LocationMap = LocationMapDefault()
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
@@ -53,7 +54,8 @@ class ReferencesSemanticAnalyser(
         _grammarNamespace = null
         _locationMap.clear()
         _context = null
-        issues.clear()
+        _issues.clear()
+        _resolvedReferences.clear()
     }
 
     override fun analyse(
@@ -78,7 +80,7 @@ class ReferencesSemanticAnalyser(
 
                 val ns = _context!!.typeModel.findNamespaceOrNull(it.namespace.qualifiedName)
                 when (ns) {
-                    null -> issues.raise(
+                    null -> _issues.raise(
                         LanguageIssueKind.ERROR,
                         LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                         null,
@@ -86,7 +88,7 @@ class ReferencesSemanticAnalyser(
                     )
 
                     else -> {
-                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, ns, issues) }
+                        _typeResolver = _context?.let { ExpressionTypeResolver(it.typeModel, ns, _issues) }
                         _grammarNamespace = ns as GrammarTypeNamespace
                         it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault)
@@ -98,7 +100,7 @@ class ReferencesSemanticAnalyser(
                 }
             }
         } else {
-            issues.raise(
+            _issues.raise(
                 LanguageIssueKind.WARNING,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 null,
@@ -106,12 +108,12 @@ class ReferencesSemanticAnalyser(
             )
         }
 
-        return SemanticAnalysisResultDefault(issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
     private fun raiseError(obj: Any, message: String) {
         val loc = _locationMap[obj]
-        issues.error(loc, message)
+        _issues.error(loc, message)
     }
 
     private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {

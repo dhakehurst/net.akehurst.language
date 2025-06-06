@@ -52,8 +52,8 @@ class TransformDomainDefault(
                 }
             )
             return when {
-                res.issues.errors.isEmpty() -> res
-                else -> error(res.issues.toString())
+                res.allIssues.errors.isEmpty() -> res
+                else -> error(res.allIssues.toString())
             }
         }
 
@@ -64,7 +64,7 @@ class TransformDomainDefault(
         ): ProcessResult<TransformModel> {
             val atfg = GrammarModel2TransformModel(typeModel, grammarModel, configuration)
             val trModel = atfg.build()
-            return ProcessResultDefault<TransformModel>(trModel, atfg.issues)
+            return ProcessResultDefault<TransformModel>(trModel, processIssues=atfg.issues)
         }
 
     }

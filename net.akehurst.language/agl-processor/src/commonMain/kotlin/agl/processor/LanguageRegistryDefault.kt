@@ -143,11 +143,11 @@ class LanguageRegistryDefault : LanguageRegistry {
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(AsmTransformSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        semanticAnalyserResolver { ProcessResultDefault(AsmTransformSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        syntaxAnalyserResolver { ProcessResultDefault(AsmTransformSyntaxAnalyser()) }
+                        semanticAnalyserResolver { ProcessResultDefault(AsmTransformSemanticAnalyser()) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                         styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), lang.styleStr) }
-                        completionProvider { ProcessResultDefault(AsmTransformCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        completionProvider { ProcessResultDefault(AsmTransformCompletionProvider()) }
                     }
                 )
             )
@@ -167,11 +167,11 @@ class LanguageRegistryDefault : LanguageRegistry {
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(ReferencesSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        semanticAnalyserResolver { ProcessResultDefault(ReferencesSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        syntaxAnalyserResolver { ProcessResultDefault(ReferencesSyntaxAnalyser()) }
+                        semanticAnalyserResolver { ProcessResultDefault(ReferencesSemanticAnalyser()) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                         styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), AglCrossReference.styleStr) }
-                        completionProvider { ProcessResultDefault(ReferencesCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        completionProvider { ProcessResultDefault(ReferencesCompletionProvider()) }
                     }
                 )
             )
@@ -191,11 +191,11 @@ class LanguageRegistryDefault : LanguageRegistry {
                         //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                         //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser()) }
+                        semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser()) }
                         //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                         styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), AglFormat.styleStr) }
-                        completionProvider { ProcessResultDefault(AglFormatCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                        completionProvider { ProcessResultDefault(AglFormatCompletionProvider()) }
                     }
                 )
             )

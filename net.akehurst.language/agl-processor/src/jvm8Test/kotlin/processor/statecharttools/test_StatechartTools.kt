@@ -102,7 +102,7 @@ class test_StatechartTools(val data: Data) {
     @Test
     fun process() {
         val result = processor[data.grammarName]!!.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
-        assertNotNull(result.asm, result.issues.toString())
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm, result.allIssues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
     }
 }

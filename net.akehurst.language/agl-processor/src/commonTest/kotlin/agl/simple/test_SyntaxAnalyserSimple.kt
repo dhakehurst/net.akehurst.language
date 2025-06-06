@@ -61,7 +61,7 @@ class test_SyntaxAnalyserSimple {
         fun test(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
-            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
             val actual = result.asm!!
 

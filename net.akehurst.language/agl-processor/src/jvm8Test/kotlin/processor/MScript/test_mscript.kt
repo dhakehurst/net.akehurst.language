@@ -698,7 +698,7 @@ class test_mscript {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
@@ -711,7 +711,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(),parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -735,7 +735,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -787,7 +787,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), parseResult.issues.toString())
 
     }
 
@@ -814,7 +814,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), parseResult.issues.toString())
 
     }
 

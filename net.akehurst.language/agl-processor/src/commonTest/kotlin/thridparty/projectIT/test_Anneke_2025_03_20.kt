@@ -100,7 +100,7 @@ class test_Anneke_2025_03_20 {
         """
 
         val actual = proc.process(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty())
             it.asm!!
         }
 
@@ -125,7 +125,7 @@ class test_Anneke_2025_03_20 {
         """
 
         val actual = proc.process(sentence).let {
-            check(it.issues.errors.isEmpty())
+            check(it.allIssues.errors.isEmpty())
             it.asm!!
         }
 

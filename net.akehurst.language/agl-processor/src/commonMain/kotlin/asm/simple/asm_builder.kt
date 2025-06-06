@@ -19,6 +19,7 @@ package net.akehurst.language.asm.builder
 
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
 import net.akehurst.language.base.api.QualifiedName
@@ -50,10 +51,11 @@ fun asmSimple(
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
+    resolvedReferences: MutableList<ResolvedReference> = mutableListOf(),
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
     val defNs = typeModel.findNamespaceOrNull(defaultNamespace) ?: StdLibDefault
-    val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, sentenceId, context, resolveReferences, failIfIssues)
+    val b = AsmSimpleBuilder(typeModel, defNs, crossReferenceModel, sentenceId, context, resolveReferences, failIfIssues,resolvedReferences)
     b.init()
     return b.build()
 }
@@ -66,7 +68,8 @@ class AsmSimpleBuilder(
     private val _sentenceId:Any?,
     private val _context: ContextWithScope<Any, Any>?,
     private val resolveReferences: Boolean,
-    private val failIfIssues: Boolean
+    private val failIfIssues: Boolean,
+    private val resolvedReferences: MutableList<ResolvedReference>
 ) {
     private val _sentenceScope = _context?.getScopeForSentenceOrNull(null) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
@@ -124,18 +127,18 @@ class AsmSimpleBuilder(
             _asm.traverseDepthFirst(scopeCreator)
 
             // resolve refs
-            _asm.traverseDepthFirst(
-                ReferenceResolverSimple(
-                    _typeModel,
-                    _crossReferenceModel,
-                    _context,
-                    _sentenceId,
-                    _identifyingValueInFor,
-                    _context.resolveScopedItem,
-                    LocationMapDefault(),
-                    _issues
-                )
+            val resolver = ReferenceResolverSimple(
+                _typeModel,
+                _crossReferenceModel,
+                _context,
+                _sentenceId,
+                _identifyingValueInFor,
+                _context.resolveScopedItem,
+                LocationMapDefault(),
+                _issues
             )
+            _asm.traverseDepthFirst(resolver)
+            resolvedReferences.addAll(resolver.resolvedReferences)
         }
         if (failIfIssues && _issues.errors.isNotEmpty()) {
             error("Issues building asm:\n${_issues.all.joinToString(separator = "\n") { "$it" }}")

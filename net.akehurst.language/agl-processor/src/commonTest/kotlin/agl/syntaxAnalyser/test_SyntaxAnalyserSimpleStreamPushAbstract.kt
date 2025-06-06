@@ -32,7 +32,6 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
@@ -143,7 +142,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 locationMap: LocationMap?,
                 options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
             ): SemanticAnalysisResult {
-                return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+                return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
             }
 
         }
@@ -152,8 +151,8 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesModel!!, p.crossReferenceModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesModel!!, p.crossReferenceModel!!)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString()) }
             }
         )
 
@@ -172,7 +171,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         fun test(proc: LanguageProcessor<String, ContextWithScope<Any, Any>>, data: TestData) {
             println("'${data.sentence}'")
             val result = proc.process(data.sentence)
-            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
             val actual = result.asm!!
 

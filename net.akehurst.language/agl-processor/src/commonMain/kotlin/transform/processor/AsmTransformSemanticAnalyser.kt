@@ -19,6 +19,7 @@ package net.akehurst.language.transform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -39,7 +40,6 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformNamespace
 import net.akehurst.language.transform.api.TransformRuleSet
@@ -65,6 +65,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
     private var _context: ContextFromGrammarAndTypeModel? = null
     private var __asm: TransformModel? = null
@@ -74,12 +75,13 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
 
     private val transformFromGrammar = cached {
         val res = TransformDomainDefault.fromGrammarModel(_grammarModel)
-        _issues.addAllFrom(res.issues)
+        _issues.addAllFrom(res.allIssues)
         res.asm!!
     }
 
     override fun clear() {
         _issues.clear()
+        _resolvedReferences.clear()
         _context = null
         __asm = null
         transformFromGrammar.reset()
@@ -126,7 +128,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
             // in case new namespaces/types were created TODO: maybe only if OPTION_CREATE_TYPES specified
             _typeModel.resolveImports()
         }
-        return SemanticAnalysisResultDefault(_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
     /**

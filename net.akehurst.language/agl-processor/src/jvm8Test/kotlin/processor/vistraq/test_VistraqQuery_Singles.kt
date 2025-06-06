@@ -61,7 +61,7 @@ class test_VistraqQuery_Singles {
             }
             val result = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
             assertTrue(processor.issues.errors.isEmpty(), processor.issues.toString())
-            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         }
 
         fun test_process_fail(sentence: String, goal: String, grammarName: String? = null, expected: Set<LanguageIssue>) {
@@ -78,7 +78,7 @@ class test_VistraqQuery_Singles {
                 }
             }
             val result = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-            assertEquals(expected, result.issues.all)
+            assertEquals(expected, result.allIssues.all)
         }
 
     }
@@ -399,7 +399,7 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         assertEquals(queryStr, resultStr)
 
         val res = processor.process(queryStr)
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test

@@ -26,6 +26,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
@@ -147,6 +148,7 @@ class test_LanguageDefinitionDefault {
             configurationBase = Agl.configurationSimple(),
             grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
         )
+        println("assert")
         assertEquals(g, def.grammarString)
         assertNotNull(def.targetGrammar)
         assertNotNull(def.processor)
@@ -158,6 +160,44 @@ class test_LanguageDefinitionDefault {
         assertNotNull(def.formatter)
         assertTrue(sut.issues.isEmpty())
     }
+
+    @Test
+    fun languageDefinitionFromStringSimple__all() {
+        val grammarStr = GrammarString("namespace ns grammar Test1 { S = 'b'; }")
+        val transformStr = TransformString("")
+        val referenceStr = CrossReferenceString("")
+        val styleStr = StyleString("namespace test styles Test {}")
+        val def  = Agl.languageDefinitionFromStringSimple(
+            identity = LanguageIdentity("test"),
+            grammarDefinitionStr = grammarStr,
+            //typeStr = SimpleArch.typeStr,
+            transformStr = transformStr,
+            referenceStr = referenceStr,
+            styleStr = styleStr,
+            configurationBase = Agl.configuration(Agl.configurationSimple()) {
+                targetGrammarName("Patterns")
+                defaultGoalRuleName("statement")
+            },
+            grammarAglOptions = Agl.options {
+                semanticAnalysis {
+                    context(ContextFromGrammarRegistry(Agl.registry))
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                }
+            },
+        )
+        println("assert")
+        assertEquals(grammarStr, def.grammarString)
+        assertNotNull(def.targetGrammar)
+        assertNotNull(def.processor)
+        assertNotNull(def.typesModel)
+        assertNotNull(def.transformModel)
+        assertNotNull(def.crossReferenceModel)
+        assertNotNull(def.styleModel)
+        assertTrue(def.styleModel!!.isEmpty.not())
+        assertNotNull(def.formatter)
+        assertTrue(sut.issues.isEmpty())
+    }
+
 
     @Test
     fun modifyObservers() {
@@ -317,8 +357,6 @@ class test_LanguageDefinitionDefault {
         assertEquals(emptyList(), formatterStrObserverCalled)
         assertEquals(emptyList(), formatterObserverCalled)
     }
-
-
 
     @Test
     fun grammarStr_change_value_to_same_value() {
@@ -660,7 +698,7 @@ class test_LanguageDefinitionDefault {
         }
 
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString(indentIncrement = "  "), result.asm!!.asString(indentIncrement = "  "))
     }
 }

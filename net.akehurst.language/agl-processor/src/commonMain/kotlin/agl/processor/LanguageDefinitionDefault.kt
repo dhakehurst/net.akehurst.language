@@ -126,12 +126,12 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         super._style_cache.reset()
     }
 
-    private fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
+    internal fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<GrammarModel, ContextWithScope<Any,Any>>(newValue?.value, aglOptions)
-            this._issues.addAllFrom(res.issues)
+            this._issues.addAllFrom(res.allIssues)
             this.grammarModel = when {
-                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
+                res.allIssues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
                 else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
             }
         }

@@ -113,7 +113,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
      */
     fun evaluateStr(evc: EvaluationContext<SelfType>, expression: String): TypedObject<SelfType> {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
-        check(result.issues.errors.isEmpty()) { result.issues.toString() }
+        check(result.allIssues.errors.isEmpty()) { result.allIssues.toString() }
         val asm = result.asm!!
         return this.evaluateExpression(evc, asm)
     }

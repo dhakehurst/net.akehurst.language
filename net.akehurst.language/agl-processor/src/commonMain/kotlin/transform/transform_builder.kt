@@ -142,7 +142,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun expression(expressionStr: String): Expression {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(res.issues.isEmpty()) { res.issues.toString() }
+        check(res.allIssues.isEmpty()) { res.allIssues.toString() }
         return res.asm!!
     }
 
@@ -244,7 +244,7 @@ class AssignmentBuilder() {
 
     fun assignment(lhsPropertyName: String, lhsGrammarRuleIndex: Int?, expressionStr: String) {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(res.issues.isEmpty()) { res.issues.toString() }
+        check(res.allIssues.isEmpty()) { res.allIssues.toString() }
         val expr = res.asm!!
         _assignments.add(Triple(lhsPropertyName, lhsGrammarRuleIndex, expr))
     }

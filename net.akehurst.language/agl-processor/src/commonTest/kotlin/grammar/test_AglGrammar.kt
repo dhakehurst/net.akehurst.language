@@ -29,7 +29,7 @@ class test_AglGrammar {
                 }
             }
         )
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
         val actual = res.asm!!.asString()
         val expected = AglGrammar.grammarModel.asString()
 
@@ -47,7 +47,7 @@ class test_AglGrammar {
                 }
             }
         )
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
         res.asm!!.addNamespace(StdLibDefault)
         res.asm!!.resolveImports()
         val actual = res.asm!!.asString()
@@ -67,7 +67,7 @@ class test_AglGrammar {
                 }
             }
         )
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
         val actual = res.asm!!.asString()
         val expected = AglGrammar.asmTransformModel.asString()
 
@@ -81,8 +81,6 @@ class test_AglGrammar {
 
         assertEquals(expected, actual)
     }
-
-
 
     @Test
     fun typeModel() {

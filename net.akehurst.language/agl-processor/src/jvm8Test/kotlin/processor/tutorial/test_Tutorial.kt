@@ -44,7 +44,7 @@ class test_Tutorial {
             for (td in testData) {
                 println(td.sentence)
                 val res = proc.process(td.sentence)
-                assertTrue(res.issues.isEmpty(), res.issues.toString())
+                assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
                 assertEquals(td.asm.asString(), res.asm!!.asString())
             }
         }

@@ -47,7 +47,7 @@ class test_SysML_UseCase_Singles {
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test

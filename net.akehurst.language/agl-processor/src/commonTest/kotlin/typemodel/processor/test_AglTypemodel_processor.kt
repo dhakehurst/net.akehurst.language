@@ -30,7 +30,7 @@ class test_AglTypemodel_processor {
 
         fun testPass(typeModeStr: String, expected: TypeModel) {
             val res = Agl.registry.agl.types.processor!!.process(typeModeStr)
-            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+            assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
             val actual = res.asm!!
 
             TypeModelTest.tmAssertEquals(expected, actual)

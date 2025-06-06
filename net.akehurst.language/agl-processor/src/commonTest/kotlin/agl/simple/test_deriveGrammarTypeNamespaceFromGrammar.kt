@@ -49,7 +49,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 }
             })
             assertNotNull(result.asm)
-            assertTrue(result.issues.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
             val grammarMdl = result.asm!!
 
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
@@ -57,7 +57,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             val atfg = TransformDomainDefault.fromGrammarModel(grammarMdl)
             //val actualTr = atfg.build()
 
-            assertTrue(atfg.issues.isEmpty(), atfg.issues.toString())
+            assertTrue(atfg.allIssues.isEmpty(), atfg.allIssues.toString())
             // val actualTm = atfg.typeModel
 
             // GrammarTypeModelTest.tmAssertEquals(expectedTm, actualTm)
@@ -83,7 +83,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("Test", true) {
@@ -137,7 +137,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val tmI = grammarTypeModel("test.I", "Inner") {
@@ -206,7 +206,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = grammarTypeModel("test.O", "O") {
@@ -253,7 +253,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
@@ -314,7 +314,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {

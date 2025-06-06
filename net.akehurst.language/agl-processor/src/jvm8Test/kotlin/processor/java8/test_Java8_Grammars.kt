@@ -38,7 +38,7 @@ class test_Java8_Grammars {
             }
         )
         assertNotNull(result.asm)
-        result.issues.forEach { println(it) }
+        result.allIssues.forEach { println(it) }
     }
 
     @Test(timeout = 5000)
@@ -55,7 +55,7 @@ class test_Java8_Grammars {
             }
         )
         assertNotNull(result.asm)
-        result.issues.forEach { println(it) }
+        result.allIssues.forEach { println(it) }
     }
 
     @Test(timeout = 5000)
@@ -73,7 +73,7 @@ class test_Java8_Grammars {
             }
         )
         assertNotNull(result.asm)
-        result.issues.forEach { println(it) }
+        result.allIssues.forEach { println(it) }
     }
 
 
@@ -91,7 +91,7 @@ class test_Java8_Grammars {
             }
         )
         assertNotNull(result.asm)
-        result.issues.forEach { println(it) }
+        result.allIssues.forEach { println(it) }
     }
 
 }

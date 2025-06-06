@@ -34,10 +34,12 @@ class ScopeSimple<ItemInScopeType>(
         const val ROOT_ID = ""
     }
 
-    override val scopeIdentity: String = when {
-        null==parent -> "/$scopeIdentityInParent"
-        "/" == parent.scopeIdentity -> "/$scopeIdentityInParent"
-        else -> "${parent.scopeIdentity}/$scopeIdentityInParent"
+    override val scopeIdentity: String by lazy {
+        when {
+            null == parent -> "/$scopeIdentityInParent"
+            "/" == parent.scopeIdentity -> "/$scopeIdentityInParent"
+            else -> "${parent.scopeIdentity}/$scopeIdentityInParent"
+        }
     }
 
     override val scopePath: List<String> by lazy {
@@ -167,8 +169,8 @@ class ScopeSimple<ItemInScopeType>(
                 val itemType = it.key
                 val scope = when {
                     this.childScopes.containsKey(itemName) -> {
-                        val chScope = this.childScopes[itemName]!!
-                        " ${chScope.asString(itemTypeIndent)}"
+                        val chScope = this.childScopes[itemName]
+                        " ${chScope?.asString(itemTypeIndent)}"
                     }
 
                     else -> ""
@@ -200,6 +202,6 @@ class ScopeSimple<ItemInScopeType>(
         else -> true
     }
 
-    override fun toString(): String = scopeIdentity
+    override fun toString(): String { return scopeIdentity }
 
 }

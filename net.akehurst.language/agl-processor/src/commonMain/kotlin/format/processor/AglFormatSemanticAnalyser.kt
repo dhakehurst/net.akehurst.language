@@ -43,6 +43,6 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatModel, SentenceConte
         asm: AglFormatModel, locationMap: LocationMap?,
         options: SemanticAnalysisOptions< SentenceContext>
     ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+        return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

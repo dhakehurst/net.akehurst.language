@@ -35,8 +35,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.transform.asm.TransformDomainDefault
 import kotlin.test.Test
@@ -59,12 +57,9 @@ class test_StatechartTools_References {
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
-                    ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
+                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), FormatString("")) }
                 // completionProvider { p ->
@@ -87,7 +82,7 @@ class test_StatechartTools_References {
             })
             println(context.asString())
             println(result.asm?.asString())
-            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
             assertEquals(expectedContext.asString(), context.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
             TestContextSimple.assertMatches(expectedContext, context)
@@ -117,7 +112,7 @@ class test_StatechartTools_References {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }
         )
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
     }
 
     @Test

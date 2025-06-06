@@ -35,7 +35,7 @@ class test_Agl_registry_agl {
     companion object {
         fun <AsmType : Formatable, ContextType:Any> checkStringEqualsModel(processor: LanguageProcessor<AsmType,ContextType>, expected:String, actual: Formatable, context:ContextType ) {
             val exp = processor.process(expected,Agl.options { semanticAnalysis { context(context) } }).let {
-                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
                 it.asm!!
             }
             assertEquals(exp.asString(), actual.asString())
@@ -43,7 +43,7 @@ class test_Agl_registry_agl {
 
         fun <AsmType : Formatable, ContextType:Any> checkModelEqualsString(processor: LanguageProcessor<AsmType,ContextType>, expected:Formatable, actual: String, context:ContextType ) {
             val act = processor.process(actual,Agl.options { semanticAnalysis { context(context) } }).let {
-                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
                 it.asm!!
             }
             assertEquals(expected.asString(), act.asString())

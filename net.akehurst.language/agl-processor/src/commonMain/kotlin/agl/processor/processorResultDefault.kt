@@ -20,7 +20,8 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.parser.api.ParseResult
 
 class LanguageProcessorResult<AsmType:Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,
@@ -34,13 +35,25 @@ data class SyntaxAnalysisResultDefault<AsmType:Any>(
 ) : SyntaxAnalysisResult<AsmType>
 
 data class SemanticAnalysisResultDefault(
+    override val resolvedReferences: List<ResolvedReference>,
     override val issues: IssueCollection<LanguageIssue>
 ) : SemanticAnalysisResult
 
 data class ProcessResultDefault<AsmType:Any>(
     override val asm: AsmType?,
-    override val issues: IssueCollection<LanguageIssue>
-) : ProcessResult<AsmType>
+    override val parse: ParseResult? = null,
+    override val syntaxAnalysis: SyntaxAnalysisResult<AsmType>? = null,
+    override val semanticAnalysis: SemanticAnalysisResult? = null,
+    override val processIssues: IssueCollection<LanguageIssue> = IssueHolder(),
+) : ProcessResult<AsmType> {
+    override val allIssues: IssueCollection<LanguageIssue>
+        get() {
+            val parseIssues = parse?.issues?.all ?: emptySet()
+            val synIssues = syntaxAnalysis?.issues?.all ?: emptySet()
+            val semIssues = semanticAnalysis?.issues?.all ?: emptySet()
+            return IssueHolder(issues = parseIssues + synIssues + semIssues + processIssues.all)
+        }
+}
 
 data class FormatResultDefault(
     override val sentence: String?,

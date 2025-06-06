@@ -141,7 +141,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         try {
             val result = Agl.registry.agl.types.processor!!.process(kompositeModel)
             if (null == result.asm) {
-                throw KompositeException("Error processing config string", result.issues.errors, null)
+                throw KompositeException("Error processing config string", result.allIssues.errors, null)
             } else {
                 this.registerFromTypeModel(result.asm!!, primitiveMappers)
             }

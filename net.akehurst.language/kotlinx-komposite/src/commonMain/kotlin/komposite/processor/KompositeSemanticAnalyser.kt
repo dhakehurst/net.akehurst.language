@@ -36,6 +36,6 @@ class KompositeSemanticAnalyser : SemanticAnalyser<TypeModel,Any> {
 
 
     override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?,options: SemanticAnalysisOptions<Any>): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+        return SemanticAnalysisResultDefault(emptyList(),IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

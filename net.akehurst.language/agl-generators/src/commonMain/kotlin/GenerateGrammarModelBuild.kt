@@ -100,7 +100,7 @@ class GenerateGrammarModelBuild(
 
     val formatModel by lazy {
         val res = AglFormatModelDefault.fromString(ContextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
-        check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
+        check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
     }
     val formatSet get() = formatModel.findDefinitionByQualifiedNameOrNull("net.akehurst.language.grammar.Asm".asQualifiedName)!!
@@ -114,7 +114,7 @@ class GenerateGrammarModelBuild(
                 }
             }
         )
-        check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
+        check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         val asm = res.asm!!
         return generateFromAsm(asm)
     }

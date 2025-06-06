@@ -87,7 +87,7 @@ class AglFormatModelDefault(
                     else -> Unit
                 }
             }
-            return ProcessResultDefault(formatModel, issues)
+            return ProcessResultDefault(formatModel, processIssues=issues)
         }
 
         fun fromString(context: ContextFromTypeModel, formatModelStr: FormatString): ProcessResult<AglFormatModel> {
@@ -99,8 +99,8 @@ class AglFormatModelDefault(
                 }
             )
             return when {
-                res.issues.errors.isEmpty() -> res
-                else -> error(res.issues.toString())
+                res.allIssues.errors.isEmpty() -> res
+                else -> error(res.allIssues.toString())
             }
         }
     }

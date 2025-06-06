@@ -34,7 +34,6 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.transform.asm.TransformDomainDefault
@@ -51,7 +50,7 @@ class test_Vistraq_References {
         private val grammarList =
             Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
                 .let {
-                    check(it.issues.errors.isEmpty()) { it.issues.toString() }
+                    check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
@@ -63,11 +62,9 @@ class test_Vistraq_References {
                 crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
+                        SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 //formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 //completionProvider { p ->
@@ -100,7 +97,7 @@ class test_Vistraq_References {
             })
             println(context.asString())
             println(result.asm?.asString())
-            assertEquals(expectedIssues, result.issues.errors, result.issues.toString())
+            assertEquals(expectedIssues, result.allIssues.errors, result.allIssues.toString())
             assertEquals(expectedContext.asString(), context.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
             TestContextSimple.assertMatches(expectedContext, context)
@@ -122,7 +119,7 @@ class test_Vistraq_References {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }
         )
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
     }
 
     @Test

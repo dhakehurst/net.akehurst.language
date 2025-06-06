@@ -197,7 +197,7 @@ grammar SQL {
                 }
             }
         }
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
 
         //check paths
@@ -209,7 +209,7 @@ grammar SQL {
     fun check_crossReferenceModel() {
         val context = ContextFromTypeModel(processor.typesModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
     }
 
     @Test
@@ -257,7 +257,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -322,7 +322,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -398,7 +398,7 @@ grammar SQL {
             )
         )
 
-        assertEquals(expIssues, result.issues.toSet())
+        assertEquals(expIssues, result.allIssues.toSet())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -416,7 +416,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
     }
 
     @Test
@@ -486,7 +486,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 

@@ -78,11 +78,11 @@ class test_AglStyleLanguage {
         """.trimIndent()
 
         val result = process(text)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.allDefinitions?.size) // 1 default nostyle rule
 
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }
 
     @Test
@@ -98,10 +98,10 @@ class test_AglStyleLanguage {
         """.trimIndent()
 
         val result = process(text)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.allDefinitions?.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }
 
     @Test
@@ -115,7 +115,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
@@ -138,7 +138,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
@@ -165,7 +165,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(2, result.asm!!.allDefinitions[0].rules.size)
@@ -185,7 +185,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
@@ -205,7 +205,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
@@ -237,7 +237,7 @@ class test_AglStyleLanguage {
                     "Grammar Rule 'xxx' not found for style rule",
                     null
                 )
-            ), result.issues.all
+            ), result.allIssues.all
         )
     }
 
@@ -256,7 +256,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)
@@ -278,7 +278,7 @@ class test_AglStyleLanguage {
 
         val result = process(text)
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(1, result.asm!!.allDefinitions.size)
         assertEquals(1, result.asm!!.allDefinitions[0].rules.size)

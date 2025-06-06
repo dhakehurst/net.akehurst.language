@@ -45,9 +45,9 @@ class test_SemanticAnalyser {
                     context(context)
                 }
             })
-            assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(expected.size, actual.issues.size)
-            assertEquals(expected.toSet(), actual.issues.toSet())
+            assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
+            assertEquals(expected.size, actual.allIssues.size)
+            assertEquals(expected.toSet(), actual.allIssues.toSet())
         }
 
         fun testFail(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
@@ -58,9 +58,9 @@ class test_SemanticAnalyser {
                     context(context)
                 }
             })
-            assertTrue(actual.issues.errors.isNotEmpty())
-            assertEquals(expected.size, actual.issues.size)
-            assertEquals(expected.toSet(), actual.issues.toSet())
+            assertTrue(actual.allIssues.errors.isNotEmpty())
+            assertEquals(expected.size, actual.allIssues.size)
+            assertEquals(expected.toSet(), actual.allIssues.toSet())
         }
 
     }

@@ -64,7 +64,7 @@ class test_FileMap {
 
         fun process(sentence: String): MapStringString {
             val res = processor.process(sentence)
-            check(res.issues.errors.isEmpty()) { res.issues.toString() }
+            check(res.allIssues.errors.isEmpty()) { res.allIssues.toString() }
             val asm = res.asm!!
             return asm[0]
         }
@@ -79,7 +79,7 @@ class test_FileMap {
             it.processor!!
         }
         val res = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString() )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString() )
         println(res.asm!!.asString())
     }
 
@@ -91,7 +91,7 @@ class test_FileMap {
             it.processor!!
         }
         val res = proc.process(sentence)
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString() )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString() )
         println(res.asm!!.asString())
     }
 }
