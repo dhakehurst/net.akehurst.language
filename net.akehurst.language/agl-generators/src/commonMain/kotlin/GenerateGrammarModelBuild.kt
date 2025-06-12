@@ -22,6 +22,7 @@ import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
@@ -99,7 +100,7 @@ class GenerateGrammarModelBuild(
     }
 
     val formatModel by lazy {
-        val res = AglFormatModelDefault.fromString(ContextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
+        val res = AglFormatModelDefault.fromString(contextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
     }

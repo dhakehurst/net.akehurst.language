@@ -376,6 +376,7 @@ class KompositeWalker<P : Any?, A : Any?>(
 
     protected fun walkMap(owningProperty: PropertyDeclarationResolved?, path: List<String>, info: WalkInfo<P, A>, data: Map<*, *>, typeInstance: TypeInstance): WalkInfo<P, A> {
         val dt = typeInstance.resolvedDeclaration as CollectionType
+        check(2==typeInstance.typeArguments.size) { "A Map must have 2 type arguments. Property '${owningProperty?.name}' has ${typeInstance.typeArguments.size} type arguments."  }
         val entryKeyType = typeInstance.typeArguments[0]
         val entryValType = typeInstance.typeArguments[1]
         val infolb = this.mapBegin(path, info, data, dt, entryKeyType.type, entryValType.type)
@@ -442,7 +443,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             else -> {
                 val dataKClassName = data::class.simpleName!! //TODO: want qualified name here when JS supports it
                 registry.findFirstDefinitionByNameOrNull(SimpleName(dataKClassName))
-                    ?: throw KompositeException("Cannot find a targetType for data object of kclass: ${data::class.simpleName}")
+                    ?: throw KompositeException("Cannot find a runtimeTypeFor for data object named: ${data::class.simpleName}")
             }
         }
     }

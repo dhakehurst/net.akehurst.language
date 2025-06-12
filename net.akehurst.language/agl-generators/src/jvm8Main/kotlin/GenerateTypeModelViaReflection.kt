@@ -4,6 +4,7 @@ import net.akehurst.kotlinx.komposite.common.DatatypeRegistry
 import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.expressions.api.LambdaExpression
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.*
 import java.nio.file.FileSystem
@@ -23,7 +24,7 @@ class GenerateTypeModelViaReflection(
     val kompositeStr: List<String>
 ) {
     companion object {
-        const val STD_LIB = "net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib"
+        const val STD_LIB = "net.akehurst.language.typemodel.simple.StdLibDefault"
 
         val KOTLIN_TO_AGL = DatatypeRegistry.KOTLIN_TO_AGL
 
@@ -250,21 +251,20 @@ class GenerateTypeModelViaReflection(
     }
 
     private fun addPrimitiveType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        ns.addDefinition(PrimitiveTypeSimple(ns, SimpleName(kclass.simpleName!!)))
+        PrimitiveTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
     }
 
     private fun <T : Enum<T>> addEnumType(ns: TypeNamespaceSimple, kclass: KClass<T>) {
         val lits = kclass.enumValues.map { it.name }
-        ns.addDefinition(EnumTypeSimple(ns, SimpleName(kclass.simpleName!!), lits))
+        EnumTypeSimple(ns, SimpleName(kclass.simpleName!!), lits) //added to ns in constructor
     }
 
     private fun addCollectionType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        ns.addDefinition(CollectionTypeSimple(ns, SimpleName(kclass.simpleName!!)))
+        CollectionTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
     }
 
     private fun addSingleton(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        val type = SingletonTypeSimple(ns, SimpleName(kclass.simpleName!!))
-        ns.addDefinition(type)
+        SingletonTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
         //       addTypeParameters(ns, type, kclass)
 //        addSuperTypes(type, kclass)
 //        addConstructors(ns, type, kclass)
@@ -280,8 +280,7 @@ class GenerateTypeModelViaReflection(
     }
 
     private fun addInterfaceType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
-        val type = InterfaceTypeSimple(ns, SimpleName(kclass.simpleName!!))
-        ns.addDefinition(type)
+        val type = InterfaceTypeSimple(ns, SimpleName(kclass.simpleName!!))  //added to ns in constructor
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
         addPropertiesAndImports(ns, type, kclass)
@@ -439,7 +438,7 @@ class GenerateTypeModelViaReflection(
                         }
                     }
 
-                    else -> TODO()
+                    else -> foundType::class
                 }
             }
 

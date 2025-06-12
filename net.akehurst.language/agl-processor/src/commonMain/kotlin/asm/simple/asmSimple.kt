@@ -105,7 +105,7 @@ open class AsmSimple() : Asm {
     fun addRoot(root: AsmValue) = (this.root as MutableList).add(root)
     fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
 
-    fun createStructure(parsePath: ParsePath, typeName: QualifiedName): AsmStructureSimple {
+    fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
         val el = AsmStructureSimple(typeName)
         el.parsePath = parsePath
         //this.elementIndex[asmPath] = el
@@ -296,7 +296,7 @@ class AsmStructureSimple(
 
     private var _properties = mutableMapOf<PropertyValueName, AsmStructurePropertySimple>()
 
-    override var parsePath: ParsePath = ParsePath(listOf("??"))
+    override var parsePath: String = "??"
     override var semanticPath: AsmPath? = null
 
     override val property: Map<PropertyValueName, AsmStructureProperty> = _properties

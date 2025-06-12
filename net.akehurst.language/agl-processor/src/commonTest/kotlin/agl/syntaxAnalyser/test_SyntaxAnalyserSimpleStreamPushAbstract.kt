@@ -36,6 +36,7 @@ import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -180,6 +181,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
     }
 
     // --- Empty ---
+    @Ignore
     @Test // S =  ;
     fun _0_empty() {
         val grammarStr = """

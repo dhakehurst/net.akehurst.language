@@ -153,8 +153,8 @@ abstract class StructuredTypeBuilder(
 ) {
     protected abstract val _structuredType: StructuredType
 
-    val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
-    val IDENTITY = PropertyCharacteristic.IDENTITY
+    val CON = PropertyCharacteristic.CONSTRUCTOR
+    val IDY = PropertyCharacteristic.IDENTITY
 
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
@@ -162,8 +162,8 @@ abstract class StructuredTypeBuilder(
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
 
-    val STORED = PropertyCharacteristic.STORED
-    val DERIVED = PropertyCharacteristic.DERIVED
+    val STR = PropertyCharacteristic.STORED
+    val DER = PropertyCharacteristic.DERIVED
 
     fun propertyOf(
         characteristics: Set<PropertyCharacteristic>,
@@ -440,9 +440,10 @@ class ConstructorBuilder(
 ) {
     val CMP = PropertyCharacteristic.COMPOSITE
     val REF = PropertyCharacteristic.REFERENCE
-
     val VAL = PropertyCharacteristic.READ_ONLY
     val VAR = PropertyCharacteristic.READ_WRITE
+    val DER = PropertyCharacteristic.DERIVED
+    val STR = PropertyCharacteristic.STORED
 
     private val _paramList = mutableListOf<ParameterDeclaration>()
 

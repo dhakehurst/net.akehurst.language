@@ -84,7 +84,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
     fun formatPrimitiveType(indent: Indent, context: TypeNamespace, type: PrimitiveType): String {
         val sb = StringBuilder()
         val tn = type.name.value
-        sb.append("${indent}primitiveType($tn)")
+        sb.append("${indent}primitive($tn)")
         formatTypeMembers(indent.inc, context, type)
         return sb.toString()
     }
@@ -93,21 +93,21 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
         val sb = StringBuilder()
         val tn = type.name.value
         val lits = type.literals.joinToString(separator = ", ") { "\"$it\"" }
-        sb.append("    enumType(\"$tn\", listOf($lits))")
+        sb.append("    enum(\"$tn\", listOf($lits))")
         return sb.toString()
     }
 
     fun formatCollectionType(indent: Indent, context: TypeNamespace, type: CollectionType): String {
         val sb = StringBuilder()
         val tn = type.name
-        sb.append("${indent}collectionType(\"$tn\")")
+        sb.append("${indent}collection(\"$tn\")")
         return sb.toString()
     }
 
     fun formatValueType(indent: Indent, context: TypeNamespace, type: ValueType): String {
         val sb = StringBuilder()
         val tn = type.name
-        sb.append("${indent} valueType(\"$tn\") {\n")
+        sb.append("${indent} value(\"$tn\") {\n")
         sb.append(formatSupertypes(indent.inc, context, type.supertypes))
         sb.append(formatConstructors(indent.inc, context, type.constructors))
         sb.append(formatTypeMembers(indent.inc, context, type))
@@ -118,7 +118,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
     fun formatInterfaceType(indent: Indent, context: TypeNamespace, type: InterfaceType): String {
         val sb = StringBuilder()
         val tn = type.name
-        sb.append("${indent}interfaceType(\"$tn\") {\n")
+        sb.append("${indent}interface_(\"$tn\") {\n")
         sb.append(formatTypeParameters(indent.inc, context, type.typeParameters.map { it.name }))
         sb.append(formatSupertypes(indent.inc, context, type.supertypes))
         sb.append(formatTypeMembers(indent.inc, context, type))
@@ -129,7 +129,7 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
     fun formatDataType(indent: Indent, context: TypeNamespace, type: DataType): String {
         val sb = StringBuilder()
         val tn = type.name
-        sb.append("${indent}dataType(\"$tn\") {\n")
+        sb.append("${indent}data(\"$tn\") {\n")
         sb.append(formatTypeParameters(indent.inc, context, type.typeParameters.map { it.name }))
         sb.append(formatSupertypes(indent.inc, context, type.supertypes))
         sb.append(formatConstructors(indent.inc, context, type.constructors))
@@ -198,7 +198,19 @@ class FormatTypeModelAsKotlinTypeModelBuilder(
     }
 
     fun formatProperty(indent: Indent, context: TypeNamespace, pd: PropertyDeclaration): String {
-        val characteristics = pd.characteristics.joinToString(separator = ", ") { it.name }
+        val characteristics = pd.characteristics.joinToString(separator = ", ") {
+            when(it) {
+                PropertyCharacteristic.REFERENCE -> "REF"
+                PropertyCharacteristic.COMPOSITE -> "CMP"
+                PropertyCharacteristic.DERIVED -> "DER"
+                PropertyCharacteristic.IDENTITY -> "IDY"
+                PropertyCharacteristic.PRIMITIVE -> "PRM"
+                PropertyCharacteristic.READ_ONLY -> "VAL"
+                PropertyCharacteristic.READ_WRITE -> "VAR"
+                PropertyCharacteristic.CONSTRUCTOR -> "CON"
+                PropertyCharacteristic.STORED -> "STR"
+            }
+        }
         val propertyName = pd.name
         val typeName = when {
             pd.typeInstance.namespace == context -> pd.typeInstance.typeName

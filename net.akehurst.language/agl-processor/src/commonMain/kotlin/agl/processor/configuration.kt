@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
@@ -110,7 +111,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatResolver: FormatResolver<AsmType, ContextType>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
+        AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
         AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
@@ -170,7 +171,7 @@ internal class LanguageProcessorConfigurationSimple(
         )
     },
     override var formatResolver: FormatResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
+        AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))

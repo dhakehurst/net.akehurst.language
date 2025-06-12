@@ -93,11 +93,10 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "namespace test styles StyleSet { S"
+        val sentence = "namespace test styles StyleSet { S "
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
-            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
-            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+            CompletionItem(CompletionItemKind.LITERAL, "','", ","),
+            CompletionItem(CompletionItemKind.LITERAL, "'{'", "{"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -110,7 +109,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S,"
+        val sentence = "namespace test styles StyleSet { S, "
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
             CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
@@ -127,7 +126,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S {"
+        val sentence = "namespace test styles StyleSet { S {"
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),

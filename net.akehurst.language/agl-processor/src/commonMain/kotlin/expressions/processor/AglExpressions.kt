@@ -17,33 +17,19 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.format.builder.formatModel
 import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.formatter.api.AglFormatModel
-import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.ChoiceIndicator
-import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.AglGrammarCompletionProvider
-import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -327,23 +313,32 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
     }
 
     override val typesModel by lazy {
-        typeModel("Expressions", true, AglBase.typesModel.namespace) {
+        typeModel(NAME, true, AglBase.typesModel.namespace) {
             grammarTypeNamespace("net.akehurst.language.expressions.api", listOf("std", "net.akehurst.language.base.api")) {
-                interface_("WithExpression") {
+               interface_("WithExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "withContext", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "withContext", "Expression", false)
+                }
+                interface_("WhenOptionElse") {
+
                 }
                 interface_("WhenOption") {
 
-                    propertyOf(setOf(VAL, CMP, STORED), "condition", "Expression", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                 }
                 interface_("WhenExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STORED), "options", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false){
                         typeArgument("WhenOption")
                     }
+                }
+                interface_("TypeTestExpression") {
+                    supertype("Expression")
+                }
+                interface_("TypeReference") {
+
                 }
                 interface_("RootExpression") {
                     supertype("Expression")
@@ -353,207 +348,269 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 }
                 interface_("OnExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                 }
                 interface_("NavigationPart") {
 
                 }
                 interface_("NavigationExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STORED), "parts", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false){
                         typeArgument("NavigationPart")
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "start", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "start", "Expression", false)
                 }
                 interface_("MethodCall") {
                     supertype("NavigationPart")
-                    propertyOf(setOf(VAR, CMP, STORED), "arguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false){
                         typeArgument("Expression")
                     }
                 }
                 interface_("LiteralExpression") {
                     supertype("Expression")
                 }
+                interface_("LambdaExpression") {
+                    supertype("Expression")
+                }
                 interface_("InfixExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STORED), "expressions", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false){
                         typeArgument("Expression")
                     }
                 }
                 interface_("IndexOperation") {
                     supertype("NavigationPart")
-                    propertyOf(setOf(VAR, CMP, STORED), "indices", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false){
                         typeArgument("Expression")
                     }
+                }
+                interface_("GroupExpression") {
+                    supertype("Expression")
                 }
                 interface_("Expression") {
 
                 }
                 interface_("CreateTupleExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STORED), "propertyAssignments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false){
                         typeArgument("AssignmentStatement")
                     }
                 }
                 interface_("CreateObjectExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STORED), "arguments", "List", false) {
-                        typeArgument("Expression")
-                    }
+                }
+                interface_("CastExpression") {
+                    supertype("Expression")
                 }
                 interface_("AssignmentStatement") {
 
-                    propertyOf(setOf(VAL, CMP, STORED), "rhs", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "rhs", "Expression", false)
                 }
             }
             namespace("net.akehurst.language.expressions.asm", listOf("net.akehurst.language.expressions.api", "std", "net.akehurst.language.base.api")) {
-                data("WithExpressionSimple") {
+                data("WithExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("WithExpression")
                     constructor_ {
                         parameter("withContext", "Expression", false)
                         parameter("expression", "Expression", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "withContext", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "withContext", "Expression", false)
                 }
-                data("WhenOptionSimple") {
+                data("WhenOptionElseDefault") {
+                    supertype("WhenOptionElse")
+                    constructor_ {
+                        parameter("expression", "Expression", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
+                }
+                data("WhenOptionDefault") {
                     supertype("WhenOption")
                     constructor_ {
                         parameter("condition", "Expression", false)
                         parameter("expression", "Expression", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "condition", "Expression", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "condition", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                 }
-                data("WhenExpressionSimple") {
+                data("WhenExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("WhenExpression")
                     constructor_ {
                         parameter("options", "List", false)
+                        parameter("elseOption", "WhenOptionElse", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "options", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "elseOption", "WhenOptionElse", false)
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false){
                         typeArgument("WhenOption")
                     }
                 }
-                data("RootExpressionSimple") {
+                data("TypeTestExpressionDefault") {
+                    supertype("TypeTestExpression")
+                    constructor_ {
+                        parameter("expression", "Expression", false)
+                        parameter("targetType", "TypeReference", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "targetType", "TypeReference", false)
+                }
+                data("TypeReferenceDefault") {
+                    supertype("TypeReference")
+                    constructor_ {
+                        parameter("possiblyQualifiedName", "PossiblyQualifiedName", false)
+                        parameter("typeArguments", "List", false)
+                        parameter("isNullable", "Boolean", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, REF, STR), "typeArguments", "List", false){
+                        typeArgument("TypeReference")
+                    }
+                }
+                data("RootExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("RootExpression")
                     constructor_ {
                         parameter("name", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "name", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "name", "String", false)
                 }
-                data("PropertyCallSimple") {
+                data("PropertyCallDefault") {
                     supertype("PropertyCall")
                     constructor_ {
                         parameter("propertyName", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "propertyName", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "propertyName", "String", false)
                 }
-                data("OnExpressionSimple") {
+                data("OnExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("OnExpression")
                     constructor_ {
                         parameter("expression", "Expression", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "expression", "Expression", false)
-                    propertyOf(setOf(VAR, REF, STORED), "propertyAssignments", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false){
                         typeArgument("AssignmentStatement")
                     }
                 }
-                data("NavigationSimple") {
+                data("NavigationExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("NavigationExpression")
                     constructor_ {
                         parameter("start", "Expression", false)
                         parameter("parts", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "parts", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false){
                         typeArgument("NavigationPart")
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "start", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "start", "Expression", false)
                 }
-                data("MethodCallSimple") {
+                data("MethodCallDefault") {
                     supertype("MethodCall")
                     constructor_ {
                         parameter("methodName", "String", false)
                         parameter("arguments", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "arguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false){
                         typeArgument("Expression")
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "methodName", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "methodName", "String", false)
                 }
-                data("LiteralExpressionSimple") {
+                data("LiteralExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("LiteralExpression")
                     constructor_ {
                         parameter("qualifiedTypeName", "QualifiedName", false)
                         parameter("value", "Any", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(VAL, REF, STORED), "value", "Any", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
-                data("InfixExpressionSimple") {
+                data("LambdaExpressionDefault") {
+                    supertype("LambdaExpression")
+                    constructor_ {
+                        parameter("expression", "Expression", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
+                }
+                data("InfixExpressionDefault") {
                     supertype("InfixExpression")
                     constructor_ {
                         parameter("expressions", "List", false)
                         parameter("operators", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "expressions", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false){
                         typeArgument("Expression")
                     }
-                    propertyOf(setOf(VAR, REF, STORED), "operators", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "operators", "List", false){
                         typeArgument("String")
                     }
                 }
-                data("IndexOperationSimple") {
+                data("IndexOperationDefault") {
                     supertype("IndexOperation")
                     constructor_ {
                         parameter("indices", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "indices", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false){
                         typeArgument("Expression")
                     }
+                }
+                data("GroupExpressionDefault") {
+                    supertype("GroupExpression")
+                    constructor_ {
+                        parameter("expression", "Expression", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
                 }
                 data("ExpressionAbstract") {
                     supertype("Expression")
                     constructor_ {}
                 }
-                data("CreateTupleExpressionSimple") {
+                data("CreateTupleExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("CreateTupleExpression")
                     constructor_ {
                         parameter("propertyAssignments", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "propertyAssignments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false){
                         typeArgument("AssignmentStatement")
                     }
                 }
-                data("CreateObjectExpressionSimple") {
+                data("CreateObjectExpressionDefault") {
                     supertype("ExpressionAbstract")
                     supertype("CreateObjectExpression")
                     constructor_ {
                         parameter("possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
-                        parameter("arguments", "List", false)
+                        parameter("constructorArguments", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "arguments", "List", false) {
-                        typeArgument("Expression")
+                    propertyOf(setOf(VAR, REF, STR), "constructorArguments", "List", false){
+                        typeArgument("AssignmentStatement")
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, REF, STORED), "propertyAssignments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false){
                         typeArgument("AssignmentStatement")
                     }
                 }
-                data("AssignmentStatementSimple") {
+                data("CastExpressionDefault") {
+                    supertype("CastExpression")
+                    constructor_ {
+                        parameter("expression", "Expression", false)
+                        parameter("targetType", "TypeReference", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "targetType", "TypeReference", false)
+                }
+                data("AssignmentStatementDefault") {
                     supertype("AssignmentStatement")
                     constructor_ {
                         parameter("lhsPropertyName", "String", false)
+                        parameter("lhsGrammarRuleIndex", "Integer", false)
                         parameter("rhs", "Expression", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "lhsPropertyName", "String", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "rhs", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "lhsGrammarRuleIndex", "Integer", false)
+                    propertyOf(setOf(VAL, REF, STR), "lhsPropertyName", "String", false)
+                    propertyOf(setOf(VAL, CMP, STR), "rhs", "Expression", false)
                 }
             }
         }
@@ -567,6 +624,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 transform(NAME) {
+                    importTypes("net.akehurst.language.expressions.api")
+                    createObject("expression","Expression") { /* custom syntax analyser */ }
+                    createObject("rootExpression","RootExpression") { /* custom syntax analyser */ }
                     //TODO
                 }
             }

@@ -38,7 +38,7 @@ import kotlin.math.max
 class ParseOptionsDefault(
     override var enabled: Boolean = true,
     override var goalRuleName: String? = null,
-    override var sentenceIdentity: () -> Any? = { null },
+    override var sentenceIdentity: SentenceIdentityFunction = SentenceIdentityFunction { null },
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true
@@ -117,7 +117,7 @@ class LeftCornerParser(
 
     override fun parse(sentenceText: String, options: ParseOptions): ParseResult {
         check(sentenceText.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentenceText.length}" }
-        val sentence = SentenceDefault(sentenceText, options.sentenceIdentity())
+        val sentence = SentenceDefault(sentenceText, options.sentenceIdentity?.invoke())
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val reportErrors = options.reportErrors
         val reportGrammarAmbiguities = options.reportGrammarAmbiguities
@@ -291,7 +291,7 @@ class LeftCornerParser(
         }
         val y = x.groupBy { it.first.position }
         return y[failedAtPosition]?.let { Pair(it.first().first, it.map { it.second }.toSet()) }
-            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1,options.sentenceIdentity()), emptySet())
+            ?: Pair(InputLocation(failedAtPosition, 0, 0, 1,options.sentenceIdentity?.invoke()), emptySet())
 
     }
 
@@ -307,7 +307,7 @@ class LeftCornerParser(
         val wordStartPosition = position - revWordStartPosition
         val usedText = sentenceText.substring(0, wordStartPosition) // parse from start (0) to position - ignore rest of text
         scanner.reset()
-        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity()), goalRuleName, scanner, automatonKind, cacheSkip)
+        val rp = createRuntimeParser(SentenceDefault(usedText, options.sentenceIdentity?.invoke()), goalRuleName, scanner, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)

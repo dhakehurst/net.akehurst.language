@@ -28,19 +28,23 @@ import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
 import kotlin.collections.set
 
-typealias CreateScopedItem<ItemType, ItemInScopeType> = (qualifiedName: List<String>, item: ItemType, location: InputLocation?) -> ItemInScopeType
-typealias ResolveScopedItem<ItemType, ItemInScopeType> = (itemInScope: ItemInScopeType) -> ItemType?
+fun interface CreateScopedItem<ItemType, ItemInScopeType> {
+    fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType
+}
+
+fun interface ResolveScopedItem<ItemType, ItemInScopeType> {
+    fun invoke(itemInScope: ItemInScopeType): ItemType?
+}
+
+object NULL_SENTENCE_IDENTIFIER {
+    override fun toString() = "NULL_SENTENCE_IDENTIFIER"
+}
 
 open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
-    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = { ref, item, location -> item as ItemInScopeType},
-    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = { itemInScope -> itemInScope as ItemType }
+    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = CreateScopedItem { ref, item, location -> item as ItemInScopeType },
+    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItem { itemInScope -> itemInScope as ItemType }
 ) : SentenceContext {
 
-    companion object {
-        private val NULL_SENTENCE_IDENTIFIER = object : Any() {
-            override fun toString() = "NULL_SENTENCE_IDENTIFIER"
-        }
-    }
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
@@ -70,10 +74,10 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     }
 
     //TODO: location carries sentenceIdentity ! remove duplication
-    fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item:ItemInScopeType) {
+    fun addToScope(sentenceIdentity: Any?, qualifiedName: List<String>, itemTypeName: QualifiedName, location: InputLocation?, item: ItemInScopeType) {
         val rootScope = getScopeForSentenceOrNull(sentenceIdentity) ?: newScopeForSentence(sentenceIdentity)
-        var scope =rootScope
-        for(n in qualifiedName.dropLast(1)) {
+        var scope = rootScope
+        for (n in qualifiedName.dropLast(1)) {
             scope = scope.createOrGetChildScope(n, QualifiedName("<unknown>"))
         }
         scope.addToScope(qualifiedName.last(), itemTypeName, location, item, false)

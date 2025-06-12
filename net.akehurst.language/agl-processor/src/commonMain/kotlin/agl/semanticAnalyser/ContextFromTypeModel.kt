@@ -17,8 +17,11 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.asQualifiedName
+import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.TypeModel
 
 // used by other languages that reference rules  in a grammar
@@ -52,4 +55,16 @@ class ContextFromTypeModel(
     }
 
     override fun toString(): String = "ContextFromTypeModel($typeModel)"
+}
+
+fun contextFromTypeModel(typeModel: TypeModel) : ContextWithScope<Any, Any> {
+    val context = ContextWithScope<Any, Any>()
+    val sentenceIdentity = typeModel.name.value
+    typeModel.allDefinitions.forEach { def ->
+        val qualifiedName = def.qualifiedName.parts.map { it.value }
+        val itemTypeName = def::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
+        val location = null
+        context.addToScope(sentenceIdentity, qualifiedName, itemTypeName, location, def)
+    }
+    return context
 }

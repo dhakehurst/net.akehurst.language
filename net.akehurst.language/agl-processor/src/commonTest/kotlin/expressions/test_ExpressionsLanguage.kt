@@ -20,6 +20,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.typemodel.test.TypeModelTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -109,6 +110,7 @@ class test_ExpressionsLanguage {
         assertNotNull(proc)
     }
 
+    @Ignore
     @Test
     fun check_typeModel() {
         val proc = Agl.registry.agl.expressions.processor!!

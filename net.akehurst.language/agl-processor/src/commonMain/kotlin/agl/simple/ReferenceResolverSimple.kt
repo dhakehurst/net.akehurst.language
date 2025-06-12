@@ -57,7 +57,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
     val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
-    val resolveFunction: ((ref: ItemInScopeType) -> Any?)?,
+    val resolveFunction: ResolveScopedItem<Any, ItemInScopeType>?,
     private val _locationMap: LocationMap,
     private val _issues: IssueHolder
 ) : AsmTreeWalker {

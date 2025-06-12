@@ -17,6 +17,7 @@
 
 package net.akehurst.language.transform.processor
 
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
@@ -26,8 +27,9 @@ import net.akehurst.language.grammar.processor.AglGrammar.NAMESPACE_NAME
 object AsmTransform { //: LanguageObject {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Transform"
-
     const val goalRuleName = "unit"
+
+    val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
      val grammarString: String = """
 namespace $NAMESPACE_NAME
@@ -57,8 +59,8 @@ grammar $NAME : Base {
     """
 
     val grammar = grammar(
-        namespace = "net.akehurst.language",
-        name = "AsmTransform"
+        namespace = NAMESPACE_NAME,
+        name = NAME
     ) {
         extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 

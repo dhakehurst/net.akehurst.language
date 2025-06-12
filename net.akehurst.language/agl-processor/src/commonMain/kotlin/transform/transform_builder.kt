@@ -194,6 +194,19 @@ class AsmTransformRuleSetBuilder internal constructor(
         _rules.add(tr)
     }
 
+    fun transToListOf(grammarRuleName: String, elementTypeName: String, expressionStr: String) {
+        val expression = expression(expressionStr)
+        val elTypeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(elementTypeName)) ?: error("Type '$elementTypeName' not found in type-model '${typeModel.name}'")
+        val listType = StdLibDefault.List.type(listOf(elTypeDef.type().asTypeArgument))
+        val tr = transformationRule(
+            type = listType,
+            expression = expression
+        )
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
+        tr.resolveTypeAs(StdLibDefault.String)
+        _rules.add(tr)
+    }
+
     fun child0StringRule(grammarRuleName: String) = transRule(grammarRuleName, "String", "child[0]")
 
     fun subtypeRule(grammarRuleName: String, typeName: String) {

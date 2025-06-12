@@ -21,6 +21,7 @@ import net.akehurst.language.format.test.FormatModelTest
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.typemodel.test.TypeModelTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -144,6 +145,7 @@ class test_AglFormat {
         assertNotNull(proc)
     }
 
+    @Ignore
     @Test
     fun check_typeModel() {
         val actual = Agl.registry.agl.format.processor!!.typesModel

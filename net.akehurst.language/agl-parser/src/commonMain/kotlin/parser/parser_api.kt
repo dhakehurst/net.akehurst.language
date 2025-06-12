@@ -161,6 +161,11 @@ interface ExpectedAtResult {
     val spines: Set<RuntimeSpine>
 }
 
+// need this as an interface so we can have a serialisable instance
+fun interface SentenceIdentityFunction {
+    fun invoke(): Any?
+}
+
 /**
  * Options to configure the parsing of a sentence
  * there is no separate scanner, so scanner options are passed to the parser
@@ -169,7 +174,7 @@ interface ExpectedAtResult {
 interface ParseOptions {
     var enabled:Boolean
     var goalRuleName: String?
-    var sentenceIdentity: ()->Any?
+    var sentenceIdentity: SentenceIdentityFunction
     var reportErrors: Boolean
     var reportGrammarAmbiguities: Boolean
     var cacheSkip: Boolean

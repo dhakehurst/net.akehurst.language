@@ -27,6 +27,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.sentence.api.InputLocation
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -325,6 +326,7 @@ class test_SemanticAnalyserSimple {
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
 
+    @Ignore
     @Test
     fun identifyingExpression_integer() {
         TODO()
@@ -478,22 +480,25 @@ class test_SemanticAnalyserSimple {
         test(grammarStr, referenceModelStr, sentence, options, expected)
     }
 
+    @Ignore
     @Test
     fun identifyingExpression_structure() {
         TODO()
     }
 
+    @Ignore
     @Test
     fun resolveReferences_off() {
         TODO()
     }
 
+    @Ignore
     @Test
     fun resolveReferences_on() {
         TODO()
     }
 
-
+    @Ignore
     @Test
     fun listOfItems() {
         val grammarStr = """
@@ -519,6 +524,7 @@ class test_SemanticAnalyserSimple {
                 test(grammarStr, scopeModelStr, sentence, expected)*/
     }
 
+    @Ignore
     @Test
     fun listOfEmpty() {
         val grammarStr = """

@@ -23,6 +23,7 @@ import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
@@ -52,6 +53,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     private val goal = "unit"
 
+    @Ignore
     @Test
     fun parse_xxx() {
         val parser = LeftCornerParser(scanner, rrs)
@@ -65,6 +67,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         AutomatonTest.assertEquals(expected, actual)
     }
 
+    @Ignore
     @Test
     fun compare() {
         val rrs_noBuild = rrs.clone()

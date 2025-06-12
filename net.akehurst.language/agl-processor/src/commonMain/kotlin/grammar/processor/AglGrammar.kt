@@ -322,7 +322,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 interface_("Terminal") {
                     supertype("TangibleItem")
@@ -338,14 +338,14 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("SeparatedList") {
                     supertype("ListOfItems")
-                    propertyOf(setOf(VAL, CMP, STORED), "separator", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "separator", "RuleItem", false)
                 }
                 interface_("RuleItem") {
 
                 }
                 interface_("PreferenceRule") {
                     supertype("GrammarItem")
-                    propertyOf(setOf(VAR, CMP, STORED), "optionList", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "optionList", "List", false) {
                         typeArgument("PreferenceOption")
                     }
                 }
@@ -357,26 +357,26 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("OptionalItem") {
                     supertype("ConcatenationItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                 }
                 interface_("NormalRule") {
                     supertype("GrammarRule")
                 }
                 interface_("NonTerminal") {
                     supertype("TangibleItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "targetGrammar", "GrammarReference", false)
+                    propertyOf(setOf(VAL, CMP, STR), "targetGrammar", "GrammarReference", false)
                 }
                 interface_("ListOfItems") {
                     supertype("ConcatenationItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                 }
                 interface_("Group") {
                     supertype("SimpleItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "groupedContent", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "groupedContent", "RuleItem", false)
                 }
                 interfaceFor("grammarRule","GrammarRule") {
                     supertype("GrammarItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "rhs", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "rhs", "RuleItem", false)
                 }
                 interface_("GrammarReference") {
 
@@ -395,16 +395,16 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("Grammar") {
                     supertype("Definition") { ref("Grammar") }
-                    propertyOf(setOf(VAR, CMP, STORED), "extends", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("GrammarReference")
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "grammarRule", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "grammarRule", "List", false) {
                         typeArgument("GrammarRule")
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "options", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
                         typeArgument("GrammarOption")
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "preferenceRule", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "preferenceRule", "List", false) {
                         typeArgument("PreferenceRule")
                     }
                 }
@@ -413,14 +413,14 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("Embedded") {
                     supertype("TangibleItem")
-                    propertyOf(setOf(VAL, CMP, STORED), "embeddedGrammarReference", "GrammarReference", false)
+                    propertyOf(setOf(VAL, CMP, STR), "embeddedGrammarReference", "GrammarReference", false)
                 }
                 interface_("ConcatenationItem") {
                     supertype("RuleItem")
                 }
                 interface_("Concatenation") {
                     supertype("RuleItem")
-                    propertyOf(setOf(VAR, CMP, STORED), "items", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "items", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -435,7 +435,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("Choice") {
                     supertype("RuleItem")
-                    propertyOf(setOf(VAR, CMP, STORED), "alternative", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -448,9 +448,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("value", "String", false)
                         parameter("isPattern", "Boolean", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "id", "String", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isPattern", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "id", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "isPattern", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("TangibleItemAbstract") {
                     supertype("SimpleItemAbstract")
@@ -465,9 +465,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("max", "Integer", false)
                         parameter("item", "RuleItem", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "item", "RuleItem", false)
-                    propertyOf(setOf(VAL, REF, STORED), "max", "Integer", false)
-                    propertyOf(setOf(VAL, REF, STORED), "min", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
+                    propertyOf(setOf(VAL, REF, STR), "max", "Integer", false)
+                    propertyOf(setOf(VAL, REF, STR), "min", "Integer", false)
                 }
                 data("SimpleItemAbstract") {
                     supertype("ConcatenationItemAbstract")
@@ -483,15 +483,15 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("item", "RuleItem", false)
                         parameter("separator", "RuleItem", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "item", "RuleItem", false)
-                    propertyOf(setOf(VAL, REF, STORED), "max", "Integer", false)
-                    propertyOf(setOf(VAL, REF, STORED), "min", "Integer", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "separator", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
+                    propertyOf(setOf(VAL, REF, STR), "max", "Integer", false)
+                    propertyOf(setOf(VAL, REF, STR), "min", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STR), "separator", "RuleItem", false)
                 }
                 data("RuleItemAbstract") {
                     supertype("RuleItem")
                     constructor_ {}
-                    propertyOf(setOf(VAR, REF, STORED), "index", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "index", "List", false) {
                         typeArgument("Integer")
                     }
                 }
@@ -503,9 +503,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("forItem", "SimpleItem", false)
                         parameter("optionList", "List", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "forItem", "SimpleItem", false)
-                    propertyOf(setOf(VAL, REF, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "optionList", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "forItem", "SimpleItem", false)
+                    propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
+                    propertyOf(setOf(VAR, CMP, STR), "optionList", "List", false) {
                         typeArgument("PreferenceOption")
                     }
                 }
@@ -517,10 +517,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("onTerminals", "List", false)
                         parameter("associativity", "Associativity", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "associativity", "Associativity", false)
-                    propertyOf(setOf(VAL, REF, STORED), "choiceNumber", "Integer", false)
-                    propertyOf(setOf(VAL, REF, STORED), "item", "NonTerminal", false)
-                    propertyOf(setOf(VAR, REF, STORED), "onTerminals", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "associativity", "Associativity", false)
+                    propertyOf(setOf(VAL, REF, STR), "choiceNumber", "Integer", false)
+                    propertyOf(setOf(VAL, REF, STR), "item", "NonTerminal", false)
+                    propertyOf(setOf(VAR, REF, STR), "onTerminals", "List", false) {
                         typeArgument("SimpleItem")
                     }
                 }
@@ -534,13 +534,13 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("isLeaf", "Boolean", false)
                         parameter("overrideKind", "OverrideKind", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isLeaf", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isOverride", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isSkip", "Boolean", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "GrammarRuleName", false)
-                    propertyOf(setOf(VAL, REF, STORED), "overrideKind", "OverrideKind", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "rhs", "RuleItem", false)
+                    propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
+                    propertyOf(setOf(VAL, REF, STR), "isLeaf", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "isOverride", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "isSkip", "Boolean", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "GrammarRuleName", false)
+                    propertyOf(setOf(VAL, REF, STR), "overrideKind", "OverrideKind", false)
+                    propertyOf(setOf(VAL, CMP, STR), "rhs", "RuleItem", false)
                 }
                 data("OptionalItemDefault") {
                     supertype("ConcatenationItemAbstract")
@@ -548,7 +548,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("item", "RuleItem", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "item", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "item", "RuleItem", false)
                 }
                 data("NormalRuleDefault") {
                     supertype("GrammarRuleAbstract")
@@ -559,12 +559,12 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("isSkip", "Boolean", false)
                         parameter("isLeaf", "Boolean", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isLeaf", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isOverride", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STORED), "isSkip", "Boolean", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "GrammarRuleName", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "rhs", "RuleItem", false)
+                    propertyOf(setOf(VAL, REF, STR), "grammar", "Grammar", false)
+                    propertyOf(setOf(VAL, REF, STR), "isLeaf", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "isOverride", "Boolean", false)
+                    propertyOf(setOf(VAL, REF, STR), "isSkip", "Boolean", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "GrammarRuleName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "rhs", "RuleItem", false)
                 }
                 data("NonTerminalDefault") {
                     supertype("TangibleItemAbstract")
@@ -573,8 +573,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("targetGrammar", "GrammarReference", false)
                         parameter("ruleReference", "GrammarRuleName", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "ruleReference", "GrammarRuleName", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "targetGrammar", "GrammarReference", false)
+                    propertyOf(setOf(VAL, CMP, STR), "ruleReference", "GrammarRuleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "targetGrammar", "GrammarReference", false)
                 }
                 data("ListOfItemsAbstract") {
                     supertype("ConcatenationItemAbstract")
@@ -587,7 +587,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("groupedContent", "RuleItem", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "groupedContent", "RuleItem", false)
+                    propertyOf(setOf(VAL, CMP, STR), "groupedContent", "RuleItem", false)
                 }
                 data("GrammarRuleAbstract") {
                     supertype("GrammarItemAbstract")
@@ -600,11 +600,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("localNamespace", "Namespace", false)
                         parameter("nameOrQName", "PossiblyQualifiedName", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "localNamespace", "Namespace", false) {
+                    propertyOf(setOf(VAL, REF, STR), "localNamespace", "Namespace", false) {
                         typeArgument("Grammar")
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "nameOrQName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, REF, STORED), "resolved", "Grammar", false)
+                    propertyOf(setOf(VAL, REF, STR), "nameOrQName", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, REF, STR), "resolved", "Grammar", false)
                 }
                 data("GrammarOptionDefault") {
                     supertype("GrammarOption")
@@ -612,8 +612,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("name", "String", false)
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "name", "String", false)
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "name", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("GrammarNamespaceDefault") {
                     supertype("GrammarNamespace")
@@ -621,7 +621,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("GrammarModelDefault") {
                     supertype("GrammarModel")
@@ -630,8 +630,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("name", "SimpleName", false)
                         parameter("namespace", "List", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "namespace", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
                         typeArgument("GrammarNamespace")
                     }
                 }
@@ -649,7 +649,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("name", "SimpleName", false)
                         parameter("options", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "options", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
                         typeArgument("GrammarOption")
                     }
                 }
@@ -659,15 +659,15 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("namespace", "GrammarNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "extends", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("GrammarReference")
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "grammarRule", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "grammarRule", "List", false) {
                         typeArgument("GrammarRule")
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STORED), "namespace", "GrammarNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "preferenceRule", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "GrammarNamespace", false)
+                    propertyOf(setOf(VAR, CMP, STR), "preferenceRule", "List", false) {
                         typeArgument("PreferenceRule")
                     }
                 }
@@ -683,8 +683,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                         parameter("embeddedGoalName", "GrammarRuleName", false)
                         parameter("embeddedGrammarReference", "GrammarReference", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "embeddedGoalName", "GrammarRuleName", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "embeddedGrammarReference", "GrammarReference", false)
+                    propertyOf(setOf(VAL, CMP, STR), "embeddedGoalName", "GrammarRuleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "embeddedGrammarReference", "GrammarReference", false)
                 }
                 data("ConcatenationItemAbstract") {
                     supertype("RuleItemAbstract")
@@ -697,7 +697,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("items", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "items", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "items", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -707,7 +707,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "alternative", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -717,7 +717,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "alternative", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -727,7 +727,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "alternative", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }
@@ -737,7 +737,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("alternative", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "alternative", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternative", "List", false) {
                         typeArgument("RuleItem")
                     }
                 }

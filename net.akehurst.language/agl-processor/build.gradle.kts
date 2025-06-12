@@ -61,7 +61,10 @@ kotlinxReflect {
 
             "net.akehurst.language.api.processor.**",
             "net.akehurst.language.agl.processor.**",
-            "net.akehurst.language.agl.simple.ContextAsmSimple",
+            "net.akehurst.language.agl.simple.ContextWithScope",
+            "net.akehurst.language.agl.simple.NULL_SENTENCE_IDENTIFIER",
+            "net.akehurst.language.agl.simple.CreateScopedItemDefault",
+            "net.akehurst.language.agl.simple.ResolveScopedItemDefault",
             "net.akehurst.language.agl.semanticAnalyser.**"
         )
     )

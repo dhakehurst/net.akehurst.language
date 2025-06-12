@@ -181,7 +181,7 @@ class AsmElementSimpleBuilder(
             }
         }
     }
-    private val _element = _asm.createStructure(ParsePath(),_elementQualifiedTypeName).also {
+    private val _element = _asm.createStructure("/",_elementQualifiedTypeName).also {
         it.semanticPath = _asmPath
         if (_isRoot) _asm.addRoot(it)
     }

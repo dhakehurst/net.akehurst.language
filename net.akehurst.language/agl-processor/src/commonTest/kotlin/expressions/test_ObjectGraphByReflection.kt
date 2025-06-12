@@ -24,6 +24,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -171,17 +172,19 @@ class test_ObjectGraphByReflection {
         assertEquals(listOf("1","2","3"), actual.self)
     }
 
+    @Ignore
     @Test
     fun executeMethod_notInLib() {
         TODO()
     }
 
+    @Ignore
     @Test
     fun cast() {
         TODO()
     }
 
-
+    @Ignore
     @Test
     fun createStructureValue() {
         TODO()

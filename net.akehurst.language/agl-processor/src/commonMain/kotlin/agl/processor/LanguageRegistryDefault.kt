@@ -29,17 +29,12 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.AglExpressions
-import net.akehurst.language.expressions.processor.ExpressionsCompletionProvider
-import net.akehurst.language.expressions.processor.ExpressionsSemanticAnalyser
-import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.processor.*
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.asGrammarModel
 import net.akehurst.language.grammar.processor.*
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.processor.AglCrossReference
 import net.akehurst.language.reference.processor.ReferencesCompletionProvider
@@ -47,17 +42,12 @@ import net.akehurst.language.reference.processor.ReferencesSemanticAnalyser
 import net.akehurst.language.reference.processor.ReferencesSyntaxAnalyser
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.style.processor.AglStyleCompletionProvider
-import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
-import net.akehurst.language.style.processor.AglStyleSyntaxAnalyser
 import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.transform.processor.AsmTransform
 import net.akehurst.language.transform.processor.AsmTransformCompletionProvider
 import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
 import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.typemodel.processor.AglTypes
 
 fun contextFromGrammarRegistry(registry: GrammarRegistry = Agl.registry): ContextWithScope<Any, Any> {
@@ -73,8 +63,8 @@ interface AglLanguages {
     val expressionsLanguageIdentity: LanguageIdentity
     val grammarLanguageIdentity: LanguageIdentity
     val typesLanguageIdentity: LanguageIdentity
-    val asmTransformLanguageIdentity: LanguageIdentity
     val crossReferenceLanguageIdentity: LanguageIdentity
+    val transformLanguageIdentity: LanguageIdentity
     val styleLanguageIdentity: LanguageIdentity
     val formatLanguageIdentity: LanguageIdentity
 
@@ -82,10 +72,10 @@ interface AglLanguages {
     val expressions: LanguageDefinition<Expression, ContextWithScope<Any,Any>>
     val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>>
     val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>>
-    val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
+    val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextWithScope<Any,Any>>
-    val format: LanguageDefinition<AglFormatModel, SentenceContext>
+    val format: LanguageDefinition<AglFormatModel, ContextWithScope<Any,Any>>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -104,10 +94,10 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val expressionsLanguageIdentity: LanguageIdentity get() = AglExpressions.identity
         override val grammarLanguageIdentity: LanguageIdentity get() = AglGrammar.identity
         override val typesLanguageIdentity: LanguageIdentity get() = AglTypes.identity
-        override val asmTransformLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AsmTransform.grammar.qualifiedName.value) }
+        override val crossReferenceLanguageIdentity: LanguageIdentity get() = AglCrossReference.identity
+        override val transformLanguageIdentity: LanguageIdentity get() = AsmTransform.identity
         override val styleLanguageIdentity: LanguageIdentity get() = AglStyle.identity
-        override val formatLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglFormat.targetGrammar.qualifiedName.value) }
-        override val crossReferenceLanguageIdentity: LanguageIdentity by lazy { LanguageIdentity(AglCrossReference.grammar.qualifiedName.value) }
+        override val formatLanguageIdentity: LanguageIdentity get() = AglFormat.identity
 
         override val base: LanguageDefinition<Any, SentenceContext> by lazy {
             this@LanguageRegistryDefault.registerFromLanguageObject(AglBase)
@@ -133,7 +123,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             val lang = AsmTransform
             this@LanguageRegistryDefault.registerFromDefinition(
                 LanguageDefinitionFromAsm(
-                    identity = asmTransformLanguageIdentity,
+                    identity = transformLanguageIdentity,
                     lang.grammar.asGrammarModel(),
                     buildForDefaultGoal = false,
                     initialConfiguration = Agl.configuration {
@@ -179,26 +169,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
         override val format by lazy {
             expressions //ensure expressions is instantiated
-            this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm<AglFormatModel, SentenceContext>(
-                    identity = formatLanguageIdentity,
-                    AglFormat.grammarModel,
-                    buildForDefaultGoal = false,
-                    initialConfiguration = Agl.configuration {
-                        targetGrammarName(AglFormat.targetGrammar.name.value)
-                        defaultGoalRuleName(AglFormat.goalRuleName)
-                        //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser()) }
-                        semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser()) }
-                        //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), AglFormat.styleStr) }
-                        completionProvider { ProcessResultDefault(AglFormatCompletionProvider()) }
-                    }
-                )
-            )
+            this@LanguageRegistryDefault.registerFromLanguageObject(AglFormat)
         }
 
         override val style: LanguageDefinition<AglStyleModel, ContextWithScope<Any,Any>> by lazy {
@@ -261,7 +232,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             agl.baseLanguageIdentity -> agl.base
             agl.expressionsLanguageIdentity -> agl.expressions
             agl.grammarLanguageIdentity -> agl.grammar
-            agl.asmTransformLanguageIdentity -> agl.transform
+            agl.transformLanguageIdentity -> agl.transform
             agl.styleLanguageIdentity -> agl.style
             agl.formatLanguageIdentity -> agl.format
             agl.crossReferenceLanguageIdentity -> agl.crossReference

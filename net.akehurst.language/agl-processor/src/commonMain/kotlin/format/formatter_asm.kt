@@ -20,6 +20,7 @@ package net.akehurst.language.format.asm
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
@@ -90,7 +91,7 @@ class AglFormatModelDefault(
             return ProcessResultDefault(formatModel, processIssues=issues)
         }
 
-        fun fromString(context: ContextFromTypeModel, formatModelStr: FormatString): ProcessResult<AglFormatModel> {
+        fun fromString(context: ContextWithScope<Any, Any>, formatModelStr: FormatString): ProcessResult<AglFormatModel> {
             val proc = Agl.registry.agl.format.processor ?: error("Agl Format language not found!")
             val res = proc.process(
                 sentence = formatModelStr.value,

@@ -33,7 +33,7 @@ interface AsmListSeparated {
                     constructor_ {
                         parameter( "value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 interface_("AsmValue") {
 
@@ -42,12 +42,12 @@ interface AsmListSeparated {
 
                 }
                 interface_("AsmStructureProperty") {
-                    propertyOf(setOf(VAL, CMP, STORED), "value", "AsmValue", false)
+                    propertyOf(setOf(VAL, CMP, STR), "value", "AsmValue", false)
                 }
                 interface_("AsmStructure") {
                     supertype("AsmValue")
-                    propertyOf(setOf(VAL, CMP, STORED), "path", "AsmPath", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "property", "Map", false){
+                    propertyOf(setOf(VAL, CMP, STR), "path", "AsmPath", false)
+                    propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
@@ -66,7 +66,7 @@ interface AsmListSeparated {
                 }
                 interface_("AsmListSeparated") {
                     supertype("AsmList")
-                    propertyOf(setOf(VAR, CMP, STORED), "elements", "ListSeparated", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
@@ -74,7 +74,7 @@ interface AsmListSeparated {
                 }
                 interface_("AsmList") {
                     supertype("AsmValue")
-                    propertyOf(setOf(VAR, CMP, STORED), "elements", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
@@ -83,7 +83,7 @@ interface AsmListSeparated {
                 }
                 interface_("Asm") {
 
-                    propertyOf(setOf(VAR, CMP, STORED), "root", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "root", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
@@ -102,12 +102,12 @@ interface AsmListSeparated {
                         parameter("path", "AsmPath", false)
                         parameter("qualifiedTypeName", "QualifiedName", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "path", "AsmPath", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "property", "Map", false){
+                    propertyOf(setOf(VAL, CMP, STR), "path", "AsmPath", false)
+                    propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
                 }
                 data("AsmStructurePropertySimple") {
                     supertype("AsmStructureProperty")
@@ -116,9 +116,9 @@ interface AsmListSeparated {
                         parameter("index", "Integer", false)
                         parameter("value", "AsmValue", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "index", "Integer", false)
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "PropertyValueName", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "value", "AsmValue", false)
+                    propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "PropertyValueName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "value", "AsmValue", false)
                 }
                 data("AsmSimpleKt") {
 
@@ -126,11 +126,11 @@ interface AsmListSeparated {
                 data("AsmSimple") {
                     supertype("Asm")
                     constructor_ {}
-                    propertyOf(setOf(VAR, REF, STORED), "elementIndex", "Map", false){
+                    propertyOf(setOf(VAR, REF, STR), "elementIndex", "Map", false){
                         typeArgument("AsmPath")
                         typeArgument("AsmStructure")
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "root", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "root", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
@@ -141,8 +141,8 @@ interface AsmListSeparated {
                         parameter("reference", "String", false)
                         parameter("value", "AsmStructure", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "reference", "String", false)
-                    propertyOf(setOf(VAR, REF, STORED), "value", "AsmStructure", false)
+                    propertyOf(setOf(VAL, REF, STR), "reference", "String", false)
+                    propertyOf(setOf(VAR, REF, STR), "value", "AsmStructure", false)
                 }
                 data("AsmPrimitiveSimple") {
                     supertype("AsmValueAbstract")
@@ -151,15 +151,15 @@ interface AsmListSeparated {
                         parameter("qualifiedTypeName", "QualifiedName", false)
                         parameter("value", "Any", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(VAL, REF, STORED), "value", "Any", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
                 data("AsmPathSimple") {
                     supertype("AsmPath")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("AsmListSimple") {
                     supertype("AsmValueAbstract")
@@ -167,7 +167,7 @@ interface AsmListSeparated {
                     constructor_ {
                         parameter("elements", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "elements", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
@@ -177,7 +177,7 @@ interface AsmListSeparated {
                     constructor_ {
                         parameter("elements", "ListSeparated", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "elements", "ListSeparated", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
@@ -189,7 +189,7 @@ interface AsmListSeparated {
                     constructor_ {
                         parameter("value", "Any", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "Any", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
             }
             namespace("net.akehurst.language.collections", listOf("std")) {

@@ -22,9 +22,12 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract.Companion.defaultSortAndFilter
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
+import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
@@ -33,20 +36,23 @@ import net.akehurst.language.typemodel.api.TypeInstance
 class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWithScope<Any,Any>> {
 
     companion object {
-        private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
-        private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
-        private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
+       // private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
+       // private val aglGrammarTypeModel get() = Agl.registry.agl.grammar.processor!!.typesModel
+        //private val aglGrammarNamespace: GrammarTypeNamespace get() = aglGrammarTypeModel.findNamespaceOrNull(aglGrammarQualifiedName) as GrammarTypeNamespace? ?: error("Internal error")
 
-        private val aglStyleQualifiedName get() = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
-        private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typesModel
-        private val aglStyleNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglStyleQualifiedName) as GrammarTypeNamespace? ?: error("")
+        //private val aglStyleQualifiedName get() = Agl.registry.agl.style.processor!!.targetGrammar!!.qualifiedName
+        //private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typesModel
+        //private val aglStyleNamespace: GrammarTypeNamespace get() = AglStyle.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.style.api")) as GrammarTypeNamespace? ?: error("Internal error: aglStyleNamespace not found")
 
-        private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
+        private val styleTransformRuleSet = AglStyle.asmTransformModel.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName)?: error("Internal error: styleTransformRuleSet not found")
+
+        //private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
         //private val aglBaseTypeModel = Agl.registry.agl.base.processor!!.typeModel
-        private val aglBaseNamespace: GrammarTypeNamespace get() = aglStyleTypeModel.findNamespaceOrNull(aglBaseQualifiedName) as GrammarTypeNamespace? ?: error("")
+       // private val aglBaseNamespace: GrammarTypeNamespace get() = AglBase.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.base.api")) as GrammarTypeNamespace? ?: error("")
 
         //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
-        private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
+        //private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRuleTypeDefinition = AglGrammar.typesModel.findByQualifiedNameOrNull(QualifiedName("net.akehurst.language.grammar.api.GrammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
 
 //        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
 //        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
@@ -67,8 +73,10 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
     }
 
     private fun provideForTerminalItem(spine: Spine, nextExpected: RuleItem,options: CompletionProviderOptions<ContextWithScope<Any,Any>>): List<CompletionItem> {
-        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
-            ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
+//        val itemType = aglStyleNamespace.findTypeForRule(nextExpected.owningRule.name)
+//            ?: aglBaseNamespace.findTypeForRule(nextExpected.owningRule.name)
+//            ?: error("Should not be null")
+        val itemType = styleTransformRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(nextExpected.owningRule.name)?.resolvedType
             ?: error("Should not be null")
         return when (nextExpected.owningRule.name) {
             GrammarRuleName("LITERAL") -> LITERAL(nextExpected, itemType, options.context!!)
@@ -103,9 +111,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
     }
 
     private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
-        val scopeItems = context.findItemsConformingTo { it == grammarRule.resolvedDeclaration.qualifiedName }
+        val scopeItems = context.findItemsConformingTo { it == grammarRuleTypeDefinition.qualifiedName }
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.REFERRED, grammarRule.resolvedDeclaration.name.value, it.referableName)
+            CompletionItem(CompletionItemKind.REFERRED, grammarRuleTypeDefinition.name.value, it.referableName)
         }
     }
 

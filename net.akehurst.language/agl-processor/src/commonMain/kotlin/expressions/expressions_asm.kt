@@ -106,12 +106,6 @@ class WhenExpressionDefault(
     override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
 }
 
-class OnExpressionDefault(
-    override val expression: Expression
-) : ExpressionAbstract(), OnExpression {
-    override var propertyAssignments: List<AssignmentStatement> = emptyList()
-}
-
 class WhenOptionDefault(
     override val condition: Expression,
     override val expression: Expression
@@ -126,6 +120,11 @@ class WhenOptionElseDefault(
     override fun toString(): String = "else -> $expression"
 }
 
+class OnExpressionDefault(
+    override val expression: Expression
+) : ExpressionAbstract(), OnExpression {
+    override var propertyAssignments: List<AssignmentStatement> = emptyList()
+}
 
 data class RootExpressionDefault(
     override val name: String

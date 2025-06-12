@@ -63,6 +63,12 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
                 primitive("Float")
                 primitive("Double")
                 primitive("String")
+//                data("Pair") {
+//                    constructor_ {
+//                        parameter("first", "Any", false)
+//                        parameter("second", "Any", false)
+//                    }
+//                }
                 data("Any") {
 
                 }
@@ -125,6 +131,12 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
             "java.lang.Exception" to StdLibDefault.Exception.qualifiedTypeName.value,
             "java.lang.RuntimeException" to StdLibDefault.Exception.qualifiedTypeName.value,
             "kotlin.Throwable" to StdLibDefault.Exception.qualifiedTypeName.value,
+            "kotlin.Function1" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            "kotlin.Function2" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            "kotlin.Function3" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            "kotlin.Function4" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            "kotlin.Function5" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            "kotlin.Function6" to StdLibDefault.Lambda.qualifiedTypeName.value,
         )
     }
 

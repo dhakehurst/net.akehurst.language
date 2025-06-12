@@ -83,6 +83,11 @@ class TransformDomainDefault(
         }
     }
 
+    override fun findTypeForGrammarRule(grammarQualifiedName: QualifiedName, ruleName: GrammarRuleName): TypeInstance? {
+        val ruleSet = this.findDefinitionByQualifiedNameOrNull(grammarQualifiedName)
+        return ruleSet?.findAllTrRuleForGrammarRuleNamedOrNull(ruleName)?.resolvedType
+    }
+
 }
 
 class TransformNamespaceDefault(

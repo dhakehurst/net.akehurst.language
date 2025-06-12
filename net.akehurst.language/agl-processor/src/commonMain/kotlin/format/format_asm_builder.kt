@@ -51,7 +51,7 @@ class FormatModelBuilder(
 
     private val _asm = AsmSimple()
     private val _ruleList = mutableListOf<AsmStructure>()
-    private val rules = _asm.createStructure(ParsePath(), QualifiedName("Unit")).also {
+    private val rules = _asm.createStructure("/", QualifiedName("Unit")).also {
         _asm.addRoot(it)
         it.setProperty(PropertyValueName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
     }
@@ -60,8 +60,8 @@ class FormatModelBuilder(
         val b = FormatExpressionBuilder(_asm)
         b.init()
         val expr = b.build()
-        val formatRuleElement = _asm.createStructure(ParsePath(),QualifiedName("FormatRule"))
-        val typeReference = _asm.createStructure(ParsePath(), QualifiedName("TypeReference"))
+        val formatRuleElement = _asm.createStructure("/",QualifiedName("FormatRule"))
+        val typeReference = _asm.createStructure("/", QualifiedName("TypeReference"))
         typeReference.setProperty(PropertyValueName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
         formatRuleElement.setProperty(PropertyValueName("typeReference"), typeReference, 0)//TODO childIndex
         formatRuleElement.setProperty(PropertyValueName("formatExpression"), expr, 0)//TODO childIndex
@@ -80,7 +80,7 @@ class FormatExpressionBuilder(
 
     fun literalString(value: String) {
         val el = _asm.createStructure(
-            parsePath = ParsePath(),
+            parsePath = "/",
             typeName = QualifiedName("LiteralString")
         )
         el.setProperty(PropertyValueName("literal_string"), AsmPrimitiveSimple.stdString(value), 0)//TODO childIndex

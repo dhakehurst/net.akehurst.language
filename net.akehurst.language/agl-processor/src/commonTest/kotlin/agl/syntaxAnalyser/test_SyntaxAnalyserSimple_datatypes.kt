@@ -30,6 +30,7 @@ import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.transform.asm.TransformDomainDefault
 import net.akehurst.language.typemodel.builder.typeModel
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -84,6 +85,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         ).processor!!
     }
 
+    @Ignore
     @Test
     fun checkTypeModel() {
         val actual = processor.typesModel

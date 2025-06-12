@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.SyntaxAnalysisOptions
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.SentenceIdentityFunction
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.common.ScanOptionsDefault
@@ -71,7 +72,7 @@ class ParseOptionsBuilder(
         _goalRuleName = value
     }
 
-    fun sentenceIdentity(func: ()->Any?) {
+    fun sentenceIdentity(func: SentenceIdentityFunction) {
         _sentenceIdentity = func
     }
 

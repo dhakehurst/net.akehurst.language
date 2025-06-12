@@ -580,42 +580,49 @@ class test_LanguageDefinitionDefault {
         assertTrue(sut.crossReferenceModel!!.allDefinitions.get(0).references.isEmpty())
     }
 
+    @Ignore
     @Test
     fun targetGrammar_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun defaultGoalRule_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun style_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun format_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun syntaxAnalyserResolver_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun semanticAnalyserResolver_change_null_to_value() {
         sut.update(grammarString = null)
         TODO()
     }
 
+    @Ignore
     @Test
     fun aglOptions_change_null_to_value() {
         sut.update(grammarString = null)

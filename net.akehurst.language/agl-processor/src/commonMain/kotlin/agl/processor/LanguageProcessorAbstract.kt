@@ -209,7 +209,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
         semAnalyser.clear()
-        val sentenceId = opts.parse.sentenceIdentity()
+        val sentenceId = opts.parse.sentenceIdentity?.invoke()
         val lm = opts.semanticAnalysis.locationMap
         return semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
     }

@@ -20,6 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
+import net.akehurst.language.sentence.api.InputLocation
 
 //fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
@@ -49,11 +50,19 @@ import net.akehurst.language.scope.asm.ScopeSimple
 //    return context
 //}
 
+object CreateScopedItemDefault : CreateScopedItem<Any, Any> {
+    override fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): Any = item
+}
+
+object ResolveScopedItemDefault : ResolveScopedItem<Any,Any> {
+    override fun invoke(itemInScope: Any): Any?  = itemInScope
+}
+
 fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
 //    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
-    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> item },
-    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> itemInScope },
+    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault,
+    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault,
     init: ContextBuilder.() -> Unit = {}
 ): ContextWithScope<Any,Any> {
     val b = ContextBuilder(createScopedItem,resolveScopedItem)
@@ -65,8 +74,8 @@ fun contextAsmSimpleWithAsmPath(
     map: MutableMap<String, Any> = mutableMapOf(),
     init: ContextBuilder.() -> Unit = {}
 ): ContextWithScope<Any,Any> {
-    val createScopedItem:CreateScopedItem<Any,Any> = { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
-    val resolveScopedItem: ResolveScopedItem<Any,Any> =  { itemInScope -> map[itemInScope] }
+    val createScopedItem:CreateScopedItem<Any,Any> = CreateScopedItem { referableName, item, location -> val path = "/${referableName.joinToString("/")}"; map[path] = item; path }
+    val resolveScopedItem: ResolveScopedItem<Any,Any> =  ResolveScopedItem { itemInScope -> map[itemInScope] }
     val b = ContextBuilder(createScopedItem, resolveScopedItem)
     b.init()
     return b.build()

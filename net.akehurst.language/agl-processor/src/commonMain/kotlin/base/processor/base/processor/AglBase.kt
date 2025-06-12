@@ -66,11 +66,19 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
     override val kompositeString = """namespace net.akehurst.language.base.api
     interface Model {
         cmp namespace
+        cmp options
+    }
+    interface Namespace {
+        cmp options
+    }
+    interface Definition {
+        cmp options
     }
     
 namespace net.akehurst.language.base.asm
     class NamespaceAbstract {
         cmp _definition
+        cmp options
     }
 """
     override val styleString: String = """
@@ -115,103 +123,152 @@ namespace net.akehurst.language.base.asm
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
         typeModel(NAME, true, listOf(StdLibDefault)) {
             grammarTypeNamespace("net.akehurst.language.base.api", listOf("std")) {
-                interface_("PublicValueType") {}
                 value("SimpleName") {
                     supertype("PossiblyQualifiedName")
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 value("QualifiedName") {
                     supertype("PossiblyQualifiedName")
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 value("Import") {
-
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                }
+                interface_("PublicValueType") {
+
                 }
                 interface_("PossiblyQualifiedName") {
+
+                }
+                interface_("OptionHolder") {
 
                 }
                 interface_("Namespace") {
                     typeParameters("DT")
                     supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 interface_("Model") {
                     typeParameters("NT", "DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAR, CMP, STORED), "namespace", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
                         typeArgument("NT")
                     }
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 interface_("Formatable") {
+
+                }
+                interface_("DefinitionReference") {
+                    typeParameters("DT")
 
                 }
                 interface_("Definition") {
                     typeParameters("DT")
                     supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
-                interface_("DefinitionReference") {}
-                interface_("OptionHolder") {}
                 data("Indent") {
 
                     constructor_ {
                         parameter("value", "String", false)
                         parameter("increment", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STORED), "increment", "String", false)
-                    propertyOf(setOf(VAL, REF, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 data("Asm_apiKt") {
+
                 }
             }
             namespace("net.akehurst.language.base.asm", listOf("net.akehurst.language.base.api", "std")) {
+                data("OptionHolderDefault") {
+                    supertype("OptionHolder")
+                    constructor_ {
+                        parameter("parent", "OptionHolder", false)
+                        parameter("options", "Map", false)
+                    }
+                    propertyOf(setOf(VAR, REF, STR), "options", "Map", false) {
+                        typeArgument("String")
+                        typeArgument("String")
+                    }
+                    propertyOf(setOf(VAR, REF, STR), "parent", "OptionHolder", false)
+                }
                 data("NamespaceDefault") {
-                    typeParameters("DT")
-                    supertype("NamespaceAbstract") { ref("DT") }
+                    supertype("NamespaceAbstract") { ref("DefinitionDefault") }
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
+                        parameter("options", "OptionHolder", false)
+                        parameter("import", "List", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("NamespaceAbstract") {
                     typeParameters("DT")
                     supertype("Namespace") { ref("DT") }
-                    constructor_ {}
-                    propertyOf(setOf(VAR, CMP, STORED), "import", "List", false) {
-                        typeArgument("Import")
+                    constructor_ {
+                        parameter("options", "OptionHolder", false)
+                        parameter("argImport", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STORED), "_definition", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "_definition", "Map", false) {
                         typeArgument("SimpleName")
                         typeArgument("DT")
                     }
+                    propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
+                        typeArgument("Import")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("ModelDefault") {
-                    typeParameters("NT", "DT")
-                    supertype("ModelAbstract") { ref("NT"); ref("DT") }
+                    supertype("ModelAbstract") { ref("NamespaceDefault"); ref("DefinitionDefault") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("namespace", "List", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(VAR, CMP, STORED), "namespace", "List", false) {
-                        typeArgument("NT")
-                    }
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }
                 data("ModelAbstract") {
                     typeParameters("NT", "DT")
                     supertype("Model") { ref("NT"); ref("DT") }
-                    constructor_ {}
+                    constructor_ {
+                        parameter("namespace", "List", false)
+                        parameter("options", "OptionHolder", false)
+                    }
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+                        typeArgument("NT")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
-                data("OptionHolderDefault") {
-                    supertype("OptionHolder")
+                data("DefinitionDefault") {
+                    supertype("DefinitionAbstract") { ref("DefinitionDefault") }
+                    constructor_ {
+                        parameter("namespace", "Namespace", false)
+                        parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "Namespace", false) {
+                        typeArgument("DefinitionDefault")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                }
+                data("DefinitionAbstract") {
+                    typeParameters("DT")
+                    supertype("Definition") { ref("DT") }
+                    constructor_ {}
                 }
             }
         }
@@ -244,8 +301,8 @@ namespace net.akehurst.language.base.asm
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule("'([^']+)'") {
-                        declaration("foreground","darkgreen")
-                        declaration("font-weight","bold")
+                        declaration("foreground", "darkgreen")
+                        declaration("font-weight", "bold")
                     }
                 }
             }

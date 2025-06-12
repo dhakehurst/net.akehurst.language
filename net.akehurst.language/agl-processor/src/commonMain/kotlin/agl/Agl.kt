@@ -19,6 +19,7 @@ package net.akehurst.language.agl
 
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.syntaxAnalyser.*
@@ -170,7 +171,7 @@ object Agl {
                 styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
-                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typesModel), formatterModelStr) }
+                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), formatterModelStr) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)

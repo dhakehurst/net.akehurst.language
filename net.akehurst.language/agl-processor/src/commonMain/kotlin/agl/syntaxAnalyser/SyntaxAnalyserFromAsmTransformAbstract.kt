@@ -617,7 +617,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         _trf.clear()
         val asm = _trf.evaluate(evc, tr)
         if(asm.self is AsmStructureSimple) { //FIXME: don't like this here...hacky!
-            (asm.self as AsmStructureSimple).parsePath = downData.path
+            (asm.self as AsmStructureSimple).parsePath = downData.path.toString()
         }
         _trf.issues.forEach {
             super.issues.error(null, "Error evaluating transformation rule '${it.message}':\n${tr.asString()}")
