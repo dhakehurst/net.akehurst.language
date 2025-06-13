@@ -35,10 +35,14 @@ import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTFromTreeData
 import kotlin.math.max
 
+object SentenceIdentityFunctionNull : SentenceIdentityFunction {
+    override fun invoke(): Any? = null
+}
+
 class ParseOptionsDefault(
     override var enabled: Boolean = true,
     override var goalRuleName: String? = null,
-    override var sentenceIdentity: SentenceIdentityFunction = SentenceIdentityFunction { null },
+    override var sentenceIdentity: SentenceIdentityFunction = SentenceIdentityFunctionNull,
     override var reportErrors: Boolean = true,
     override var reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true

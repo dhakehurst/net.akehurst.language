@@ -36,13 +36,21 @@ fun interface ResolveScopedItem<ItemType, ItemInScopeType> {
     fun invoke(itemInScope: ItemInScopeType): ItemType?
 }
 
+class CreateScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : CreateScopedItem<ItemType, ItemInScopeType> {
+    override fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType = item as ItemInScopeType
+}
+
+class ResolveScopedItemDefault<ItemType : Any, ItemInScopeType : Any> : ResolveScopedItem<ItemType, ItemInScopeType> {
+    override fun invoke(itemInScope: ItemInScopeType): ItemType? = itemInScope as ItemType?
+}
+
 object NULL_SENTENCE_IDENTIFIER {
     override fun toString() = "NULL_SENTENCE_IDENTIFIER"
 }
 
 open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
-    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = CreateScopedItem { ref, item, location -> item as ItemInScopeType },
-    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItem { itemInScope -> itemInScope as ItemType }
+    val createScopedItem: CreateScopedItem<ItemType, ItemInScopeType> = CreateScopedItemDefault(),
+    val resolveScopedItem: ResolveScopedItem<ItemType, ItemInScopeType> = ResolveScopedItemDefault()
 ) : SentenceContext {
 
 

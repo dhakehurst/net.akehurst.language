@@ -65,6 +65,7 @@ kotlinxReflect {
             "net.akehurst.language.agl.simple.NULL_SENTENCE_IDENTIFIER",
             "net.akehurst.language.agl.simple.CreateScopedItemDefault",
             "net.akehurst.language.agl.simple.ResolveScopedItemDefault",
+            "net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault",
             "net.akehurst.language.agl.semanticAnalyser.**"
         )
     )

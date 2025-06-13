@@ -27,20 +27,19 @@ import net.akehurst.language.typemodel.api.TypeModel
 
 fun TypeModel.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
     return this.namespace.firstNotNullOfOrNull { ns ->
-        when(ns) {
+        when (ns) {
             is GrammarTypeNamespace -> ns.findTypeForRule(ruleName)
             else -> null
         }
     }
 }
 
-fun contextFromGrammar(grammars: GrammarModel): ContextWithScope<Any,Any> {
+fun contextFromGrammar(grammars: GrammarModel): ContextWithScope<Any, Any> {
     val proc = Agl.registry.agl.grammar.processor!!
     val aglGrammarTypeModel = proc.typesModel
-    val context = ContextWithScope<Any,Any>()
-    //val scope = ScopeSimple<String>(null, grammars.primary!!.name.value, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+    val context = ContextWithScope<Any, Any>()
     grammars.allDefinitions.forEach { g ->
-        val scope = context.newScopeForSentence(g)
+        val scope = context.newScopeForSentence(g.qualifiedName.toString())
         g.allResolvedGrammarRule.forEach {
             val rType = aglGrammarTypeModel.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Type not found for rule '${it.name}'")
             scope.addToScope(it.name.value, rType.resolvedDeclaration.qualifiedName, null, it.name.value,  false)

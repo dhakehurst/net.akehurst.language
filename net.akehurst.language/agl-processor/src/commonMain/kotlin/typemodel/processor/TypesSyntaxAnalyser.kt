@@ -154,7 +154,10 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         val name = SimpleName(children[1] as String)
         val tParams = (children[2] as List<String>).map { TypeParameterSimple(SimpleName((it))) }
         return { namespace: TypeNamespace ->
-            CollectionTypeSimple(namespace, name, tParams).also { setLocationFor(it, nodeInfo, sentence) }
+            CollectionTypeSimple(namespace, name).also { td ->
+                tParams.forEach { td.addTypeParameter(it) }
+                setLocationFor(td, nodeInfo, sentence)
+            }
         }
     }
 

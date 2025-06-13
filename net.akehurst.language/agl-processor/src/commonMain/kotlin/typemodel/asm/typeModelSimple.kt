@@ -283,7 +283,7 @@ class TypeParameterReference(
 
     override val typeName: SimpleName get() = typeParameterName
 
-    override val typeArguments: List<TypeArgument> = emptyList()
+    override val typeArguments: List<TypeArgument> = mutableListOf() //mutableListOf for serialisation
 
     override val resolvedDeclarationOrNull: TypeDefinition? = null
 
@@ -814,8 +814,8 @@ abstract class TypeDefinitionSimpleAbstract(
 
     override val qualifiedName: QualifiedName get() = namespace.qualifiedName.append(name)
 
-    override val supertypes: List<TypeInstance> = mutableListOf()
-    override val subtypes: List<TypeInstance> = emptyList()
+    override val supertypes: List<TypeInstance> = mutableListOf() //make implementation mutable for serialisation
+    override val subtypes: List<TypeInstance> = mutableListOf() //make implementation mutable for serialisation
 
     override val typeParameters: List<TypeParameter> = mutableListOf() //make implementation mutable for serialisation
 
@@ -1513,8 +1513,7 @@ class DataTypeSimple(
 
 class CollectionTypeSimple(
     override val namespace: TypeNamespace,
-    override val name: SimpleName,
-    override var typeParameters: List<TypeParameter> = mutableListOf()
+    override val name: SimpleName
 ) : StructuredTypeSimpleAbstract(), CollectionType {
 
     init {

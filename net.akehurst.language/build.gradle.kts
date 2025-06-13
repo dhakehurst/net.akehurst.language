@@ -33,6 +33,7 @@ allprojects {
             }
         }
         mavenCentral()
+        gradlePluginPortal()
     }
 
     group = rootProject.name
@@ -186,7 +187,7 @@ subprojects {
             artifact(javadocJar.get())
 
             pom {
-                name.set("AGL Processor")
+                name.set("AGL Parser, Processor, etc")
                 description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
                 url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
 
@@ -215,14 +216,7 @@ subprojects {
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }
-    val signTasks = arrayOf(
-        "signKotlinMultiplatformPublication",
-        "signJvm8Publication",
-        "signJsPublication",
-        "signWasmJsPublication",
-//         "signMacosArm64Publication"
-    )
-
+    val signTasks = tasks.matching { it.name.matches(Regex("sign(.)+")) }.toTypedArray()
     tasks.forEach {
         when {
             it.name.matches(Regex("publish(.)+")) -> {

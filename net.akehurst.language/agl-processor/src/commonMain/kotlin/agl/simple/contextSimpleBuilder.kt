@@ -50,19 +50,11 @@ import net.akehurst.language.sentence.api.InputLocation
 //    return context
 //}
 
-object CreateScopedItemDefault : CreateScopedItem<Any, Any> {
-    override fun invoke(qualifiedName: List<String>, item: Any, location: InputLocation?): Any = item
-}
-
-object ResolveScopedItemDefault : ResolveScopedItem<Any,Any> {
-    override fun invoke(itemInScope: Any): Any?  = itemInScope
-}
-
 fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },
 //    resolveScopedItem: ResolveScopedItem<Any, Any> = { itemInScope -> (itemInScope as Pair<*, *>).second as AsmStructure },
-    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault,
-    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault,
+    createScopedItem: CreateScopedItem<Any, Any> = CreateScopedItemDefault(),
+    resolveScopedItem: ResolveScopedItem<Any, Any> = ResolveScopedItemDefault(),
     init: ContextBuilder.() -> Unit = {}
 ): ContextWithScope<Any,Any> {
     val b = ContextBuilder(createScopedItem,resolveScopedItem)

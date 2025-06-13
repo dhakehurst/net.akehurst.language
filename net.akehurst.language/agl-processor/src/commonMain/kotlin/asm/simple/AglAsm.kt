@@ -11,7 +11,7 @@ interface Asm {
   cmp root
 }
 interface AsmStructure {
-  cmp path
+  cmp semanticPath
   cmp property
 }
 interface AsmStructureProperty {
@@ -27,11 +27,11 @@ interface AsmListSeparated {
 
     val typeModel: TypeModel by lazy {
         typeModel("Asm", true, AglBase.typesModel.namespace) {
-            namespace("net.akehurst.language.asm.api", listOf("std", "net.akehurst.language.base.api", "net.akehurst.language.collections")) {
+            namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.collections")) {
                 value("PropertyValueName") {
-
+                    supertype("PublicValueType")
                     constructor_ {
-                        parameter( "value", "String", false)
+                        parameter("value", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
@@ -42,11 +42,11 @@ interface AsmListSeparated {
 
                 }
                 interface_("AsmStructureProperty") {
+
                     propertyOf(setOf(VAL, CMP, STR), "value", "AsmValue", false)
                 }
                 interface_("AsmStructure") {
                     supertype("AsmValue")
-                    propertyOf(setOf(VAL, CMP, STR), "path", "AsmPath", false)
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
@@ -78,6 +78,9 @@ interface AsmListSeparated {
                         typeArgument("AsmValue")
                     }
                 }
+                interface_("AsmLambda") {
+                    supertype("AsmValue")
+                }
                 interface_("AsmAny") {
                     supertype("AsmValue")
                 }
@@ -99,15 +102,15 @@ interface AsmListSeparated {
                     supertype("AsmValueAbstract")
                     supertype("AsmStructure")
                     constructor_ {
-                        parameter("path", "AsmPath", false)
                         parameter("qualifiedTypeName", "QualifiedName", false)
                     }
-                    propertyOf(setOf(VAL, CMP, STR), "path", "AsmPath", false)
+                    propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
                     propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "semanticPath", "AsmPath", false)
                 }
                 data("AsmStructurePropertySimple") {
                     supertype("AsmStructureProperty")
@@ -183,6 +186,18 @@ interface AsmListSeparated {
                         typeArgument("AsmValue")
                     }
                 }
+                data("AsmLambdaSimple") {
+                    supertype("AsmValueAbstract")
+                    supertype("AsmLambda")
+                    constructor_ {
+                        parameter("lambda", "LambdaType", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "lambda", "LambdaType", false){
+                        typeArgument("AsmValue")
+                        typeArgument("AsmValue")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                }
                 data("AsmAnySimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmAny")
@@ -197,7 +212,8 @@ interface AsmListSeparated {
                     typeParameters("E", "I", "S")
                     supertype("List"){ ref("E") }
                 }
-            }}
+            }
+        }
     }
 
 }

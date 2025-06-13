@@ -84,11 +84,12 @@ object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any, Any>>(
           }
       """.trimIndent()
 
+    // TODO: This is only used when generating the typesModel I think, do we need it here ? but not sure where else to put it!
     override val kompositeString = """namespace net.akehurst.language.typemodel.api
     interface TypeInstance {
         cmp typeArguments
     }
-    interface TypeDeclaration {
+    interface TypeDefinition {
         cmp supertypes
         cmp typeParameters
     }
@@ -98,8 +99,8 @@ object AglTypes : LanguageObjectAbstract<TypeModel, ContextWithScope<Any, Any>>(
     interface DataType {
         cmp constructors
     }
-    interface UnnamedSupertypeType {
-        cmp subtypes
+    interface UnionType {
+        cmp alternatives
     }
     interface PropertyDeclaration {
         cmp typeInstance
@@ -119,7 +120,7 @@ namespace net.akehurst.language.typemodel.asm
         cmp ownedUnnamedSupertypeType
         cmp ownedTupleTypes
     }
-    class TypeDeclarationSimpleAbstract {
+    class TypeDefinitionSimpleAbstract {
         cmp propertyByIndex
     }
     class TypeInstanceSimple {
@@ -200,21 +201,21 @@ namespace net.akehurst.language.grammarTypemodel.api
             namespace("net.akehurst.language.typemodel.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
                 value("PropertyName") {
-
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 value("ParameterName") {
-
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
                 value("MethodName") {
-
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
@@ -222,39 +223,30 @@ namespace net.akehurst.language.grammarTypemodel.api
                 }
                 interface_("ValueType") {
                     supertype("StructuredType")
-                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false){
                         typeArgument("ConstructorDeclaration")
                     }
                 }
-                interface_("UnnamedSupertypeType") {
-                    supertype("TypeDeclaration")
-                    propertyOf(setOf(VAR, CMP, STR), "subtypes", "List", false) {
-                        typeArgument("TypeInstance")
-                    }
+                interface_("UnionType") {
+                    supertype("TypeDefinition")
                 }
                 interface_("TypeParameter") {
 
                 }
                 interface_("TypeNamespace") {
-                    supertype("Namespace") { ref("TypeDeclaration") }
+                    supertype("Namespace"){ ref("TypeDefinition") }
                 }
                 interface_("TypeModel") {
-                    supertype("Model") { ref("TypeNamespace"); ref("TypeDeclaration") }
+                    supertype("Model"){ ref("TypeNamespace"); ref("TypeDefinition") }
                 }
                 interface_("TypeInstance") {
 
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false){
                         typeArgument("TypeArgument")
                     }
                 }
-                interface_("TypeDeclaration") {
-                    supertype("Definition") { ref("TypeDeclaration") }
-                    propertyOf(setOf(VAR, CMP, STR), "supertypes", "List", false) {
-                        typeArgument("TypeInstance")
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "typeParameters", "List", false) {
-                        typeArgument("TypeParameter")
-                    }
+                interface_("TypeDefinition") {
+                    supertype("Definition"){ ref("TypeDefinition") }
                 }
                 interface_("TypeArgumentNamed") {
                     supertype("TypeArgument")
@@ -264,18 +256,21 @@ namespace net.akehurst.language.grammarTypemodel.api
                 }
                 interface_("TupleTypeInstance") {
                     supertype("TypeInstance")
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false){
                         typeArgument("TypeArgumentNamed")
                     }
                 }
                 interface_("TupleType") {
-                    supertype("TypeDeclaration")
+                    supertype("TypeDefinition")
                 }
                 interface_("StructuredType") {
-                    supertype("TypeDeclaration")
+                    supertype("TypeDefinition")
+                }
+                interface_("SpecialType") {
+                    supertype("TypeDefinition")
                 }
                 interface_("SingletonType") {
-                    supertype("TypeDeclaration")
+                    supertype("TypeDefinition")
                 }
                 interface_("PropertyDeclarationResolved") {
                     supertype("PropertyDeclaration")
@@ -285,15 +280,24 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
                 interface_("PrimitiveType") {
-                    supertype("TypeDeclaration")
+                    supertype("TypeDefinition")
                 }
                 interface_("ParameterDeclaration") {
 
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
+                interface_("MethodDeclarationResolved") {
+                    supertype("MethodDeclaration")
+                }
+                interface_("MethodDeclarationPrimitive") {
+                    supertype("MethodDeclaration")
+                }
+                interface_("MethodDeclarationDerived") {
+                    supertype("MethodDeclaration")
+                }
                 interface_("MethodDeclaration") {
 
-                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false){
                         typeArgument("ParameterDeclaration")
                     }
                 }
@@ -301,17 +305,17 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("StructuredType")
                 }
                 interface_("EnumType") {
-                    supertype("TypeDeclaration")
+                    supertype("TypeDefinition")
                 }
                 interface_("DataType") {
                     supertype("StructuredType")
-                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false){
                         typeArgument("ConstructorDeclaration")
                     }
                 }
                 interface_("ConstructorDeclaration") {
 
-                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false){
                         typeArgument("ParameterDeclaration")
                     }
                 }
@@ -321,7 +325,7 @@ namespace net.akehurst.language.grammarTypemodel.api
             }
             namespace("net.akehurst.language.typemodel.asm", listOf("net.akehurst.language.typemodel.api", "net.akehurst.language.base.api", "std", "net.akehurst.language.base.asm")) {
                 singleton("TypeParameterMultiple")
-                singleton("SimpleTypeModelStdLib")
+                singleton("StdLibDefault")
                 data("ValueTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("ValueType")
@@ -329,41 +333,24 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false){
                         typeArgument("ConstructorDeclaration")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
                 }
-                data("UnnamedSupertypeTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
-                    supertype("UnnamedSupertypeType")
+                data("UnionTypeSimple") {
+                    supertype("TypeDefinitionSimpleAbstract")
+                    supertype("UnionType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
-                        parameter("id", "Integer", false)
-                        parameter("subtypes", "List", false)
+                        parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "id", "Integer", false)
-                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STR), "subtypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "alternatives", "List", false){
                         typeArgument("TypeInstance")
                     }
-                }
-                data("UnnamedSupertypeTypeInstance") {
-                    supertype("TypeInstanceAbstract")
-                    constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
-                        parameter("declaration", "UnnamedSupertypeType", false)
-                        parameter("typeArguments", "List", false)
-                        parameter("isNullable", "Boolean", false)
-                    }
-                    propertyOf(setOf(VAL, REF, STR), "declaration", "UnnamedSupertypeType", false)
-                    propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
-                        typeArgument("TypeArgument")
-                    }
                 }
                 data("TypeParameterSimple") {
                     supertype("TypeParameter")
@@ -376,46 +363,48 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("TypeInstanceAbstract")
                     supertype("TypeInstance")
                     constructor_ {
-                        parameter("context", "TypeDeclaration", false)
+                        parameter("context", "TypeDefinition", false)
                         parameter("typeParameterName", "SimpleName", false)
                         parameter("isNullable", "Boolean", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "context", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "context", "TypeDefinition", false)
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclarationOrNull", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false){
                         typeArgument("TypeArgument")
                     }
-                    propertyOf(setOf(VAL, REF, STR), "typeOrNull", "TypeDeclaration", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeParameterName", "SimpleName", false)
                 }
                 data("TypeNamespaceSimple") {
                     supertype("TypeNamespaceAbstract")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("TypeNamespaceAbstract") {
                     supertype("TypeNamespace")
-                    supertype("NamespaceAbstract") { ref("net.akehurst.language.typemodel.api.TypeDeclaration") }
+                    supertype("NamespaceAbstract"){ ref("net.akehurst.language.typemodel.api.TypeDefinition") }
                     constructor_ {
+                        parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "import", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "import", "List", false){
                         typeArgument("Import")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "ownedTupleTypes", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "ownedTupleTypes", "List", false){
                         typeArgument("TupleType")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "ownedUnnamedSupertypeType", "List", false) {
-                        typeArgument("UnnamedSupertypeType")
+                    propertyOf(setOf(VAR, CMP, STR), "ownedUnnamedSupertypeType", "List", false){
+                        typeArgument("UnionType")
                     }
                 }
                 data("TypeModelSimpleAbstract") {
                     supertype("TypeModel")
                     constructor_ {}
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false){
                         typeArgument("TypeNamespace")
                     }
                 }
@@ -423,8 +412,10 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("TypeModelSimpleAbstract")
                     constructor_ {
                         parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("TypeInstanceSimple") {
                     supertype("TypeInstanceAbstract")
@@ -439,7 +430,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedOrImportedTypeName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false){
                         typeArgument("TypeArgument")
                     }
                 }
@@ -447,24 +438,30 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("TypeInstance")
                     constructor_ {}
                 }
-                data("TypeDeclarationSimpleAbstract") {
-                    supertype("TypeDeclaration")
-                    constructor_ {}
-                    propertyOf(setOf(VAR, REF, STR), "metaInfo", "Map", false) {
+                data("TypeDefinitionSimpleAbstract") {
+                    supertype("TypeDefinition")
+                    constructor_ {
+                        parameter("options", "OptionHolder", false)
+                    }
+                    propertyOf(setOf(VAR, REF, STR), "metaInfo", "Map", false){
                         typeArgument("String")
                         typeArgument("String")
                     }
-                    propertyOf(setOf(VAR, REF, STR), "method", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "method", "List", false){
                         typeArgument("MethodDeclaration")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "propertyByIndex", "Map", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                    propertyOf(setOf(VAR, CMP, STR), "propertyByIndex", "Map", false){
                         typeArgument("Integer")
                         typeArgument("PropertyDeclaration")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "supertypes", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false){
                         typeArgument("TypeInstance")
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "supertypes", "List", false){
+                        typeArgument("TypeInstance")
+                    }
+                    propertyOf(setOf(VAR, CMP, STR), "typeParameters", "List", false){
                         typeArgument("TypeParameter")
                     }
                 }
@@ -485,7 +482,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, REF, STR), "type", "TypeInstance", false)
                 }
                 data("TupleTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
                     supertype("TupleType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
@@ -493,7 +490,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAL, CMP, STR), "typeParameters", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "typeParameters", "List", false){
                         typeArgument("TypeParameterMultiple")
                     }
                 }
@@ -507,17 +504,19 @@ namespace net.akehurst.language.grammarTypemodel.api
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "resolvedDeclaration", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false){
                         typeArgument("TypeArgumentNamed")
                     }
                 }
                 data("StructuredTypeSimpleAbstract") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
                     supertype("StructuredType")
                     constructor_ {}
                 }
                 data("SpecialTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
+                    supertype("SpecialType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
@@ -526,7 +525,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
                 }
                 data("SingletonTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
                     supertype("SingletonType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
@@ -544,7 +543,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("characteristics", "Set", false)
                         parameter("index", "Integer", false)
                     }
-                    propertyOf(setOf(VAR, REF, STR), "characteristics", "Set", false) {
+                    propertyOf(setOf(VAR, REF, STR), "characteristics", "Set", false){
                         typeArgument("PropertyCharacteristic")
                     }
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
@@ -557,24 +556,26 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("PropertyDeclarationAbstract")
                     supertype("PropertyDeclarationResolved")
                     constructor_ {
-                        parameter("owner", "TypeDeclaration", false)
+                        parameter("original", "PropertyDeclaration", false)
+                        parameter("owner", "TypeDefinition", false)
                         parameter("name", "PropertyName", false)
                         parameter("typeInstance", "TypeInstance", false)
                         parameter("characteristics", "Set", false)
                         parameter("description", "String", false)
                     }
-                    propertyOf(setOf(VAR, REF, STR), "characteristics", "Set", false) {
+                    propertyOf(setOf(VAR, REF, STR), "characteristics", "Set", false){
                         typeArgument("PropertyCharacteristic")
                     }
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "PropertyName", false)
-                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "original", "PropertyDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
                 data("PropertyDeclarationPrimitive") {
                     supertype("PropertyDeclarationAbstract")
                     constructor_ {
-                        parameter("owner", "TypeDeclaration", false)
+                        parameter("owner", "TypeDefinition", false)
                         parameter("name", "PropertyName", false)
                         parameter("typeInstance", "TypeInstance", false)
                         parameter("description", "String", false)
@@ -583,13 +584,13 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "PropertyName", false)
-                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
                 data("PropertyDeclarationDerived") {
                     supertype("PropertyDeclarationAbstract")
                     constructor_ {
-                        parameter("owner", "TypeDeclaration", false)
+                        parameter("owner", "TypeDefinition", false)
                         parameter("name", "PropertyName", false)
                         parameter("typeInstance", "TypeInstance", false)
                         parameter("description", "String", false)
@@ -600,19 +601,19 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, REF, STR), "expression", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "PropertyName", false)
-                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
                 data("PropertyDeclarationAbstract") {
                     supertype("PropertyDeclaration")
                     constructor_ {}
-                    propertyOf(setOf(VAR, REF, STR), "metaInfo", "Map", false) {
+                    propertyOf(setOf(VAR, REF, STR), "metaInfo", "Map", false){
                         typeArgument("String")
                         typeArgument("String")
                     }
                 }
                 data("PrimitiveTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
                     supertype("PrimitiveType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
@@ -632,22 +633,49 @@ namespace net.akehurst.language.grammarTypemodel.api
                     propertyOf(setOf(VAL, CMP, STR), "name", "ParameterName", false)
                     propertyOf(setOf(VAL, CMP, STR), "typeInstance", "TypeInstance", false)
                 }
-                data("MethodDeclarationDerived") {
-                    supertype("MethodDeclaration")
+                data("MethodDeclarationResolvedSimple") {
+                    supertype("MethodDeclarationAbstract")
+                    supertype("MethodDeclarationResolved")
                     constructor_ {
-                        parameter("owner", "TypeDeclaration", false)
+                        parameter("original", "MethodDeclaration", false)
+                        parameter("owner", "TypeDefinition", false)
                         parameter("name", "MethodName", false)
                         parameter("parameters", "List", false)
+                        parameter("returnType", "TypeInstance", false)
+                        parameter("description", "String", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "description", "String", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
+                    propertyOf(setOf(VAL, REF, STR), "original", "MethodDeclaration", false)
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false){
+                        typeArgument("ParameterDeclaration")
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
+                }
+                data("MethodDeclarationDerivedSimple") {
+                    supertype("MethodDeclarationAbstract")
+                    supertype("MethodDeclarationDerived")
+                    constructor_ {
+                        parameter("owner", "TypeDefinition", false)
+                        parameter("name", "MethodName", false)
+                        parameter("parameters", "List", false)
+                        parameter("returnType", "TypeInstance", false)
                         parameter("description", "String", false)
                         parameter("body", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "body", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "description", "String", false)
                     propertyOf(setOf(VAL, CMP, STR), "name", "MethodName", false)
-                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false){
                         typeArgument("ParameterDeclaration")
                     }
+                    propertyOf(setOf(VAL, REF, STR), "returnType", "TypeInstance", false)
+                }
+                data("MethodDeclarationAbstract") {
+                    supertype("MethodDeclaration")
+                    constructor_ {}
                 }
                 data("InterfaceTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
@@ -658,19 +686,19 @@ namespace net.akehurst.language.grammarTypemodel.api
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false){
                         typeArgument("TypeInstance")
                     }
                 }
                 data("EnumTypeSimple") {
-                    supertype("TypeDeclarationSimpleAbstract")
+                    supertype("TypeDefinitionSimpleAbstract")
                     supertype("EnumType")
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                         parameter("literals", "List", false)
                     }
-                    propertyOf(setOf(VAR, REF, STR), "literals", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "literals", "List", false){
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
@@ -683,23 +711,23 @@ namespace net.akehurst.language.grammarTypemodel.api
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false){
                         typeArgument("ConstructorDeclaration")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false) {
+                    propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false){
                         typeArgument("TypeInstance")
                     }
                 }
                 data("ConstructorDeclarationSimple") {
                     supertype("ConstructorDeclaration")
                     constructor_ {
-                        parameter("owner", "TypeDeclaration", false)
+                        parameter("owner", "TypeDefinition", false)
                         parameter("parameters", "List", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDeclaration", false)
-                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false) {
+                    propertyOf(setOf(VAL, REF, STR), "owner", "TypeDefinition", false)
+                    propertyOf(setOf(VAR, CMP, STR), "parameters", "List", false){
                         typeArgument("ParameterDeclaration")
                     }
                 }
@@ -709,39 +737,26 @@ namespace net.akehurst.language.grammarTypemodel.api
                     constructor_ {
                         parameter("namespace", "TypeNamespace", false)
                         parameter("name", "SimpleName", false)
-                        parameter("typeParameters", "List", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
-                    propertyOf(setOf(VAR, CMP, STR), "typeParameters", "List", false) {
-                        typeArgument("TypeParameter")
-                    }
                 }
             }
             namespace("net.akehurst.language.grammarTypemodel.api", listOf("net.akehurst.language.typemodel.api", "std", "net.akehurst.language.grammar.api")) {
                 interface_("GrammarTypeNamespace") {
                     supertype("TypeNamespace")
-                    propertyOf(setOf(VAR, CMP, STR), "allRuleNameToType", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "allRuleNameToType", "Map", false){
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
                     }
                 }
             }
-            namespace(
-                "net.akehurst.language.grammarTypemodel.asm",
-                listOf(
-                    "net.akehurst.language.base.api",
-                    "std",
-                    "net.akehurst.language.typemodel.asm",
-                    "net.akehurst.language.grammarTypemodel.api",
-                    "net.akehurst.language.grammar.api",
-                    "net.akehurst.language.typemodel.api"
-                )
-            ) {
+            namespace("net.akehurst.language.grammarTypemodel.asm", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.typemodel.asm", "net.akehurst.language.grammarTypemodel.api", "net.akehurst.language.grammar.api", "net.akehurst.language.typemodel.api")) {
                 data("GrammarTypeNamespaceSimple") {
                     supertype("GrammarTypeNamespaceAbstract")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
@@ -750,9 +765,10 @@ namespace net.akehurst.language.grammarTypemodel.api
                     supertype("TypeNamespaceAbstract")
                     supertype("GrammarTypeNamespace")
                     constructor_ {
+                        parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "allRuleNameToType", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "allRuleNameToType", "Map", false){
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
                     }

@@ -40,7 +40,7 @@ import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
-object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,Any>>() {
+object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, Any>>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -318,7 +318,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
                 enum("Associativity", listOf("LEFT", "RIGHT"))
+                enum("ChoiceIndicator", listOf("NONE", "EMPTY", "ITEM", "NUMBER"))
                 value("GrammarRuleName") {
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
@@ -329,6 +331,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 }
                 interface_("TangibleItem") {
                     supertype("SimpleItem")
+                }
+                interface_("Spine") {
+
                 }
                 interface_("SimpleList") {
                     supertype("ListOfItems")
@@ -374,14 +379,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     supertype("SimpleItem")
                     propertyOf(setOf(VAL, CMP, STR), "groupedContent", "RuleItem", false)
                 }
-                interfaceFor("grammarRule","GrammarRule") {
+                interfaceFor("grammarRule", "GrammarRule") {
                     supertype("GrammarItem")
                     propertyOf(setOf(VAL, CMP, STR), "rhs", "RuleItem", false)
                 }
                 interface_("GrammarReference") {
-
-                }
-                interface_("GrammarOption") {
 
                 }
                 interface_("GrammarNamespace") {
@@ -400,9 +402,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     }
                     propertyOf(setOf(VAR, CMP, STR), "grammarRule", "List", false) {
                         typeArgument("GrammarRule")
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
-                        typeArgument("GrammarOption")
                     }
                     propertyOf(setOf(VAR, CMP, STR), "preferenceRule", "List", false) {
                         typeArgument("PreferenceRule")
@@ -456,6 +455,15 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     supertype("SimpleItemAbstract")
                     supertype("TangibleItem")
                     constructor_ {}
+                }
+                data("SpineDefault") {
+                    supertype("Spine")
+                    constructor_ {
+                        parameter("parts", "List", false)
+                    }
+                    propertyOf(setOf(VAR, REF, STR), "parts", "List", false) {
+                        typeArgument("NonTerminal")
+                    }
                 }
                 data("SimpleListDefault") {
                     supertype("ListOfItemsAbstract")
@@ -512,17 +520,19 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                 data("PreferenceOptionDefault") {
                     supertype("PreferenceOption")
                     constructor_ {
-                        parameter("item", "NonTerminal", false)
+                        parameter("spine", "Spine", false)
+                        parameter("choiceIndicator", "ChoiceIndicator", false)
                         parameter("choiceNumber", "Integer", false)
                         parameter("onTerminals", "List", false)
                         parameter("associativity", "Associativity", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "associativity", "Associativity", false)
+                    propertyOf(setOf(VAL, REF, STR), "choiceIndicator", "ChoiceIndicator", false)
                     propertyOf(setOf(VAL, REF, STR), "choiceNumber", "Integer", false)
-                    propertyOf(setOf(VAL, REF, STR), "item", "NonTerminal", false)
                     propertyOf(setOf(VAR, REF, STR), "onTerminals", "List", false) {
                         typeArgument("SimpleItem")
                     }
+                    propertyOf(setOf(VAL, REF, STR), "spine", "Spine", false)
                 }
                 data("OverrideRuleDefault") {
                     supertype("GrammarRuleAbstract")
@@ -606,20 +616,13 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     propertyOf(setOf(VAL, REF, STR), "nameOrQName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAR, REF, STR), "resolved", "Grammar", false)
                 }
-                data("GrammarOptionDefault") {
-                    supertype("GrammarOption")
-                    constructor_ {
-                        parameter("name", "String", false)
-                        parameter("value", "String", false)
-                    }
-                    propertyOf(setOf(VAL, REF, STR), "name", "String", false)
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
-                }
                 data("GrammarNamespaceDefault") {
                     supertype("GrammarNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
+                        parameter("options", "OptionHolder", false)
+                        parameter("import", "List", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
@@ -628,12 +631,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     supertype("ModelAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("namespace", "List", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
-                        typeArgument("GrammarNamespace")
-                    }
                 }
                 data("GrammarItemAbstract") {
                     supertype("GrammarItem")
@@ -647,10 +648,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("namespace", "GrammarNamespace", false)
                         parameter("name", "SimpleName", false)
-                        parameter("options", "List", false)
-                    }
-                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
-                        typeArgument("GrammarOption")
+                        parameter("options", "OptionHolder", false)
                     }
                 }
                 data("GrammarAbstract") {
@@ -658,6 +656,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     constructor_ {
                         parameter("namespace", "GrammarNamespace", false)
                         parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
                     }
                     propertyOf(setOf(VAR, CMP, STR), "extends", "List", false) {
                         typeArgument("GrammarReference")
@@ -667,6 +666,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                     propertyOf(setOf(VAL, REF, STR), "namespace", "GrammarNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                     propertyOf(setOf(VAR, CMP, STR), "preferenceRule", "List", false) {
                         typeArgument("PreferenceRule")
                     }
@@ -742,233 +742,6 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
                     }
                 }
             }
-            /*
-            grammarTypeNamespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
-                dataType("grammar","GrammarDefault") {
-                    supertype("GrammarAbstract")
-                    constructor_ {
-                        parameter("namespace", "GrammarNamespace", false)
-                        parameter("name", "SimpleName", false)
-                        parameter("options", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "options", "List", false) {
-                        typeArgument("GrammarOption")
-                    }
-                }
-                dataType("rule","GrammarRuleAbstract") {
-                    supertype("GrammarItemAbstract")
-                    supertype("GrammarRule")
-                    constructor_ {}
-                }
-                dataType("grammarRule","NormalRuleDefault") {
-                    supertype("GrammarRuleAbstract")
-                    supertype("NormalRule")
-                    constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("name", "GrammarRuleName", false)
-                        parameter("isSkip", "Boolean", false)
-                        parameter("isLeaf", "Boolean", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "rhs", "RuleItem", false)
-                }
-                dataType("overrideRule","OverrideRuleDefault") {
-                    supertype("GrammarRuleAbstract")
-                    supertype("OverrideRule")
-                    constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("name", "GrammarRuleName", false)
-                        parameter("isSkip", "Boolean", false)
-                        parameter("isLeaf", "Boolean", false)
-                        parameter("overrideKind", "OverrideKind", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isLeaf", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isOverride", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isSkip", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "GrammarRuleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "overrideKind", "OverrideKind", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "rhs", "RuleItem", false)
-                }
-                stringTypeFor("overrideOperator")
-                dataType("rhs","RuleItemAbstract") {
-                    supertype("RuleItem")
-                    constructor_ {}
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "index", "List", false) {
-                        typeArgument("Integer")
-                    }
-                }
-                dataType("empty","EmptyRuleDefault") {
-                    supertype("TangibleItemAbstract")
-                    supertype("EmptyRule")
-                    constructor_ {}
-                }
-                dataType("choice","ChoiceAbstract") {
-                    supertype("RuleItemAbstract")
-                    supertype("Choice")
-                    constructor_ {
-                        parameter("alternative", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                dataType("ambiguousChoice","ChoiceAmbiguousDefault") {
-                    supertype("ChoiceAbstract")
-                    supertype("ChoiceAmbiguous")
-                    constructor_ {
-                        parameter("alternative", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                dataType("priorityChoice","ChoicePriorityDefault") {
-                    supertype("ChoiceAbstract")
-                    supertype("ChoicePriority")
-                    constructor_ {
-                        parameter("alternative", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                dataType("simpleChoice","ChoiceLongestDefault") {
-                    supertype("ChoiceAbstract")
-                    supertype("ChoiceLongest")
-                    constructor_ {
-                        parameter("alternative", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "alternative", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                dataType("concatenation","ConcatenationDefault") {
-                    supertype("RuleItemAbstract")
-                    supertype("Concatenation")
-                    constructor_ {
-                        parameter("items", "List", false)
-                    }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "items", "List", false) {
-                        typeArgument("RuleItem")
-                    }
-                }
-                dataType("concatenationItem","ConcatenationItemAbstract") {
-                    supertype("RuleItemAbstract")
-                    supertype("ConcatenationItem")
-                    constructor_ {}
-                }
-                dataType("simpleItemOrGroup","SimpleItemAbstract") {
-                    supertype("ConcatenationItemAbstract")
-                    supertype("SimpleItem")
-                    constructor_ {}
-                }
-                dataType("simpleItem","TangibleItemAbstract") {
-                    supertype("SimpleItemAbstract")
-                    supertype("TangibleItem")
-                    constructor_ {}
-                }
-                dataType("simpleList","SimpleListDefault") {
-                    supertype("ListOfItemsAbstract")
-                    supertype("SimpleList")
-                    constructor_ {
-                        parameter("min", "Integer", false)
-                        parameter("max", "Integer", false)
-                        parameter("item", "RuleItem", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
-                }
-                dataType("separatedList","SeparatedListDefault") {
-                    supertype("ListOfItemsAbstract")
-                    supertype("SeparatedList")
-                    constructor_ {
-                        parameter("min", "Integer", false)
-                        parameter("max", "Integer", false)
-                        parameter("item", "RuleItem", false)
-                        parameter("separator", "RuleItem", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "item", "RuleItem", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "max", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "min", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "separator", "RuleItem", false)
-                }
-                dataType("group","GroupDefault") {
-                    supertype("SimpleItemAbstract")
-                    supertype("Group")
-                    constructor_ {
-                        parameter("groupedContent", "RuleItem", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "groupedContent", "RuleItem", false)
-                }
-                dataType("nonTerminal","NonTerminalDefault") {
-                    supertype("TangibleItemAbstract")
-                    supertype("NonTerminal")
-                    constructor_ {
-                        parameter("targetGrammar", "GrammarReference", false)
-                        parameter("ruleReference", "GrammarRuleName", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "ruleReference", "GrammarRuleName", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "targetGrammar", "GrammarReference", false)
-                }
-                dataType("embedded","EmbeddedDefault") {
-                    supertype("TangibleItemAbstract")
-                    supertype("Embedded")
-                    constructor_ {
-                        parameter("embeddedGoalName", "GrammarRuleName", false)
-                        parameter("embeddedGrammarReference", "GrammarReference", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGoalName", "GrammarRuleName", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "embeddedGrammarReference", "GrammarReference", false)
-                }
-                dataType("terminal","TerminalDefault") {
-                    supertype("TangibleItemAbstract")
-                    supertype("Terminal")
-                    constructor_ {
-                        parameter("value", "String", false)
-                        parameter("isPattern", "Boolean", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "id", "String", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "isPattern", "Boolean", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
-                }
-
-                dataType("preferenceRule","PreferenceRuleDefault") {
-                    supertype("GrammarItemAbstract")
-                    supertype("PreferenceRule")
-                    constructor_ {
-                        parameter("grammar", "Grammar", false)
-                        parameter("forItem", "SimpleItem", false)
-                        parameter("optionList", "List", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "forItem", "SimpleItem", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "grammar", "Grammar", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "optionList", "List", false) {
-                        typeArgument("PreferenceOption")
-                    }
-                }
-                dataType("preferenceOption","PreferenceOptionDefault") {
-                    supertype("PreferenceOption")
-                    constructor_ {
-                        parameter("item", "NonTerminal", false)
-                        parameter("choiceNumber", "Integer", false)
-                        parameter("onTerminals", "List", false)
-                        parameter("associativity", "Associativity", false)
-                    }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "associativity", "Associativity", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "choiceNumber", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "item", "NonTerminal", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "onTerminals", "List", false) {
-                        typeArgument("SimpleItem")
-                    }
-                }
-            }
-             */
         }
     }
 
@@ -1047,21 +820,21 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any,An
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule("'[^']+'") {
-                        declaration("foreground","darkgreen")
-                        declaration("font-weight","bold")
+                        declaration("foreground", "darkgreen")
+                        declaration("font-weight", "bold")
                     }
                     tagRule("LITERAL") {
-                        declaration("foreground","blue")
+                        declaration("foreground", "blue")
                     }
                     tagRule("PATTERN") {
-                        declaration("foreground","darkblue")
+                        declaration("foreground", "darkblue")
                     }
                     tagRule("IDENTIFIER") {
-                        declaration("foreground","darkred")
-                        declaration("font-style","italic")
+                        declaration("foreground", "darkred")
+                        declaration("font-style", "italic")
                     }
                     tagRule("SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT") {
-                        declaration("foreground","LightSlateGrey")
+                        declaration("foreground", "LightSlateGrey")
                     }
                 }
             }
@@ -1117,8 +890,8 @@ namespace net.akehurst.language.Grammar {
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<GrammarModel> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any,Any>> by lazy { AglGrammarCompletionProvider() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

@@ -69,7 +69,7 @@ class test_GenerateTypeModelViaReflection {
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
-    fun gen_typemodel():Pair<TypeModel,List<QualifiedName>> {
+    fun gen_types():Pair<TypeModel,List<QualifiedName>> {
         val (grammar,gadded) = gen_grammar()
         val added = grammar.namespace.map { it.qualifiedName }
         val gen = GenerateTypeModelViaReflection(
@@ -87,8 +87,8 @@ class test_GenerateTypeModelViaReflection {
     }
 
     @Test
-    fun test_format_typemodel() {
-        val (tm,added) = gen_typemodel()
+    fun test_format_types() {
+        val (tm,added) = gen_types()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
@@ -203,7 +203,6 @@ class test_GenerateTypeModelViaReflection {
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
         println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
-
 
     fun gen_runtime(): TypeModel {
         val gen = GenerateTypeModelViaReflection(

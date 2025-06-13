@@ -19,7 +19,6 @@ package net.akehurst.language.grammar.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
-import net.akehurst.language.grammar.asm.ChoiceIndicator
 import kotlin.jvm.JvmInline
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -163,6 +162,7 @@ interface PreferenceRule : GrammarItem {
 }
 
 enum class Associativity { LEFT, RIGHT }
+enum class ChoiceIndicator { NONE, EMPTY, ITEM, NUMBER }
 
 interface PreferenceOption : Formatable {
     val spine: Spine

@@ -20,7 +20,6 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Assoc

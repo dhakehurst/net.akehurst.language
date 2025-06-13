@@ -34,8 +34,6 @@ data class PreferenceRuleDefault(
     override fun toString(): String = "preference $forItem { ... }"
 }
 
-enum class ChoiceIndicator { NONE, EMPTY, ITEM, NUMBER }
-
 data class PreferenceOptionDefault(
     override val spine: Spine,
     override val choiceIndicator: ChoiceIndicator,

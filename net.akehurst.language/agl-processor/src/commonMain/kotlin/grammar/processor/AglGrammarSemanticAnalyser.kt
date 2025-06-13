@@ -30,7 +30,6 @@ import net.akehurst.language.automaton.leftcorner.ParserStateSet
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.ChoiceIndicator
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 

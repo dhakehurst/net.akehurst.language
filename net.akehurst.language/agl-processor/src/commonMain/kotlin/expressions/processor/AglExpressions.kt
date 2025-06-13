@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammar.asm.ChoiceIndicator
+import net.akehurst.language.grammar.api.ChoiceIndicator
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace

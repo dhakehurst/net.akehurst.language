@@ -44,7 +44,13 @@ interface Scope {
                     }
                     propertyOf(setOf(VAR, CMP, STR), "items", "Map", false){
                         typeArgument("String")
-                        typeArgument("Map")
+                        typeArgument("Map") {
+                            typeArgument("QualifiedName")
+                            typeArgument("Pair") {
+                                typeArgument("Any", nullable = true)
+                                typeArgument("ItemInScopeType")
+                            }
+                        }
                     }
                 }
                 data("ItemInScope") {

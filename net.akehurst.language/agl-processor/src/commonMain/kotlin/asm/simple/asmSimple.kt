@@ -17,33 +17,13 @@
 
 package net.akehurst.language.asm.simple
 
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
-import net.akehurst.language.expressions.processor.TypedObject
-import net.akehurst.language.expressions.processor.TypedObjectAsmValue
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
-
-class AsmFactorySimple(
-    typeModel: TypeModel,
-    issues: IssueHolder
-) : ObjectGraphAsmSimple(typeModel, issues), AsmFactory<Asm, AsmValue> {
-
-    override fun constructAsm(): Asm = AsmSimple()
-
-    override fun rootList(asm: Asm): List<AsmValue> = asm.root
-    override fun addRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
-    override fun removeRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
-}
 
 class AsmPathSimple(
     override val value: String
