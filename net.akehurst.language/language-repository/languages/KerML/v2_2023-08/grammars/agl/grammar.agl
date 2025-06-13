@@ -34,7 +34,7 @@ grammar Base {
     leaf CONJUGATES = '~' | 'conjugates' ;
 
     leaf BASIC_NAME = "[a-zA-Z_][0-9a-zA-Z_]*" ;
-    leaf UNRESTRICTED_NAME = "'([^'\\]|\\.)*'" ;
+    leaf UNRESTRICTED_NAME = "'([^'\\\\]|\\.)*'" ;
 
     NAME = BASIC_NAME | UNRESTRICTED_NAME ;
     Identification = ( '<' NAME '>' )? NAME? ;

@@ -27,13 +27,13 @@ class test_Sentence_locationFor {
     @Test
     fun singleLine() {
         val inputText = "abc"
-        val sut = SentenceDefault(inputText)
+        val sut = SentenceDefault(inputText, null)
 
         for (p in inputText.indices) {
             val actual = sut.locationFor(p, 1)
             val col = p + 1
             val line = 1
-            val expected = InputLocation(p, col, line, 1)
+            val expected = InputLocation(p, col, line, 1, null)
             assertEquals(expected, actual)
         }
     }
@@ -45,13 +45,13 @@ class test_Sentence_locationFor {
             def
             ghi
         """.trimIndent()
-        val sut = SentenceDefault(inputText)
+        val sut = SentenceDefault(inputText, null)
 
         for (p in inputText.indices) {
             val actual = sut.locationFor(p, 1)
             val col = (p % 4) + 1
             val line = (p / 4) + 1
-            val expected = InputLocation(p, col, line, 1)
+            val expected = InputLocation(p, col, line, 1, null)
             assertEquals(expected, actual)
         }
 

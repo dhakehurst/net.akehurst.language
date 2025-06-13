@@ -94,7 +94,7 @@ class test_AllDefault {
             }
         )
 
-        fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataForSentenceParse) {
+        fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataForSentenceParse) {
             println("'${sd.sentence}'")
             val spptRes = proc.parse(sd.sentence)
             assertTrue(spptRes.issues.errors.isEmpty(), spptRes.issues.toString())
@@ -103,7 +103,7 @@ class test_AllDefault {
             assertEquals(expSppt.toStringAll, sppt.toStringAll, "Different SPPT")
 
             val asmRes = proc.process(sd.sentence)
-            assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
+            assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
             val actual = asmRes.asm!!
             assertEquals(sd.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
 
@@ -118,11 +118,11 @@ class test_AllDefault {
             assertEquals(testData.expectedRrs.toString(), rrs.toString(), "Different RRS by string")
             assertTrue(testData.expectedRrs.matches(rrs), "Different RRS by match")
 
-            assertEquals(testData.expectedTm.asString(), proc.typeModel.asString(), "Different TypeModel by string")
-            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typeModel)
+            assertEquals(testData.expectedTm.asString(), proc.typesModel.asString(), "Different TypeModel by string")
+            GrammarTypeModelTest.tmAssertEquals(testData.expectedTm, proc.typesModel)
 
-            assertEquals(testData.expectedTr.asString(), proc.asmTransformModel.asString(), "Different AsmTransform by string")
-            AsmTransformModelTest.trAssertEquals(testData.expectedTr, proc.asmTransformModel)
+            assertEquals(testData.expectedTr.asString(), proc.transformModel.asString(), "Different AsmTransform by string")
+            AsmTransformModelTest.trAssertEquals(testData.expectedTr, proc.transformModel)
 
             if (null == sentenceIndex) {
                 for (sd in testData.sentenceData) {
@@ -171,7 +171,7 @@ class test_AllDefault {
          */
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -221,7 +221,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -267,7 +267,7 @@ class test_AllDefault {
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("a")
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
             }
@@ -315,7 +315,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -360,7 +360,7 @@ class test_AllDefault {
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 stringTypeFor("v")
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("v", "String", false, 0)
                 }
             }
@@ -414,14 +414,14 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                     propertyDataTypeOf("b", "B", false, 1)
                     propertyDataTypeOf("c", "C", false, 2)
                 }
-                dataType("A", "A") {}
-                dataType("B", "B") {}
-                dataType("C", "C") {}
+                dataFor("A", "A") {}
+                dataFor("B", "B") {}
+                dataFor("C", "C") {}
             }
         }
         val expectedTr = asmGrammarTransform(
@@ -478,14 +478,14 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                     propertyDataTypeOf("b", "B", false, 2)
                     propertyDataTypeOf("c", "C", false, 4)
                 }
-                dataType("A", "A") {}
-                dataType("B", "B") {}
-                dataType("C", "C") {}
+                dataFor("A", "A") {}
+                dataFor("B", "B") {}
+                dataFor("C", "C") {}
             }
         }
         val expectedTr = asmGrammarTransform(
@@ -599,20 +599,20 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     subtypes("A", "B", "C")
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("S")
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     supertypes("S")
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
                 }
-                dataType("C", "C") {
+                dataFor("C", "C") {
                     supertypes("S")
                     propertyPrimitiveType("c", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
@@ -714,7 +714,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     tupleType {
                         typeRef("a", "A", false)
                         typeRef("b", "B", false)
@@ -724,16 +724,16 @@ class test_AllDefault {
                         typeRef("d", "D", false)
                     }
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     propertyPrimitiveType("b", "String", false, 0)
                 }
-                dataType("C", "C") {
+                dataFor("C", "C") {
                     propertyPrimitiveType("c", "String", false, 0)
                 }
-                dataType("D", "D") {
+                dataFor("D", "D") {
                     propertyPrimitiveType("d", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -1030,24 +1030,24 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     subtypes("A", "B", "C")
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("S")
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     supertypes("S")
                     subtypes("C", "D")
                 }
-                dataType("C", "C") {
+                dataFor("C", "C") {
                     supertypes("S", "B")
                     propertyPrimitiveType("c", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
                 }
-                dataType("D", "D") {
+                dataFor("D", "D") {
                     supertypes("B")
                     propertyPrimitiveType("d", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
@@ -1147,23 +1147,23 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("B", "B"){
+                unionFor("B", "B"){
                     typeRef("String",false)
                     typeRef("D")
                 }
-                unionType("S", "S") {
+                unionFor("S", "S") {
                     typeRef("A",false)
                     typeRef("B",false)
                     typeRef("C",false)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("x", "String", false, 1)
                 }
-                dataType("C", "C") {
+                dataFor("C", "C") {
                     propertyPrimitiveType("c", "String", false, 0)
                 }
-                dataType("D", "D") {
+                dataFor("D", "D") {
                     propertyPrimitiveType("d", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -1275,11 +1275,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("BC", "BC") {
+                dataFor("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 1)
                 }
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("BC")
                     listType(false) {
                         ref("String")
@@ -1378,17 +1378,17 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("BC")
                     listType(false) {
                         ref("D")
                     }
                 }
-                dataType("BC", "BC") {
+                dataFor("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 1)
                 }
-                dataType("D", "D") {
+                dataFor("D", "D") {
                     propertyPrimitiveType("d", "String", false, 0)
                 }
                 stringTypeFor("b")
@@ -1506,11 +1506,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("String")
                     typeRef("S1")
                 }
-                dataType("S1", "S1") {
+                dataFor("S1", "S1") {
                     propertyDataTypeOf("s", "S",false, 0)
                     propertyPrimitiveType("a", "String", false, 1)
                 }
@@ -1604,7 +1604,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -1652,7 +1652,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", true, 0)
                 }
                 stringTypeFor("a")
@@ -1713,7 +1713,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 2)
                 }
@@ -1781,7 +1781,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("b", "String", true, 1)
                     propertyPrimitiveType("c", "String", false, 2)
@@ -1852,10 +1852,10 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", true, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -1922,11 +1922,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyDataTypeOf("a", "A", true, 1)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -1997,13 +1997,13 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("oA", "OA", false, 0)
                 }
-                dataType("oA", "OA") {
+                dataFor("oA", "OA") {
                     propertyDataTypeOf("a", "A", true, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -2072,7 +2072,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -2134,7 +2134,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 2)
                 }
@@ -2215,7 +2215,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListType("a", false, 0) { ref("String") }
                 }
                 stringTypeFor("a")
@@ -2291,7 +2291,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyListType("b", false, 1) { ref("String") }
                     propertyPrimitiveType("c", "String", false, 2)
@@ -2380,10 +2380,10 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("a", "A", false, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -2468,12 +2468,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyListTypeOf("a", "A", false, 1)
                     propertyPrimitiveType("c", "String", false, 2)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
@@ -2564,9 +2564,9 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                 }
             }
         }
@@ -2633,11 +2633,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListType("as", false, 0) { ref("String") }
                 }
                 //listTypeFor("as", StringType)
-                dataType("as", "As") {
+                dataFor("as", "As") {
                     propertyListType("a", false, 0) { ref("String") }
                 }
                 stringTypeFor("a")
@@ -2716,13 +2716,13 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("as", "Ao", false, 0)
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                     propertyListTypeOf("ao", "Ao", false, 0)
                 }
-                dataType("ao", "Ao") {
+                dataFor("ao", "Ao") {
                     propertyPrimitiveType("a", "String", true, 0)
                 }
                 stringTypeFor("a")
@@ -2816,21 +2816,21 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("abs", "AB", false, 0)
                 }
-                dataType("abs", "Abs") {
+                dataFor("abs", "Abs") {
                     propertyListTypeOf("ab", "AB", false, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("AB")
                     propertyPrimitiveType("a", "String", false, 0)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     supertypes("AB")
                     propertyPrimitiveType("b", "String", false, 0)
                 }
-                dataType("AB", "AB") {
+                dataFor("AB", "AB") {
                     subtypes("A", "B")
                 }
                 stringTypeFor("a")
@@ -2995,17 +2995,17 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("e", "E", false, 0)
                 }
-                dataType("E", "E") {
+                dataFor("E", "E") {
                     subtypes("V", "A")
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("E")
                     propertyListTypeOf("e", "E", false, 0)
                 }
-                dataType("V", "V") {
+                dataFor("V", "V") {
                     supertypes("E")
                     propertyPrimitiveType("n", "String", false, 0)
                 }
@@ -3104,9 +3104,9 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                 }
             }
         }
@@ -3181,11 +3181,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 2)
                 }
-                dataType("bs", "Bs") {
+                dataFor("bs", "Bs") {
 
                 }
                 stringTypeFor("a")
@@ -3275,10 +3275,10 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("as", "String", false, 0) // of String
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                     propertyListTypeOf("a", "String", false, 0) // of String
                 }
                 stringTypeFor("a")
@@ -3373,21 +3373,21 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("abs", "AB", false, 0)
                 }
-                dataType("abs", "Abs") {
+                dataFor("abs", "Abs") {
                     propertyListTypeOf("ab", "AB", false, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("AB")
                     propertyPrimitiveType("a", "String", false, 0)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     supertypes("AB")
                     propertyPrimitiveType("b", "String", false, 0)
                 }
-                dataType("AB", "AB") {
+                dataFor("AB", "AB") {
                     subtypes("A", "B")
                 }
                 stringTypeFor("a")
@@ -3546,14 +3546,14 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     // no property 'a' because it is list of non-leaf literals
                     propertyDataTypeOf("b", "B", true, 1)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     // no properties because rule list contains only literals
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     // no properties because rule contains only literals
                 }
             }
@@ -3644,11 +3644,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListType("as", false, 0) { ref("String") }
                     propertyPrimitiveType("b", "String", true, 1)
                 }
-                dataType("As", "As") {
+                dataFor("As", "As") {
                     propertyListType("a", false, 0) { ref("String") }
                 }
                 stringTypeFor("A")
@@ -3750,16 +3750,16 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyListTypeOf("ass", "As", false, 0) // of String
                 }
-                dataType("ass", "Ass") {
+                dataFor("ass", "Ass") {
                     propertyListTypeOf("as", "As", false, 0)
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                     propertyListTypeOf("a", "A", false, 0)
                 }
-                dataType("a", "A") {
+                dataFor("a", "A") {
                 }
             }
         }
@@ -3931,7 +3931,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -3981,7 +3981,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyTupleType("\$group", false, 0) {
                         typeRef("b", "String", false)
                         typeRef("c", "String", false)
@@ -4046,7 +4046,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
@@ -4110,7 +4110,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("b", "String", false)
@@ -4192,7 +4192,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("b", "String", false)
@@ -4280,7 +4280,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("b", "String", false)
@@ -4354,7 +4354,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("b", "String", false)
@@ -4453,7 +4453,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyPrimitiveType("\$choice", "String", false, 1)
                     propertyPrimitiveType("e", "String", false, 2)
@@ -4547,12 +4547,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S\$1",false, 1)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     tupleType {
                         typeRef("b", "String", false)
                         typeRef("c", "String", false)
@@ -4652,12 +4652,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1", false, 1)
                     propertyPrimitiveType("f", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     tupleType {
                         typeRef("b", "String", false)
                         typeRef("c", "String", false)
@@ -4769,12 +4769,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("f", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     tupleType {
                         typeRef("b", "String", false)
                         typeRef("c", "String", false)
@@ -4883,12 +4883,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1",true, 1)
                     propertyPrimitiveType("f", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     tupleType {
                         typeRef("b", "String", false)
                         typeRef("c", "String", false)
@@ -4999,7 +4999,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("b", "String", true)
@@ -5102,7 +5102,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
                         typeRef("\$choice", "String", false)
@@ -5248,16 +5248,16 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     typeRef("BC")
                     listType { ref("String") }
                 }
-                dataType("BC", "BC") {
+                dataFor("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 1)
                 }
@@ -5378,16 +5378,16 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1",true, 1)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     typeRef("BC")
                     listType { ref("String") }
                 }
-                dataType("BC", "BC") {
+                dataFor("BC", "BC") {
                     propertyPrimitiveType("b", "String", false, 0)
                     propertyPrimitiveType("c", "String", false, 1)
                 }
@@ -5512,7 +5512,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5617,7 +5617,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("a", "String", false)
@@ -5735,7 +5735,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("a", "String", false)
@@ -5855,12 +5855,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
                     propertyUnionTypeOf("\$choice", "S$1",false, 1)
                     propertyPrimitiveType("y", "String", false, 2)
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -5971,10 +5971,10 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyUnionTypeOf("ch", "CH", false, 0)
                 }
-                unionType("CH","CH") {
+                unionFor("CH","CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -6097,12 +6097,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("x", "String", false, 0)
                     propertyUnionTypeOf("ch", "CH",false, 1)
                     propertyPrimitiveType("y", "String", false, 2)
                 }
-                unionType("CH","CH") {
+                unionFor("CH","CH") {
                     tupleType {
                         typeRef("a", "String", false)
                         typeRef("b", "String", false)
@@ -6254,12 +6254,12 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("a", "String", false, 0)
                     propertyUnionTypeOf("x",  "X",true, 1)
                     propertyPrimitiveType("e", "String", false, 2)
                 }
-                unionType("R", "R") {
+                unionFor("R", "R") {
                     tupleType {
                         tupleType("\$group", false) {
                             typeRef("b", "String", false)
@@ -6273,7 +6273,7 @@ class test_AllDefault {
                         }
                     }
                 }
-                unionType("X", "X") {
+                unionFor("X", "X") {
                     typeRef("R", false)
                     typeRef("String", false)
                 }
@@ -6436,11 +6436,11 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Inner") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("String")
                     typeRef("S1")
                 }
-                dataType("S1", "S1") {
+                dataFor("S1", "S1") {
                     propertyUnionTypeOf("s", "S",false, 0)
                     propertyPrimitiveType("a", "String", false, 1)
                 }
@@ -6448,15 +6448,15 @@ class test_AllDefault {
             }
             grammarTypeNamespace("test.Outer") {
                 imports("test.Inner")
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("String")
                     typeRef("S1")
                 }
-                dataType("S1", "S1") {
+                dataFor("S1", "S1") {
                     propertyUnionTypeOf("b", "B",false, 0)
                     propertyUnionTypeOf("s", "S",false, 1)
                 }
-                unionType("B","B") {
+                unionFor("B","B") {
                     tupleType {
                         typeRef("b", "String", false)
                         typeRef("s","test.Inner.S",false)
@@ -6635,37 +6635,37 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.I") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     subtypes("A", "SA")
                 }
-                dataType("SA", "SA") {
+                dataFor("SA", "SA") {
                     supertypes("S")
                     propertyDataTypeOf("s", "S", false, 0)
                     propertyDataTypeOf("a", "A", false, 1)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     supertypes("S")
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
             }
             grammarTypeNamespace("test.O", imports = listOf("std", "test.I")) {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     subtypes("B", "BC")
                 }
-                dataType("SBC", "SBC") {
+                dataFor("SBC", "SBC") {
                     supertypes("S")
                     propertyDataTypeOf("s", "S", false, 0)
                     propertyDataTypeOf("bc", "BC", false, 1)
                 }
-                dataType("BC", "BC") {
+                dataFor("BC", "BC") {
                     subtypes("B", "C")
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     supertypes("S", "BC")
                     propertyDataTypeOf("s", "test.I.S", false, 0)
                 }
-                dataType("C", "C") {
+                dataFor("C", "C") {
                     supertypes("BC")
                     propertyDataTypeOf("s", "test.I.S", false, 0)
                 }
@@ -6747,7 +6747,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -6798,7 +6798,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -6854,20 +6854,20 @@ class test_AllDefault {
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 // S = type ;
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("type", "Type", false, 0)
                 }
                 // type = NAME typeArgs? ;
-                dataType("type", "Type") {
+                dataFor("type", "Type") {
                     propertyPrimitiveType("name", "String", false, 0)
                     propertyDataTypeOf("typeArgs", "TypeArgs", true, 1)
                 }
                 // typeArgs = '<' typeArgList '>' ;
-                dataType("typeArgs", "TypeArgs") {
+                dataFor("typeArgs", "TypeArgs") {
                     propertyListTypeOf("typeArgList", "Type", false, 1)
                 }
                 // typeArgList = [type / ',']+ ;
-                dataType("typeArgList", "TypeArgList") {
+                dataFor("typeArgList", "TypeArgList") {
                     propertyListTypeOf("type", "Type", false, 0)
                 }
                 // leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
@@ -6964,7 +6964,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7010,7 +7010,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7060,7 +7060,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7106,7 +7106,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7152,7 +7152,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7197,7 +7197,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7243,7 +7243,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7298,7 +7298,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("id", "String", false, 0)
                     propertyListType("\$choiceList", false, 1) { ref("String") }
                 }
@@ -7390,7 +7390,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7440,7 +7440,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7492,7 +7492,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7544,7 +7544,7 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                 }
             }
         }
@@ -7604,18 +7604,18 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                unionType("S","S") {
+                unionFor("S","S") {
                     typeRef("As")
                     typeRef("Bs")
 
                 }
-                dataType("as", "As") {
+                dataFor("as", "As") {
                     propertyListType("a", false, 0) { ref("String") }
                 }
-                dataType("bs", "Bs") {
+                dataFor("bs", "Bs") {
                     propertyListType("b", false, 0) { ref("String") }
                 }
-                unionType("cs","?") {
+                unionFor("cs","?") {
                     typeRef("String")
                     tupleType { }
                 }
@@ -7686,10 +7686,10 @@ class test_AllDefault {
                 stringTypeFor("a")
             }
             grammarTypeNamespace("test.Test", imports = listOf(StdLibDefault.qualifiedName.value, "test.Base")) {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
             }
@@ -7757,13 +7757,13 @@ class test_AllDefault {
         }
         val expectedTm = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Base") {
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("a", "String", false, 0)
                 }
                 stringTypeFor("a")
             }
             grammarTypeNamespace("test.Test", imports = listOf(StdLibDefault.qualifiedName.value, "test.Base"), true) {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("a", "A", false, 0)
                 }
             }

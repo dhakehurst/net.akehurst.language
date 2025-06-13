@@ -42,6 +42,6 @@ grammar AtomBasic {
 
     leaf ID = "[a-zA-Z][a-zA-Z0-9]*" ;
     leaf INTEGER = "[0-9]+" ;
-    leaf STRING = "\"([^\"\\]|\\.)*\"" ;
+    leaf STRING = "\"([^\"\\\\]|\\.)*\"" ;
 
 }

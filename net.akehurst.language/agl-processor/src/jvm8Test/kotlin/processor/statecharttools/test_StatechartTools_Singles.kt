@@ -18,9 +18,11 @@ package net.akehurst.language.agl.processor.statecharttools
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
@@ -29,8 +31,6 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import kotlin.test.Test
@@ -76,24 +76,21 @@ class test_StatechartTools_Singles {
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
             .also {
-                assertTrue(it.issues.errors.isEmpty(), it.issues.toString())
+                assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
             }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
-                    ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
+                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), formatterStr) }
+                formatResolver { p -> AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), formatterStr) }
 //TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
@@ -108,9 +105,9 @@ class test_StatechartTools_Singles {
         fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(ContextAsmSimple()) }
+                semanticAnalysis { context(contextAsmSimple()) }
             })
-            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
             val resultStr = processors[grammar].formatAsm(result.asm!!).sentence
             assertEquals(sentence, resultStr)
         }

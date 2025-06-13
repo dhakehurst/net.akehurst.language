@@ -21,8 +21,10 @@ import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
+import net.akehurst.language.parser.api.SentenceIdentityFunction
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.common.ScanOptionsDefault
@@ -57,6 +59,7 @@ class ParseOptionsBuilder(
 ) {
     private var _enabled: Boolean = true
     private var _goalRuleName: String? = base.goalRuleName
+    private  var _sentenceIdentity = base.sentenceIdentity
     private var _reportErrors: Boolean = base.reportErrors
     private var _reportGrammarAmbiguities = base.reportGrammarAmbiguities
     private var _cacheSkip: Boolean = base.cacheSkip
@@ -67,6 +70,10 @@ class ParseOptionsBuilder(
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
+    }
+
+    fun sentenceIdentity(func: SentenceIdentityFunction) {
+        _sentenceIdentity = func
     }
 
     fun reportErrors(value: Boolean) {
@@ -83,7 +90,7 @@ class ParseOptionsBuilder(
 
     fun build(): ParseOptions {
         return ParseOptionsDefault(
-            _enabled, _goalRuleName, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
+            _enabled, _goalRuleName, _sentenceIdentity, _reportErrors, _reportGrammarAmbiguities, _cacheSkip
         )
     }
 }
@@ -172,7 +179,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>(
         _enabled = value
     }
 
-    fun locationMap(value: Map<Any, InputLocation>) {
+    fun locationMap(value: LocationMap) {
         _locationMap = value
     }
 
@@ -226,6 +233,9 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
 
     private var _context: ContextType? = base.context
     private var _depth: Int = base.depth
+    private var _path: List<Pair<Int,Int>> = base.path
+    private var _showOptionalItems = base.showOptionalItems
+    private var _provideValuesForPatternTerminals = base.provideValuesForPatternTerminals
     private val _options = base.other.toMutableMap()
 
     fun context(value: ContextType?) {
@@ -236,11 +246,30 @@ class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>(
         _depth = value
     }
 
+    fun path(value:List<Pair<Int,Int>>) {
+        _path = value
+    }
+
+    fun showOptionalItems(value:Boolean) {
+        _showOptionalItems = value
+    }
+
+    fun provideValuesForPatternTerminals(value: Boolean) {
+        _provideValuesForPatternTerminals = value
+    }
+
     fun option(key: String, value: Any) {
         _options[key] = value
     }
 
     fun build(): CompletionProviderOptions<ContextType> {
-        return CompletionProviderOptionsDefault<ContextType>(_context, _depth, _options)
+        return CompletionProviderOptionsDefault<ContextType>(
+            context = _context,
+            depth = _depth,
+            path = _path,
+            showOptionalItems = _showOptionalItems,
+            provideValuesForPatternTerminals = _provideValuesForPatternTerminals,
+            other = _options
+        )
     }
 }

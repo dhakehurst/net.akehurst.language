@@ -19,6 +19,7 @@ package net.akehurst.language.api.semanticAnalyser
 
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.sentence.api.InputLocation
 
 /**
@@ -33,8 +34,9 @@ interface SemanticAnalyser<in AsmType : Any, ContextType : Any> {
     //fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue>
 
     fun analyse(
+        sentenceIdentity:Any?,
         asm: AsmType,
-        locationMap: Map<Any, InputLocation>? = null,
+        locationMap: LocationMap? = null,
         options: SemanticAnalysisOptions<ContextType>
     ): SemanticAnalysisResult
 }

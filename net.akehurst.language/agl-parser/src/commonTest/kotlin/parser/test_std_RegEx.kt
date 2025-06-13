@@ -31,7 +31,7 @@ class test_std_RegEx {
         val rr = RuntimeRule(0, 0, "x", false, false).also {
             it.setRhs(RuntimeRuleRhsPattern(it, "|"))
         }
-        val sentence = SentenceDefault("?")
+        val sentence = SentenceDefault("?", null)
         val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.using(RegexEnginePlatform).isLookingAt(sentence, 0)
 
         assertEquals(false, result)

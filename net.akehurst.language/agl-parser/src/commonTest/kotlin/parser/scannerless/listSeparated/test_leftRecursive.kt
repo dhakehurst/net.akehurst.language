@@ -51,7 +51,7 @@ class test_leftRecursive  : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 

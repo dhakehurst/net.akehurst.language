@@ -21,6 +21,6 @@ interface SentenceContext{
 
 }
 
-interface ContextWithScope : SentenceContext {
-
-}
+//interface ContextWithScope : SentenceContext {
+//
+//}

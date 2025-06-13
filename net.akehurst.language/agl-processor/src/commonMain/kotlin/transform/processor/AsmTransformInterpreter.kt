@@ -19,8 +19,6 @@ package net.akehurst.language.transform.processor
 
 import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
-import net.akehurst.language.asm.api.AsmValue
-import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
@@ -28,10 +26,10 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
@@ -57,22 +55,22 @@ class AsmTransformInterpreter<AsmValueType:Any>(
 
         val parseNodeTypeModel = typeModel("ParseNodes", true) {
             namespace("parse") {
-                dataType("Node") {
+                data("Node") {
                     subtypes("BranchSeparated","Branch", "Leaf")
                     property(PATH.value, StdLibDefault.AnyType, 0)
                     property(ALTERNATIVE.value, StdLibDefault.Integer, 1)
                     property(MATCHED_TEXT.value, StdLibDefault.String, 2)
                 }
-                dataType("Leaf") {
+                data("Leaf") {
                     subtypes("Node")
                     property("value", StdLibDefault.String, 0)
                 }
-                dataType("Branch") {
+                data("Branch") {
                     supertypes("Node")
                     propertyListTypeOf(CHILDREN.value, StdLibDefault.AnyType.qualifiedTypeName.value, false, 0) //TODO: typeArgument ?
                     propertyListTypeOf(CHILD.value, StdLibDefault.AnyType.qualifiedTypeName.value, false, 1)
                 }
-                dataType("BranchSeparated") {
+                data("BranchSeparated") {
                     supertypes("Node")
                     propertyListSeparatedType(CHILDREN.value, false, 0) {
                         ref(StdLibDefault.AnyType.qualifiedTypeName.value)
@@ -136,7 +134,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValueType>, path: AsmPath, trRule: TransformationRule): TypedObject<AsmValueType> {
+    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: TransformationRule): TypedObject<AsmValueType> {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm

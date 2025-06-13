@@ -19,8 +19,10 @@ package net.akehurst.language.agl.generators
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
-import net.akehurst.language.agl.expressions.processor.TypedObjectByReflection
+import net.akehurst.language.agl.expressions.processor.TypedObjectAny
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
@@ -29,13 +31,12 @@ import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.TypeModel
 
 class GenerateGrammarModelBuild(
-    val grammarTypeModel: TypeModel = AglGrammar.typeModel
+    val grammarTypeModel: TypeModel = AglGrammar.typesModel
 ) {
 
     companion object {
@@ -99,8 +100,8 @@ class GenerateGrammarModelBuild(
     }
 
     val formatModel by lazy {
-        val res = AglFormatModelDefault.fromString(ContextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
-        check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
+        val res = AglFormatModelDefault.fromString(contextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
+        check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
     }
     val formatSet get() = formatModel.findDefinitionByQualifiedNameOrNull("net.akehurst.language.grammar.Asm".asQualifiedName)!!
@@ -110,22 +111,22 @@ class GenerateGrammarModelBuild(
             sentence = grammarString.value,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry())
                 }
             }
         )
-        check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
+        check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         val asm = res.asm!!
         return generateFromAsm(asm)
     }
 
     fun generateFromAsm(grammarModel: GrammarModel): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection(AglGrammar.typeModel, issues)
+        val og = ObjectGraphByReflection<Any>(AglGrammar.typesModel, issues)
         val formatter = FormatterOverTypedObject<Any>(formatModel, og,issues)
 
         val tp = grammarTypeModel.findFirstDefinitionByNameOrNull(SimpleName("GrammarModel"))!!.type()
-        val tobj = TypedObjectByReflection(tp, grammarModel)
+        val tobj = TypedObjectAny(tp, grammarModel)
         val res = formatter.format(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }

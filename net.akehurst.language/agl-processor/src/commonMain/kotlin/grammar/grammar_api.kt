@@ -19,7 +19,6 @@ package net.akehurst.language.grammar.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
-import net.akehurst.language.grammar.asm.ChoiceIndicator
 import kotlin.jvm.JvmInline
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -163,6 +162,7 @@ interface PreferenceRule : GrammarItem {
 }
 
 enum class Associativity { LEFT, RIGHT }
+enum class ChoiceIndicator { NONE, EMPTY, ITEM, NUMBER }
 
 interface PreferenceOption : Formatable {
     val spine: Spine
@@ -192,8 +192,11 @@ interface NormalRule : GrammarRule {
 }
 
 enum class OverrideKind {
-    REPLACE, // replace references to original rule with this one
-    APPEND_ALTERNATIVE, // either append this as another option or convert original to a choice and append this option
+    /** '=' replace references to original rule with this one */
+    REPLACE,
+    /** '+|=' either append this as another option or convert original to a choice and append this option */
+    APPEND_ALTERNATIVE,
+    /** '==' ?? */
     SUBSTITUTION //TODO: document this!
 }
 

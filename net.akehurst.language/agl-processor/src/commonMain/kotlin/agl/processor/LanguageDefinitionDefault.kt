@@ -16,27 +16,17 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.*
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.processor.AglGrammar.formatStr
-import net.akehurst.language.grammar.processor.ContextFromGrammar
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimple
-import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    private val aglOptions: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>?,
+    private val aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
@@ -107,8 +97,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.targetGrammarName = configuration.targetGrammarName
         this.defaultGoalRule = configuration.defaultGoalRuleName
 
-        this._regexEngineKind = configuration.regexEngineKind
-        this._scannerKind = configuration.scannerKind
+//        this._regexEngineKind = configuration.regexEngineKind
+//        this._scannerKind = configuration.scannerKind
 
         this.grammarString = configuration.grammarString
         this.typesString = configuration.typesString
@@ -117,30 +107,31 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.styleString = configuration.styleString
         this.formatString = configuration.formatString
 
-        this._scannerResolver = configuration.scannerResolver
-        this._parserResolver = configuration.parserResolver
-        this._typeModelResolver = configuration.typesResolver
-        this._asmTransformModelResolver = configuration.transformResolver
-        this._crossReferenceModelResolver = configuration.crossReferenceResolver
-        this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
-        this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
-
+//        this._scannerResolver = configuration.scannerResolver
+//        this._parserResolver = configuration.parserResolver
+//        this._typeModelResolver = configuration.typesResolver
+//        this._asmTransformModelResolver = configuration.transformResolver
+//        this._crossReferenceModelResolver = configuration.crossReferenceResolver
+//        this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
+//        this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
+//
+//        this._formatterResolver = configuration.formatResolver
+//        this._completionProviderResolver = configuration.completionProviderResolver
         this._styleResolver = configuration.styleResolver
-        this._formatterResolver = configuration.formatResolver
-        this._completionProviderResolver = configuration.completionProviderResolver
 
         updateGrammarModel(oldGrammarStr, configuration.grammarString)
 
         this._doObservableUpdates = true
         super._processor_cache.reset()
+        super._style_cache.reset()
     }
 
-    private fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
+    internal fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<GrammarModel, ContextFromGrammarRegistry>(newValue?.value, aglOptions)
-            this._issues.addAllFrom(res.issues)
+            val res = Agl.grammarFromString<GrammarModel, ContextWithScope<Any,Any>>(newValue?.value, aglOptions)
+            this._issues.addAllFrom(res.allIssues)
             this.grammarModel = when {
-                res.issues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
+                res.allIssues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
                 else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
             }
         }

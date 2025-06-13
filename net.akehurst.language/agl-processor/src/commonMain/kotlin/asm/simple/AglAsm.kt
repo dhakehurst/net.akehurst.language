@@ -11,7 +11,7 @@ interface Asm {
   cmp root
 }
 interface AsmStructure {
-  cmp path
+  cmp semanticPath
   cmp property
 }
 interface AsmStructureProperty {
@@ -26,65 +26,67 @@ interface AsmListSeparated {
 """
 
     val typeModel: TypeModel by lazy {
-        typeModel("Asm", true, AglBase.typeModel.namespace) {
-            namespace("net.akehurst.language.asm.api", listOf("std", "net.akehurst.language.base.api", "net.akehurst.language.collections")) {
-                valueType("PropertyValueName") {
-
+        typeModel("Asm", true, AglBase.typesModel.namespace) {
+            namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.collections")) {
+                value("PropertyValueName") {
+                    supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
-                interfaceType("AsmValue") {
+                interface_("AsmValue") {
 
                 }
-                interfaceType("AsmTreeWalker") {
+                interface_("AsmTreeWalker") {
 
                 }
-                interfaceType("AsmStructureProperty") {
+                interface_("AsmStructureProperty") {
 
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "value", "AsmValue", false)
+                    propertyOf(setOf(VAL, CMP, STR), "value", "AsmValue", false)
                 }
-                interfaceType("AsmStructure") {
+                interface_("AsmStructure") {
                     supertype("AsmValue")
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "path", "AsmPath", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "property", "Map", false){
+                    propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
                 }
-                interfaceType("AsmReference") {
+                interface_("AsmReference") {
 
                 }
-                interfaceType("AsmPrimitive") {
+                interface_("AsmPrimitive") {
                     supertype("AsmValue")
                 }
-                interfaceType("AsmPath") {
+                interface_("AsmPath") {
 
                 }
-                interfaceType("AsmNothing") {
+                interface_("AsmNothing") {
                     supertype("AsmValue")
                 }
-                interfaceType("AsmListSeparated") {
+                interface_("AsmListSeparated") {
                     supertype("AsmList")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "elements", "ListSeparated", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                     }
                 }
-                interfaceType("AsmList") {
+                interface_("AsmList") {
                     supertype("AsmValue")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "elements", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
-                interfaceType("AsmAny") {
+                interface_("AsmLambda") {
                     supertype("AsmValue")
                 }
-                interfaceType("Asm") {
+                interface_("AsmAny") {
+                    supertype("AsmValue")
+                }
+                interface_("Asm") {
 
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "root", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "root", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
@@ -92,113 +94,126 @@ interface AsmListSeparated {
             namespace("net.akehurst.language.asm.simple", listOf("net.akehurst.language.asm.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.collections")) {
                 singleton("AsmNothingSimple")
                 singleton("AglAsm")
-                dataType("AsmValueAbstract") {
+                data("AsmValueAbstract") {
                     supertype("AsmValue")
                     constructor_ {}
                 }
-                dataType("AsmStructureSimple") {
+                data("AsmStructureSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmStructure")
                     constructor_ {
-                        parameter("path", "AsmPath", false)
                         parameter("qualifiedTypeName", "QualifiedName", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "path", "AsmPath", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "property", "Map", false){
+                    propertyOf(setOf(VAR, REF, STR), "parsePath", "String", false)
+                    propertyOf(setOf(VAR, CMP, STR), "property", "Map", false){
                         typeArgument("PropertyValueName")
                         typeArgument("AsmStructureProperty")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "semanticPath", "AsmPath", false)
                 }
-                dataType("AsmStructurePropertySimple") {
+                data("AsmStructurePropertySimple") {
                     supertype("AsmStructureProperty")
                     constructor_ {
                         parameter("name", "PropertyValueName", false)
                         parameter("index", "Integer", false)
                         parameter("value", "AsmValue", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "index", "Integer", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "PropertyValueName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "value", "AsmValue", false)
+                    propertyOf(setOf(VAL, REF, STR), "index", "Integer", false)
+                    propertyOf(setOf(VAL, CMP, STR), "name", "PropertyValueName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "value", "AsmValue", false)
                 }
-                dataType("AsmSimpleKt") {
+                data("AsmSimpleKt") {
 
                 }
-                dataType("AsmSimple") {
+                data("AsmSimple") {
                     supertype("Asm")
                     constructor_ {}
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "elementIndex", "Map", false){
+                    propertyOf(setOf(VAR, REF, STR), "elementIndex", "Map", false){
                         typeArgument("AsmPath")
                         typeArgument("AsmStructure")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "root", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "root", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
-                dataType("AsmReferenceSimple") {
+                data("AsmReferenceSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmReference")
                     constructor_ {
                         parameter("reference", "String", false)
                         parameter("value", "AsmStructure", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "reference", "String", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "value", "AsmStructure", false)
+                    propertyOf(setOf(VAL, REF, STR), "reference", "String", false)
+                    propertyOf(setOf(VAR, REF, STR), "value", "AsmStructure", false)
                 }
-                dataType("AsmPrimitiveSimple") {
+                data("AsmPrimitiveSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmPrimitive")
                     constructor_ {
                         parameter("qualifiedTypeName", "QualifiedName", false)
                         parameter("value", "Any", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedTypeName", "QualifiedName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "Any", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
-                dataType("AsmPathSimple") {
+                data("AsmPathSimple") {
                     supertype("AsmPath")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
-                dataType("AsmListSimple") {
+                data("AsmListSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmList")
                     constructor_ {
                         parameter("elements", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "elements", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "List", false){
                         typeArgument("AsmValue")
                     }
                 }
-                dataType("AsmListSeparatedSimple") {
+                data("AsmListSeparatedSimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmListSeparated")
                     constructor_ {
                         parameter("elements", "ListSeparated", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "elements", "ListSeparated", false){
+                    propertyOf(setOf(VAR, CMP, STR), "elements", "ListSeparated", false){
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                         typeArgument("AsmValue")
                     }
                 }
-                dataType("AsmAnySimple") {
+                data("AsmLambdaSimple") {
+                    supertype("AsmValueAbstract")
+                    supertype("AsmLambda")
+                    constructor_ {
+                        parameter("lambda", "LambdaType", false)
+                    }
+                    propertyOf(setOf(VAL, REF, STR), "lambda", "LambdaType", false){
+                        typeArgument("AsmValue")
+                        typeArgument("AsmValue")
+                    }
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedTypeName", "QualifiedName", false)
+                }
+                data("AsmAnySimple") {
                     supertype("AsmValueAbstract")
                     supertype("AsmAny")
                     constructor_ {
                         parameter("value", "Any", false)
                     }
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "value", "Any", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "Any", false)
                 }
             }
             namespace("net.akehurst.language.collections", listOf("std")) {
-                interfaceType("ListSeparated") {
+                interface_("ListSeparated") {
                     typeParameters("E", "I", "S")
                     supertype("List"){ ref("E") }
                 }
-            }}
+            }
+        }
     }
 
 }

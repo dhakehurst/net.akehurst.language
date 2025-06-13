@@ -34,21 +34,21 @@ class test_mscript {
 
     @Test
     fun mscript_typeModel() {
-        val actual = sut.typeModel
+        val actual = sut.typesModel
         val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript") {
-            dataType("script", "Script") {
+            dataFor("script", "Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)
             }
-            dataType("statementList", "StatementList") {
+            dataFor("statementList", "StatementList") {
                 // statementList = [line / "\R"]* ;
                 propertyListSeparatedTypeOf("line", "Line", "String", false, 0)
             }
-            dataType("line", "Line") {
+            dataFor("line", "Line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "Statement", "String", false, 0)
             }
-            dataType("statement", "Statement") {
+            dataFor("statement", "Statement") {
                 // statement
                 //   = conditional
                 //   | assignment
@@ -57,22 +57,22 @@ class test_mscript {
                 //   ;
                 subtypes("Conditional", "Assignment", "ExpressionStatement")
             }
-            dataType("conditional", "Conditional") {
+            dataFor("conditional", "Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
                 propertyDataTypeOf("expression", "Expression", false, 1)
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 3)
                 propertyListSeparatedTypeOf("statementList2", "Line", "String", false, 5)
             }
-            dataType("assignment", "Assignment") {
+            dataFor("assignment", "Assignment") {
                 // assignment = rootVariable '=' expression ;
                 propertyDataTypeOf("rootVariable", "RootVariable", false, 0)
                 propertyDataTypeOf("expression", "Expression", false, 2)
             }
-            dataType("", "ExpressionStatement") {
+            dataFor("", "ExpressionStatement") {
                 // expressionStatement = expression ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
             }
-            dataType("", "Expression") {
+            dataFor("", "Expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -84,26 +84,26 @@ class test_mscript {
                 //   ;
                 subtypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
             }
-            dataType("", "GroupExpression") {
+            dataFor("", "GroupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
                 propertyDataTypeOf("expression", "Expression", false, 1)
             }
-            dataType("", "FunctionCallOrIndex") {
+            dataFor("", "FunctionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
                 propertyPrimitiveType("name", "String", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "Argument", "String", false, 2)
             }
-            dataType("", "ArgumentList") {
+            dataFor("", "ArgumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "Argument", "String", false, 0)
             }
-            dataType("", "Argument") {
+            dataFor("", "Argument") {
                 // argument = expression | colonOperator ;
                 subtypes("Expression", "ColonOperator")
             }
-            dataType("", "PrefixExpression") {
+            dataFor("", "PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
                 propertyDataTypeOf("expression", "Expression", false, 1)
@@ -113,7 +113,7 @@ class test_mscript {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            dataType("", "InfixExpression") {
+            dataFor("", "InfixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "Expression", "String", false, 0)
             }
@@ -127,14 +127,14 @@ class test_mscript {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            dataType("", "ColonOperator") {
+            dataFor("", "ColonOperator") {
                 propertyPrimitiveType("colon", "String", false, 0)
             }
-            dataType("", "Matrix") {
+            dataFor("", "Matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "Row", "String", false, 1)
             }
-            dataType("", "Row") {
+            dataFor("", "Row") {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
@@ -142,7 +142,7 @@ class test_mscript {
                     typeRef("expression", "Expression", false)
                 }
             }
-            dataType("", "LiteralExpression") {
+            dataFor("", "LiteralExpression") {
                 propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("LiteralValue")
@@ -155,7 +155,7 @@ class test_mscript {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            dataType("", "RootVariable") {
+            dataFor("", "RootVariable") {
                 // rootVariable = NAME ;
                 propertyPrimitiveType("name", "String", false, 0)
             }
@@ -331,7 +331,7 @@ class test_mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         val expIssues = listOf(
-            parseError(InputLocation(0, 1, 1, 1), text, setOf("<GOAL>"), setOf("REAL"))
+            parseError(InputLocation(0, 1, 1, 1, null), text, setOf("<GOAL>"), setOf("REAL"))
         )
         assertNull(result.sppt)
         assertEquals(expIssues, result.issues.errors)
@@ -698,7 +698,7 @@ class test_mscript {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
@@ -711,7 +711,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(),parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -735,7 +735,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -787,7 +787,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), parseResult.issues.toString())
 
     }
 
@@ -814,7 +814,7 @@ class test_mscript {
         assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), parseResult.issues.toString())
 
     }
 

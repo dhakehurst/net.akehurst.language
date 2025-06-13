@@ -106,7 +106,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val extended = sl.items.map {
             // need to manually add the Reference as it is not seen by the super class
             { ns: FormatNamespace ->
-                FormatSetReferenceDefault(ns, it).also { this.locationMap[it] = sentence.locationForNode(nodeInfo.node) }
+                FormatSetReferenceDefault(ns, it).also { setLocationFor(it, nodeInfo, sentence) }
             }
         }
         return extended

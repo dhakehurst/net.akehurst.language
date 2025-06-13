@@ -16,7 +16,8 @@
 package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -36,20 +37,20 @@ class test_KerML_agl_Singles {
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 
-        val processor: LanguageProcessor<Asm, ContextAsmSimple> by lazy {
+        val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy {
             Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).processor!!
         }
 
-        fun test_process(sentence: String, context: ContextAsmSimple, expIssues: Set<LanguageIssue>) {
+        fun test_process(sentence: String, context: ContextWithScope<Any, Any>, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
                 }
             })
-            assertEquals(expIssues, result.issues.all, result.issues.toString())
+            assertEquals(expIssues, result.allIssues.all, result.allIssues.toString())
         }
     }
 
@@ -64,7 +65,7 @@ class test_KerML_agl_Singles {
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
 
@@ -81,7 +82,7 @@ class test_KerML_agl_Singles {
                 }
             }
         )
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test
@@ -151,7 +152,7 @@ class test_KerML_agl_Singles {
         val sentence = """
         """.trimIndent()
 
-        test_process(sentence, ContextAsmSimple(), emptySet())
+        test_process(sentence, contextAsmSimple(), emptySet())
     }
 
     @Test
@@ -164,7 +165,7 @@ class test_KerML_agl_Singles {
             }
         """.trimIndent()
 
-        test_process(sentence, ContextAsmSimple(), emptySet())
+        test_process(sentence, contextAsmSimple(), emptySet())
     }
 
     @Test
@@ -181,12 +182,12 @@ class test_KerML_agl_Singles {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(17, 1, 2, 16),
+                InputLocation(17, 1, 2, 16, null),
                 "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope //", null
             )
         )
 
-        test_process(sentence, ContextAsmSimple(), expIssues)
+        test_process(sentence, contextAsmSimple(), expIssues)
     }
 
 }

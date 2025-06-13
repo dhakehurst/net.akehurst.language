@@ -64,7 +64,7 @@ class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_LeftCornerParserAbst
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
         ),issues.errors)
     }
 

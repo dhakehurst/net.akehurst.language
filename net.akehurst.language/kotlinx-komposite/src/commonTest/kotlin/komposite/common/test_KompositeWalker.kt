@@ -336,7 +336,7 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         val tm = typeModel("Test",true) {
             namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
-                dataType("A") {
+                data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -377,7 +377,7 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         val tm = typeModel("Test",true) {
             namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
-                dataType("A") {
+                data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }

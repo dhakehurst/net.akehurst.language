@@ -55,10 +55,10 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_nothing() {
-        val expression = "\$nothing"
+        val expression = $$"$nothing"
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -75,10 +75,10 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_self() {
-        val expression = "\$self"
+        val expression = $$"$self"
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -97,7 +97,7 @@ class test_ExpressionsInterpreter {
     fun structure_property__notfound() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -116,7 +116,7 @@ class test_ExpressionsInterpreter {
     fun structure_property__found() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -135,7 +135,7 @@ class test_ExpressionsInterpreter {
     fun structure_property_index__notIndexable() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -161,7 +161,7 @@ class test_ExpressionsInterpreter {
     fun structure_property_index__onlyOneIndexValue() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
@@ -187,7 +187,7 @@ class test_ExpressionsInterpreter {
     fun structure_property_index__mustBeInteger() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
@@ -213,7 +213,7 @@ class test_ExpressionsInterpreter {
     fun structure_property_index__outOfRange() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
@@ -239,7 +239,7 @@ class test_ExpressionsInterpreter {
     fun structure_propertyListOfString_index_0() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
                 }
             }
@@ -259,10 +259,10 @@ class test_ExpressionsInterpreter {
     fun structure_propertyListOfA_get() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("aList", "A", false, 0)
                 }
-                dataType("A") {
+                data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }
@@ -292,10 +292,10 @@ class test_ExpressionsInterpreter {
     fun structure_propertyListOfA_map() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("aList", "A", false, 0)
                 }
-                dataType("A") {
+                data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
                 }
             }

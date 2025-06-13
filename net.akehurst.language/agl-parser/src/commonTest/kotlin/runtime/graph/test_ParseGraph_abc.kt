@@ -49,7 +49,7 @@ class test_ParseGraph_abc {
 
         val text = "a"
         val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
-        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
+        val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("S")]
         val r_S = rrs.findRuntimeRule("S")
@@ -72,7 +72,7 @@ class test_ParseGraph_abc {
         }
         val text = "a"
         val scanner = ScannerOnDemand(RegexEnginePlatform, rrs.terminals)
-        val sut = ParseGraph(SentenceDefault(text), scanner, 0)
+        val sut = ParseGraph(SentenceDefault(text, null), scanner, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
         val startState = RulePositionWithLookahead(RulePositionRuntime(gr, RulePosition.OPTION_NONE, 0), emptySet())

@@ -21,12 +21,15 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.typemodel.api.CollectionType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.StructuredType
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -48,87 +51,120 @@ class CompletionProviderSimple(
     val grammar2TypeModel: Grammar2TypeModelMapping,
     val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModel
-) : CompletionProviderAbstract<Asm, ContextAsmSimple>() {
+) : CompletionProviderAbstract<Asm, ContextWithScope<Any, Any>>() {
 
     val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextAsmSimple>): List<CompletionItem> {
-        val depth = options.depth
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
         val context = options.context
-        val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
-            nextExpected.flatMap { sp -> provideDefault(depth,sp) }.toSet()
-                .toList() //TODO: can we remove duplicates earlier!
-        } else {
-            val items = nextExpected.flatMap { sp ->
-                val firstSpineNode = sp.elements.firstOrNull()
-                when (firstSpineNode) {
-                    null -> provideDefault(depth,sp)
-                    else -> {
-                        val type = typeFor(firstSpineNode.rule)
-                        when (type) {
-                            null -> provideDefault(depth,sp)
-                            else -> provideForType(type, firstSpineNode, context) + provideDefault(depth,sp)
+
+        return when {
+            options.path.isEmpty() -> {
+                val result = if (null == context) {// || context.isEmpty || crossReferenceModel.isEmpty) {
+                    val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                    val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                    expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                } else {
+                    val items = nextExpected.flatMap { sp ->
+                        val firstSpineNode = sp.elements.firstOrNull()
+                        when (firstSpineNode) {
+                            null -> provideDefaultForSpine(sp, options)
+                            else -> {
+                                val type = typeFor(firstSpineNode.rule)
+                                when (type) {
+                                    null -> {
+                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                                        expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                                    }
+                                    else -> {
+                                        val forTypes = provideForType(type, firstSpineNode, context)
+                                        val expansions = nextExpected.flatMap { sp -> provideForRuleItems(sp.expectedNextRuleItems, options) }
+                                        val tangibles = nextExpected.flatMap { sp -> provideForTangibles(sp.expectedNextLeafNonTerminalOrTerminal, options) }
+                                        forTypes + expansionToCompletionItem(expansions) + tangibles.toSet().toList() //TODO: can we remove duplicates earlier!
+                                    }
+                                }
+                            }
                         }
                     }
+                    items.toSet().toList() //TODO: can we remove duplicates earlier!
                 }
+                defaultSortAndFilter(result)
             }
-            items.toSet().toList() //TODO: can we remove duplicates earlier!
+
+            else -> {
+                val path = options.path
+                val (pthDepth0, pthExpIdx0) = path.first()
+                val initExpansions = nextExpected.flatMap { sp ->
+                    provideExpansionsForRuleItem(pthDepth0, sp.expectedNextRuleItems, options)
+                }
+                val expansions = when (path.size) {
+                    1 -> initExpansions
+                    else -> {
+                        var lastItems = initExpansions
+                        var pthItem = lastItems[pthExpIdx0]!!.ruleItem
+                        for (i in 1 until path.size) {
+                            val (pthDepth, pthExpIdx) = path[i]
+                            lastItems = expand(pthDepth, pthItem, options)
+                            val ni = lastItems.getOrNull(pthExpIdx)?.ruleItem
+                            if (ni == null) break
+                            pthItem = ni
+                        }
+                        lastItems
+                    }
+                }
+                val cis = expansionToCompletionItem(expansions)
+                defaultSortAndFilter(cis)
+            }
         }
-        return defaultSortAndFilter(result)
     }
 
     fun typeFor(rule: GrammarRule): TypeInstance? = targetNamespace.findTypeForRule(rule.name)
 
 
-    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
-        val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
-        //TODO: lists ?
-        return when (prop) {
-            null -> emptyList()
-            else -> {
-                var strProp: PropertyDeclaration = prop
-                while(strProp.typeInstance != StdLibDefault.String) {
-                    strProp = firstPropertyOf(strProp.typeInstance)
-                }
-                val refTypeNames = crossReferenceModel.referenceForProperty(strProp.typeInstance.qualifiedTypeName, strProp.name.value)
-                val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
-                val items = refTypes.flatMap { refType ->
-                    context.rootScope.findItemsConformingTo {
-                        val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
-                        itemType.conformsTo(refType)
+    private fun provideForType(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
+        try {
+            val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
+            //TODO: lists ?
+            return when (prop) {
+                null -> emptyList()
+                else -> {
+                    var strProps: Set<PropertyDeclaration> = setOf(prop)
+                    while (strProps.isNotEmpty() && strProps.all { it.typeInstance != StdLibDefault.String }) {
+                        strProps = strProps.filter { it.typeInstance == StdLibDefault.String }.toSet() +
+                                strProps.filter { it.typeInstance != StdLibDefault.String }.flatMap { prp ->
+                                    val type = prp.typeInstance
+                                    val td = type.resolvedDeclaration
+                                    when (td) {
+                                        is CollectionType -> firstPropertyOf(type.typeArguments[0].type)
+                                        is StructuredType -> firstPropertyOf(type)
+                                        else -> emptyList()
+                                    }
+                                }.toSet()
                     }
-                }
-                items.map {
-                    CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
-                }
-
-                val firstTangibles = firstSpineNode.expectedNextLeafNonTerminalOrTerminal
-                val compItems = firstTangibles.mapNotNull { ti ->
-                    val ni2 = when {
-                        ti.owningRule.isLeaf -> NonTerminalDefault(GrammarReferenceDefault(targetGrammar.namespace, targetGrammar.name), ti.owningRule.name)
-                        else -> ti
-                    }
-                    val tiType = StdLibDefault.String.resolvedDeclaration
-                    val pn = grammar2TypeModel.propertyNameFor(targetGrammar, ni2, tiType)
-                    val refTypeNames = crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, pn.value)
-                    val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
-                    val items = refTypes.flatMap { refType ->
-                        context.rootScope.findItemsConformingTo {
-                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
-                            itemType.conformsTo(refType)
+                    strProps.flatMap { prp ->
+                        val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
+                        val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                        val items = refTypes.flatMap { refType ->
+                            context.findItemsConformingTo {
+                                val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                                itemType.conformsTo(refType)
+                            }
+                        }
+                        items.map {
+                            CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
                         }
                     }
-                    items.map {
-                        CompletionItem(CompletionItemKind.REFERRED, it.qualifiedTypeName.last.value, it.referableName)
-                    }
                 }
-                compItems.flatten()
             }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            return emptyList()
         }
     }
 
-    private fun provideForType2(type: TypeInstance, firstSpineNode: SpineNode, context: ContextAsmSimple): List<CompletionItem> {
+    private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
         return when (prop) {
@@ -145,7 +181,7 @@ class CompletionProviderSimple(
                     val refTypeNames = crossReferenceModel.referenceForProperty(prop.typeInstance.qualifiedTypeName, pn.value)
                     val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
                     val items = refTypes.flatMap { refType ->
-                        context.rootScope.findItemsConformingTo {
+                        context.findItemsConformingTo {
                             val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(refType)
                         }
@@ -159,8 +195,11 @@ class CompletionProviderSimple(
         }
     }
 
-    private fun firstPropertyOf(type: TypeInstance): PropertyDeclaration {
-        return type.allResolvedProperty.values.minBy { it.index }
+    private fun firstPropertyOf(type: TypeInstance): List<PropertyDeclaration> {
+        val typesClosure = setOf(type).transitiveClosure { it.resolvedDeclaration.subtypes.toSet() }
+        val minProps = typesClosure.mapNotNull { it.allResolvedProperty.values.minByOrNull { it.index } }
+        val minOfMin = minProps.minOf { it.index }
+        return minProps.filter { minOfMin == it.index }
     }
 
     /*

@@ -12,7 +12,7 @@ import net.akehurst.language.scope.processor.AglScope
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.processor.AglTypemodel
+import net.akehurst.language.typemodel.processor.AglTypes
 import kotlin.test.Test
 
 class test_GenerateTypeModelViaReflection {
@@ -44,7 +44,7 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_base() {
         val (tm,added) = gen_base()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(listOf(StdLibDefault.qualifiedName)))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
     fun gen_grammar():Pair<TypeModel,List<QualifiedName>> {
@@ -54,7 +54,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Grammar"),
             btm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglGrammar.komposite)
+            listOf(AglBase.kompositeString, AglGrammar.kompositeString)
         )
         gen.addPackage("net.akehurst.language.grammar.api")
         gen.addPackage("net.akehurst.language.grammar.asm")
@@ -66,17 +66,17 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_grammar() {
         val (tm,added) = gen_grammar()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
-    fun gen_typemodel():Pair<TypeModel,List<QualifiedName>> {
+    fun gen_types():Pair<TypeModel,List<QualifiedName>> {
         val (grammar,gadded) = gen_grammar()
         val added = grammar.namespace.map { it.qualifiedName }
         val gen = GenerateTypeModelViaReflection(
             SimpleName("Typemodel"),
             grammar.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglTypemodel.kompositeString)
+            listOf(AglBase.kompositeString, AglTypes.kompositeString)
         )
         gen.addPackage("net.akehurst.language.typemodel.api")
         gen.addPackage("net.akehurst.language.typemodel.asm")
@@ -87,10 +87,10 @@ class test_GenerateTypeModelViaReflection {
     }
 
     @Test
-    fun test_format_typemodel() {
-        val (tm,added) = gen_typemodel()
+    fun test_format_types() {
+        val (tm,added) = gen_types()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
     fun gen_asm():Pair<TypeModel,List<QualifiedName>> {
@@ -123,7 +123,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             btm.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglExpressions.komposite)
+            listOf(AglBase.kompositeString, AglExpressions.kompositeString)
         )
         gen.addPackage("net.akehurst.language.expressions.api")
         gen.addPackage("net.akehurst.language.expressions.asm")
@@ -135,7 +135,7 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_expressions() {
         val (tm,added) = gen_expressions()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
     fun gen_reference():Pair<TypeModel,List<QualifiedName>> {
@@ -145,7 +145,7 @@ class test_GenerateTypeModelViaReflection {
             SimpleName("Test"),
             expr.namespace,
             GenerateTypeModelViaReflection.KOTLIN_TO_AGL,
-            listOf(AglBase.kompositeString, AglExpressions.komposite, AglCrossReference.komposite)
+            listOf(AglBase.kompositeString, AglExpressions.kompositeString, AglCrossReference.komposite)
         )
         gen.addPackage("net.akehurst.language.reference.api")
         gen.addPackage("net.akehurst.language.reference.asm")
@@ -157,7 +157,7 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_reference() {
         val (tm,added) = gen_reference()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
     fun gen_scope():Pair<TypeModel,List<QualifiedName>> {
@@ -179,7 +179,7 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_scope() {
         val (tm,added) = gen_scope()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
     fun gen_style():Pair<TypeModel,List<QualifiedName>> {
@@ -201,9 +201,8 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_style() {
         val (tm,added) = gen_style()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
-
 
     fun gen_runtime(): TypeModel {
         val gen = GenerateTypeModelViaReflection(
@@ -243,7 +242,7 @@ class test_GenerateTypeModelViaReflection {
     fun test_format_sppt() {
         val (tm,added) = gen_sppt()
         val fmrtr = FormatTypeModelAsKotlinTypeModelBuilder(formatConfig(added))
-        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("SimpleTypeModelStdLib")))
+        println(fmrtr.formatTypeModel(Indent(), tm, true, listOf("std")))
     }
 
 }

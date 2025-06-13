@@ -266,7 +266,7 @@ FQN = ID ('.' ID)*;
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("after", SentenceDefault(text).textAt(actual[0].position,actual[0].length))
+        assertEquals("after", SentenceDefault(text, null).textAt(actual[0].position,actual[0].length))
     }
 
 }

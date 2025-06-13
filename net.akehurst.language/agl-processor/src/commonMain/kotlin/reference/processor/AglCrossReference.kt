@@ -16,20 +16,24 @@
 
 package net.akehurst.language.reference.processor
 
+import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglCrossReference {
-    //: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "References") {
+    const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
+    const val NAME = "CrossReferences"
     const val goalRuleName = "unit"
 
-    //override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
-    //override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
-    const val grammarStr = """namespace net.akehurst.language
+    val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-grammar CrossReferences extends Expressions {
+    const val grammarStr = """namespace $NAMESPACE_NAME
+
+grammar $NAME extends Expressions {
 
     override namespace = 'namespace' possiblyQualifiedName import* declarations ;
     declarations = rootIdentifiables scopes references? ;
@@ -57,10 +61,10 @@ grammar CrossReferences extends Expressions {
 """
 
     val grammar = grammar(
-        namespace = "net.akehurst.language",
-        name = "CrossReferences"
+        namespace = NAMESPACE_NAME,
+        name = NAME
     ) {
-        extendsGrammar(AglExpressions.grammar.selfReference)
+        extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("import") }
@@ -111,6 +115,7 @@ grammar CrossReferences extends Expressions {
 interface DeclarationsForNamespace {
     cmp scopeDefinition
     cmp references
+    cmp options
 }
 
 interface ScopeDefinition {
@@ -133,71 +138,68 @@ interface ReferenceExpressionCollection {
 """
 
     val typeModel by lazy {
-        typeModel("CrossReferences", true, AglExpressions.typeModel.namespace) {
-            namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api", "net.akehurst.language.reference.asm")) {
-                interfaceType("ScopeDefinition") {
+        typeModel(NAME, true, AglExpressions.typesModel.namespace) {
+            namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api")) {
+                interface_("ScopeDefinition") {
                     supertype("Formatable")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "identifiables", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
                     }
                 }
-                interfaceType("ReferenceExpressionProperty") {
+                interface_("ReferenceExpressionProperty") {
                     supertype("ReferenceExpression")
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "fromNavigation", "NavigationExpression", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "referringPropertyNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
                 }
-                interfaceType("ReferenceExpressionCollection") {
+                interface_("ReferenceExpressionCollection") {
                     supertype("ReferenceExpression")
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "expression", "Expression", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "referenceExpressionList", "List", false) {
-                        typeArgument("ReferenceExpressionAbstract")
-                    }
-                }
-                interfaceType("ReferenceExpression") {
-                    supertype("Formatable")
-                }
-                interfaceType("ReferenceDefinition") {
-                    supertype("Formatable")
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "referenceExpressionList", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
                     }
                 }
-                interfaceType("Identifiable") {
+                interface_("ReferenceExpression") {
                     supertype("Formatable")
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "identifiedBy", "Expression", false)
                 }
-                interfaceType("DeclarationsForNamespace") {
-                    supertype("Definition") { ref("DeclarationsForNamespace") }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "references", "List", false) {
+                interface_("ReferenceDefinition") {
+                    supertype("Formatable")
+                    propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
+                        typeArgument("ReferenceExpression")
+                    }
+                }
+                interface_("Identifiable") {
+                    supertype("Formatable")
+                    propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
+                }
+                interface_("DeclarationsForNamespace") {
+                    supertype("Definition"){ ref("DeclarationsForNamespace") }
+                    propertyOf(setOf(VAR, CMP, STR), "references", "List", false){
                         typeArgument("ReferenceDefinition")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "scopeDefinition", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "scopeDefinition", "Map", false){
                         typeArgument("SimpleName")
                         typeArgument("ScopeDefinition")
                     }
                 }
-                interfaceType("CrossReferenceNamespace") {
-                    supertype("Namespace") { ref("DeclarationsForNamespace") }
+                interface_("CrossReferenceNamespace") {
+                    supertype("Namespace"){ ref("DeclarationsForNamespace") }
                 }
-                interfaceType("CrossReferenceModel") {
-                    supertype("Model") { ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
+                interface_("CrossReferenceModel") {
+                    supertype("Model"){ ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
                 }
             }
-            namespace(
-                "net.akehurst.language.reference.asm",
-                listOf("net.akehurst.language.reference.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.expressions.api", "net.akehurst.language.base.asm")
-            ) {
-                dataType("ScopeDefinitionDefault") {
+            namespace("net.akehurst.language.reference.asm", listOf("net.akehurst.language.reference.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.expressions.api", "net.akehurst.language.base.asm")) {
+                data("ScopeDefinitionDefault") {
                     supertype("ScopeDefinition")
                     constructor_ {
                         parameter("scopeForTypeName", "SimpleName", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "identifiables", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "identifiables", "List", false){
                         typeArgument("Identifiable")
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "scopeForTypeName", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "scopeForTypeName", "SimpleName", false)
                 }
-                dataType("ReferenceExpressionPropertyDefault") {
+                data("ReferenceExpressionPropertyDefault") {
                     supertype("ReferenceExpressionAbstract")
                     supertype("ReferenceExpressionProperty")
                     constructor_ {
@@ -205,13 +207,13 @@ interface ReferenceExpressionCollection {
                         parameter("refersToTypeName", "List", false)
                         parameter("fromNavigation", "NavigationExpression", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "fromNavigation", "NavigationExpression", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "referringPropertyNavigation", "NavigationExpression", false)
-                    propertyOf(setOf(READ_WRITE, REFERENCE, STORED), "refersToTypeName", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "fromNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "referringPropertyNavigation", "NavigationExpression", false)
+                    propertyOf(setOf(VAR, REF, STR), "refersToTypeName", "List", false){
                         typeArgument("PossiblyQualifiedName")
                     }
                 }
-                dataType("ReferenceExpressionCollectionDefault") {
+                data("ReferenceExpressionCollectionDefault") {
                     supertype("ReferenceExpressionAbstract")
                     supertype("ReferenceExpressionCollection")
                     constructor_ {
@@ -219,81 +221,80 @@ interface ReferenceExpressionCollection {
                         parameter("ofType", "PossiblyQualifiedName", false)
                         parameter("referenceExpressionList", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "expression", "Expression", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "ofType", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "referenceExpressionList", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
+                    propertyOf(setOf(VAL, REF, STR), "ofType", "PossiblyQualifiedName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpressionAbstract")
                     }
                 }
-                dataType("ReferenceExpressionAbstract") {
+                data("ReferenceExpressionAbstract") {
                     supertype("ReferenceExpression")
                     constructor_ {}
                 }
-                dataType("ReferenceDefinitionDefault") {
+                data("ReferenceDefinitionDefault") {
                     supertype("ReferenceDefinition")
                     constructor_ {
                         parameter("inTypeName", "SimpleName", false)
                         parameter("referenceExpressionList", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "inTypeName", "SimpleName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "referenceExpressionList", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "inTypeName", "SimpleName", false)
+                    propertyOf(setOf(VAR, CMP, STR), "referenceExpressionList", "List", false){
                         typeArgument("ReferenceExpression")
                     }
                 }
-                dataType("IdentifiableDefault") {
+                data("IdentifiableDefault") {
                     supertype("Identifiable")
                     constructor_ {
                         parameter("typeName", "SimpleName", false)
                         parameter("identifiedBy", "Expression", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "identifiedBy", "Expression", false)
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "typeName", "SimpleName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "identifiedBy", "Expression", false)
+                    propertyOf(setOf(VAL, CMP, STR), "typeName", "SimpleName", false)
                 }
-                dataType("DeclarationsForNamespaceDefault") {
+                data("DeclarationsForNamespaceDefault") {
                     supertype("DeclarationsForNamespace")
+                    supertype("DefinitionAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     constructor_ {
                         parameter("namespace", "CrossReferenceNamespace", false)
+                        parameter("options", "OptionHolder", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_ONLY, REFERENCE, STORED), "namespace", "CrossReferenceNamespace", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "references", "List", false) {
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "CrossReferenceNamespace", false)
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                    propertyOf(setOf(VAR, CMP, STR), "references", "List", false){
                         typeArgument("ReferenceDefinition")
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "scopeDefinition", "Map", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "scopeDefinition", "Map", false){
                         typeArgument("SimpleName")
                         typeArgument("ScopeDefinition")
                     }
                 }
-                dataType("CrossReferenceNamespaceDefault") {
-                    supertype("NamespaceAbstract") { ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
+                data("CrossReferenceNamespaceDefault") {
+                    supertype("NamespaceAbstract"){ ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     supertype("CrossReferenceNamespace")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)
                     }
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "import", "List", false) {
-                        typeArgument("Import")
-                    }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "qualifiedName", "QualifiedName", false)
+                    propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
-                dataType("CrossReferenceModelDefault") {
-                    supertype("ModelAbstract") { ref("net.akehurst.language.reference.api.CrossReferenceNamespace"); ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
+                data("CrossReferenceModelDefault") {
+                    supertype("ModelAbstract"){ ref("net.akehurst.language.reference.api.CrossReferenceNamespace"); ref("net.akehurst.language.reference.api.DeclarationsForNamespace") }
                     supertype("CrossReferenceModel")
                     constructor_ {
                         parameter("name", "SimpleName", false)
+                        parameter("options", "OptionHolder", false)
                         parameter("namespace", "List", false)
                     }
-                    propertyOf(setOf(READ_ONLY, COMPOSITE, STORED), "name", "SimpleName", false)
-                    propertyOf(setOf(READ_WRITE, COMPOSITE, STORED), "namespace", "List", false) {
-                        typeArgument("CrossReferenceNamespace")
-                    }
+                    propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
                 }
             }
         }
     }
 
-    const val styleStr = """namespace net.akehurst.language
-styles CrossReferences : Base {
+    const val styleStr = """namespace $NAMESPACE_NAME
+styles $NAME : Base {
 }"""
 
     const val formatterStr = """

@@ -256,7 +256,7 @@ class test_ProjectIT_singles {
 
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1, null), "^]", setOf("<EOT>"))
             ),
             result.issues.all
         )
@@ -272,7 +272,7 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>", "literal", "escapedChar", "'\${'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1, null), "^]", setOf("<EOT>", "literal", "escapedChar", "'\${'"))
             ),
             result.issues.all
         )

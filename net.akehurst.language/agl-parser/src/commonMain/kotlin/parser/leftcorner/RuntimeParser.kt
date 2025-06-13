@@ -61,8 +61,6 @@ internal class RuntimeParser(
     private val _issues: IssueHolder
 ) {
     companion object {
-        val defaultStartLocation = InputLocation(0, 0, 1, 0)
-
         data class GrowArgs(
             val buildTree: Boolean, //TODO: want to not build tree is some situations, however tree is used for resolving ambiguities!
             val noLookahead: Boolean,

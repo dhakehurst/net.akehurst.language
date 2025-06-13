@@ -18,7 +18,7 @@ class ExpressionTypeResolver(
 
     fun typeOfExpressionStr(expression: String, self: TypeDefinition): TypeInstance {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
-        check(result.issues.errors.isEmpty()) { result.issues.toString() }
+        check(result.allIssues.errors.isEmpty()) { result.allIssues.toString() }
         val asm = result.asm!!
         return asm.typeOfExpressionFor(self.type())
     }
@@ -180,15 +180,15 @@ class ExpressionTypeResolver(
     }
 
     fun CastExpression.typeOfCastExpressionFor(self: TypeInstance): TypeInstance =
-        this.targetType.typeOfTypeReference(self)
+        this.targetType.typeOfTypeReference()
 
     fun GroupExpression.typeOfGroupExpressionFor(self: TypeInstance): TypeInstance =
         this.expression.typeOfExpressionFor(self)
 
-    fun TypeReference.typeOfTypeReference(self: TypeInstance): TypeInstance {
+    fun TypeReference.typeOfTypeReference(): TypeInstance {
         //val td = typeModel.findFirstByPossiblyQualifiedOrNull(this.possiblyQualifiedName) ?: StdLibDefault.NothingType.resolvedDeclaration
         val targs = this.typeArguments.map {
-            val argTArgs = it.typeArguments.map { typeOfTypeReference(self).asTypeArgument }
+            val argTArgs = it.typeArguments.map { it.typeOfTypeReference().asTypeArgument }
             contextNamespace.createTypeInstance(null, it.possiblyQualifiedName, argTArgs, it.isNullable)
                 .asTypeArgument
         }

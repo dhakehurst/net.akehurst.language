@@ -17,11 +17,16 @@
 
 package net.akehurst.language.scope.api
 
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.sentence.api.InputLocation
 
 data class ItemInScope<ItemInScopeType>(
+    /** identity of the item in this scope */
     val referableName: String,
+    /** type of the scoped item */
     val qualifiedTypeName: QualifiedName,
+    val location: Any?,
     val item: ItemInScopeType
 )
 
@@ -32,21 +37,21 @@ data class ItemInScope<ItemInScopeType>(
 interface Scope<ItemInScopeType> {
 
     /**
-     * unqualified TypeName from the ScopeDefinition,
+     * qualified TypeName from the ScopeDefinition,
      * i.e., the identity of the ScopeDefinition
      */
     val forTypeName: QualifiedName
 
     val scopeIdentity: String
-    val scopePath:List<String>
+    val scopePath: List<String>
 
     /**
      * item.name -> item.type -> item
      */
-    val items: Map<String, Map<QualifiedName, ItemInScopeType>>
+    val items: Map<String, Map<QualifiedName, Pair<Any?, ItemInScopeType>>>
 
     //TODO: don't want this here..see implementation
-   // val scopeMap:Map<ItemType, Scope<ItemInScopeType>>
+    // val scopeMap:Map<ItemType, Scope<ItemInScopeType>>
 
 
     /**
@@ -58,7 +63,9 @@ interface Scope<ItemInScopeType> {
 
     val isEmpty: Boolean
 
-    fun contains(referableName: String, typeName: QualifiedName, conformsToFunc: (itemTypeName: QualifiedName, requiredTypeName: QualifiedName) -> Boolean): Boolean
+    fun clear()
+
+    fun contains(referableName: String, conformsToFunc: (itemTypeName: QualifiedName) -> Boolean): Boolean
 
     /**
      * find all items in this scope with the given <name>, return list of pairs (item,its-typeName)
@@ -82,13 +89,17 @@ interface Scope<ItemInScopeType> {
 
     fun getChildScopeOrNull(childScopeIdentityInThis: String): Scope<ItemInScopeType>?
 
-    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName, item: ItemInScopeType): Scope<ItemInScopeType>
+    fun createOrGetChildScope(childScopeIdentityInThis: String, forTypeName: QualifiedName): Scope<ItemInScopeType>
 
     /**
      * adds Pair(item, typeName) to this scope
      * return true if added, false if the pair is already in the scope
      */
-    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, item: ItemInScopeType, replaceIfAlreadyExists:Boolean): Boolean
+    fun addToScope(referableName: String, qualifiedTypeName: QualifiedName, location: Any?, item: ItemInScopeType, replaceIfAlreadyExists: Boolean): Boolean
 
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun removeItemsWithLocation(location: Any)
+
+    fun removeItemsIf(func:(item:ItemInScope<ItemInScopeType>) -> Boolean)
+
+    fun asString(indent: Indent): String
 }

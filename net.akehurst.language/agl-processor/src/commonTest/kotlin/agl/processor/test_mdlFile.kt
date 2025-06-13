@@ -66,7 +66,7 @@ grammar Mdl {
     leaf BOOLEAN             = 'on' | 'off' ;
     leaf INTEGER             = "([+]|[-])?[0-9]+" ;
     leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?|[-+]?[0-9]*[eE][-+]?[0-9]+" ;
-    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\]|\\.)*\"";
+    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\\\]|\\.)*\"";
 }
     """.trimIndent()
 
@@ -76,54 +76,54 @@ grammar Mdl {
 
     @Test
     fun mdlTypeModel() {
-        val actual = processor.typeModel
+        val actual = processor.typesModel
         val expected = typeModel("FromGrammarParsedGrammarUnit",true) {
             grammarTypeNamespace("test.Mdl") {
                 //file = section+ ;
-                dataType("file", "File") {
+                dataFor("file", "File") {
                     propertyListTypeOf("section", "Section", false, 0)
                 }
                 //section = IDENTIFIER '{' content* '}' ;
-                dataType("section", "Section") {
+                dataFor("section", "Section") {
                     supertypes("Content")
                     propertyPrimitiveType("identifier", "String", false, 0)
                     propertyListTypeOf("content", "Content", false, 2)
                 }
                 //content = section | parameter ;
-                dataType("content", "Content") {
+                dataFor("content", "Content") {
                     subtypes("Section", "Parameter")
                 }
                 //parameter = IDENTIFIER value ;
-                dataType("parameter", "Parameter") {
+                dataFor("parameter", "Parameter") {
                     supertypes("Content")
                     propertyPrimitiveType("identifier", "String", false, 0)
                     propertyUnionTypeOf("value", "Value",false, 1)
                 }
                 //value = stringList | matrix | identifier | literal ;
-                unionType("value","Value") {
+                unionFor("value","Value") {
                     typeRef("StringList")
                     typeRef("Matrix")
                     typeRef("Identifier")
                     typeRef("String")
                 }
                 //identifier = IDENTIFIER ;
-                dataType("identifier", "Identifier") {
+                dataFor("identifier", "Identifier") {
                     propertyPrimitiveType("identifier", "String", false, 0)
                 }
                 //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-                dataType("matrix", "Matrix") {
+                dataFor("matrix", "Matrix") {
                     propertyListType("row", false, 1) {
                         ref("Row")
                     }
                 }
                 //row = [literal / ',']+ | literal+ ;
-                unionType("row","Row") {
+                unionFor("row","Row") {
                     listSeparatedType(false) { ref("String");ref("String") }
                     listType(false) { ref("String") }
                 }
 
                 //stringList = DOUBLE_QUOTE_STRING+ ;
-                dataType("stringList", "StringList") {
+                dataFor("stringList", "StringList") {
                     propertyListType("double_quote_string", false, 0) { ref("String") }
                 }
 

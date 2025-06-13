@@ -17,21 +17,24 @@
 
 package net.akehurst.language.transform.processor
 
+import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.processor.AglGrammar.NAMESPACE_NAME
 
 object AsmTransform { //: LanguageObject {
-
+    const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
+    const val NAME = "Transform"
     const val goalRuleName = "unit"
 
+    val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+
      val grammarString: String = """
-namespace net.akehurst.language
+namespace $NAMESPACE_NAME
 
-grammar AsmTransform : Base {
-
-    unit = option* namespace* ;
+grammar $NAME : Base {
     override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
     transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '} ;
     typeImport = 'import-types' possiblyQualifiedName ;
@@ -56,15 +59,11 @@ grammar AsmTransform : Base {
     """
 
     val grammar = grammar(
-        namespace = "net.akehurst.language",
-        name = "AsmTransform"
+        namespace = NAMESPACE_NAME,
+        name = NAME
     ) {
         extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
 
-        concatenation("unit") {
-            lst(0, -1) { ref("option") }
-            lst(0, -1) { ref("namespace") }
-        }
         concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
             lit("namespace"); ref("possiblyQualifiedName")
             lst(0, -1) { ref("option") }
@@ -100,7 +99,7 @@ grammar AsmTransform : Base {
         concatenation("propertyName") { ref("IDENTIFIER") }
         concatenation("grammarRuleName") { ref("IDENTIFIER") }
         concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
-        concatenation("expression") { ebd(AglExpressions.grammar.selfReference, "expression") }
+        concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
         concatenation("grammarRuleIndex"){ lit("$"); ref("POSITIVE_INTEGER") }
         concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
     }
@@ -109,6 +108,5 @@ grammar AsmTransform : Base {
     const val styleStr = """
     """
 
-    //TODO: gen this from the ASM
-    override fun toString(): String = AglExpressions.grammarStr.trimIndent()
+    override fun toString(): String = grammarString.trimIndent()
 }

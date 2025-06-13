@@ -52,7 +52,7 @@ class test_optional_x2_nested : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "V"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'a'", "'b'", "V"))
             ), issues.errors
         )
     }

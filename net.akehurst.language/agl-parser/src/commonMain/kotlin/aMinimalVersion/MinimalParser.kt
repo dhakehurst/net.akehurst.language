@@ -391,7 +391,7 @@ class MinimalParser private constructor(
 
     fun parse(sentenceText: String): TreeData {
         //this.reset()
-        this.sentence = SentenceDefault(sentenceText)
+        this.sentence = SentenceDefault(sentenceText, null)
         //this.skipParser?.scanner = this.scanner
         this.skipParser?.sentence = this.sentence
 

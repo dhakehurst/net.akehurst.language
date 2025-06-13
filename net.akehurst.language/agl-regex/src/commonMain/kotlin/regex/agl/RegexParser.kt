@@ -415,6 +415,7 @@ internal class RegexParser(
             '(' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '|' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '[' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            ']' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '.' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '$' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '?' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
@@ -531,6 +532,11 @@ internal class RegexParser(
         return when (c) {
             '\\' -> '\\'
             '$' -> '$'
+            '-' -> '-'
+            '^' -> '^'
+            '[' -> '['
+            ']' -> ']'
+            '&' -> '&'
             't' -> '\t'
             'n' -> '\n'
             'r' -> '\r'

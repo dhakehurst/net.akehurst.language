@@ -44,7 +44,7 @@ class test_MinimalVersionForPaper2 {
             println(sut.automaton.usedAutomatonToString(true))
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
-            val walker = SpptWalkerToString(SentenceDefault(s), "  ")
+            val walker = SpptWalkerToString(SentenceDefault(s, null), "  ")
             actual.traverseTreeDepthFirst(walker, true)
             val out = walker.output
             println(out.substring(0, min(maxOut, out.length)))
@@ -75,7 +75,7 @@ grammar Xml {
 	WS = "\s+" ;
 	CHARDATA = "[^<]+" ;
 	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-	DOUBLE_QUOTE_STRING = "\"([^\"\\]|\.)*\"" ;
+	DOUBLE_QUOTE_STRING = "\"([^\"\\\\]|\.)*\"" ;
 	SINGLE_QUOTE_STRING = "['][^']*[']" ;
 }
 
@@ -145,7 +145,7 @@ grammar Dot  {
 	leaf ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ; //"[a-zA-Z\200-\377_][a-zA-Z\200-\377_0-9]*" ;
 
 	leaf NUMERAL = "[-+]?([0-9]+([.][0-9]+)?|([.][0-9]+))" ;
-	leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+	leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\\\]|\\.)*\"" ;
 	HTML = '<' Xml::elementContent '>' ;
 }
         """
@@ -258,13 +258,13 @@ grammar Literals {
      ;
 
     leaf BOOLEAN_LITERAL   = 'true' | 'false' ;
-    leaf CHARACTER_LITERAL = "'" ("[^'\r\n\\]" | ESCAPE_SEQUENCE) "'" ;
+    leaf CHARACTER_LITERAL = "'" ("[^'\r\n\\\\]" | ESCAPE_SEQUENCE) "'" ;
     leaf ESCAPE_SEQUENCE
-        = '\\' "[btnfr\x27\\]"
+        = '\\' "[btnfr\x27\\\\]"
         | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
         | '\\' 'u'+ "[0-9a-fA-F]{4}"
         ;
-    leaf STRING_LITERAL    = "\"([^\"\\]|\\.)*\"" ;
+    leaf STRING_LITERAL    = "\"([^\"\\\\]|\\.)*\"" ;
     leaf NULL_LITERAL      = 'null' ;
 }
 

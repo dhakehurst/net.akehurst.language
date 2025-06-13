@@ -92,7 +92,7 @@ class RuntimeRuleRhsPattern(
     companion object {
         fun unescape(literalEscaped: String) =
             literalEscaped
-                .replace("\\\"", "\"")
+                .replace("\\\"", "\"").replace("\\\\","\\")
     }
 
     override val matchable by lazy { Matchable(rule.runtimeRuleSetNumber, rule.ruleNumber, rule.tag, this.patternUnescaped, MatchableKind.REGEX) }

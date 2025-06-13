@@ -11,13 +11,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 }
 
-
-kotlin {
-    jvm("jvm8") {
-        withJava()
-    }
-}
-
-tasks.withType<PublishToMavenLocal> {
+tasks.withType<AbstractPublishToMaven> {
     onlyIf { false }
 }

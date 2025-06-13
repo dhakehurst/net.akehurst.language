@@ -33,6 +33,7 @@ allprojects {
             }
         }
         mavenCentral()
+        gradlePluginPortal()
     }
 
     group = rootProject.name
@@ -171,12 +172,22 @@ subprojects {
                     password = sonatype_pwd
                 }
             }
+
+            maven {
+                name = "Other"
+                setUrl(getProjectProperty("PUB_URL") ?: "<use -P PUB_URL=<...> to set>")
+                credentials {
+                    username = getProjectProperty("PUB_USERNAME")
+                        ?: error("Must set project property with Username (-P PUB_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
+                    password = getProjectProperty("PUB_PASSWORD") ?: creds.forKey(getProjectProperty("PUB_USERNAME"))
+                }
+            }
         }
         publications.withType<MavenPublication> {
             artifact(javadocJar.get())
 
             pom {
-                name.set("AGL Processor")
+                name.set("AGL Parser, Processor, etc")
                 description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
                 url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
 
@@ -205,17 +216,10 @@ subprojects {
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }
-    val signTasks = arrayOf(
-        "signKotlinMultiplatformPublication",
-        "signJvm8Publication",
-        "signJsPublication",
-        "signWasmJsPublication",
-//         "signMacosArm64Publication"
-    )
-
+    val signTasks = tasks.matching { it.name.matches(Regex("sign(.)+")) }.toTypedArray()
     tasks.forEach {
         when {
-            it.name.matches(Regex("publish(.)+PublicationToMavenLocal")) -> {
+            it.name.matches(Regex("publish(.)+")) -> {
                 println("${it.name}.mustRunAfter(${signTasks.toList()})")
                 it.mustRunAfter(*signTasks)
             }

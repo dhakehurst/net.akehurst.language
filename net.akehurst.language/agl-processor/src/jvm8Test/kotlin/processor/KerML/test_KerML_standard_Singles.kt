@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
@@ -29,7 +29,7 @@ class test_KerML_standard_Singles {
     private companion object {
         private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(
+        var processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarStr)
         ).processor!!
 
@@ -46,7 +46,7 @@ class test_KerML_standard_Singles {
     fun process_grammar() {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Ignore
@@ -62,7 +62,7 @@ class test_KerML_standard_Singles {
                 }
             }
         )
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 
     @Test

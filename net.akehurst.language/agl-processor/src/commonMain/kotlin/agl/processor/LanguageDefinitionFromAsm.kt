@@ -36,27 +36,52 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
             error("Cannot set the configuration of a LanguageDefinitionFromAsm")
         }
 
-    override val grammarString: GrammarString?
-        get() = this.grammarModel?.asString()?.let { GrammarString(it) }
+    override val grammarString: GrammarString? get() = this.grammarModel?.asString()?.let { GrammarString(it) }
 
     override val isModifiable: Boolean = false
 
-    override val typesString: TypesString?
-        get() = this.typesModel?.asString()?.let { TypesString(it) }
+    override val typesString: TypesString? get() = this.typesModel?.asString()?.let { TypesString(it) }
 
-    override val transformString: TransformString?
-        get() = this.transformModel?.asString()?.let { TransformString(it) }
+    override val transformString: TransformString? get() = this.transformModel?.asString()?.let { TransformString(it) }
 
-    override val crossReferenceString: CrossReferenceString?
-        get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
+    override val crossReferenceString: CrossReferenceString? get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
 
-    override val styleString: StyleString?
-        get() = this.styleModel?.asString()?.let { StyleString(it) }
+    override val styleString: StyleString? get() = this.styleModel?.asString()?.let { StyleString(it) }
 
-    override val formatString: FormatString?
-        get() = FormatString(this.formatter?.formatModel?.asString() ?:"")
+    override val formatString: FormatString? get() = FormatString(this.formatter?.formatModel?.asString() ?: "")
 
-    override fun update(grammarStr: GrammarString?, typeModelStr: TypesString?, asmTransformStr: TransformString?, crossReferenceStr: CrossReferenceString?, styleStr: StyleString?,  formatStr: FormatString?) {
+    init {
+        this._issues.clear()
+
+        this.targetGrammarName = configuration.targetGrammarName
+        this.defaultGoalRule = configuration.defaultGoalRuleName
+
+//        this._regexEngineKind = configuration.regexEngineKind
+//        this._scannerKind = configuration.scannerKind
+//
+//        this._scannerResolver = configuration.scannerResolver
+//        this._parserResolver = configuration.parserResolver
+//        this._typeModelResolver = configuration.typesResolver
+//        this._asmTransformModelResolver = configuration.transformResolver
+//        this._crossReferenceModelResolver = configuration.crossReferenceResolver
+//        this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
+//        this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
+//
+//        this._formatterResolver = configuration.formatResolver
+//        this._completionProviderResolver = configuration.completionProviderResolver
+        this._styleResolver = configuration.styleResolver
+        super._processor_cache.reset()
+        super._style_cache.reset()
+    }
+
+    override fun update(
+        grammarStr: GrammarString?,
+        typeModelStr: TypesString?,
+        asmTransformStr: TransformString?,
+        crossReferenceStr: CrossReferenceString?,
+        styleStr: StyleString?,
+        formatStr: FormatString?
+    ) {
         error("Cannot update a LanguageDefinitionFromAsm")
     }
 }

@@ -33,7 +33,7 @@ class test_Scanner_findOrTryCreateLeaf {
     companion object {
 
         fun test(text: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
-            val sentence = SentenceDefault(text)
+            val sentence = SentenceDefault(text, null)
             val terms = rrs.terminals.filterNot { it.isEmptyTerminal || it.isEmptyListTerminal }
             val scanners = listOf(
                 ScannerOnDemand(RegexEnginePlatform, terms),
@@ -163,7 +163,7 @@ class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun OnDemand_class_A() {
-        val sentence = SentenceDefault("class A;")
+        val sentence = SentenceDefault("class A;", null)
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -192,7 +192,7 @@ class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun Classic_class_A() {
-        val sentence = SentenceDefault("class A;")
+        val sentence = SentenceDefault("class A;", null)
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -222,7 +222,7 @@ class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun OnDemand_class_class() {
-        val sentence = SentenceDefault("class class;")
+        val sentence = SentenceDefault("class class;", null)
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }
@@ -251,7 +251,7 @@ class test_Scanner_findOrTryCreateLeaf {
 
     @Test
     fun Classic_class_class() {
-        val sentence = SentenceDefault("class class;")
+        val sentence = SentenceDefault("class class;", null)
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             concatenation("S") { literal("class"); ref("NAME"); literal(";") }

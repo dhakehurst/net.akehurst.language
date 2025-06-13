@@ -19,7 +19,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
@@ -39,13 +39,13 @@ class test_Java8_Singles_aglSpec {
 
     private companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglSpec.agl"
-        val aglSpecProcessor: LanguageProcessor<Asm, ContextAsmSimple> by lazy { createJava8Processor(grammarFile, true) }
+        val aglSpecProcessor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextAsmSimple> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString<Asm, ContextAsmSimple>(
+            val proc = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
@@ -76,7 +76,7 @@ class test_Java8_Singles_aglSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "Type"
-        val p = Agl.processorFromString<Asm, ContextAsmSimple>(
+        val p = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
             grammarDefinitionStr = grammarStr,
             aglOptions = Agl.options {
                 semanticAnalysis {
@@ -163,7 +163,7 @@ class test_Java8_Singles_aglSpec {
         assertEquals(
             listOf(
                 LanguageIssue(
-                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1),
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1, null),
                     "0b01^2",
                     setOf(
                         "<EOT>",
@@ -228,7 +228,7 @@ public class BadBinaryLiterals {
         assertEquals(
             listOf(
                 LanguageIssue(
-                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1),
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1, null),
                     "...t1 = 0b01.^01;  // no...",
                     setOf("IDENTIFIER", "'new'", "'<'")
                 )

@@ -52,8 +52,8 @@ object Komposite {
                 grammarDefinitionStr = grammarStr,
                 configuration = Agl.configuration {
                     defaultGoalRuleName("unit")
-                    syntaxAnalyserResolver { ProcessResultDefault(KompositeSyntaxAnalyser2(),IssueHolder(LanguageProcessorPhase.ALL)) }
-                    semanticAnalyserResolver { ProcessResultDefault(KompositeSemanticAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(KompositeSyntaxAnalyser2()) }
+                    semanticAnalyserResolver { ProcessResultDefault(KompositeSemanticAnalyser()) }
                 //formatter(Formatter())
                 }
             )

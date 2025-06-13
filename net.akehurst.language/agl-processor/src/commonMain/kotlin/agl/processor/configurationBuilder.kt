@@ -105,7 +105,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
                 ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
             }
-            ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
+            ProcessResultDefault(scanner)
         }
     }
 
@@ -138,7 +138,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun syntaxAnalyserResolverResult(func: () -> SyntaxAnalyser<AsmType>) { //TODO: others need this
-        _syntaxAnalyserResolver = { ProcessResultDefault(func.invoke(), IssueHolder(LanguageProcessorPhase.ALL)) }
+        _syntaxAnalyserResolver = { ProcessResultDefault(func.invoke()) }
     }
 
     fun semanticAnalyserResolver(value: SemanticAnalyserResolver<AsmType, ContextType>?) {
@@ -146,7 +146,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun semanticAnalyserResolverResult(func: () -> SemanticAnalyser<AsmType, ContextType>) { //TODO: others need this
-        _semanticAnalyserResolver = { ProcessResultDefault(func.invoke(), IssueHolder(LanguageProcessorPhase.ALL)) }
+        _semanticAnalyserResolver = { ProcessResultDefault(func.invoke()) }
     }
 
     fun formatResolver(func: FormatResolver<AsmType, ContextType>?) {

@@ -52,8 +52,8 @@ class TransformDomainDefault(
                 }
             )
             return when {
-                res.issues.errors.isEmpty() -> res
-                else -> error(res.issues.toString())
+                res.allIssues.errors.isEmpty() -> res
+                else -> error(res.allIssues.toString())
             }
         }
 
@@ -64,7 +64,7 @@ class TransformDomainDefault(
         ): ProcessResult<TransformModel> {
             val atfg = GrammarModel2TransformModel(typeModel, grammarModel, configuration)
             val trModel = atfg.build()
-            return ProcessResultDefault<TransformModel>(trModel, atfg.issues)
+            return ProcessResultDefault<TransformModel>(trModel, processIssues=atfg.issues)
         }
 
     }
@@ -81,6 +81,11 @@ class TransformDomainDefault(
             }
             else -> existing as TransformNamespace
         }
+    }
+
+    override fun findTypeForGrammarRule(grammarQualifiedName: QualifiedName, ruleName: GrammarRuleName): TypeInstance? {
+        val ruleSet = this.findDefinitionByQualifiedNameOrNull(grammarQualifiedName)
+        return ruleSet?.findAllTrRuleForGrammarRuleNamedOrNull(ruleName)?.resolvedType
     }
 
 }
@@ -207,7 +212,7 @@ class TransformRuleSetDefault(
                 " : ${refsStr.joinToString(separator = ", ") { it }}" //TODO import affect!
             }
         }
-        sb.append("grammar-transform $name$extStr{\n")
+        sb.append("transform $name$extStr{\n")
         val newIndent = indent.inc
         if (importTypes.isNotEmpty()) {
             val importStr = importTypes

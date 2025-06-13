@@ -49,7 +49,7 @@ internal class CharacterMatcher(
     val kind: MatcherKind,
     val literal: Char = '\u0000', // min
     val max: Char = '\u0000',
-    val options: Array<CharacterMatcher> = arrayOf(CharacterMatcher.EMPTY)
+    val options: Array<CharacterMatcher> = arrayOf()//CharacterMatcher.EMPTY)
 ) {
     internal companion object {
         val EMPTY = CharacterMatcher(MatcherKind.EMPTY)
@@ -57,16 +57,26 @@ internal class CharacterMatcher(
         val END_OF_LINE_OR_INPUT = CharacterMatcher(MatcherKind.END_OF_LINE_OR_INPUT)
     }
 
+    val notEmpty: Boolean get() = when(kind) {
+        MatcherKind.EMPTY -> false
+        MatcherKind.ANY -> true
+        MatcherKind.END_OF_LINE_OR_INPUT -> true
+        MatcherKind.NEGATED -> true
+        MatcherKind.LITERAL -> options.isEmpty() || options.all{ it.notEmpty }
+        MatcherKind.ONE_OF -> true
+        MatcherKind.RANGE -> true
+    }
+
     // for range
     val min = literal
 
     // for negated
-    val matcher: CharacterMatcher = options[0]
+    val matcher: CharacterMatcher get() = options[0]
 
     //abstract fun matches(text: CharSequence, pos: Int): Boolean =
 
     override fun toString(): String = when (kind) {
-        MatcherKind.EMPTY -> error("should not happen")
+        MatcherKind.EMPTY -> "EMPTY"
         MatcherKind.ANY -> "ANY"
         MatcherKind.END_OF_LINE_OR_INPUT -> "$"
         MatcherKind.NEGATED -> "!($matcher)"

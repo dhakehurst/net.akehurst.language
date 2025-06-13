@@ -17,10 +17,12 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.CompletionProviderOptions
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -54,7 +56,7 @@ class SyntaxAnalysisOptionsDefault<AsmType : Any>(
 
 class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var enabled: Boolean = true,
-    override var locationMap: Map<Any, InputLocation> = emptyMap(),
+    override var locationMap: LocationMap = LocationMapDefault(),
     override var context: ContextType? = null,
     override var buildScope: Boolean = true,
     override var replaceIfItemAlreadyExistsInScope: Boolean = false,
@@ -78,12 +80,18 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
 
 class CompletionProviderOptionsDefault<ContextType : Any>(
     override var context: ContextType? = null,
-    override var depth: Int = 1,
+    override var depth: Int = 0,
+    override var path: List<Pair<Int, Int>> = emptyList(),
+    override var showOptionalItems: Boolean = true,
+    override var provideValuesForPatternTerminals: Boolean = false,
     override val other: Map<String, Any> = mutableMapOf()
 ) : CompletionProviderOptions<ContextType> {
     override fun clone() = CompletionProviderOptionsDefault<ContextType>(
         context = this.context,
         depth = this.depth,
+        path = this.path,
+        showOptionalItems = this.showOptionalItems,
+        provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
         other = other
     )
 }

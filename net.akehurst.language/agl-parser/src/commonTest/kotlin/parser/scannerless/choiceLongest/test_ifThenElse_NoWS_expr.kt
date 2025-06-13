@@ -58,7 +58,7 @@ class test_ifThenElse_NoWS_expr : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("VAR", "'if'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("VAR", "'if'"))
             ), issues.errors)
     }
 

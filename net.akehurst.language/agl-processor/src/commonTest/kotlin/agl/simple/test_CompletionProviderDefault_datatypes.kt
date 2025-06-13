@@ -71,7 +71,7 @@ class test_CompletionProviderDefault_datatypes {
 
         data class TestData(
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmSimple? = ContextAsmSimple(),
+            val context: ContextWithScope<Any,Any>? = contextAsmSimple(),
             val sentence: String,
             val expected: List<CompletionItem>
         )
@@ -82,9 +82,9 @@ class test_CompletionProviderDefault_datatypes {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespaceAndResolveImports(it.namespace)
+                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typeModel
+            proc.typesModel
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
@@ -133,14 +133,14 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A {") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                         CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
                     ))
                 }
                 sentencePass("class A { ") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<ID> : <typeReference>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "property", "<property>"),
                         CompletionItem(CompletionItemKind.LITERAL, "'}'", "}"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<ID>"),
                     ))
@@ -187,7 +187,7 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A { prop : B<") {
                     expectedCompletionItems(listOf(
-                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<TYPE> <typeArguments>"),
+                        CompletionItem(CompletionItemKind.SEGMENT, "typeReference", "<typeReference>"),
                         CompletionItem(CompletionItemKind.PATTERN, "[A-Za-z_][A-Za-z0-9_]*", "<TYPE>"),
                     ))
                 }
@@ -354,7 +354,9 @@ class test_CompletionProviderDefault_datatypes {
                 }
                 sentencePass("class A { prop :", "external item in scope") {
                     context(contextAsmSimple {
-                        item("ExternalType","test.Test.Primitive","itemInScope?")
+                        forSentence(null) {
+                            item("ExternalType", "test.Test.Primitive", null, "itemInScope?")
+                        }
                     })
                     expectedCompletionItems(listOf(
                         CompletionItem(CompletionItemKind.REFERRED, "Primitive", "ExternalType"),

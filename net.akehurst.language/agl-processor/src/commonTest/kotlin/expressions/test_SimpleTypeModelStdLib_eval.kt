@@ -46,7 +46,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_size__empty() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", "std.String", false, 0)
                 }
             }
@@ -65,7 +65,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_size() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -76,14 +76,14 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.size", AsmPrimitiveSimple(StdLibDefault.Integer.qualifiedTypeName, 4))
+        test(tm, self, "list.size", AsmPrimitiveSimple.stdInteger( 4L))
     }
 
     @Test
     fun collection_List_size__missing_prop_name() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -101,7 +101,7 @@ class test_SimpleTypeModelStdLib_eval {
     fun collection_List_first() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -112,14 +112,14 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.first", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "A"))
+        test(tm, self, "list.first", AsmPrimitiveSimple.stdString("A"))
     }
 
     @Test
     fun collection_List_last() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -130,14 +130,14 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.last", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "D"))
+        test(tm, self, "list.last", AsmPrimitiveSimple.stdString("D"))
     }
 
     @Test
     fun collection_List_back() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -148,14 +148,14 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, it) }))
+        test(tm, self, "list.back", AsmListSimple(listOf("B", "C", "D").map { AsmPrimitiveSimple.stdString(it) }))
     }
 
     @Test
     fun collection_List_front() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -166,14 +166,14 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, it) }))
+        test(tm, self, "list.front", AsmListSimple(listOf("A", "B", "C").map { AsmPrimitiveSimple.stdString(it)}))
     }
 
     @Test
     fun collection_List_join() {
         val tm = typeModel("test", true) {
             namespace("ns") {
-                dataType("Test") {
+                data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
                 }
             }
@@ -184,6 +184,6 @@ class test_SimpleTypeModelStdLib_eval {
             }
         }
         val self = asm.root[0]
-        test(tm, self, "list.join", AsmPrimitiveSimple(StdLibDefault.String.qualifiedTypeName, "ABCD"))
+        test(tm, self, "list.join", AsmPrimitiveSimple.stdString("ABCD"))
     }
 }

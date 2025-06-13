@@ -1,6 +1,6 @@
 $keyword {
     foreground: darkred;
-    font-style: bold;
+    font-weight: bold;
 }
 
 COMMENT_MULTI_LINE, COMMENT_SINGLE_LINE {

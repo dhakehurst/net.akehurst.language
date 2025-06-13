@@ -17,14 +17,18 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.scope.asm.ScopeSimple
 import kotlin.test.assertEquals
 
 object TestContextSimple {
 
-    fun assertMatches(expected: ContextAsmSimple, actual: ContextAsmSimple) {
-        assertMatches(expected.rootScope, actual.rootScope)
+    fun assertMatches(expected: ContextWithScope<Any,Any>, actual: ContextWithScope<Any,Any>) {
+        assertEquals(expected.scopeForSentence.size, actual.scopeForSentence.size)
+        assertEquals(expected.scopeForSentence.keys, actual.scopeForSentence.keys)
+        for (k in expected.scopeForSentence.keys) {
+            assertMatches(expected.scopeForSentence[k]!!, actual.scopeForSentence[k]!!)
+        }
     }
 
     fun assertMatches(expected: ScopeSimple<Any>, actual: ScopeSimple<Any>) {

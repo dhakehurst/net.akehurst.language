@@ -31,15 +31,15 @@ import net.akehurst.language.reference.asm.*
 @DslMarker
 annotation class CrossReferenceModelBuilderMarker
 
-fun crossReferenceModel(init: CrossReferenceModelBuilder.() -> Unit): CrossReferenceModel {
-    val b = CrossReferenceModelBuilder()
+fun crossReferenceModel(name:String, init: CrossReferenceModelBuilder.() -> Unit): CrossReferenceModel {
+    val b = CrossReferenceModelBuilder(name)
     b.init()
     return b.build()
 }
 
 @CrossReferenceModelBuilderMarker
 class CrossReferenceModelBuilder(
-
+    private val _name:String,
 ) {
 
     private var _namespaces = mutableListOf<CrossReferenceNamespaceDefault>()
@@ -54,7 +54,7 @@ class CrossReferenceModelBuilder(
     }
 
     fun build(): CrossReferenceModel {
-        val result = CrossReferenceModelDefault(SimpleName("CrossReference"), namespace =  _namespaces)
+        val result = CrossReferenceModelDefault(SimpleName(_name), namespace =  _namespaces)
         return result
     }
 }
@@ -100,7 +100,7 @@ class ScopeDefinitionBuilder(
 
     fun identify(typeName: String, expressionStr: String) {
         val exprResult = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(exprResult.issues.errors.isEmpty()) { exprResult.issues.toString() }
+        check(exprResult.allIssues.errors.isEmpty()) { exprResult.allIssues.toString() }
         val expression = exprResult.asm ?: error("No expression created from given expressionStr")
         val i = IdentifiableDefault(SimpleName(typeName), expression)
         _identifiables.add(i)
@@ -121,7 +121,7 @@ class ReferenceDefinitionBuilder(
 
     fun property(referringPropertyStr: String, refersToTypes: List<String>, fromExpressionStr: String?) {
         val exprResult = Agl.registry.agl.expressions.processor!!.process(referringPropertyStr)
-        check(exprResult.issues.errors.isEmpty()) { exprResult.issues.toString() }
+        check(exprResult.allIssues.errors.isEmpty()) { exprResult.allIssues.toString() }
         val refPropNav = exprResult.asm?.let {
             when (it) {
                 is NavigationExpression -> it
@@ -132,7 +132,7 @@ class ReferenceDefinitionBuilder(
 
         val fromNav = fromExpressionStr?.let {
             val fromResult = Agl.registry.agl.expressions.processor!!.process(it)
-            check(fromResult.issues.errors.isEmpty()) { fromResult.issues.toString() }
+            check(fromResult.allIssues.errors.isEmpty()) { fromResult.allIssues.toString() }
             fromResult.asm?.let { if (it is NavigationExpression) it else null } ?: error("Navigation not created from given fromExpressionStr")
         }
 

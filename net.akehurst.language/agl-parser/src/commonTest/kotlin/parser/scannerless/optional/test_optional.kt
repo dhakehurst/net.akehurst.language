@@ -65,7 +65,7 @@ class test_optional : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("<EOT>"))
             ), issues.errors
         )
     }

@@ -18,36 +18,41 @@
 package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sentence.api.InputLocation
 
 class ExpressionsSemanticAnalyser(
-) : SemanticAnalyser<Expression, SentenceContext> {
+) : SemanticAnalyser<Expression, ContextWithScope<Any,Any>> {
 
-    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private var _locationMap: Map<Any, InputLocation> = emptyMap()
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
+    private var _locationMap: LocationMap = LocationMapDefault()
 
     private var _grammarNamespace: GrammarTypeNamespace? = null
 
     override fun clear() {
         _grammarNamespace = null
-        _locationMap = emptyMap()
-        issues.clear()
+        _locationMap.clear()
+        _issues.clear()
+        _resolvedReferences.clear()
     }
 
     override fun analyse(
+        sentenceIdentity:Any?,
         asm: Expression,
-        locationMap: Map<Any, InputLocation>?,
-        options: SemanticAnalysisOptions< SentenceContext>
+        locationMap: LocationMap?,
+        options: SemanticAnalysisOptions< ContextWithScope<Any,Any>>
     ): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
 }

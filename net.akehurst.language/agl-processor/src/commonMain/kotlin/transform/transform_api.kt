@@ -32,6 +32,7 @@ interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
     override val namespace: List<TransformNamespace>
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace
+    fun findTypeForGrammarRule(grammarQualifiedName: QualifiedName, ruleName: GrammarRuleName): TypeInstance?
 }
 
 interface TransformNamespace : Namespace<TransformRuleSet> {

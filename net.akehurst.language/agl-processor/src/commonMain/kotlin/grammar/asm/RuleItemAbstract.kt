@@ -106,7 +106,7 @@ sealed class ChoiceAbstract(
         return this.alternative.get(index)
     }
 
-    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when(childNumber) {
+    override fun itemsForChild(childNumber: Int): Set<RuleItem> = when (childNumber) {
         0 -> alternative.toSet()
         else -> emptySet()
     }
@@ -258,7 +258,11 @@ class TerminalDefault(
         error("subitem ${index} not found")
     }
 
-    override fun toString(): String = if (isPattern) "\"${value.replace("\"", "\\\"")}\"" else "'${value.replace("'", "\\'")}'"
+    override fun toString(): String = if (isPattern) {
+        "\"${value.replace("\\","\\\\").replace("\"","\\\"")}\""
+    } else {
+        "'${value.replace("\\","\\\\").replace("'","\\'")}'"
+    }
 }
 
 class NonTerminalDefault(

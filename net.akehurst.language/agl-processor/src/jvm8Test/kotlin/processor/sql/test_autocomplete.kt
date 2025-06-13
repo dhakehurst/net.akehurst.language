@@ -16,7 +16,6 @@
 
 package net.akehurst.language.test.processor.sql
 
-import net.akehurst.language.agl.simple.ContextAsmSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
@@ -35,7 +34,7 @@ class test_autocomplete {
             testData("With grammar only") {
                 grammarStr(grammarStr)
                 sentencePass("") {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "terminatedStatement", "<statement> ;"),
@@ -48,7 +47,7 @@ class test_autocomplete {
                     )
                 }
                 sentencePass("SELECT ") {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.LITERAL, "*", "*"),
@@ -61,7 +60,9 @@ class test_autocomplete {
                 grammarStr(grammarStr)
                 sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
-                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
+                        forSentence(null) {
+                            item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -71,7 +72,9 @@ class test_autocomplete {
                 }
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
-                        item("col1", "net.akehurst.language.sql.Column", "")
+                        forSentence(null) {
+                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -86,8 +89,10 @@ class test_autocomplete {
                 referenceStr(referenceStr)
                 sentencePass("SELECT * FROM ") {
                     context(contextAsmSimple {
-                        item("table1", "net.akehurst.language.example.SQL.TableDefinition", "")
-                        item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", "")
+                        forSentence(null) {
+                            item("table1", "net.akehurst.language.example.SQL.TableDefinition", null, "")
+                            item("col1", "net.akehurst.language.example.SQL.ColumnDefinition", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -98,7 +103,9 @@ class test_autocomplete {
                 }
                 sentencePass("SELECT ") {
                     context(contextAsmSimple {
-                        item("col1", "net.akehurst.language.sql.Column", "")
+                        forSentence(null) {
+                            item("col1", "net.akehurst.language.sql.Column", null, "")
+                        }
                     })
                     expectedCompletionItems(
                         listOf(
@@ -113,7 +120,7 @@ class test_autocomplete {
                 grammarStr(grammarStr)
                 referenceStr(referenceStr)
                 sentencePass("") {
-                    context(ContextAsmSimple())
+                    context(contextAsmSimple())
                     expectedCompletionItems(
                         listOf(
                             CompletionItem(CompletionItemKind.SEGMENT, "Select statement", "SELECT <columns> FROM <table-id>;"),

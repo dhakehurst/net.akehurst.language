@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.issues.api.LanguageIssue
@@ -78,17 +78,17 @@ class test_BasicTutorial {
         }
 
         fun testPass(sentence: String) {
-            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
             check(_processor.issues.errors.isEmpty()){ _processor.issues.toString()}
-            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)
         }
 
         fun testFail(sentence: String, expectedIssues: Set<LanguageIssue>) {
-            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+            val result = _processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
             assertTrue(_processor.issues.errors.isEmpty(), _processor.issues.toString())
-            assertEquals(expectedIssues,result.issues.all)
-            assertNull(result.asm)
+            assertEquals(expectedIssues,result.allIssues.all)
+            assertNotNull(result.asm)
         }
     }
 
@@ -121,11 +121,11 @@ class test_BasicTutorial {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(76, 7, 7, 6),
-                "No target of type(s) [TargetDef] found for referring value 'Ann' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
+                InputLocation(64, 7, 6, 3, null),
+                "Reference 'Ann' not resolved, to type(s) [TargetDef] in scope '/'"
             )
         )
-//FIXME: path different
+
         testFail(sentence, expIssues)
     }
 }

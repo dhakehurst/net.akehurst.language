@@ -59,7 +59,7 @@ class test_IETELE_VC : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'v'", "'i'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'v'", "'i'"))
             ), issues.errors
         )
     }

@@ -74,7 +74,7 @@ class KompositeSyntaxAnalyser2 : SyntaxAnalyserByMethodRegistrationAbstract<Type
         val ns = TypeNamespaceSimple(qn)
         declaration.forEach {
             val dec = it.invoke(ns)
-            ns.addDefinition(dec)
+            //ns.addDefinition(dec)
         }
 
         return ns

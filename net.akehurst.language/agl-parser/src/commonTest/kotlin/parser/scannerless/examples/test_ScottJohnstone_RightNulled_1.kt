@@ -56,7 +56,7 @@ class test_ScottJohnstone_RightNulled_1 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'a'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'a'"))
         ),issues.errors)
     }
 
@@ -66,7 +66,7 @@ class test_ScottJohnstone_RightNulled_1 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),sentence, setOf("<GOAL>"),setOf("'b'"))
+            parseError(InputLocation(1, 2, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'b'"))
         ),issues.errors)
     }
 
@@ -76,7 +76,7 @@ class test_ScottJohnstone_RightNulled_1 : test_LeftCornerParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),sentence, setOf("abAa","aBAa","aba"),setOf("'a'"))
+            parseError(InputLocation(2, 3, 1, 1, null),sentence, setOf("abAa","aBAa","aba"),setOf("'a'"))
         ),issues.errors)
     }
 

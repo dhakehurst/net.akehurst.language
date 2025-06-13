@@ -50,7 +50,7 @@ class AsmTransformSyntaxAnalyser(
     )
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
-        AglExpressions.grammar.qualifiedName to ExpressionsSyntaxAnalyser()
+        AglExpressions.defaultTargetGrammar.qualifiedName to ExpressionsSyntaxAnalyser()
     )
 
     override fun registerHandlers() {
@@ -122,7 +122,7 @@ class AsmTransformSyntaxAnalyser(
             val asm = TransformRuleSetDefault(namespace, name, extendRefs, optHolder, rules)
             typeImports.forEach { asm.addImportType(it) }
             rules.forEach { asm.setRule(it) }
-            asm
+            asm.also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 

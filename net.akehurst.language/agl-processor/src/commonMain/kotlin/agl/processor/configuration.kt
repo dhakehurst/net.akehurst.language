@@ -18,13 +18,14 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
@@ -37,9 +38,7 @@ import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.builder.typeModel
 
 
 internal class LanguageProcessorConfigurationEmpty<AsmType : Any, ContextType : Any>(
@@ -80,7 +79,7 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     override val styleString: StyleString? = null,
     override val formatString: FormatString? = null,
 
-    override val regexEngineKind : RegexEngineKind = RegexEngineKind.PLATFORM,
+    override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
 
     override val scannerResolver: ScannerResolver<AsmType, ContextType>? = {
@@ -92,16 +91,13 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
             ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
             ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
         }
-        ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
+        ProcessResultDefault(scanner)
     },
     override val parserResolver: ParserResolver<AsmType, ContextType>? = { p ->
-        ProcessResultDefault(
-            p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) },
-            IssueHolder(LanguageProcessorPhase.ALL)
-        )
+        ProcessResultDefault(p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) })
     },
     override var typesResolver: TypesResolver<AsmType, ContextType>? = { p ->
-        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), ContextFromGrammar.createContextFrom(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
+        TypeModelSimple.fromString(SimpleName("FromGrammar" + p.grammarModel!!.name.value), contextFromGrammar(p.grammarModel!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
@@ -110,15 +106,15 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
         } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceResolver: CrossReferenceResolver<AsmType, ContextType>? = { p ->
-        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatResolver: FormatResolver<AsmType, ContextType>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.formatString ?: FormatString(""))
+        AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
     override var styleResolver: StyleResolver<AsmType, ContextType>? = { p ->
-        AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
+        AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
     },
     override var completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null,
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -136,7 +132,7 @@ internal class LanguageProcessorConfigurationSimple(
 
     override val regexEngineKind: RegexEngineKind = RegexEngineKind.PLATFORM,
     override val scannerKind: ScannerKind = ScannerKind.OnDemand,
-    override val scannerResolver: ScannerResolver<Asm, ContextAsmSimple>? = {
+    override val scannerResolver: ScannerResolver<Asm, ContextWithScope<Any, Any>>? = {
         val regexEngine = when (regexEngineKind) {
             RegexEngineKind.PLATFORM -> RegexEnginePlatform
             RegexEngineKind.AGL -> RegexEngineAgl
@@ -145,48 +141,44 @@ internal class LanguageProcessorConfigurationSimple(
             ScannerKind.Classic -> ScannerClassic(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
             ScannerKind.OnDemand -> ScannerOnDemand(regexEngine, it.targetRuleSet?.let { it.terminals + it.embeddedTerminals } ?: emptyList())
         }
-        ProcessResultDefault(scanner, IssueHolder(LanguageProcessorPhase.ALL))
+        ProcessResultDefault(scanner)
     },
-    override val parserResolver: ParserResolver<Asm, ContextAsmSimple>? = { p ->
+    override val parserResolver: ParserResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(
             p.targetRuleSet?.let { LeftCornerParser(p.scanner!!, it) },
-            IssueHolder(LanguageProcessorPhase.ALL)
         )
     },
-    override var typesResolver: TypesResolver<Asm, ContextAsmSimple>? = { p ->
-        TypeModelSimple.fromString(SimpleName("FromGrammar"+p.grammarModel!!.name.value), ContextFromGrammar.createContextFrom(p.grammarModel!!),p.configuration.typesString ?: TypesString(""))
+    override var typesResolver: TypesResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
+        TypeModelSimple.fromString(SimpleName("FromGrammar" + p.grammarModel!!.name.value), contextFromGrammar(p.grammarModel!!), p.configuration.typesString ?: TypesString(""))
     },
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
-    override val transformResolver: TransformResolver<Asm, ContextAsmSimple>? = { p ->
+    override val transformResolver: TransformResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         p.configuration.transformString?.let {
             TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), it)
         } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
-    override var crossReferenceResolver: CrossReferenceResolver<Asm, ContextAsmSimple>? = { p ->
-        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
+    override var crossReferenceResolver: CrossReferenceResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
+        CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
     },
-    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextAsmSimple>? = { p ->
+    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(
-            SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetAsmTransformRuleSet.qualifiedName), //FIXME
-            IssueHolder(LanguageProcessorPhase.ALL)
+            SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetTransformRuleSet.qualifiedName), //FIXME
         )
     },
-    override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, ContextAsmSimple>? = { p ->
+    override var semanticAnalyserResolver: SemanticAnalyserResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(
-            SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel),
-            IssueHolder(LanguageProcessorPhase.ALL)
+            SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel),
         )
     },
-    override var formatResolver: FormatResolver<Asm, ContextAsmSimple>? = { p ->
-        AglFormatModelDefault.fromString(ContextFromTypeModel(p.typeModel), p.configuration.formatString ?: FormatString(""))
+    override var formatResolver: FormatResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
+        AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), p.configuration.formatString ?: FormatString(""))
     },
-    override var styleResolver: StyleResolver<Asm, ContextAsmSimple>? = { p ->
-        AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
+    override var styleResolver: StyleResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
+        AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), p.configuration.styleString ?: StyleString(""))
     },
-    override var completionProviderResolver: CompletionProviderResolver<Asm, ContextAsmSimple>? = { p ->
+    override var completionProviderResolver: CompletionProviderResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         ProcessResultDefault(
-            CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typeModel, p.crossReferenceModel),
-            IssueHolder(LanguageProcessorPhase.ALL)
+            CompletionProviderSimple(p.targetGrammar!!, Grammar2TransformRuleSet.defaultConfiguration, p.typesModel, p.crossReferenceModel),
         )
     }
-) : LanguageProcessorConfiguration<Asm, ContextAsmSimple>
+) : LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>>

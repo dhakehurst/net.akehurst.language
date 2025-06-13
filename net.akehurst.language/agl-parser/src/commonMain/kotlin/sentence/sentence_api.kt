@@ -50,8 +50,9 @@ data class InputLocation(
     val position: Int,
     val column: Int,
     val line: Int,
-    var length: Int
-) {
+    var length: Int,
+    val sentenceIdentity: Any?,
+    ) {
 
     val endPosition get() = position + length
 }

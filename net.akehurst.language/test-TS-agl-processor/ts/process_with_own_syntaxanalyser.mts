@@ -17,7 +17,8 @@ import {
 } from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-processor.mjs';
 
 import {
-    IssueHolder
+    IssueHolder,
+    locationForNode
 } from 'net.akehurst.language-agl-processor/net.akehurst.language-agl-parser.mjs';
 
 
@@ -94,6 +95,8 @@ class MySyntaxAnalyser extends SyntaxAnalyserByMethodRegistrationAbstract<Value>
 
     // value = object | predefined | literal ;
     private value(nodeInfo: SpptDataNodeInfo, children: KtList<object>, sentence: Sentence): Value {
+        //console.log( locationForNode(nodeInfo.node, sentence) )
+        console.log( sentence.locationFor(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip - nodeInfo.node.startPosition) )
         return children.asJsReadonlyArrayView()[0] as Value;
     }
 

@@ -19,6 +19,8 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
@@ -52,7 +54,7 @@ class test_AglGrammarSemanticAnalyser {
                 SyntaxAnalysisResultDefault(
                     gm,
                     IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS),
-                    emptyMap()
+                    LocationMapDefault()
                 ),
                 Agl.options { }
             )
@@ -76,24 +78,24 @@ class test_AglGrammarSemanticAnalyser {
 
         fun semanticAnalysis(
             asmRes: SyntaxAnalysisResult<GrammarModel>,
-            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry>
+            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
             val context = ContextFromGrammarRegistry(Agl.registry)
             options.semanticAnalysis.context = context
-            return semanticAnalyser.analyse(asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
+            return semanticAnalyser.analyse(null,asmRes.asm!!, asmRes.locationMap, options.semanticAnalysis)
         }
 
         fun test(
             grammarStr: String,
             expected: Set<LanguageIssue>,
-            options: ProcessOptions<GrammarModel, ContextFromGrammarRegistry> = Agl.options { }
+            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>> = Agl.options { }
         ): ProcessResult<GrammarModel> {
             val sppt = parse(grammarStr)
             val asmRes = syntaxAnalysis(sppt)
             val res = semanticAnalysis(asmRes, options)
             assertEquals(expected, res.issues.all)
-            return ProcessResultDefault(asmRes.asm, res.issues)
+            return ProcessResultDefault(asmRes.asm, processIssues=res.issues)
         }
 
     }
@@ -108,7 +110,7 @@ class test_AglGrammarSemanticAnalyser {
         """.trimIndent()
 
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "GrammarRule 'b' not found in grammar 'Test'")
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1, null), "GrammarRule 'b' not found in grammar 'Test'")
         )
 
         test(grammarStr, expected, Agl.options {
@@ -159,7 +161,7 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(position = 60, column = 5, line = 5, length = 9),
+                InputLocation(position = 60, column = 5, line = 5, length = 9, sentenceIdentity = null),
                 "More than one rule named 'b' found in grammar 'Test'"
             ),
 //            LanguageIssue(
@@ -188,7 +190,7 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9), "Rule 'c' is not used in grammar Test.")
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9, null), "Rule 'c' is not used in grammar Test.")
         )
         test(grammarStr, expected, Agl.options {
             semanticAnalysis {
@@ -212,13 +214,13 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.WARNING,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(57, 10, 4, 3),
+                InputLocation(57, 10, 4, 3, null),
                 "Ambiguity: [HEIGHT/HEIGHT] conflict from 'b1' into 'b1/b2' on [<EOT>]"
             ),
             LanguageIssue(
                 LanguageIssueKind.WARNING,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(72, 10, 5, 3),
+                InputLocation(72, 10, 5, 3, null),
                 "Ambiguity: [HEIGHT/HEIGHT] conflict from 'b1' into 'b2/b1' on [<EOT>]"
             ),
         )
@@ -321,13 +323,13 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(89, 3, 8, 10),
+                InputLocation(89, 3, 8, 10, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             )
         )
@@ -435,13 +437,13 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(75, 5, 6, 14),
+                InputLocation(75, 5, 6, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(38, 5, 3, 14),
+                InputLocation(38, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
@@ -565,22 +567,22 @@ class test_AglGrammarSemanticAnalyser {
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(123, 5, 9, 14),
+                InputLocation(123, 5, 9, 14, null),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(123, 5, 9, 14),
+                InputLocation(123, 5, 9, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
@@ -642,22 +644,22 @@ class test_AglGrammarSemanticAnalyser {
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(123, 5, 9, 14),
+                InputLocation(123, 5, 9, 14, null),
                 "More than one rule named 'A' found in grammar 'Mid2'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(123, 5, 9, 14),
+                InputLocation(123, 5, 9, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )
@@ -691,12 +693,12 @@ class test_AglGrammarSemanticAnalyser {
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(37, 5, 3, 14),
+                InputLocation(37, 5, 3, 14, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(123, 5, 9, 25),
+                InputLocation(123, 5, 9, 25, null),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
         )

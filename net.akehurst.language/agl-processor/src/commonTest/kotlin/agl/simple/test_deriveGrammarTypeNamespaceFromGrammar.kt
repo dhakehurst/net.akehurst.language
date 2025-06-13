@@ -49,7 +49,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 }
             })
             assertNotNull(result.asm)
-            assertTrue(result.issues.isEmpty(), result.issues.toString())
+            assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
             val grammarMdl = result.asm!!
 
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
@@ -57,7 +57,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             val atfg = TransformDomainDefault.fromGrammarModel(grammarMdl)
             //val actualTr = atfg.build()
 
-            assertTrue(atfg.issues.isEmpty(), atfg.issues.toString())
+            assertTrue(atfg.allIssues.isEmpty(), atfg.allIssues.toString())
             // val actualTm = atfg.typeModel
 
             // GrammarTypeModelTest.tmAssertEquals(expectedTm, actualTm)
@@ -83,7 +83,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("Test", true) {
@@ -91,21 +91,21 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 stringTypeFor("ID")
                 stringTypeFor("NAME")
                 stringTypeFor("NUMBER")
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyPrimitiveType("id", "String", false, 0)
                     propertyListType("\$choiceList", false, 1) {
                         ref("S$1")
                     }
                 }
-                unionTypeNotMapped("S$1") {
+                union("S$1") {
                     typeRef("A",false)
                     typeRef("B",false)
                 }
-                dataType("A", "A") {
+                dataFor("A", "A") {
                     propertyPrimitiveType("name", "String", false, 0)
                     propertyPrimitiveType("number", "String", false, 1)
                 }
-                dataType("B", "B") {
+                dataFor("B", "B") {
                     propertyPrimitiveType("name", "String", false, 0)
                     propertyPrimitiveType("name2", "String", false, 1)
                 }
@@ -137,20 +137,20 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val tmI = grammarTypeModel("test.I", "Inner") {
             stringTypeFor("a")
-            dataType("S", "S") {
+            dataFor("S", "S") {
                 subtypes("A", "SA")
             }
-            dataType("SA", "SA") {
+            dataFor("SA", "SA") {
                 supertypes("S")
                 propertyDataTypeOf("s", "S", false, 0)
                 propertyDataTypeOf("a", "A", false, 1)
             }
-            dataType("A", "A") {
+            dataFor("A", "A") {
                 supertypes("S")
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -161,22 +161,22 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 tmI.namespace[1]
             )
         ) {
-            dataType("S", "S") {
+            dataFor("S", "S") {
                 subtypes("B", "SBC")
             }
-            dataType("SBC", "SBC") {
+            dataFor("SBC", "SBC") {
                 supertypes("S")
                 propertyDataTypeOf("s", "S", false, 0)
                 propertyDataTypeOf("bc", "BC", false, 1)
             }
-            dataType("BC", "BC") {
+            dataFor("BC", "BC") {
                 subtypes("B", "C")
             }
-            dataType("C", "C") {
+            dataFor("C", "C") {
                 supertypes("BC")
                 propertyDataTypeOf("s", "test.I.S", false, 1)
             }
-            dataType("B", "B") {
+            dataFor("B", "B") {
                 supertypes("S", "BC")
                 propertyDataTypeOf("s", "test.I.S", false, 1)
             }
@@ -206,24 +206,24 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = grammarTypeModel("test.O", "O") {
-            unionType("S","S") {
+            unionFor("S","S") {
                 typeRef("B")
                 tupleType {
                     typeRef("s", "S", false)
                     typeRef("bc", "BC", false)
                 }
             }
-            dataType("BC", "BC") {
+            dataFor("BC", "BC") {
                 subtypes("B", "C")
             }
-            dataType("C", "C") {
+            dataFor("C", "C") {
                 propertyPrimitiveType("s", "S", false, 1)
             }
-            dataType("B", "B") {
+            dataFor("B", "B") {
                 propertyPrimitiveType("s", "S", false, 1)
             }
         }
@@ -253,37 +253,37 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("exprList", "ExprList", false, 0)
                 }
-                dataType("exprList", "ExprList") {
+                dataFor("exprList", "ExprList") {
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
                         typeRef("expr", "Expr", false)
                     }
                 }
-                dataType("expr", "Expr") {
+                dataFor("expr", "Expr") {
                     subtypes("Root", "Mul", "Add")
                 }
-                dataType("root", "Root") {
+                dataFor("root", "Root") {
                     subtypes("Var", "Literal")
                 }
-                dataType("var", "Var") {
+                dataFor("var", "Var") {
                     propertyPrimitiveType("name", "String", false, 0)
                 }
-                dataType("literal", "Literal") {
+                dataFor("literal", "Literal") {
                     propertyPrimitiveType("number", "String", false, 0)
                 }
-                dataType("mul", "Mul") {
+                dataFor("mul", "Mul") {
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyDataTypeOf("expr2", "Expr", false, 2)
                 }
-                dataType("add", "Add") {
+                dataFor("add", "Add") {
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyDataTypeOf("expr2", "Expr", false, 2)
                 }
@@ -314,37 +314,37 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
         val actual = TransformDomainDefault.fromGrammarModel(result.asm!!).asm!!.typeModel!!
         val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
-                dataType("S", "S") {
+                dataFor("S", "S") {
                     propertyDataTypeOf("exprList", "ExprList", false, 0)
                 }
-                dataType("exprList", "ExprList") {
+                dataFor("exprList", "ExprList") {
                     propertyDataTypeOf("expr", "Expr", false, 0)
                     propertyListOfTupleType(Grammar2TransformRuleSet.UNNAMED_LIST_PROPERTY_NAME.value, false, 1) {
                         typeRef("expr", "Expr", false)
                     }
                 }
-                dataType("expr", "Expr") {
+                dataFor("expr", "Expr") {
                     subtypes("Root", "Mul", "Add")
                 }
-                dataType("root", "Root") {
+                dataFor("root", "Root") {
                     subtypes("Var", "Literal")
                 }
-                dataType("var", "Var") {
+                dataFor("var", "Var") {
                     propertyPrimitiveType("name", "String", false, 0)
                 }
-                dataType("literal", "Literal") {
+                dataFor("literal", "Literal") {
                     propertyPrimitiveType("number", "String", false, 0)
                 }
-                dataType("mul", "Mul") {
+                dataFor("mul", "Mul") {
                     propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
                 }
                 //listTypeOf("add", "Expr")
-                dataType("add", "Add") {
+                dataFor("add", "Add") {
                     propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
                 }
             }

@@ -29,10 +29,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.regex.api.RegexEngineKind
-import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
@@ -70,8 +67,8 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
-    override val typesModel: TypeModel? get() = this.processor?.typeModel
-    override val transformModel: TransformModel? get() = this.processor?.asmTransformModel
+    override val typesModel: TypeModel? get() = this.processor?.typesModel
+    override val transformModel: TransformModel? get() = this.processor?.transformModel
     override val crossReferenceModel: CrossReferenceModel? get() = this.processor?.crossReferenceModel
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = this.processor?.syntaxAnalyser
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this.processor?.semanticAnalyser
@@ -92,34 +89,10 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
 */
     //abstract override var aglOptions: ProcessOptions<DefinitionBlock<Grammar>, GrammarContext>?
 
-    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
-
     override val issues: IssueCollection<LanguageIssue> get() = _issues
 
-    override val styleModel: AglStyleModel?
-        get() {
-            return if (null == _style) {
-                _styleResolver?.let {
-                    val p = this.processor
-                    if (null == p) {
-                        null
-                    } else {
-                        val r = it.invoke(p)
-                        _issues.addAllFrom(r.issues)
-                        r.asm
-                    }
-                }
-            } else {
-                _style
-            }
-        }
-//        set(value) {
-//            val oldValue = _style
-//            if (oldValue != value) {
-//                _styleResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-//                styleObservers.forEach { it(oldValue, value) }
-//            }
-//        }
+    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
+    override val styleModel: AglStyleModel? get() = this._style_cache.value
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: GrammarString?, newValue: GrammarString?) -> Unit>()
@@ -152,20 +125,28 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
 
-    //private var _grammar_cache: CachedValue<Grammar?> = cached {
-    //    val res = this._grammarResolver?.invoke()
-    //    this._issues.addAll(res?.issues?: emptyList())
-    //    res?.asm
-    //}.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
+    // style is not part of the processor...only used by editors
+    protected val _style_cache: CachedValue<AglStyleModel?> = cached {
+        _styleResolver?.let {
+            val p = this.processor
+            if (null == p) {
+                null
+            } else {
+                val r = it.invoke(p)
+                _issues.addAllFrom(r.allIssues)
+                r.asm
+            }
+        }
+    }
 
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
-    protected var _style: AglStyleModel = AglStyleModelDefault(SimpleName("<empty>"))
-
+/*
     protected var _regexEngineKind: RegexEngineKind by Delegates.observable(RegexEngineKind.AGL) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+
     protected var _scannerKind : ScannerKind by Delegates.observable(ScannerKind.OnDemand) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
@@ -220,15 +201,17 @@ abstract class LanguageDefinitionAbstract<AsmType:Any, ContextType : Any>(
         }
     }
 
+    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+*/
+
     protected var _styleResolver: StyleResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    protected var _completionProviderResolver: CompletionProviderResolver<AsmType,  ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-        }
-    }
 }

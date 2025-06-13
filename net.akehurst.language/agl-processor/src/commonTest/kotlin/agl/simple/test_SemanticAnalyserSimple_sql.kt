@@ -130,7 +130,7 @@ grammar SQL {
             grammarDefinitionStr = (grammarStr),
             referenceStr = (crossReferenceModelStr)
         ).processor!!
-        val typeModel = processor.typeModel
+        val typeModel = processor.typesModel
         val crossReferenceModel = processor.crossReferenceModel
 
         operator fun AsmStructure.get(value:String) = this.getProperty(PropertyValueName(value))
@@ -197,19 +197,19 @@ grammar SQL {
                 }
             }
         }
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
 
         //check paths
         val asmRoot = result.asm!!.root[0] as AsmStructure
-        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.value)
+        assertEquals("/0/terminatedStatement/0", asmRoot["terminatedStatement"].ass<AsmList>().elements[0].ass<AsmStructure>().parsePath.toString())
     }
 
     @Test
     fun check_crossReferenceModel() {
-        val context = ContextFromTypeModel(processor.typeModel)
+        val context = ContextFromTypeModel(processor.typesModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
-        assertTrue(res.issues.isEmpty(), res.issues.toString())
+        assertTrue(res.allIssues.isEmpty(), res.allIssues.toString())
     }
 
     @Test
@@ -224,7 +224,7 @@ grammar SQL {
 
         val result = processor.process(sentence)
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -257,7 +257,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -273,9 +273,9 @@ grammar SQL {
             SELECT col1 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimpleWithAsmPath()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -322,7 +322,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -338,11 +338,11 @@ grammar SQL {
             SELECT col7 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimpleWithAsmPath()) } })
 
         val expected = asmSimple(
             typeModel = typeModel,
-            crossReferenceModel = crossReferenceModel, context = ContextAsmSimple(),
+            crossReferenceModel = crossReferenceModel, context = contextAsmSimple(),
             failIfIssues = false //there are failing references expected
         ) {
             element("StatementList") {
@@ -393,12 +393,12 @@ grammar SQL {
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(83, 8, 7, 4),
-                "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef[/0/terminatedStatement/1/statement/columns/0]'"
+                InputLocation(83, 8, 7, 4, null),
+                "Reference 'col7' not resolved, to type(s) [ColumnDefinition] in scope '/table1'"
             )
         )
 
-        assertEquals(expIssues, result.issues.toSet())
+        assertEquals(expIssues, result.allIssues.toSet())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
@@ -414,9 +414,9 @@ grammar SQL {
             SELECT * FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
     }
 
     @Test
@@ -431,9 +431,9 @@ grammar SQL {
             SELECT col1,col2,col3 FROM table1 ;
         """.trimIndent()
 
-        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextAsmSimple()) } })
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(contextAsmSimple()) } })
 
-        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextAsmSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = contextAsmSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -486,7 +486,7 @@ grammar SQL {
             }
         }
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 

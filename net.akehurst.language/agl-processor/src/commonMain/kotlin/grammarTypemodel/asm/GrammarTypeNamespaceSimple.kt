@@ -85,16 +85,17 @@ abstract class GrammarTypeNamespaceAbstract(
                 }
             }
 
-    override fun asString(indent: Indent): String {
-        val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }
-        val ruleToType = rules.joinToString(separator = "\n") { it.key.value + "->" + it.value.signature(this, 0) }
-        val types = this.ownedTypesByName.entries.sortedBy { it.key.value }.joinToString(separator = "\n") { it.value.asStringInContext(this) }
-        val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}.*" }
-        val s = """namespace '$qualifiedName' {
-$ruleToType
-$importstr
-$types
-}""".trimIndent()
-        return s
-    }
+//    override fun asString(indent: Indent): String {
+//        //val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }
+//        //val ruleToType = rules.joinToString(separator = "\n") { it.key.value + "->" + it.value.signature(this, 0) }
+//        val types = this.ownedTypesByName.entries
+//            .sortedBy { it.key.value }
+//            .joinToString(separator = "\n") { it.value.asStringInContext(this) }
+//        val importstr = this.import.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}" }
+//        val s = """namespace $qualifiedName
+//$importstr
+//$types
+//""".trimIndent()
+//        return s
+//    }
 }

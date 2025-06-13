@@ -29,6 +29,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.formatter.api.FormatNamespace
+import net.akehurst.language.sppt.api.ParsePath
 
 @DslMarker
 annotation class FormatModelDslMarker
@@ -50,7 +51,7 @@ class FormatModelBuilder(
 
     private val _asm = AsmSimple()
     private val _ruleList = mutableListOf<AsmStructure>()
-    private val rules = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("Unit")).also {
+    private val rules = _asm.createStructure("/", QualifiedName("Unit")).also {
         _asm.addRoot(it)
         it.setProperty(PropertyValueName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
     }
@@ -59,8 +60,8 @@ class FormatModelBuilder(
         val b = FormatExpressionBuilder(_asm)
         b.init()
         val expr = b.build()
-        val formatRuleElement = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("FormatRule"))
-        val typeReference = _asm.createStructure(AsmPathSimple.ROOT, QualifiedName("TypeReference"))
+        val formatRuleElement = _asm.createStructure("/",QualifiedName("FormatRule"))
+        val typeReference = _asm.createStructure("/", QualifiedName("TypeReference"))
         typeReference.setProperty(PropertyValueName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
         formatRuleElement.setProperty(PropertyValueName("typeReference"), typeReference, 0)//TODO childIndex
         formatRuleElement.setProperty(PropertyValueName("formatExpression"), expr, 0)//TODO childIndex
@@ -79,7 +80,7 @@ class FormatExpressionBuilder(
 
     fun literalString(value: String) {
         val el = _asm.createStructure(
-            asmPath = AsmPathSimple.ROOT,
+            parsePath = "/",
             typeName = QualifiedName("LiteralString")
         )
         el.setProperty(PropertyValueName("literal_string"), AsmPrimitiveSimple.stdString(value), 0)//TODO childIndex

@@ -47,7 +47,7 @@ class test_TELE_Exp : test_LeftCornerParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"),setOf("'v'","'t'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"),setOf("'v'","'t'"))
         ),issues.errors)
     }
 

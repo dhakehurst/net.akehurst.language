@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -39,28 +39,28 @@ class test_SemanticAnalyser {
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(testGrammar)
+            val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
                 }
             })
-            assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(expected.size, actual.issues.size)
-            assertEquals(expected.toSet(), actual.issues.toSet())
+            assertTrue(actual.allIssues.errors.isEmpty(), actual.allIssues.toString())
+            assertEquals(expected.size, actual.allIssues.size)
+            assertEquals(expected.toSet(), actual.allIssues.toSet())
         }
 
         fun testFail(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(testGrammar)
+            val context = contextFromGrammar(testGrammar)
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
                 }
             })
-            assertTrue(actual.issues.errors.isNotEmpty())
-            assertEquals(expected.size, actual.issues.size)
-            assertEquals(expected.toSet(), actual.issues.toSet())
+            assertTrue(actual.allIssues.errors.isNotEmpty())
+            assertEquals(expected.size, actual.allIssues.size)
+            assertEquals(expected.toSet(), actual.allIssues.toSet())
         }
 
     }
@@ -101,7 +101,7 @@ class test_SemanticAnalyser {
         val expected = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(31, 3, 3, 1),
+                InputLocation(31, 3, 3, 1, null),
                 "Grammar Rule 'X' not found for style rule",
                 null
             )
@@ -142,7 +142,7 @@ class test_SemanticAnalyser {
             }
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3), "Terminal Literal 'x' not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3, null), "Terminal Literal 'x' not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }
@@ -180,7 +180,7 @@ class test_SemanticAnalyser {
             }
         """.trimIndent()
         val expected = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3), "Terminal Pattern \"x\" not found for style rule", null)
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(31, 3, 3, 3, null), "Terminal Pattern \"x\" not found for style rule", null)
         )
         testFail(grammarStr, sentence, sentence.length, expected)
     }

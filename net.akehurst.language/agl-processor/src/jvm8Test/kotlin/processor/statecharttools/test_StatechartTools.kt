@@ -16,7 +16,9 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.Agl.configurationSimple
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.collections.lazyMap
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -39,13 +41,28 @@ class test_StatechartTools(val data: Data) {
 
         // must create processor for 'Expressions' so that SText can extend it
         //val exprProcessor = Agl.processorFromStringSimple(GrammarString(grammarStr1)).processor!!
-        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        //var processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
         var sourceFiles = arrayOf("/statechart-tools/samplesValid.txt")
+
+        fun processorFor(targetGrammar:String) =Agl.processorFromStringSimple(
+                GrammarString(grammarStr),
+                configurationBase = Agl.configuration(configurationSimple()) {
+                    targetGrammarName(targetGrammar)
+                }
+            ).let {
+                check(it.issues.errors.isEmpty()) {it.issues.toString()}
+            it.processor
+            }
+
+        val processor = lazyMap { tgtGram:String ->
+            processorFor(tgtGram)
+        }
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun collectData(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
+            var grammarName = "Statechart"
             var ruleName = ""
             for (file in sourceFiles) {
                 val inps = this::class.java.getResourceAsStream(file) ?: error("File not found")
@@ -56,11 +73,13 @@ class test_StatechartTools(val data: Data) {
                         // blank line
                     } else if (line.startsWith("//#")) {
                         // change goal rule
-                        ruleName = line.substringAfter("#").trim()
+                        val str = line.substringAfter("#").trim()
+                        grammarName = str.substringBefore("::", "Statechart")
+                        ruleName = str.substringAfter("::", str)
                     } else if (line.startsWith("//")) {
                         // comment
                     } else {
-                        col.add(arrayOf(Data(file, ruleName, line)))
+                        col.add(arrayOf(Data(file, grammarName, ruleName, line)))
                     }
                 }
                 return col
@@ -69,11 +88,11 @@ class test_StatechartTools(val data: Data) {
         }
     }
 
-    data class Data(val file: String, val ruleName: String, val text: String)
+    data class Data(val file: String, val grammarName:String, val ruleName: String, val text: String)
 
     @Test
     fun parse() {
-        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
+        val result = processor[data.grammarName]!!.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
@@ -82,8 +101,8 @@ class test_StatechartTools(val data: Data) {
 
     @Test
     fun process() {
-        val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
-        assertNotNull(result.asm, result.issues.toString())
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val result = processor[data.grammarName]!!.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
+        assertNotNull(result.asm, result.allIssues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
     }
 }

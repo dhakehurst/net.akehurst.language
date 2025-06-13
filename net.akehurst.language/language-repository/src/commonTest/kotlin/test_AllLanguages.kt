@@ -269,13 +269,13 @@ class test_AllLanguages : FunSpec({
                 else -> processor.process(testData.sentence.text)
             }
             if (testData.isValid) {
-                assertTrue(procResult.issues.errors.isEmpty(), procResult.issues.toString())
+                assertTrue(procResult.allIssues.errors.isEmpty(), procResult.allIssues.toString())
                 //TODO: format and check resulting asm
                 //val asm = procResult.asm!!
                 //val frmRes = processor.formatAsm(asm)
                 // assertEquals(testData.sentence, frmRes.sentence)
             } else {
-                assertTrue(procResult.issues.errors.isNotEmpty())
+                assertTrue(procResult.allIssues.errors.isNotEmpty())
             }
         }
     }

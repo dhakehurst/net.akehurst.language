@@ -37,7 +37,7 @@ class test_CompletionProviderSimple {
             val grammarStr: String,
             val crossReferencesStr: String = "",
             val additionalTypeModel: TypeModel? = null,
-            val context: ContextAsmSimple? = ContextAsmSimple(),
+            val context: ContextWithScope<Any, Any>? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
             val expected: List<CompletionItem>
@@ -48,9 +48,9 @@ class test_CompletionProviderSimple {
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
             data.additionalTypeModel?.let {
-                proc.typeModel.addAllNamespaceAndResolveImports(it.namespace)
+                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typeModel
+            proc.typesModel
             proc.crossReferenceModel
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
@@ -226,12 +226,12 @@ class test_CompletionProviderSimple {
         val sentence = "var x:"
         val additionalTypeModel = typeModel("External", true) {
             namespace(externalNsName) {
-                dataType("TypeDef")
+                data("TypeDef")
             }
         }
 
-        val context = ContextAsmSimple()
-        context.rootScope.addToScope("int", QualifiedName("$externalNsName.TypeDef"), "int", false)
+        val context = contextAsmSimple()
+        context.newScopeForSentence(null).addToScope("int", QualifiedName("$externalNsName.TypeDef"), null, "int", false)
 
 
         val expected = listOf(
@@ -249,6 +249,68 @@ class test_CompletionProviderSimple {
                 sentence = sentence,
                 position = sentence.length,
                 expected = expected
+            )
+        )
+    }
+
+    @Test
+    fun keyword_completion() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                S = ('This' | "That") 'is' 'a' 'sentence' '.' ;
+            }
+        """
+        val sentence = "This is a sentence ."
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 0,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 1,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+//        test(
+//            TestData(
+//                grammarStr = grammarStr,
+//                sentence = sentence,
+//                position = 2,
+//                expected = listOf(
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+//                )
+//            )
+//        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = 3,
+                expected = listOf(
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                )
             )
         )
     }

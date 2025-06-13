@@ -18,24 +18,41 @@
 package net.akehurst.language.typemodel.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.api.syntaxAnalyser.LocationMap
+import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.asm.StdLibDefault
 
-class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextFromGrammar> {
+internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> {
 
-    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    companion object {
+        const val OPTION_INCLUDE_STD = "include-std"
 
-    override fun clear() {
+        private val OptionHolder.includeStd get() = this[OPTION_INCLUDE_STD] == "true"
     }
 
-    override fun analyse(asm: TypeModel, locationMap: Map<Any, InputLocation>?, options: SemanticAnalysisOptions<ContextFromGrammar>): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(_issues)
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private val _resolvedReferences = mutableListOf<ResolvedReference>()
+
+
+    override fun clear() {
+        _issues.clear()
+        _resolvedReferences.clear()
+    }
+
+    override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
+        if(asm.options.includeStd) {
+            asm.addNamespace(StdLibDefault)
+        }
+        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
 }

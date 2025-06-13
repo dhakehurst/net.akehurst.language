@@ -86,7 +86,7 @@ class test_bodmas_sList_root_choiceEqual_WS : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
             ), issues.errors)
     }
 

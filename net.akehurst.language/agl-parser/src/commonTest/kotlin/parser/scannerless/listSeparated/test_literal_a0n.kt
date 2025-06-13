@@ -41,7 +41,7 @@ class test_literal_a0n : test_LeftCornerParserAbstract() {
     fun empty() {
         val sentence = ""
 
-        val expected = "S|0 { <EMPTY_LIST> }"
+        val expected = "S { <EMPTY_LIST> }"
 
         super.test_pass(
             rrs = rrs,
@@ -56,7 +56,7 @@ class test_literal_a0n : test_LeftCornerParserAbstract() {
     fun a() {
         val sentence = "a"
 
-        val expected = "S|1 { 'a' }"
+        val expected = "S { 'a' }"
 
         super.test_pass(
             rrs = rrs,
@@ -75,7 +75,7 @@ class test_literal_a0n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), sentence, setOf("<GOAL>"), setOf("','", "<EOT>"))
+                parseError(InputLocation(1, 2, 1, 1, null), sentence, setOf("<GOAL>"), setOf("','", "<EOT>"))
             ), issues.errors
         )
     }
@@ -103,7 +103,7 @@ class test_literal_a0n : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3, 4, 1, 1), sentence, setOf("S"), setOf("','", "<EOT>"))
+                parseError(InputLocation(3, 4, 1, 1, null), sentence, setOf("S"), setOf("','", "<EOT>"))
             ), issues.errors
         )
     }

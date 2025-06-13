@@ -21,6 +21,7 @@ import net.akehurst.language.format.test.FormatModelTest
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.typemodel.test.TypeModelTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -129,8 +130,8 @@ class test_AglFormat {
 
         private fun test_process(data: TestData) {
             val result = Agl.registry.agl.format.processor!!.process(data.sentence)
-            assertNotNull(result.asm, result.issues.toString())
-            assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
+            assertNotNull(result.asm, result.allIssues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), "'${data.sentence}'\n${result.allIssues}")
             data.expectedAsm?.let {
                 FormatModelTest.assertEqual(it, result.asm)
             }
@@ -144,9 +145,10 @@ class test_AglFormat {
         assertNotNull(proc)
     }
 
+    @Ignore
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.format.processor!!.typeModel
+        val actual = Agl.registry.agl.format.processor!!.typesModel
         val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;

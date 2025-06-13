@@ -16,12 +16,12 @@
 package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.processor.ContextFromGrammar
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -36,7 +36,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<Asm, ContextAsmSimple> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
 
     }
 
@@ -995,27 +995,27 @@ MULTI_LINE_COMMENT {
 }
 STRICT {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 GRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 DIGRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 SUBGRAPH {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 NODE {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 EDGE {
   foreground: purple;
-  font-style: bold;
+  font-weight: bold;
 }
 ALPHABETIC_ID {
   foreground: red;
@@ -1033,11 +1033,11 @@ NAME {
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(ContextFromGrammar.createContextFrom(processor.grammarModel!!)) }
+                semanticAnalysis { context(contextFromGrammar(processor.grammarModel!!)) }
             })
 
         assertNotNull(result.asm)
         assertEquals(13, result.asm!!.allDefinitions.size)
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+        assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }
 }

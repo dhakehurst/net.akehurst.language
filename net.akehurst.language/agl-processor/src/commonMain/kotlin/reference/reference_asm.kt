@@ -68,8 +68,6 @@ class CrossReferenceModelDefault(
                     it.isScopeDefinedFor(possiblyQualifiedTypeName)
                 }
             }
-
-            else -> error("Unsupported")
         }
     }
 
@@ -88,8 +86,6 @@ class CrossReferenceModelDefault(
                     it.referencesFor(possiblyQualifiedTypeName)
                 }
             }
-
-            else -> error("Unsupported")
         }
     }
 
@@ -108,8 +104,6 @@ class CrossReferenceModelDefault(
                     it.identifyingExpressionFor(scopeForTypeName, possiblyQualifiedTypeName)
                 }
             }
-
-            else -> error("Unsupported")
         }
     }
 

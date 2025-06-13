@@ -1,21 +1,21 @@
 package testFixture.data
 
 import net.akehurst.language.agl.*
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataParserSentence) {
+fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: TestDataParserSentence) {
     println("Testing - $sd")
     when (sd) {
         is TestDataProcessorSentencePass -> when {
             null != sd.expectedAsm && null != sd.expectedCompletionItem -> error("Currently only supports testing either process or autocomplete, not both")
             null != sd.expectedAsm -> {
                 val asmRes = proc.process(sd.sentence, sd.options)
-                assertTrue(asmRes.issues.errors.isEmpty(), asmRes.issues.toString())
+                assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
                 val actual = asmRes.asm!!
                 assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
             }
@@ -23,8 +23,8 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextAsmSimple>, sd: TestDataPar
             null != sd.expectedCompletionItem -> {
                 val actual = proc.expectedItemsAt(sd.sentence, sd.sentence.length, sd.options)
                 assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-                assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
-                assertEquals(sd.expectedCompletionItem.toSet(), actual.items.toSet(),actual.items.joinToString(separator = "\n"))
+                //assertEquals(sd.expectedCompletionItem.size, actual.items.size,actual.items.joinToString(separator = "\n"))
+                assertEquals(sd.expectedCompletionItem.joinToString(separator = "\n"), actual.items.joinToString(separator = "\n"))
             }
             else -> error("Must provide either an expectedAsm or expectedCompletionItems")
         }
@@ -53,9 +53,9 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val proc = procRes.processor!!
 
     println("--- TypeDomain ---")
-    println(proc.typeModel.asString())
+    println(proc.typesModel.asString())
     println("--- Asm Transform ---")
-    println(proc.asmTransformModel.asString())
+    println(proc.transformModel.asString())
 
     println("****** ${testData.description} Sentences ******")
     if (null == sentenceIndex) {

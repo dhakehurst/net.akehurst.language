@@ -68,13 +68,13 @@ class test_SharedPackedParseTree {
             pattern("VAR", "[a-z]+")
         }
         val text = "a"
-        val result = parse(rrs, "S",SentenceDefault(text))
+        val result = parse(rrs, "S",SentenceDefault(text, null))
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
-        assertEquals("a", SentenceDefault(text).textAt(actual[0].position,actual[0].length))
+        assertEquals("a", SentenceDefault(text, null).textAt(actual[0].position,actual[0].length))
     }
 
     @Test
@@ -105,7 +105,7 @@ class test_SharedPackedParseTree {
             a + b
             + c
         """.trimIndent()
-        val result = parse(rrs, "S",SentenceDefault(text))
+        val result = parse(rrs, "S",SentenceDefault(text, null))
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
@@ -161,7 +161,8 @@ class test_SharedPackedParseTree {
             """
             a + b
               + c
-        """.trimIndent()
+        """.trimIndent(),
+            null
         )
         val result = parse(rrs, "S",sentence)
 
@@ -205,7 +206,7 @@ class XXX {
 }
         """
         val text2 = text.trimStart()
-        val sentence = SentenceDefault(text2)
+        val sentence = SentenceDefault(text2, null)
         val result = parse(rrs, "declaration", sentence)
 
         assertNotNull(result.sppt)

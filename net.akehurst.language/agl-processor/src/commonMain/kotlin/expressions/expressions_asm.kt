@@ -49,7 +49,7 @@ data class CreateTupleExpressionDefault(
 
 data class CreateObjectExpressionDefault(
     override val possiblyQualifiedTypeName: PossiblyQualifiedName,
-    override val arguments: List<Expression>
+    override val constructorArguments: List<AssignmentStatement>
 ) : ExpressionAbstract(), CreateObjectExpression {
 
     override var propertyAssignments: List<AssignmentStatement> = emptyList()
@@ -60,7 +60,8 @@ data class CreateObjectExpressionDefault(
             imports.any { it.value == possiblyQualifiedTypeName.asQualifiedName(null).front.value } -> possiblyQualifiedTypeName.simpleName.value
             else -> possiblyQualifiedTypeName.value
         }
-        sb.append("$pqn {\n")
+        val cArgs = constructorArguments.joinToString(separator = ", ") { it.asString(Indent(), imports) }
+        sb.append("$pqn($cArgs) {\n")
         val ni = indent.inc
         val props = propertyAssignments.joinToString(separator = "\n") { "${ni}${it.asString(ni, imports)}" }
         sb.append("${props}\n")
@@ -105,12 +106,6 @@ class WhenExpressionDefault(
     override fun toString(): String = "when { ${options.joinToString(separator = " ") { it.toString() }} }"
 }
 
-class OnExpressionDefault(
-    override val expression: Expression
-) : ExpressionAbstract(), OnExpression {
-    override var propertyAssignments: List<AssignmentStatement> = emptyList()
-}
-
 class WhenOptionDefault(
     override val condition: Expression,
     override val expression: Expression
@@ -125,6 +120,11 @@ class WhenOptionElseDefault(
     override fun toString(): String = "else -> $expression"
 }
 
+class OnExpressionDefault(
+    override val expression: Expression
+) : ExpressionAbstract(), OnExpression {
+    override var propertyAssignments: List<AssignmentStatement> = emptyList()
+}
 
 data class RootExpressionDefault(
     override val name: String

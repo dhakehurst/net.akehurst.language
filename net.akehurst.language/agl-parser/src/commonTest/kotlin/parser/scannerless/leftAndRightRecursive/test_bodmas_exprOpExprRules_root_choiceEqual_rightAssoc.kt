@@ -64,7 +64,7 @@ class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_LeftCornerP
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'v'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'v'"))
             ), issues.errors)
     }
 

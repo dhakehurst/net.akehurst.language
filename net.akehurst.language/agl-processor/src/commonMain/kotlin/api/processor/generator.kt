@@ -37,7 +37,7 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val identity: LanguageIdentity
 
     val grammarString: String
-    val typemodelString: String
+    val typesString: String
     val kompositeString: String
     val asmTransformString: String
     val crossReferenceString: String
@@ -45,7 +45,7 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val formatString: String
 
     val grammarModel: GrammarModel
-    val typeModel: TypeModel
+    val typesModel: TypeModel
     val kompositeModel: TypeModel
     val asmTransformModel: TransformModel
     val crossReferenceModel: CrossReferenceModel
@@ -76,10 +76,10 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
         val GOAL = ParseAction.GOAL
     }
 
-    override val kompositeModel: TypeModel get() = typeModel
+    override val kompositeModel: TypeModel get() = typesModel
 
     override val grammarString: String by lazy { grammarModel.asString() }
-    override val typemodelString: String by lazy { typeModel.asString() }
+    override val typesString: String by lazy { typesModel.asString() }
     override val kompositeString: String by lazy { kompositeModel.asString() }
     override val asmTransformString: String by lazy { asmTransformModel.asString() }
     override val crossReferenceString: String by lazy { crossReferenceModel.asString() }

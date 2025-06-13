@@ -135,6 +135,8 @@ interface RulePosition {
         val OPTION_OPTIONAL_ITEM = OptionNum(-2)
         val OPTION_OPTIONAL_EMPTY = OptionNum(-3)
 
+        // Option is used to compute priority in choice and dynamic priority
+        // EMPTY should be the lowest priority so that full is preferred - for greedy lists TODO: maybe add lazy lists where this is different!
         val OPTION_MULTI_ITEM = OptionNum(-4)
         val OPTION_MULTI_EMPTY = OptionNum(-5)
 
@@ -154,13 +156,25 @@ interface RuntimeSpine {
     val nextChildNumber: Int
 }
 
+interface ExpectedAtResult {
+    val usedPosition: Int
+    val spines: Set<RuntimeSpine>
+}
+
+// need this as an interface so we can have a serialisable instance
+fun interface SentenceIdentityFunction {
+    fun invoke(): Any?
+}
+
 /**
  * Options to configure the parsing of a sentence
  * there is no separate scanner, so scanner options are passed to the parser
  */
+// cannot have targetGrammar as an option because the grammar converted to rule set is needed to construct the parser TODO: change this, it could be possible
 interface ParseOptions {
     var enabled:Boolean
     var goalRuleName: String?
+    var sentenceIdentity: SentenceIdentityFunction
     var reportErrors: Boolean
     var reportGrammarAmbiguities: Boolean
     var cacheSkip: Boolean
@@ -203,7 +217,7 @@ interface Parser {
      * list of non-terminal or terminal runtime rules expected at the position
      *
      **/
-    fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): Set<RuntimeSpine>
+    fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult
 
     /*
      * List of terminal rules expected at the position

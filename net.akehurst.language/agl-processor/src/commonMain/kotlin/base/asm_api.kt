@@ -17,7 +17,7 @@
 
 package net.akehurst.language.base.api
 
-import net.akehurst.language.transform.api.TransformRuleSet
+//import net.akehurst.language.transform.api.TransformRuleSet
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
@@ -30,7 +30,7 @@ val String.asPossiblyQualifiedName: PossiblyQualifiedName
 val String.isQualifiedName: Boolean get() = this.contains(".")
 val String.asQualifiedName: QualifiedName get() = QualifiedName(this)
 
-interface PossiblyQualifiedName {
+sealed interface PossiblyQualifiedName {
     companion object {
         //FIXME: from here - see above
     }
@@ -184,7 +184,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 interface DefinitionReference<DT : Definition<DT>> {
     val localNamespace: Namespace<DT>
     val nameOrQName: PossiblyQualifiedName
-    var resolved: TransformRuleSet?
+    var resolved: DT?
 
     fun resolveAs(resolved: DT)
 

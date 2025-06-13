@@ -31,7 +31,7 @@ object StdLibPrimitiveExecutions {
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdInteger(self.elements.size)
+                AsmPrimitiveSimple.stdInteger(self.elements.size.toLong())
             },
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -81,8 +81,8 @@ object StdLibPrimitiveExecutions {
                 check(args[0].self is AsmPrimitive) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
                 check(StdLibDefault.Integer.qualifiedTypeName == args[0].type.qualifiedTypeName) { "Method '${meth.name}' takes an ${StdLibDefault.Integer.qualifiedTypeName} as its argument, received ${args[0].type.qualifiedTypeName}" }
                 val arg1 = args[0].self as AsmPrimitive
-                val idx = arg1.value as Int
-                self.elements.get(idx)
+                val idx = arg1.value as Long
+                self.elements.get(idx.toInt())
             },
             StdLibDefault.Collection.findAllMethodOrNull(MethodName("map"))!! to { self, meth, args ->
                 check(self is AsmList) { "Method '${meth.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -131,27 +131,27 @@ open class ObjectGraphAsmSimple(
     override fun toTypedObject(obj: AsmValue?): TypedObject<AsmValue> = obj?.toTypedObject() ?: nothing()
 
     override fun nothing() = AsmNothingSimple.toTypedObject()
-    override fun any(value: Any) = AsmAnySimple(object{}).toTypedObject()
+    override fun any(value: Any) = AsmAnySimple(value).toTypedObject()
 
     override fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any) = when (qualifiedTypeName) {
-        StdLibDefault.Boolean.qualifiedTypeName -> AsmPrimitiveSimple(qualifiedTypeName, value).toTypedObject()
-        StdLibDefault.Integer.qualifiedTypeName -> AsmPrimitiveSimple(qualifiedTypeName, value).toTypedObject()
-        StdLibDefault.Real.qualifiedTypeName -> AsmPrimitiveSimple(qualifiedTypeName, value).toTypedObject()
-        StdLibDefault.String.qualifiedTypeName -> AsmPrimitiveSimple(qualifiedTypeName, value).toTypedObject()
+        StdLibDefault.Boolean.qualifiedTypeName -> AsmPrimitiveSimple.stdBoolean(value as Boolean).toTypedObject()
+        StdLibDefault.Integer.qualifiedTypeName -> AsmPrimitiveSimple.stdInteger(value as Long).toTypedObject()
+        StdLibDefault.Real.qualifiedTypeName -> AsmPrimitiveSimple.stdReal(value as Double).toTypedObject()
+        StdLibDefault.String.qualifiedTypeName -> AsmPrimitiveSimple.stdString(value as String).toTypedObject()
         else -> error("should not happen")
     }
 
     override fun createTupleValue(typeArgs: List<TypeArgumentNamed>): TypedObject<AsmValue> {
         val tupleType = StdLibDefault.TupleType
-        val tuple = AsmStructureSimple(AsmPathSimple(""), tupleType.qualifiedName)
+        val tuple = AsmStructureSimple(tupleType.qualifiedName)
         return TypedObjectAsmValue(tupleType.type(typeArgs), tuple)
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<AsmValue>>): TypedObject<AsmValue> {
         val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
-        val asmPath = AsmPathSimple("??") //TODO:
-        val obj = AsmStructureSimple(asmPath, typeDecl.qualifiedName)
+        //val asmPath = AsmPathSimple("??") //TODO:
+        val obj = AsmStructureSimple( typeDecl.qualifiedName)
         constructorArgs.forEach { (k, v) -> obj.setProperty(PropertyValueName(k), v.self, obj.property.size) }
         return TypedObjectAsmValue(typeDecl.type(), obj)
     }
@@ -180,11 +180,10 @@ open class ObjectGraphAsmSimple(
 
     override fun valueOf(value: TypedObject<AsmValue>): Any = value.self.raw
 
-    override fun getIndex(tobj: TypedObject<AsmValue>, index: Any): TypedObject<AsmValue> {
+    override fun getIndex(tobj: TypedObject<AsmValue>, index: Int): TypedObject<AsmValue> {
         val asmValue = tobj.self
         return when (asmValue) {
-            is AsmList -> when (index) {
-                is Int -> {
+            is AsmList ->  {
                     val el = asmValue.elements.getOrNull(index)
                     when (el) {
                         null -> {
@@ -196,11 +195,6 @@ open class ObjectGraphAsmSimple(
                     }
                 }
 
-                else -> {
-                    issues.error(null, "in getIndex argument 'index' must be an Int for Lists")
-                    nothing()
-                }
-            }
 
             else -> {
                 issues.error(null, "getIndex not supported on type '${tobj.type.typeName}'")

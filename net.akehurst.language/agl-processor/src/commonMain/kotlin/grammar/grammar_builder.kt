@@ -18,6 +18,7 @@
 package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
+import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.GrammarRegistry
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.OptionHolderDefault
@@ -39,17 +40,16 @@ fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(),
         val opts = SemanticAnalysisOptionsDefault(
             context = ContextFromGrammarRegistry(gr)
         )
-        sa.analyse(gm,emptyMap(), opts)
+        sa.analyse(null,gm, LocationMapDefault(), opts)
     }
     return gm
 }
 
+@Deprecated("use 'grammarModel' instead")
 fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): Grammar {
     val ns = GrammarNamespaceDefault(QualifiedName(namespace))
     val b = GrammarBuilder(ns, SimpleName(name))
     b.init()
-    val gr = b.build()
-    ns.addDefinition(gr)
     return b.build()
 }
 
@@ -95,8 +95,7 @@ class GrammarNamespaceBuilder(
     fun grammar(name: String, init: GrammarBuilder.() -> Unit) {
         val b = GrammarBuilder(_namespace, SimpleName(name))
         b.init()
-        val g = b.build()
-        _namespace.addDefinition(g)
+        b.build()
     }
 
     fun build() = _namespace
@@ -108,7 +107,7 @@ class GrammarBuilder(
     name: SimpleName,
 ) {
 
-    private val _grammar = GrammarDefault(namespace, name)
+    private val _grammar = GrammarDefault(namespace, name, OptionHolderDefault(null, emptyMap()))
     private val _terminals = mutableMapOf<String, Terminal>()
 
     fun extends(nameOrQName: String) {

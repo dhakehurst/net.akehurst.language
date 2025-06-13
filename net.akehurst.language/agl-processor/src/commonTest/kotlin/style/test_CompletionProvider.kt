@@ -21,7 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.processor.ContextFromGrammar
+import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,15 +38,14 @@ class test_CompletionProvider {
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<CompletionItem>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar.createContextFrom(testGrammar)
-            val actual = aglProc.expectedItemsAt(sentence, position,  Agl.options {
+            val context = contextFromGrammar(testGrammar)
+            val actual = aglProc.expectedItemsAt(sentence, position, Agl.options {
                 completionProvider {
                     context(context)
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(expected.size, actual.items.size)
-            assertEquals(expected.toSet(), actual.items.toSet())
+            assertEquals(expected.joinToString("\n"), actual.items.joinToString("\n"))
         }
     }
 
@@ -60,9 +59,28 @@ class test_CompletionProvider {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(kind = CompletionItemKind.SEGMENT, label = "unit", text = "<namespace> <styleSet>"),
+            CompletionItem(kind = CompletionItemKind.LITERAL, label = "'namespace'", text = "namespace")
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun before_Selector() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = "namespace test styles StyleSet { "
+        val expected = listOf(
+            CompletionItem(kind=CompletionItemKind.REFERRED, label="GrammarRule", text="S"),
+            CompletionItem(kind=CompletionItemKind.REFERRED, label="LITERAL", text="'a'"),
+            CompletionItem(kind=CompletionItemKind.SEGMENT, label="rule", text="<rule>"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'$$'", text="$$"),
+            CompletionItem(kind=CompletionItemKind.LITERAL, label="'}'", text="}"),
+            CompletionItem(kind=CompletionItemKind.PATTERN, label= $$"[\\$][a-zA-Z_][a-zA-Z_0-9-]*", text="<SPECIAL_IDENTIFIER>"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -75,11 +93,10 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S"
+        val sentence = "namespace test styles StyleSet { S "
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
-            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
-            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+            CompletionItem(CompletionItemKind.LITERAL, "','", ","),
+            CompletionItem(CompletionItemKind.LITERAL, "'{'", "{"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -92,7 +109,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S,"
+        val sentence = "namespace test styles StyleSet { S, "
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
             CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
@@ -109,7 +126,7 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = "S {"
+        val sentence = "namespace test styles StyleSet { S {"
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
             CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),

@@ -20,10 +20,11 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.simple.ContextAsmSimple
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -33,7 +34,6 @@ import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.transform.asm.TransformDomainDefault
@@ -50,23 +50,21 @@ class test_Vistraq_References {
         private val grammarList =
             Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
                 .let {
-                    check(it.issues.errors.isEmpty()) { it.issues.toString() }
+                    check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!
                 }
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextAsmSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
             val grm = grammarList
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 //typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typeModel, p.asmTransformModel, p.targetGrammar!!.qualifiedName),
-                        IssueHolder(LanguageProcessorPhase.ALL)
-                    )
+                        SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 //formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 //completionProvider { p ->
@@ -83,13 +81,14 @@ class test_Vistraq_References {
             grammar: String,
             goal: String,
             sentence: String,
-            context: ContextAsmSimple,
+            context: ContextWithScope<Any,Any>,
             resolveReferences: Boolean,
-            expectedContext: ContextAsmSimple,
+            expectedContext: ContextWithScope<Any,Any>,
             expectedAsm: Asm? = null,
             expectedIssues: List<LanguageIssue> = emptyList()
         ) {
-            val result = processors[grammar].process(sentence, Agl.options {
+            val proc = processors[grammar]
+            val result = proc.process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis {
                     context(context)
@@ -98,7 +97,7 @@ class test_Vistraq_References {
             })
             println(context.asString())
             println(result.asm?.asString())
-            assertEquals(expectedIssues, result.issues.errors, result.issues.toString())
+            assertEquals(expectedIssues, result.allIssues.errors, result.allIssues.toString())
             assertEquals(expectedContext.asString(), context.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
             TestContextSimple.assertMatches(expectedContext, context)
@@ -120,7 +119,7 @@ class test_Vistraq_References {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }
         )
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
     }
 
     @Test
@@ -136,12 +135,15 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
-            item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
-            item("AB", "vistraq.query.TIM.LinkType", "/0/linkList/0")
+            forSentence(null) {
+                item("A", "vistraq.query.TIM.NodeType", null, "/A")
+                item("B", "vistraq.query.TIM.NodeType", null, "/B")
+                item("AB", "vistraq.query.TIM.LinkType", null, "/AB")
+                scope("AB","??")
+            }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext)
+        test(grammar, goal, sentence, contextAsmSimpleWithAsmPath(), true, expectedContext)
     }
 
     @Test
@@ -157,25 +159,28 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/nodeList/0")
-            item("B", "vistraq.query.TIM.NodeType", "/0/nodeList/1")
-            item("CD", "vistraq.query.TIM.LinkType", "/0/linkList/0")
+            forSentence(null) {
+                item("A", "vistraq.query.TIM.NodeType", null, "/A")
+                item("B", "vistraq.query.TIM.NodeType", null, "/B")
+                item("CD", "vistraq.query.TIM.LinkType", null, "/CD")
+                scope("CD","??")
+            }
         }
 
         val expectedIssues = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(62, 5, 4, 21),
-                "No target of type(s) [NodeType] found for referring value 'C' in scope of element ':LinkType[/0/linkList/0]'", null
+                InputLocation(62, 5, 4, 21, null),
+                "Reference 'C' not resolved, to type(s) [NodeType] in scope '/CD'", null
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(62, 5, 4, 21),
-                "No target of type(s) [NodeType] found for referring value 'D' in scope of element ':LinkType[/0/linkList/0]'", null
+                InputLocation(62, 5, 4, 21, null),
+                "Reference 'D' not resolved, to type(s) [NodeType] in scope '/CD'", null
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimpleWithAsmPath(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -191,10 +196,12 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expected = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            forSentence(null) {
+                item("A", "vistraq.query.TIM.NodeType", null, "/A")
+            }
         }
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expected)
+        test(grammar, goal, sentence, contextAsmSimpleWithAsmPath(), true, expected)
     }
 
     @Test
@@ -210,20 +217,22 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            forSentence(null) {
+                item("A", "vistraq.query.TIM.NodeType", null, "/A")
+            }
         }
 
         val expectedIssues = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(6, 7, 1, 1),
-                "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
+                InputLocation(6, 7, 1, 1, null),
+                "Reference 'B' not resolved, to type(s) [NodeType] in scope '/'",
                 null
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimpleWithAsmPath(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
@@ -239,20 +248,22 @@ class test_Vistraq_References {
         """.trimIndent()
 
         val expectedContext = contextAsmSimple {
-            item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
+            forSentence(null) {
+                item("A", "vistraq.query.TIM.NodeType", null, "/A")
+            }
         }
 
         val expectedIssues = listOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(6, 7, 1, 1),
-                "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/singleQuery/0/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
+                InputLocation(19, 20, 1, 1, null),
+                "Reference 'B' not resolved, to type(s) [NodeType] in scope '/'",
                 null
             )
         )
 
-        test(grammar, goal, sentence, ContextAsmSimple(), true, expectedContext, null, expectedIssues)
+        test(grammar, goal, sentence, contextAsmSimpleWithAsmPath(), true, expectedContext, null, expectedIssues)
     }
 
 

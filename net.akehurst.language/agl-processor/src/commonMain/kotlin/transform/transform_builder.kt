@@ -58,16 +58,18 @@ class AsmTransformModelBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val namespaces = mutableListOf<TransformNamespace>()
+    private val _namespaces = mutableListOf<TransformNamespace>()
 
     fun namespace(qualifiedName: String, init: AsmTransformNamespaceBuilder.() -> Unit) {
         val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
         b.init()
         val v = b.build()
-        namespaces.add(v)
+        _namespaces.add(v)
     }
 
-    fun build(): TransformModel = TransformDomainDefault(name, namespace = namespaces).also { it.typeModel = typeModel }
+    fun build(): TransformModel = TransformDomainDefault(name, namespace = _namespaces).also {
+        it.typeModel = typeModel
+    }
 }
 
 @AsmTransformModelDslMarker
@@ -128,19 +130,19 @@ class AsmTransformRuleSetBuilder internal constructor(
                     }
                     td
                 }
-
-                else -> error("Unsupported")
             }
         } else {
-            val ns = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName)!!
-            val qt = ns.findTypeNamed(pqt) ?: error("Type '$pqt' not found")
+            val defaultNs = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName) ?: null
+            val importedNs = _importTypes.mapNotNull { typeModel.findNamespaceOrNull(it.asQualifiedName) }
+            val nss = ( defaultNs?.let { listOf(it) } ?: emptyList() ) + importedNs
+            val qt = nss.firstNotNullOfOrNull { it.findTypeNamed(pqt) } ?: error("Type '$pqt' not found")
             return qt
         }
     }
 
     fun expression(expressionStr: String): Expression {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(res.issues.isEmpty()) { res.issues.toString() }
+        check(res.allIssues.isEmpty()) { res.allIssues.toString() }
         return res.asm!!
     }
 
@@ -185,6 +187,19 @@ class AsmTransformRuleSetBuilder internal constructor(
         val typeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
         val tr = transformationRule(
             type = typeDef.type(),
+            expression = expression
+        )
+        tr.grammarRuleName = GrammarRuleName(grammarRuleName)
+        tr.resolveTypeAs(StdLibDefault.String)
+        _rules.add(tr)
+    }
+
+    fun transToListOf(grammarRuleName: String, elementTypeName: String, expressionStr: String) {
+        val expression = expression(expressionStr)
+        val elTypeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(elementTypeName)) ?: error("Type '$elementTypeName' not found in type-model '${typeModel.name}'")
+        val listType = StdLibDefault.List.type(listOf(elTypeDef.type().asTypeArgument))
+        val tr = transformationRule(
+            type = listType,
             expression = expression
         )
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
@@ -242,7 +257,7 @@ class AssignmentBuilder() {
 
     fun assignment(lhsPropertyName: String, lhsGrammarRuleIndex: Int?, expressionStr: String) {
         val res = Agl.registry.agl.expressions.processor!!.process(expressionStr)
-        check(res.issues.isEmpty()) { res.issues.toString() }
+        check(res.allIssues.isEmpty()) { res.allIssues.toString() }
         val expr = res.asm!!
         _assignments.add(Triple(lhsPropertyName, lhsGrammarRuleIndex, expr))
     }

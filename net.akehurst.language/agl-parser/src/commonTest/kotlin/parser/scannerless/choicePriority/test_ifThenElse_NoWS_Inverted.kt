@@ -70,7 +70,7 @@ class test_ifThenElse_NoWS_Inverted : test_LeftCornerParserAbstract() {
         val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),sentence, setOf("<GOAL>"), setOf("'W'","'X'","'Y'","'Z'","'if'"))
+            parseError(InputLocation(0, 1, 1, 1, null),sentence, setOf("<GOAL>"), setOf("'W'","'X'","'Y'","'Z'","'if'"))
         ),issues.errors)
     }
 

@@ -72,7 +72,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                             null -> sentence.matchedTextNoSkip(nodeInfo.node)
                             else -> {
                                 val res = handler.invoke(nodeInfo, emptyList(), sentence)
-                                res?.let { locationMap[res] = sentence.locationForNode(nodeInfo.node) }
+                                res?.let { setLocationFor(res, nodeInfo, sentence) }
                                 res
                             }
                         }
@@ -112,7 +112,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                             null -> stack.push(child)
                             else -> {
                                 val obj = handler.invoke(nodeInfo, listOf(child), sentence)
-                                obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                                obj?.let { setLocationFor(obj, nodeInfo, sentence)  }
                                 stack.push(obj)
                             }
                         }
@@ -127,7 +127,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                             null -> stack.push(chldn)
                             else -> {
                                 val obj = handler.invoke(nodeInfo, chldn, sentence)
-                                obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                                obj?.let { setLocationFor(obj, nodeInfo, sentence) }
                                 stack.push(obj)
                             }
                         }
@@ -137,7 +137,11 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                         null -> stack.push(reverseChildren)
                         else -> {
                             val obj = handler.invoke(nodeInfo, reverseChildren, sentence)
-                            obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
+                            when (obj) {
+                                null -> Unit
+                                is Function<*> -> Unit // no point setting location for function/lambda
+                                else -> setLocationFor(obj,nodeInfo,sentence)
+                            }
                             stack.push(obj)
                         }
                     }
@@ -160,9 +164,9 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
                 val obj = when (handler) {
                     null -> children[0]
                     else -> {
-                        val res = handler.invoke(nodeInfo, children, sentence)
-                        res?.let { locationMap[res] = sentence.locationForNode(nodeInfo.node) }
-                        res
+                        val obj = handler.invoke(nodeInfo, children, sentence)
+                        obj?.let { setLocationFor(obj, nodeInfo, sentence) }
+                        obj
                     }
                 }
                 stack.push(obj)

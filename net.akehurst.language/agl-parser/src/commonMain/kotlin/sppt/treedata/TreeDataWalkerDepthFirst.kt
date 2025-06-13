@@ -28,6 +28,7 @@ internal interface StackData {
 
 internal data class StackInfo(
     val done: Boolean,
+    override val path: ParsePath,
     override val node: SpptDataNode,
 
     override val parentAlt: AltInfo,
@@ -84,7 +85,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             userRoot.rule.isTerminal -> {
                 val urchildOfTotal = ChildInfo(0, 0, 1)
                 val altOfTotal = AltInfo(RulePosition.OPTION_NONE, 0, 1)
-                stack.push(StackInfo(false, userRoot, parentAlt, altOfTotal, urchildOfTotal, emptyMap(), -1))
+                stack.push(StackInfo(false, ParsePath(emptyList()), userRoot, parentAlt, altOfTotal, urchildOfTotal, emptyMap(), -1))
             }
 
             else -> {
@@ -101,7 +102,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     val urnumSkipChildren = numSkipChildren(treeData.initialSkip) +
                             children.filter { it.rule.isTerminal }
                                 .fold(0) { acc, it -> treeData.skipDataAfter(it)?.let { acc + numSkipChildren(it) } ?: acc }
-                    val stackData = StackInfo(true, userRoot, parentAlt, altOfTotal, urchildOfTotal, numChildrenAlternatives, urnumSkipChildren)
+                    val stackData = StackInfo(true, ParsePath(emptyList()), userRoot, parentAlt, altOfTotal, urchildOfTotal, numChildrenAlternatives, urnumSkipChildren)
                     altInfo.alternatives.add(Pair(stackData, children))
                 }
             }
@@ -150,7 +151,8 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             val n = multi[i]
             val childOfTotal = ChildInfo(i, i, multi.size + 1) //TODO: is this correct ?
             val skp = treeData.childrenFor(n)[0].second[0]
-            stack.push(StackInfo(false, skp, parentAlt, AltInfo(RulePosition.OPTION_NONE, 0, 1), childOfTotal, emptyMap(), -1))
+            val skpPath = ParsePath(emptyList()) //FIXME:  make the path !
+            stack.push(StackInfo(false, skpPath, skp, parentAlt, AltInfo(RulePosition.OPTION_NONE, 0, 1), childOfTotal, emptyMap(), -1))
         }
 
         while (stack.isNotEmpty) {
@@ -209,23 +211,27 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     else -> i
                 }
                 val childOfTotal = ChildInfo(propertyIndex, i, totChildrenIncSkip)
+                val childPath = when {
+                    nodeInfo.node.rule.isList -> nodeInfo.path + i.toString() + ch.rule.tag
+                    else -> nodeInfo.path + ch.rule.tag
+                }
                 // carry the childOfTotal, rest is unused
-                stack.push(StackInfo(false, ch, nodeInfo.parentAlt, nodeInfo.alt, childOfTotal, emptyMap(), -1))
+                stack.push(StackInfo(false, childPath, ch, nodeInfo.parentAlt, nodeInfo.alt, childOfTotal, emptyMap(), -1))
             }
         }
     }
 
-    private fun traverseBranch(callback: SpptWalker, skipDataAsTree: Boolean, info: StackInfo) {
-        if (info.done) {
-            callback.endBranch(info)
+    private fun traverseBranch(callback: SpptWalker, skipDataAsTree: Boolean, nodeInfo: StackInfo) {
+        if (nodeInfo.done) {
+            callback.endBranch(nodeInfo)
         } else {
-            val altInfo = AlternativesInfo(info.node, false)
+            val altInfo = AlternativesInfo(nodeInfo.node, false)
             if (path.elements.any { it.node == altInfo.node }) {
                 callback.treeError("Loop in Tree, Grammar has a recursive path that does not consume any input.") {
                     path.elements.map { it.node }
                 }
             } else {
-                val alternatives = treeData.childrenFor(info.node).sortedBy { it.first }
+                val alternatives = treeData.childrenFor(nodeInfo.node).sortedBy { it.first }
                 path.push(altInfo)
                 stack.push(altInfo)
                 val numChildrenAlternatives = alternatives.associate { Pair(it.first, it.second.size) }
@@ -235,26 +241,27 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     //val numChildrenAlternatives = numChildrenAlternatives(children)
                     val numSkipChildren = children.filter { it.rule.isTerminal }
                         .fold(0) { acc, it -> treeData.skipDataAfter(it)?.let { acc + numSkipChildren(it) } ?: acc }
-                    val stackData = StackInfo(true, info.node, info.alt, altOfTotal, info.child, numChildrenAlternatives, numSkipChildren)
+                    val stackData = StackInfo(true, nodeInfo.path, nodeInfo.node, nodeInfo.alt, altOfTotal, nodeInfo.child, numChildrenAlternatives, numSkipChildren)
                     altInfo.alternatives.add(Pair(stackData, children))
                 }
             }
         }
     }
 
-    private fun traverseLeaf(callback: SpptWalker, skipDataAsTree: Boolean, info: StackInfo) {
-        if (info.node.rule.isEmbedded) {
-            val ed = treeData.embeddedFor(info.node) ?: error("Cannot find embedded TreeData for '${info.node}'")
+    private fun traverseLeaf(callback: SpptWalker, skipDataAsTree: Boolean, nodeInfo: StackInfo) {
+        if (nodeInfo.node.rule.isEmbedded) {
+            val ed = treeData.embeddedFor(nodeInfo.node) ?: error("Cannot find embedded TreeData for '${nodeInfo.node}'")
             val numChildrenAlternatives = mapOf(RulePosition.OPTION_NONE to 1) //FIXME: should recalc this from embedded data
-            val numSkipChildren = treeData.skipDataAfter(info.node)?.let { numSkipChildren(it) } ?: 0
-            val stackData = StackInfo(true, info.node, info.parentAlt, info.alt, info.child, numChildrenAlternatives, numSkipChildren)
+            val numSkipChildren = treeData.skipDataAfter(nodeInfo.node)?.let { numSkipChildren(it) } ?: 0
+            val embPath = nodeInfo.path //FIXME: is this correct ?
+            val stackData = StackInfo(true, embPath, nodeInfo.node, nodeInfo.parentAlt, nodeInfo.alt, nodeInfo.child, numChildrenAlternatives, numSkipChildren)
             callback.beginEmbedded(stackData)
             ed.traverseTreeDepthFirst(callback, skipDataAsTree)
-            this.traverseSkipData(callback, skipDataAsTree, treeData.skipDataAfter(info.node))
+            this.traverseSkipData(callback, skipDataAsTree, treeData.skipDataAfter(nodeInfo.node))
             callback.endEmbedded(stackData)
         } else {
-            callback.leaf(info)
-            this.traverseSkipData(callback, skipDataAsTree, treeData.skipDataAfter(info.node))
+            callback.leaf(nodeInfo)
+            this.traverseSkipData(callback, skipDataAsTree, treeData.skipDataAfter(nodeInfo.node))
         }
     }
 

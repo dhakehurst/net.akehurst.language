@@ -56,7 +56,7 @@ class test_hiddenLeft1 : test_LeftCornerParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), sentence, setOf("<GOAL>"), setOf("'b'", "'a'"))
+                parseError(InputLocation(0, 1, 1, 1, null), sentence, setOf("<GOAL>"), setOf("'b'", "'a'"))
             ), issues.errors
         )
     }

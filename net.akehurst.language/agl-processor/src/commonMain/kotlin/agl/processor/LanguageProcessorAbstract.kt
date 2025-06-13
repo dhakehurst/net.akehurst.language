@@ -65,14 +65,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val scanner: Scanner? by lazy {
         val res = configuration.scannerResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val parser: Parser? by lazy {
         //ScanOnDemandParser(this.runtimeRuleSet)
         val res = configuration.parserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
@@ -97,64 +97,64 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val baseTypeModel: TypeModel by lazy {
         val res = configuration.typesResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
             ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
     }
 
-    override val typeModel: TypeModel get() = this.asmTransformModel.typeModel ?: error("Should not happen")
+    override val typesModel: TypeModel get() = this.transformModel.typeModel ?: error("Should not happen")
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val transformModel: TransformModel by lazy {
         val res = configuration.transformResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
             ?: TransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
             ?: error("should not happen")
     }
 
-    override val targetAsmTransformRuleSet: TransformRuleSet by lazy {
-        targetGrammar?.let { asmTransformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
+    override val targetTransformRuleSet: TransformRuleSet by lazy {
+        targetGrammar?.let { transformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
             ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
     }
 
     override val crossReferenceModel: CrossReferenceModel by lazy {
         val res = configuration.crossReferenceResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar" + grammarModel.name.value))
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by lazy {
         val res = configuration.semanticAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val formatModel: AglFormatModel? by lazy {
         val res = configuration.formatResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val formatter: Formatter<AsmType>? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let {
-            this.issues.addAllFrom(res.issues)
+            this.issues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typeModel, this.issues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesModel, this.issues) as Formatter<AsmType>
             }
         }
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
         val res = configuration.completionProviderResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.issues) }
+        res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
@@ -182,7 +182,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun scan(sentence: String, options: ScanOptions?): ScanResult {
-        return this.scanner?.scan(SentenceDefault(sentence), options)?.also { scanner?.reset() }
+        return this.scanner?.scan(SentenceDefault(sentence, null), options)?.also { scanner?.reset() } //TODO: check do we need a sentenceID ?
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Scanner")
     }
 
@@ -209,27 +209,30 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
         semAnalyser.clear()
+        val sentenceId = opts.parse.sentenceIdentity?.invoke()
         val lm = opts.semanticAnalysis.locationMap
-        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis)
+        return semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
     }
 
     override fun process(sentence: String, options: ProcessOptions<AsmType, ContextType>?): ProcessResult<AsmType> {
         val opts = defaultOptions(options)
         val parseResult = this.parse(sentence, opts.parse)
-        return if (null == parseResult.sppt || opts.syntaxAnalysis.enabled.not()) {
-            ProcessResultDefault(null, parseResult.issues)
+        val sppt = parseResult.sppt
+        return if (null == sppt || opts.syntaxAnalysis.enabled.not()) {
+            ProcessResultDefault(null, parseResult)
         } else {
-            val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(parseResult.sppt!!, opts)
-            if (null == synxResult.asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
-                val issues = parseResult.issues + synxResult.issues
+            val synxResult: SyntaxAnalysisResult<AsmType> = this.syntaxAnalysis(sppt, opts)
+            val asm = synxResult.asm
+            if (null == asm || opts.semanticAnalysis.enabled.not() || null == this.semanticAnalyser) {
+                val issues = IssueHolder()
                 if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
                 if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
                 if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
-                ProcessResultDefault(synxResult.asm, issues)
+                ProcessResultDefault(synxResult.asm,parseResult,synxResult, processIssues = issues)
             } else {
                 opts.semanticAnalysis.locationMap = synxResult.locationMap
-                val result = this.semanticAnalysis(synxResult.asm!!, opts)
-                ProcessResultDefault(synxResult.asm, parseResult.issues + synxResult.issues + result.issues)
+                val result = this.semanticAnalysis(asm, opts)
+                ProcessResultDefault(synxResult.asm, parseResult, synxResult, result)
             }
         }
     }
@@ -271,7 +274,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 else -> {
                     val rr = it as RuntimeRule
                     val terminalRuleItem = mapToGrammar(rr.runtimeRuleSetNumber, rr.ruleNumber) as Terminal?
-                    terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it) }
+                    terminalRuleItem?.let { CompletionProviderAbstract.provideForTangible(it, opts.completionProvider) }
                     //when {
                     //    it.isLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.unescapedTerminalValue, it.tag)
                     //    it.isPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", "${it.tag}")
@@ -280,7 +283,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }.flatten()
-        return ExpectedAtResultDefault(terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(0, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -289,16 +292,24 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val opts = defaultOptions(options)
                 val parserExpected = this.parser?.expectedAt(sentence, position, opts.parse)
                     ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
-                val spines = parserExpected.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
+                val spines = parserExpected.spines.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
                 val items = completionProvider!!.provide(spines, opts.completionProvider)
-                ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
+                if (parserExpected.usedPosition == position) {
+                    ExpectedAtResultDefault(0, items, IssueHolder(LanguageProcessorPhase.ALL))
+                } else {
+                    val prefix = sentence.substring(parserExpected.usedPosition, position)
+                    val filtered = items.filter {
+                        it.text.startsWith(prefix)
+                    }
+                    ExpectedAtResultDefault(position - parserExpected.usedPosition, filtered, IssueHolder(LanguageProcessorPhase.ALL))
+                }
             }
 
             else -> expectedTerminalsAt(sentence, position, options)
         }
     }
 
-    private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
+    internal fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
         val opts = options ?: optionsDefault()
         if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName?.value
         return opts
