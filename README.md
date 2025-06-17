@@ -34,6 +34,58 @@ My Requirements:
  - [Creating a custom Domain Specific Language for text input validation](https://medium.com/javascript-in-plain-english/agl-your-dsl-in-the-web-c9f54595691b)
  - [Documentation](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
 
+# Example
+
+Create a processor from a grammar
+```
+   val processor = Agl.processorFromStringSimple(GrammarString("""
+        namespace test
+        grammar Test {
+            skip leaf WS = "\s+" ;
+            skip leaf COMMENT = "//[^\n]*(\n)" ;
+        
+            unit = declaration* ;
+            declaration = datatype | primitive | collection ;
+            primitive = 'primitive' ID ;
+            collection = 'collection' ID typeParameters? ;
+            typeParameters = '<' typeParameterList '>' ;
+            typeParameterList = [ID / ',']+ ;
+            datatype = 'datatype' ID '{' property* '}' ;
+            property = ID ':' typeReference ;
+            typeReference = type typeArguments? ;
+            typeArguments = '<' typeArgumentList '>' ;
+            typeArgumentList = [typeReference / ',']+ ;
+        
+            leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+            leaf type = ID;
+        }
+    """.trimIndent())).let {
+        check(it.issues.errors.isEmpty()) { it.issues.toString() }
+        it.processor!!
+   }
+```
+
+Parse a sentence to see if it is valid
+```
+   val sentence = """
+       primitive String
+       collection List<E>
+       datatype A {
+           prop : String
+           prop2 : List<String>
+       }
+   """.trimIndent()
+   val result1 = processor.parse(sentence)
+   check(result1.issues.errors.isEmpty()) { result1.issues.toString() }
+```
+
+Process the sentence to get an Abstract Syntax Model (tree) of the sentence
+```
+   val result2 = processor.process(sentence)
+   check(result2.allIssues.errors.isEmpty()) { result2.allIssues.toString() }
+   println(result2.asm?.asString())
+```
+
 # TODO
 
 lots:
