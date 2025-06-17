@@ -165,7 +165,7 @@ class test_mscript {
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
         }
-        assertEquals(expected.asString(), actual?.asString())
+        assertEquals(expected.asString(), actual.asString())
         GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
@@ -700,7 +700,7 @@ class test_mscript {
 
         assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
         assertNotNull(result.asm)
-        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
+        assertEquals(expected.asString(), result.asm?.asString())
     }
 
     @Test
@@ -724,7 +724,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
+        assertEquals(expected.asString(), actual.asString())
     }
 
     @Test
@@ -761,7 +761,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
+        assertEquals(expected.asString(), actual.asString())
     }
 
     @Test

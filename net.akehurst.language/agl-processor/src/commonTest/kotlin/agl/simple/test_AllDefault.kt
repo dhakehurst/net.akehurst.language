@@ -105,7 +105,7 @@ class test_AllDefault {
             val asmRes = proc.process(sd.sentence)
             assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
             val actual = asmRes.asm!!
-            assertEquals(sd.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+            assertEquals(sd.expected.asString(), actual.asString(), "Different ASM")
 
         }
 

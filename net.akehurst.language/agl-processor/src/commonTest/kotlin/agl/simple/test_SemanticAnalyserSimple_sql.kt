@@ -198,7 +198,7 @@ grammar SQL {
             }
         }
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
 
         //check paths
         val asmRoot = result.asm!!.root[0] as AsmStructure
@@ -258,7 +258,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -323,7 +323,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -399,7 +399,7 @@ grammar SQL {
         )
 
         assertEquals(expIssues, result.allIssues.toSet())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -487,7 +487,7 @@ grammar SQL {
         }
 
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
 }

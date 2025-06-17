@@ -706,6 +706,6 @@ class test_LanguageDefinitionDefault {
 
         assertNotNull(result.asm)
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
-        assertEquals(expected.asString(indentIncrement = "  "), result.asm!!.asString(indentIncrement = "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 }

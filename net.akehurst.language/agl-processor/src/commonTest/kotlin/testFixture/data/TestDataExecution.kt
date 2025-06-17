@@ -17,7 +17,7 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: T
                 val asmRes = proc.process(sd.sentence, sd.options)
                 assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
                 val actual = asmRes.asm!!
-                assertEquals(sd.expectedAsm.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "), "Different ASM")
+                assertEquals(sd.expectedAsm.asString(), actual.asString(), "Different ASM")
             }
 
             null != sd.expectedCompletionItem -> {

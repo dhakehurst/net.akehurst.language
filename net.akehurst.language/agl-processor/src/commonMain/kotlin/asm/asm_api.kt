@@ -17,6 +17,7 @@
 
 package net.akehurst.language.asm.api
 
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PublicValueType
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -39,7 +40,7 @@ interface Asm {
 
     fun addToIndex(value: AsmStructure)
     fun traverseDepthFirst(callback: AsmTreeWalker)
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun asString(indent: Indent = Indent()): String
 }
 
 interface AsmValue {
@@ -51,7 +52,7 @@ interface AsmValue {
      */
     val typeName: SimpleName
 
-    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
+    fun asString(indent: Indent = Indent()): String
     fun equalTo(other: AsmValue): Boolean
 }
 

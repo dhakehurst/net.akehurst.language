@@ -151,7 +151,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -180,7 +180,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -222,7 +222,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val expItems = emptyList<LanguageIssue>()
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
         assertEquals(expItems, result.allIssues.errors)
     }
 
@@ -268,7 +268,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
 
     }
 }

@@ -18,6 +18,7 @@
 package net.akehurst.language.asm.simple
 
 import net.akehurst.language.asm.api.*
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.typemodel.api.PropertyName
@@ -133,8 +134,8 @@ open class AsmSimple() : Asm {
         }
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = this.root.joinToString(separator = "\n") {
-        it.asString(indentIncrement, currentIndent)
+    override fun asString(indent: Indent): String = this.root.joinToString(separator = "\n") {
+        it.asString(indent)
     }
 
 }
@@ -145,7 +146,7 @@ abstract class AsmValueAbstract() : AsmValue {
 
 object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.NothingType.qualifiedTypeName
-    override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
+    override fun asString(indent: Indent): String = $$"$nothing"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmNothing -> false
         else -> true
@@ -157,7 +158,7 @@ object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
         else -> true
     }
 
-    override fun toString(): String = "Nothing"
+    override fun toString(): String = $$"$nothing"
 }
 
 class AsmAnySimple(
@@ -169,7 +170,7 @@ class AsmAnySimple(
 
     override val qualifiedTypeName: QualifiedName get() = StdLibDefault.AnyType.qualifiedTypeName
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = "AsmAny($value)"
+    override fun asString(indent: Indent): String = "AsmAny($value)"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmAny -> false
         other.value != this.value -> false
@@ -198,7 +199,7 @@ class AsmPrimitiveSimple(
         fun stdReal(value: Double) = AsmPrimitiveSimple(StdLibDefault.Real.qualifiedTypeName, value)
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
+    override fun asString(indent: Indent): String = "'$value'"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
         other.value != this.value -> false
@@ -246,7 +247,7 @@ class AsmReferenceSimple(
         this.value = value
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
+    override fun asString(indent: Indent): String = when (value) {
         null -> "<unresolved> &$reference"
         else -> "&{'${value!!.parsePath.toString()}' : ${value!!.typeName}}"
     }
@@ -324,18 +325,17 @@ class AsmStructureSimple(
         value.forEach { this._properties[it.name] = it }
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String {
-        val newIndent = currentIndent + indentIncrement
-        val propsStr = this.property.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
+    override fun asString(indent: Indent): String {
+        val propsStr = this.property.values.joinToString(separator = "\n") {
             if (it.isReference) {
                 val ref = it.value as AsmReferenceSimple
-                "${it.name} = $ref"
+                "${indent.inc}${it.name} = $ref"
             } else {
-                "${it.name} = ${it.value.asString(indentIncrement, newIndent)}"
+                "${indent.inc}${it.name} = ${it.value.asString(indent.inc)}"
             }
         }
         //return ":$typeName $propsStr"
-        return ":$typeName $propsStr"
+        return ":$typeName {\n$propsStr\n$indent}"
     }
 
     override fun equalTo(other: AsmValue): Boolean = when {
@@ -450,8 +450,11 @@ class AsmListSimple(
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
 
-    override fun asString(currentIndent: String, indentIncrement: String): String =
-        this.elements.joinToString { it.asString(currentIndent, indentIncrement) }
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
+    }
 
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmList -> false
@@ -480,9 +483,11 @@ class AsmListSeparatedSimple(
     override val isEmpty: Boolean get() = elements.isEmpty()
     override val isNotEmpty: Boolean get() = elements.isNotEmpty()
 
-    override fun asString(currentIndent: String, indentIncrement: String): String =
-        this.elements.elements.joinToString { (it).asString(currentIndent, indentIncrement) }
-
+    override fun asString(indent: Indent): String = when {
+        elements.isEmpty() -> "[]"
+        1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
+        else -> "[\n${this.elements.joinToString { it.asString(indent.inc) }}\n$indent]"
+    }
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
@@ -517,7 +522,7 @@ class AsmLambdaSimple(
         return false
     }
 
-    override fun asString(currentIndent: String, indentIncrement: String): String {
-        return "{ <expre> }"
+    override fun asString(indent: Indent): String {
+        return "{ <lambda expression> }" //TODO
     }
 }

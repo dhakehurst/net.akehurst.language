@@ -121,7 +121,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -154,7 +154,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
     }
 
     @Test
@@ -249,7 +249,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
+        assertEquals(expected.asString(), result.asm!!.asString())
         val expectedResolved = listOf(
             ResolvedReference(
                 source = expectedResolvedList[0].source,

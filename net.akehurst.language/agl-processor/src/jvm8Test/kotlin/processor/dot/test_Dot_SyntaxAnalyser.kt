@@ -170,7 +170,7 @@ class test_Dot_SyntaxAnalyser {
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
         }
-        assertEquals(expected.asString(), actual?.asString())
+        assertEquals(expected.asString(), actual.asString())
         TypeModelTest.tmAssertEquals(expected, actual)
     }
 
@@ -208,7 +208,7 @@ class test_Dot_SyntaxAnalyser {
                 }
             }
         }
-        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
+        assertEquals(expected.asString(), result.asm?.asString())
     }
 
     @Test
