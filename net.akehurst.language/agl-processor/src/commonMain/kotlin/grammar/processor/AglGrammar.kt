@@ -33,6 +33,7 @@ import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.api.TransformModel
@@ -84,8 +85,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             nonTerminal = possiblyQualifiedName ;
             embedded = possiblyQualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
-            leaf LITERAL = "'([^'\\\\]|\\\\.)+'" ;
-            leaf PATTERN = "\"([^\"\\\\]|\\\\.)+\"" ;
+            leaf LITERAL = '\'' "('|([^'])+" '\'' ;
+            leaf PATTERN = '"' "\\"|([^\"])+"  '"' ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
             leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
             preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;
@@ -281,8 +282,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                         ref("LITERAL")
                         ref("PATTERN")
                     }
-                    concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)+'") }
-                    concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)+\"") }
+                    concatenation("LITERAL", isLeaf = true) { lit("'"); pat(CommonRegexPatterns.LITERAL); lit("'"); }
+                    concatenation("PATTERN", isLeaf = true) { lit("\""); pat(CommonRegexPatterns.PATTERN); lit("\""); } //{ pat("\"([^\"\\\\]|\\\\.)+\"") }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") }
                     concatenation("POSITIVE_INTEGER_GT_ZERO", isLeaf = true) { pat("[1-9][0-9]*") }
 

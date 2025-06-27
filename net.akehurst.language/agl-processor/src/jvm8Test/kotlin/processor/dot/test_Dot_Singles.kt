@@ -1036,7 +1036,7 @@ NAME {
                 semanticAnalysis { context(contextFromGrammar(processor.grammarModel!!)) }
             })
 
-        assertNotNull(result.asm)
+        assertNotNull(result.asm, result.allIssues.toString())
         assertEquals(13, result.asm!!.allDefinitions.size)
         assertEquals(0, result.allIssues.size, result.allIssues.joinToString("\n") { "$it" })
     }

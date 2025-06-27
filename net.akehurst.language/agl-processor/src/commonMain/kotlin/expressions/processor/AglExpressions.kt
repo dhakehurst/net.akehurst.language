@@ -118,7 +118,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             leaf BOOLEAN = "true|false" ;
             leaf INTEGER = "[0-9]+" ;
             leaf REAL = "[0-9]+[.][0-9]+" ;
-            leaf STRING = "'([^'\\\\]|\\\\.)*'" ;
+            leaf STRING = "'([^'\\]|\\.)*'" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
           }
       """.trimIndent()

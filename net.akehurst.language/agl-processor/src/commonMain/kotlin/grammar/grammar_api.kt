@@ -19,6 +19,9 @@ package net.akehurst.language.grammar.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.OrderedSet
+import net.akehurst.language.regex.api.EscapedPattern
+import net.akehurst.language.regex.api.EscapedValue
+import net.akehurst.language.regex.api.UnescapedValue
 import kotlin.jvm.JvmInline
 
 //class GrammarException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -145,7 +148,7 @@ interface Grammar : Definition<Grammar> {
 
     fun findAllResolvedGrammarRule(ruleName: GrammarRuleName): GrammarRule?
 
-    fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
+    fun findAllResolvedTerminalRule(terminalPattern: EscapedPattern): Terminal
 
     fun findAllResolvedEmbeddedGrammars(found:Set<Grammar> = emptySet()) : Set<Grammar>
 
@@ -293,7 +296,16 @@ interface Terminal : TangibleItem {
     val id: String
     val isLiteral: Boolean
     val isPattern: Boolean
-    val value: String
+
+    /**
+     * with characters special to AGL (i.e. ") having a \ before
+     */
+    val escapedValue: EscapedValue
+
+    /**
+     * with characters special to AGL (i.e. ") not escaped
+     */
+    val unescapedValue: UnescapedValue
 }
 
 interface NonTerminal : TangibleItem {

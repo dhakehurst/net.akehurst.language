@@ -92,7 +92,7 @@ class LeftCornerParser(
     internal val runtimeRuleSet = ruleSet as RuntimeRuleSet
 
     // cached only so it can be interrupted
-    private var runtimeParser: RuntimeParser? = null
+    private var runtimeParser: RuntimeParserAgl? = null
 
     private val _issues = IssueHolder(LanguageProcessorPhase.PARSE)
 
@@ -132,7 +132,7 @@ class LeftCornerParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.Companion.GrowArgs(
+        val parseArgs = RuntimeParserAgl.Companion.GrowArgs(
             true,
             false,
             false,
@@ -168,7 +168,7 @@ class LeftCornerParser(
         }
     }
 
-    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParser) {
+    private fun createParseIssuesFromFailures(sentence: Sentence, options: ParseOptions, rp: RuntimeParserAgl) {
         if (options.reportErrors) {
             // need to include the 'startSkipFailures',
             val map1 = rp.failedReasons //no need to clone it as it will not be modified after this point
@@ -195,11 +195,11 @@ class LeftCornerParser(
         }
     }
 
-    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParser {
+    private fun createRuntimeParser(sentence: Sentence, goalRuleName: String, scanner: Scanner, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParserAgl {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParser(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, _issues)
+        return RuntimeParserAgl(sentence, false, s0.stateSet, skipStateSet, cacheSkip, goalRule, scanner, _issues)
     }
 
     private fun addParseIssue(
@@ -315,7 +315,7 @@ class LeftCornerParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.forExpectedAt
+        val parseArgs = RuntimeParserAgl.forExpectedAt
         val startSkipFailures = rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
 

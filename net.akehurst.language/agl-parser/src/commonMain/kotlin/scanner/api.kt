@@ -22,6 +22,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.regex.api.Regex
 import net.akehurst.language.regex.api.RegexEngine
+import net.akehurst.language.regex.api.UnescapedValue
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.LeafData
 import net.akehurst.language.sppt.api.SpptDataNode
@@ -87,14 +88,14 @@ class Matchable(
      *   REGEX -> Regular Expression
      * }
      */
-    val expression: String,
+    val expression: UnescapedValue,
     val kind: MatchableKind
 ) {
     // create this so Regex is cached
     private var _regEx: Regex? = null
 
     fun using(regexEngine: RegexEngine): Matchable {
-        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression) else null
+        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.value) else null
         return this
     }
 
@@ -103,7 +104,7 @@ class Matchable(
      */
     fun isLookingAt(sentence: Sentence, atPosition: Int): Boolean = when (kind) {
         MatchableKind.EOT -> atPosition >= sentence.text.length
-        MatchableKind.LITERAL -> sentence.text.regionMatches(atPosition, expression, 0, expression.length)
+        MatchableKind.LITERAL -> sentence.text.regionMatches(atPosition, expression.value, 0, expression.value.length)
         MatchableKind.REGEX -> _regEx!!.matchesAt(sentence.text, atPosition)
     }
 
@@ -113,7 +114,7 @@ class Matchable(
     fun matchedLength(sentence: Sentence, atPosition: Int): Int = when (kind) {
         MatchableKind.EOT -> if (atPosition >= sentence.text.length) 0 else -1
         MatchableKind.LITERAL -> when {
-            sentence.text.regionMatches(atPosition, expression, 0, expression.length) -> expression.length
+            sentence.text.regionMatches(atPosition, expression.value, 0, expression.value.length) -> expression.value.length
             else -> -1
         }
 

@@ -23,6 +23,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.regex.api.EscapedPattern
 
 
 class GrammarModelDefault(
@@ -280,8 +281,8 @@ abstract class GrammarAbstract(
         }
     }
 
-    override fun findAllResolvedTerminalRule(terminalPattern: String): Terminal {
-        val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
+    override fun findAllResolvedTerminalRule(terminalPattern: EscapedPattern): Terminal {
+        val all = this.allResolvedTerminal.filter { it.escapedValue == terminalPattern }
         when {
             all.isEmpty() -> error("$terminalPattern in Grammar(${this.name}).findTerminalRule")
             all.size > 1 -> error("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")

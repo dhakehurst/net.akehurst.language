@@ -16,8 +16,6 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.parser.api.OptionNum
@@ -25,6 +23,7 @@ import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.regexMatcher
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.regex.api.RegexMatcher
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
@@ -38,8 +37,8 @@ internal object Tokens {
     val ID = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
     val EMBED = regexMatcher("::")
     val OPTION = regexMatcher("[|][0-9]+")
-    val LITERAL = regexMatcher("'([^'\\\\]|\\\\.)*'")
-    val PATTERN = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
+    val LITERAL = regexMatcher("'${CommonRegexPatterns.LITERAL}'")
+    val PATTERN = regexMatcher("\"${CommonRegexPatterns.PATTERN}\"")//"\"([^\"\\\\]|\\\\.)*\"")
     val COLON = regexMatcher("[:]")
     val CHILDREN_START = regexMatcher("[{]")
     val CHILDREN_END = regexMatcher("[}]")
@@ -234,25 +233,24 @@ internal class TreeParser(
     private fun scanLiteral() {
         val literal = scanner.next(Tokens.LITERAL)
         val textWithQuotes = literal
-        val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
+        val text = textWithQuotes.removeSurrounding("'")//substring(1, textWithQuotes.length - 1)
+        val textUnescaped = CommonRegexPatterns.unescape_LITERAL(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += textUnescaped.length
-        val literalUnescaped = RuntimeRuleRhsLiteral.unescape(literal)
-        this.leaf(literalUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.value.length
+        val literalUnescaped =CommonRegexPatterns.unescape_LITERAL(literal)
+        this.leaf(literalUnescaped.value, textUnescaped.value, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // ID COLON LITERAL
     private fun scanLeafLiteral() {
-        val literal = scanner.next(Tokens.ID)
+        val id = scanner.next(Tokens.ID)
         scanner.next(Tokens.COLON)
         val textWithQuotes = scanner.next(Tokens.LITERAL)
-        val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
+        val text = textWithQuotes.removeSurrounding("'")
+        val textUnescaped = CommonRegexPatterns.unescape_LITERAL(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += textUnescaped.length
-        val literalUnescaped = RuntimeRuleRhsLiteral.unescape(literal)
-        this.leaf(literalUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.value.length
+        this.leaf(id, textUnescaped.value, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // PATTERN COLON LITERAL
@@ -261,11 +259,11 @@ internal class TreeParser(
         scanner.next(Tokens.COLON)
         val textWithQuotes = scanner.next(Tokens.LITERAL)
         val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
+        val textUnescaped = CommonRegexPatterns.unescape_LITERAL(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += textUnescaped.length
-        val patternUnescaped = RuntimeRuleRhsPattern.unescape(pattern)
-        this.leaf(patternUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.value.length
+        val patternUnescaped = CommonRegexPatterns.unescape_PATTERN(pattern)
+        this.leaf(patternUnescaped.value, textUnescaped.value, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // ID CHILDREN_START

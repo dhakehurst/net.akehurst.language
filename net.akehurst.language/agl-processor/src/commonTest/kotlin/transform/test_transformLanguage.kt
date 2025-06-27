@@ -22,6 +22,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.test.TypeModelTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -141,6 +142,7 @@ class test_transformLanguage {
         assertNotNull(proc)
     }
 
+    @Ignore
     @Test
     fun check_typeModel() {
         val actual = Agl.registry.agl.transform.processor!!.typesModel

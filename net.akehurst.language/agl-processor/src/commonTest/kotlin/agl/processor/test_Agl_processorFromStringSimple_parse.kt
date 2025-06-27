@@ -112,19 +112,19 @@ class test_Agl_processorFromStringSimple_parse {
         val grammarStr = """
             namespace test
             grammar Test {
-                EscapeSequence = '\\' "[btnfr'\\\\]" ;
+                EscapeSequence = '\\' "[btnfr'\\]" ;
             }
         """.trimIndent()
 
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
-        assertNotNull(pr.processor)
+        assertNotNull(pr.processor, pr.issues.toString())
 
         val result = pr.processor!!.parse("\\b");
         val expected = pr.processor!!.spptParser.parse(
             """
              EscapeSequence {
                 '\\'
-                "[btnfr'\\\\]" : 'b'
+                "[btnfr'\\]" : 'b'
              }
         """
         )

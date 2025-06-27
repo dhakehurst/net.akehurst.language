@@ -34,7 +34,7 @@ import net.akehurst.language.collections.clone
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.RulePosition
-import net.akehurst.language.sentence.api.InputLocation
+import net.akehurst.language.parser.api.RuntimeParser
 import net.akehurst.language.parsermessages.IssueMessage
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
@@ -50,7 +50,7 @@ internal data class RuntimeContext(
     val prevPrev: GrowingNodeIndex? // null if head is goal
 )
 
-internal class RuntimeParser(
+internal class RuntimeParserAgl(
     val sentence: Sentence, //FIXME: should really be a method argument
     val isSkipParser: Boolean,
     val stateSet: ParserStateSet,
@@ -59,7 +59,7 @@ internal class RuntimeParser(
     val userGoalRule: RuntimeRule,
     private val scanner: Scanner,
     private val _issues: IssueHolder
-) {
+) : RuntimeParser {
     companion object {
         data class GrowArgs(
             val buildTree: Boolean, //TODO: want to not build tree is some situations, however tree is used for resolving ambiguities!
@@ -97,7 +97,7 @@ internal class RuntimeParser(
             is ScannerClassic -> scanner //ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
             else -> error("subtype of Scanner unsupported - ${scanner::class.simpleName}")
         }
-        RuntimeParser(sentence, true, it, null, false, skipStateSet.userGoalRule, skipScanner, _issues)
+        RuntimeParserAgl(sentence, true, it, null, false, skipStateSet.userGoalRule, skipScanner, _issues)
     }
 
     fun reset() {
@@ -183,7 +183,7 @@ internal class RuntimeParser(
         })"
 
         fun GrowingNodeIndex.chains(): List<List<GrowingNodeIndex>> {
-            val prevs = this@RuntimeParser.graph.previousOf(this)
+            val prevs = this@RuntimeParserAgl.graph.previousOf(this)
             return when {
                 prevs.isEmpty() -> listOf(listOf(this))
                 else -> prevs.flatMap { prev ->
@@ -373,7 +373,7 @@ internal class RuntimeParser(
         return headGrownHeight || headGrownGraft
     }
 
-    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>, acceptEOT:Boolean) =
+    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>, acceptEOT: Boolean) =
         when {
 //            possibleEndOfText.size > 1 -> TODO()
 //            runtimeLhs.size > 1 -> TODO()
@@ -383,7 +383,7 @@ internal class RuntimeParser(
                 val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 //possibleEndOfText.flatMap { eot ->
                 //    runtimeLhs.map { rt ->
-                val lh = when(acceptEOT) {
+                val lh = when (acceptEOT) {
                     true -> lh1.union(LookaheadSetPart.EOT)
                     false -> lh1
                 }
@@ -570,7 +570,13 @@ internal class RuntimeParser(
                 val transWithValidLookahead = when {
                     parseArgs.noLookahead -> transitions.map { Pair(it, LookaheadSetPart.ANY) }
                     else -> transitions.mapNotNull {
-                        val m = matchedLookahead(runtimeContext.head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, runtimeContext.prev.runtimeState.runtimeLookaheadSet,parseArgs.allowEOTAfterSkip)
+                        val m = matchedLookahead(
+                            runtimeContext.head.nextInputPositionAfterSkip,
+                            it.lookahead,
+                            possibleEndOfText,
+                            runtimeContext.prev.runtimeState.runtimeLookaheadSet,
+                            parseArgs.allowEOTAfterSkip
+                        )
                         when {
                             m.first -> Pair(it, m.second)
                             else -> null
@@ -844,7 +850,7 @@ internal class RuntimeParser(
                 val lhWithMatch = transition.lookahead.flatMap { lh ->
                     possibleEndOfText.flatMap { eot ->
                         runtimeLhs.mapNotNull { rt ->
-                            val lhg = when(parseArgs.allowEOTAfterSkip) {
+                            val lhg = when (parseArgs.allowEOTAfterSkip) {
                                 true -> lh.guard.union(this.stateSet, LookaheadSet.EOT)
                                 false -> lh.guard
                             }
@@ -853,8 +859,8 @@ internal class RuntimeParser(
                         }
                     }
                 }
-               // val hasLh = lhWithMatch.isNotEmpty()
-                val hasLh  =true // transitions lookahead already checked in resolveTransitionAmbiguity
+                // val hasLh = lhWithMatch.isNotEmpty()
+                val hasLh = true // transitions lookahead already checked in resolveTransitionAmbiguity
                 return if (parseArgs.noLookahead || hasLh) { //TODO: don't resolve EOT
                     val newRuntimeLhs = if (parseArgs.noLookahead) {
                         transition.lookahead.flatMap { lh ->
@@ -909,7 +915,7 @@ internal class RuntimeParser(
             else -> {
                 if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
                     val runtimeLhs = previous.runtimeState.runtimeLookaheadSet
-                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs,parseArgs.allowEOTAfterSkip)
+                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs, parseArgs.allowEOTAfterSkip)
                     val hasLh = lhWithMatch.first//isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (parseArgs.noLookahead || hasLh) {
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
@@ -1031,11 +1037,12 @@ internal class RuntimeParser(
         transition: Transition
     ): Pair<RuntimeParser, Set<LookaheadSet>> {
         val embeddedRhs = transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+
         val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
         val embeddedStartRule = embeddedRhs.embeddedStartRule
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
-        val embeddedParser = RuntimeParser(sentence, false, embeddedS0.stateSet, embeddedSkipStateSet, this.cacheSkip, embeddedStartRule, this.scanner, _issues)
+        val embeddedParser = RuntimeParserAgl(sentence, false, embeddedS0.stateSet, embeddedSkipStateSet, this.cacheSkip, embeddedStartRule, this.scanner, _issues)
         val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
@@ -1057,44 +1064,52 @@ internal class RuntimeParser(
             //TODO: what about an empty embedded ?
             else -> {
                 val (embeddedParser, embeddedEOT) = createEmbeddedRuntimeParser(possibleEndOfText, head.runtimeState.runtimeLookaheadSet, transition)
-                val endingLookahead = transition.lookahead.first().guard //should ony ever be one
-                val startPosition = head.nextInputPositionAfterSkip
-                embeddedParser.start(startPosition, embeddedEOT, parseArgs)
-                var seasons = 1
-                var maxNumHeads = embeddedParser.graph.numberOfHeads
-                do {
-                    embeddedParser.grow3(embeddedEOT, parseArgs)
-                    seasons++
-                    maxNumHeads = max(maxNumHeads, embeddedParser.graph.numberOfHeads)
-                } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
-                //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
-                val match = embeddedParser.graph.treeData.complete
-                if (match.root != null) {
-                    val embeddedS0 = embeddedParser.stateSet.startState
-                    val ni = match.root?.nextInputPosition!! // will always have value if root not null
-                    //TODO: parse skipNodes
-                    val skipLh = head.runtimeState.runtimeLookaheadSet.flatMap { rt ->
-                        possibleEndOfText.map { eot ->
-                            endingLookahead.resolve(eot, rt).lhs(embeddedS0.stateSet)
+                when (embeddedParser) {
+                    is RuntimeParserAgl -> {
+                        val endingLookahead = transition.lookahead.first().guard //should ony ever be one
+                        val startPosition = head.nextInputPositionAfterSkip
+                        embeddedParser.start(startPosition, embeddedEOT, parseArgs)
+                        var seasons = 1
+                        var maxNumHeads = embeddedParser.graph.numberOfHeads
+                        do {
+                            embeddedParser.grow3(embeddedEOT, parseArgs)
+                            seasons++
+                            maxNumHeads = max(maxNumHeads, embeddedParser.graph.numberOfHeads)
+                        } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
+                        //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
+                        val match = embeddedParser.graph.treeData.complete
+                        if (match.root != null) {
+                            val embeddedS0 = embeddedParser.stateSet.startState
+                            val ni = match.root?.nextInputPosition!! // will always have value if root not null
+                            //TODO: parse skipNodes
+                            val skipLh = head.runtimeState.runtimeLookaheadSet.flatMap { rt ->
+                                possibleEndOfText.map { eot ->
+                                    endingLookahead.resolve(eot, rt).lhs(embeddedS0.stateSet)
+                                }
+                            }.toSet()
+                            val skipData = this.tryParseSkipUntilNone(skipLh, ni, parseArgs)//, lh) //TODO: does the result get reused?
+                            //val nextInput = skipData?.nextInputPosition ?: ni
+                            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
+                            this.graph.pushEmbeddedToStackOf(
+                                head,
+                                transition.to,
+                                head.runtimeState.runtimeLookaheadSet,
+                                startPosition,
+                                ni,
+                                match,
+                                skipData
+                            )
+                        } else {
+                            //  could not parse embedded
+                            //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
+                            recordFailedEmbedded(parseArgs, head, transition, embeddedParser.failedReasons)
+                            false
                         }
-                    }.toSet()
-                    val skipData = this.tryParseSkipUntilNone(skipLh, ni, parseArgs)//, lh) //TODO: does the result get reused?
-                    //val nextInput = skipData?.nextInputPosition ?: ni
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head\n  taking: $transition" }
-                    this.graph.pushEmbeddedToStackOf(
-                        head,
-                        transition.to,
-                        head.runtimeState.runtimeLookaheadSet,
-                        startPosition,
-                        ni,
-                        match,
-                        skipData
-                    )
-                } else {
-                    //  could not parse embedded
-                    //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
-                    recordFailedEmbedded(parseArgs, head, transition, embeddedParser.failedReasons)
-                    false
+                    }
+                    is RuntimeParserExternal -> {
+                        TODO()
+                    }
+                    else -> error("Subtype of RuntimeParser not supported: '${embeddedParser::class.simpleName}'")
                 }
             }
         }

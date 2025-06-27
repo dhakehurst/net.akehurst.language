@@ -19,7 +19,7 @@ package net.akehurst.language.regex.agl
 import net.akehurst.language.regex.api.MatchResult
 import net.akehurst.language.regex.api.RegexMatcher
 
-fun regexMatcher(pattern: String): RegexMatcher = RegexParser(pattern).parse()
+fun regexMatcher(pattern: String): RegexMatcher = RegexParser().parse(pattern)
 
 // nfa is Array of States, each state is element in array
 // Array<Int,

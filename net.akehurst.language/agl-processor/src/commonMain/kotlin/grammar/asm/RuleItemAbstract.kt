@@ -17,6 +17,8 @@
 package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.regex.api.EscapedValue
 
 sealed class RuleItemAbstract : RuleItem {
 
@@ -230,11 +232,13 @@ class EmptyRuleDefault : TangibleItemAbstract(), EmptyRule {
 }
 
 class TerminalDefault(
-    override val value: String,
+    override val escapedValue: EscapedValue,
     override val isPattern: Boolean
 ) : TangibleItemAbstract(), Terminal {
 
-    override val id: String = if (isPattern) "\"$value\"" else "'${value}'"
+    override val id: String = if (isPattern) "\"${escapedValue.value}\"" else "'${escapedValue.value}'"
+
+    override val unescapedValue get() = escapedValue.unescaped
 
     override val isLiteral: Boolean get() = isPattern.not()
 
@@ -259,9 +263,9 @@ class TerminalDefault(
     }
 
     override fun toString(): String = if (isPattern) {
-        "\"${value.replace("\\","\\\\").replace("\"","\\\"")}\""
+        "\"${escapedValue.value}\""
     } else {
-        "'${value.replace("\\","\\\\").replace("'","\\'")}'"
+        "'${escapedValue.value}'"
     }
 }
 

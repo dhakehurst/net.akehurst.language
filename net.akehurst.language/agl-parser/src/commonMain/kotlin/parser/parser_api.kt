@@ -229,3 +229,7 @@ interface Parser {
 interface ParseFailure {
     val failedSpines: List<RuntimeSpine>
 }
+
+interface RuntimeParser {
+
+}

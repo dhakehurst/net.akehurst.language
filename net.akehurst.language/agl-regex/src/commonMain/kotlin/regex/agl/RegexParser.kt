@@ -17,15 +17,14 @@
 package net.akehurst.language.regex.agl
 
 import net.akehurst.language.collections.MutableStack
+import net.akehurst.language.regex.agl.RegexMatcherBuilder
 import net.akehurst.language.regex.api.RegexMatcher
 
-internal class RegexParser(
-    val pattern: String
-) {
+class RegexParser {
 
     internal enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
 
-    companion object {
+    private companion object {
         val PREC_GROUP_OPEN = 1
         val PREC_GROUP_CLOSE = 1
         val PREC_LITERAL = 2
@@ -105,11 +104,15 @@ internal class RegexParser(
         )
     }
 
-    val patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
-    var pp = 0
-    val matcherBuilder = RegexMatcherBuilder(pattern)
+    private lateinit var patternX: String
+    private lateinit var pattern: String
+    private var pp = 0
+    private lateinit var matcherBuilder: RegexMatcherBuilder
 
-    fun parse(): RegexMatcher {
+    fun parse(pattern: String): RegexMatcher {
+        this.pattern = pattern
+        patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
+        matcherBuilder = RegexMatcherBuilder(pattern)
         this.parsePattern()
         return this.matcherBuilder.build()
     }
@@ -393,10 +396,10 @@ internal class RegexParser(
                     }
                 }
             } catch (t: Throwable) {
-                val before = this.pattern.substring(maxOf(0, this.pp - 5), minOf(this.pattern.length, this.pp))
-                val after = this.pattern.substring(maxOf(this.pattern.length, this.pp - 5), minOf(this.pattern.length, this.pp + 5))
+                val before = pattern.substring(maxOf(0, this.pp - 5), minOf(pattern.length, this.pp))
+                val after = pattern.substring(maxOf(pattern.length, this.pp - 5), minOf(pattern.length, this.pp + 5))
                 val posStr = "$before^$after"
-                error("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", " + t.message)
+                error("Failed to parse regex \"${pattern}\" at position ${this.pp}, \"$posStr\", " + t.message)
             }
             while (opStack.isEmpty.not()) {
                 postfix.push(opStack.pop())
@@ -528,7 +531,7 @@ internal class RegexParser(
     }
 
     private fun parseCharacterClassEscape(): Char {
-        var c = this.next()
+        val c = this.next()
         return when (c) {
             '\\' -> '\\'
             '$' -> '$'

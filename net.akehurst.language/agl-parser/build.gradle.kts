@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.exportPublic)
     alias(libs.plugins.reflex)
 }
 

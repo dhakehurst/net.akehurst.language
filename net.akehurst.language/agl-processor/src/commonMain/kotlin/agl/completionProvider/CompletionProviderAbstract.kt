@@ -250,18 +250,18 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                             item.owningRule.isLeaf -> Expansion(item, null, "<${item.owningRule.name}>")
                             item.isPattern -> when {
                                 options.provideValuesForPatternTerminals -> try {
-                                    val p = RegexValueProvider(item.value, 'X') //TODO: pass in the 'any value'
+                                    val p = RegexValueProvider(item.unescapedValue.value, 'X') //TODO: pass in the 'any value'
                                     val txt = p.provide()
                                     Expansion(item, null, txt)
                                 } catch (t: Throwable) {
                                     t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
-                                    Expansion(item, null, "<${item.value}>")
+                                    Expansion(item, null, "<${item.unescapedValue.value}>")
                                 }
 
-                                else -> Expansion(item, null, "<${item.value}>")
+                                else -> Expansion(item, null, "<${item.unescapedValue.value}>")
                             }
 
-                            else -> Expansion(item, null, item.value)
+                            else -> Expansion(item, null, item.unescapedValue.value)
                         }
 
                         is NonTerminal -> Expansion(item, item.ruleReference.value, "<${item.ruleReference.value}>")
@@ -292,30 +292,30 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                 is NonTerminal -> { //must be a reference to leaf
                     val name = tangibleItem.ruleReference.value
                     val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
-                    val text = refRule.compressedLeaf.value
+                    val text = refRule.compressedLeaf.unescapedValue.value
                     listOf(CompletionItem(CompletionItemKind.PATTERN, text, "<$name>"))
                 }
 
                 is Terminal -> {
                     val name = when {
                         tangibleItem.owningRule.isLeaf -> tangibleItem.owningRule.name.value
-                        else -> tangibleItem.value
+                        else -> tangibleItem.escapedValue.value
                     }
                     when {
                         tangibleItem.isPattern -> when {
                             options.provideValuesForPatternTerminals -> try {
-                                val p = RegexValueProvider(tangibleItem.value, 'X') //TODO: pass in the 'any value'
+                                val p = RegexValueProvider(tangibleItem.unescapedValue.value, 'X') //TODO: pass in the 'any value'
                                 val txt = p.provide()
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, txt))
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, txt))
                             } catch (t: Throwable) {
                                 t.printStackTrace() // should not happen, but bugs in AGL regex could cause it
-                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, "<$name>"))
+                                listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>"))
                             }
 
-                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.value, "<$name>"))
+                            else -> listOf(CompletionItem(CompletionItemKind.PATTERN, tangibleItem.unescapedValue.value, "<$name>"))
                         }
 
-                        else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.value))
+                        else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.unescapedValue.value))
                     }
                 }
 
@@ -335,7 +335,7 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
         val rule = item.owningRule
         return when {
             rule.isLeaf -> listOf(
-                CompletionItem(CompletionItemKind.PATTERN, rule.compressedLeaf.value, "<${rule.name}>")
+                CompletionItem(CompletionItemKind.PATTERN, rule.compressedLeaf.unescapedValue.value, "<${rule.name}>")
             )
 
             else -> {

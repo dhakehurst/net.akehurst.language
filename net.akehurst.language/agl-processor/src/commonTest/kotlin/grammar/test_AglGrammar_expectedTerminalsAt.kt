@@ -59,6 +59,7 @@ class test_AglGrammar_expectedTerminalsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 9)
 
         val expected = listOf<CompletionItem>(
+            CompletionItem(CompletionItemKind.LITERAL, "'#'", "#"),
             CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "<IDENTIFIER>")
         )
 

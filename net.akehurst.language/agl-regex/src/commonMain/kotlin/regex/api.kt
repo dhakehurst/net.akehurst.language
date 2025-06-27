@@ -16,6 +16,8 @@
 
 package net.akehurst.language.regex.api
 
+import kotlin.jvm.JvmInline
+
 enum class RegexEngineKind {
     PLATFORM, AGL
 }
@@ -48,4 +50,51 @@ interface RegexEngine {
 interface MatchResult {
     val matchedText: String
     //val eolPositions: List<Int>
+}
+
+/**
+ * with characters special to AGL (i.e. ") having a \ before
+ */
+interface EscapedValue {
+    val unescaped: UnescapedValue
+    val value:String
+}
+
+/**
+ * with characters special to AGL (i.e. ") not escaped
+ */
+interface UnescapedValue {
+    val escaped: EscapedValue
+    val value:String
+}
+
+@JvmInline
+value class EscapedPattern(override val value: String):EscapedValue {
+    override val unescaped:UnescapedPattern get() = CommonRegexPatterns.unescape_PATTERN(value)
+}
+
+@JvmInline
+value class UnescapedPattern(override val value: String):UnescapedValue {
+    override val escaped:EscapedPattern get() = CommonRegexPatterns.escape_PATTERN(value)
+}
+
+@JvmInline
+value class EscapedLiteral(override val value: String):EscapedValue {
+    override val unescaped:UnescapedLiteral get() = CommonRegexPatterns.unescape_LITERAL(value)
+}
+
+@JvmInline
+value class UnescapedLiteral(override val value: String):UnescapedValue {
+    override val escaped:EscapedLiteral get() = CommonRegexPatterns.escape_LITERAL(value)
+}
+
+object CommonRegexPatterns {
+    const val PATTERN = "(\\\\\"|[^\"])+"
+    fun unescape_PATTERN(escaped: String)= UnescapedPattern(escaped.replace("\\\"", "\""))
+    fun escape_PATTERN(unescaped:String)= EscapedPattern(unescaped.replace("\"", "\\\""))
+
+    const val LITERAL = "(\\\\\\\\|\\\\'|[^'\\\\])+"
+    fun unescape_LITERAL(escaped: String)= UnescapedLiteral(escaped.replace("\\'", "'").replace("\\\\","\\"))
+    fun escape_LITERAL(unescaped:String)= EscapedLiteral( unescaped.replace("\\","\\\\").replace("'", "\\'"))
+
 }

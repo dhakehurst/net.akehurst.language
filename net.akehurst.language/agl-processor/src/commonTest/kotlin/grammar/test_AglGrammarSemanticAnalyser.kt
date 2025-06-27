@@ -742,7 +742,7 @@ class test_AglGrammarSemanticAnalyser {
     fun extends_diamond_repeat_with_override3() {
         val grammarStr = """
             namespace ns.test
-            grammar Annotations {
+            grammar Base {
                 Annotation = 'annotation' ;
             }
             grammar Mid1 : Base {

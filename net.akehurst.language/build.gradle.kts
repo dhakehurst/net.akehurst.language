@@ -43,8 +43,8 @@ allprojects {
 }
 
 subprojects {
-    val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
-    val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
+    val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+    val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
     val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
@@ -220,7 +220,7 @@ subprojects {
     tasks.forEach {
         when {
             it.name.matches(Regex("publish(.)+")) -> {
-                println("${it.name}.mustRunAfter(${signTasks.toList()})")
+                //println("${it.name}.mustRunAfter(${signTasks.toList()})")
                 it.mustRunAfter(*signTasks)
             }
         }

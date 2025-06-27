@@ -49,7 +49,7 @@ fun contextFromGrammar(grammars: GrammarModel): ContextWithScope<Any, Any> {
                 it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
                 else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
             }
-            scope.addToScope(it.id, QualifiedName(rTypeName), null, it.value, false)
+            scope.addToScope(it.id, QualifiedName(rTypeName), null, it.escapedValue, false)
         }
     }
     return context

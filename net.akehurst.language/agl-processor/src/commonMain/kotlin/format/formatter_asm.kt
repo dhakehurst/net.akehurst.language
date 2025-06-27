@@ -19,7 +19,6 @@ package net.akehurst.language.format.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
@@ -46,7 +45,7 @@ class AglFormatModelDefault(
         private fun fromRuleItem(grammar: Grammar, ruleItem: RuleItem): TemplateElement = when (ruleItem) {
             is Terminal -> when {
                 ruleItem.isPattern -> TODO()
-                else -> TemplateElementTextDefault(ruleItem.value)
+                else -> TemplateElementTextDefault(ruleItem.escapedValue.value)
             }
 
             is EmptyRule -> TemplateElementTextDefault("")

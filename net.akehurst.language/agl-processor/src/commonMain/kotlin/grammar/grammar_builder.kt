@@ -26,6 +26,8 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.regex.api.UnescapedLiteral
+import net.akehurst.language.regex.api.UnescapedPattern
 
 @DslMarker
 annotation class GrammarBuilderMarker
@@ -118,20 +120,20 @@ class GrammarBuilder(
         _grammar.extends.add(extended)
     }
 
-    private fun terminal(value: String, isPattern: Boolean): Terminal {
-        val t = _terminals[value]
-        return if (null == t) {
-            val tt = TerminalDefault(value, isPattern)
-            _terminals[value] = tt
-            tt
-        } else {
-            if (isPattern == t.isPattern) {
-                t
-            } else {
-                error("Error terminal defined as both pattern and literal!")
-            }
-        }
-    }
+//    private fun terminal(value: String, isPattern: Boolean): Terminal {
+//        val t = _terminals[value]
+//        return if (null == t) {
+//            val tt = TerminalDefault(value, isPattern)
+//            _terminals[value] = tt
+//            tt
+//        } else {
+//            if (isPattern == t.isPattern) {
+//                t
+//            } else {
+//                error("Error terminal defined as both pattern and literal!")
+//            }
+//        }
+//    }
 
     private fun createRule(grammarRuleName: GrammarRuleName, overrideKind: OverrideKind?, isSkip: Boolean, isLeaf: Boolean, rhs: RuleItem) = when (overrideKind) {
         null -> {
@@ -147,13 +149,13 @@ class GrammarBuilder(
         }
     }
 
-    fun terminalLiteral(value: String): Terminal {
-        return terminal(value, false)
-    }
-
-    fun terminalPattern(value: String): Terminal {
-        return terminal(value, true)
-    }
+//    fun terminalLiteral(value: String): Terminal {
+//        return terminal(value, false)
+//    }
+//
+//    fun terminalPattern(value: String): Terminal {
+//        return terminal(value, true)
+//    }
 
     fun empty(grammarRuleName: String, overrideKind: OverrideKind? = null, isSkip: Boolean = false, isLeaf: Boolean = false) {
         val rhs = EmptyRuleDefault()
@@ -244,12 +246,12 @@ open class SimpleItemsBuilder(
         items.add(item as SimpleItem)
     }
 
-    fun lit(value: String) {
-        addItem(TerminalDefault(value, false))
+    fun lit(unescapedValue: String) {
+        addItem(TerminalDefault(UnescapedLiteral( unescapedValue).escaped, false))
     }
 
-    fun pat(value: String) {
-        addItem(TerminalDefault(value, true))
+    fun pat(unescapedValue: String) {
+        addItem(TerminalDefault(UnescapedPattern(unescapedValue).escaped, true))
     }
 
     fun ebd(embeddedGrammarReference: String, embeddedGoalName: String) {
@@ -388,7 +390,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(it, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escaped, false) },
                 Associativity.LEFT
             )
         )
@@ -400,7 +402,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(it, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escaped, false) },
                 Associativity.RIGHT
             )
         )

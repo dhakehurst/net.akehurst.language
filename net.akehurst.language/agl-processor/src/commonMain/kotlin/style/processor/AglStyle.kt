@@ -29,6 +29,7 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.builder.asmTransform
@@ -60,8 +61,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
                 style = STYLE_ID ':' styleValue ';' ;
                 styleValue = STYLE_VALUE | STRING ;
                 
-                leaf LITERAL = "'([^'\\\\]|\\.)+'" ;
-                leaf PATTERN = "\"([^\"\\\\]|\\.)+\"" ;
+                leaf LITERAL = '\'' "('|([^'])+" '\'' ;
+                leaf PATTERN = '"' "\\"|([^\"])+"  '"' ;
                 leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
                 leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
                 leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
@@ -148,8 +149,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
                         ref("SPECIAL_IDENTIFIER")
                     }
                     // these must match what is in the AglGrammarGrammar
-                    concatenation("LITERAL", isLeaf = true) { pat("'([^'\\\\]|\\\\.)*'") }
-                    concatenation("PATTERN", isLeaf = true) { pat("\"([^\"\\\\]|\\\\.)*\"") }
+                    concatenation("LITERAL", isLeaf = true) { lit("'"); pat(CommonRegexPatterns.LITERAL); lit("'"); }
+                    concatenation("PATTERN", isLeaf = true) { lit("\""); pat(CommonRegexPatterns.PATTERN); lit("\""); } //{ pat("\"([^\"\\\\]|\\\\.)+\"") }
 
                     concatenation("SPECIAL_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
 

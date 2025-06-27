@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.parser.api.*
+import net.akehurst.language.regex.api.UnescapedLiteral
+import net.akehurst.language.regex.api.UnescapedPattern
 import std.extensions.implies
 
 fun ruleSet(name: String, init: RuleSetBuilder.() -> Unit) : RuleSet = runtimeRuleSet(name, init)
@@ -87,7 +89,7 @@ internal class RuntimeRuleSetBuilder2(
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, false) { rule, _ ->
-                RuntimeRuleRhsLiteral(rule, literalUnescaped)
+                RuntimeRuleRhsLiteral(rule, UnescapedLiteral(literalUnescaped))
             }
             this._ruleBuilders[tag] = rb
         }
@@ -100,7 +102,7 @@ internal class RuntimeRuleSetBuilder2(
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip, false) { rule, _ ->
-                RuntimeRuleRhsPattern(rule, patternUnescaped)
+                RuntimeRuleRhsPattern(rule, UnescapedPattern(patternUnescaped))
             }
             this._ruleBuilders[tag] = rb
         }

@@ -19,6 +19,7 @@ package net.akehurst.language.regex.agl
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
+import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.sentence.common.SentenceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,7 +30,7 @@ class test_std_RegEx {
     fun t() {
         //'(', ID, chSep, ';'
         val rr = RuntimeRule(0, 0, "x", false, false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it, "|"))
+            it.setRhs(RuntimeRuleRhsPattern(it, UnescapedPattern("|")))
         }
         val sentence = SentenceDefault("?", null)
         val result = (rr.rhs as RuntimeRuleRhsPattern).matchable.using(RegexEnginePlatform).isLookingAt(sentence, 0)

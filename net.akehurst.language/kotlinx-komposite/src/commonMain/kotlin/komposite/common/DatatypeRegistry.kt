@@ -137,6 +137,14 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
             "kotlin.Function4" to StdLibDefault.Lambda.qualifiedTypeName.value,
             "kotlin.Function5" to StdLibDefault.Lambda.qualifiedTypeName.value,
             "kotlin.Function6" to StdLibDefault.Lambda.qualifiedTypeName.value,
+            // to handle lack of qualified names
+            "Any" to StdLibDefault.AnyType.qualifiedTypeName.value,
+            "Boolean" to StdLibDefault.Boolean.qualifiedTypeName.value,
+            "String" to StdLibDefault.String.qualifiedTypeName.value,
+            "Int" to StdLibDefault.Integer.qualifiedTypeName.value,
+            "Double" to StdLibDefault.Real.qualifiedTypeName.value,
+            "Float" to StdLibDefault.Real.qualifiedTypeName.value,
+            "Pair" to StdLibDefault.Pair.qualifiedName.value,
         )
     }
 
@@ -157,6 +165,8 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
             } else {
                 this.registerFromTypeModel(result.asm!!, primitiveMappers)
             }
+        } catch (e: KompositeException) {
+            throw e
         } catch (e: Exception) {
             throw KompositeException("Error trying to register datatypes from config string - ${e.message}", e)
         }

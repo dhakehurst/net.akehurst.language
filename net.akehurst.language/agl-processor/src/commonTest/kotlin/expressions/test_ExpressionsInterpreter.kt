@@ -151,7 +151,7 @@ class test_ExpressionsInterpreter {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.INTERPRET,
                 null,
-                "Index operation on non List value is not possible: strValue"
+                "Index operation on non List value is not possible: 'strValue'"
             )
         )
         test_fail(tm, self, "prop1[0]", expectedIssues)

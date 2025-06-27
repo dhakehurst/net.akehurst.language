@@ -443,6 +443,7 @@ class KompositeWalker<P : Any?, A : Any?>(
             else -> {
                 val dataKClassName = data::class.simpleName!! //TODO: want qualified name here when JS supports it
                 registry.findFirstDefinitionByNameOrNull(SimpleName(dataKClassName))
+                    ?: DatatypeRegistry.KOTLIN_TO_AGL[dataKClassName]?.let { registry.findFirstDefinitionByNameOrNull(SimpleName(it)) }
                     ?: throw KompositeException("Cannot find a runtimeTypeFor for data object named: ${data::class.simpleName}")
             }
         }

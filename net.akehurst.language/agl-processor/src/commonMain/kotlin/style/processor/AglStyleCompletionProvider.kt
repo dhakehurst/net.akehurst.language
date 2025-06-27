@@ -17,18 +17,15 @@
 
 package net.akehurst.language.style.processor
 
-import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract.Companion.defaultSortAndFilter
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.typemodel.api.TypeInstance
@@ -149,7 +146,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
 
     private fun rule(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return when (nextExpected) {
-            is Terminal -> when (nextExpected.value) {
+            is Terminal -> when (nextExpected.id) {
                 "'{'" -> listOf(
                     CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
                     CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
@@ -165,7 +162,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
 
     private fun style(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return when (nextExpected) {
-            is Terminal -> when (nextExpected.value) {
+            is Terminal -> when (nextExpected.id) {
                 "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ":"))
                 "';'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ";"))
                 else -> error("Internal error: RuleItem $nextExpected not handled")

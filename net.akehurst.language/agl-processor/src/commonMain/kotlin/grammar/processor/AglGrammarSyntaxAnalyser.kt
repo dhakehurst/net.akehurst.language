@@ -26,6 +26,11 @@ import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.regex.api.EscapedLiteral
+import net.akehurst.language.regex.api.EscapedPattern
+import net.akehurst.language.regex.api.EscapedValue
+import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.sppt.treedata.locationForNode
@@ -440,11 +445,11 @@ internal class AglGrammarSyntaxAnalyser(
         }
         val mt = children[0] as String
         val value = mt.substring(1, mt.length - 1)
-        val unescaped = when (isPattern) {
-            false -> value.replace("\\'", "'").replace("\\\\","\\")
-            true -> value.replace("\\\"", "\"").replace("\\\\","\\")
+        val escapedValue = when(isPattern) {
+            true -> EscapedPattern(value)
+            false -> EscapedLiteral(value)
         }
-        return { TerminalDefault(unescaped, isPattern).also { setLocationFor(it, target, sentence) } }
+        return { TerminalDefault(escapedValue, isPattern).also { setLocationFor(it, target, sentence) } }
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
