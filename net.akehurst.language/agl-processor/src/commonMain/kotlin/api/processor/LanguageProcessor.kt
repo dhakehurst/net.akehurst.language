@@ -57,6 +57,8 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val targetGrammar:Grammar?
 
+    val ruleSets: Map<String,RuleSet>
+
     val targetRuleSet: RuleSet?
 
     val scanner: Scanner?

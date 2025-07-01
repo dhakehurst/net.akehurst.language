@@ -20,6 +20,8 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.api.processor.GrammarString
+import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asm.api.PropertyValueName
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.sentence.api.InputLocation
@@ -170,33 +172,34 @@ class test_mscript {
     }
 
     @Test
-    fun process_empty_line() {
+    fun parse_empty_line() {
 
-        val text = """
+        val text = """ 
         """
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
+    }
+
+    @Test
+    fun parse_empty_line_several() {
+
+        val text = """
+
+
+        """
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+        println(result.sppt!!.toStringAll)
 
     }
 
     @Test
-    fun process_empty_line_several() {
-
-        val text = """
-
-
-        """
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-
-    }
-
-    @Test
-    fun process_single_line_comment() {
+    fun parse_single_line_comment() {
 
         val text = "% this is a comment"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
@@ -206,7 +209,7 @@ class test_mscript {
     }
 
     @Test
-    fun process_single_line_comment_several() {
+    fun parse_single_line_comment_several() {
 
         val text = """
             % this is a comment
@@ -221,7 +224,7 @@ class test_mscript {
     }
 
     @Test
-    fun process_multi_line_comment() {
+    fun parse_multi_line_comment() {
 
         val text = """
             %{
@@ -231,8 +234,9 @@ class test_mscript {
         """.trimIndent()
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -240,11 +244,18 @@ class test_mscript {
     fun process_rootVariable_x() {
 
         val text = "x"
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("rootVariable") })
+        val result = sut.process(text, Agl.options { parse{ goalRuleName("rootVariable") }})
 
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-        assertEquals("rootVariable", result.sppt!!.treeData.userRoot!!.rule.tag)
+        val expected = asmSimple {
+            element("RootVariable") {
+                propertyString("name", "x")
+            }
+        }
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
+        assertNotNull(result.asm)
+        println(result.asm!!.asString())
+        assertEquals(expected.asString(), result.asm!!.asString())
+
     }
 
     @Test
@@ -253,8 +264,9 @@ class test_mscript {
         val text = "x"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("expression", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -264,8 +276,9 @@ class test_mscript {
         val text = "true"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("BOOLEAN") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("BOOLEAN", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -275,8 +288,9 @@ class test_mscript {
         val text = "true"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("expression", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -286,8 +300,9 @@ class test_mscript {
         val text = "0.1"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("REAL", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -297,8 +312,9 @@ class test_mscript {
         val text = "0.1e-5"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("REAL", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -308,8 +324,9 @@ class test_mscript {
         val text = ".1"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("REAL", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -319,8 +336,9 @@ class test_mscript {
         val text = ".1e5"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("REAL", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -343,8 +361,9 @@ class test_mscript {
         val text = "1"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("INTEGER") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("INTEGER", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -353,8 +372,9 @@ class test_mscript {
         val text = "''"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -363,8 +383,9 @@ class test_mscript {
         val text = "'xxx'"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -374,8 +395,9 @@ class test_mscript {
             x'""".trimIndent()
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -385,8 +407,9 @@ class test_mscript {
         val text = "[]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -396,8 +419,9 @@ class test_mscript {
         val text = "[1]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -407,8 +431,9 @@ class test_mscript {
         val text = "[[1]]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -418,8 +443,9 @@ class test_mscript {
         val text = "1 2 3 4"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("row") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("row", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -429,8 +455,9 @@ class test_mscript {
         val text = "[1 2 3 4]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -440,8 +467,9 @@ class test_mscript {
         val text = "[1, 2, 3, 4]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -451,8 +479,9 @@ class test_mscript {
         val text = "[1; 2; 3; 4]"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -461,8 +490,9 @@ class test_mscript {
         val text = "cn.src_cpu"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
         assertEquals("matrix", result.sppt!!.treeData.userRoot!!.rule.tag)
     }
 
@@ -472,8 +502,9 @@ class test_mscript {
         val text = "0" + ",0".repeat(49)
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("argumentList") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -482,8 +513,9 @@ class test_mscript {
         val text = "func()"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -492,8 +524,9 @@ class test_mscript {
         val text = "func(a)"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -502,8 +535,9 @@ class test_mscript {
         val text = "func(a,1)"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -512,8 +546,9 @@ class test_mscript {
         val text = "func(a,1,'hello')"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -522,8 +557,9 @@ class test_mscript {
         val text = "func(a, 1, b, 2, c, 3, d, 4, e, 5)"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -532,8 +568,9 @@ class test_mscript {
         val text = "func(a,1,b,2,c,3,d,4,e,5,f,6,g,7,h,8,i,9,j,10)"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -542,8 +579,9 @@ class test_mscript {
         val text = "fprintf(''" + ",0".repeat(49) + ")"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -552,8 +590,9 @@ class test_mscript {
         val text = "func( func(a) )"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -565,8 +604,9 @@ class test_mscript {
         """.trimIndent()
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -575,8 +615,9 @@ class test_mscript {
         val text = "1 + 1"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -585,8 +626,9 @@ class test_mscript {
         val text = "1" + " + 1".repeat(10)
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
     }
 
     @Test
@@ -595,8 +637,49 @@ class test_mscript {
         val text = "1" + " + 1".repeat(100)
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
+    }
+
+    @Test
+    fun process_expression_groups1() {
+
+        val text = "(1*1)"
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+    }
+
+    @Test
+    fun process_expression_groups2() {
+
+        val text = "(1 + 1)"
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+    }
+
+    @Test
+    fun process_expression_groups3() {
+
+        val text = "(1+ 1)"
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+    }
+
+    @Test
+    fun process_expression_groups4() {
+
+        val text = "(1 +1)"
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
     }
 
     @Test
@@ -605,8 +688,8 @@ class test_mscript {
         val text = "((1+1)*(2+3)+4)*5"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -614,8 +697,9 @@ class test_mscript {
         val text = "fprintf(''" + ",0".repeat(99) + ");"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -625,8 +709,9 @@ class test_mscript {
         val text = "func()"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("functionCallOrIndex") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -636,8 +721,9 @@ class test_mscript {
         val text = "func()"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statement") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -647,8 +733,9 @@ class test_mscript {
         val text = "func();"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("line") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -658,8 +745,9 @@ class test_mscript {
         val text = "func();"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statementList") })
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        println(result.sppt!!.toStringAll)
 
     }
 
@@ -698,7 +786,7 @@ class test_mscript {
             }
         }
 
-        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
         assertEquals(expected.asString(), result.asm?.asString())
     }
@@ -708,10 +796,10 @@ class test_mscript {
 
         val text = "x=1"
         val parseResult = sut.parse(text, Agl.parseOptions { goalRuleName("assignment") })
-        assertTrue(parseResult.issues.errors.isEmpty(),parseResult.issues.toString())
+        assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
 
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
-        assertTrue(result.allIssues.errors.isEmpty(),result.allIssues.toString())
+        assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         val actual = result.asm!!
         val expected = asmSimple {
             element("Assignment") {
@@ -742,14 +830,13 @@ class test_mscript {
                 propertyElementExplicitType("lhs", "Matrix") {
                     propertyListOfElement("row") {
                         element("Row") {
-                            propertyElementExplicitType("expression", "RootVariable") {
-                                propertyString("name", "x")
-                            }
-                            propertyListOfElement("\$list") {
-                                tuple {
-                                    propertyElementExplicitType("expression", "RootVariable") {
-                                        propertyString("name", "y")
-                                    }
+                            propertyListOfElement("expression") {
+                                element("RootVariable") {
+                                    propertyString("name", "x")
+                                }
+                                element("RowSep") {}
+                                element("RootVariable") {
+                                    propertyString("name", "y")
                                 }
                             }
                         }
@@ -772,15 +859,7 @@ class test_mscript {
               Adapted from an example in the MathWorks Script Documentation
               https://uk.mathworks.com/help/matlab/learn_matlab/scripts.html
             %}
-            % Create and plot a sphere with radius r.
-            [x,y,z] = sphere;       % Create a unit sphere.
-            r = 2;
-            surf(x*r,y*r,z*r)       % Adjust each dimension and plot.
-            axis(equal)             % Use the same scale for each axis. 
-             
-            % Find the surface area and volume.
-            A = 4*pi*r^2;
-            V = (4/3)*pi*r^3;
+            
         """.trimIndent()
 
         val parseResult = sut.parse(sentence)
@@ -792,7 +871,7 @@ class test_mscript {
     }
 
     @Test
-    fun bug() {
+    fun defaultGoalRule() {
 
         val sentence = """
             %{

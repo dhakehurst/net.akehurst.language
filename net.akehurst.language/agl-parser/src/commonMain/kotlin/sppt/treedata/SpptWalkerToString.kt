@@ -17,6 +17,7 @@
 
 package net.akehurst.language.sppt.treedata
 
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.PathFunction
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
@@ -50,13 +51,13 @@ import net.akehurst.language.sppt.api.SpptWalker
         val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
             .replace("\n", "\u23CE")
             .replace("\t", "\u2B72")
-            .replace("'", "\\'")
+        val escapedText =  CommonRegexPatterns.escape_LITERAL(matchedText).value
         when {
             nodeInfo.node.rule.isEmptyTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
             nodeInfo.node.rule.isEmptyListTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
-            nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
-            "'${matchedText}'" == nodeInfo.node.rule.tag -> sb.append("${ind}'${matchedText}'$eol")
-            else -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
+            nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${escapedText}'$eol")
+            "'${matchedText}'" == nodeInfo.node.rule.tag -> sb.append("${ind}'${escapedText}'$eol")
+            else -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${escapedText}'$eol")
         }
     }
 

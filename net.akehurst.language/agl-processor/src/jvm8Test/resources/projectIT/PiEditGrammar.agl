@@ -33,9 +33,9 @@ grammar Expressions {
 
     leaf var = "[a-zA-Z][a-zA-Z0-9]*" ;
     leaf number = "[0-9]+" ;
-    leaf string = "\"([^\"\\\\]|\\.)*\"" ;
+    leaf string = "\"([^\"\\]|\.)*\"" ;
 
-    leaf literal = "[^\\\$\\]\\|]+" ;
+    leaf literal = "[^\$\\]\|]+" ;
 
 }
 
@@ -50,8 +50,8 @@ grammar Template {
 
     embeddedExpression = '${' Expressions::expression '}' ;
 
-    leaf escapedChar = '\\\\' | '\\$' ;
-    leaf literal = "[^\\\$\\]\\|]+" ;
+    leaf escapedChar = '\\' | '\\$' ;
+    leaf literal = "[^\$\]\\|]+" ;
 }
 
 grammar PiEditGrammar : Expressions {

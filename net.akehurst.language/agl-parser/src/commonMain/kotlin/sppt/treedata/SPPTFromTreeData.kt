@@ -69,7 +69,7 @@ class SPPTFromTreeData(
     override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {
         val walker = SpptWalkerToString(sentence, indentIncrement)
         this.treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
-        return walker.output
+        return walker.output.trim()
     }
 
     fun matches(other: SPPTFromTreeData) = this.treeData.matches(other.treeData)

@@ -17,16 +17,13 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
-import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
-import kotlin.js.JsExport
 import kotlin.reflect.KFunction3
 
 typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, T?>
@@ -48,7 +45,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<AsmType : Any>
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<*>> = mutableStackOf(this)
+        val syntaxAnalyserStack = mutableStackOf<SyntaxAnalyserByMethodRegistrationAbstract<*>>(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
             override fun beginTree() {}

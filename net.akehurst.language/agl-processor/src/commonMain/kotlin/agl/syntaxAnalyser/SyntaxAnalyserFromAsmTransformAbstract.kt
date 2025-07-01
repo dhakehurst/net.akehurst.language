@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 //import net.akehurst.language.asm.simple.*
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
@@ -29,15 +30,12 @@ import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
-import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.api.TransformationRule
@@ -114,7 +112,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     }
 
     override fun walkTree(sentence: Sentence, treeData: TreeData, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserFromAsmTransformAbstract<AsmType, AsmValueType>> = mutableStackOf(this)
+        val syntaxAnalyserStack = mutableStackOf<SyntaxAnalyserFromAsmTransformAbstract<AsmType, AsmValueType>>(this)
         val downStack = mutableStackOf<DownData2>() //when null don't use branch
         val stack = mutableStackOf<ChildData<AsmValueType>>()
         val walker = object : SpptWalker {

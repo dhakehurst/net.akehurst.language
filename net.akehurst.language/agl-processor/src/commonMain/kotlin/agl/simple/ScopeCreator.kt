@@ -17,18 +17,16 @@
 
 package net.akehurst.language.agl.simple
 
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.scope.api.Scope
-import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**

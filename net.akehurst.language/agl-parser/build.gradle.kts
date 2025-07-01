@@ -8,6 +8,7 @@ dependencies {
     commonMainImplementation(project(":collections"))
 
     commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
+    commonMainApi(libs.nak.kotlinx.collections) // for MutableStack
 }
 
 //  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done

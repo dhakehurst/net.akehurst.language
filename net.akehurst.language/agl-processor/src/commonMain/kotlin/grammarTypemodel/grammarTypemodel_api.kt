@@ -17,6 +17,7 @@
 
 package net.akehurst.language.grammarTypemodel.api
 
+import net.akehurst.language.base.api.Import
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeNamespace
@@ -30,7 +31,7 @@ interface GrammarTypeNamespace : TypeNamespace {
 
     val allTypesByRuleName: Collection<Pair<GrammarRuleName, TypeInstance>>
 
-    fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance?
+    fun findTypeForRule(ruleName: GrammarRuleName, excludingImports:Set<Import> = emptySet()): TypeInstance?
 
     fun setTypeForGrammarRule(grammarRuleName: GrammarRuleName, typeUse: TypeInstance)
 }

@@ -114,7 +114,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
                         lit("\${"); ebd("Format","formatExpression"); lit("}")
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
-                    concatenation("RAW_TEXT", isLeaf = true) { pat("([^\$\"\\\\]|\\\\.)+") }
+                    concatenation("RAW_TEXT", isLeaf = true) { pat("([^" +
+                            "$\"\\\\]|\\\\.)+") }
                 }
                 grammar(NAME) {
                     extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)

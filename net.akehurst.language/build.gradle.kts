@@ -238,4 +238,10 @@ subprojects {
 //    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 //    tasks.named("publishWasmJsPublicationToSonatypeRepository").get().mustRunAfter(*signTasks)
 
+
+    configurations.all {
+        // Check for updates every build
+        resolutionStrategy.cacheChangingModulesFor( 0, "seconds")
+    }
+
 }

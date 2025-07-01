@@ -77,11 +77,11 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
     override val defaultTargetGoalRule: String
         get() = TODO("not implemented")
 
-    override val ruleSet: RuleSet = ruleSet("Test") {
+    override val targetRuleSet: RuleSet = ruleSet("Test") {
         concatenation("S") { literal("a") }
     }
 
-    private val automaton_S = aut(ruleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
+    private val automaton_S = aut(targetRuleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
         // 0: G = . S
         state(GOAL_RULE, OP_NONE, SR)
         // 1: G = S .

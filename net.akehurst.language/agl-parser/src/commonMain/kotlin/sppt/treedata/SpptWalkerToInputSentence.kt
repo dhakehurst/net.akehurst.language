@@ -17,9 +17,7 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.agl.runtime.structure.RulePositionRuntime
-import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.parser.api.OptionNum
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.PathFunction

@@ -22,8 +22,8 @@ class test_AglFormat_Singles {
         }
 
         private fun test_process(targetGrammar: String, goal: String, sentence: String, expectedAsm: Asm? = null) {
-            //val proc = processor(targetGrammar)
-            val proc = Agl.registry.agl.format.processor!!
+            val proc = processor(targetGrammar)
+            //val proc = Agl.registry.agl.format.processor!!
             val result = proc.process(
                 sentence,
                 Agl.options {

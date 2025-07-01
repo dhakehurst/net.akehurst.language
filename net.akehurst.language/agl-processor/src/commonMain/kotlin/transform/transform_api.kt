@@ -33,6 +33,7 @@ interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace
     fun findTypeForGrammarRule(grammarQualifiedName: QualifiedName, ruleName: GrammarRuleName): TypeInstance?
+
 }
 
 interface TransformNamespace : Namespace<TransformRuleSet> {

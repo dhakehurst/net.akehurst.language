@@ -15,6 +15,7 @@ kotest = "5.9.1"
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
+nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }

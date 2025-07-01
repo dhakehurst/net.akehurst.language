@@ -486,7 +486,7 @@ class AsmListSeparatedSimple(
     override fun asString(indent: Indent): String = when {
         elements.isEmpty() -> "[]"
         1 == elements.size -> "[ ${elements[0].asString(indent.inc)} ]"
-        else -> "[\n${this.elements.joinToString { it.asString(indent.inc) }}\n$indent]"
+        else -> "[\n${this.elements.joinToString(separator = "\n") { "${indent.inc}${it.asString(indent.inc)}" }}\n$indent]"
     }
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmListSeparated -> false

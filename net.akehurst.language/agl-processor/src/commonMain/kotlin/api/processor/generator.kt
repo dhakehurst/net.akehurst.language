@@ -86,7 +86,8 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
     override val styleString: String by lazy { styleModel.asString() }
     override val formatString: String by lazy { formatModel.asString() }
 
-    open val ruleSet: RuleSet get() = TODO()
+    open val ruleSets: Map<String, RuleSet> get() = TODO()
+    open val targetRuleSet: RuleSet get() = TODO()
     open val mapToGrammar: (Int, Int) -> RuleItem get() = TODO()
     open val automata: Map<String, Automaton> get() = TODO()
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = TODO()

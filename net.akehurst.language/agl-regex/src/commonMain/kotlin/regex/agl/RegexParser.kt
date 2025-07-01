@@ -16,8 +16,7 @@
 
 package net.akehurst.language.regex.agl
 
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.regex.agl.RegexMatcherBuilder
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.regex.api.RegexMatcher
 
 class RegexParser {
@@ -125,9 +124,9 @@ class RegexParser {
 
     private fun parsePattern() {
         //this.matcherBuilder.start()
-        val postfix = MutableStack<Pair<Int, () -> Unit>>()
-        val opStack = MutableStack<Pair<Int, () -> Unit>>()
-        var needConcat = MutableStack<Boolean>()
+        val postfix = mutableStackOf<Pair<Int, () -> Unit>>()
+        val opStack = mutableStackOf<Pair<Int, () -> Unit>>()
+        var needConcat = mutableStackOf<Boolean>()
         needConcat.push(false)
         if (pattern.length > 0) {
             var c = this.next()

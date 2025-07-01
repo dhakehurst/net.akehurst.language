@@ -16,15 +16,15 @@
 
 package net.akehurst.language.sppt.treedata
 
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.regex.agl.regexMatcher
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.regex.api.RegexMatcher
+import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.api.TreeData

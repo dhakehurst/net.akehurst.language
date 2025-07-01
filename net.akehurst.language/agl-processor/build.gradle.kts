@@ -7,6 +7,7 @@ dependencies {
     commonMainApi(project(":agl-regex"))
     commonMainApi(project(":collections")) //TODO merge with kotlinx collections
 
+    commonMainApi(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
     commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
 }
 

@@ -16,11 +16,11 @@
 
 package net.akehurst.language.grammar.asm
 
+import net.akehurst.kotlinx.collections.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.collections.*
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.regex.api.EscapedPattern
@@ -251,7 +251,7 @@ abstract class GrammarAbstract(
 
     override val allResolvedPreferenceRuleRule: OrderedSet<PreferenceRule> by lazy {
         val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule ?: emptyList() }.toMutableOrderedSet()
-        rules + this.preferenceRule
+        rules.plus( this.preferenceRule)
     }
 
     override val allResolvedEmbeddedRules: Set<Embedded> by lazy {

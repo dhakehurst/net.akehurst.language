@@ -76,14 +76,18 @@ abstract class GrammarTypeNamespaceAbstract(
     override val allTypesByRuleName: Collection<Pair<GrammarRuleName, TypeInstance>>
         get() = allRuleNameToType.entries.map { Pair(it.key, it.value) }
 
-    override fun findTypeForRule(ruleName: GrammarRuleName): TypeInstance? =
-        allRuleNameToType[ruleName]
+    override fun findTypeForRule(ruleName: GrammarRuleName, excludingImports:Set<Import>): TypeInstance? {
+        // excludingImports is needed in order to eliminate infinite recursion
+        return allRuleNameToType[ruleName]
             ?: _importedNamespaces.values.firstNotNullOfOrNull {
-                when (it) {
-                    is GrammarTypeNamespace -> it.findTypeForRule(ruleName)
+                when {
+                    null==it -> null //FIXME: why is an importedNamespace maybe null !
+                    excludingImports.contains(it.qualifiedName.asImport) -> null
+                    it is GrammarTypeNamespace -> it.findTypeForRule(ruleName, excludingImports+this.qualifiedName.asImport)
                     else -> null
                 }
             }
+    }
 
 //    override fun asString(indent: Indent): String {
 //        //val rules = this.allRuleNameToType.entries.sortedBy { it.key.value }

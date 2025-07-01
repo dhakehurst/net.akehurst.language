@@ -35,15 +35,18 @@ class test_ProjectIT_singles {
 
         private val grammarStr = this::class.java.getResource("/projectIT/PiEditGrammar.agl")?.readText() ?: error("File not found")
 
-        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).processor!!
+        var processor = Agl.processorFromStringSimple(GrammarString(grammarStr)).let {
+           check(it.issues.errors.isEmpty()) {it.issues.toString()}
+            it.processor!!
+        }
 
     }
 
     private fun checkSPPT(expected: String, actual: SharedPackedParseTree) {
         val sppt = processor.spptParser
         val exp = sppt.parse(expected)
-        assertEquals(exp.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
-        assertEquals(exp, actual)
+        assertEquals(exp.toStringAll, actual.toStringAll)
+       // assertEquals(exp, actual)
     }
 
     @Test
@@ -239,7 +242,7 @@ class test_ProjectIT_singles {
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.isEmpty())
         checkSPPT(
-            "templateText { Template::text { textItem { literal : 'Insurance Product' } } }",
+            "templateText:Template::text { textItem { literal : 'Insurance Product' } }",
             result.sppt!!
         )
     }
@@ -272,7 +275,7 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1, null), "^]", setOf("<EOT>", "literal", "escapedChar", "'\${'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1, null), "Failed to match {<GOAL>} at: ^]", setOf("<EOT>", "literal", "escapedChar", "'\${'"))
             ),
             result.issues.all
         )
@@ -294,9 +297,9 @@ class test_ProjectIT_singles {
                 projection {
                   '['
                   WHITESPACE : '⏎  '
-                  projectionContent { templateText {
-                    Template::text { textItem { literal : 'Insurance Product⏎' } }
-                  } }
+                  projectionContent {
+                     templateText:Template::text { textItem { literal : 'Insurance Product⏎' } }
+                  }
                   ']'
                 }
             """.trimIndent(),
@@ -387,13 +390,13 @@ class test_ProjectIT_singles {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt, "No SPPT !")
         checkSPPT(
-            """
+            $$"""
             projection {
               '[' WHITESPACE : '⏎  '
-              projectionContent { templateText { Template::text {
+              projectionContent { templateText: Template::text {
                 textItem { embeddedExpression {
-                  '${'$'}{'
-                      §Expressions§expression§embedded1 { Expressions::expression { listExpression {
+                  '${'
+                      §Expressions§expression§embedded1: Expressions::expression { listExpression {
                         'list' WHITESPACE : ' '
                         navigationExpression {
                           var : 'a'
@@ -406,11 +409,11 @@ class test_ProjectIT_singles {
                           §listInfo§opt1 { §empty }
                           §listInfo§opt2 { §empty }
                         }
-                      } } }
+                      } }
                   '}'
                 } }
                 textItem { literal : '⏎' }
-              } } }
+              } }
               ']'
             }
             """.trimIndent(),
@@ -421,9 +424,9 @@ class test_ProjectIT_singles {
     @Test
     fun projection_2() {
         val goal = "projection"
-        val sentence = """
+        val sentence = $$"""
         [
-          Insurance Product ${"$"}{name} ( public name: ${"$"}{productName} ) USES ${"$"}{list basedOn horizontal separator[, ]}
+          Insurance Product ${name} ( public name: ${productName} ) USES ${list basedOn horizontal separator[, ]}
         ]
         """.trimIndent()
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))

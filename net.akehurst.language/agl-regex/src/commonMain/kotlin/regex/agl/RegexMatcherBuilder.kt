@@ -16,14 +16,14 @@
 
 package net.akehurst.language.regex.agl
 
-import net.akehurst.language.collections.MutableStack
+import net.akehurst.kotlinx.collections.mutableStackOf
 
 internal class RegexMatcherBuilder(val pattern: String) {
 
     // List[StateNumber] -> Map<Unicode-Int, List<StateNumber>>
     val nfa = mutableListOf<State>()
     var nextStateNumber = 0
-    var stack = MutableStack<Fragment>()
+    var stack = mutableStackOf<Fragment>()
     var startState: State = RegexMatcherImpl.ERROR_STATE
 
     // return new state

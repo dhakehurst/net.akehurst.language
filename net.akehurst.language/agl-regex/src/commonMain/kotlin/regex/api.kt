@@ -89,11 +89,11 @@ value class UnescapedLiteral(override val value: String):UnescapedValue {
 }
 
 object CommonRegexPatterns {
-    const val PATTERN = "(\\\\\"|[^\"])+"
+    const val PATTERN = "(\\\\\"|[^\"])+"  //  (\"|[^"])+  escaped for java and regex, not for AGL
     fun unescape_PATTERN(escaped: String)= UnescapedPattern(escaped.replace("\\\"", "\""))
     fun escape_PATTERN(unescaped:String)= EscapedPattern(unescaped.replace("\"", "\\\""))
 
-    const val LITERAL = "(\\\\\\\\|\\\\'|[^'\\\\])+"
+    const val LITERAL = "(\\\\\\\\|\\\\'|[^'\\\\])+" // (\\|\'|[^'\])+  escaped for java and regex, not for AGL
     fun unescape_LITERAL(escaped: String)= UnescapedLiteral(escaped.replace("\\'", "'").replace("\\\\","\\"))
     fun escape_LITERAL(unescaped:String)= EscapedLiteral( unescaped.replace("\\","\\\\").replace("'", "\\'"))
 

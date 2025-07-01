@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.completionProvider.SpineDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -77,12 +78,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val spptParser: SPPTParser by lazy {
-        val embeddedRuntimeRuleSets = targetGrammar?.allResolvedEmbeddedGrammars?.map {
-            val cvt = ConverterToRuntimeRules(it)
-            val rrs = cvt.runtimeRuleSet
-            Pair(it.qualifiedName.value, rrs)
-        }?.associate { it } ?: emptyMap()
-        SPPTParserDefault((parser as LeftCornerParser).ruleSet, embeddedRuntimeRuleSets)
+        SPPTParserDefault((parser as LeftCornerParser).ruleSet, this.ruleSets as Map<String, RuntimeRuleSet>)
     }
 
     protected val defaultGoalRuleName: GrammarRuleName? by lazy {

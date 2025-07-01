@@ -85,8 +85,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             nonTerminal = possiblyQualifiedName ;
             embedded = possiblyQualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
-            leaf LITERAL = '\'' "('|([^'])+" '\'' ;
-            leaf PATTERN = '"' "\\"|([^\"])+"  '"' ;
+            leaf LITERAL = '\'' "(\\|'|[^'\\])+" '\'' ;
+            leaf PATTERN = '"' "(\"|[^\"])+" '"' ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
             leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
             preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;

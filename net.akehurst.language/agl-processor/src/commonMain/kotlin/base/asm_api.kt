@@ -51,7 +51,7 @@ sealed interface PossiblyQualifiedName {
 @JvmInline
 value class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
 
-    constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.$name")
+    constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.${name.value}")
 
     val isQualified: Boolean get() = value.isQualifiedName
 

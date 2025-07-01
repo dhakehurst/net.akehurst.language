@@ -17,7 +17,7 @@
 
 package net.akehurst.language.sppt.treedata
 
-import net.akehurst.language.collections.MutableStack
+import net.akehurst.kotlinx.collections.mutableStackOf
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.sppt.api.*
@@ -72,8 +72,8 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
     }
 
     // stack of (Node, Alternatives) Alternatives decremented each pop, until 0 then really pop
-    private val path = MutableStack<AlternativesInfo>()
-    private val stack = MutableStack<StackData>()
+    private val path = mutableStackOf<AlternativesInfo>()
+    private val stack = mutableStackOf<StackData>()
 
     fun traverse(callback: SpptWalker, skipDataAsTree: Boolean) {
         callback.beginTree()

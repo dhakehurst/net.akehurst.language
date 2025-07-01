@@ -158,7 +158,9 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
             }
         }
         // first rule is default goal rule //TODO: adjust for 'option defaultGoalRule'
-        this._unusedRules[grammar]?.remove(grammar.grammarRule.first { it.isSkip.not() })
+        grammar.grammarRule.firstOrNull { it.isSkip.not() }?.let {
+            this._unusedRules[grammar]?.remove(it)
+        }
 
         grammar.grammarRule.forEach {
             when (it) {
