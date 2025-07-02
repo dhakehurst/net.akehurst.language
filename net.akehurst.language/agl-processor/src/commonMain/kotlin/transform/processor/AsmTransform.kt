@@ -22,7 +22,6 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
-import net.akehurst.language.grammar.processor.AglGrammar.NAMESPACE_NAME
 
 object AsmTransform { //: LanguageObject {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME

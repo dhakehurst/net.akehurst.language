@@ -21,7 +21,6 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
-import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglCrossReference {

@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import org.junit.Test
 import kotlin.test.assertNotNull
 
@@ -31,7 +31,7 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
@@ -48,7 +48,7 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
@@ -66,7 +66,7 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
@@ -84,7 +84,7 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }

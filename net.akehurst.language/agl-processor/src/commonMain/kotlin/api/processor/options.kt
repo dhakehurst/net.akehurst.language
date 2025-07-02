@@ -20,7 +20,6 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.scanner.api.ScanOptions
-import net.akehurst.language.sentence.api.InputLocation
 
 /**
  * Options to configure the syntax analysis of a Shared Packed Parse Tree (SPPT)

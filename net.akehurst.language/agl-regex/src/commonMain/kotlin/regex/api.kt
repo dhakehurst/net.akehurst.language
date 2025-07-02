@@ -56,45 +56,72 @@ interface MatchResult {
  * with characters special to AGL (i.e. ") having a \ before
  */
 interface EscapedValue {
-    val unescaped: UnescapedValue
-    val value:String
+    val value: String
+    val unescapedFromAgl: UnescapedValue
 }
 
 /**
  * with characters special to AGL (i.e. ") not escaped
  */
 interface UnescapedValue {
-    val escaped: EscapedValue
-    val value:String
+    val value: String
+    val escapedFoAgl: EscapedValue
+    val escapedForRegex: String
 }
 
 @JvmInline
-value class EscapedPattern(override val value: String):EscapedValue {
-    override val unescaped:UnescapedPattern get() = CommonRegexPatterns.unescape_PATTERN(value)
+value class EscapedPattern(override val value: String) : EscapedValue {
+    override val unescapedFromAgl: UnescapedPattern get() = CommonRegexPatterns.unescape_PATTERN(value)
 }
 
 @JvmInline
-value class UnescapedPattern(override val value: String):UnescapedValue {
-    override val escaped:EscapedPattern get() = CommonRegexPatterns.escape_PATTERN(value)
+value class UnescapedPattern(override val value: String) : UnescapedValue {
+    override val escapedFoAgl: EscapedPattern get() = CommonRegexPatterns.escape_PATTERN(value)
+    override val escapedForRegex: String
+        get() =
+            value
+
+    fun toRegex() = escapedForRegex.toRegex()
 }
 
 @JvmInline
-value class EscapedLiteral(override val value: String):EscapedValue {
-    override val unescaped:UnescapedLiteral get() = CommonRegexPatterns.unescape_LITERAL(value)
+value class EscapedLiteral(override val value: String) : EscapedValue {
+    override val unescapedFromAgl: UnescapedLiteral get() = CommonRegexPatterns.unescape_LITERAL(value)
 }
 
 @JvmInline
-value class UnescapedLiteral(override val value: String):UnescapedValue {
-    override val escaped:EscapedLiteral get() = CommonRegexPatterns.escape_LITERAL(value)
+value class UnescapedLiteral(override val value: String) : UnescapedValue {
+    override val escapedFoAgl: EscapedLiteral get() = CommonRegexPatterns.escape_LITERAL(value)
+    override val escapedForRegex: String
+        get() =
+            kotlin.text.Regex.escape(value)
 }
 
 object CommonRegexPatterns {
-    const val PATTERN = "(\\\\\"|[^\"])+"  //  (\"|[^"])+  escaped for java and regex, not for AGL
-    fun unescape_PATTERN(escaped: String)= UnescapedPattern(escaped.replace("\\\"", "\""))
-    fun escape_PATTERN(unescaped:String)= EscapedPattern(unescaped.replace("\"", "\\\""))
+    val PATTERN = UnescapedPattern("\"(\\\\\"|[^\"])+\"")  //  "(\\"|[^"])+"  escaped for java, not for AGL
+    fun unescape_PATTERN(escaped: String) = UnescapedPattern(
+        escaped
+            .replace("\\\"", "\"")
+//            .replace("\\\\", "\\")
+    )
 
-    const val LITERAL = "(\\\\\\\\|\\\\'|[^'\\\\])+" // (\\|\'|[^'\])+  escaped for java and regex, not for AGL
-    fun unescape_LITERAL(escaped: String)= UnescapedLiteral(escaped.replace("\\'", "'").replace("\\\\","\\"))
-    fun escape_LITERAL(unescaped:String)= EscapedLiteral( unescaped.replace("\\","\\\\").replace("'", "\\'"))
+    fun escape_PATTERN(unescaped: String) = EscapedPattern(
+        unescaped
+//            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+    )
+
+    val LITERAL = UnescapedPattern("'(\\\\\\\\|\\\\'|[^'\\\\])+'") // '(\\\\|\\'|[^'\\])+'  escaped for java, not for AGL
+    fun unescape_LITERAL(escaped: String) = UnescapedLiteral(
+        escaped
+            .replace("\\'", "'")
+            .replace("\\\\", "\\")
+    )
+
+    fun escape_LITERAL(unescaped: String) = EscapedLiteral(
+        unescaped
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+    )
 
 }

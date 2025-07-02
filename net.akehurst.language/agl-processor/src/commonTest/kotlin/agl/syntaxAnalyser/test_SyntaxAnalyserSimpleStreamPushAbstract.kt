@@ -36,11 +36,7 @@ import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
 import net.akehurst.language.typemodel.api.TypeModel
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class test_SyntaxAnalyserSimpleStreamPushAbstract {
 

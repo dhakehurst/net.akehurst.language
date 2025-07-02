@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.contextAsmSimple
@@ -23,7 +24,6 @@ import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,7 +50,7 @@ class test_StatechartTools_CodeCompletion {
            }
         """.replace("§", "\$")
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
             val grm = grammarList.asm ?: error("Can't find grammar for '$grmName'")
             /*            val cfg = Agl.configuration {

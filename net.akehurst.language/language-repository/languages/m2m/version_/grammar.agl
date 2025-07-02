@@ -16,7 +16,7 @@ grammar Common {
     leaf REF = ID | STRING ;
 
     leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
-    leaf STRING = "'([^'\\\\]|\.)*'" ;
+    leaf STRING = "'(\.|[^'\\])*'" ;
 }
 
 

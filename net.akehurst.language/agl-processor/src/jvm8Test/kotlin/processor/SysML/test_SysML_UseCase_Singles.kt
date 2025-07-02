@@ -16,11 +16,11 @@
 package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,7 +46,7 @@ class test_SysML_UseCase_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
     }
 

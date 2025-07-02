@@ -17,7 +17,6 @@
 package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.regex.api.EscapedValue
 
 sealed class RuleItemAbstract : RuleItem {
@@ -238,7 +237,7 @@ class TerminalDefault(
 
     override val id: String = if (isPattern) "\"${escapedValue.value}\"" else "'${escapedValue.value}'"
 
-    override val unescapedValue get() = escapedValue.unescaped
+    override val unescapedValue get() = escapedValue.unescapedFromAgl
 
     override val isLiteral: Boolean get() = isPattern.not()
 

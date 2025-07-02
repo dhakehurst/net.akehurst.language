@@ -18,7 +18,6 @@
 package net.akehurst.language.grammarTypemodel.asm
 
 import net.akehurst.language.base.api.Import
-import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault

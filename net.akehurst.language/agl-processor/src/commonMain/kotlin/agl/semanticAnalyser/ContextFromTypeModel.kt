@@ -21,11 +21,9 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.TypeModel
 
 // used by other languages that reference rules  in a grammar
-
 class ContextFromTypeModelReference(
     val languageDefinitionId: LanguageIdentity
 ) : SentenceContext {

@@ -18,9 +18,7 @@ package net.akehurst.language.grammar.asm
 
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.regex.api.EscapedValue
-import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.regex.api.UnescapedValue
 
@@ -38,7 +36,7 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
         ) : Terminal, RuleItemAbstract() {
 
             override val isLiteral: Boolean get() = isPattern.not()
-            override val escapedValue: EscapedValue get() = unescapedValue.escaped
+            override val escapedValue: EscapedValue get() = unescapedValue.escapedFoAgl
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()

@@ -20,7 +20,6 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import kotlin.test.*
 
 class test_LanguageRegistry {
@@ -41,7 +40,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -60,7 +59,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -81,7 +80,7 @@ class test_LanguageRegistry {
             buildForDefaultGoal = false,
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -91,12 +90,12 @@ class test_LanguageRegistry {
         )
 
         assertEquals(identity, languageDefinition.identity)
-        assertTrue(languageDefinition.issues.isNotEmpty())
+        assertTrue(languageDefinition.issues.isNotEmpty(), languageDefinition.issues.toString())
         assertNull(languageDefinition.processor)
 
         languageDefinition.update(GrammarString("namespace ns grammar Test { S = 'b'; }"), null, null, null, null)
         assertEquals(identity, languageDefinition.identity)
-        assertTrue(languageDefinition.issues.isEmpty())
+        assertTrue(languageDefinition.issues.isEmpty(), languageDefinition.issues.toString())
         assertNotNull(languageDefinition.processor)
     }
 

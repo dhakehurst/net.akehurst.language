@@ -119,8 +119,8 @@ class test_Agl_processorFromStringSimple_parse {
         val pr = Agl.processorFromStringSimple(GrammarString(grammarStr))
         assertNotNull(pr.processor, pr.issues.toString())
 
-        val result = pr.processor!!.parse("\\b");
-        val expected = pr.processor!!.spptParser.parse(
+        val result = pr.processor.parse("\\b");
+        val expected = pr.processor.spptParser.parse(
             """
              EscapeSequence {
                 '\\'

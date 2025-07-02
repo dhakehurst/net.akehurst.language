@@ -17,8 +17,8 @@
 
 package net.akehurst.language.grammar.api
 
-import net.akehurst.language.base.api.*
 import net.akehurst.kotlinx.collections.OrderedSet
+import net.akehurst.language.base.api.*
 import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.regex.api.EscapedValue
 import net.akehurst.language.regex.api.UnescapedValue
@@ -195,11 +195,11 @@ interface NormalRule : GrammarRule {
 }
 
 enum class OverrideKind {
-    /** '=' replace references to original rule with this one */
+    /** '=' replace references to the original rule with this one */
     REPLACE,
-    /** '+|=' either append this as another option or convert original to a choice and append this option */
+    /** '+|=' either append this as another option or convert the original to a choice and append this option */
     APPEND_ALTERNATIVE,
-    /** '==' ?? */
+    /** '==' when a rule is inherited via multiple inheritance paths (i.e. diamond), specify which one to use */
     SUBSTITUTION //TODO: document this!
 }
 

@@ -19,7 +19,6 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
-import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel

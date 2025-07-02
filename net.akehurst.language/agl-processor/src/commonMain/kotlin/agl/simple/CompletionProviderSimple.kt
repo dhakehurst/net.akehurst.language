@@ -27,24 +27,32 @@ import net.akehurst.language.grammar.asm.GrammarReferenceDefault
 import net.akehurst.language.grammar.asm.NonTerminalDefault
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.StructuredType
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
+import kotlin.Any
+import kotlin.Throwable
 import kotlin.collections.List
 import kotlin.collections.Set
+import kotlin.collections.all
 import kotlin.collections.emptyList
+import kotlin.collections.filter
+import kotlin.collections.first
 import kotlin.collections.firstOrNull
 import kotlin.collections.flatMap
 import kotlin.collections.flatten
+import kotlin.collections.getOrNull
+import kotlin.collections.isNotEmpty
 import kotlin.collections.map
 import kotlin.collections.mapNotNull
+import kotlin.collections.minByOrNull
+import kotlin.collections.minOf
 import kotlin.collections.plus
+import kotlin.collections.setOf
 import kotlin.collections.toList
 import kotlin.collections.toSet
 import kotlin.error
+import kotlin.printStackTrace
+import kotlin.ranges.until
 
 class CompletionProviderSimple(
     val targetGrammar: Grammar,

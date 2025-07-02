@@ -24,6 +24,7 @@ import net.akehurst.language.base.asm.DefinitionAbstract
 import net.akehurst.language.base.asm.ModelAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.style.api.*
 
 class AglStyleModelDefault(
@@ -106,7 +107,7 @@ class AglStyleSetDefault(
 }
 
 data class AglStyleMetaRuleDefault(
-    override val pattern: Regex
+    override val pattern: EscapedPattern
 ) : AglStyleMetaRule {
 
     // order matters
@@ -114,7 +115,7 @@ data class AglStyleMetaRuleDefault(
 
     override fun asString(indent: Indent): String {
         val sb = StringBuilder()
-        val sel = this.pattern.pattern
+        val sel = this.pattern.value
         sb.append("$$ \"$sel\" {\n")
         val newIndent = indent.inc
         val decls = declaration.values // do not sort, order matters

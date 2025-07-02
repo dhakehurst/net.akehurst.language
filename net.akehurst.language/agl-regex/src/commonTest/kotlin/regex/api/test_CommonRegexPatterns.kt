@@ -24,99 +24,138 @@ import kotlin.test.assertNull
 class test_CommonRegexPatterns {
 
     @Test
+    fun PATTERN__escapedForRegex() {
+
+        // "(\"|[^"])+"
+        val expected = """
+            "(\\"|[^"])+"
+        """.trimIndent()
+        val actual = CommonRegexPatterns.PATTERN.escapedForRegex
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun LITERAL__escapedForRegex() {
+
+        // '(\\|\'|[^'\\])+'
+        val expected = """
+            '(\\\\|\\'|[^'\\])+'
+        """.trimIndent()
+        val actual = CommonRegexPatterns.LITERAL.escapedForRegex
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun PATTERN__simple() {
         val str = """
-            abc
+            "abc"
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.PATTERN).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.PATTERN.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("abc", actual.value)
+        assertEquals(str, actual.value)
     }
 
     @Test
     fun PATTERN__charclass() {
         val str = """
-            [a-z]
+            "[a-z]"
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.PATTERN).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.PATTERN.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("[a-z]", actual.value)
+        assertEquals(str, actual.value)
     }
 
     @Test
     fun PATTERN__backslash() {
         val str = """
-            \
+            "\"
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.PATTERN).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.PATTERN.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("\\", actual.value)
+        assertEquals(str, actual.value)
     }
 
     @Test
     fun PATTERN__backslash_in_charclass() {
         val str = """
-            [\\]
+            "[\\]"
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.PATTERN).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.PATTERN.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("[\\\\]", actual.value)
+        assertEquals(str, actual.value)
     }
 
     @Test
     fun PATTERN__doublequote() {
         val str = """
-            "
+            "\""
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.PATTERN).matchEntire(str)
+        val regex = Regex(CommonRegexPatterns.PATTERN.escapedForRegex)
+        val actual = regex.matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("\"", actual.value)
+        assertEquals(str, actual.value)
+    }
+
+    @Test
+    fun PATTERN__predefined() {
+        val str = """
+            "\s+"
+        """.trimIndent()
+        val regex = Regex(CommonRegexPatterns.PATTERN.escapedForRegex)
+        val actual = regex.matchEntire(str)
+
+        assertNotNull(actual)
+        assertEquals(str, actual.value)
+
+        val pat = Regex(UnescapedPattern(str.removeSurrounding("\"")).escapedForRegex)
+        val res = pat.matchEntire("  ")
+        assertNotNull(res)
+        assertEquals("  ", res.value)
     }
 
     @Test
     fun LITERAL__simple() {
-        val str = """
-            abc
-        """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.LITERAL).matchEntire(str)
+        val str = "'abc'"
+        val actual = Regex(CommonRegexPatterns.LITERAL.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("abc", actual.value)
+        assertEquals(str, actual.value)
     }
 
     @Test
     fun LITERAL__backslash() {
         val str = """
-            \\
+            '\\'
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.LITERAL).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.LITERAL.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("\\\\", actual.value)
+        assertEquals("'\\\\'", actual.value)
     }
 
     @Test
     fun LITERAL__backslash_singlequote() {
         val str = """
-            \'
+            '\''
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.LITERAL).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.LITERAL.escapedForRegex).matchEntire(str)
 
         assertNotNull(actual)
-        assertEquals("\\'", actual.value)
+        assertEquals("'\\''", actual.value)
     }
 
     @Test
     fun LITERAL__singlequote__fails() {
         val str = """
-            '
+            '''
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.LITERAL).matchEntire(str)
+        val regex = Regex(CommonRegexPatterns.LITERAL.escapedForRegex)
+        val actual = regex.matchEntire(str)
 
         assertNull(actual)
     }
@@ -126,8 +165,20 @@ class test_CommonRegexPatterns {
         val str = """
             abc'
         """.trimIndent()
-        val actual = Regex(CommonRegexPatterns.LITERAL).matchEntire(str)
+        val actual = Regex(CommonRegexPatterns.LITERAL.escapedForRegex).matchEntire(str)
 
         assertNull(actual)
+    }
+
+    @Test
+    fun LITERAL__surounded_by_singlequote() {
+        val str = """
+            'abc'
+        """.trimIndent()
+        val regex = Regex(CommonRegexPatterns.LITERAL.escapedForRegex)
+        val actual = regex.matchEntire(str)
+
+        assertNotNull(actual)
+        assertEquals("'abc'", actual.value)
     }
 }

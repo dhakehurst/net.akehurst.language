@@ -27,7 +27,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.reference.api.CrossReferenceModel

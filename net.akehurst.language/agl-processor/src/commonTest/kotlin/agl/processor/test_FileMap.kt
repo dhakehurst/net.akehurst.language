@@ -21,7 +21,7 @@ class test_FileMap {
                 unit = entry* ;
                 entry = GLOB ':' value ';' ;
                 value = PATH | QUALIFIED_NAME ;
-                leaf GLOB = "([a-zA-Z0-9_*/.?{},\[\]-]|\.)+" ;
+                leaf GLOB = "([a-zA-Z0-9_*/.?{},\[\]-])+" ;
                 QUALIFIED_NAME = [ID / '.']+ ;
                 PATH = '/' [ID / '/']+ ;
                 leaf ID = "[a-zA-Z._][a-zA-Z0-9._-]*" ;

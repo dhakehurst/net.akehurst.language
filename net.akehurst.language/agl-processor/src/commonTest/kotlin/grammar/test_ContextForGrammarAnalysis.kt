@@ -23,7 +23,6 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.grammar.api.Grammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

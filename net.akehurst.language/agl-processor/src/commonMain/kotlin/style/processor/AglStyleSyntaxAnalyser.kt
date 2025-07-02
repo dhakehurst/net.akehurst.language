@@ -16,7 +16,6 @@
 
 package net.akehurst.language.style.processor
 
-
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.Import
@@ -25,9 +24,9 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.regex.api.EscapedPattern
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.sppt.treedata.locationForNode
 import net.akehurst.language.style.api.*
 import net.akehurst.language.style.asm.*
 
@@ -61,7 +60,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglStyleModelDefault(name = SimpleName("ParsedStyleUnit"),  namespace = listOf(ns))
+        val su = AglStyleModelDefault(name = SimpleName("ParsedStyleUnit"), namespace = listOf(ns))
         return su
     }
 
@@ -103,10 +102,9 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     // metaRule = '$$' PATTERN '{' styleList '}' ;
     fun metaRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleMetaRule {
         val patternStr = children[1] as String //TODO: ? selector combinations, and/or/contains etc
-        val escaped = patternStr.replace("\\\"", "\"")
-        val regex = Regex(escaped.trim('"'))
+        val escaped = EscapedPattern(patternStr.removeSurrounding("\""))
         val styles: List<AglStyleDeclaration> = children[3] as List<AglStyleDeclaration>
-        val rule = AglStyleMetaRuleDefault(regex)
+        val rule = AglStyleMetaRuleDefault(escaped)
         styles.forEach { rule.declaration[it.name] = it }
         return rule
     }

@@ -341,10 +341,11 @@ internal class Grammar2TransformRuleSet(
                 gr is NormalRule -> grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn).type()
                 gr is OverrideRule -> when (gr.overrideKind) {
                     OverrideKind.APPEND_ALTERNATIVE -> grammarTypeNamespace.findTypeNamed(tn)?.type()
-                        ?: error("Type for override rule '${gr.qualifiedName}' not found")
+                        ?: error("Type for override (append) rule '${gr.qualifiedName}' not found")
 
                     OverrideKind.REPLACE -> grammarTypeNamespace.findOwnedOrCreateDataTypeNamed(tn).type()
-                    OverrideKind.SUBSTITUTION -> TODO()
+                    OverrideKind.SUBSTITUTION -> grammarTypeNamespace.findTypeNamed(tn)?.type()
+                        ?: error("Type for override (substitution) rule '${gr.qualifiedName}' not found")
                 }
 
                 else -> error("Subtype of GrammarRule '${gr::class.simpleName}' not supported")

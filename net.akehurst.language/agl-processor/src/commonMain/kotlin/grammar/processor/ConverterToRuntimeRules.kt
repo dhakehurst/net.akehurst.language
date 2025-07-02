@@ -26,7 +26,6 @@ import net.akehurst.language.parser.api.Assoc
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.parser.api.PrefRule
 import net.akehurst.language.parser.api.RulePosition
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.regex.api.EscapedValue
 import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
@@ -87,9 +86,9 @@ internal class ConverterToRuntimeRules(
     private fun terminalRule(name: String?, escapedValue: EscapedValue, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         val newRule = RuntimeRule(_ruleSetNumber, _runtimeRules.size, name, isSkip, false).also {
             if (isPattern) {
-                it.setRhs(RuntimeRuleRhsPattern(it, escapedValue.unescaped as UnescapedPattern))
+                it.setRhs(RuntimeRuleRhsPattern(it, escapedValue.unescapedFromAgl as UnescapedPattern))
             } else {
-                it.setRhs(RuntimeRuleRhsLiteral(it, escapedValue.unescaped as UnescapedLiteral))
+                it.setRhs(RuntimeRuleRhsLiteral(it, escapedValue.unescapedFromAgl as UnescapedLiteral))
             }
         }
         if (Debug.CHECK) check(this._runtimeRules.containsKey(newRule.tag).not()) { "Already got rule with tag '$name'" }
@@ -368,7 +367,7 @@ internal class ConverterToRuntimeRules(
     private fun createRuleForRuleItemNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
         val refName = target.ruleReference
         return findNamedRule(refName.value)
-            ?: this.convertGrammarRule(target.referencedRule(this.grammar!!), arg)
+            ?: this.convertGrammarRule(target.referencedRule(this.grammar), arg)
     }
 
     private fun createRuleForRuleItemEmbedded(target: Embedded, arg: String): RuntimeRule {

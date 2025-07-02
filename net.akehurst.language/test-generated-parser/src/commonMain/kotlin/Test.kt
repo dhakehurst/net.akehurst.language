@@ -108,7 +108,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
         "S" to automaton_S
     )
 
-    val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy { Agl.processorFromGeneratedCode(this) }
+    val processor: LanguageProcessor<Asm, ContextWithScope<Any, Any>> by lazy { Agl.processorFromLanguageObject(this) }
 
     fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence, options)
 

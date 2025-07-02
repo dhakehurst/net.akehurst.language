@@ -17,7 +17,6 @@
 
 package net.akehurst.language.transform.processor
 
-import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -29,7 +28,6 @@ import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.transform.api.TransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName

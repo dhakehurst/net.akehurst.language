@@ -1,10 +1,10 @@
 package testFixture.data
 
 import net.akehurst.language.agl.*
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -44,7 +44,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
-                context(ContextFromGrammarRegistry(Agl.registry))
+                context(contextFromGrammarRegistry(Agl.registry))
 //TODO:                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
             }
         }

@@ -18,7 +18,6 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
@@ -26,7 +25,6 @@ import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
 import net.akehurst.language.sentence.api.InputLocation
-import kotlin.collections.set
 
 fun interface CreateScopedItem<ItemType, ItemInScopeType> {
     fun invoke(qualifiedName: List<String>, item: ItemType, location: InputLocation?): ItemInScopeType

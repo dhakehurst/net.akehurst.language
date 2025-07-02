@@ -18,6 +18,7 @@
 package net.akehurst.language.grammar.builder
 
 import net.akehurst.language.agl.processor.SemanticAnalysisOptionsDefault
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.GrammarRegistry
 import net.akehurst.language.base.api.*
@@ -25,7 +26,6 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.asm.*
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.regex.api.UnescapedLiteral
 import net.akehurst.language.regex.api.UnescapedPattern
 
@@ -40,7 +40,7 @@ fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(),
         gm.allDefinitions.forEach { gr.registerGrammar(it) }
         val sa = AglGrammarSemanticAnalyser()
         val opts = SemanticAnalysisOptionsDefault(
-            context = ContextFromGrammarRegistry(gr)
+            context = contextFromGrammarRegistry(gr)
         )
         sa.analyse(null,gm, LocationMapDefault(), opts)
     }
@@ -247,11 +247,11 @@ open class SimpleItemsBuilder(
     }
 
     fun lit(unescapedValue: String) {
-        addItem(TerminalDefault(UnescapedLiteral( unescapedValue).escaped, false))
+        addItem(TerminalDefault(UnescapedLiteral( unescapedValue).escapedFoAgl, false))
     }
 
     fun pat(unescapedValue: String) {
-        addItem(TerminalDefault(UnescapedPattern(unescapedValue).escaped, true))
+        addItem(TerminalDefault(UnescapedPattern(unescapedValue).escapedFoAgl, true))
     }
 
     fun ebd(embeddedGrammarReference: String, embeddedGoalName: String) {
@@ -390,7 +390,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escaped, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escapedFoAgl, false) },
                 Associativity.LEFT
             )
         )
@@ -402,7 +402,7 @@ class PreferenceRuleBuilder(
                 spine = SpineDefault(spine.map { NonTerminalDefault(null, GrammarRuleName(it)) }),
                 choiceIndicator = choiceIndicator,
                 choiceNumber = choiceNumber,
-                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escaped, false) },
+                onTerminals = terminals.map { TerminalDefault(UnescapedLiteral(it).escapedFoAgl, false) },
                 Associativity.RIGHT
             )
         )

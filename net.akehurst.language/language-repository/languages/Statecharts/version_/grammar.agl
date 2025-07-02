@@ -13,7 +13,7 @@ namespace com.itemis.create
 grammar Expressions {
 
     skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
-    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" ;
+    skip leaf COMMENT_MULTI_LINE = "/[*][^*]*[*]+(?:[^/*][^*]*[*]+)*/" ;
     skip leaf WS = "\s+";
 
     Expression
@@ -114,8 +114,8 @@ grammar Expressions {
     BINARY  = "0(b|B)[01]+" ;
     DOUBLE = (INT '.' INT) ('e' ('-' | '+') INT)? ('d' | 'D')? ;
     FLOAT = (INT '.' INT) ('e' ('-' | '+') INT)? ('f' | 'F')? ;
-    DQ_STRING = "\"([^\"\\\\]|\\\\.)*\"";
-    SQ_STRING = "'([^'\\\\]|\\\\.)*'" ;
+    DQ_STRING = "\"([^\"\\]|\\.)*\"";
+    SQ_STRING = "'([^'\\\|\\.)*'" ;
 }
 
 grammar Global : Expressions {

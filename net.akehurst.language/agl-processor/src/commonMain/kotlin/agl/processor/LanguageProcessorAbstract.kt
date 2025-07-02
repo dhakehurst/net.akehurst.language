@@ -29,7 +29,6 @@ import net.akehurst.language.format.processor.FormatterOverAsmSimple
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.issues.ram.plus

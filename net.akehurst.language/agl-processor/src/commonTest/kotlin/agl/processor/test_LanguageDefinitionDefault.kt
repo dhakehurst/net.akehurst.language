@@ -27,7 +27,6 @@ import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -74,7 +73,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterModelStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
         )
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
@@ -120,7 +119,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterModelStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
         )
         assertNull(def.grammarString)
         assertNull(def.targetGrammar)
@@ -128,7 +127,7 @@ class test_LanguageDefinitionDefault {
         assertNull(def.typesModel)
         assertNull(def.transformModel)
         assertNull(def.crossReferenceModel)
-        assertNotNull(def.styleModel)
+        assertNull(def.styleModel)
         assertTrue(def.styleModel!!.isEmpty)
         assertNull(def.formatter)
         assertTrue(sut.issues.isEmpty())
@@ -146,7 +145,7 @@ class test_LanguageDefinitionDefault {
             styleStr = null,
             formatterModelStr = null,
             configurationBase = Agl.configurationSimple(),
-            grammarAglOptions =  Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
+            grammarAglOptions =  Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } },
         )
         println("assert")
         assertEquals(g, def.grammarString)
@@ -155,7 +154,7 @@ class test_LanguageDefinitionDefault {
         assertNotNull(def.typesModel)
         assertNotNull(def.transformModel)
         assertNotNull(def.crossReferenceModel)
-        assertNotNull(def.styleModel)
+        assertNull(def.styleModel)
         assertTrue(def.styleModel!!.isEmpty)
         assertNotNull(def.formatter)
         assertTrue(sut.issues.isEmpty())
@@ -180,7 +179,7 @@ class test_LanguageDefinitionDefault {
             },
             grammarAglOptions = Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             },
@@ -235,7 +234,7 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1, null), "Failed to match {<GOAL>} at: ^xxxxx", setOf("'namespace'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1, null), "Failed to match {<GOAL>} at: ^xxxxx", setOf("'#'","<EOT>","'namespace'"))
             ), sut.issues.all
         )
         assertEquals(listOf(Pair<GrammarString?, GrammarString?>(null, g)), grammarStrObserverCalled)

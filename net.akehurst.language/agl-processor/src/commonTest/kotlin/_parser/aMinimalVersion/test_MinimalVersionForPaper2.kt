@@ -18,9 +18,9 @@
 package net.akehurst.language.parser.aMinimalVersion
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.processor.ConverterToRuntimeRules
 import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.treedata.SpptWalkerToString
@@ -149,7 +149,7 @@ grammar Dot  {
 	HTML = '<' Xml::elementContent '>' ;
 }
         """
-        val grammars = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
+        val grammars = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }).asm!!
         val rrs = grammars.allDefinitions.map {
             ConverterToRuntimeRules(it).runtimeRuleSet
         }
@@ -683,7 +683,7 @@ grammar Packages : Interfaces {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
                     option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                 }
             }
         ).asm!!

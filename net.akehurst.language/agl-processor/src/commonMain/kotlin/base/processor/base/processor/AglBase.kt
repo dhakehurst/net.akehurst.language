@@ -32,6 +32,7 @@ import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.transform.api.TransformModel
@@ -50,7 +51,7 @@ object AglBase : LanguageObjectAbstract<Any, SentenceContext>() {
         namespace $NAMESPACE_NAME
           grammar $NAME {
             skip leaf WHITESPACE = "\s+" ;
-            skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+            skip leaf MULTI_LINE_COMMENT = "/[*][^*]*[*]+([^*/][^*]*[*]+)*/" ;
             skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
         
             unit = option* namespace* ;
@@ -84,7 +85,7 @@ namespace net.akehurst.language.base.asm
     override val styleString: String = """
         namespace $NAMESPACE_NAME
           styles $NAME {
-            $$ "'([^']+)'" {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
               foreground: darkgreen;
               font-weight: bold;
             }
@@ -96,7 +97,7 @@ namespace net.akehurst.language.base.asm
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     concatenation("WHITESPACE", isSkip = true, isLeaf = true) { pat("\\s+") }
-                    concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/") }
+                    concatenation("MULTI_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("/[*][^*]*[*]+([^*/][^*]*[*]+)*/") }
                     concatenation("SINGLE_LINE_COMMENT", isSkip = true, isLeaf = true) { pat("//[^\\n\\r]*") }
 
                     concatenation("unit") { lst(0, -1) { ref("option") }; lst(0, -1) { ref("namespace") } }
@@ -300,7 +301,7 @@ namespace net.akehurst.language.base.asm
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'([^']+)'") {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }

@@ -95,7 +95,7 @@ class Matchable(
     private var _regEx: Regex? = null
 
     fun using(regexEngine: RegexEngine): Matchable {
-        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.value) else null
+        _regEx = if (MatchableKind.REGEX == kind) regexEngine.createFor(expression.escapedForRegex) else null
         return this
     }
 

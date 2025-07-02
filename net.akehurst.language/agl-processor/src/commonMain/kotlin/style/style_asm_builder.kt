@@ -18,25 +18,9 @@ package net.akehurst.language.style.builder
 
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.style.api.AglStyleDeclaration
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.api.AglStyleRule
-import net.akehurst.language.style.api.AglStyleSelector
-import net.akehurst.language.style.api.AglStyleSelectorKind
-import net.akehurst.language.style.api.AglStyleTagRule
-import net.akehurst.language.style.api.StyleNamespace
-import net.akehurst.language.style.api.StyleSet
-import net.akehurst.language.style.api.StyleSetReference
-import net.akehurst.language.style.asm.AglStyleMetaRuleDefault
-import net.akehurst.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.style.asm.AglStyleSetDefault
-import net.akehurst.language.style.asm.AglStyleTagRuleDefault
-import net.akehurst.language.style.asm.StyleNamespaceDefault
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.asm.TransformNamespaceDefault
-import net.akehurst.language.transform.builder.AsmTransformModelDslMarker
-import net.akehurst.language.transform.builder.AsmTransformNamespaceBuilder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.regex.api.UnescapedPattern
+import net.akehurst.language.style.api.*
+import net.akehurst.language.style.asm.*
 
 @DslMarker
 annotation class StyleModelDslMarker
@@ -90,8 +74,8 @@ class StylesBuilder internal constructor(
     private val _extends = mutableListOf<StyleSetReference>()
     private val _rules = mutableListOf<AglStyleRule>()
 
-    fun metaRule(pattern: String, init: StyleMetaRuleBuilder.() -> Unit) {
-        val b = StyleMetaRuleBuilder(Regex(pattern))
+    fun metaRule(unescapedPattern: String, init: StyleMetaRuleBuilder.() -> Unit) {
+        val b = StyleMetaRuleBuilder(UnescapedPattern(unescapedPattern))
         b.init()
         _rules.add(b.build())
     }
@@ -117,7 +101,7 @@ class StylesBuilder internal constructor(
 
 @StyleModelDslMarker
 class StyleMetaRuleBuilder internal constructor(
-    private val _pattern: Regex
+    private val _pattern: UnescapedPattern
 ) {
     private val _declarations = mutableListOf<AglStyleDeclaration>()
 
@@ -125,7 +109,7 @@ class StyleMetaRuleBuilder internal constructor(
         _declarations.add(AglStyleDeclaration(name, value))
     }
 
-    fun build() = AglStyleMetaRuleDefault(_pattern).also { rule ->
+    fun build() = AglStyleMetaRuleDefault(_pattern.escapedFoAgl).also { rule ->
         _declarations.forEach {
             rule.declaration[it.name] = it
         }

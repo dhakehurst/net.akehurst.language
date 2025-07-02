@@ -20,7 +20,7 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.test.FixMethodOrder
@@ -45,7 +45,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         fun test(grammarStr: String, expectedTr: TransformModel, expectedTm: TypeModel) {
             val result = grammarProc.process(grammarStr, Agl.options {
                 semanticAnalysis {
-                    context(ContextFromGrammarRegistry(Agl.registry))
+                    context(contextFromGrammarRegistry(Agl.registry))
                 }
             })
             assertNotNull(result.asm)

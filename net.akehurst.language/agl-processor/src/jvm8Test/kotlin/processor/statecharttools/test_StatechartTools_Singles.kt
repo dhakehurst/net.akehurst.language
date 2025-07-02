@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
@@ -30,7 +31,6 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.format.asm.AglFormatModelDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import kotlin.test.Test
@@ -74,7 +74,7 @@ class test_StatechartTools_Singles {
              
         """)
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
             .also {
                 assertTrue(it.allIssues.errors.isEmpty(), it.allIssues.toString())
             }

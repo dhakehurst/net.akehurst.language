@@ -24,8 +24,6 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.builder.typeModel
 import net.akehurst.language.util.cached

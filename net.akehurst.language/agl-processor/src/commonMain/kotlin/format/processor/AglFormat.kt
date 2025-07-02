@@ -32,12 +32,8 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.style.processor.AglStyleCompletionProvider
-import net.akehurst.language.style.processor.AglStyleSemanticAnalyser
-import net.akehurst.language.style.processor.AglStyleSyntaxAnalyser
 import net.akehurst.language.transform.api.TransformModel
 import net.akehurst.language.transform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel

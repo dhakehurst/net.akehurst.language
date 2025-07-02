@@ -18,19 +18,15 @@ package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.agl.simple.SemanticAnalyserSimple
-import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
-import net.akehurst.language.agl.simple.contextAsmSimple
-import net.akehurst.language.agl.simple.contextAsmSimpleWithAsmPath
+import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -48,7 +44,7 @@ class test_Vistraq_References {
         private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/vistraq/version_/references.agl")?.readText() ?: error("File not found"))
 
         private val grammarList =
-            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
+            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } })
                 .let {
                     check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                     it.asm!!

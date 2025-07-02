@@ -126,7 +126,7 @@ class RegexParser {
         //this.matcherBuilder.start()
         val postfix = mutableStackOf<Pair<Int, () -> Unit>>()
         val opStack = mutableStackOf<Pair<Int, () -> Unit>>()
-        var needConcat = mutableStackOf<Boolean>()
+        val needConcat = mutableStackOf<Boolean>()
         needConcat.push(false)
         if (pattern.length > 0) {
             var c = this.next()

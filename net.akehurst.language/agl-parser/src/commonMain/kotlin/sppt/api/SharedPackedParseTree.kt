@@ -98,19 +98,7 @@ data class LeafData(
     val position: Int,
     val length: Int,
     val tagList: List<String>
-) {
-    val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
-        val map = mutableMapOf<String, String>(
- //TODO?           AglStyleModelDefault.KEYWORD_STYLE_ID to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
-        )
-        map.mapNotNull {
-            when {
-                this.name.matches(Regex(it.value)) -> it.key
-                else -> null
-            }
-        }
-    }
-}
+)
 
 interface TreeData {
     val root: SpptDataNode?

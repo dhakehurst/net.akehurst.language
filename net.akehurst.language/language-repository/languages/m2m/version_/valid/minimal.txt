@@ -1,0 +1,5 @@
+transformation Minimal()
+
+top relation Top {
+  domain As a:A
+}

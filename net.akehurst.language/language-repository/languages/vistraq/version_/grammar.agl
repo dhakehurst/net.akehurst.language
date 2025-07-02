@@ -50,7 +50,7 @@ grammar Expressions : Base {
 
     literalValue = BOOLEAN < SINGLE_QUOTE_STRING < INTEGER < REAL < NULL ;
     leaf BOOLEAN = 'true' | 'false' ;
-    leaf SINGLE_QUOTE_STRING = "'([^']|\\')*'" ;
+    leaf SINGLE_QUOTE_STRING = "'(\\|\'|[^'\])*'" ;
     leaf INTEGER = "[0-9]+" ;
     leaf REAL = "[0-9]+[.][0-9]+" ;
     leaf NULL = 'null' ;
@@ -173,7 +173,7 @@ grammar Queries : Base {
 	columnOrder = NAME ('ASCENDING' | 'DESCENDING')? ;
 
 	leaf STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
-    leaf QUOTED_TIMESTAMP = "'([^']|\\')*'" ; //TODO: better regex for timestamps
+    leaf QUOTED_TIMESTAMP = "'(\'|[^'])*'" ; //TODO: better regex for timestamps
 }
 
 // Traceability Information Model

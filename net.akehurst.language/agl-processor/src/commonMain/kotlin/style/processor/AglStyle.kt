@@ -61,8 +61,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
                 style = STYLE_ID ':' styleValue ';' ;
                 styleValue = STYLE_VALUE | STRING ;
                 
-                leaf LITERAL = '\'' "('|([^'])+" '\'' ;
-                leaf PATTERN = '"' "\\"|([^\"])+"  '"' ;
+                leaf LITERAL = "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" ;
+                leaf PATTERN = "${CommonRegexPatterns.PATTERN.escapedFoAgl.value}" ;
                 leaf SPECIAL_IDENTIFIER = "[\\$][a-zA-Z_][a-zA-Z_0-9-]*" ;
                 leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
                 leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
@@ -83,7 +83,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
     override val styleString = """
         namespace net.akehurst.language
             styles Style {
-                $$ "'([^']+)'" {
+                $$ "$${CommonRegexPatterns.LITERAL.value}" {
                   foreground: darkgreen;
                   font-weight: bold;
                 }
@@ -149,8 +149,8 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
                         ref("SPECIAL_IDENTIFIER")
                     }
                     // these must match what is in the AglGrammarGrammar
-                    concatenation("LITERAL", isLeaf = true) { lit("'"); pat(CommonRegexPatterns.LITERAL); lit("'"); }
-                    concatenation("PATTERN", isLeaf = true) { lit("\""); pat(CommonRegexPatterns.PATTERN); lit("\""); } //{ pat("\"([^\"\\\\]|\\\\.)+\"") }
+                    concatenation("LITERAL", isLeaf = true) { pat(CommonRegexPatterns.LITERAL.value) }
+                    concatenation("PATTERN", isLeaf = true) { pat(CommonRegexPatterns.PATTERN.value) }
 
                     concatenation("SPECIAL_IDENTIFIER", isLeaf = true) { pat("[\\$][a-zA-Z_][a-zA-Z_0-9-]*") }
 
@@ -351,7 +351,7 @@ interface AglStyleRule {
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'[^']+'") {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }

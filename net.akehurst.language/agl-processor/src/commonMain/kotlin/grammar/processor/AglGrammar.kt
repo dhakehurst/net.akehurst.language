@@ -85,8 +85,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             nonTerminal = possiblyQualifiedName ;
             embedded = possiblyQualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
-            leaf LITERAL = '\'' "(\\|'|[^'\\])+" '\'' ;
-            leaf PATTERN = '"' "(\"|[^\"])+" '"' ;
+            leaf LITERAL = "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" ;
+            leaf PATTERN = "${CommonRegexPatterns.PATTERN.escapedFoAgl.value}" ;
             leaf POSITIVE_INTEGER = "[0-9]+" ;
             leaf POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
             preferenceRule = 'preference' simpleItem '{' preferenceOption+ '}' ;
@@ -145,7 +145,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
     override val styleString: String = """
         namespace $NAMESPACE_NAME
           styles $NAME {
-            $$ "'[^']+'" {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
               foreground: darkgreen;
               font-weight: bold;
             }
@@ -282,8 +282,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                         ref("LITERAL")
                         ref("PATTERN")
                     }
-                    concatenation("LITERAL", isLeaf = true) { lit("'"); pat(CommonRegexPatterns.LITERAL); lit("'"); }
-                    concatenation("PATTERN", isLeaf = true) { lit("\""); pat(CommonRegexPatterns.PATTERN); lit("\""); } //{ pat("\"([^\"\\\\]|\\\\.)+\"") }
+                    concatenation("LITERAL", isLeaf = true) { pat(CommonRegexPatterns.LITERAL.value) }
+                    concatenation("PATTERN", isLeaf = true) { pat(CommonRegexPatterns.PATTERN.value) }
                     concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") }
                     concatenation("POSITIVE_INTEGER_GT_ZERO", isLeaf = true) { pat("[1-9][0-9]*") }
 
@@ -820,7 +820,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         styleModel(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'[^']+'") {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }

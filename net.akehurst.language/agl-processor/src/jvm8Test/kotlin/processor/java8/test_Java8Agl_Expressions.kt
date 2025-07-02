@@ -22,9 +22,9 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.InputStreamReader
 
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.processor.test.utils.notWidth
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,7 +50,7 @@ class test_Java8Agl_Expressions(val data: Data) {
                 Agl.configuration { targetGrammarName(("Expressions")); defaultGoalRuleName("Expression") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        context(ContextFromGrammarRegistry(Agl.registry))
+                        context(contextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

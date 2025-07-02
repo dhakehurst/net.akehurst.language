@@ -24,7 +24,6 @@ import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
 import net.akehurst.language.typemodel.builder.*
 
 fun TypeModelBuilder.grammarTypeNamespace(

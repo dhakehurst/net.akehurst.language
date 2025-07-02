@@ -25,6 +25,27 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.parser.api.RuntimeSpine
 import net.akehurst.language.regex.agl.RegexValueProvider
+import kotlin.collections.List
+import kotlin.collections.Set
+import kotlin.collections.any
+import kotlin.collections.count
+import kotlin.collections.emptyList
+import kotlin.collections.emptySet
+import kotlin.collections.first
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatMap
+import kotlin.collections.groupBy
+import kotlin.collections.joinToString
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapIndexed
+import kotlin.collections.mapNotNull
+import kotlin.collections.plus
+import kotlin.collections.setOf
+import kotlin.collections.sortedWith
+import kotlin.collections.toList
+import kotlin.collections.toSet
+import kotlin.text.isBlank
 
 internal abstract class SpineNodeAbstract(
     val ruleItem: RuleItem,

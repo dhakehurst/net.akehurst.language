@@ -20,9 +20,9 @@ grammar Base {
 
     skip leaf WHITE_SPACE = "\s+" ;
     skip leaf SINGLE_LINE_NOTE = "//[^\n\r]*" ;
-    skip leaf MULTILINE_NOTE = "//\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+    skip leaf MULTILINE_NOTE = "//[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
 
-    leaf REGULAR_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+    leaf REGULAR_COMMENT = "/[*][^*]*[*]+(?:[^*/][^*]*[*]+)*/" ;
 
     leaf STRING_VALUE = "\"(\\\"|[^\"])*\"" ;
 

@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
@@ -35,7 +36,6 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.format.asm.AglFormatModelDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.transform.asm.TransformDomainDefault
 import kotlin.test.Test
@@ -49,7 +49,7 @@ class test_StatechartTools_References {
         private val scopeModelStr = CrossReferenceString(this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found"))
 
         private val grammarModel =
-            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
+            Agl.registry.agl.grammar.processor!!.process(grammarStr.value, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }).asm!!
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextWithScope<Any, Any>>> { grmName ->
             val grm = grammarModel
             val cfg = Agl.configuration {

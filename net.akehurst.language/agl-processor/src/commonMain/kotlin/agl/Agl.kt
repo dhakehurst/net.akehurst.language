@@ -33,7 +33,6 @@ import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
-import net.akehurst.language.grammar.processor.ContextFromGrammarRegistry
 import net.akehurst.language.grammar.processor.contextFromGrammar
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
@@ -144,7 +143,7 @@ object Agl {
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ): LanguageProcessorResult<Asm, ContextWithScope<Any, Any>> {
         val config = Agl.configuration(configurationBase) {
             if (null != typeStr) {
@@ -189,7 +188,7 @@ object Agl {
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ) = processorFromStringSimple(
         GrammarString(grammarDefinitionStr),
         typeModelStr?.let { TypesString(it) },
@@ -211,7 +210,7 @@ object Agl {
     fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = configurationBase(),
-        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
             val res = Agl.grammarFromString<GrammarModel, ContextWithScope<Any, Any>>(
@@ -233,10 +232,10 @@ object Agl {
         }
     }
 
-    fun <AsmType : Any, ContextType : Any> processorFromGeneratedCode(
-        generated: LanguageObjectAbstract<AsmType, ContextType>
+    fun <AsmType : Any, ContextType : Any> processorFromLanguageObject(
+        languageObject: LanguageObjectAbstract<AsmType, ContextType>
     ): LanguageProcessor<AsmType, ContextType> {
-        return LanguageProcessorFromLanguageObject(generated)
+        return LanguageProcessorFromLanguageObject(languageObject)
     }
 
     fun <AsmType : Any, ContextType : Any> fromString(
@@ -249,7 +248,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
-        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
+        aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }
     ): ProcessResult<GrammarModel> {
         return if (null == sentence) {
             ProcessResultDefault(null)
@@ -268,7 +267,7 @@ object Agl {
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<AsmType, ContextType> = configurationBase(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ): LanguageDefinition<AsmType, ContextType> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)
@@ -307,7 +306,7 @@ object Agl {
         styleStr: StyleString? = null,
         formatterModelStr: FormatString? = null,
         configurationBase: LanguageProcessorConfiguration<Asm, ContextWithScope<Any, Any>> = configurationSimple(),
-        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(ContextFromGrammarRegistry(registry)) } }
+        grammarAglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any, Any>>? = options { semanticAnalysis { context(contextFromGrammarRegistry(registry)) } }
     ): LanguageDefinition<Asm, ContextWithScope<Any, Any>> {
         val config = Agl.configuration(configurationBase) {
             grammarString(grammarDefinitionStr)

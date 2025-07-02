@@ -27,32 +27,8 @@ import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.DataType
-import net.akehurst.language.typemodel.api.EnumType
-import net.akehurst.language.typemodel.api.InterfaceType
-import net.akehurst.language.typemodel.api.MethodDeclaration
-import net.akehurst.language.typemodel.api.MethodDeclarationDerived
-import net.akehurst.language.typemodel.api.MethodDeclarationPrimitive
-import net.akehurst.language.typemodel.api.MethodName
-import net.akehurst.language.typemodel.api.PrimitiveType
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.api.SingletonType
-import net.akehurst.language.typemodel.api.SpecialType
-import net.akehurst.language.typemodel.api.StructuredType
-import net.akehurst.language.typemodel.api.TupleType
-import net.akehurst.language.typemodel.api.TypeArgumentNamed
-import net.akehurst.language.typemodel.api.TypeDefinition
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.UnionType
-import net.akehurst.language.typemodel.api.ValueType
-import net.akehurst.language.typemodel.asm.PropertyDeclarationDerived
-import net.akehurst.language.typemodel.asm.PropertyDeclarationPrimitive
-import net.akehurst.language.typemodel.asm.PropertyDeclarationStored
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.asm.*
 
 object StdLibPrimitiveExecutionsForReflection {
     val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any)>>(

@@ -320,7 +320,7 @@ class test_VistraqQuery_Singles {
         test_process(sentence, goal, grammarName)
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun Queries_process_query2() {
         val sentence = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month

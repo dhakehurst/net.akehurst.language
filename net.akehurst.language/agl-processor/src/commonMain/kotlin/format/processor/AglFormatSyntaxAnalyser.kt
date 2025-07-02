@@ -31,7 +31,6 @@ import net.akehurst.language.format.asm.*
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.sppt.treedata.locationForNode
 
 internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatModel>() {
 

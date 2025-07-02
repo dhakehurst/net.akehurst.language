@@ -17,10 +17,8 @@
 
 package net.akehurst.language.agl.simple
 
-import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.scope.asm.ScopeSimple
-import net.akehurst.language.sentence.api.InputLocation
 
 //fun contextAsmSimple(
 //    createScopedItem: CreateScopedItem<Any, Any> = { referableName, item, location -> Pair(location?.sentenceIdentity, item) },

@@ -18,6 +18,7 @@
 package net.akehurst.language.style.api
 
 import net.akehurst.language.base.api.*
+import net.akehurst.language.regex.api.EscapedPattern
 
 interface AglStyleModel : Model<StyleNamespace, StyleSet> {
 
@@ -48,7 +49,7 @@ interface AglStyleRule : Formatable {
 }
 
 interface AglStyleMetaRule : AglStyleRule {
-    val pattern:Regex
+    val pattern: EscapedPattern
 }
 
 interface AglStyleTagRule : AglStyleRule {
