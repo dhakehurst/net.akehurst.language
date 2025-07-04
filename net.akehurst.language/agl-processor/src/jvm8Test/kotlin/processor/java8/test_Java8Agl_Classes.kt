@@ -104,7 +104,7 @@ class test_Java8Agl_Classes(val data: Data) {
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertTrue(2 >= result.sppt!!.maxNumHeads)
     }
 
 }

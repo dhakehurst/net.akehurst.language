@@ -51,26 +51,26 @@ class test_SysML_Singles {
     }
 
     @Test
-    fun SINGLE_LINE_COMMENT() {
+    fun SINGLE_LINE_NOTE() {
         val goal = "RootNamespace"
         val sentence = """
-          // a comment
+          // a note
         """.trimIndent()
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(),result.issues.toString())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
     @Test
-    fun MULTI_LINE_COMMENT() {
+    fun MULTILINE_NOTE() {
         val goal = "RootNamespace"
         val sentence = """
-          /* a comment */
+          //* a note */
         """.trimIndent()
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
+        assertTrue(result.issues.isEmpty(),result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -81,7 +81,18 @@ class test_SysML_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(),result.issues.toString())
+    }
+
+    @Test
+    fun Comment() {
+        val goal = "RootNamespace"
+        val sentence = """
+          comment /* a comment */
+        """.trimIndent()
+        val result = processor.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
+        assertTrue(result.issues.isEmpty(),result.issues.toString())
+        assertNotNull(result.sppt)
     }
 
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.KerML
+package net.akehurst.language.agl.processor.SysML
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
@@ -27,14 +27,19 @@ import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.sentence.api.InputLocation
 import testFixture.utils.parseError
-import kotlin.test.*
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_SysML_agl_Singles {
 
     private companion object {
-        private val languagePathStr = "/SysML/v2_2023-11/grammars/standard" //TODO: agl"
+        private val languagePathStr = "/SysML/v2_2023-11/grammars/agl"
         private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
 

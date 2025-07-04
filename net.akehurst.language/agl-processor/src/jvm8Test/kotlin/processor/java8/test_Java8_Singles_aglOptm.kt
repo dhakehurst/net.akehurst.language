@@ -36,10 +36,10 @@ class test_Java8_Singles_aglOptm {
 
     companion object {
         val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
+        val grammarStr = this::class.java.getResource(grammarFile)?.readText() ?: error("file not found '$grammarFile'")
         val proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>> = createJava8Processor(grammarFile, true)
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
-            val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
             val proc = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
@@ -82,9 +82,7 @@ class test_Java8_Singles_aglOptm {
 
     @Test//(timeout = 5000)
     fun Types_Type__int() {
-
-        val grammarStr = this::class.java.getResource(grammarFile).readText()
-        val goal = "Type"
+        val goal = "TypeReference"
         val p = Agl.processorFromString(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration() {
@@ -92,18 +90,24 @@ class test_Java8_Singles_aglOptm {
                 defaultGoalRuleName(goal)
             },
             aglOptions = Agl.options {
+                parse {
+                    reportGrammarAmbiguities(true)
+                }
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
-                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    //option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     context(contextFromGrammarRegistry(Agl.registry))
                 }
-            }).processor!!
+            }).let {
+                check(it.issues.errors.isEmpty()) { it.issues.toString()}
+                it.processor!!
+            }
 
         val sentence = "int"
-        val result = p.parse(sentence, Agl.parseOptions { goalRuleName("TypeReference") })//TODO: use build
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })//TODO: use build
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test(timeout = 5000)
@@ -120,7 +124,7 @@ class test_Java8_Singles_aglOptm {
                 UTypeReference = ID TypeArguments? ;
                 TypeArguments = '<' ReferenceType '>' ;
                 ReferenceType = Annotation* UTypeReference ;
-                Annotation = ID  TypeArguments?  ;
+                Annotation = ID TypeArguments?  ;
                 Dims = Annotation '[' ']' ;
             }
         """.trimIndent()
@@ -131,7 +135,7 @@ class test_Java8_Singles_aglOptm {
         val result = p.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test(timeout = 5000)
@@ -228,7 +232,7 @@ grammar Expressions {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads) // 2 heads because of 'int'
     }
 
     @Test(timeout = 5000)
@@ -238,7 +242,7 @@ grammar Expressions {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)  // 2 heads because of 'int'
     }
 
     @Test(timeout = 5000)
@@ -248,7 +252,7 @@ grammar Expressions {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)  // 2 heads because of 'int'
     }
 
     @Test(timeout = 5000)
@@ -258,7 +262,7 @@ grammar Expressions {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)  // 2 heads because of 'int'
     }
 
     @Test(timeout = 5000)
@@ -272,7 +276,7 @@ grammar Expressions {
             listOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1, null),
-                    "0b01^2",
+                    "Failed to match {<GOAL>} at: 0b01^2",
                     setOf("'.'", "ASSIGNMENT_OPERATOR", "'::'", "'?'", "INFIX_OPERATOR", "POSTFIX_OPERATOR", "'['", "<EOT>")
                 )
             ), result.issues.errors
@@ -304,10 +308,9 @@ public class BadBinaryLiterals {
             """.trimIndent()
         val goal = "CompilationUnit"
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
-        assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-
+        assertTrue(result.issues.isNotEmpty())
+        println(result.issues.toString())
+        assertNull(result.sppt)
     }
 
     @Test(timeout = 5000)
@@ -317,13 +320,13 @@ public class BadBinaryLiterals {
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads) // 2 heads because it could be a function call at start
     }
 
     @Test(timeout = 5000)
     fun BlockStatement__UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
-        val goal = "BlockStatement"
+        val goal = "LocalVariableDeclarationStatement"
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)

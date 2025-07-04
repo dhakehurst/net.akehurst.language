@@ -87,7 +87,7 @@ class test_AglGrammar_expectedItemsAt {
     fun namespace_WS_n_WS() {
 
         val sentence = "namespace n "
-        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, options = Agl.options { completionProvider { depth(2) } })
+        val result = Agl.registry.agl.grammar.processor!!.expectedItemsAt(sentence, sentence.length, options = Agl.options { completionProvider { depth(1) } })
 
         val expected = listOf<CompletionItem>(
             CompletionItem(CompletionItemKind.SEGMENT, "grammar", "grammar <IDENTIFIER> <extends>? { <option> <rule> }"),

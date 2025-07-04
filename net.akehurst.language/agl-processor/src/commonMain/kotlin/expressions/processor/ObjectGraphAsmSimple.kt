@@ -51,7 +51,17 @@ object StdLibPrimitiveExecutions {
             },
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("join"))!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
+                AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") {
+                    when(it) {
+                        is AsmNothing -> ""
+                        is AsmAny -> it.value.toString()
+                        is AsmPrimitive -> it.value.toString()
+                        is AsmStructure -> it.asString()
+                        is AsmList -> it.asString()
+                        is AsmLambda -> it.asString()
+                        else -> error("Unsupported ${it::class.simpleName}")
+                    }
+                })
             },
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("asMap"))!! to { self, prop ->
                 check(self is AsmList) { "Method '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }

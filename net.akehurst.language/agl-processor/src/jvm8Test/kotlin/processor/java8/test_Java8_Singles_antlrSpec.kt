@@ -67,8 +67,8 @@ class test_Java8_Singles_antlrSpec {
         val goal = "literal"
 
         val result = proc.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -80,8 +80,8 @@ class test_Java8_Singles_antlrSpec {
 
         val sentence = "int"
         val result = p.parse(sentence, ParseOptionsDefault(goalRuleName = goal))
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
 
         assertEqualsWarning(1, result.sppt!!.maxNumHeads)
     }
@@ -199,7 +199,7 @@ public class BadBinaryLiterals {
             listOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1, null),
-                    "...t1 = 0b01.^01;  // no...",
+                    "Failed to match {classInstanceCreationExpression | fieldAccess | methodInvocation | primary} at: ...t1 = 0b01.^ ...",
                     setOf("'new'", "'<'", "Identifier")
                 )
             ), result.issues.errors

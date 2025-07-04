@@ -99,6 +99,7 @@ value class OptionNum(val value:Int) :Comparable<OptionNum> {
         return value
     }
 
+    val isEmpty get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_MULTI_EMPTY || this == RulePosition.OPTION_SLIST_EMPTY
     val isChoiceOption get() = value >= 0
     val isNoneOption get() = this == RulePosition.OPTION_NONE
     val isOptionalOption get() = this == RulePosition.OPTION_OPTIONAL_EMPTY || this == RulePosition.OPTION_OPTIONAL_ITEM
@@ -172,11 +173,29 @@ fun interface SentenceIdentityFunction {
  */
 // cannot have targetGrammar as an option because the grammar converted to rule set is needed to construct the parser TODO: change this, it could be possible
 interface ParseOptions {
+    /**
+     * default = true
+     */
     var enabled:Boolean
+    /**
+     * default = null, use first non skip rule found in last Grammar
+     */
     var goalRuleName: String?
+    /**
+     * default = { null }
+     */
     var sentenceIdentity: SentenceIdentityFunction
+    /**
+     * default = true
+     */
     var reportErrors: Boolean
+    /**
+     * default = false
+     */
     var reportGrammarAmbiguities: Boolean
+    /**
+     * default = true
+     */
     var cacheSkip: Boolean
 
     fun clone(): ParseOptions

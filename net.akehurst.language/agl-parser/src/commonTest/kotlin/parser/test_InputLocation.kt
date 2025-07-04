@@ -211,6 +211,7 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
+        println(result.sppt!!.toStringAll)
         assertEquals(InputLocation(0, 1, 1, 11, null), ss.locationForNode(result.sppt!!.treeData.userRoot))
         assertEquals(InputLocation(0, 1, 1, 3, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[0]))
         assertEquals(InputLocation(3, 4, 1, 1, null), ss.locationForNode(result.sppt!!.treeData.userRoot.children(result.sppt!!.treeData)[1]))
