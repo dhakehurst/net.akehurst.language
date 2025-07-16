@@ -85,15 +85,9 @@ Process the sentence to get an Abstract Syntax Model (tree) of the sentence
    check(result2.allIssues.errors.isEmpty()) { result2.allIssues.toString() }
    println(result2.asm?.asString())
 ```
-
-# TODO
-
-lots:
- - performance improvements
- - PT is not always what one expects
  
 # Build
-There are currently a number of failing tests, these indicate things to be fixed, and desired performance improvements.
+There are currently a number of failing tests, these indicate desired improvements.
 To build locally the latest version, use `assemble` or `publishToMavenLocal`.
 ```
 > cd net.akehurst.language
