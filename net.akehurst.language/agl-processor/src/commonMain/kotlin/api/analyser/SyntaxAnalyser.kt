@@ -104,5 +104,5 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
      * map the tree into an instance of the targetType
      *
      */
-    fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AsmType>
+    fun transform(sppt: SharedPackedParseTree): SyntaxAnalysisResult<AsmType>
 }

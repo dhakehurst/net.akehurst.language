@@ -60,8 +60,8 @@ class test_CompletionProviderSimple {
                 }
             })
             assertTrue(actual.issues.errors.isEmpty(), actual.issues.toString())
-            assertEquals(data.expected.size, actual.items.size, actual.items.joinToString(separator = "\n"))
-            assertEquals(data.expected.toSet(), actual.items.toSet())
+            //assertEquals(data.expected.size, actual.items.size, actual.items.joinToString(separator = "\n"))
+            assertEquals(data.expected.joinToString(separator = "\n"), actual.items.joinToString(separator = "\n"))
         }
 
     }
@@ -180,7 +180,7 @@ class test_CompletionProviderSimple {
             }
         """
 
-        val sentence = "var x:"
+        val sentence = "var x: "
 
         val expected = listOf(
             CompletionItem(CompletionItemKind.SEGMENT, "typeRef", "<typeRef>"),
@@ -223,7 +223,7 @@ class test_CompletionProviderSimple {
         """.trimIndent()
 
 
-        val sentence = "var x:"
+        val sentence = "var x: "
         val additionalTypeModel = typeModel("External", true) {
             namespace(externalNsName) {
                 data("TypeDef")

@@ -20,6 +20,8 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.base.api.Namespace
 import net.akehurst.language.grammar.api.*
+import net.akehurst.language.grammar.asm.NonTerminalDefault
+import net.akehurst.language.grammar.asm.TerminalDefault
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.Assoc
@@ -203,24 +205,37 @@ internal class ConverterToRuntimeRules(
                 target.isLeaf -> when {
                     rhs is Terminal -> {
                         val rrule = this.terminalRule(target.name.value, rhs.escapedValue, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, rhs)
                     }
 
                     rhs is Concatenation && rhs.items.size == 1 && rhs.items[0] is Terminal -> {
                         val t = (rhs.items[0] as Terminal)
                         val rrule = this.terminalRule(target.name.value, t.escapedValue, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, t)
                     }
 
                     rhs is Choice && rhs.alternative.size == 1 && rhs.alternative[0] is Terminal -> {
                         val t = (rhs.alternative[0] as Terminal)
                         val rrule = this.terminalRule(target.name.value, t.escapedValue, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        recordOriginalRuleItem(rrule, rhs)
                         Pair(rrule, t)
                     }
 
                     else -> {
                         val rrule = this.buildCompressedRule(target, target.isSkip)
-                        Pair(rrule, rhs)
+                        //fake Term
+                        val compRhs = rrule.rhs
+                        val escapedValue = when(compRhs) {
+                            is RuntimeRuleRhsPattern -> compRhs.patternUnescaped.escapedFoAgl
+                            is RuntimeRuleRhsLiteral -> compRhs.literalUnescaped.escapedFoAgl
+                            else -> error("unsupported")
+                        }
+                       val ft = TerminalDefault(escapedValue, true)
+                        ft.setOwningRule(target, listOf(0))
+                        recordOriginalRuleItem(rrule, ft)
+                        Pair(rrule, ft)
                     }
                 }
 
@@ -240,10 +255,11 @@ internal class ConverterToRuntimeRules(
                     val nrule = this.nextRule(target.name.value, target.isSkip, false)
                     val rrhs = createRhs(nrule, target.rhs, target.name.value)
                     nrule.setRhs(rrhs)
+                    recordOriginalRuleItem(nrule, target.rhs)
                     Pair(nrule, target.rhs)
                 }
             }
-            recordOriginalRuleItem(rrule, ruleItem)
+//            recordOriginalRuleItem(rrule, ruleItem)
             rrule
         } else {
             rule

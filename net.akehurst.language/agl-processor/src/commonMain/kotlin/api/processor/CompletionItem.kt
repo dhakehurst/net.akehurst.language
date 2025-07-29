@@ -41,7 +41,7 @@ interface SpineNode {
     val rule: GrammarRule
     val nextChildNumber: Int
     val nextExpectedItems: Set<RuleItem>
-    val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
+    //val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem>
     val nextExpectedConcatenation: Set<Concatenation>
 }
 

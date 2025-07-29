@@ -54,7 +54,7 @@ internal abstract class SpineNodeAbstract(
     override val rule: GrammarRule get() = ruleItem.owningRule
     override val nextExpectedItems: Set<RuleItem>
         get() = ruleItem.itemsForChild(nextChildNumber)
-    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
+    //override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
     override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItems.flatMap { it.firstConcatenationRecursive }.toSet()
 
     override fun toString(): String = "($ruleItem)[$nextChildNumber]"
@@ -66,7 +66,7 @@ internal class SpineNodeRoot(
     override val nextChildNumber: Int get() = 0
     override val rule: GrammarRule get() = _rootRuleItem.owningRule
     override val nextExpectedItems: Set<RuleItem> get() = setOf(_rootRuleItem)
-    override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
+    //override val expectedNextLeafNonTerminalOrTerminal: Set<TangibleItem> get() = nextExpectedItems.flatMap { it.firstTangibleRecursive }.toSet()
     override val nextExpectedConcatenation: Set<Concatenation> get() = nextExpectedItems.flatMap { it.firstConcatenationRecursive }.toSet()
     override fun toString(): String = "GOAL"
 }
@@ -308,8 +308,12 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
             }
         }
 
+        // maybe should pass in a GrammarRule rather than TangibleItem
         fun <ContextType : Any> provideForTangible(tangibleItem: TangibleItem, options: CompletionProviderOptions<ContextType>): List<CompletionItem> {
             return when (tangibleItem) {
+                // Empty -> provides nothing
+                // Embedded -> should not occur in spine as the embedded item is used.
+
                 is NonTerminal -> { //must be a reference to leaf
                     val name = tangibleItem.ruleReference.value
                     val refRule = tangibleItem.referencedRule(tangibleItem.owningRule.grammar)
@@ -339,7 +343,6 @@ abstract class CompletionProviderAbstract<AsmType : Any, ContextType : Any> : Co
                         else -> listOf(CompletionItem(CompletionItemKind.LITERAL, "'$name'", tangibleItem.unescapedValue.value))
                     }
                 }
-
                 else -> error("Not supported subtype of TangibleItem: ${tangibleItem::class.simpleName}")
             }
         }

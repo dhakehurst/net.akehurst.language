@@ -96,7 +96,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<AsmType : Any> : SyntaxAnalyse
         }
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AsmType> {
+    override fun transform(sppt: SharedPackedParseTree): SyntaxAnalysisResult<AsmType> {
         val sentence = (sppt as SPPTFromTreeData).sentence
         val treeData = (sppt as SPPTFromTreeData).treeData
         this.walkTree(sentence, treeData, false)

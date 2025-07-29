@@ -77,10 +77,7 @@ value class EscapedPattern(override val value: String) : EscapedValue {
 @JvmInline
 value class UnescapedPattern(override val value: String) : UnescapedValue {
     override val escapedFoAgl: EscapedPattern get() = CommonRegexPatterns.escape_PATTERN(value)
-    override val escapedForRegex: String
-        get() =
-            value
-
+    override val escapedForRegex: String get() = value
     fun toRegex() = escapedForRegex.toRegex()
 }
 

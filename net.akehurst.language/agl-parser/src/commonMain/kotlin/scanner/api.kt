@@ -120,10 +120,7 @@ class Matchable(
 
         MatchableKind.REGEX -> {
             val m = _regEx!!.matchAt(sentence.text, atPosition)
-            m?.let {
-                //sentence.setEolPositions(m.eolPositions)
-                it.matchedText.length
-            } ?: -1
+            m?.matchedText?.length ?: -1
         }
     }
 

@@ -100,7 +100,7 @@ class GenerateGrammarModelBuild(
     }
 
     val formatModel by lazy {
-        val res = AglFormatModelDefault.fromString(contextFromTypeModel(grammarTypeModel), FormatString(generatedFormat))
+        val res = Agl.formatModel(FormatString(generatedFormat),grammarTypeModel )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
     }

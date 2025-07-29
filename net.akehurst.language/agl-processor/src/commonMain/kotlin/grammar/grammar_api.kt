@@ -289,9 +289,8 @@ interface TangibleItem : SimpleItem {
 
 interface EmptyRule : TangibleItem
 interface Terminal : TangibleItem {
-    //, GrammarItem {
     /**
-     * id of the terminal is its value encosed in '' or ""
+     * id of the terminal is its value enclosed in '' or ""
      */
     val id: String
     val isLiteral: Boolean

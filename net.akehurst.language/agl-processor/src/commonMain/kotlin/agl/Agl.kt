@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl
 
+import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
@@ -28,12 +29,16 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.format.asm.AglFormatModelDefault
+import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.asm.GrammarModelDefault
 import net.akehurst.language.grammar.processor.contextFromGrammar
+import net.akehurst.language.issues.api.LanguageProcessorPhase
+import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
 import net.akehurst.language.reference.api.CrossReferenceModel
@@ -170,7 +175,7 @@ object Agl {
                 styleResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglStyleModelDefault.fromString(contextFromGrammar(p.grammarModel!!), styleStr) }
             }
             if (null != formatterModelStr) {
-                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), formatterModelStr) }
+                formatResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> -> Agl.formatModel(formatterModelStr, p.typesModel) }
             }
         }
         val proc = processorFromString(grammarDefinitionStr.value, config, grammarAglOptions)
@@ -322,5 +327,26 @@ object Agl {
             buildForDefaultGoal = false,
             initialConfiguration = config
         )
+    }
+
+    fun formatModel(template: FormatString, typeModel: TypeModel): ProcessResult<AglFormatModel> {
+        return AglFormatModelDefault.fromString(contextFromTypeModel(typeModel), template)
+    }
+
+    fun <SelfType : Any> format(formatModel: AglFormatModel, objectGraph: ObjectGraph<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
+        val formatter = FormatterOverTypedObject(formatModel, objectGraph, issueHolder)
+        val formatSetName = formatModel.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
+        val result = formatter.format(formatSetName, self)
+        return result
+    }
+
+    fun <SelfType : Any> formatByReflection(template: FormatString, typeModel: TypeModel, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
+        val formatModelResult = formatModel(template, typeModel)
+        val formatModel = formatModelResult.asm ?: error("AglFormatModel not created from template.")
+        val objectGraph = ObjectGraphByReflection<SelfType>(typeModel, issueHolder)
+        val result = format(formatModel, objectGraph, self, options)
+        return result
     }
 }

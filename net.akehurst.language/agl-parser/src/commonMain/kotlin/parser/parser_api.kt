@@ -198,6 +198,31 @@ interface ParseOptions {
      */
     var cacheSkip: Boolean
 
+    /**
+     * A regular expression pattern used for identifying the start of a word
+     * while looking for the nextExpected Tokens
+     * (in the reverse direction, i.e. a sentence position going backwards towards the start of the sentence).
+     *
+     * This allows for handling of partial-words. The 'next-expected' could be partially written/covered by a position.
+     *
+     * This property is optional and can be set to null, in which case the parser
+     * may resort to a default behavior or other mechanisms for determining word boundaries.
+     *
+     * The Regex should identify the first character (i.e. not part of a word) after which the search for the next expected tokens should start.
+     *
+     * Default value: `null`.
+     */
+    var reverseFindWordStartRegex: String?
+
+    /**
+     * Indicates whether the parser should use the skip rules of the grammar to determine a word's start position
+     * while looking for the nextExpected Tokens
+     * (in the reverse direction, i.e. a sentence position going backwards towards the start of the sentence).
+     *
+     * Default value: `true`.
+     */
+    var reverseFindWordStartBySkipRules: Boolean
+
     fun clone(): ParseOptions
 }
 

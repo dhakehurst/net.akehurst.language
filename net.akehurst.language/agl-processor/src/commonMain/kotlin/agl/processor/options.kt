@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
 import net.akehurst.language.api.processor.CompletionProviderOptions
+import net.akehurst.language.api.processor.FormatOptions
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SyntaxAnalysisOptions
@@ -34,7 +35,8 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
     override val semanticAnalysis: SemanticAnalysisOptions<ContextType> = SemanticAnalysisOptionsDefault(),
-    override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault()
+    override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault(),
+    override val format: FormatOptions<AsmType> = FormatOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType> {
     override fun clone()= ProcessOptionsDefault<AsmType, ContextType>(
         scan = scan.clone(),
@@ -93,4 +95,8 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
         provideValuesForPatternTerminals = this.provideValuesForPatternTerminals,
         other = other
     )
+}
+
+class FormatOptionsDefault<AsmType : Any>() : FormatOptions<AsmType> {
+
 }

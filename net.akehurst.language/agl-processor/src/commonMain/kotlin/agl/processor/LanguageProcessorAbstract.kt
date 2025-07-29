@@ -196,7 +196,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SyntaxAnalyser")
         sa.clear<AsmType>()
-        return sa.transform(sppt, this.mapToGrammar) as SyntaxAnalysisResult<AsmType>
+        return sa.transform(sppt) as SyntaxAnalysisResult<AsmType>
     }
 
     override fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): SemanticAnalysisResult {
@@ -263,7 +263,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: error("The processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Parser")
         val terminalItems = parserExpected.mapNotNull {
             when {
-                it.isEndOfText -> null
+                it.isEndOfText -> null // FIXME: maybe indicate EOT ?
                 it.isEmptyTerminal -> null
                 it.isEmptyListTerminal -> null
                 else -> {

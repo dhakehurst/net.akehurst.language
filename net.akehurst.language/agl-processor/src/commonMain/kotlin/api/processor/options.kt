@@ -70,15 +70,19 @@ interface CompletionProviderOptions<ContextType : Any> {
     /**
      * list of (depth, ruleName) pairs
      */
-    var path: List<Pair<Int,Int>>
+    var path: List<Pair<Int, Int>>
 
-    var showOptionalItems:Boolean
+    var showOptionalItems: Boolean
 
-    var provideValuesForPatternTerminals:Boolean
+    var provideValuesForPatternTerminals: Boolean
 
     val other: Map<String, Any>
 
     fun clone(): CompletionProviderOptions<ContextType>
+}
+
+interface FormatOptions<AsmType : Any> {
+
 }
 
 /**
@@ -90,6 +94,7 @@ interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
     val semanticAnalysis: SemanticAnalysisOptions<ContextType>
     val completionProvider: CompletionProviderOptions<ContextType>
+    val format: FormatOptions<AsmType>
 
     fun clone(): ProcessOptions<AsmType, ContextType>
 }

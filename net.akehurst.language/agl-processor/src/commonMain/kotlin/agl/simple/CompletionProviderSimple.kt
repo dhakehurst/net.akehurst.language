@@ -171,7 +171,7 @@ class CompletionProviderSimple(
             return emptyList()
         }
     }
-
+/*
     private fun provideForType1(type: TypeInstance, firstSpineNode: SpineNode, context: ContextWithScope<Any, Any>): List<CompletionItem> {
         val prop = type.resolvedDeclaration.getOwnedPropertyByIndexOrNull(firstSpineNode.nextChildNumber)
         //TODO: lists ?
@@ -202,7 +202,7 @@ class CompletionProviderSimple(
             }
         }
     }
-
+*/
     private fun firstPropertyOf(type: TypeInstance): List<PropertyDeclaration> {
         val typesClosure = setOf(type).transitiveClosure { it.resolvedDeclaration.subtypes.toSet() }
         val minProps = typesClosure.mapNotNull { it.allResolvedProperty.values.minByOrNull { it.index } }
