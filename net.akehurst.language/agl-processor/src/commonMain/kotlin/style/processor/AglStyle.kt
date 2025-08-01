@@ -32,7 +32,7 @@ import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, Any>>() {
@@ -71,7 +71,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
         """.trimIndent()
 
     override val crossReferenceString = """
-        namespace net.akehurst.language
+        namespace $NAMESPACE_NAME
           references {
             in scope property typeReference refers-to GrammarRule
             in identifiable property typeReference refers-to GrammarRule
@@ -82,7 +82,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
 
     override val styleString = """
         namespace net.akehurst.language
-            styles Style {
+            styles $NAME {
                 $$ "$${CommonRegexPatterns.LITERAL.value}" {
                   foreground: darkgreen;
                   font-weight: bold;
@@ -181,7 +181,7 @@ interface AglStyleRule {
 """
 
     override val typesModel by lazy {
-        typeModel("Style", true, AglBase.typesModel.namespace) {
+        typeModel(NAME, true, AglBase.typesModel.namespace) {
             grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
                 interface_("AglStyleModel") {

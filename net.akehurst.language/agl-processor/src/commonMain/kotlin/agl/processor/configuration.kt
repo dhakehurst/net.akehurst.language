@@ -35,7 +35,7 @@ import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.scanner.common.ScannerClassic
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 
@@ -100,8 +100,8 @@ internal class LanguageProcessorConfigurationBase<AsmType : Any, ContextType : A
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactory<AsmType,*,*>>? = null,
     override var transformResolver: TransformResolver<AsmType, ContextType>? = { p ->
         p.configuration.transformString?.let {
-            TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), it)
-        } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
+            AsmTransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), it)
+        } ?: AsmTransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceResolver: CrossReferenceResolver<AsmType, ContextType>? = { p ->
         CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))
@@ -152,8 +152,8 @@ internal class LanguageProcessorConfigurationSimple(
     //override val asmFactoryResolver: AsmFactoryResolver<AsmFactorySimple>? = { AsmFactorySimple() },
     override val transformResolver: TransformResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         p.configuration.transformString?.let {
-            TransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), it)
-        } ?: TransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
+            AsmTransformDomainDefault.fromString(ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel), it)
+        } ?: AsmTransformDomainDefault.fromGrammarModel(p.grammarModel!!, p.baseTypeModel)
     },
     override var crossReferenceResolver: CrossReferenceResolver<Asm, ContextWithScope<Any, Any>>? = { p ->
         CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), p.configuration.crossReferenceString ?: CrossReferenceString(""))

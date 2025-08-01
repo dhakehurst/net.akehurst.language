@@ -32,7 +32,7 @@ import net.akehurst.language.grammar.builder.grammarModel
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 

@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.simple
 
 
+import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
 import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -24,11 +25,10 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 
 class AsmFactorySimple(
@@ -51,7 +51,7 @@ class AsmFactorySimple(
  */
 class SyntaxAnalyserSimple(
     typeModel: TypeModel,
-    asmTransformModel: TransformModel,
+    asmTransformModel: AsmTransformDomain,
     relevantTrRuleSet: QualifiedName
 ) : SyntaxAnalyserFromAsmTransformAbstract<Asm, AsmValue>(
     typeModel,

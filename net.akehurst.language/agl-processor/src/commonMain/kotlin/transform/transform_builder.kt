@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.transform.builder
+package net.akehurst.language.asmTransform.builder
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.Import
@@ -29,8 +29,8 @@ import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
-import net.akehurst.language.transform.api.*
-import net.akehurst.language.transform.asm.*
+import net.akehurst.language.asmTransform.api.*
+import net.akehurst.language.asmTransform.asm.*
 import net.akehurst.language.typemodel.api.TypeDefinition
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
@@ -44,7 +44,7 @@ fun asmTransform(
     typeModel: TypeModel,
     createTypes: Boolean,
     init: AsmTransformModelBuilder.() -> Unit
-): TransformModel {
+): AsmTransformDomain {
     val b = AsmTransformModelBuilder(SimpleName(name), typeModel, createTypes)
     b.init()
     val m = b.build()
@@ -58,7 +58,7 @@ class AsmTransformModelBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val _namespaces = mutableListOf<TransformNamespace>()
+    private val _namespaces = mutableListOf<AsmTransformNamespace>()
 
     fun namespace(qualifiedName: String, init: AsmTransformNamespaceBuilder.() -> Unit) {
         val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
@@ -67,7 +67,7 @@ class AsmTransformModelBuilder internal constructor(
         _namespaces.add(v)
     }
 
-    fun build(): TransformModel = TransformDomainDefault(name, namespace = _namespaces).also {
+    fun build(): AsmTransformDomain = AsmTransformDomainDefault(name, namespace = _namespaces).also {
         it.typeModel = typeModel
     }
 }
@@ -79,7 +79,7 @@ class AsmTransformNamespaceBuilder internal constructor(
     private val createTypes: Boolean
 ) {
 
-    private val namespace = TransformNamespaceDefault(qualifiedName)
+    private val namespace = AsmTransformNamespaceDefault(qualifiedName)
 
     fun imports(vararg imports:String) {
         imports.forEach { namespace.addImport(Import(it)) }
@@ -91,20 +91,20 @@ class AsmTransformNamespaceBuilder internal constructor(
         b.build()
     }
 
-    fun build(): TransformNamespace = namespace
+    fun build(): AsmTransformNamespace = namespace
 }
 
 @AsmTransformModelDslMarker
 class AsmTransformRuleSetBuilder internal constructor(
-    private val namespace: TransformNamespaceDefault,
+    private val namespace: AsmTransformNamespaceDefault,
     private val name: SimpleName,
     private val typeModel: TypeModel,
     private val createTypes: Boolean
 ) {
 
     private val _importTypes = mutableListOf<Import>()
-    private val _extends = mutableListOf<TransformRuleSetReference>()
-    private val _rules = mutableListOf<TransformationRule>()
+    private val _extends = mutableListOf<AsmTransformRuleSetReference>()
+    private val _rules = mutableListOf<AsmTransformationRule>()
     private val defaultTypeNamespaceQualifiedName = namespace.qualifiedName.append(name)
 
     private fun resolveType(grName: GrammarRuleName, typeName: String): TypeDefinition {
@@ -148,7 +148,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     private fun trRule(grammarRuleName: String, typeName: String, expression: Expression) {
         val qt = resolveType(GrammarRuleName(grammarRuleName), typeName)
-        val tr = TransformationRuleDefault(expression)
+        val tr = AsmTransformationRuleDefault(expression)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         _rules.add(tr)
         tr.resolveTypeAs(qt.type())
@@ -167,7 +167,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun extends(vararg list: String) {
         list.forEach {
-            _extends.add(TransformRuleSetReferenceDefault(namespace, it.asPossiblyQualifiedName))
+            _extends.add(AsmTransformRuleSetReferenceDefault(namespace, it.asPossiblyQualifiedName))
         }
     }
 
@@ -176,7 +176,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun leafStringRule(grammarRuleName: String) {
-        val tr = TransformationRuleDefault(RootExpressionDefault.SELF) //("leaf"))
+        val tr = AsmTransformationRuleDefault(RootExpressionDefault.SELF) //("leaf"))
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         tr.resolveTypeAs(StdLibDefault.String)
         _rules.add(tr)
@@ -185,7 +185,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     fun transRule(grammarRuleName: String, typeName: String, expressionStr: String) {
         val expression = expression(expressionStr)
         val typeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
-        val tr = transformationRule(
+        val tr = asmTransformationRule(
             type = typeDef.type(),
             expression = expression
         )
@@ -198,7 +198,7 @@ class AsmTransformRuleSetBuilder internal constructor(
         val expression = expression(expressionStr)
         val elTypeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(elementTypeName)) ?: error("Type '$elementTypeName' not found in type-model '${typeModel.name}'")
         val listType = StdLibDefault.List.type(listOf(elTypeDef.type().asTypeArgument))
-        val tr = transformationRule(
+        val tr = asmTransformationRule(
             type = listType,
             expression = expression
         )
@@ -219,7 +219,7 @@ class AsmTransformRuleSetBuilder internal constructor(
         b.init()
         val subtypes = b.build()
         val expr = expression(expressionStr)
-        val tr = TransformationRuleDefault(expr)
+        val tr = AsmTransformationRuleDefault(expr)
         tr.grammarRuleName = GrammarRuleName(grammarRuleName)
         val t = ns.findOwnedOrCreateUnionTypeNamed(SimpleName(typeName)) { ut ->
             subtypes.forEach { ut.addAlternative(it) }
@@ -238,8 +238,8 @@ class AsmTransformRuleSetBuilder internal constructor(
         trRule(grammarRuleName, typeName, expr)
     }
 
-    fun build(): TransformRuleSet {
-        val trs = TransformRuleSetDefault(
+    fun build(): AsmTransformRuleSet {
+        val trs = AsmTransformRuleSetDefault(
             namespace = namespace,
             name = name,
             _rules = _rules,

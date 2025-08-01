@@ -33,10 +33,10 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.AsmTransformRuleSetBuilder
-import net.akehurst.language.transform.builder.asmTransform
-import net.akehurst.language.transform.test.AsmTransformModelTest
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.AsmTransformRuleSetBuilder
+import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.asmTransform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
@@ -53,7 +53,7 @@ class test_AllDefault {
          * TrNamespace.name = qualifiedName.front
          * TrRuleSet.name = qualifiedName.last
          */
-        fun asmGrammarTransform(domainName: String, namespaceName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): TransformModel {
+        fun asmGrammarTransform(domainName: String, namespaceName: String, typeModel: TypeModel, createTypes: Boolean, init: AsmTransformRuleSetBuilder.() -> Unit): AsmTransformDomain {
             val qn = QualifiedName(namespaceName)
             return asmTransform(domainName, typeModel, createTypes) {
                 namespace(qn.front.value) {
@@ -69,7 +69,7 @@ class test_AllDefault {
             val grammarStr: String,
             val expectedRrs: RuleSet,
             val expectedTm: TypeModel,
-            val expectedTr: TransformModel
+            val expectedTr: AsmTransformDomain
         ) {
             val sentenceData = mutableListOf<TestDataForSentenceParse>()
 
@@ -138,7 +138,7 @@ class test_AllDefault {
             grammarStr: String,
             expectedRrs: RuleSet,
             expectedTm: TypeModel,
-            expectedTr: TransformModel,
+            expectedTr: AsmTransformDomain,
             sentenceIndex: Int? = null,
             sentenceData: TestDataForGeneratedParser.() -> Unit
         ) {

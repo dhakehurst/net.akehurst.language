@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
+import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.Agl.configurationSimple
 import net.akehurst.language.api.processor.GrammarString
-import net.akehurst.language.collections.lazyMap
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized

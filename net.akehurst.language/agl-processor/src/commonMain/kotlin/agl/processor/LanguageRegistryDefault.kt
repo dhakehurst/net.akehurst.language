@@ -42,11 +42,11 @@ import net.akehurst.language.reference.processor.ReferencesSemanticAnalyser
 import net.akehurst.language.reference.processor.ReferencesSyntaxAnalyser
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.processor.AsmTransform
-import net.akehurst.language.transform.processor.AsmTransformCompletionProvider
-import net.akehurst.language.transform.processor.AsmTransformSemanticAnalyser
-import net.akehurst.language.transform.processor.AsmTransformSyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.processor.AsmTransform
+import net.akehurst.language.asmTransform.processor.AsmTransformCompletionProvider
+import net.akehurst.language.asmTransform.processor.AsmTransformSemanticAnalyser
+import net.akehurst.language.asmTransform.processor.AsmTransformSyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.processor.AglTypes
 
@@ -73,7 +73,7 @@ interface AglLanguages {
     val grammar: LanguageDefinition<GrammarModel, ContextWithScope<Any,Any>>
     val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>>
     val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel>
-    val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel>
+    val transform: LanguageDefinition<AsmTransformDomain, ContextWithScope<Any, Any>>
     val style: LanguageDefinition<AglStyleModel, ContextWithScope<Any,Any>>
     val format: LanguageDefinition<AglFormatModel, ContextWithScope<Any,Any>>
 }
@@ -114,33 +114,14 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
 
         override val types: LanguageDefinition<TypeModel, ContextWithScope<Any,Any>> by lazy {
-            base //ensure base is instantiated
+            base // ensure base is instantiated
             this@LanguageRegistryDefault.registerFromLanguageObject(AglTypes)
         }
 
-        override val transform: LanguageDefinition<TransformModel, ContextFromGrammarAndTypeModel> by lazy {
+        override val transform: LanguageDefinition<AsmTransformDomain, ContextWithScope<Any, Any>> by lazy {
             base //ensure base is instantiated
-            val lang = AsmTransform
-            this@LanguageRegistryDefault.registerFromDefinition(
-                LanguageDefinitionFromAsm(
-                    identity = transformLanguageIdentity,
-                    lang.grammar.asGrammarModel(),
-                    buildForDefaultGoal = false,
-                    initialConfiguration = Agl.configuration {
-                        targetGrammarName(lang.grammar.name.value)
-                        defaultGoalRuleName(lang.goalRuleName)
-                        //scannerResolver { ProcessResultDefault(ScannerOnDemand(RegexEnginePlatform, it.ruleSet.terminals), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //parserResolver { ProcessResultDefault(LeftCornerParser(it.scanner!!, it.ruleSet), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        //crossReferenceModelResolver { ProcessResultDefault(CrossReferenceModelDefault(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                        syntaxAnalyserResolver { ProcessResultDefault(AsmTransformSyntaxAnalyser()) }
-                        semanticAnalyserResolver { ProcessResultDefault(AsmTransformSemanticAnalyser()) }
-                        //formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                        styleResolver { Agl.fromString(Agl.registry.agl.style.processor!!, Agl.registry.agl.style.processor!!.optionsDefault(), lang.styleStr) }
-                        completionProvider { ProcessResultDefault(AsmTransformCompletionProvider()) }
-                    }
-                )
-            )
+            expressions // ensure expressions is instantiated
+            this@LanguageRegistryDefault.registerFromLanguageObject(AsmTransform)
         }
 
         override val crossReference: LanguageDefinition<CrossReferenceModel, ContextFromTypeModel> by lazy {

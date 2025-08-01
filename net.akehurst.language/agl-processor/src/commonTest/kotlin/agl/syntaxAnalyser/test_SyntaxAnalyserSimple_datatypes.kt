@@ -28,7 +28,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.*
 
@@ -61,7 +61,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.allIssues.none { it.kind == LanguageIssueKind.ERROR }, result.allIssues.toString())
-            val tr = TransformDomainDefault.fromGrammarModel(result.asm!!)
+            val tr = AsmTransformDomainDefault.fromGrammarModel(result.asm!!)
             assertNotNull(tr.asm)
             assertTrue(tr.allIssues.none { it.kind == LanguageIssueKind.ERROR }, result.allIssues.toString())
             tr.asm!!

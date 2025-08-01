@@ -42,7 +42,7 @@ import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -68,7 +68,7 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
         TODO("build type model")
     }
     override val kompositeModel: TypeModel get() = typesModel
-    override val asmTransformModel: TransformModel get() = TODO()
+    override val asmTransformModel: AsmTransformDomain get() = TODO()
     override val crossReferenceModel: CrossReferenceModel get() = TODO("builder for cross reference model")
     override val styleModel: AglStyleModel get() = TODO("not implemented")
     override val formatModel: AglFormatModel get() = TODO("not implemented")

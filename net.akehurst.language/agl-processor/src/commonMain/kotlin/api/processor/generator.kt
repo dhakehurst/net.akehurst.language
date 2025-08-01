@@ -30,7 +30,7 @@ import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 
 interface LanguageObject<AsmType : Any, ContextType : Any> {
@@ -47,7 +47,7 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val grammarModel: GrammarModel
     val typesModel: TypeModel
     val kompositeModel: TypeModel
-    val asmTransformModel: TransformModel
+    val asmTransformModel: AsmTransformDomain
     val crossReferenceModel: CrossReferenceModel
     val styleModel: AglStyleModel
     val formatModel: AglFormatModel

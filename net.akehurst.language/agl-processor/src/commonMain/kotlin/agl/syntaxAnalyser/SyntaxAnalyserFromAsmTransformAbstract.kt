@@ -37,20 +37,20 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformationRule
-import net.akehurst.language.transform.asm.*
-import net.akehurst.language.transform.processor.AsmTransformInterpreter
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.*
+import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
 data class NodeTrRules(
-    val forNode: TransformationRule,
-    val forChildren: TransformationRule
+    val forNode: AsmTransformationRule,
+    val forChildren: AsmTransformationRule
 ) {
-    constructor(t: TransformationRule) : this(t, t)
+    constructor(t: AsmTransformationRule) : this(t, t)
 }
 
 data class DownData2(
@@ -71,7 +71,7 @@ data class ChildData<AsmValueType : Any>(
  */
 abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueType : Any>(
     _typeModel: TypeModel,
-    val asmTransformModel: TransformModel,
+    val asmTransformModel: AsmTransformDomain,
     val relevantTrRuleSet: QualifiedName,
     val asmFactory: AsmFactory<AsmType, AsmValueType>
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
@@ -101,7 +101,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): TransformationRule? {
+    private fun findTrRuleForGrammarRuleNamedOrNull(grmRuleName: String): AsmTransformationRule? {
         return relevantRuleSet.findAllTrRuleForGrammarRuleNamedOrNull(GrammarRuleName(grmRuleName))
     }
 
@@ -274,12 +274,12 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun trRuleForNode(parentTrRule: TransformationRule?, nodeInfo: SpptDataNodeInfo): TransformationRule {
+    private fun trRuleForNode(parentTrRule: AsmTransformationRule?, nodeInfo: SpptDataNodeInfo): AsmTransformationRule {
         //val parentType = parentTrRule?.resolvedType
         val parentTypeDecl = parentTrRule?.resolvedType?.resolvedDeclaration
         val nodeRule = nodeInfo.node.rule
         return when {
-            null == parentTypeDecl -> transformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
+            null == parentTypeDecl -> asmTransformationRule(StdLibDefault.NothingType, RootExpressionDefault.NOTHING)
             /*
             nodeRule.isOptional -> when {
                 nodeRule.isPseudo -> transformationRule(SimpleTypeModelStdLib.AnyType.nullable(), RootExpressionSimple.SELF)
@@ -314,7 +314,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             }
 */
             else -> when {
-                nodeRule.isPseudo -> transformationRule(StdLibDefault.AnyType, RootExpressionDefault.SELF)
+                nodeRule.isPseudo -> asmTransformationRule(StdLibDefault.AnyType, RootExpressionDefault.SELF)
                 /*
                 nodeRule.isPseudo -> { //TODO: check if isPseudo maybe just need to return self..higher TR-rule handles pars-tree-nodes?
                     //must be group or choice
@@ -498,7 +498,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         }
     }
 
-    private fun resolveCompressed(p: ParsePath, trRule: TransformationRule, nodeInfo: SpptDataNodeInfo): DownData2 {
+    private fun resolveCompressed(p: ParsePath, trRule: AsmTransformationRule, nodeInfo: SpptDataNodeInfo): DownData2 {
         val typeDecl = trRule.resolvedType.resolvedDeclaration
         return when {
             typeDecl is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {

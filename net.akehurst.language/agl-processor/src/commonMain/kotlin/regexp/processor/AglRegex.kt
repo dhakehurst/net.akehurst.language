@@ -29,7 +29,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.regex.agl.RegexParser
 import net.akehurst.language.regex.api.Regex
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 
 object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
@@ -142,7 +142,7 @@ object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
     override val typesModel: TypeModel
         get() = TODO("not implemented")
 
-    override val asmTransformModel: TransformModel
+    override val asmTransformModel: AsmTransformDomain
         get() = TODO("not implemented")
 
     override val crossReferenceModel: CrossReferenceModel

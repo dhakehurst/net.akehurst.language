@@ -34,8 +34,8 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.builder.styleModel
 import net.akehurst.language.style.processor.AglStyle
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -153,7 +153,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
         typeModel(NAME, true, AglBase.typesModel.namespace) {  }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val asmTransformModel: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
             typeModel = typesModel,

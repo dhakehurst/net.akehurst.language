@@ -31,7 +31,7 @@ import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.jvm.JvmInline
 
@@ -110,7 +110,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val typesModel: TypeModel?
 
     val transformString: TransformString?
-    val transformModel: TransformModel?
+    val transformModel: AsmTransformDomain?
 
     val crossReferenceString: CrossReferenceString?
     val crossReferenceModel: CrossReferenceModel?

@@ -15,20 +15,20 @@
  *
  */
 
-package net.akehurst.language.transform.test
+package net.akehurst.language.asmTransform.test
 
 import net.akehurst.language.expressions.test.ExpressionsTest
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformNamespace
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 object AsmTransformModelTest {
 
-    fun trAssertEquals(expected: TransformModel?, actual: TransformModel?) {
+    fun trAssertEquals(expected: AsmTransformDomain?, actual: AsmTransformDomain?) {
         assertEquals(expected?.asString(), actual?.asString())
         assertEquals(expected?.name, actual?.name)
         assertEquals(expected?.namespace?.size, actual?.namespace?.size, "Different number of namespaces")
@@ -41,7 +41,7 @@ object AsmTransformModelTest {
         }
     }
 
-    fun trAssertEquals(expected: TransformNamespace?, actual: TransformNamespace?) {
+    fun trAssertEquals(expected: AsmTransformNamespace?, actual: AsmTransformNamespace?) {
         assertEquals(expected?.qualifiedName, actual?.qualifiedName)
         assertEquals(expected?.definition?.size, actual?.definition?.size, "Different number of definitions")
         if (expected?.definition != null && actual?.definition != null) {
@@ -53,7 +53,7 @@ object AsmTransformModelTest {
         }
     }
 
-    private fun trAssertEquals(expected: TransformRuleSet?, actual: TransformRuleSet?) {
+    private fun trAssertEquals(expected: AsmTransformRuleSet?, actual: AsmTransformRuleSet?) {
         when {
             (expected == null && actual == null) -> Unit // pass
             expected == null -> fail()
@@ -71,7 +71,7 @@ object AsmTransformModelTest {
         }
     }
 
-    private fun trAssertEquals(expected: TransformationRule, actual: TransformationRule, message: String) {
+    private fun trAssertEquals(expected: AsmTransformationRule, actual: AsmTransformationRule, message: String) {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
         TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
         ExpressionsTest.exAssertEquals(expected.expression, actual.expression)

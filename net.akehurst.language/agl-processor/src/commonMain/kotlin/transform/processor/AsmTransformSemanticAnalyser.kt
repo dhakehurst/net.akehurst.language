@@ -15,10 +15,11 @@
  *
  */
 
-package net.akehurst.language.transform.processor
+package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -40,20 +41,20 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformationRule
-import net.akehurst.language.transform.asm.TransformDomainDefault
-import net.akehurst.language.transform.asm.TransformationRuleDefault
-import net.akehurst.language.transform.asm.transformationRule
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformNamespace
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformationRuleDefault
+import net.akehurst.language.asmTransform.asm.asmTransformationRule
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.ParameterDefinitionSimple
 import net.akehurst.language.typemodel.asm.PropertyDeclarationStored
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.util.cached
 
-class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextFromGrammarAndTypeModel> {
+class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, ContextWithScope<Any, Any>> {
 
     companion object {
         const val OPTION_CREATE_TYPES = "create-missing-types"
@@ -67,14 +68,15 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
 
-    private var _context: ContextFromGrammarAndTypeModel? = null
-    private var __asm: TransformModel? = null
-    private val _asm: TransformModel get() = __asm!!
-    private val _typeModel: TypeModel get() = _context!!.typeModel
-    private val _grammarModel: GrammarModel get() = _context!!.grammarModel
+    private var _context: ContextWithScope<Any, Any>? = null
+    private var __asm: AsmTransformDomain? = null
+    private val _asm: AsmTransformDomain get() = __asm!!
+    //TODO: rework to allow use of proper items in context
+    private val _typeModel: TypeModel get() = _context!!.findItemsNamedConformingTo("typeModel") { _ -> true }.first().item as TypeModel
+    private val _grammarModel: GrammarModel get() = _context!!.findItemsNamedConformingTo("grammarModel") { _ -> true }.first().item as GrammarModel
 
     private val transformFromGrammar = cached {
-        val res = TransformDomainDefault.fromGrammarModel(_grammarModel)
+        val res = AsmTransformDomainDefault.fromGrammarModel(_grammarModel)
         _issues.addAllFrom(res.allIssues)
         res.asm!!
     }
@@ -88,17 +90,17 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
     }
 
     override fun analyse(
-        sentenceIdentity:Any?,
-        asm: TransformModel,
+        sentenceIdentity: Any?,
+        asm: AsmTransformDomain,
         locationMap: LocationMap?,
-        options: SemanticAnalysisOptions<ContextFromGrammarAndTypeModel>
+        options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
         _context = options.context
         __asm = asm
         if (null == _context) {
             _issues.warn(null, "No context, semantic analysis cannot be performed")
         } else {
-            (asm as TransformDomainDefault).typeModel = _typeModel
+            (asm as AsmTransformDomainDefault).typeModel = _typeModel
             for (trns in asm.namespace) {
                 overrideDefaultNamespace(trns)
                 for (trs in trns.definition) {
@@ -121,20 +123,20 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                     }
                     for (trr in trs.rules.values) {
                         val ti = typeFor(trs, trr) // always fetch the type, so that it gets created if need be TODO: maybe do type creation in separate phase!
-                        (trr as TransformationRuleDefault).resolveTypeAs(ti)
+                        (trr as AsmTransformationRuleDefault).resolveTypeAs(ti)
                     }
                 }
             }
             // in case new namespaces/types were created TODO: maybe only if OPTION_CREATE_TYPES specified
             _typeModel.resolveImports()
         }
-        return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
+        return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
 
     /**
      * converts nonTerm: TypeRef  =>  nonTerm: TypeRef() { ... <prop assignments from default> ...  }
      */
-    private fun convertRulesThatSimplyRedefineDefaultType(trs: TransformRuleSet) {
+    private fun convertRulesThatSimplyRedefineDefaultType(trs: AsmTransformRuleSet) {
         val rulesToConvert = trs.rules.values.filter { it.expression is RootExpression && (it.expression as RootExpression).isSelf.not() }
         when {
             trs.options.overrideDefault -> {
@@ -155,7 +157,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
 
                         else -> error("Unsupported ${defExpr::class.simpleName}")
                     }
-                    val newRule = transformationRule(clonedTypeDeclOrCreated.type(), newExpr)
+                    val newRule = asmTransformationRule(clonedTypeDeclOrCreated.type(), newExpr)
                     newRule.grammarRuleName = trr.grammarRuleName
                     trs.setRule(newRule)
                     //also ensure properties are transferred
@@ -179,7 +181,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         }
     }
 
-    private fun typeFor(trs: TransformRuleSet, trr: TransformationRule): TypeInstance {
+    private fun typeFor(trs: AsmTransformRuleSet, trr: AsmTransformationRule): TypeInstance {
         // A TrRule needs to know the target type because this type is used
         // to define the type for a grammar Rule
         // thus only certain expressions are valid.
@@ -201,7 +203,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
      * if it exists, clone it into type-domain for this transform
      * else create or find grammar-type-namespace and create new datatype for 'typePqn'
      */
-    private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: TransformRuleSet, trr: TransformationRule): TypeDefinition {
+    private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: AsmTransformRuleSet, trr: AsmTransformationRule): TypeDefinition {
         val grmDecl = transformFromGrammar.value.typeModel?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
         val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typeModel) ?: let {
             // need a grammarTypeNamespace
@@ -222,7 +224,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         return clonedTypeDeclOrCreated
     }
 
-    private fun overrideDefaultNamespace(ns: TransformNamespace) {
+    private fun overrideDefaultNamespace(ns: AsmTransformNamespace) {
         when {
             ns.options.overrideDefault -> {
                 val grmNs = transformFromGrammar.value.findNamespaceOrNull(ns.qualifiedName)
@@ -255,13 +257,13 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
             }
     }
 
-    private fun createMissingTypeNamespaces(trs: TransformRuleSet) {
+    private fun createMissingTypeNamespaces(trs: AsmTransformRuleSet) {
         when {
             trs.options.createTypes -> findOrCreateGrammarTypeNamespace(trs.qualifiedName)
         }
     }
 
-    private fun overrideDefaultRuleSet(trs: TransformRuleSet) {
+    private fun overrideDefaultRuleSet(trs: AsmTransformRuleSet) {
         when {
             trs.options.overrideDefault -> {
                 val grmRs = transformFromGrammar.value.findNamespaceOrNull(trs.namespace.qualifiedName)?.findDefinitionOrNull(trs.name)
@@ -283,7 +285,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
         }
     }
 
-    private fun createMissingTypes(trs: TransformRuleSet) {
+    private fun createMissingTypes(trs: AsmTransformRuleSet) {
         when {
             trs.options.createTypes -> {
                 for (trr in trs.rules.values) {
@@ -301,7 +303,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                                 if (pType == StdLibDefault.NothingType) {
                                     pType = StdLibDefault.AnyType
                                 }
-                                ParameterDefinitionSimple(pName,pType, null)
+                                ParameterDefinitionSimple(pName, pType, null)
                             }
                             t.addConstructor(params)
 
@@ -315,7 +317,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<TransformModel, ContextF
                                 when {
                                     null == existingProp -> {
                                         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-                                        t.appendPropertyStored(propName, propType, characteristics, ass.lhsGrammarRuleIndex?: -1)
+                                        t.appendPropertyStored(propName, propType, characteristics, ass.lhsGrammarRuleIndex ?: -1)
                                     }
 
                                     else -> when {

@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.transform.api
+package net.akehurst.language.asmTransform.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
@@ -23,38 +23,38 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 
-interface TransformModel : Model<TransformNamespace, TransformRuleSet> {
+interface AsmTransformDomain : Model<AsmTransformNamespace, AsmTransformRuleSet> {
     /**
      * Access to the TypeModel ensuring that the AsmTransform has first been evaluated
      */
     val typeModel: TypeModel?
 
-    override val namespace: List<TransformNamespace>
+    override val namespace: List<AsmTransformNamespace>
 
-    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace
+    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): AsmTransformNamespace
     fun findTypeForGrammarRule(grammarQualifiedName: QualifiedName, ruleName: GrammarRuleName): TypeInstance?
 
 }
 
-interface TransformNamespace : Namespace<TransformRuleSet> {
-    fun createOwnedTransformRuleSet(name: SimpleName, extends: List<TransformRuleSetReference>, options: OptionHolder): TransformRuleSet
+interface AsmTransformNamespace : Namespace<AsmTransformRuleSet> {
+    fun createOwnedTransformRuleSet(name: SimpleName, extends: List<AsmTransformRuleSetReference>, options: OptionHolder): AsmTransformRuleSet
 }
 
-interface TransformRuleSetReference : DefinitionReference<TransformRuleSet> {
+interface AsmTransformRuleSetReference : DefinitionReference<AsmTransformRuleSet> {
    // val localNamespace: TransformNamespace
   //  val nameOrQName: PossiblyQualifiedName
    // var resolved: TransformRuleSet?
 
    // fun resolveAs(resolved: TransformRuleSet)
 
-   fun cloneTo(ns: TransformNamespace): TransformRuleSetReference
+   fun cloneTo(ns: AsmTransformNamespace): AsmTransformRuleSetReference
 }
 
-interface TransformRuleSet : Definition<TransformRuleSet> {
+interface AsmTransformRuleSet : Definition<AsmTransformRuleSet> {
 
-    override val namespace: TransformNamespace
+    override val namespace: AsmTransformNamespace
 
-    val extends: List<TransformRuleSetReference>
+    val extends: List<AsmTransformRuleSetReference>
 
     /**
      * Types in these namespaces can be referenced non-qualified
@@ -65,25 +65,25 @@ interface TransformRuleSet : Definition<TransformRuleSet> {
     /**
      * map from grammar-rule name to TransformationRule
      */
-    val rules: Map<GrammarRuleName, TransformationRule>
+    val rules: Map<GrammarRuleName, AsmTransformationRule>
 
     val createObjectRules: List<CreateObjectRule>
     val modifyObjectRules: List<ModifyObjectRule>
 
-    fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
-    fun findAllTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule?
+    fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): AsmTransformationRule?
+    fun findAllTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): AsmTransformationRule?
 
     fun addImportType(value:Import)
 
     /**
      * set the rule for its GrammarRuleName (rules[rule.grammarRuleName] = rule)
      */
-    fun setRule(rule: TransformationRule)
+    fun setRule(rule: AsmTransformationRule)
 
-    fun cloneTo(ns: TransformNamespace): TransformRuleSet
+    fun cloneTo(ns: AsmTransformNamespace): AsmTransformRuleSet
 }
 
-interface TransformationRule {
+interface AsmTransformationRule {
     var grammarRuleName: GrammarRuleName
     val expression: Expression
     val isResolved: Boolean
@@ -93,7 +93,7 @@ interface TransformationRule {
     fun asString(indent: Indent = Indent(), imports: List<Import> = emptyList()): String
 }
 
-interface CreateObjectRule : TransformationRule {
+interface CreateObjectRule : AsmTransformationRule {
 
 }
 
@@ -101,5 +101,5 @@ interface SelfStatement {
 
 }
 
-interface ModifyObjectRule : TransformationRule {
+interface ModifyObjectRule : AsmTransformationRule {
 }

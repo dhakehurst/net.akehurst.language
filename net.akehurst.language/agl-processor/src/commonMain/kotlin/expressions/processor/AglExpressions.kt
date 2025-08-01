@@ -30,7 +30,7 @@ import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any, Any>>() {

@@ -29,7 +29,7 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.sentence.api.InputLocation
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.TypeModelSimple
@@ -47,7 +47,7 @@ class test_CrossReferenceLanguage {
             val grammarMdl = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
             val grmrTypeModel = TypeModelSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(StdLibDefault)
-            TransformDomainDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
+            AsmTransformDomainDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
             val ctx = ContextFromTypeModel(tm)

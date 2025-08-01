@@ -36,8 +36,8 @@ import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -746,7 +746,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val asmTransformModel: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
             typeModel = typesModel,
@@ -811,7 +811,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
     }
 
     override val formatModel: AglFormatModel by lazy {
-        formatModel(AglBase.NAME) {
+        formatModel(NAME) {
 //            TODO("not implemented")
         }
     }

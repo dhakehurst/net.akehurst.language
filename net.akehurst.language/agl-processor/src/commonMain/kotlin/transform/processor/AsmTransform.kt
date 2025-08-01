@@ -15,22 +15,47 @@
  *
  */
 
-package net.akehurst.language.transform.processor
+package net.akehurst.language.asmTransform.processor
 
+import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.api.processor.LanguageObjectAbstract
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
+import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.grammar.api.Grammar
+import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammar
+import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.processor.AglGrammar
+import net.akehurst.language.grammar.processor.AglGrammarCompletionProvider
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
+import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.regex.api.CommonRegexPatterns
+import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.style.processor.AglStyle
+import net.akehurst.language.typemodel.builder.typeModel
 
-object AsmTransform { //: LanguageObject {
+object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
-    const val NAME = "Transform"
+    const val NAME = "AsmTransform"
     const val goalRuleName = "unit"
 
-    val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+    override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
-     val grammarString: String = """
+    override val grammarString: String = """
 namespace $NAMESPACE_NAME
 
 grammar $NAME : Base {
@@ -57,55 +82,169 @@ grammar $NAME : Base {
 }
     """
 
-    val grammar = grammar(
-        namespace = NAMESPACE_NAME,
-        name = NAME
-    ) {
-        extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+    override val crossReferenceString = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
 
-        concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
-            lit("namespace"); ref("possiblyQualifiedName")
-            lst(0, -1) { ref("option") }
-            lst(0, -1) { ref("import") }
-            lst(0, -1) { ref("transform") }
+    override val styleString = """
+        namespace $NAMESPACE_NAME
+        styles $NAME {
+            // TODO
         }
-        concatenation("transform") {
-            lit("transform"); ref("IDENTIFIER"); opt { ref("extends") }
-            lit("{")
-            lst(0, -1) { ref("option") }
-            lst(0, -1) { ref("typeImport") }
-            lst(0, -1) { ref("transformRule") }
-            lit("}")
-        }
-        concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
-        concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
-        concatenation("transformRule") {
-            ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
-        }
-        choice("transformRuleRhs") {
-            ref("expressionRule")
-            ref("modifyRule")
-        }
-        concatenation("expressionRule") {
-            ref("expression")
-        }
-        concatenation("modifyRule") {
-            lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
-        }
-        concatenation("assignmentStatement") {
-            ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
-        }
-        concatenation("propertyName") { ref("IDENTIFIER") }
-        concatenation("grammarRuleName") { ref("IDENTIFIER") }
-        concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
-        concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
-        concatenation("grammarRuleIndex"){ lit("$"); ref("POSITIVE_INTEGER") }
-        concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
-    }
-
-
-    const val styleStr = """
     """
 
-    override fun toString(): String = grammarString.trimIndent()
+    override val grammarModel by lazy {
+        grammarModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                grammar(NAME) {
+                    extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
+
+                    concatenation("namespace", overrideKind = OverrideKind.REPLACE) {
+                        lit("namespace"); ref("possiblyQualifiedName")
+                        lst(0, -1) { ref("option") }
+                        lst(0, -1) { ref("import") }
+                        lst(0, -1) { ref("transform") }
+                    }
+                    concatenation("transform") {
+                        lit("transform"); ref("IDENTIFIER"); opt { ref("extends") }
+                        lit("{")
+                        lst(0, -1) { ref("option") }
+                        lst(0, -1) { ref("typeImport") }
+                        lst(0, -1) { ref("transformRule") }
+                        lit("}")
+                    }
+                    concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
+                    concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
+                    concatenation("transformRule") {
+                        ref("grammarRuleName"); lit(":");ref("transformRuleRhs")
+                    }
+                    choice("transformRuleRhs") {
+                        ref("expressionRule")
+                        ref("modifyRule")
+                    }
+                    concatenation("expressionRule") {
+                        ref("expression")
+                    }
+                    concatenation("modifyRule") {
+                        lit("{"); ref("possiblyQualifiedTypeName"); lit("->"); lst(1, -1) { ref("assignmentStatement") }; lit("}")
+                    }
+                    concatenation("assignmentStatement") {
+                        ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
+                    }
+                    concatenation("propertyName") { ref("IDENTIFIER") }
+                    concatenation("grammarRuleName") { ref("IDENTIFIER") }
+                    concatenation("possiblyQualifiedTypeName") { ref("possiblyQualifiedName") }
+                    concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
+                    concatenation("grammarRuleIndex") { lit("$"); ref("POSITIVE_INTEGER") }
+                    concatenation("POSITIVE_INTEGER", isLeaf = true) { pat("[0-9]+") } //TODO: move this into Base
+                }
+            }
+        }
+    }
+
+    const val komposite = """namespace net.akehurst.language.asmTransform.api
+        // TODO
+    """
+
+    override val typesModel by lazy {
+        typeModel(NAME, true, AglBase.typesModel.namespace) {
+            namespace("net.akehurst.language.asmTransform.api", listOf("std", "net.akehurst.language.base.api")) {
+                interface_("AsmTransformDomain") {}
+            }
+            namespace("net.akehurst.language.asmTransform.asm", listOf("std", "net.akehurst.language.base.asm","net.akehurst.language.asmTransform.api")) {
+                //TODO
+            }
+        }
+    }
+
+    override val asmTransformModel: AsmTransformDomain by lazy {
+        asmTransform(
+            name = NAME,
+            typeModel = typesModel,
+            createTypes = false
+        ) {
+            namespace(qualifiedName = NAMESPACE_NAME) {
+                transform(NAME) {
+                    importTypes(
+                        "net.akehurst.language.asmTransform.api",
+                        "net.akehurst.language.asmTransform.asm"
+                    )
+                    createObject("unit", "AsmTransformDomain") {
+
+                    }
+                    //TODO: currently the types are not found in the typemodel
+                    //    createObject("unit", "DefinitionBlock") {
+                    //        assignment("definitions", "child[1]")
+                    //    }
+                    /*
+                    createObject("grammar", "Grammar") {
+                        assignment("namespace", "child[1]")
+                        assignment("name", "child[1]")
+                        assignment("options", "child[4]")
+                    }
+
+
+                    createObject("embedded", "Embedded") {
+                        assignment("embeddedGoalName", "child[2].name")
+                        assignment(
+                            "embeddedGrammarReference",
+                            """
+                            GrammarReference {
+                                localNamespace := ???
+                                nameOrQName := child[0]
+                            }
+                            """.trimIndent()
+                        )
+                    }
+                    createObject("terminal", "Terminal") {
+                        assignment("value", "child[0].dropAtBothEnds(1)")
+                        assignment("isPattern", "1 == \$alternative")
+                    }
+
+                    transRule("qualifiedName", "String", "children.join()")
+
+                    leafStringRule("LITERAL")
+                    leafStringRule("PATTERN")
+                    leafStringRule("POSITIVE_INTEGER")
+                    leafStringRule("POSITIVE_INTEGER_GT_ZERO")
+
+                     */
+                }
+            }
+        }
+    }
+
+    override val crossReferenceModel: CrossReferenceModel by lazy {
+        crossReferenceModel(NAME) {
+            //TODO
+
+        }
+    }
+
+    override val formatModel: AglFormatModel by lazy {
+        formatModel(NAME) {
+//            TODO("not implemented")
+        }
+    }
+
+    override val styleModel: AglStyleModel by lazy {
+        styleModel(NAME) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    // TODO
+                }
+            }
+        }
+    }
+
+    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGoalRule: String = "unit"
+
+    override val syntaxAnalyser: SyntaxAnalyser<AsmTransformDomain> by lazy { AsmTransformSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<AsmTransformDomain, ContextWithScope<Any, Any>> by lazy { AsmTransformSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AsmTransformDomain, ContextWithScope<Any, Any>> by lazy { AsmTransformCompletionProvider() }
+
+    override fun toString(): String = "${NAMESPACE_NAME}.${NAME}"
+
 }

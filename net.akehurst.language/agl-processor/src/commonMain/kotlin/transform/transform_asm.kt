@@ -15,11 +15,12 @@
  *
  */
 
-package net.akehurst.language.transform.asm
+package net.akehurst.language.asmTransform.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypeModelMapping
 import net.akehurst.language.agl.simple.GrammarModel2TransformModel
@@ -31,19 +32,19 @@ import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.transform.api.*
+import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
-class TransformDomainDefault(
+class AsmTransformDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-    namespace: List<TransformNamespace> = emptyList()
-) : TransformModel, ModelAbstract<TransformNamespace, TransformRuleSet>(namespace,options) {
+    namespace: List<AsmTransformNamespace> = emptyList()
+) : AsmTransformDomain, ModelAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
 
-    companion object {
-        fun fromString(context: ContextFromGrammarAndTypeModel, transformStr: TransformString): ProcessResult<TransformModel> {
+    companion object Companion {
+        fun fromString(context: ContextWithScope<Any, Any>, transformStr: TransformString): ProcessResult<AsmTransformDomain> {
             val proc = Agl.registry.agl.transform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,
@@ -61,25 +62,25 @@ class TransformDomainDefault(
             grammarModel: GrammarModel,
             typeModel: TypeModel = TypeModelSimple(grammarModel.allDefinitions.last().name),
             configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
-        ): ProcessResult<TransformModel> {
+        ): ProcessResult<AsmTransformDomain> {
             val atfg = GrammarModel2TransformModel(typeModel, grammarModel, configuration)
             val trModel = atfg.build()
-            return ProcessResultDefault<TransformModel>(trModel, processIssues=atfg.issues)
+            return ProcessResultDefault<AsmTransformDomain>(trModel, processIssues=atfg.issues)
         }
 
     }
 
     override var typeModel: TypeModel? = null
 
-    override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TransformNamespace {
+    override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): AsmTransformNamespace {
         val existing = findNamespaceOrNull(qualifiedName)
         return when(existing) {
             null -> {
-                val ns = TransformNamespaceDefault(qualifiedName = qualifiedName, import = imports)//, imports)
+                val ns = AsmTransformNamespaceDefault(qualifiedName = qualifiedName, import = imports)//, imports)
                 addNamespace(ns)
                 ns
             }
-            else -> existing as TransformNamespace
+            else -> existing as AsmTransformNamespace
         }
     }
 
@@ -90,13 +91,13 @@ class TransformDomainDefault(
 
 }
 
-class TransformNamespaceDefault(
+class AsmTransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = mutableListOf()
-) : TransformNamespace, NamespaceAbstract<TransformRuleSet>(options,import) {
+) : AsmTransformNamespace, NamespaceAbstract<AsmTransformRuleSet>(options,import) {
 
-    override fun createOwnedTransformRuleSet(name: SimpleName, extends: List<TransformRuleSetReference>, options: OptionHolder): TransformRuleSet = TransformRuleSetDefault(
+    override fun createOwnedTransformRuleSet(name: SimpleName, extends: List<AsmTransformRuleSetReference>, options: OptionHolder): AsmTransformRuleSet = AsmTransformRuleSetDefault(
         namespace = this,
         name = name,
         argExtends = extends,
@@ -123,36 +124,36 @@ class TransformNamespaceDefault(
     }
 }
 
-data class TransformRuleSetReferenceDefault(
-    override val localNamespace: TransformNamespace,
+data class AsmTransformRuleSetReferenceDefault(
+    override val localNamespace: AsmTransformNamespace,
     override val nameOrQName: PossiblyQualifiedName
-) : TransformRuleSetReference {
-    override var resolved: TransformRuleSet? = null
-    override fun resolveAs(resolved: TransformRuleSet) {
+) : AsmTransformRuleSetReference {
+    override var resolved: AsmTransformRuleSet? = null
+    override fun resolveAs(resolved: AsmTransformRuleSet) {
         this.resolved = resolved
     }
 
-    override fun cloneTo(ns: TransformNamespace): TransformRuleSetReference {
-        return TransformRuleSetReferenceDefault(ns, nameOrQName).also {
+    override fun cloneTo(ns: AsmTransformNamespace): AsmTransformRuleSetReference {
+        return AsmTransformRuleSetReferenceDefault(ns, nameOrQName).also {
             val resolved = this.resolved
             if (null!=resolved) it.resolveAs(resolved)
         }
     }
 }
 
-class TransformRuleSetDefault(
-    override val namespace: TransformNamespace,
+class AsmTransformRuleSetDefault(
+    override val namespace: AsmTransformNamespace,
     override val name: SimpleName,
-    argExtends: List<TransformRuleSetReference> = emptyList(),
+    argExtends: List<AsmTransformRuleSetReference> = emptyList(),
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
-    _rules: List<TransformationRule>
-) : TransformRuleSet, DefinitionAbstract<TransformRuleSet>() {
+    _rules: List<AsmTransformationRule>
+) : AsmTransformRuleSet, DefinitionAbstract<AsmTransformRuleSet>() {
 
-    override val extends: List<TransformRuleSetReference> = argExtends.toMutableList() //clone the list so it can be modified
+    override val extends: List<AsmTransformRuleSetReference> = argExtends.toMutableList() //clone the list so it can be modified
 
     override val importTypes: List<Import> = mutableListOf()
 
-    override val rules: Map<GrammarRuleName, TransformationRule> = _rules.associateBy(TransformationRule::grammarRuleName).toMutableMap()
+    override val rules: Map<GrammarRuleName, AsmTransformationRule> = _rules.associateBy(AsmTransformationRule::grammarRuleName).toMutableMap()
 
     override val createObjectRules: List<CreateObjectRule> get() = rules.values.filterIsInstance<CreateObjectRule>()
     override val modifyObjectRules: List<ModifyObjectRule> get() = rules.values.filterIsInstance<ModifyObjectRule>()
@@ -167,10 +168,10 @@ class TransformRuleSetDefault(
         }
     }
 
-    override fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule? =
+    override fun findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): AsmTransformationRule? =
         rules[grmRuleName]
 
-    override fun findAllTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): TransformationRule? {
+    override fun findAllTrRuleForGrammarRuleNamedOrNull(grmRuleName: GrammarRuleName): AsmTransformationRule? {
         return findOwnedTrRuleForGrammarRuleNamedOrNull(grmRuleName)
             ?: this.extends.firstNotNullOfOrNull {
                 val res = it.resolved ?: error("Should be resolved!")
@@ -178,8 +179,8 @@ class TransformRuleSetDefault(
             }
     }
 
-    override fun cloneTo(ns: TransformNamespace): TransformRuleSet {
-        val rrs = TransformRuleSetDefault(
+    override fun cloneTo(ns: AsmTransformNamespace): AsmTransformRuleSet {
+        val rrs = AsmTransformRuleSetDefault(
             namespace = ns,
             name = this.name,
             argExtends = this.extends.map { it.cloneTo(ns) },
@@ -190,11 +191,11 @@ class TransformRuleSetDefault(
         return rrs
     }
 
-    fun addExtends(other:TransformRuleSetReference) {
+    fun addExtends(other:AsmTransformRuleSetReference) {
         (this.extends as MutableList).add(other)
     }
 
-    override fun setRule(rule: TransformationRule) {
+    override fun setRule(rule: AsmTransformationRule) {
         (rules as MutableMap)[rule.grammarRuleName] = rule
     }
 
@@ -235,9 +236,9 @@ class TransformRuleSetDefault(
     override fun toString(): String  = "transform ${this.qualifiedName.value} {...}"
 }
 
-class TransformationRuleDefault(
+class AsmTransformationRuleDefault(
     override val expression: Expression
-) : TransformationRule {
+) : AsmTransformationRule {
 
     override var grammarRuleName: GrammarRuleName = GrammarRuleName("<unset>")
     override val isResolved: Boolean get() = null!=this._resolvedType
@@ -256,17 +257,17 @@ class TransformationRuleDefault(
     override fun toString(): String  = "${grammarRuleName.value}: ${expression}"
 }
 
-internal fun transformationRule(type: TypeInstance, expression: Expression): TransformationRuleDefault {
-    return TransformationRuleDefault(
+internal fun asmTransformationRule(type: TypeInstance, expression: Expression): AsmTransformationRuleDefault {
+    return AsmTransformationRuleDefault(
         expression
     ).also {
         it.resolveTypeAs(type)
     }
 }
 
-internal abstract class TransformationStatementAbstract
+internal abstract class AsmTransformationStatementAbstract
 
-internal abstract class SelfStatementAbstract : TransformationStatementAbstract(), SelfStatement
+internal abstract class SelfStatementAbstract : AsmTransformationStatementAbstract(), SelfStatement
 /*
 internal class LambdaSelfStatementSimple(
     val qualifiedTypeName: String

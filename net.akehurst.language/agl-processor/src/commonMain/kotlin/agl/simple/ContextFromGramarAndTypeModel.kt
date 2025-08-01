@@ -18,10 +18,19 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.typemodel.api.TypeModel
 
-data class ContextFromGrammarAndTypeModel(
-    val grammarModel: GrammarModel,
-    val typeModel: TypeModel
-) : SentenceContext
+fun ContextFromGrammarAndTypeModel(
+    grammarModel: GrammarModel,
+    typeModel: TypeModel
+) = ContextWithScope<Any, Any>().also {
+    it.addToScope(null, listOf("grammarModel"), QualifiedName("GrammarModel"),null, grammarModel)
+    it.addToScope(null, listOf("typeModel"), QualifiedName("TypeModel"),null, typeModel)
+}
+
+//data class ContextFromGrammarAndTypeModel(
+//    val grammarModel: GrammarModel,
+//    val typeModel: TypeModel
+//) : SentenceContext

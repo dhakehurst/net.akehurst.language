@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.transform.processor
+package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest

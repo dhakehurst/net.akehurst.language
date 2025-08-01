@@ -37,7 +37,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -92,13 +92,13 @@ class test_StatechartTools_References {
 
     @Test
     fun typeModel() {
-        val typeModel = TransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = TransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
         val extNs = typeModel.findOrCreateNamespace(QualifiedName("external"), listOf(Import("std")))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("AnnotationType"))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("BuiltInType"))

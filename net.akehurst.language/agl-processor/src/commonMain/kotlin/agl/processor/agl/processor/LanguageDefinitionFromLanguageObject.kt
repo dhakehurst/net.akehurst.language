@@ -29,7 +29,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
@@ -49,7 +49,7 @@ internal class LanguageDefinitionFromLanguageObject<AsmType : Any, ContextType :
     override val typesModel: TypeModel? get() = languageObject.typesModel
 
     override val transformString: TransformString? get() = TransformString(languageObject.asmTransformString)
-    override val transformModel: TransformModel? get() = languageObject.asmTransformModel
+    override val transformModel: AsmTransformDomain? get() = languageObject.asmTransformModel
 
     override val crossReferenceString: CrossReferenceString? get() = CrossReferenceString(languageObject.crossReferenceString)
     override val crossReferenceModel: CrossReferenceModel? get() = languageObject.crossReferenceModel

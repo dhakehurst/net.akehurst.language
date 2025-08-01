@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.transform.processor
+package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.base.api.QualifiedName
@@ -28,7 +28,7 @@ import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.transform.api.TransformationRule
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.PropertyName
 import net.akehurst.language.typemodel.api.TypeModel
@@ -132,7 +132,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         this.issues.clear()
     }
 
-    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: TransformationRule): TypedObject<AsmValueType> {
+    fun evaluate(evc: EvaluationContext<AsmValueType>,trRule: AsmTransformationRule): TypedObject<AsmValueType> {
         val tObj = evaluateSelfStatement(evc, trRule.expression)
         val asm = tObj
         return asm

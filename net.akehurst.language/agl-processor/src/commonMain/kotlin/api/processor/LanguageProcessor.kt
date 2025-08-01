@@ -34,8 +34,8 @@ import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**
@@ -87,9 +87,9 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      * The transformation from parse-tree to ASM
      * Evaluating this may or may not modify the typeModel depending on the specifics of the TransformModel
      */
-    val transformModel: TransformModel
+    val transformModel: AsmTransformDomain
 
-    val targetTransformRuleSet: TransformRuleSet
+    val targetTransformRuleSet: AsmTransformRuleSet
 
     /**
      * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor

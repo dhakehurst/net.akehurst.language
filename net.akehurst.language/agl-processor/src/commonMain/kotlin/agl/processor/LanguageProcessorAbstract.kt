@@ -47,9 +47,9 @@ import net.akehurst.language.sentence.common.SentenceDefault
 import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.sppt.treedata.SPPTParserDefault
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 
@@ -99,15 +99,15 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val typesModel: TypeModel get() = this.transformModel.typeModel ?: error("Should not happen")
 
-    override val transformModel: TransformModel by lazy {
+    override val transformModel: AsmTransformDomain by lazy {
         val res = configuration.transformResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
-            ?: TransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
+            ?: AsmTransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
             ?: error("should not happen")
     }
 
-    override val targetTransformRuleSet: TransformRuleSet by lazy {
+    override val targetTransformRuleSet: AsmTransformRuleSet by lazy {
         targetGrammar?.let { transformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
             ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
     }

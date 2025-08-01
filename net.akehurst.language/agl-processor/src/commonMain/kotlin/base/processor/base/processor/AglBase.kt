@@ -35,8 +35,8 @@ import net.akehurst.language.reference.builder.crossReferenceModel
 import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.builder.asmTransform
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.builder.typeModel
@@ -275,7 +275,7 @@ namespace net.akehurst.language.base.asm
         }
     }
 
-    override val asmTransformModel: TransformModel by lazy {
+    override val asmTransformModel: AsmTransformDomain by lazy {
         asmTransform(NAME, typesModel, false) {
             namespace(NAMESPACE_NAME) {
                 transform(NAME) {

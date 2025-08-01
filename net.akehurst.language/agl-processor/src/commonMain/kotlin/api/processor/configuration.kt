@@ -28,13 +28,13 @@ import net.akehurst.language.regex.api.RegexEngineKind
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.scanner.api.ScannerKind
 import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.typemodel.api.TypeModel
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScannerResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Scanner>
 typealias ParserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Parser>
-typealias TransformResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TransformModel>
+typealias TransformResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AsmTransformDomain>
 typealias TypesResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TypeModel>
 //typealias AsmFactoryResolver<AsmFactoryType> = () -> AsmFactoryType
 typealias CrossReferenceResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceModel>

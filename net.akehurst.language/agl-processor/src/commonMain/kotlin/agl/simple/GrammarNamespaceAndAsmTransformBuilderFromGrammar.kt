@@ -29,11 +29,11 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.api.TransformNamespace
-import net.akehurst.language.transform.api.TransformRuleSet
-import net.akehurst.language.transform.api.TransformationRule
-import net.akehurst.language.transform.asm.*
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformNamespace
+import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.asm.StdLibDefault
 import net.akehurst.language.typemodel.asm.StructuredTypeSimpleAbstract
@@ -42,7 +42,7 @@ import std.extensions.capitalise
 import kotlin.reflect.KClass
 
 
-internal class ConstructAndModify<TP : DataType, TR : TransformationRule>(
+internal class ConstructAndModify<TP : DataType, TR : AsmTransformationRule>(
     val construct: (TP) -> TR,
     val modify: (TR) -> Unit
 )
@@ -88,7 +88,7 @@ internal class GrammarModel2TransformModel(
 ) {
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
-    val transModel = TransformDomainDefault(
+    val transModel = AsmTransformDomainDefault(
         name = SimpleName("FromGrammar" + grammarModel.allDefinitions.last().name.value),
         namespace = emptyList()
     ).also {
@@ -116,7 +116,7 @@ internal class GrammarModel2TransformModel(
         }
     }
 
-    fun build(): TransformModel {
+    fun build(): AsmTransformDomain {
         val unsortedGrammars = mutableSetOf<Grammar>()
         grammarModel.allDefinitions.forEach {
             unsortedGrammars.addAll(it.allExtendsResolved)
@@ -156,13 +156,13 @@ internal class GrammarModel2TransformModel(
 internal class Grammar2Namespaces(
     val issues: IssueHolder,
     val typeModel: TypeModel,
-    val transModel: TransformModel,
+    val transModel: AsmTransformDomain,
     val grammar: Grammar,
     val grm2Ns: Map<QualifiedName, Grammar2Namespaces>,
     val configuration: Grammar2TypeModelMapping?
 ) {
     var tpNs: GrammarTypeNamespace? = null
-    var trNs: TransformNamespace? = null
+    var trNs: AsmTransformNamespace? = null
     var g2rs: Grammar2TransformRuleSet? = null
 
     fun buildNamespace(qualifiedName: QualifiedName) =
@@ -179,7 +179,7 @@ internal class Grammar2Namespaces(
             }
         }
 
-    fun buildTransformNamespace(grammar: Grammar): TransformNamespace {
+    fun buildTransformNamespace(grammar: Grammar): AsmTransformNamespace {
         val nsImports = grammar.extendsResolved.filterNot { it.namespace == grammar.namespace }.map { it.namespace.qualifiedName.asImport }
         return transModel.findOrCreateNamespace(grammar.namespace.qualifiedName, nsImports)
     }
@@ -188,7 +188,7 @@ internal class Grammar2Namespaces(
         val gnsqn = grammar.namespace.qualifiedName
         val gqn = grammar.qualifiedName
         tpNs = typeModel.findNamespaceOrNull(gqn) as GrammarTypeNamespace
-        trNs = transModel.findNamespaceOrNull(gnsqn) as TransformNamespace?
+        trNs = transModel.findNamespaceOrNull(gnsqn) as AsmTransformNamespace?
             ?: error("Trans namespace '${gnsqn}' is not created.")
 
         g2rs = Grammar2TransformRuleSet(issues, typeModel, transModel, tpNs!!, trNs!!, grammar, grm2Ns, configuration)
@@ -203,9 +203,9 @@ internal class Grammar2Namespaces(
 internal class Grammar2TransformRuleSet(
     val issues: IssueHolder,
     val typeModel: TypeModel,
-    val transModel: TransformModel,
+    val transModel: AsmTransformDomain,
     val grammarTypeNamespace: GrammarTypeNamespace,
-    val transformNamespace: TransformNamespace,
+    val transformNamespace: AsmTransformNamespace,
     val grammar: Grammar,
     val grm2Ns: Map<QualifiedName, Grammar2Namespaces>,
     val configuration: Grammar2TypeModelMapping?
@@ -221,16 +221,16 @@ internal class Grammar2TransformRuleSet(
         val UNNAMED_CHOICE_PROPERTY_NAME = PropertyName("\$choice")
 
 
-        fun TypeInstance.toNoActionTrRule() = this.let { t -> transformationRule(t, RootExpressionDefault.NOTHING) }
+        fun TypeInstance.toNoActionTrRule() = this.let { t -> asmTransformationRule(t, RootExpressionDefault.NOTHING) }
         fun TypeInstance.toLeafAsStringTrRule() = this.let { t ->
-            transformationRule(t, RootExpressionDefault.SELF)//("leaf"))
+            asmTransformationRule(t, RootExpressionDefault.SELF)//("leaf"))
         }
 
-        fun TypeInstance.toListTrRule() = this.let { t -> transformationRule(t, RootExpressionDefault("children")) }
+        fun TypeInstance.toListTrRule() = this.let { t -> asmTransformationRule(t, RootExpressionDefault("children")) }
         fun TypeInstance.toSListItemsTrRule() =
-            this.let { t -> transformationRule(t, NavigationExpressionDefault(RootExpressionDefault("children"), listOf(PropertyCallDefault("items")))) }
+            this.let { t -> asmTransformationRule(t, NavigationExpressionDefault(RootExpressionDefault("children"), listOf(PropertyCallDefault("items")))) }
 
-        fun TypeInstance.toSubtypeTrRule() = this.let { t -> transformationRule(t, EXPRESSION_CHILD(0)) }
+        fun TypeInstance.toSubtypeTrRule() = this.let { t -> asmTransformationRule(t, EXPRESSION_CHILD(0)) }
         fun EXPRESSION_CHILD(childIndex: Int) = NavigationExpressionDefault(
             start = RootExpressionDefault("child"),
             parts = listOf(IndexOperationDefault(listOf(LiteralExpressionDefault(StdLibDefault.Integer.qualifiedTypeName, childIndex.toLong()))))
@@ -246,20 +246,20 @@ internal class Grammar2TransformRuleSet(
 
         val EXPRESSION_CHILDREN = RootExpressionDefault("children")
 
-        private fun List<TransformationRule>.allOfType(typeDecl: TypeDefinition) = this.all { it.resolvedType.resolvedDeclaration == typeDecl }
-        private fun List<TransformationRule>.allOfTypeIs(klass: KClass<*>) = this.all { klass.isInstance(it.resolvedType.resolvedDeclaration) }
-        private fun List<TransformationRule>.allTrTupleTypesMatch() =
+        private fun List<AsmTransformationRule>.allOfType(typeDecl: TypeDefinition) = this.all { it.resolvedType.resolvedDeclaration == typeDecl }
+        private fun List<AsmTransformationRule>.allOfTypeIs(klass: KClass<*>) = this.all { klass.isInstance(it.resolvedType.resolvedDeclaration) }
+        private fun List<AsmTransformationRule>.allTrTupleTypesMatch() =
             1 == this.map { tr -> (tr.resolvedType as TupleTypeInstance).typeArguments.toSet() }.toSet().size
         private fun List<TypeInstance>.allTupleTypesMatch() =
             1 == this.map { ti -> (ti as TupleTypeInstance).typeArguments.toSet() }.toSet().size
     }
 
-    private var _transformRuleSet: TransformRuleSet? = null
+    private var _transformRuleSet: AsmTransformRuleSet? = null
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredType, PropertyName>, Int>()
     private val _grRuleNameToType = mutableMapOf<GrammarRuleName, TypeInstance>()
     private val _grRuleItemToType = mutableMapOf<RuleItem, TypeInstance>()
-    private val _grRuleNameToTrRule = mutableMapOf<GrammarRuleName, TransformationRule>()
-    private val _grRuleItemToTrRule = mutableMapOf<RuleItem, TransformationRule>()
+    private val _grRuleNameToTrRule = mutableMapOf<GrammarRuleName, AsmTransformationRule>()
+    private val _grRuleItemToTrRule = mutableMapOf<RuleItem, AsmTransformationRule>()
 
     // owning grammar rule name -> next integer to use
     private val _unnamedUnionNames = mutableMapOf<GrammarRuleName, Int>()
@@ -276,13 +276,13 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    fun build(): TransformRuleSet {
+    fun build(): AsmTransformRuleSet {
         //val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() }
         val nonSkipRules = grammar.resolvedGrammarRule.filter { it.isSkip.not() }
         for (gr in nonSkipRules) {
             createOrFindTrRuleForGrammarRule(gr)
         }
-        val trRules = mutableListOf<TransformationRule>()
+        val trRules = mutableListOf<AsmTransformationRule>()
         // TODO: why iterate here?...just add to transformModel & namespace when first created !
         this._grRuleNameToTrRule.entries.forEach {
             val key = it.key
@@ -293,9 +293,9 @@ internal class Grammar2TransformRuleSet(
         val extends = grammar.extends.map {
             val rqn = it.resolved?.qualifiedName ?: error("Should already be resolved")
             val trs = grm2Ns[rqn]?.g2rs?._transformRuleSet ?: error("Extended TransformRuleSet not built!")
-            TransformRuleSetReferenceDefault(this.transformNamespace, it.nameOrQName).also { it.resolveAs(trs) }
+            AsmTransformRuleSetReferenceDefault(this.transformNamespace, it.nameOrQName).also { it.resolveAs(trs) }
         }
-        _transformRuleSet = TransformRuleSetDefault(
+        _transformRuleSet = AsmTransformRuleSetDefault(
             namespace = transformNamespace,
             name = grammar.name,
             _rules = trRules,
@@ -697,7 +697,7 @@ internal class Grammar2TransformRuleSet(
         return pd
     }
 
-    private fun <TP : DataType, TR : TransformationRule> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): TransformationRule {
+    private fun <TP : DataType, TR : AsmTransformationRule> findOrCreateTrRule(rule: GrammarRule, cnm: ConstructAndModify<TP, TR>): AsmTransformationRule {
         val ruleName = rule.name
         val existing = _grRuleNameToTrRule[ruleName]
         return if (null == existing) {
@@ -721,7 +721,7 @@ internal class Grammar2TransformRuleSet(
         return g2ns
     }
 
-    fun findTrRuleForGrammarRuleOrNull(gr: GrammarRule): TransformationRule? {
+    fun findTrRuleForGrammarRuleOrNull(gr: GrammarRule): AsmTransformationRule? {
         return when {
             gr.grammar.qualifiedName == this.grammarTypeNamespace.qualifiedName -> _grRuleNameToTrRule[gr.name]
             else -> grm2Ns[gr.grammar.qualifiedName]?.g2rs?.findTrRuleForGrammarRuleOrNull(gr)
@@ -729,7 +729,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun createOrFindTrRuleForGrammarRule(gr: GrammarRule): TransformationRule {
+    private fun createOrFindTrRuleForGrammarRule(gr: GrammarRule): AsmTransformationRule {
         val tr = findTrRuleForGrammarRuleOrNull(gr)
         return when {
             null != tr -> tr
@@ -751,7 +751,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRhs(gr: GrammarRule, rhs: RuleItem): TransformationRule {
+    private fun trRuleForRhs(gr: GrammarRule, rhs: RuleItem): AsmTransformationRule {
         return when (rhs) {
             is EmptyRule -> trRuleForRhsItemList(gr, emptyList())
             is Terminal -> trRuleForRhsItemList(gr, listOf(rhs))
@@ -767,11 +767,11 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRhsItemList(rule: GrammarRule, items: List<RuleItem>): TransformationRule {
+    private fun trRuleForRhsItemList(rule: GrammarRule, items: List<RuleItem>): AsmTransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
-                    transformationRule(
+                    asmTransformationRule(
                         type = it.type(),
                         expression = CreateObjectExpressionDefault(it.qualifiedName, emptyList())
                     )
@@ -786,7 +786,7 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    private fun trRuleForRhsChoice(choice: Choice, choiceRule: GrammarRule): TransformationRule {
+    private fun trRuleForRhsChoice(choice: Choice, choiceRule: GrammarRule): AsmTransformationRule {
         return when (choice.alternative.size) {
             1 -> error("Internal Error: choice should have more than one alternative")
             else -> {
@@ -796,7 +796,7 @@ internal class Grammar2TransformRuleSet(
                         is Concatenation -> itemTr
                         else -> {
                             val expr = WithExpressionDefault(withContext = EXPRESSION_CHILD(0), expression = itemTr.expression)
-                            transformationRule(itemTr.resolvedType, expr)
+                            asmTransformationRule(itemTr.resolvedType, expr)
                         }
                     }
                 }
@@ -806,7 +806,7 @@ internal class Grammar2TransformRuleSet(
                         t.toNoActionTrRule()
                     }
 
-                    subtypeTransforms.all { it.resolvedType.resolvedDeclaration is PrimitiveType } -> transformationRule(
+                    subtypeTransforms.all { it.resolvedType.resolvedDeclaration is PrimitiveType } -> asmTransformationRule(
                         type = StdLibDefault.String,
                         expression = EXPRESSION_CHILD(0)
                     )
@@ -815,7 +815,7 @@ internal class Grammar2TransformRuleSet(
                         choiceRule,
                         ConstructAndModify(
                             construct = {
-                                transformationRule(
+                                asmTransformationRule(
                                     type = it.type(),
                                     expression = EXPRESSION_CHILD(0)
                                 )
@@ -858,7 +858,7 @@ internal class Grammar2TransformRuleSet(
                                     expression = it.expression
                                 )
                             }
-                            transformationRule(
+                            asmTransformationRule(
                                 type = unionType.type(),
                                 expression = WhenExpressionDefault(options, WhenOptionElseDefault(RootExpressionDefault.NOTHING))
                             )
@@ -879,7 +879,7 @@ internal class Grammar2TransformRuleSet(
                                 expression = it.expression
                             )
                         }
-                        transformationRule(
+                        asmTransformationRule(
                             type = unionType.type(),
                             expression = WhenExpressionDefault(options, WhenOptionElseDefault(RootExpressionDefault.NOTHING))
                         )
@@ -889,11 +889,11 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRhsOptional(rule: GrammarRule, optItem: OptionalItem): TransformationRule {
+    private fun trRuleForRhsOptional(rule: GrammarRule, optItem: OptionalItem): AsmTransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
-                    transformationRule(
+                    asmTransformationRule(
                         type = it.type(),
                         expression = CreateObjectExpressionDefault(it.qualifiedName, emptyList())
                     )
@@ -917,11 +917,11 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    private fun trRuleForRhsListSimple(rule: GrammarRule, listItem: SimpleList): TransformationRule {
+    private fun trRuleForRhsListSimple(rule: GrammarRule, listItem: SimpleList): AsmTransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
-                    transformationRule(
+                    asmTransformationRule(
                         type = it.type(),
                         expression = CreateObjectExpressionDefault(it.qualifiedName, emptyList())
                     )
@@ -945,11 +945,11 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    private fun trRuleForRhsListSeparated(rule: GrammarRule, listItem: SeparatedList): TransformationRule {
+    private fun trRuleForRhsListSeparated(rule: GrammarRule, listItem: SeparatedList): AsmTransformationRule {
         val trRule = findOrCreateTrRule(
             rule, ConstructAndModify(
                 construct = {
-                    transformationRule(
+                    asmTransformationRule(
                         type = it.type(),
                         expression = CreateObjectExpressionDefault(it.qualifiedName, emptyList())
                     )
@@ -973,16 +973,16 @@ internal class Grammar2TransformRuleSet(
         return trRule
     }
 
-    private fun trRuleForRhsGroup(rule: GrammarRule, group: Group): TransformationRule =
+    private fun trRuleForRhsGroup(rule: GrammarRule, group: Group): AsmTransformationRule =
         trRuleForRuleItemGroup(group, false)
 
     // Type for a GrammarRule is in some cases different to type for a rule item when part of something else in a rule
-    private fun trRuleForRuleItem(ruleItem: RuleItem, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItem(ruleItem: RuleItem, forProperty: Boolean): AsmTransformationRule {
         val existing = _grRuleItemToTrRule[ruleItem]
         return if (null != existing) {
             existing
         } else {
-            val trRule: TransformationRule = when (ruleItem) {
+            val trRule: AsmTransformationRule = when (ruleItem) {
                 is EmptyRule -> trRuleForRuleItemEmpty(ruleItem, forProperty)
                 is Terminal -> trRuleForRuleItemTerminal(ruleItem, forProperty)
                 is NonTerminal -> trRuleForRuleItemNonTerminal(ruleItem, forProperty)
@@ -1000,11 +1000,11 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemEmpty(ruleItem: EmptyRule, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemEmpty(ruleItem: EmptyRule, forProperty: Boolean): AsmTransformationRule {
         return StdLibDefault.NothingType.toNoActionTrRule()
     }
 
-    private fun trRuleForRuleItemTerminal(ruleItem: Terminal, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemTerminal(ruleItem: Terminal, forProperty: Boolean): AsmTransformationRule {
         return if (forProperty) {
             StdLibDefault.NothingType.toNoActionTrRule()
         } else {
@@ -1012,34 +1012,34 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemNonTerminal(ruleItem: NonTerminal, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemNonTerminal(ruleItem: NonTerminal, forProperty: Boolean): AsmTransformationRule {
         val refRule = ruleItem.referencedRuleOrNull(this.grammar)
         return when {
             null == refRule -> StdLibDefault.NothingType.toNoActionTrRule()
-            refRule.isLeaf -> transformationRule(StdLibDefault.String, RootExpressionDefault.SELF)
+            refRule.isLeaf -> asmTransformationRule(StdLibDefault.String, RootExpressionDefault.SELF)
             refRule.rhs is EmptyRule -> StdLibDefault.NothingType.toNoActionTrRule()
             else -> {
                 val trForRefRule = createOrFindTrRuleForGrammarRule(refRule)
-                transformationRule(trForRefRule.resolvedType, RootExpressionDefault.SELF)
+                asmTransformationRule(trForRefRule.resolvedType, RootExpressionDefault.SELF)
             }
         }
     }
 
-    private fun trRuleForRuleItemEmbedded(ruleItem: Embedded, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemEmbedded(ruleItem: Embedded, forProperty: Boolean): AsmTransformationRule {
         val g2ns = transformForEmbedded(ruleItem)
         val t = g2ns.g2rs!!.findTypeForRuleName(ruleItem.embeddedGoalName) ?: error("Internal error: type for '${ruleItem.embeddedGoalName}' not found")
 //        val t = g2ns.tpNs!!.findTypeForRule(ruleItem.embeddedGoalName) ?: error("Internal error: type for '${ruleItem.embeddedGoalName}' not found")
-        return transformationRule(t, RootExpressionDefault.SELF)
+        return asmTransformationRule(t, RootExpressionDefault.SELF)
     }
 
-    private fun trRuleForRuleItemChoice(choice: Choice, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemChoice(choice: Choice, forProperty: Boolean): AsmTransformationRule {
         val subtypeTransforms = choice.alternative.map {
             val itemTr = trRuleForRuleItem(it, forProperty)
             when (it) {
                 is Concatenation -> itemTr
                 else -> {
                     val expr = WithExpressionDefault(withContext = EXPRESSION_CHILD(0), expression = itemTr.expression)
-                    transformationRule(itemTr.resolvedType, expr)
+                    asmTransformationRule(itemTr.resolvedType, expr)
                 }
             }
         }
@@ -1049,7 +1049,7 @@ internal class Grammar2TransformRuleSet(
                 t.toNoActionTrRule()
             }
 
-            subtypeTransforms.allOfType(StdLibDefault.String.resolvedDeclaration) -> transformationRule(
+            subtypeTransforms.allOfType(StdLibDefault.String.resolvedDeclaration) -> asmTransformationRule(
                 StdLibDefault.String,
                 EXPRESSION_CHILD(0)
             )
@@ -1091,7 +1091,7 @@ internal class Grammar2TransformRuleSet(
                         expression = it.expression
                     )
                 }
-                transformationRule(
+                asmTransformationRule(
                     type = unionType.type(),
                     expression = WhenExpressionDefault(options, WhenOptionElseDefault(RootExpressionDefault.NOTHING))
                 )
@@ -1100,12 +1100,12 @@ internal class Grammar2TransformRuleSet(
     }
 
     private var tupleCount = 0
-    private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): TransformationRule {
+    private fun trRuleForRuleItemConcatenation(ruleItem: RuleItem, items: List<RuleItem>): AsmTransformationRule {
         //To avoid recursion issue, create and cache type & tr-rule before creating assignments
         val assignments = mutableListOf<AssignmentStatement>()
         val typeArgs = mutableListOf<TypeArgumentNamed>()
         val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
-        val tr = transformationRule(ti, CreateTupleExpressionDefault(assignments))
+        val tr = asmTransformationRule(ti, CreateTupleExpressionDefault(assignments))
         this._grRuleItemToTrRule[ruleItem] = tr
 
         //create dummy DataType to hold property defs
@@ -1140,7 +1140,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemOptional(ruleItem: OptionalItem, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemOptional(ruleItem: OptionalItem, forProperty: Boolean): AsmTransformationRule {
         val trRule = trRuleForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
         return when (trRule.resolvedType.resolvedDeclaration) {
             StdLibDefault.NothingType.resolvedDeclaration -> StdLibDefault.NothingType.toNoActionTrRule()
@@ -1156,14 +1156,14 @@ internal class Grammar2TransformRuleSet(
                     // else -> trRule.expression //EXPRESSION_CHILD(0)
                     else -> WithExpressionDefault(withContext = EXPRESSION_CHILD(0), expression = trRule.expression)
                 }
-                val optTr = transformationRule(optType, expr)
+                val optTr = asmTransformationRule(optType, expr)
                 _grRuleItemToTrRule[ruleItem] = optTr
                 optTr
             }
         }
     }
 
-    private fun trRuleForRuleItemListSimple(ruleItem: SimpleList, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemListSimple(ruleItem: SimpleList, forProperty: Boolean): AsmTransformationRule {
         // There will be an extra pseudo node for the list
         //  multi { items ...  }
         val listItem = ruleItem.item
@@ -1172,7 +1172,7 @@ internal class Grammar2TransformRuleSet(
                 // assign type to rule item before getting arg types to avoid recursion overflow
                 val typeArgs = mutableListOf<TypeArgument>()
                 val ti = StdLibDefault.List.type(typeArgs)
-                val tr = transformationRule(ti, RootExpressionDefault("children"))
+                val tr = asmTransformationRule(ti, RootExpressionDefault("children"))
                 _grRuleItemToTrRule[ruleItem] = tr
                 val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
                 typeArgs.add(trRuleForItem.resolvedType.asTypeArgument)
@@ -1188,7 +1188,7 @@ internal class Grammar2TransformRuleSet(
                     RootExpressionDefault("children"),
                     nav
                 )
-                val tr = transformationRule(ti, exp)
+                val tr = asmTransformationRule(ti, exp)
                 _grRuleItemToTrRule[ruleItem] = tr
                 val trRuleForItem = trRuleForRuleItem(ruleItem.item, forProperty)
                 nav.add(
@@ -1218,7 +1218,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemListSeparated(ruleItem: SeparatedList, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemListSeparated(ruleItem: SeparatedList, forProperty: Boolean): AsmTransformationRule {
         // assign type to rule item before getting arg types to avoid recursion overflow
         val typeArgs = mutableListOf<TypeArgument>()
         val t = StdLibDefault.ListSeparated.type(typeArgs).toListTrRule() //TODO: needs action for sep-lists!
@@ -1245,7 +1245,7 @@ internal class Grammar2TransformRuleSet(
         }
     }
 
-    private fun trRuleForRuleItemGroup(group: Group, forProperty: Boolean): TransformationRule {
+    private fun trRuleForRuleItemGroup(group: Group, forProperty: Boolean): AsmTransformationRule {
         val content = group.groupedContent
         return when (content) {
             is Choice -> trRuleForRuleItemChoice(content, forProperty)
@@ -1276,7 +1276,7 @@ internal class Grammar2TransformRuleSet(
         }
         */
 
-    private fun trRuleForGroupContentOptional(optItem: OptionalItem): TransformationRule {
+    private fun trRuleForGroupContentOptional(optItem: OptionalItem): AsmTransformationRule {
         val ttSub = object : StructuredTypeSimpleAbstract() {
             override val namespace: TypeNamespace = grammarTypeNamespace
             override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
@@ -1299,7 +1299,7 @@ internal class Grammar2TransformRuleSet(
                 TypeArgumentNamedSimple(it.name, it.typeInstance.nullable())
             }
             val ti = grammarTypeNamespace.createTupleTypeInstance(typeArgs, false)
-            val tr = transformationRule(ti, CreateTupleExpressionDefault(listOf(assignment)))
+            val tr = asmTransformationRule(ti, CreateTupleExpressionDefault(listOf(assignment)))
             tr
         }
     }

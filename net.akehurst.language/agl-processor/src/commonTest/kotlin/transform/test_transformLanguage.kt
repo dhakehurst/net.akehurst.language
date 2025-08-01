@@ -15,12 +15,12 @@
  *
  */
 
-package net.akehurst.language.transform.processor
+package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.test.AsmTransformModelTest
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.test.AsmTransformModelTest
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class test_transformLanguage {
         data class TestData(
             val testName: String,
             val sentence: String,
-            val expectedAsm: List<TransformModel> = emptyList()
+            val expectedAsm: List<AsmTransformDomain> = emptyList()
         )
 
         val testData = listOf(

@@ -21,7 +21,7 @@ import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.transform.api.TransformModel
+import net.akehurst.language.asmTransform.api.TransformModel
 import net.akehurst.language.base.api.DefinitionBlock
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase

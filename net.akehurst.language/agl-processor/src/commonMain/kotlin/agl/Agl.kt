@@ -45,8 +45,8 @@ import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.transform.api.TransformModel
-import net.akehurst.language.transform.asm.TransformDomainDefault
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.asm.TypeModelSimple
 
@@ -73,7 +73,7 @@ object Agl {
             styleString = StyleString(languageObject.styleString),
             formatString = FormatString(languageObject.formatString),
             typesResolver = { p -> ProcessResultDefault<TypeModel>(languageObject.typesModel) },
-            transformResolver = { p -> ProcessResultDefault<TransformModel>(languageObject.asmTransformModel) },
+            transformResolver = { p -> ProcessResultDefault<AsmTransformDomain>(languageObject.asmTransformModel) },
             crossReferenceResolver = { p -> ProcessResultDefault<CrossReferenceModel>(languageObject.crossReferenceModel) },
             syntaxAnalyserResolver = { p -> ProcessResultDefault<SyntaxAnalyser<AsmType>>(languageObject.syntaxAnalyser) },
             semanticAnalyserResolver = { p -> ProcessResultDefault<SemanticAnalyser<AsmType, ContextType>>(languageObject.semanticAnalyser) },
@@ -162,7 +162,7 @@ object Agl {
             }
             if (null != transformStr) {
                 transformResolver { p: LanguageProcessor<Asm, ContextWithScope<Any, Any>> ->
-                    TransformDomainDefault.fromString(
+                    AsmTransformDomainDefault.fromString(
                         ContextFromGrammarAndTypeModel(p.grammarModel!!, p.baseTypeModel),
                         transformStr
                     )

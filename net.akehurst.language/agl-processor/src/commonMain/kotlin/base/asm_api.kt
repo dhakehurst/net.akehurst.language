@@ -17,7 +17,7 @@
 
 package net.akehurst.language.base.api
 
-//import net.akehurst.language.transform.api.TransformRuleSet
+//import net.akehurst.language.asmTransform.api.TransformRuleSet
 import kotlin.jvm.JvmInline
 
 //FixME: wanted these in the companion object below, but is a kotlin bug
