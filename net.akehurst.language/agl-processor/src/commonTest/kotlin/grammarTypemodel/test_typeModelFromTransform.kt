@@ -57,7 +57,7 @@ class test_typemodelFromTransform {
         """.trimIndent()
         val transformStr = """
             namespace test
-            transform Test {
+            asm-transform Test {
                 S : S2
             }
         """.trimIndent()
@@ -83,7 +83,7 @@ class test_typemodelFromTransform {
         """.trimIndent()
         val transformStr = """
             namespace test
-            transform Test {
+            asm-transform Test {
                 import types.*
 
                 S : S2
@@ -123,7 +123,7 @@ class test_typemodelFromTransform {
         """
         val transformStr = """
             namespace test
-            transform Test {
+            asm-transform Test {
                 import types.*
 
                 S : S2

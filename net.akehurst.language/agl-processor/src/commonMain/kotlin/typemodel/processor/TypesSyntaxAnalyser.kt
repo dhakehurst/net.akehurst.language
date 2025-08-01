@@ -249,7 +249,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     private fun constructorParameter(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (TypeDefinition) -> ParameterDeclaration {
         val cmpRef = children[0] as PropertyCharacteristic?
         val valVar = children[1] as PropertyCharacteristic?
-        val name = net.akehurst.language.typemodel.api.ParameterName(children[2] as String)
+        val name =TmParameterName(children[2] as String)
         val typeRef = children[4] as TypeRefInfo
 
         val characteristics = (cmpRef?.let { setOf(it) } ?: emptySet()) + (valVar?.let { setOf(it) } ?: emptySet())

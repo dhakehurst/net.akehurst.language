@@ -1,4 +1,21 @@
-package agl.simple
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.agl.simple
 
 import net.akehurst.language.asm.builder.asmSimple
 import testFixture.data.doTest
@@ -68,7 +85,7 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX() { yyy := child[0] }
                       }
                 """.trimIndent()
@@ -98,7 +115,7 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         #override-default-transform
                         S : XXX() { yyy := child[0] }
                       }
@@ -139,7 +156,7 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX
                       }
                 """.trimIndent()
@@ -169,7 +186,7 @@ class test_ProvidedTransform {
                     """
                     #create-missing-types
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         #override-default-transform
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
@@ -211,7 +228,7 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                      transform Test {
+                      asm-transform Test {
                         S : XXX() { yyy := child[0] }
                         A : child[0] as String
                       }
@@ -258,7 +275,7 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                        transform Outer {
+                        asm-transform Outer {
                             B: BI() { inner := child[1] }
                         }
                 """
@@ -332,11 +349,11 @@ class test_ProvidedTransform {
                     #create-missing-types
                     #override-default-transform
                     namespace test
-                        transform Inner {
+                        asm-transform Inner {
                             S: child[0] as String
                             S1: (child[0] + child[1]) as String
                         }
-                        transform Outer {
+                        asm-transform Outer {
                             B: BI() { inner := child[1] }
                         }
                 """.replace("§", "$")

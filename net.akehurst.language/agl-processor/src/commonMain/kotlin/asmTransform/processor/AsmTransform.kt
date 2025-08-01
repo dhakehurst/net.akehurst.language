@@ -31,21 +31,12 @@ import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.formatter.api.AglFormatModel
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.grammar.builder.grammarModel
-import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.grammar.processor.AglGrammarCompletionProvider
-import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
-import net.akehurst.language.grammar.processor.AglGrammarSyntaxAnalyser
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.api.CrossReferenceModel
 import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleModel
 import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.typemodel.builder.typeModel
 
 object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, ContextWithScope<Any, Any>>() {
@@ -59,8 +50,8 @@ object AsmTransform : LanguageObjectAbstract<AsmTransformDomain, ContextWithScop
 namespace $NAMESPACE_NAME
 
 grammar $NAME : Base {
-    override namespace = 'namespace' possiblyQualifiedName option* import* transform* ;
-    transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '} ;
+    override namespace = 'namespace' possiblyQualifiedName option* import* asmTransform* ;
+    asmTransform = 'asm-transform' IDENTIFIER extends? '{' option* typeImport* transformRule* '} ;
     typeImport = 'import-types' possiblyQualifiedName ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
     transformRule = grammarRuleName ':' transformRuleRhs ;
@@ -104,10 +95,10 @@ grammar $NAME : Base {
                         lit("namespace"); ref("possiblyQualifiedName")
                         lst(0, -1) { ref("option") }
                         lst(0, -1) { ref("import") }
-                        lst(0, -1) { ref("transform") }
+                        lst(0, -1) { ref("asmTransform") }
                     }
-                    concatenation("transform") {
-                        lit("transform"); ref("IDENTIFIER"); opt { ref("extends") }
+                    concatenation("asmTransform") {
+                        lit("asm-transform"); ref("IDENTIFIER"); opt { ref("extends") }
                         lit("{")
                         lst(0, -1) { ref("option") }
                         lst(0, -1) { ref("typeImport") }
@@ -165,7 +156,7 @@ grammar $NAME : Base {
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     importTypes(
                         "net.akehurst.language.asmTransform.api",
                         "net.akehurst.language.asmTransform.asm"

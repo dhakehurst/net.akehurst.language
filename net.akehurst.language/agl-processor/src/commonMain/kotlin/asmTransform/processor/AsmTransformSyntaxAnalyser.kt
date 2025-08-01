@@ -42,8 +42,7 @@ import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.*
 
-class AsmTransformSyntaxAnalyser(
-) : SyntaxAnalyserByMethodRegistrationAbstract<AsmTransformDomain>() {
+class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AsmTransformDomain>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         QualifiedName("Base") to BaseSyntaxAnalyser()
@@ -57,7 +56,7 @@ class AsmTransformSyntaxAnalyser(
         super.register(this::unit)
         super.register(this::namespace)
         //super.register(this::transformList)
-        super.register(this::transform)
+        super.register(this::asmTransform)
         super.register(this::extends)
         super.register(this::typeImport)
         //super.register(this::transformRuleList)
@@ -108,8 +107,8 @@ class AsmTransformSyntaxAnalyser(
         children as List<(TransformNamespace) -> TransformRuleSet>
     */
 
-    // transform = 'transform' IDENTIFIER extends? '{' option* typeImport* transformRule+ '} ;
-    private fun transform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (AsmTransformNamespace) -> AsmTransformRuleSet {
+    // transform = 'asm-transform' IDENTIFIER extends? '{' option* typeImport* transformRule+ '} ;
+    private fun asmTransform(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (AsmTransformNamespace) -> AsmTransformRuleSet {
         val name = SimpleName(children[1] as String)
         val extends = children[2] as List<PossiblyQualifiedName>? ?: emptyList()
         val options = children[4] as List<Pair<String, String>>

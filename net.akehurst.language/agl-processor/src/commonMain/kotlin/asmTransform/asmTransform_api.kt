@@ -41,12 +41,6 @@ interface AsmTransformNamespace : Namespace<AsmTransformRuleSet> {
 }
 
 interface AsmTransformRuleSetReference : DefinitionReference<AsmTransformRuleSet> {
-   // val localNamespace: TransformNamespace
-  //  val nameOrQName: PossiblyQualifiedName
-   // var resolved: TransformRuleSet?
-
-   // fun resolveAs(resolved: TransformRuleSet)
-
    fun cloneTo(ns: AsmTransformNamespace): AsmTransformRuleSetReference
 }
 

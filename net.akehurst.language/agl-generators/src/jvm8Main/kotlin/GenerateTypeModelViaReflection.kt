@@ -310,7 +310,7 @@ class GenerateTypeModelViaReflection(
         kclass.primaryConstructor?.let { c ->
             c.name
             val prms = c.valueParameters.map { cp ->
-                val pn = net.akehurst.language.typemodel.api.ParameterName(cp.name!!)
+                val pn = TmParameterName(cp.name!!)
                 //val (ty, req) = cp.type.asTypeInstance(ns, type, substituteTypes)
                 val ti = toTypeInstance(type, cp.type)
                 ParameterDefinitionSimple(pn, ti, null)

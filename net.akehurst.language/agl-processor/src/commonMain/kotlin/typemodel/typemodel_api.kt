@@ -500,11 +500,12 @@ interface ConstructorDeclaration {
     fun findInOrCloneTo(other: TypeModel): ConstructorDeclaration
 }
 
+// ParameterName clashes with kotlin.ParameterName
 @JvmInline
-value class ParameterName(override val value: String) : PublicValueType
+value class TmParameterName(override val value: String) : PublicValueType
 
 interface ParameterDeclaration {
-    val name: ParameterName
+    val name: TmParameterName
     val typeInstance: TypeInstance
     val defaultValue: String?
 

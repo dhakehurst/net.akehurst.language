@@ -623,7 +623,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     importTypes("net.akehurst.language.expressions.api")
                     createObject("expression","Expression") { /* custom syntax analyser */ }
                     createObject("rootExpression","RootExpression") { /* custom syntax analyser */ }

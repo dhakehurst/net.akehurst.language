@@ -57,7 +57,7 @@ class test_AllDefault {
             val qn = QualifiedName(namespaceName)
             return asmTransform(domainName, typeModel, createTypes) {
                 namespace(qn.front.value) {
-                    transform(qn.last.value) {
+                    this.ruleSet(qn.last.value) {
                         importTypes(namespaceName)
                         this.init()
                     }
@@ -6482,16 +6482,16 @@ class test_AllDefault {
             true
         ) {
             namespace("test") {
-                transform("Inner") {
+                this.ruleSet("Inner") {
                     importTypes("test.Inner")
                     unionRule(
                         "S", "S",$$"""
-                       when {
-                          0 == $alternative -> with(child[0]) $self
-                          1 == $alternative -> with(child[0]) $self
-                          else -> $nothing
-                       }
-                    """.trimIndent()
+                                   when {
+                                      0 == $alternative -> with(child[0]) $self
+                                      1 == $alternative -> with(child[0]) $self
+                                      else -> $nothing
+                                   }
+                                """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6502,16 +6502,16 @@ class test_AllDefault {
                     }
                     leafStringRule("a")
                 }
-                transform("Outer") {
+                this.ruleSet("Outer") {
                     importTypes("test.Outer")
                     unionRule(
                         "S", "S",$$"""
-                       when {
-                          0 == $alternative -> with(child[0]) $self
-                          1 == $alternative -> with(child[0]) $self
-                          else -> $nothing
-                       }
-                    """.trimIndent()
+                                   when {
+                                      0 == $alternative -> with(child[0]) $self
+                                      1 == $alternative -> with(child[0]) $self
+                                      else -> $nothing
+                                   }
+                                """.trimIndent()
                     ) {
                         typeRef("String")
                         typeRef("S1")
@@ -6522,20 +6522,20 @@ class test_AllDefault {
                     }
                     unionRule(
                         "B", "B",$$"""
-                       when {
-                          0 == $alternative -> tuple {
-                              b := child[0]
-                              s := with(child[1]) $self
-                              b2 := child[2]
-                          }
-                          1 == $alternative -> tuple {
-                              c := child[0]
-                              s := with(child[1]) $self
-                              c2 := child[2]
-                          }
-                          else -> $nothing
-                       }
-                    """
+                                   when {
+                                      0 == $alternative -> tuple {
+                                          b := child[0]
+                                          s := with(child[1]) $self
+                                          b2 := child[2]
+                                      }
+                                      1 == $alternative -> tuple {
+                                          c := child[0]
+                                          s := with(child[1]) $self
+                                          c2 := child[2]
+                                      }
+                                      else -> $nothing
+                                   }
+                                """
                     ) {
                         tupleType {
                             typeRef("b", "String", false)
@@ -6680,7 +6680,7 @@ class test_AllDefault {
             true
         ) {
             namespace("test") {
-                transform("I") {
+                this.ruleSet("I") {
                     importTypes("test.I")
                     subtypeRule("S", "S")
                     createObject("SA", "SA") {
@@ -6692,7 +6692,7 @@ class test_AllDefault {
                     }
                     leafStringRule("a")
                 }
-                transform("O") {
+                this.ruleSet("O") {
                     importTypes("test.O")
                     subtypeRule("S", "S")
                     createObject("SBC", "SBC") {
@@ -7703,11 +7703,11 @@ class test_AllDefault {
             true
         ) {
             namespace("test") {
-                transform("Base") {
+                this.ruleSet("Base") {
                     importTypes("test.Base")
                     leafStringRule("a")
                 }
-                transform("Test") {
+                this.ruleSet("Test") {
                     extends("Base")
                     importTypes("test.Base","test.Test")
                     createObject("S","S") {
@@ -7777,14 +7777,14 @@ class test_AllDefault {
             true
         ) {
             namespace("test") {
-                transform("Base") {
+                this.ruleSet("Base") {
                     importTypes("test.Base")
                     createObject("A","A") {
                         assignment("a", null, "child[0]")
                     }
                     leafStringRule("a")
                 }
-                transform("Test") {
+                this.ruleSet("Test") {
                     extends("Base")
                     importTypes("test.Base", "test.Test")
                     createObject("S","S") {

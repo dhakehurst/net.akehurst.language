@@ -312,7 +312,7 @@ interface AglStyleRule {
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     importTypes("net.akehurst.language.style.api", "net.akehurst.language.base.api")
                     createObject("unit", "AglStyleModel") { /* custom SyntaxAnalyser */ }
                     createObject("namespace", "StyleNamespace") { /* custom SyntaxAnalyser */ }

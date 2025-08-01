@@ -207,7 +207,7 @@ namespace net.akehurst.language.grammarTypemodel.api
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
-                value("ParameterName") {
+                value("TmParameterName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
@@ -784,7 +784,7 @@ namespace net.akehurst.language.grammarTypemodel.api
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     //TODO
                 }
             }

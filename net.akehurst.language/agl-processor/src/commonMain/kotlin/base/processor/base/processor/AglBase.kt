@@ -278,7 +278,7 @@ namespace net.akehurst.language.base.asm
     override val asmTransformModel: AsmTransformDomain by lazy {
         asmTransform(NAME, typesModel, false) {
             namespace(NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     //TODO("not implemented")
                 }
             }

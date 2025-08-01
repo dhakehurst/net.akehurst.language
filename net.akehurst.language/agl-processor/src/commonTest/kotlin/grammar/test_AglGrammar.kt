@@ -58,7 +58,7 @@ class test_AglGrammar {
 
     @Test
     fun process_transformString_EQ_transformModel() {
-        val res = Agl.registry.agl.transform.processor!!.process(
+        val res = Agl.registry.agl.asmTransform.processor!!.process(
             // AglBase.typesString + "\n" +
             AglGrammar.asmTransformString, // this is created from asString on the model, thus base namespace is already included!
             Agl.options {

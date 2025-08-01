@@ -19,7 +19,6 @@ package net.akehurst.language.asmTransform.asm
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
 import net.akehurst.language.agl.simple.Grammar2TypeModelMapping
@@ -45,7 +44,7 @@ class AsmTransformDomainDefault(
 
     companion object Companion {
         fun fromString(context: ContextWithScope<Any, Any>, transformStr: TransformString): ProcessResult<AsmTransformDomain> {
-            val proc = Agl.registry.agl.transform.processor ?: error("Asm-Transform language not found!")
+            val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,
                 Agl.options {

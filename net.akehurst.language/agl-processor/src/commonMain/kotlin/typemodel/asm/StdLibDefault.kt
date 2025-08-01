@@ -59,8 +59,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         (td.typeParameters as MutableList).add(TypeParameterSimple(SimpleName("S")))
         (td as DataTypeSimple).addConstructor(
             listOf(
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("first"), this.createTypeInstance(td.qualifiedName, SimpleName("F")), null),
-                ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("second"), this.createTypeInstance(td.qualifiedName, SimpleName("S")), null),
+                ParameterDefinitionSimple(TmParameterName("first"), this.createTypeInstance(td.qualifiedName, SimpleName("F")), null),
+                ParameterDefinitionSimple(TmParameterName("second"), this.createTypeInstance(td.qualifiedName, SimpleName("S")), null),
             )
         )
         td.appendPropertyStored(PropertyName("first"), TypeParameterReference(td, SimpleName("F")), setOf(PropertyCharacteristic.READ_ONLY, PropertyCharacteristic.COMPOSITE), 0)
@@ -88,7 +88,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
 
         typeDecl.appendMethodPrimitive(
             MethodName("map"),
-            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
+            listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
             StdLibDefault.AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
             "A list created by mapping each element using the given lambda expression."
         )
@@ -156,7 +156,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         typeDecl.appendMethodPrimitive(MethodName("toReal"), emptyList(), Real, "Convert this String to a Real value.")
         typeDecl.appendMethodPrimitive(
             MethodName("removeSurrounding"),
-            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("delimiter"), Integer, null)),
+            listOf(ParameterDefinitionSimple(TmParameterName("delimiter"), Integer, null)),
             String,
             "Remove the given string value from the start and end of this string, if present."
         )
@@ -183,7 +183,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         val typeDecl = List
         typeDecl.appendMethodPrimitive(
             MethodName("get"),
-            listOf(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName("index"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), null)),
+            listOf(ParameterDefinitionSimple(TmParameterName("index"), this.createTypeInstance(typeDecl.qualifiedName, Integer.typeName), null)),
             TypeParameterReference(typeDecl, SimpleName("E")),
             "The element at the given index."
         )

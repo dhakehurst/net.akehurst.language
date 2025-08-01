@@ -753,7 +753,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
-                transform(NAME) {
+                ruleSet(NAME) {
                     importTypes(
                         "net.akehurst.language.grammar.api",
                         "net.akehurst.language.grammar.asm"

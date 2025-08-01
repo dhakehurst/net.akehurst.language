@@ -18,7 +18,6 @@
 package net.akehurst.language.asmTransform.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.simple.ContextFromGrammarAndTypeModel
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
@@ -298,7 +297,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
 
                             val params = expr.constructorArguments.map { ass ->
-                                val pName = net.akehurst.language.typemodel.api.ParameterName(ass.lhsPropertyName)
+                                val pName = TmParameterName(ass.lhsPropertyName)
                                 var pType = exprTypeResolver.typeFor(ass.rhs, AsmTransformInterpreter.PARSE_NODE_TYPE_BRANCH_SIMPLE)
                                 if (pType == StdLibDefault.NothingType) {
                                     pType = StdLibDefault.AnyType

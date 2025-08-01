@@ -116,7 +116,7 @@ class test_Agl_registry_agl {
 
     @Test
     fun test_Agl_registry_agl_transform() {
-        checkProcessor(Agl.registry.agl.transform.processor)
+        checkProcessor(Agl.registry.agl.asmTransform.processor)
     }
 
     @Test

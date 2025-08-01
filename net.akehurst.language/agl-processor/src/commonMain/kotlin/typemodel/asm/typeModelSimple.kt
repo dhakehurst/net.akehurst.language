@@ -1788,7 +1788,7 @@ class MethodDeclarationResolvedSimple(
 }
 
 class ParameterDefinitionSimple(
-    override val name: net.akehurst.language.typemodel.api.ParameterName,
+    override val name: TmParameterName,
     override val typeInstance: TypeInstance,
     override val defaultValue: String?
 ) : ParameterDeclaration {

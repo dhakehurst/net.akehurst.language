@@ -85,7 +85,7 @@ class AsmTransformNamespaceBuilder internal constructor(
         imports.forEach { namespace.addImport(Import(it)) }
     }
 
-    fun transform(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
+    fun ruleSet(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
         val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typeModel, createTypes)
         b.init()
         b.build()

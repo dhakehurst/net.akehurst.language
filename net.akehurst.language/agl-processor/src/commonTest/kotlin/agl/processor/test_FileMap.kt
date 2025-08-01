@@ -33,7 +33,7 @@ class test_FileMap {
             #override-default-transform
             
             namespace ide
-            transform FileExtensionMap {
+            asm-transform FileExtensionMap {
                unit : children.asMap as Map<String,String>
                entry : tuple { key:=child[0] value:=child[2] }
                PATH: (child[0] + child[1].children.join) as String

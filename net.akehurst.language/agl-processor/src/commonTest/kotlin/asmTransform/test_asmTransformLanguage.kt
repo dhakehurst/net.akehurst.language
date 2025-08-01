@@ -27,9 +27,9 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_transformLanguage {
+class test_asmTransformLanguage {
 
-    companion object {
+    companion object Companion {
         data class TestData(
             val testName: String,
             val sentence: String,

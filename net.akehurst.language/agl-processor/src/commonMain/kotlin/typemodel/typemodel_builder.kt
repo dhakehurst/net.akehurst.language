@@ -449,7 +449,7 @@ class ConstructorBuilder(
 
     fun parameter(name: String, typeName: String, nullable: Boolean = false) {
         val ty = _namespace.createTypeInstance(_type.qualifiedName, typeName.asPossiblyQualifiedName, emptyList(), nullable)
-        _paramList.add(ParameterDefinitionSimple(net.akehurst.language.typemodel.api.ParameterName(name), ty, null))
+        _paramList.add(ParameterDefinitionSimple(TmParameterName(name), ty, null))
     }
 
     fun build(): List<ParameterDeclaration> = _paramList

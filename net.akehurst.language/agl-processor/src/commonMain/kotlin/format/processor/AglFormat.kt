@@ -160,7 +160,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
             createTypes = false
         ) {
             namespace(NAMESPACE_NAME){
-                transform(NAME) {
+                ruleSet(NAME) {
                     //TODO
                 }
             }
