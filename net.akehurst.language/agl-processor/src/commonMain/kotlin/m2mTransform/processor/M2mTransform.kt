@@ -75,7 +75,7 @@ grammar $NAME : Base {
     where = 'where' '{' expression '}' ;
     
     objectPattern = typeName '{' propertyPattern*  '}';
-    propertyPattern = IDENTIFIER '=' propertyPatternRhs ;
+    propertyPattern = IDENTIFIER '==' propertyPatternRhs ;
     propertyPatternRhs = expression | namedObjectPattern ;
     namedObjectPattern = (IDENTIFIER ':')? objectPattern ;
 }

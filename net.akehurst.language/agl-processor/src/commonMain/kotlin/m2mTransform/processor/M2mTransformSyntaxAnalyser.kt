@@ -66,6 +66,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::transformRule)
         super.register(this::relation)
         super.register(this::mapping)
+        super.register(this::pivot)
         super.register(this::relDomain)
         super.register(this::mapDomain)
         super.register(this::variableDefinition)
@@ -77,6 +78,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::propertyPattern)
         super.register(this::propertyPatternRhs)
         super.register(this::namedObjectPattern)
+        super.register(this::typeName)
     }
 
     // override unit = option* namespace* ;
@@ -158,11 +160,12 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
         val pivots = children[4] as List<VariableDefinition>
-        val relDomains = children[5] as List<Pair<DomainItem, ObjectPattern?>>
+        val relDomains = children[5] as List<Pair<DomainItem, ObjectPattern>>
         return M2mRelationDefault(isTop, name).also { rel ->
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
             relDomains.forEach { rd ->
                 (rel.domainItem as MutableMap)[rd.first.domainRef] = rd.first
+                (rel.objectPattern as MutableMap)[rd.first.domainRef] = rd.second
             }
         }
     }
@@ -187,7 +190,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     }
 
     // relDomain = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    private fun relDomain(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, ObjectPattern?> {
+    private fun relDomain(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, ObjectPattern> {
         val dn = children[1] as String
         val id = children[2] as String
         val pat = children[4] as ObjectPattern
@@ -206,11 +209,11 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return Pair(di, expr)
     }
 
-    // variableDefinition = IDENTIFIER ':' TYPE_NAME ;
+    // variableDefinition = IDENTIFIER ':' typeName ;
     private fun variableDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {
         val name = children[0] as String
-        val typeRef = children[2] as String
-        return VariableDefinitionDefault(SimpleName(name), typeRef.asPossiblyQualifiedName)
+        val typeRef = children[2] as PossiblyQualifiedName
+        return VariableDefinitionDefault(SimpleName(name), typeRef)
     }
 
     // leaf TYPE_NAME = IDENTIFIER ;
@@ -256,4 +259,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             it.setIdentifier(SimpleName(id))
         }
     }
+
+    private fun typeName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PossiblyQualifiedName =
+        children[0] as PossiblyQualifiedName
 }

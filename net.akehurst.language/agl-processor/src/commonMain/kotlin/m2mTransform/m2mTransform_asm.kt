@@ -112,6 +112,7 @@ data class M2mRelationDefault(
 ) : M2mRelation {
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
     override val domainItem: Map<DomainReference, DomainItem> = mutableMapOf()
+    override val objectPattern: Map<DomainReference, ObjectPattern> = mutableMapOf()
 }
 
 data class M2mMappingDefault(
@@ -157,7 +158,7 @@ data class ObjectPatternDefault(
         this.identifier = value
     }
 
-    fun resolveType(tm: TypeModel) {
+    override fun resolveType(tm: TypeModel) {
         val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef)
         _resolvedType = td?.type()
     }

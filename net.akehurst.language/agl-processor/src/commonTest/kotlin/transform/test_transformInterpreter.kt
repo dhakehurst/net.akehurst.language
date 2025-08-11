@@ -28,6 +28,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.DomainReference
 import net.akehurst.language.m2mTransform.processor.M2mTransformInterpreter
+import net.akehurst.language.typemodel.api.PropertyCharacteristic
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.builder.typeModel
 import kotlin.test.Test
@@ -39,55 +40,60 @@ class test_transformInterpreter {
         data class TestData(
             val description: String = "",
         ) {
-            val typeDomains = mutableListOf<TypeModel>()
+            val typeDomains = mutableMapOf<DomainReference,TypeModel>()
             var transform: String = ""
             val input = mutableMapOf<DomainReference, Asm>()
+            var target: DomainReference? = null
             val expected = mutableMapOf<DomainReference, Asm>()
         }
 
         val testSuit = listOf(
             TestData("just a namespace").also {
-                it.typeDomains.add(typeModel("Domain1", true) {
-
-                })
-                it.typeDomains.add(typeModel("Domain2", true) {
-
-                })
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typeModel("Domain1", true) {}
+                val tm2 = typeModel("Domain2", true) {}
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
                 it.transform = """
                     namespace test
                 """
+                it.target = dr2
             },
             TestData("just a transform, no rules").also {
-                it.typeDomains.add(typeModel("Domain1", true) {
-
-                })
-                it.typeDomains.add(typeModel("Domain2", true) {
-
-                })
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typeModel("Domain1", true) {}
+                val tm2 = typeModel("Domain2", true) {}
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
                 it.transform = """
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         
                     }
                 """
+                it.target = dr2
             },
             TestData("simple mapping").also {
-                val d1 = typeModel("Domain1", true) {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typeModel("Domain1", true) {
                     namespace("n1") {
                         data("A1") {
                             propertyOf(emptySet(), "prop1", "String")
                         }
                     }
                 }
-                val d2 = typeModel("Domain2", true) {
+                val tm2 = typeModel("Domain2", true) {
                     namespace("n2") {
                         data("A2") {
                             propertyOf(emptySet(), "prop2", "String")
                         }
                     }
                 }
-                it.typeDomains.add(d1)
-                it.typeDomains.add(d2)
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
                 it.transform = """
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
@@ -97,44 +103,89 @@ class test_transformInterpreter {
                         }
                     }
                 """
-                it.input[DomainReference("d1")] = asmSimple(d1) {
+                it.input[dr1] = asmSimple(tm1) {
                     element("A1") {
                         propertyString("prop1", "value1")
                     }
                 }
-                it.expected[DomainReference("d2")] = asmSimple(d2) {
+                it.target = dr2
+                it.expected[dr2] = asmSimple(tm2) {
                     element("A2") {
                         propertyString("prop2", "value1")
                     }
                 }
             },
             TestData("umlRdbms QVT example").also {
-                it.typeDomains.add(typeModel("SimpleUML", true) {
+                val dr1 = DomainReference("uml")
+                val dr2 = DomainReference("rdbms")
+                val tm1 = typeModel("SimpleUML", true) {
                     namespace("uml") {
-                        data("Package")
+                        data("UmlModelElement") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                        }
+                        data("Package") {
+                            supertypes("UmlModelElement")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"elements","Set") {
+                                typeArgument("PackageElement")
+                            }
+                        }
+                        data("Attribute") {
+                            supertypes("UmlModelElement")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"type","Classifier")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"owner","Class")
+                        }
+                        data("PackageElement") {
+                            supertypes("UmlModelElement")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"namespace","Package")
+                        }
+                        data("Classifier") {
+                            supertypes("PackageElement")
+
+                        }
+                        data("Class") {
+                            supertypes("Classifier")
+
+                        }
+                        data("PrimitiveDataType") {
+                            supertypes("Classifier")
+
+                        }
+                        data("Association") {
+                            supertypes("PackageElement")
+
+                        }
                     }
-                })
-                it.typeDomains.add(typeModel("SimpleRDBMS", true) {
+                }
+                val tm2 = typeModel("SimpleRDBMS", true) {
                     namespace("rdbms") {
-                        data("Schema")
+                        data("Schema") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                        }
                     }
-                })
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
                 it.transform = """
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         /* map each package to a schema */
                         top relation PackageToSchema {
                             pivot pn: String
-                            domain uml p:Package { name==pn }
-                            domain rdbms s:Schema { name==pn }
+                            domain uml p:Package { name==pn }
+                            domain rdbms s:Schema { name==pn }
                         }
                     }
                 """.trimIndent()
-                it.input[DomainReference("uml")] = asmSimple {
-                    element("Package") {}
+                it.input[dr1] = asmSimple(tm1) {
+                    element("Package") {
+                        propertyString("name", "pkg1")
+                    }
                 }
-                it.expected[DomainReference("uml")] = asmSimple {
-
+                it.target = dr2
+                it.expected[dr2] = asmSimple(tm2) {
+                    element("Schema") {
+                        propertyString("name", "pkg1")
+                    }
                 }
             }
         )
@@ -142,8 +193,8 @@ class test_transformInterpreter {
         fun doTest(testData: TestData) {
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val context = ContextWithScope<Any, Any>()
-            testData.typeDomains.forEach {
-                context.addToScope(null, listOf(it.name.value), QualifiedName("TypeModel"), null, it)
+            testData.typeDomains.forEach { (k,v) ->
+                context.addToScope(null, listOf(v.name.value), QualifiedName("TypeModel"), null, v)
             }
             val res = Agl.registry.agl.m2mTransform.processor!!.process(
                 testData.transform,
@@ -157,28 +208,30 @@ class test_transformInterpreter {
                 check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                 it.asm!!
             }
-            val ogs = testData.typeDomains.associate {
-                it.name to ObjectGraphAsmSimple(it, issues)
+            val ogs = testData.typeDomains.entries.associate { (k,v) ->
+                Pair(v.name , ObjectGraphAsmSimple(v, issues))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
-            val srcTypeDomain = testData.typeDomains.first()
-            for ((dr, asm) in testData.input) {
-                for(obj in asm.root) {
-                    val tobj = ogs[srcTypeDomain.name]?.let {
-                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName)!!
-                        TypedObjectAsmValue(td.type(),obj)
-                    }!!
-                    val res = interpreter.transform(dr, tobj)
-                    assertTrue(res.issues.isEmpty(), res.issues.toString())
-                    assertEquals(testData.expected.size, res.objects.size, "number of outputs is different")
-                    for(dr in testData.expected.keys) {
-                        val exp = testData.expected[dr]!!
-                        val act = res.objects[dr]!!
-                        assertEquals(exp.asString(), act.asString())
-                    }
-                }
+            val source = testData.input.entries.associate { (k,v) ->
+                //TODO: for all roots!
+                val obj = v.root.first()
+                val srcTypeDomain = testData.typeDomains[k]!!
+                val tobj = ogs[srcTypeDomain.name]?.let {
+                    val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+                    TypedObjectAsmValue(td.type(),obj)
+                }!!
+                Pair(k,tobj)
             }
+            val trRes = interpreter.transform(testData.target!!, source)
+            assertTrue(trRes.issues.isEmpty(), trRes.issues.toString())
+            assertEquals(testData.expected.size, trRes.objects.size, "number of outputs is different")
+            for(dr in testData.expected.keys) {
+                val exp = testData.expected[dr]!!
+                val act = trRes.objects[dr]!!
+                assertEquals(exp.asString(), act.asString())
+            }
+
         }
     }
 

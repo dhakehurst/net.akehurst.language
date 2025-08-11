@@ -81,6 +81,7 @@ interface VariableDefinition {
 
 interface M2mRelation : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
+    val objectPattern: Map<DomainReference, ObjectPattern>
 }
 
 /**
@@ -95,10 +96,11 @@ interface M2mMapping : M2mTransformRule {
 
 interface ObjectPattern : PropertyPatternRhs {
     val identifier: SimpleName?
-    val type: TypeInstance?
+    val type: TypeInstance
     val propertyPattern: Map<SimpleName, PropertyPattern>
 
     fun setIdentifier(value: SimpleName)
+    fun resolveType(tm: TypeModel)
 }
 
 interface PropertyPattern {

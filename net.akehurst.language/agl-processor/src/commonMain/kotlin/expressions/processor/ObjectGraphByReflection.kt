@@ -239,6 +239,9 @@ open class ObjectGraphByReflection<SelfType : Any>(
         else -> obj?.let { TypedObjectAny(typeFor(obj), obj) } ?: nothing()
     }
 
+    override fun isNothing(obj: TypedObject<SelfType>): Boolean = obj.self == Unit
+    override fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean = lhs.self == rhs.self
+
     override fun nothing(): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.NothingType, Unit) as TypedObject<SelfType>
     override fun any(value: Any): TypedObject<SelfType> = TypedObjectAny(StdLibDefault.AnyType, value) as TypedObject<SelfType>
 

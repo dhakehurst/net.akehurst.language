@@ -71,6 +71,9 @@ interface ObjectGraph<SelfType:Any> {
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj:SelfType?) : TypedObject<SelfType>
 
+    fun isNothing(obj: TypedObject<SelfType>): Boolean
+    fun equalTo(lhs: TypedObject<SelfType>, rhs: TypedObject<SelfType>): Boolean
+
     fun nothing(): TypedObject<SelfType>
     fun any(value: Any): TypedObject<SelfType>
     fun createPrimitiveValue(qualifiedTypeName: QualifiedName, value: Any): TypedObject<SelfType>
@@ -151,7 +154,10 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
             expression.name.startsWith("\$") -> evaluateSpecial(evc, expression.name)
             else -> evc.getOrInParent(expression.name)
                 ?: evc.self?.let { evaluatePropertyName(it, PropertyName(expression.name)) }
-                ?: error("Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                ?: let {
+                    issues.error(null,"Evaluation Context does not contain '${expression.name}' and there is no 'self' object with that property name")
+                    objectGraph.nothing()
+                }
         }
     }
 
