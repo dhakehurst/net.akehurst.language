@@ -115,36 +115,29 @@ class test_transformInterpreter {
                     }
                 }
             },
-            TestData("umlRdbms QVT example").also {
+            TestData("umlRdbms QVT example - PackageToSchema").also {
                 val dr1 = DomainReference("uml")
                 val dr2 = DomainReference("rdbms")
                 val tm1 = typeModel("SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                            propertyOf(setOf(CMP, VAR),"name","String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"elements","Set") {
-                                typeArgument("PackageElement")
-                            }
                         }
                         data("Attribute") {
                             supertypes("UmlModelElement")
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"type","Classifier")
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"owner","Class")
                         }
                         data("PackageElement") {
                             supertypes("UmlModelElement")
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"namespace","Package")
                         }
                         data("Classifier") {
                             supertypes("PackageElement")
-
                         }
                         data("Class") {
                             supertypes("Classifier")
-
+                            propertyOf(setOf(CMP, VAR),"kind","String")
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
@@ -152,14 +145,77 @@ class test_transformInterpreter {
                         }
                         data("Association") {
                             supertypes("PackageElement")
-
+                        }
+                        association {
+                            end("Package",setOf(REF,VAR),"namespace")
+                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                        }
+                        association {
+                            end("Classifier",setOf(REF,VAR),"type")
+                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"owner")
+                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"general", false,"Set")
+                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"source")
+                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"destination")
+                            end("Association",setOf(REF,VAR),"forward", false,"Set")
                         }
                     }
                 }
                 val tm2 = typeModel("SimpleRDBMS", true) {
                     namespace("rdbms") {
-                        data("Schema") {
+                        data("RModelElement") {
                             propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                        }
+                        data("Schema") {
+                            supertypes("RModelElement")
+                        }
+                        data("Table") {
+                            supertypes("RModelElement")
+                        }
+                        data("Column") {
+                            supertypes("RModelElement")
+                        }
+                        data("Key") {
+                            supertypes("RModelElement")
+                        }
+                        data("ForeignKey") {
+                            supertypes("RModelElement")
+                        }
+                        association {
+                            end("Schema",setOf(REF,VAR),"schema")
+                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                        }
+                        association {
+                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            //TODO: refersToOpposite is not navigable!
+                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                        }
+                        association {
+                            end("Column",setOf(REF,VAR),"column", false,"Set")
+                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
                         }
                     }
                 }
@@ -187,10 +243,356 @@ class test_transformInterpreter {
                         propertyString("name", "pkg1")
                     }
                 }
+            },
+            TestData("umlRdbms QVT example - PrimitiveUmlTypeToSqlType").also {
+                val dr1 = DomainReference("uml")
+                val dr2 = DomainReference("rdbms")
+                val tm1 = typeModel("SimpleUML", true) {
+                    namespace("uml") {
+                        data("UmlModelElement") {
+                            propertyOf(setOf(CMP, VAR),"name","String")
+                        }
+                        data("Package") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Attribute") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("PackageElement") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Classifier") {
+                            supertypes("PackageElement")
+                        }
+                        data("Class") {
+                            supertypes("Classifier")
+                            propertyOf(setOf(CMP, VAR),"kind","String")
+                        }
+                        data("PrimitiveDataType") {
+                            supertypes("Classifier")
+
+                        }
+                        data("Association") {
+                            supertypes("PackageElement")
+                        }
+                        association {
+                            end("Package",setOf(REF,VAR),"namespace")
+                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                        }
+                        association {
+                            end("Classifier",setOf(REF,VAR),"type")
+                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"owner")
+                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"general", false,"Set")
+                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"source")
+                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"destination")
+                            end("Association",setOf(REF,VAR),"forward", false,"Set")
+                        }
+                    }
+                }
+                val tm2 = typeModel("SimpleRDBMS", true) {
+                    namespace("rdbms") {
+                        data("RModelElement") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                        }
+                        data("Schema") {
+                            supertypes("RModelElement")
+                        }
+                        data("Table") {
+                            supertypes("RModelElement")
+                        }
+                        data("Column") {
+                            supertypes("RModelElement")
+                        }
+                        data("Key") {
+                            supertypes("RModelElement")
+                        }
+                        data("ForeignKey") {
+                            supertypes("RModelElement")
+                        }
+                        association {
+                            end("Schema",setOf(REF,VAR),"schema")
+                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                        }
+                        association {
+                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            //TODO: refersToOpposite is not navigable!
+                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                        }
+                        association {
+                            end("Column",setOf(REF,VAR),"column", false,"Set")
+                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
+                        }
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
+                        abstract top relation PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType
+                            domain rdbms ct:String
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeBoolean : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'Boolean'}
+                            domain rdbms ct:String == 'BOOLEAN'
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeInteger : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'Int'}
+                            domain rdbms ct:String == 'NUMBER'
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeBoolean : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'String'}
+                            domain rdbms ct:String == 'VARCHAR'
+                        }
+                    }
+                """.trimIndent()
+                it.input[dr1] = asmSimple(tm1) {
+                    element("PrimitiveDataType") {
+                        propertyString("name", "Boolean")
+                    }
+                }
+                it.target = dr2
+                it.expected[dr2] = asmSimple(tm2) {
+                    string("BOOLEAN")
+                }
+            },
+            TestData("umlRdbms QVT example").also {
+                val dr1 = DomainReference("uml")
+                val dr2 = DomainReference("rdbms")
+                val tm1 = typeModel("SimpleUML", true) {
+                    namespace("uml") {
+                        data("UmlModelElement") {
+                            propertyOf(setOf(CMP, VAR),"name","String")
+                        }
+                        data("Package") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Attribute") {
+                            supertypes("UmlModelElement")
+                       }
+                        data("PackageElement") {
+                            supertypes("UmlModelElement")
+                        }
+                        data("Classifier") {
+                            supertypes("PackageElement")
+                        }
+                        data("Class") {
+                            supertypes("Classifier")
+                            propertyOf(setOf(CMP, VAR),"kind","String")
+                        }
+                        data("PrimitiveDataType") {
+                            supertypes("Classifier")
+
+                        }
+                        data("Association") {
+                            supertypes("PackageElement")
+                        }
+                        association {
+                            end("Package",setOf(REF,VAR),"namespace")
+                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                        }
+                        association {
+                            end("Classifier",setOf(REF,VAR),"type")
+                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"owner")
+                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"general", false,"Set")
+                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"source")
+                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                        }
+                        association {
+                            end("Class",setOf(REF,VAR),"destination")
+                            end("Association",setOf(REF,VAR),"forward", false,"Set")
+                        }
+                    }
+                }
+                val tm2 = typeModel("SimpleRDBMS", true) {
+                    namespace("rdbms") {
+                        data("RModelElement") {
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                        }
+                        data("Schema") {
+                            supertypes("RModelElement")
+                        }
+                        data("Table") {
+                            supertypes("RModelElement")
+                        }
+                        data("Column") {
+                            supertypes("RModelElement")
+                        }
+                        data("Key") {
+                            supertypes("RModelElement")
+                        }
+                        data("ForeignKey") {
+                            supertypes("RModelElement")
+                        }
+                        association {
+                            end("Schema",setOf(REF,VAR),"schema")
+                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                        }
+                        association {
+                            end("Table",setOf(REF,VAR),"owner")
+                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                        }
+                        association {
+                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            //TODO: refersToOpposite is not navigable!
+                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                        }
+                        association {
+                            end("Column",setOf(REF,VAR),"column", false,"Set")
+                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
+                        }
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
+                        /* map each package to a schema */
+                        top relation PackageToSchema {
+                            pivot pn: String
+                            domain uml p:Package { name==pn }
+                            domain rdbms s:Schema { name==pn }
+                            where {
+                                ClassToTable(p.elements, s.table)
+                            }
+                        }
+                        relation ClassToTable {
+                            pivot cn: String
+                            pivot prefix:String
+                            domain uml c:Class {
+                                namespace==p:Package
+                                kind=='Persistent'
+                                name==cn
+                            }
+                            domain rdbms t:Table {
+                                schema==s:Schema
+                                name==cn
+                                column==cl:Column {
+                                    name=='_id'
+                                    type=='NUMBER'
+                                }
+                                key==k:Key {
+                                    name=='_pk'
+                                    column==cl
+                                    kind==’primary’
+                                }
+                            }
+                            when { PackageToSchema(p, s) }
+                            where {
+                                AttributeToColumn(c.attribute, t.column)
+                            }
+                        }
+                        abstract relation AttributeToColumn {
+                            domain uml a:Attribute
+                            domain rdbms c:Column
+                        }
+                        relation AttributeToColumnPrimitive {
+                            pivot n:String
+                            domain uml a:Attribute {
+                                name==n
+                                type==at:PrimitiveDataType
+                            }
+                            domain rdbms c:Column {
+                                name==n
+                                type==ct:String
+                            }
+                            where {
+                                PrimitiveUmlTypeToSqlType(at, ct)
+                            }
+                        }
+                        relation AttributeToColumnComplex {
+                            pivot n:String
+                            domain uml a:Attribute {
+                                name==n
+                                type==at:Class
+                            }
+                            domain rdbms c:Column {
+                                name==n
+                                type=='NUMBER'
+                            }
+                            where {
+                                ComplexUmlTypeToSqlType(at, ct)
+                            }
+                        }                        
+                        abstract relation PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType
+                            domain rdbms ct:String
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeBoolean : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'Boolean'}
+                            domain rdbms ct:String == 'BOOLEAN'
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeInteger : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'Int'}
+                            domain rdbms ct:String == 'NUMBER'
+                        }
+                        relation PrimitiveUmlTypeToSqlTypeBoolean : PrimitiveUmlTypeToSqlType {
+                            domain uml pt:PrimitiveDataType{ name == 'String'}
+                            domain rdbms ct:String == 'VARCHAR'
+                        }
+                    }
+                """.trimIndent()
+                it.input[dr1] = asmSimple(tm1) {
+                    element("Package") {
+                        propertyString("name", "pkg1")
+                    }
+                }
+                it.target = dr2
+                it.expected[dr2] = asmSimple(tm2) {
+                    element("Schema") {
+                        propertyString("name", "pkg1")
+                    }
+                }
             }
         )
 
         fun doTest(testData: TestData) {
+            testData.typeDomains.forEach { (k,v) ->
+                println(v.asString())
+            }
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val context = ContextWithScope<Any, Any>()
             testData.typeDomains.forEach { (k,v) ->

@@ -738,6 +738,31 @@ abstract class TypeNamespaceAbstract(
         }
     }
 
+    override fun findOrCreateAssociation(ends: List<AssociationEnd>): List<PropertyDeclaration> {
+        val props = mutableListOf<PropertyDeclaration>()
+        for (i in ends.indices) {
+            val thisEnd = ends[i]
+            val thisEndDef = thisEnd.endType
+            for (j in ends.indices) {
+                if (i == j) {
+                    continue
+                } else {
+                    val otherEnd = ends[j]
+                    val otherEndType = if (null == otherEnd.collectionTypeName) {
+                        otherEnd.endType.type(emptyList(), otherEnd.isNullable)
+                    } else {
+                        val ti = otherEnd.endType.type(emptyList(), otherEnd.isNullable)
+                        val targs = listOf(ti.asTypeArgument)
+                        this.createTypeInstance(null, otherEnd.collectionTypeName, targs, false)
+                    }
+                    val pd = thisEndDef.appendPropertyStored(otherEnd.endName, otherEndType, otherEnd.characteristics)
+                    props.add(pd)
+                }
+            }
+        }
+        return props
+    }
+
     override fun createTupleType(): TupleType {
         return StdLibDefault.TupleType
         //val td = TupleTypeSimple(this, _nextTupleTypeTypeId++)
@@ -1391,7 +1416,7 @@ class InterfaceTypeSimple(
         val targs = if (this.typeParameters.isEmpty()) {
             ""
         } else {
-            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+            "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
         val props = this.property
@@ -1478,7 +1503,7 @@ class DataTypeSimple(
         val targs = if (this.typeParameters.isEmpty()) {
             ""
         } else {
-            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+            "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
         val props = this.property
@@ -1540,7 +1565,7 @@ class CollectionTypeSimple(
         val targs = if (this.typeParameters.isEmpty()) {
             ""
         } else {
-            "<" + this.typeParameters.joinToString(","){it.name.value} + ">"
+            "<" + this.typeParameters.joinToString(",") { it.name.value } + ">"
         }
         return "collection ${signature(context)}$targs"
     }

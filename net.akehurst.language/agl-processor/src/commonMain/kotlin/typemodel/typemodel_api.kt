@@ -38,6 +38,15 @@ interface TypeModel : Model<TypeNamespace, TypeDefinition> {
 
 }
 
+data class AssociationEnd(
+    val endName: PropertyName,
+    val endType: DataType,
+    val isNullable: Boolean,
+    val collectionTypeName: PossiblyQualifiedName?,
+    val characteristics: Set<PropertyCharacteristic>,
+    val navigable: Boolean,
+)
+
 interface TypeNamespace : Namespace<TypeDefinition> {
 
     /**
@@ -99,6 +108,13 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     fun findOwnedOrCreateCollectionTypeNamed(typeName: SimpleName): CollectionType
     fun findOwnedOrCreateUnionTypeNamed(typeName: SimpleName, ifCreate: (UnionType) -> Unit): UnionType
 
+    /**
+     * creates properties in the types of each end that point to each other
+     * ends must be 'DataType' types
+     * TODO: support directionality and
+     */
+    fun findOrCreateAssociation(ends:List<AssociationEnd>): List<PropertyDeclaration>
+
     fun createTypeInstance(
         contextQualifiedTypeName: QualifiedName?, qualifiedOrImportedTypeName: PossiblyQualifiedName, typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
@@ -112,6 +128,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
      * clone the namespace but not the content
      */
     fun findInOrCloneTo(other: TypeModel): TypeNamespace
+
 }
 
 interface TypeParameter {

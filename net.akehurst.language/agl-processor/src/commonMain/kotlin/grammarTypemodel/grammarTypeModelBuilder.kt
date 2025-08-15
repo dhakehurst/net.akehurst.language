@@ -34,7 +34,7 @@ fun TypeModelBuilder.grammarTypeNamespace(
 ) {
     val b = GrammarTypeNamespaceBuilder(_model, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), resolveImports)
     b.init()
-    val ns = b.build()
+    val (ns, assocBuilders) = b.build()
     _model.addNamespace(ns)
 }
 
@@ -49,7 +49,7 @@ fun grammarTypeModel(
     imports.forEach { model.addNamespace(it) }
     val b = GrammarTypeNamespaceBuilder(model, QualifiedName(namespaceQualifiedName), imports.map { Import(it.qualifiedName.value) }.toMutableList(), true)
     b.init()
-    val ns = b.build()
+    val (ns,assocBuilders) = b.build()
     model.addNamespace(ns)
     model.resolveImports()
     return model
