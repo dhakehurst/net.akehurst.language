@@ -304,15 +304,13 @@ class AsmStructureSimple(
 
     override fun hasProperty(name: PropertyValueName): Boolean = property.containsKey(name)
 
-    fun getPropertyAsStringOrNull(name: PropertyValueName): String? = property[name]?.value as String?
-    fun getPropertyAsAsmElementOrNull(name: PropertyValueName): AsmStructureSimple? = property[name]?.value as AsmStructureSimple?
     fun getPropertyAsReferenceOrNull(name: PropertyValueName): AsmReferenceSimple? = property[name]?.value as AsmReferenceSimple?
     fun getPropertyAsListOrNull(name: PropertyValueName): List<Any>? = property[name]?.value as List<Any>?
 
-    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
     override fun getProperty(name: PropertyValueName): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$parsePath' ")
-    fun getPropertyAsString(name: PropertyValueName): String = (getProperty(name) as AsmPrimitive).value as String
-    fun getPropertyAsAsmElement(name: PropertyValueName): AsmStructureSimple = getProperty(name) as AsmStructureSimple
+    override fun getPropertyOrNothing(name: PropertyValueName): AsmValue = property[name]?.value ?: AsmNothingSimple
+    override fun getPropertyOrNull(name: PropertyValueName): AsmValue? = property[name]?.value
+
     fun getPropertyAsReference(name: PropertyValueName): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
     fun getPropertyAsList(name: PropertyValueName): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: PropertyValueName): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>

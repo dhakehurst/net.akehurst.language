@@ -106,7 +106,42 @@ interface AsmStructure : AsmValue {
      */
     fun getPropertyOrNothing(name: PropertyValueName): AsmValue
 
+    /**
+     * the value of the named property, null if no property with that name
+     */
+    fun getPropertyOrNull(name: PropertyValueName): AsmValue?
+
     fun setProperty(name: PropertyValueName, value: AsmValue, childIndex: Int)
+
+    /**
+     * get the property as an AsmPrimitive, or null if the property does not exist
+     */
+    fun getPropertyAsAsmPrimitiveOrNull(name: String): AsmPrimitive? = getPropertyOrNull(PropertyValueName(name)) as AsmPrimitive
+
+    /**
+     * get the property as an AsmPrimitive, return its value.toString or null if the property does not exist
+     */
+    fun getPropertyAsStringOrNull(name: String): String? = getPropertyAsAsmPrimitiveOrNull(name)?.value?.toString()
+
+    /**
+     * get the property as an AsmStructure, or null if the property does not exist
+     */
+    fun getPropertyAsAsmStructureOrNull(name: String): AsmStructure? = getPropertyOrNull(PropertyValueName(name)) as AsmStructure?
+
+    /**
+     * get the property as an AsmList, or null if the property does not exist
+     */
+    fun getPropertyAsAsmListOrNull(name: String): AsmList? = getPropertyOrNull(PropertyValueName(name)) as AsmList?
+
+    fun getPropertyAsListOfAsmPrimitiveOrNull(name: String): List<AsmPrimitive>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmPrimitive>
+    fun getPropertyAsListOfAnyOrNull(name: String): List<Any>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.value }
+    fun getPropertyAsListOfStringOrNull(name: String): List<String>? = getPropertyAsListOfAsmPrimitiveOrNull(name)?.map { it.toString() }
+    fun getPropertyAsListOfAsmStructureOrNull(name: String): List<AsmStructure>? = getPropertyAsAsmListOrNull(name)?.elements as? List<AsmStructure>
+
+    /**
+     * get the property as an AsmListSeparated, or null if the property does not exist
+     */
+    fun getPropertyAsAsmListSeparatedOrNull(name: String): AsmListSeparated? = getPropertyOrNull(PropertyValueName(name)) as AsmListSeparated?
 }
 
 interface AsmStructureProperty {
