@@ -26,7 +26,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, ContextWithScope<Any, Any>> {
     override fun clear() {
@@ -45,7 +45,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
             def.rule.forEach { (k,v) ->
                 v.domainItem.forEach { (dk,dv) ->
                     val typesDomainName = typeDomains[dv.domainRef]!!
-                    val tm = (context.findItemsNamedConformingTo(typesDomainName.value,) {true}).first().item as TypeModel//TODO check its a typemodel
+                    val tm = (context.findItemsNamedConformingTo(typesDomainName.value,) {true}).first().item as TypesDomain//TODO check its a typemodel
                     dv.variable.resolveType(tm)
                 }
             }

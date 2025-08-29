@@ -25,8 +25,8 @@ import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.NavigationPart
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
@@ -34,10 +34,10 @@ import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.*
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.StructuredTypeSimpleAbstract
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.StructuredTypeSimpleAbstract
+import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 import std.extensions.capitalise
 import kotlin.reflect.KClass
 
@@ -80,25 +80,25 @@ internal class ConstructAndModify<TP : DataType, TR : AsmTransformationRule>(
  *   }
  *
  */
-internal class GrammarModel2TransformModel(
+internal class GrammarDomain2TransformDomain(
     /** base type model, could be empty if can create types, else must hold all types needed **/
-    val typeModel: TypeModel,
-    val grammarModel: GrammarModel,
-    val configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
+    val typesDomain: TypesDomain,
+    val grammarDomain: GrammarDomain,
+    val configuration: Grammar2TypesDomainMapping? = Grammar2TransformRuleSet.defaultConfiguration
 ) {
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
-    val transModel = AsmTransformDomainDefault(
-        name = SimpleName("FromGrammar" + grammarModel.allDefinitions.last().name.value),
+    val transDomain = AsmTransformDomainDefault(
+        name = SimpleName("FromGrammar" + grammarDomain.allDefinitions.last().name.value),
         namespace = emptyList()
     ).also {
-        it.typeModel = typeModel
+        it.typesDomain = typesDomain
     }
 
     private val _map = mutableMapOf<QualifiedName, Grammar2Namespaces>()
 
     private fun createGrammar2Namespaces(grammar: Grammar): Grammar2Namespaces {
-        return Grammar2Namespaces(issues, typeModel, transModel, grammar, _map, configuration).also {
+        return Grammar2Namespaces(issues, typesDomain, transDomain, grammar, _map, configuration).also {
             _map[grammar.qualifiedName] = it
         }
     }
@@ -118,7 +118,7 @@ internal class GrammarModel2TransformModel(
 
     fun build(): AsmTransformDomain {
         val unsortedGrammars = mutableSetOf<Grammar>()
-        grammarModel.allDefinitions.forEach {
+        grammarDomain.allDefinitions.forEach {
             unsortedGrammars.addAll(it.allExtendsResolved)
             unsortedGrammars.addAll(it.allResolvedEmbeddedGrammars)
             unsortedGrammars.add(it)
@@ -140,33 +140,33 @@ internal class GrammarModel2TransformModel(
         val g2ns = sortedGrammars.map { createGrammar2Namespaces(it) }
         g2ns.forEach { resolveReferencedGrammars(it.grammar) }
 
-        typeModel.addNamespace(StdLibDefault)
+        typesDomain.addNamespace(StdLibDefault)
         g2ns.forEach { it.buildNamespace(it.grammar.qualifiedName) }
-        typeModel.resolveImports()
+        typesDomain.resolveImports()
 
         g2ns.forEach { it.buildTransformNamespace(it.grammar) }
         val g2ts = g2ns.map { it.build() }
         g2ts.forEach { it.buildTypesForRules() }
         g2ts.forEach { it.build() }
-        return transModel
+        return transDomain
     }
 
 }
 
 internal class Grammar2Namespaces(
     val issues: IssueHolder,
-    val typeModel: TypeModel,
-    val transModel: AsmTransformDomain,
+    val typesDomain: TypesDomain,
+    val transDomain: AsmTransformDomain,
     val grammar: Grammar,
     val grm2Ns: Map<QualifiedName, Grammar2Namespaces>,
-    val configuration: Grammar2TypeModelMapping?
+    val configuration: Grammar2TypesDomainMapping?
 ) {
-    var tpNs: GrammarTypeNamespace? = null
+    var tpNs: GrammarTypesNamespace? = null
     var trNs: AsmTransformNamespace? = null
     var g2rs: Grammar2TransformRuleSet? = null
 
     fun buildNamespace(qualifiedName: QualifiedName) =
-        GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(typeModel, qualifiedName).also { gns ->
+        GrammarTypesNamespaceSimple.findOrCreateGrammarNamespace(typesDomain, qualifiedName).also { gns ->
             grammar.allExtendsResolved.map {
                 it.qualifiedName.asImport
             }.forEach {
@@ -181,38 +181,38 @@ internal class Grammar2Namespaces(
 
     fun buildTransformNamespace(grammar: Grammar): AsmTransformNamespace {
         val nsImports = grammar.extendsResolved.filterNot { it.namespace == grammar.namespace }.map { it.namespace.qualifiedName.asImport }
-        return transModel.findOrCreateNamespace(grammar.namespace.qualifiedName, nsImports)
+        return transDomain.findOrCreateNamespace(grammar.namespace.qualifiedName, nsImports)
     }
 
     fun build(): Grammar2TransformRuleSet {
         val gnsqn = grammar.namespace.qualifiedName
         val gqn = grammar.qualifiedName
-        tpNs = typeModel.findNamespaceOrNull(gqn) as GrammarTypeNamespace
-        trNs = transModel.findNamespaceOrNull(gnsqn) as AsmTransformNamespace?
+        tpNs = typesDomain.findNamespaceOrNull(gqn) as GrammarTypesNamespace
+        trNs = transDomain.findNamespaceOrNull(gnsqn) as AsmTransformNamespace?
             ?: error("Trans namespace '${gnsqn}' is not created.")
 
-        g2rs = Grammar2TransformRuleSet(issues, typeModel, transModel, tpNs!!, trNs!!, grammar, grm2Ns, configuration)
+        g2rs = Grammar2TransformRuleSet(issues, typesDomain, transDomain, tpNs!!, trNs!!, grammar, grm2Ns, configuration)
         return g2rs!!
     }
 
     private fun findOrCreateGrammarNamespace(qualifiedName: QualifiedName) =
-        GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(typeModel, qualifiedName)
+        GrammarTypesNamespaceSimple.findOrCreateGrammarNamespace(typesDomain, qualifiedName)
 
 }
 
 internal class Grammar2TransformRuleSet(
     val issues: IssueHolder,
-    val typeModel: TypeModel,
-    val transModel: AsmTransformDomain,
-    val grammarTypeNamespace: GrammarTypeNamespace,
+    val typesDomain: TypesDomain,
+    val transDomain: AsmTransformDomain,
+    val grammarTypeNamespace: GrammarTypesNamespace,
     val transformNamespace: AsmTransformNamespace,
     val grammar: Grammar,
     val grm2Ns: Map<QualifiedName, Grammar2Namespaces>,
-    val configuration: Grammar2TypeModelMapping?
+    val configuration: Grammar2TypesDomainMapping?
 ) {
 
     companion object {
-        val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
+        val defaultConfiguration = TypesDomainFromGrammarConfigurationDefault()
 
         val UNNAMED_PRIMITIVE_PROPERTY_NAME = PropertyName("\$value")
         val UNNAMED_LIST_PROPERTY_NAME = PropertyName("\$list")
@@ -288,7 +288,7 @@ internal class Grammar2TransformRuleSet(
             val key = it.key
             val value = it.value
             trRules.add(value)
-            (grammarTypeNamespace as GrammarTypeNamespaceSimple).allRuleNameToType[key] = value.resolvedType
+            (grammarTypeNamespace as GrammarTypesNamespaceSimple).allRuleNameToType[key] = value.resolvedType
         }
         val extends = grammar.extends.map {
             val rqn = it.resolved?.qualifiedName ?: error("Should already be resolved")
@@ -466,14 +466,14 @@ internal class Grammar2TransformRuleSet(
 
         //create fake DataType to hold property defs
         val ttSub = object : StructuredTypeSimpleAbstract() {
-            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val namespace: TypesNamespace = grammarTypeNamespace
             override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
 
-            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+            override fun signature(context: TypesNamespace?, currentDepth: Int): String {
                 TODO("not implemented")
             }
 
-            override fun findInOrCloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypesDomain): StructuredType {
                 TODO("not implemented")
             }
         }
@@ -600,14 +600,14 @@ internal class Grammar2TransformRuleSet(
 
     private fun typeForGroupContentOptional(optItem: OptionalItem): TypeInstance {
         val ttSub = object : StructuredTypeSimpleAbstract() {
-            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val namespace: TypesNamespace = grammarTypeNamespace
             override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
 
-            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+            override fun signature(context: TypesNamespace?, currentDepth: Int): String {
                 TODO("not implemented")
             }
 
-            override fun findInOrCloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypesDomain): StructuredType {
                 TODO("not implemented")
             }
         }
@@ -1110,14 +1110,14 @@ internal class Grammar2TransformRuleSet(
 
         //create dummy DataType to hold property defs
         val ttSub = object : StructuredTypeSimpleAbstract() {
-            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val namespace: TypesNamespace = grammarTypeNamespace
             override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
 
-            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+            override fun signature(context: TypesNamespace?, currentDepth: Int): String {
                 TODO("not implemented")
             }
 
-            override fun findInOrCloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypesDomain): StructuredType {
                 TODO("not implemented")
             }
         }
@@ -1278,14 +1278,14 @@ internal class Grammar2TransformRuleSet(
 
     private fun trRuleForGroupContentOptional(optItem: OptionalItem): AsmTransformationRule {
         val ttSub = object : StructuredTypeSimpleAbstract() {
-            override val namespace: TypeNamespace = grammarTypeNamespace
+            override val namespace: TypesNamespace = grammarTypeNamespace
             override val name: SimpleName = SimpleName("TupleTypeSubstitute-${tupleCount++}")
 
-            override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+            override fun signature(context: TypesNamespace?, currentDepth: Int): String {
                 TODO("not implemented")
             }
 
-            override fun findInOrCloneTo(other: TypeModel): StructuredType {
+            override fun findInOrCloneTo(other: TypesDomain): StructuredType {
                 TODO("not implemented")
             }
         }

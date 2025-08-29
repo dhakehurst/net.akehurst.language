@@ -18,9 +18,9 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.format.test.FormatModelTest
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -31,7 +31,7 @@ class test_AglFormat {
     private companion object {
         data class TestData(
             val sentence: String,
-            val expectedAsm: AglFormatModel? = null
+            val expectedAsm: AglFormatDomain? = null
         )
 
         val testData = listOf(
@@ -148,7 +148,7 @@ class test_AglFormat {
     @Ignore
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.format.processor!!.typesModel
+        val actual = Agl.registry.agl.format.processor!!.typesDomain
         val expected = grammarTypeModel("net.akehurst.language.agl.AglFormat", "AglFormat") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
@@ -159,7 +159,7 @@ class test_AglFormat {
             // ;
         }
 
-        TypeModelTest.tmAssertEquals(expected, actual)
+        TypesDomainTest.tmAssertEquals(expected, actual)
     }
 
     @Test

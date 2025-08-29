@@ -19,16 +19,16 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.issues.api.IssueCollection
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.ParseResult
 import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
@@ -36,7 +36,7 @@ import net.akehurst.language.sppt.api.SPPTParser
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 /**
  * A LanguageProcessor is immutable and used to process a sentence using a given grammar.
@@ -52,7 +52,7 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val issues: IssueCollection<LanguageIssue>
 
-    val grammarModel: GrammarModel?
+    val grammarDomain: GrammarDomain?
 
     val targetGrammar:Grammar?
 
@@ -75,28 +75,28 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      * Access to the TypeModel possibly before the AsmTransform has been resolved.
      * After resolving the AsmTransform this value will be the same as typeModel
      */
-    val baseTypeModel: TypeModel
+    val baseTypesDomain: TypesDomain
 
     /**
-     * Model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     * The types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      * After resolving the AsmTransform, which may modify the original baseTypeModel
      */
-    val typesModel: TypeModel
+    val typesDomain: TypesDomain
 
     /**
      * The transformation from parse-tree to ASM
      * Evaluating this may or may not modify the typeModel depending on the specifics of the TransformModel
      */
-    val transformModel: AsmTransformDomain
+    val transformDomain: AsmTransformDomain
 
     val targetTransformRuleSet: AsmTransformRuleSet
 
     /**
      * Model of the scopes and cross-references for the LanguageDefinition of this LanguageProcessor
      */
-    val crossReferenceModel: CrossReferenceModel
+    val crossReferenceDomain: CrossReferenceDomain
 
-    val formatModel: AglFormatModel?
+    val formatDomain: AglFormatDomain?
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 

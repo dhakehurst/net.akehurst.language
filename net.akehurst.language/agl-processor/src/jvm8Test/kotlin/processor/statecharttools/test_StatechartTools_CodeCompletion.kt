@@ -17,14 +17,14 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.contextAsmSimple
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -76,7 +76,7 @@ class test_StatechartTools_CodeCompletion {
                         }*/
             val cfg = Agl.configuration(Agl.configurationSimple()) {
                 targetGrammarName(grmName)
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), CrossReferenceString( crossReferenceModelStr)) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), CrossReferenceString( crossReferenceModelStr)) }
             }
             Agl.processorFromGrammar(grm, cfg)
         }

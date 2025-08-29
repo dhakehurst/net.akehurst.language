@@ -28,15 +28,15 @@ import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.parser.api.RulePosition
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 
 data class ChildDataAny(
     val nodeInfo: SpptDataNodeInfo,
@@ -45,8 +45,8 @@ data class ChildDataAny(
 
 abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     val grammarNamespaceQualifiedName: QualifiedName,
-    val typeModel: TypeModel,
-    val scopeModel: CrossReferenceModel
+    val types: TypesDomain,
+    val crossReference: CrossReferenceDomain
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {
@@ -81,7 +81,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
     abstract fun finishProperty(declaration: PropertyDeclaration, isRef: Boolean)
 
     private fun findTypeUsageForRule(ruleName: String): TypeInstance? {
-        val ns = this.typeModel.findNamespaceOrNull(grammarNamespaceQualifiedName) as GrammarTypeNamespace?
+        val ns = this.types.findNamespaceOrNull(grammarNamespaceQualifiedName) as GrammarTypesNamespace?
         return ns?.findTypeForRule(GrammarRuleName(ruleName))
     }
 
@@ -126,7 +126,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                 }
                 val tuc = resolveCompressed(tu, nodeInfo)
                 val dd = when {
-                    tuc.forNode.resolvedDeclaration == typeModel.NothingType -> null //could test for NothingType instead of null when used
+                    tuc.forNode.resolvedDeclaration == types.NothingType -> null //could test for NothingType instead of null when used
                     else -> DownData(p, tuc)
                 }
                 downStack.push(dd)
@@ -142,8 +142,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     is TupleType -> startTuple()
                     is DataType -> startAsmElement(p, tuc.forNode.resolvedDeclaration as DataType)
                     else -> when (tuc.forNode.resolvedDeclaration) {
-                        typeModel.NothingType -> Unit
-                        typeModel.AnyType -> Unit
+                        types.NothingType -> Unit
+                        types.AnyType -> Unit
                         else -> error("Shold not happen")
                     }
                 }
@@ -183,7 +183,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     ?: error("Type not found for $embRuleName")
                 val tuc = resolveCompressed(tu, nodeInfo)
                 val dd = when {
-                    tuc.forNode.resolvedDeclaration == typeModel.NothingType -> null //could test for NothingType instead of null when used
+                    tuc.forNode.resolvedDeclaration == types.NothingType -> null //could test for NothingType instead of null when used
                     else -> DownData(p, tuc)
                 }
                 downStack.push(dd)
@@ -228,8 +228,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
             }
 
             else -> when (parentType) {
-                typeModel.NothingType -> parentPath.plus("<error>")
-                typeModel.AnyType -> TODO()
+                types.NothingType -> parentPath.plus("<error>")
+                types.AnyType -> TODO()
                 else -> error("Shold not happen")
             }
         }
@@ -237,7 +237,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
 
     private fun typeForNode(parentTypeUsage: TypeInstance?, nodeInfo: SpptDataNodeInfo): TypeInstance {
         return when {
-            null == parentTypeUsage -> typeModel.NothingType.type() // property unused
+            null == parentTypeUsage -> types.NothingType.type() // property unused
             parentTypeUsage.isNullable -> typeForParentOptional(parentTypeUsage, nodeInfo)
             nodeInfo.node.rule.isEmbedded -> typeForEmbedded(parentTypeUsage, nodeInfo)
             else -> {
@@ -254,8 +254,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     is TupleType -> typeForParentTuple(parentType, nodeInfo)
                     is DataType -> typeForParentElement(parentType, nodeInfo)
                     else -> when (parentType) {
-                        typeModel.NothingType -> typeModel.NothingType.type()
-                        typeModel.AnyType -> TODO()
+                        types.NothingType -> types.NothingType.type()
+                        types.AnyType -> TODO()
                         else -> error("Shold not happen")
                     }
                 }
@@ -277,7 +277,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         return when (type) {
             is DataType -> {
                 val prop = type.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                prop?.typeInstance ?: typeModel.NothingType.type()
+                prop?.typeInstance ?: types.NothingType.type()
             }
 
             else -> parentTypeUsage
@@ -340,7 +340,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
 
     private fun typeForProperty(prop: PropertyDeclaration?, nodeInfo: SpptDataNodeInfo): TypeInstance {
         return when {
-            null == prop -> typeModel.NothingType.type() // property unused
+            null == prop -> types.NothingType.type() // property unused
             prop.typeInstance.isNullable -> prop.typeInstance//typeForOptional(propTypeUse, nodeInfo)
             else -> {
                 val propType = prop.typeInstance.resolvedDeclaration
@@ -360,8 +360,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     is TupleType -> (prop.typeInstance)
                     is DataType -> (prop.typeInstance)
                     else -> when (propType) {
-                        typeModel.NothingType -> typeModel.NothingType.type()
-                        typeModel.AnyType -> TODO()
+                        types.NothingType -> types.NothingType.type()
+                        types.AnyType -> TODO()
                         else -> error("Shold not happen")
                     }
                 }
@@ -547,8 +547,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
                     }
 
                     else -> when (type) {
-                        typeModel.NothingType -> error("Internal Error: items should not have type 'NothingType'")
-                        typeModel.AnyType -> {
+                        types.NothingType -> error("Internal Error: items should not have type 'NothingType'")
+                        types.AnyType -> {
                             TODO()
                             /*
                     val actualType = this.findTypeForRule(target.name) ?: error("Internal Error: cannot find actual type for ${target.name}")
@@ -591,8 +591,8 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<AsmType : Any>(
         is TupleType -> createTupleFrom(sentence, type, path, childData.value as List<ChildDataAny>)
         is DataType -> createElementFrom(sentence, type, path, childData.value as List<ChildDataAny>)
         else -> when (type) {
-            typeModel.NothingType -> TODO()
-            typeModel.AnyType -> TODO()
+            types.NothingType -> TODO()
+            types.AnyType -> TODO()
             else -> error("Shold not happen")
         }
     }

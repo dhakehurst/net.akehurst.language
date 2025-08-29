@@ -24,10 +24,10 @@ import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
 import net.akehurst.language.base.api.DefinitionBlock
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.asm.TypeNamespaceSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.SimpleTypeModelStdLib
+import net.akehurst.language.types.asm.TypeModelSimple
+import net.akehurst.language.types.asm.TypeNamespaceSimple
 
 object TypeModelFromGrammar {
 

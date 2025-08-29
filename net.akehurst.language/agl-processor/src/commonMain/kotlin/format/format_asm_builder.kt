@@ -25,14 +25,14 @@ import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.format.asm.AglFormatModelDefault
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.formatter.api.FormatNamespace
 
 @DslMarker
 annotation class FormatModelDslMarker
 
-fun formatModel(name:String, init: FormatModelBuilder.() -> Unit): AglFormatModel {
+fun formatDomain(name:String, init: FormatModelBuilder.() -> Unit): AglFormatDomain {
     val b = FormatModelBuilder(SimpleName(name))
     b.init()
     return b.build()
@@ -45,7 +45,7 @@ class FormatModelBuilder(
 
     private val _namespaces = mutableListOf<FormatNamespace>()
     private val _options = mutableMapOf<String,String>()
-    private val _model = AglFormatModelDefault(name, OptionHolderDefault(null, _options), _namespaces)
+    private val _domain = AglFormatDomainDefault(name, OptionHolderDefault(null, _options), _namespaces)
 
     private val _asm = AsmSimple()
     private val _ruleList = mutableListOf<AsmStructure>()
@@ -66,7 +66,7 @@ class FormatModelBuilder(
         _ruleList.add(formatRuleElement)
     }
 
-    fun build(): AglFormatModel = _model
+    fun build(): AglFormatDomain = _domain
 }
 
 @FormatModelDslMarker

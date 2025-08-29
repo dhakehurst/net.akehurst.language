@@ -21,25 +21,22 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.expressions.processor.TypedObjectAny
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
 import net.akehurst.language.api.processor.FormatString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.format.asm.AglFormatModelDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
-class GenerateGrammarModelBuild(
-    val grammarTypeModel: TypeModel = AglGrammar.typesModel
+class GenerateGrammarDomainBuild(
+    val grammarTypesDomain: TypesDomain = AglGrammar.typesDomain
 ) {
 
-    companion object {
+    companion object Companion {
         val generatedFormat = $$"""
             namespace net.akehurst.language.grammar
               format Asm {
@@ -48,8 +45,8 @@ class GenerateGrammarModelBuild(
                 SimpleName -> value    // TODO: move these to something we extend
                 QualifiedName -> value
                 
-                GrammarModel -> "
-                  grammarModel(\"$name\") {
+                GrammarDomain -> "
+                  grammarDomain(\"$name\") {
                     $options
                     $[namespace / '\\n']
                   }
@@ -99,12 +96,12 @@ class GenerateGrammarModelBuild(
         """
     }
 
-    val formatModel by lazy {
-        val res = Agl.formatModel(FormatString(generatedFormat),grammarTypeModel )
+    val formatDomain by lazy {
+        val res = Agl.formatDomain(FormatString(generatedFormat),grammarTypesDomain )
         check(res.allIssues.errors.isEmpty()) { println(res.allIssues.errors) } //TODO: handle issues
         res.asm!!
     }
-    val formatSet get() = formatModel.findDefinitionByQualifiedNameOrNull("net.akehurst.language.grammar.Asm".asQualifiedName)!!
+    val formatSet get() = formatDomain.findDefinitionByQualifiedNameOrNull("net.akehurst.language.grammar.Asm".asQualifiedName)!!
 
     fun generateFromString(grammarString: GrammarString):String {
         val res = Agl.registry.agl.grammar.processor!!.process(
@@ -120,14 +117,14 @@ class GenerateGrammarModelBuild(
         return generateFromAsm(asm)
     }
 
-    fun generateFromAsm(grammarModel: GrammarModel): String {
+    fun generateFromAsm(grammarDomain: GrammarDomain): String {
         val issues = IssueHolder(LanguageProcessorPhase.FORMAT)
-        val og = ObjectGraphByReflection<Any>(AglGrammar.typesModel, issues)
-        val formatter = FormatterOverTypedObject<Any>(formatModel, og,issues)
+        val og = ObjectGraphByReflection<Any>(AglGrammar.typesDomain, issues)
+        val formatter = FormatterOverTypedObject<Any>(formatDomain, og,issues)
 
-        val tp = grammarTypeModel.findFirstDefinitionByNameOrNull(SimpleName("GrammarModel"))!!.type()
-        val tobj = TypedObjectAny(tp, grammarModel)
-        val res = formatter.format(formatSet.qualifiedName, tobj)
+        val tp = grammarTypesDomain.findFirstDefinitionByNameOrNull(SimpleName("GrammarDomain"))!!.type()
+        val tobj = TypedObjectAny(tp, grammarDomain)
+        val res = formatter.formatSelf(formatSet.qualifiedName, tobj)
         check(res.issues.errors.isEmpty()) { println(res.issues.errors) } //TODO: handle issues
         //val str = grammarModel.namespace.joinToString(separator = "\n\n") { generateNamespace(it) }
         return res.sentence!!

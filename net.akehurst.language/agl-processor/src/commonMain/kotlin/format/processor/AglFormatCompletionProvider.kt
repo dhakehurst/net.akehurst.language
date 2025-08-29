@@ -19,9 +19,9 @@ package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 
-class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatModel, ContextWithScope<Any, Any>>() {
+class AglFormatCompletionProvider : CompletionProviderAbstract<AglFormatDomain, ContextWithScope<Any, Any>>() {
 
         //TODO
 

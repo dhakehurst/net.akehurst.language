@@ -16,6 +16,7 @@
 
 package net.akehurst.language.base.processor
 
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.CompletionProviderOptions
@@ -23,9 +24,9 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 
-class BaseCompletionProvider() : CompletionProvider<Any, SentenceContext> {
+class BaseCompletionProvider() : CompletionProvider<Any, ContextWithScope<Any, Any>> {
 
-    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<SentenceContext>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
         TODO("not implemented")
     }
 

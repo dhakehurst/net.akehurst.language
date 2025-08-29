@@ -81,8 +81,10 @@ interface CompletionProviderOptions<ContextType : Any> {
     fun clone(): CompletionProviderOptions<ContextType>
 }
 
-interface FormatOptions<AsmType : Any> {
+interface FormatOptions<SelfType : Any> {
+    val environment: Map<String, SelfType>
 
+    fun clone(): FormatOptions<SelfType>
 }
 
 /**

@@ -25,7 +25,7 @@ import net.akehurst.language.formatter.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
-internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatModel>() {
+internal class AglTemplateSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatDomain>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mutableMapOf(

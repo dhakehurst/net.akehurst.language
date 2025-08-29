@@ -20,28 +20,28 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.parser.api.Parser
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.regex.api.RegexEngineKind
 import net.akehurst.language.scanner.api.Scanner
 import net.akehurst.language.scanner.api.ScannerKind
-import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScannerResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Scanner>
 typealias ParserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<Parser>
 typealias TransformResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AsmTransformDomain>
-typealias TypesResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TypeModel>
+typealias TypesResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<TypesDomain>
 //typealias AsmFactoryResolver<AsmFactoryType> = () -> AsmFactoryType
-typealias CrossReferenceResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceModel>
+typealias CrossReferenceResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CrossReferenceDomain>
 typealias SyntaxAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
-typealias FormatResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatModel>
-typealias StyleResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglStyleModel>
+typealias FormatResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglFormatDomain>
+typealias StyleResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<AglStyleDomain>
 typealias CompletionProviderResolver<AsmType,  ContextType> = (LanguageProcessor<AsmType,  ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
 
 /**
@@ -62,7 +62,7 @@ interface LanguageProcessorConfiguration<AsmType:Any, ContextType : Any> {
 
     val grammarString: GrammarString?
     val typesString: TypesString?
-    val transformString: TransformString?
+    val asmTransformString: AsmTransformString?
     val crossReferenceString: CrossReferenceString?
     val styleString: StyleString?
     val formatString:FormatString?

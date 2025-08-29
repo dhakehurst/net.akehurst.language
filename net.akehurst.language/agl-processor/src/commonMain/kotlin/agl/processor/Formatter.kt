@@ -19,6 +19,6 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.processor.Formatter
 
 
-abstract class FormatterAbstract<AsmType> : Formatter<AsmType> {
+abstract class FormatterAbstract<AsmType:Any> : Formatter<AsmType> {
 
 }

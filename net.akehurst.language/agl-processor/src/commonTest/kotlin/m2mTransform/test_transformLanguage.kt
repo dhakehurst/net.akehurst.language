@@ -20,8 +20,8 @@ package net.akehurst.language.asmTransform.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.test.AsmTransformModelTest
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -129,7 +129,7 @@ class test_transformLanguage {
             assertNotNull(result.asm, result.allIssues.toString())
             assertTrue(result.allIssues.errors.isEmpty(), "'${data.sentence}'\n${result.allIssues}")
             data.expectedAsm.forEachIndexed { idx, it ->
-                AsmTransformModelTest.trAssertEquals(it, result.asm!!)
+                AsmTransformDomainTest.trAssertEquals(it, result.asm!!)
             }
         }
 
@@ -145,7 +145,7 @@ class test_transformLanguage {
     @Ignore
     @Test
     fun check_typeModel() {
-        val actual = Agl.registry.agl.asmTransform.processor!!.typesModel
+        val actual = Agl.registry.agl.asmTransform.processor!!.typesDomain
         val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
             //unit = ruleList ;
             //ruleList = [formatRule]* ;
@@ -156,7 +156,7 @@ class test_transformLanguage {
             // ;
         }
 
-        TypeModelTest.tmAssertEquals(expected, actual)
+        TypesDomainTest.tmAssertEquals(expected, actual)
     }
 
     @Test

@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -40,7 +40,7 @@ class test_Dot_SyntaxAnalyser {
 
     @Test
     fun dotTypeModel() {
-        val actual = processor.typesModel
+        val actual = processor.typesDomain
         val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
             dataFor("graph", "Graph") {
@@ -171,7 +171,7 @@ class test_Dot_SyntaxAnalyser {
             //}
         }
         assertEquals(expected.asString(), actual.asString())
-        TypeModelTest.tmAssertEquals(expected, actual)
+        TypesDomainTest.tmAssertEquals(expected, actual)
     }
 
     @Test

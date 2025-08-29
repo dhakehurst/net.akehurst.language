@@ -15,14 +15,14 @@
  *
  */
 
-package net.akehurst.language.typemodel.asm
+package net.akehurst.language.types.asm
 
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.types.api.*
 
-object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
+object StdLibDefault : TypesNamespaceAbstract(OptionHolderDefault(null, emptyMap()), emptyList()) {
 
     override val qualifiedName: QualifiedName = QualifiedName("std")
 
@@ -78,8 +78,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
             this.createTypeInstance(
                 typeDecl.qualifiedName, QualifiedName("std.Map"),
                 listOf(
-                    StdLibDefault.AnyType.asTypeArgument, //TODO: should be type of Pair.first
-                    StdLibDefault.AnyType.asTypeArgument //TODO: should be type of Pair.second
+                    AnyType.asTypeArgument, //TODO: should be type of Pair.first
+                    AnyType.asTypeArgument //TODO: should be type of Pair.second
                 ),
                 false
             ),
@@ -89,7 +89,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         typeDecl.appendMethodPrimitive(
             MethodName("map"),
             listOf(ParameterDefinitionSimple(TmParameterName("lambda"), this.createTypeInstance(typeDecl.qualifiedName, LambdaType_typeName), null)),
-            StdLibDefault.AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
+            AnyType, //TODO: this should be result of lambda  //TypeParameterReference(typeDecl, SimpleName("E")),
             "A list created by mapping each element using the given lambda expression."
         )
     }
@@ -132,7 +132,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
         )
     }
 
-    override fun findInOrCloneTo(other: TypeModel): TypeNamespace = this
+    override fun findInOrCloneTo(other: TypesDomain): TypesNamespace = this
 
     init {
         createProperties()
@@ -192,8 +192,8 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
             emptyList(),
             this.createTypeInstance(
                 typeDecl.qualifiedName, ListSeparated_typeName, listOf(
-                    StdLibDefault.AnyType.asTypeArgument, //TODO: this should be type provided by method typeargs
-                    StdLibDefault.AnyType.asTypeArgument //TODO: this should be type provided by method typeargs
+                    AnyType.asTypeArgument, //TODO: this should be type provided by method typeargs
+                    AnyType.asTypeArgument //TODO: this should be type provided by method typeargs
                 )
             ),
             ""
@@ -207,7 +207,7 @@ object StdLibDefault : TypeNamespaceAbstract(OptionHolderDefault(null, emptyMap(
             PropertyName("elements"),
             this.createTypeInstance(
                 typeDecl.qualifiedName, List_typeName,
-                listOf(StdLibDefault.AnyType.asTypeArgument)
+                listOf(AnyType.asTypeArgument)
             ),
             "All elements in the List."
         )

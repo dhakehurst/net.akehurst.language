@@ -28,24 +28,24 @@ import net.akehurst.language.expressions.asm.AssignmentStatementDefault
 import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.asmTransform.api.*
 import net.akehurst.language.asmTransform.asm.*
-import net.akehurst.language.typemodel.api.TypeDefinition
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.SubtypeListBuilder
+import net.akehurst.language.types.api.TypeDefinition
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.SubtypeListBuilder
 
 @DslMarker
 annotation class AsmTransformModelDslMarker
 
 fun asmTransform(
     name: String,
-    typeModel: TypeModel,
+    typesDomain: TypesDomain,
     createTypes: Boolean,
     init: AsmTransformModelBuilder.() -> Unit
 ): AsmTransformDomain {
-    val b = AsmTransformModelBuilder(SimpleName(name), typeModel, createTypes)
+    val b = AsmTransformModelBuilder(SimpleName(name), typesDomain, createTypes)
     b.init()
     val m = b.build()
     return m
@@ -54,28 +54,28 @@ fun asmTransform(
 @AsmTransformModelDslMarker
 class AsmTransformModelBuilder internal constructor(
     private val name: SimpleName,
-    private val typeModel: TypeModel,
+    private val typesDomain: TypesDomain,
     private val createTypes: Boolean
 ) {
 
     private val _namespaces = mutableListOf<AsmTransformNamespace>()
 
     fun namespace(qualifiedName: String, init: AsmTransformNamespaceBuilder.() -> Unit) {
-        val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typeModel, createTypes)
+        val b = AsmTransformNamespaceBuilder(QualifiedName(qualifiedName), typesDomain, createTypes)
         b.init()
         val v = b.build()
         _namespaces.add(v)
     }
 
     fun build(): AsmTransformDomain = AsmTransformDomainDefault(name, namespace = _namespaces).also {
-        it.typeModel = typeModel
+        it.typesDomain = typesDomain
     }
 }
 
 @AsmTransformModelDslMarker
 class AsmTransformNamespaceBuilder internal constructor(
     private val qualifiedName: QualifiedName,
-    private val typeModel: TypeModel,
+    private val typesDomain: TypesDomain,
     private val createTypes: Boolean
 ) {
 
@@ -86,7 +86,7 @@ class AsmTransformNamespaceBuilder internal constructor(
     }
 
     fun ruleSet(name: String, init: AsmTransformRuleSetBuilder.() -> Unit) {
-        val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typeModel, createTypes)
+        val b = AsmTransformRuleSetBuilder(namespace, SimpleName(name), typesDomain, createTypes)
         b.init()
         b.build()
     }
@@ -98,7 +98,7 @@ class AsmTransformNamespaceBuilder internal constructor(
 class AsmTransformRuleSetBuilder internal constructor(
     private val namespace: AsmTransformNamespaceDefault,
     private val name: SimpleName,
-    private val typeModel: TypeModel,
+    private val typesDomain: TypesDomain,
     private val createTypes: Boolean
 ) {
 
@@ -112,9 +112,9 @@ class AsmTransformRuleSetBuilder internal constructor(
         return if (createTypes) {
             when (pqt) {
                 is SimpleName -> {
-                    val tns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(StdLibDefault.qualifiedName.asImport))
+                    val tns = typesDomain.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(StdLibDefault.qualifiedName.asImport))
                     val td = tns.findOwnedOrCreateDataTypeNamed(pqt)
-                    if (tns is GrammarTypeNamespaceSimple) {
+                    if (tns is GrammarTypesNamespaceSimple) {
                         tns.setTypeForGrammarRule(grName, td.type())
                     }
                     td
@@ -123,17 +123,17 @@ class AsmTransformRuleSetBuilder internal constructor(
                 is QualifiedName -> {
                     val nsqn = pqt.front
                     val tn = pqt.last
-                    val tns = typeModel.findOrCreateNamespace(nsqn, listOf(StdLibDefault.qualifiedName.asImport))
+                    val tns = typesDomain.findOrCreateNamespace(nsqn, listOf(StdLibDefault.qualifiedName.asImport))
                     val td = tns.findOwnedOrCreateDataTypeNamed(tn)
-                    if (tns is GrammarTypeNamespaceSimple) {
+                    if (tns is GrammarTypesNamespaceSimple) {
                         tns.setTypeForGrammarRule(grName, td.type())
                     }
                     td
                 }
             }
         } else {
-            val defaultNs = typeModel.findNamespaceOrNull(defaultTypeNamespaceQualifiedName) ?: null
-            val importedNs = _importTypes.mapNotNull { typeModel.findNamespaceOrNull(it.asQualifiedName) }
+            val defaultNs = typesDomain.findNamespaceOrNull(defaultTypeNamespaceQualifiedName) ?: null
+            val importedNs = _importTypes.mapNotNull { typesDomain.findNamespaceOrNull(it.asQualifiedName) }
             val nss = ( defaultNs?.let { listOf(it) } ?: emptyList() ) + importedNs
             val qt = nss.firstNotNullOfOrNull { it.findTypeNamed(pqt) } ?: error("Type '$pqt' not found")
             return qt
@@ -184,7 +184,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun transRule(grammarRuleName: String, typeName: String, expressionStr: String) {
         val expression = expression(expressionStr)
-        val typeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typeModel.name}'")
+        val typeDef = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(typeName)) ?: error("Type '$typeName' not found in type-model '${typesDomain.name}'")
         val tr = asmTransformationRule(
             type = typeDef.type(),
             expression = expression
@@ -196,7 +196,7 @@ class AsmTransformRuleSetBuilder internal constructor(
 
     fun transToListOf(grammarRuleName: String, elementTypeName: String, expressionStr: String) {
         val expression = expression(expressionStr)
-        val elTypeDef = typeModel.findFirstDefinitionByNameOrNull(SimpleName(elementTypeName)) ?: error("Type '$elementTypeName' not found in type-model '${typeModel.name}'")
+        val elTypeDef = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(elementTypeName)) ?: error("Type '$elementTypeName' not found in type-model '${typesDomain.name}'")
         val listType = StdLibDefault.List.type(listOf(elTypeDef.type().asTypeArgument))
         val tr = asmTransformationRule(
             type = listType,
@@ -214,7 +214,7 @@ class AsmTransformRuleSetBuilder internal constructor(
     }
 
     fun unionRule(grammarRuleName: String, typeName: String, expressionStr: String, init: SubtypeListBuilder.() -> Unit) {
-        val ns = typeModel.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(StdLibDefault.qualifiedName.asImport))
+        val ns = typesDomain.findOrCreateNamespace(defaultTypeNamespaceQualifiedName, listOf(StdLibDefault.qualifiedName.asImport))
         val b = SubtypeListBuilder(ns, mutableListOf())
         b.init()
         val subtypes = b.build()

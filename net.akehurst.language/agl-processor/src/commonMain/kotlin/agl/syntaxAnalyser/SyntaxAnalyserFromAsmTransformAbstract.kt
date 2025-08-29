@@ -23,11 +23,16 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toLeafAsStringTrRule
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet.Companion.toSubtypeTrRule
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.AsmPathSimple
 import net.akehurst.language.asm.simple.AsmStructureSimple
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
+import net.akehurst.language.asmTransform.asm.*
+import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.asm.*
@@ -37,14 +42,10 @@ import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
 import net.akehurst.language.sppt.treedata.matchedTextNoSkip
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.asmTransform.asm.*
-import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
-import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeArgumentNamedSimple
+import net.akehurst.language.types.asm.TypesDomainSimple
 
 data class NodeTrRules(
     val forNode: AsmTransformationRule,
@@ -70,8 +71,8 @@ data class ChildData<AsmValueType : Any>(
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueType : Any>(
-    _typeModel: TypeModel,
-    val asmTransformModel: AsmTransformDomain,
+    _typesDomain: TypesDomain,
+    val asmTransform: AsmTransformDomain,
     val relevantTrRuleSet: QualifiedName,
     val asmFactory: AsmFactory<AsmType, AsmValueType>
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
@@ -86,18 +87,18 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
     }
 
-    val typeModel: TypeModel get() = asmFactory.typeModel
+    val typesDomain: TypesDomain get() = asmFactory.typesDomain
 
     private var _asm: AsmType? = null
     override val asm: AsmType get() = _asm as AsmType
 
-    val relevantRuleSet = asmTransformModel.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
+    val relevantRuleSet = asmTransform.findNamespaceOrNull(relevantTrRuleSet.front)?.findDefinitionOrNull(relevantTrRuleSet.last)
         ?: error("Relevant TransformRuleSet not Found for '$relevantTrRuleSet'")
-    val _trf = AsmTransformInterpreter(typeModel, asmFactory)
+    val _trf = AsmTransformInterpreter(typesDomain, asmFactory)
 
     init {
-        asmFactory.typeModel = TypeModelSimple(SimpleName(_typeModel.name.value + "+ParseNodeNamespace")).also {
-            it.addAllNamespaceAndResolveImports(_typeModel.namespace + AsmTransformInterpreter.parseNodeNamespace)
+        asmFactory.typesDomain = TypesDomainSimple(SimpleName(_typesDomain.name.value + "+ParseNodeNamespace")).also {
+            it.addAllNamespaceAndResolveImports(_typesDomain.namespace + AsmTransformInterpreter.parseNodeNamespace)
         }
     }
 
@@ -169,7 +170,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                 val downData = downStack.pop()
                 val value = when {
                     //NothingType -> branch not used for element property value, push null for correct num children on stack
-                    typeModel.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> asmFactory.nothing()
+                    typesDomain.NothingType == downData.trRule.forNode.resolvedType.resolvedDeclaration -> asmFactory.nothing()
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { setLocationFor(it.self, nodeInfo, sentence) }
@@ -267,8 +268,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
             }
 
             else -> when (parentType) {
-                typeModel.NothingType -> parentPath.plus("<error>")
-                typeModel.AnyType -> parentPath.plus("<any>") // FIXME:
+                typesDomain.NothingType -> parentPath.plus("<error>")
+                typesDomain.AnyType -> parentPath.plus("<any>") // FIXME:
                 else -> error("Should not happen")
             }
         }
@@ -406,7 +407,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
         return when (type) {
             is DataType -> {
                 val prop = type.getOwnedPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
-                prop?.typeInstance ?: typeModel.NothingType.type()
+                prop?.typeInstance ?: typesDomain.NothingType.type()
             }
 
             else -> parentTypeUsage
@@ -469,7 +470,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
 
     private fun typeForProperty(prop: PropertyDeclaration?, nodeInfo: SpptDataNodeInfo): TypeInstance {
         return when {
-            null == prop -> typeModel.NothingType.type() // property unused
+            null == prop -> typesDomain.NothingType.type() // property unused
             prop.typeInstance.isNullable -> prop.typeInstance//typeForOptional(propTypeUse, nodeInfo)
             else -> {
                 val propType = prop.typeInstance.resolvedDeclaration
@@ -489,8 +490,8 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
                     is TupleType -> (prop.typeInstance)
                     is DataType -> (prop.typeInstance)
                     else -> when (propType) {
-                        typeModel.NothingType -> typeModel.NothingType.type()
-                        typeModel.AnyType -> TODO()
+                        typesDomain.NothingType -> typesDomain.NothingType.type()
+                        typesDomain.AnyType -> TODO()
                         else -> error("Should not happen")
                     }
                 }

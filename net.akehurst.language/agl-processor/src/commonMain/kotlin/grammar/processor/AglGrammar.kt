@@ -16,7 +16,7 @@
 
 package net.akehurst.language.grammar.processor
 
-import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -25,29 +25,33 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
-object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, Any>>() {
+object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, Any>>() {
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
+    const val TYPES_API_NS_QN = "net.akehurst.language.grammar.api"
+    const val TYPES_ASM_NS_QN = "net.akehurst.language.grammar.asm"
     const val NAME = "Grammar"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
+
+    override val extends by lazy { listOf(AglBase) }
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -99,6 +103,13 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
           }
         """.trimIndent()
 
+    override val typesString: String by lazy {
+        """
+        ${typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString()}
+        ${typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()}
+        """.trimIndent()
+    }
+
     override val kompositeString = """
         namespace $NAMESPACE_NAME.grammar.api
             interface Grammar {
@@ -142,6 +153,16 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
             }
         """.trimIndent()
 
+    override val asmTransformString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """
+
+    override val crossReferenceString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """
+
     override val styleString: String = """
         namespace $NAMESPACE_NAME
           styles $NAME {
@@ -165,8 +186,13 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
           }
       """.trimIndent()
 
-    override val grammarModel: GrammarModel by lazy {
-        grammarModel(NAME) {
+    override val formatString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """
+
+    override val grammarDomain: GrammarDomain by lazy {
+        grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
@@ -312,10 +338,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
     }
 
     /** implemented as kotlin classes **/
-    override val typesModel: TypeModel by lazy {
+    override val typesDomain: TypesDomain by lazy {
         //TODO: GrammarTypeNamespace?
-        typeModel("Grammar", true, AglBase.typesModel.namespace) {
-            grammarTypeNamespace("net.akehurst.language.grammar.api", listOf("std", "net.akehurst.language.base.api")) {
+        typesDomain("Grammar", true, AglBase.typesDomain.namespace) {
+            grammarTypeNamespace(TYPES_API_NS_QN, listOf("std", "net.akehurst.language.base.api")) {
                 enum("SeparatedListKind", listOf("Flat", "Left", "Right"))
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
                 enum("Associativity", listOf("LEFT", "RIGHT"))
@@ -440,7 +466,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
                     }
                 }
             }
-            namespace("net.akehurst.language.grammar.asm", listOf("net.akehurst.language.grammar.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
+            namespace(TYPES_ASM_NS_QN, listOf(TYPES_API_NS_QN, "std", "net.akehurst.language.base.api", "net.akehurst.language.base.asm")) {
                 data("TerminalDefault") {
                     supertype("TangibleItemAbstract")
                     supertype("Terminal")
@@ -746,10 +772,10 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         }
     }
 
-    override val asmTransformModel: AsmTransformDomain by lazy {
+    override val asmTransformDomain: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
@@ -803,21 +829,21 @@ object AglGrammar : LanguageObjectAbstract<GrammarModel, ContextWithScope<Any, A
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
-        crossReferenceModel(NAME) {
+    override val crossReferenceDomain: CrossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
             //TODO
 
         }
     }
 
-    override val formatModel: AglFormatModel by lazy {
-        formatModel(NAME) {
+    override val formatDomain: AglFormatDomain by lazy {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val styleModel: AglStyleModel by lazy {
-        styleModel(NAME) {
+    override val styleDomain: AglStyleDomain by lazy {
+        styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule(CommonRegexPatterns.LITERAL.value) {
@@ -887,12 +913,12 @@ namespace net.akehurst.language.Grammar {
 }
 """.trimIndent().replace("$", "\$")
 
-    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
+    override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.$NAME"))!! }
     override val defaultTargetGoalRule: String = "unit"
 
-    override val syntaxAnalyser: SyntaxAnalyser<GrammarModel> by lazy { AglGrammarSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<GrammarModel, ContextWithScope<Any, Any>> by lazy { AglGrammarCompletionProvider() }
+    override val syntaxAnalyser: SyntaxAnalyser<GrammarDomain> by lazy { AglGrammarSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<GrammarDomain, ContextWithScope<Any, Any>> by lazy { AglGrammarSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<GrammarDomain, ContextWithScope<Any, Any>> by lazy { AglGrammarCompletionProvider() }
 
     override fun toString(): String = "${NAMESPACE_NAME}.$NAME"
 

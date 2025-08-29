@@ -30,13 +30,13 @@ import net.akehurst.language.sppt.api.SpptDataNodeInfo
 import net.akehurst.language.style.api.*
 import net.akehurst.language.style.asm.*
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleDomain>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         QualifiedName("Base") to BaseSyntaxAnalyser()
     )
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleModel>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<AglStyleDomain>> = emptyMap()
 
     override fun registerHandlers() {
         super.register(this::unit)
@@ -56,11 +56,11 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     private val _localStore = mutableMapOf<String, Any>()
 
     // unit = namespace rule* ;
-    fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleModelDefault {
+    fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleDomainDefault {
         val ns = children[0] as StyleNamespaceDefault
         val ruleBuilder = children[1] as List<((ns: StyleNamespaceDefault) -> Unit)>
         ruleBuilder.forEach { it.invoke(ns) }
-        val su = AglStyleModelDefault(name = SimpleName("ParsedStyleUnit"), namespace = listOf(ns))
+        val su = AglStyleDomainDefault(name = SimpleName("ParsedStyleUnit"), namespace = listOf(ns))
         return su
     }
 

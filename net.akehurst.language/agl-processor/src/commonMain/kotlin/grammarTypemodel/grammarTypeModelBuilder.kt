@@ -19,33 +19,33 @@ package net.akehurst.language.grammarTypemodel.builder
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.builder.*
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypesDomainSimple
+import net.akehurst.language.types.builder.*
 
-fun TypeModelBuilder.grammarTypeNamespace(
+fun TypeDomainBuilder.grammarTypeNamespace(
     namespaceQualifiedName: String,
     imports: List<String> = listOf(StdLibDefault.qualifiedName.value),
     resolveImports: Boolean = false,
     init: GrammarTypeNamespaceBuilder.() -> Unit
 ) {
-    val b = GrammarTypeNamespaceBuilder(_model, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), resolveImports)
+    val b = GrammarTypeNamespaceBuilder(_domain, QualifiedName(namespaceQualifiedName), imports.map { Import(it) }.toMutableList(), resolveImports)
     b.init()
     val (ns, assocBuilders) = b.build()
-    _model.addNamespace(ns)
+    _domain.addNamespace(ns)
 }
 
 @Deprecated("does not allow namespaces",ReplaceWith("typeModel(..) { grammarTypeNamespace(..){...} }"))
 fun grammarTypeModel(
     namespaceQualifiedName: String,
     modelName: String,
-    imports: List<TypeNamespace> = listOf(StdLibDefault),
+    imports: List<TypesNamespace> = listOf(StdLibDefault),
     init: GrammarTypeNamespaceBuilder.() -> Unit
-): TypeModel {
-    val model = TypeModelSimple(SimpleName(modelName))
+): TypesDomain {
+    val model = TypesDomainSimple(SimpleName(modelName))
     imports.forEach { model.addNamespace(it) }
     val b = GrammarTypeNamespaceBuilder(model, QualifiedName(namespaceQualifiedName), imports.map { Import(it.qualifiedName.value) }.toMutableList(), true)
     b.init()
@@ -57,17 +57,17 @@ fun grammarTypeModel(
 
 @TypeModelDslMarker
 class GrammarTypeNamespaceBuilder(
-    typeModel: TypeModel,
+    typesDomain: TypesDomain,
     namespaceQualifiedName: QualifiedName,
     imports: MutableList<Import>,
     resolveImports:Boolean
 )  : TypeNamespaceBuilder(namespaceQualifiedName,imports) {
-    override val _namespace:TypeNamespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, import =  imports).also {
+    override val _namespace:TypesNamespace = GrammarTypesNamespaceSimple(namespaceQualifiedName, import =  imports).also {
         if(resolveImports) {
-            it.resolveImports(typeModel as Model<Namespace<TypeDefinition>, TypeDefinition>)
+            it.resolveImports(typesDomain as Domain<Namespace<TypeDefinition>, TypeDefinition>)
         }
     }
-    private val _grammarNamespace get() = _namespace as GrammarTypeNamespace
+    private val _grammarNamespace get() = _namespace as GrammarTypesNamespace
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
 
     val StringType: PrimitiveType get() = StdLibDefault.String.resolvedDeclaration as PrimitiveType

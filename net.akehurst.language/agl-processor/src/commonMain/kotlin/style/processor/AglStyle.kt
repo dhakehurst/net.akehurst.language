@@ -16,7 +16,7 @@
 
 package net.akehurst.language.style.processor
 
-import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -26,21 +26,23 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.regex.api.CommonRegexPatterns
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.builder.typesDomain
 
-object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, Any>>() {
+object AglStyle : LanguageObjectAbstract<AglStyleDomain, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Style"
     const val goalRuleName = "unit"
 
     override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+
+    override val extends by lazy { listOf(AglBase) }
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -69,6 +71,21 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
                 leaf STRING = "'([^'\\\\]|\\'|\\\\)*'" ;
             }
         """.trimIndent()
+
+    override val typesString: String = """
+        namespace ${NAMESPACE_NAME}.style.api
+          // TODO
+    """.trimIndent()
+
+    override val kompositeString: String = """
+        namespace ${NAMESPACE_NAME}.style.api
+          // TODO
+    """.trimIndent()
+
+    override val asmTransformString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
 
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
@@ -110,8 +127,13 @@ object AglStyle : LanguageObjectAbstract<AglStyleModel, ContextWithScope<Any, An
             }
         """.trimIndent()
 
-    override val grammarModel by lazy {
-        grammarModel(NAME) {
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}.style.api
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain by lazy {
+        grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
@@ -180,8 +202,8 @@ interface AglStyleRule {
 }
 """
 
-    override val typesModel by lazy {
-        typeModel(NAME, true, AglBase.typesModel.namespace) {
+    override val typesDomain by lazy {
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
                 interface_("AglStyleModel") {
@@ -305,10 +327,10 @@ interface AglStyleRule {
         }
     }
 
-    override val asmTransformModel by lazy {
+    override val asmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
@@ -341,14 +363,14 @@ interface AglStyleRule {
         }
     }
 
-    override val crossReferenceModel by lazy {
-        crossReferenceModel(NAME) {
+    override val crossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
             //TODO
         }
     }
 
-    override val styleModel by lazy {
-        styleModel(NAME) {
+    override val styleDomain by lazy {
+        styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule(CommonRegexPatterns.LITERAL.value) {
@@ -360,18 +382,18 @@ interface AglStyleRule {
         }
     }
 
-    override val formatModel by lazy {
-        formatModel(NAME) {
+    override val formatDomain by lazy {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGrammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
     override val defaultTargetGoalRule = "unit"
 
-    override val syntaxAnalyser: SyntaxAnalyser<AglStyleModel>? by lazy { AglStyleSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglStyleModel, ContextWithScope<Any, Any>>? by lazy { AglStyleSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglStyleModel, ContextWithScope<Any, Any>>? by lazy { AglStyleCompletionProvider() }
+    override val syntaxAnalyser: SyntaxAnalyser<AglStyleDomain>? by lazy { AglStyleSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<AglStyleDomain, ContextWithScope<Any, Any>>? by lazy { AglStyleSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglStyleDomain, ContextWithScope<Any, Any>>? by lazy { AglStyleCompletionProvider() }
 }
 
 

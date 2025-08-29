@@ -32,8 +32,8 @@ import net.akehurst.language.regex.api.UnescapedPattern
 @DslMarker
 annotation class GrammarBuilderMarker
 
-fun grammarModel(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarModelBuilder.() -> Unit): GrammarModel {
-    val b = GrammarModelBuilder(SimpleName(name), namespaces)
+fun grammarDomain(name: String, namespaces: List<GrammarNamespace> = emptyList(), grammarRegistry: GrammarRegistry? = null, init: GrammarDomainBuilder.() -> Unit): GrammarDomain {
+    val b = GrammarDomainBuilder(SimpleName(name), namespaces)
     b.init()
     val gm = b.build()
     grammarRegistry?.let { gr ->
@@ -56,12 +56,12 @@ fun grammar(namespace: String, name: String, init: GrammarBuilder.() -> Unit): G
 }
 
 @GrammarBuilderMarker
-class GrammarModelBuilder(
+class GrammarDomainBuilder(
     name: SimpleName,
     namespaces: List<GrammarNamespace>
 ) {
     private val _options = mutableMapOf<String, String>()
-    private val _model = GrammarModelDefault(name, OptionHolderDefault(null, _options), namespaces)
+    private val _model = GrammarDomainDefault(name, OptionHolderDefault(null, _options), namespaces)
 
     fun option(key: String, value: String) {
         _options[key] = value
@@ -79,7 +79,7 @@ class GrammarModelBuilder(
 
 @GrammarBuilderMarker
 class GrammarNamespaceBuilder(
-    val grammarModel: GrammarModel,
+    val grammarDomain: GrammarDomain,
     qualifiedName: String
 ) {
     private val _options = mutableMapOf<String, String>()

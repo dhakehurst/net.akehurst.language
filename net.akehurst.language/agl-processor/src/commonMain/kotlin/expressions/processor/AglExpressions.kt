@@ -17,7 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
-import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.processor.LanguageObjectAbstract
@@ -25,19 +25,21 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.ChoiceIndicator
-import net.akehurst.language.grammar.builder.grammarModel
+import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.builder.typesDomain
 
 object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
 
     override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+
+    override val extends by lazy { listOf(AglBase) }
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -123,6 +125,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           }
       """.trimIndent()
 
+    override val typesString: String = """
+        namespace ${NAMESPACE_NAME}.expressions.api
+          // TODO
+    """
+
     override val kompositeString = """
         namespace $NAMESPACE_NAME.expressions.api
             interface CreateTupleExpression {
@@ -163,6 +170,16 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             }
         """.trimIndent()
 
+    override val asmTransformString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val crossReferenceString = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val styleString = """
         namespace $NAMESPACE_NAME
           styles $NAME {
@@ -173,8 +190,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           }
         """.trimIndent()
 
-    override val grammarModel by lazy {
-        grammarModel(NAME) {
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain by lazy {
+        grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
@@ -312,10 +334,10 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         }
     }
 
-    override val typesModel by lazy {
-        typeModel(NAME, true, AglBase.typesModel.namespace) {
+    override val typesDomain by lazy {
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             grammarTypeNamespace("net.akehurst.language.expressions.api", listOf("std", "net.akehurst.language.base.api")) {
-               interface_("WithExpression") {
+                interface_("WithExpression") {
                     supertype("Expression")
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
                     propertyOf(setOf(VAL, CMP, STR), "withContext", "Expression", false)
@@ -330,7 +352,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 }
                 interface_("WhenExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
                         typeArgument("WhenOption")
                     }
                 }
@@ -355,14 +377,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 }
                 interface_("NavigationExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false) {
                         typeArgument("NavigationPart")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "start", "Expression", false)
                 }
                 interface_("MethodCall") {
                     supertype("NavigationPart")
-                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false) {
                         typeArgument("Expression")
                     }
                 }
@@ -374,13 +396,13 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 }
                 interface_("InfixExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false) {
                         typeArgument("Expression")
                     }
                 }
                 interface_("IndexOperation") {
                     supertype("NavigationPart")
-                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false) {
                         typeArgument("Expression")
                     }
                 }
@@ -392,7 +414,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                 }
                 interface_("CreateTupleExpression") {
                     supertype("Expression")
-                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false) {
                         typeArgument("AssignmentStatement")
                     }
                 }
@@ -442,7 +464,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("elseOption", "WhenOptionElse", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "elseOption", "WhenOptionElse", false)
-                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "options", "List", false) {
                         typeArgument("WhenOption")
                     }
                 }
@@ -464,7 +486,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
                     propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, REF, STR), "typeArguments", "List", false){
+                    propertyOf(setOf(VAR, REF, STR), "typeArguments", "List", false) {
                         typeArgument("TypeReference")
                     }
                 }
@@ -490,7 +512,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("expression", "Expression", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "expression", "Expression", false)
-                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false){
+                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false) {
                         typeArgument("AssignmentStatement")
                     }
                 }
@@ -501,7 +523,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("start", "Expression", false)
                         parameter("parts", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "parts", "List", false) {
                         typeArgument("NavigationPart")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "start", "Expression", false)
@@ -512,7 +534,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("methodName", "String", false)
                         parameter("arguments", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "arguments", "List", false) {
                         typeArgument("Expression")
                     }
                     propertyOf(setOf(VAL, REF, STR), "methodName", "String", false)
@@ -540,10 +562,10 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("expressions", "List", false)
                         parameter("operators", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "expressions", "List", false) {
                         typeArgument("Expression")
                     }
-                    propertyOf(setOf(VAR, REF, STR), "operators", "List", false){
+                    propertyOf(setOf(VAR, REF, STR), "operators", "List", false) {
                         typeArgument("String")
                     }
                 }
@@ -552,7 +574,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                     constructor_ {
                         parameter("indices", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "indices", "List", false) {
                         typeArgument("Expression")
                     }
                 }
@@ -573,7 +595,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                     constructor_ {
                         parameter("propertyAssignments", "List", false)
                     }
-                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false){
+                    propertyOf(setOf(VAR, CMP, STR), "propertyAssignments", "List", false) {
                         typeArgument("AssignmentStatement")
                     }
                 }
@@ -584,11 +606,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         parameter("possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
                         parameter("constructorArguments", "List", false)
                     }
-                    propertyOf(setOf(VAR, REF, STR), "constructorArguments", "List", false){
+                    propertyOf(setOf(VAR, REF, STR), "constructorArguments", "List", false) {
                         typeArgument("AssignmentStatement")
                     }
                     propertyOf(setOf(VAL, REF, STR), "possiblyQualifiedTypeName", "PossiblyQualifiedName", false)
-                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false){
+                    propertyOf(setOf(VAR, REF, STR), "propertyAssignments", "List", false) {
                         typeArgument("AssignmentStatement")
                     }
                 }
@@ -616,50 +638,50 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         }
     }
 
-    override val asmTransformModel by lazy {
+    override val asmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 ruleSet(NAME) {
                     importTypes("net.akehurst.language.expressions.api")
-                    createObject("expression","Expression") { /* custom syntax analyser */ }
-                    createObject("rootExpression","RootExpression") { /* custom syntax analyser */ }
+                    createObject("expression", "Expression") { /* custom syntax analyser */ }
+                    createObject("rootExpression", "RootExpression") { /* custom syntax analyser */ }
                     //TODO
                 }
             }
         }
     }
 
-    override val crossReferenceModel by lazy {
-        crossReferenceModel(NAME) {
+    override val crossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
             //TODO
 
         }
     }
 
-    override val formatModel by lazy {
-        formatModel(NAME) {
+    override val formatDomain by lazy {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val styleModel by lazy {
-        styleModel(NAME) {
+    override val styleDomain by lazy {
+        styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     metaRule("'[^']+'") {
-                        declaration("foreground","darkgreen")
-                        declaration("font-weight","bold")
+                        declaration("foreground", "darkgreen")
+                        declaration("font-weight", "bold")
                     }
                 }
             }
         }
     }
 
-    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGrammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
     override val defaultTargetGoalRule = "expression"
 
     override val syntaxAnalyser by lazy { ExpressionsSyntaxAnalyser() }

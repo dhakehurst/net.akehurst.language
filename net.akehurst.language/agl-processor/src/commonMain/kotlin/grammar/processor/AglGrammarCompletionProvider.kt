@@ -19,9 +19,9 @@ package net.akehurst.language.grammar.processor
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.simple.ContextWithScope
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 
-class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarModel, ContextWithScope<Any,Any>>() {
+class AglGrammarCompletionProvider : CompletionProviderAbstract<GrammarDomain, ContextWithScope<Any,Any>>() {
 
     //TODO
 

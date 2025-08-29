@@ -26,7 +26,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -38,8 +38,8 @@ import net.akehurst.language.parser.api.Parser
 import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scanner.api.ScanOptions
 import net.akehurst.language.scanner.api.ScanResult
 import net.akehurst.language.scanner.api.Scanner
@@ -50,8 +50,8 @@ import net.akehurst.language.sppt.treedata.SPPTParserDefault
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
@@ -61,7 +61,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract override val targetRuleSet: RuleSet?
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
 
-    abstract override val grammarModel: GrammarModel
+    abstract override val grammarDomain: GrammarDomain
 
     override val scanner: Scanner? by lazy {
         val res = configuration.scannerResolver?.invoke(this)
@@ -87,35 +87,35 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override val targetGrammar: Grammar? by lazy {
-        this.grammarModel.allDefinitions.lastOrNull { it.name == configuration.targetGrammarName } ?: this.grammarModel.primary
+        this.grammarDomain.allDefinitions.lastOrNull { it.name == configuration.targetGrammarName } ?: this.grammarDomain.primary
     }
 
-    override val baseTypeModel: TypeModel by lazy {
+    override val baseTypesDomain: TypesDomain by lazy {
         val res = configuration.typesResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
-            ?: typeModel("FromGrammar" + this.grammarModel.name.value, true) {}
+            ?: typesDomain("FromGrammar" + this.grammarDomain.name.value, true) {}
     }
 
-    override val typesModel: TypeModel get() = this.transformModel.typeModel ?: error("Should not happen")
+    override val typesDomain: TypesDomain get() = this.transformDomain.typesDomain ?: error("Should not happen")
 
-    override val transformModel: AsmTransformDomain by lazy {
+    override val transformDomain: AsmTransformDomain by lazy {
         val res = configuration.transformResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
-            ?: AsmTransformDomainDefault.fromGrammarModel(this.grammarModel, this.baseTypeModel).asm
+            ?: AsmTransformDomainDefault.fromGrammarDomain(this.grammarDomain, this.baseTypesDomain).asm
             ?: error("should not happen")
     }
 
     override val targetTransformRuleSet: AsmTransformRuleSet by lazy {
-        targetGrammar?.let { transformModel.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
+        targetGrammar?.let { transformDomain.findNamespaceOrNull(it.namespace.qualifiedName)?.findOwnedDefinitionOrNull(it.name) }
             ?: error("Target TransformRuleSet not found for grammar '${targetGrammar?.qualifiedName ?: "null"}'")
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
+    override val crossReferenceDomain: CrossReferenceDomain by lazy {
         val res = configuration.crossReferenceResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.allIssues) }
-        res?.asm ?: CrossReferenceModelDefault(SimpleName("FromGrammar" + grammarModel.name.value))
+        res?.asm ?: CrossReferenceDomainDefault(SimpleName("FromGrammar" + grammarDomain.name.value))
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
@@ -130,7 +130,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatModel: AglFormatModel? by lazy {
+    override val formatDomain: AglFormatDomain? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let { this.issues.addAllFrom(res.allIssues) }
         res?.asm
@@ -142,7 +142,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             this.issues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typesModel, this.issues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesDomain, this.issues) as Formatter<AsmType>
             }
         }
     }
@@ -254,7 +254,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         //val fm = formatModel?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a FormatModel")
         val frmtr = this.formatter
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a Formatter")
-        return frmtr.format(formatSetName, asm)
+        return frmtr.formatSelf(formatSetName, asm)
     }
 
     override fun expectedTerminalsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -309,4 +309,6 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         if (null == opts.parse.goalRuleName) opts.parse.goalRuleName = this.defaultGoalRuleName?.value
         return opts
     }
+
+    override fun toString(): String = "LanguageProcessor for : '${this.targetGrammar?.name?.value ?: this.grammarDomain.name.value}'"
 }

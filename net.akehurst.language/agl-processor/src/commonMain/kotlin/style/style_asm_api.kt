@@ -20,7 +20,7 @@ package net.akehurst.language.style.api
 import net.akehurst.language.base.api.*
 import net.akehurst.language.regex.api.EscapedPattern
 
-interface AglStyleModel : Model<StyleNamespace, StyleSet> {
+interface AglStyleDomain : Domain<StyleNamespace, StyleSet> {
 
 }
 

@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 import testFixture.data.doTest
 import testFixture.data.executeTestSuit
 import testFixture.data.testSuit
@@ -70,7 +70,7 @@ class test_CompletionProviderDefault_datatypes {
         """.trimIndent()
 
         data class TestData(
-            val additionalTypeModel: TypeModel? = null,
+            val additionalTypesDomain: TypesDomain? = null,
             val context: ContextWithScope<Any,Any>? = contextAsmSimple(),
             val sentence: String,
             val expected: List<CompletionItem>
@@ -81,11 +81,11 @@ class test_CompletionProviderDefault_datatypes {
 
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
-            data.additionalTypeModel?.let {
-                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
+            data.additionalTypesDomain?.let {
+                proc.typesDomain.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typesModel
-            proc.crossReferenceModel
+            proc.typesDomain
+            proc.crossReferenceDomain
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
             val actual = proc.expectedItemsAt(data.sentence, data.sentence.length, Agl.options {

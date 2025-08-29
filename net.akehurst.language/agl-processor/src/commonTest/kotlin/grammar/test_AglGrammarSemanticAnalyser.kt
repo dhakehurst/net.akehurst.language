@@ -26,7 +26,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
@@ -50,7 +50,7 @@ class test_AglGrammarSemanticAnalyser {
             // grammars are registered in a registry when semantically analysed,
             // thus need to analyse Base grammar first
             val context = contextFromGrammarRegistry(Agl.registry)
-            val gm = GrammarModelDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
+            val gm = GrammarDomainDefault(SimpleName("Test"), namespace = listOf(AglBase.defaultTargetGrammar.namespace as GrammarNamespace))
             semanticAnalysis(
                 SyntaxAnalysisResultDefault(
                     gm,
@@ -71,15 +71,15 @@ class test_AglGrammarSemanticAnalyser {
             return res.sppt!!
         }
 
-        fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarModel> {
+        fun syntaxAnalysis(sppt: SharedPackedParseTree): SyntaxAnalysisResult<GrammarDomain> {
             val sut = AglGrammarSyntaxAnalyser()
             val res = sut.transform(sppt)
             return res
         }
 
         fun semanticAnalysis(
-            asmRes: SyntaxAnalysisResult<GrammarModel>,
-            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>
+            asmRes: SyntaxAnalysisResult<GrammarDomain>,
+            options: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>
         ): SemanticAnalysisResult {
             val semanticAnalyser = AglGrammarSemanticAnalyser()
             val context = contextFromGrammarRegistry(Agl.registry)
@@ -90,8 +90,8 @@ class test_AglGrammarSemanticAnalyser {
         fun test(
             grammarStr: String,
             expected: Set<LanguageIssue>,
-            options: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>> = Agl.options { }
-        ): ProcessResult<GrammarModel> {
+            options: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>> = Agl.options { }
+        ): ProcessResult<GrammarDomain> {
             val sppt = parse(grammarStr)
             val asmRes = syntaxAnalysis(sppt)
             val res = semanticAnalysis(asmRes, options)

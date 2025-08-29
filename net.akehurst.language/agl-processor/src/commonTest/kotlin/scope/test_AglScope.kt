@@ -18,7 +18,7 @@
 package net.akehurst.language.scope.processor
 
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.types.api.PropertyName
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -27,7 +27,7 @@ class test_AglScope {
 
     @Test
     fun typemodel() {
-        val actual = AglScope.typeModel
+        val actual = AglScope.typesDomain
 
         assertNotNull(actual)
     }
@@ -35,7 +35,7 @@ class test_AglScope {
 
     @Test
     fun domainTypes() {
-        val td = AglScope.typeModel.findFirstDefinitionByNameOrNull(SimpleName("Scope"))
+        val td = AglScope.typesDomain.findFirstDefinitionByNameOrNull(SimpleName("Scope"))
         assertNotNull(td)
         assertEquals("Scope", td.name.value)
         val itemsProp = td.findAllPropertyOrNull(PropertyName("items"))

@@ -32,19 +32,19 @@ import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.AutomatonKind
 import net.akehurst.language.automaton.leftcorner.aut
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseOptions
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 // sample
 object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<Any, Any>>() {
@@ -60,18 +60,23 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
           S = 'a' ;
         }
      """.trimIndent()
-    override val crossReferenceString: String = """
-    """
 
-    override val grammarModel: GrammarModel get() = TODO("not implemented")
-    override val typesModel: TypeModel = typeModel("test", true) {
+    override val typesString: String = ""
+    override val kompositeString: String = ""
+    override val asmTransformString: String = ""
+    override val crossReferenceString: String = ""
+    override val styleString: String = ""
+    override val formatString: String = ""
+
+    override val grammarDomain: GrammarDomain get() = TODO("not implemented")
+    override val typesDomain: TypesDomain = typesDomain("test", true) {
         TODO("build type model")
     }
-    override val kompositeModel: TypeModel get() = typesModel
-    override val asmTransformModel: AsmTransformDomain get() = TODO()
-    override val crossReferenceModel: CrossReferenceModel get() = TODO("builder for cross reference model")
-    override val styleModel: AglStyleModel get() = TODO("not implemented")
-    override val formatModel: AglFormatModel get() = TODO("not implemented")
+    override val kompositeDomain: TypesDomain get() = typesDomain
+    override val asmTransformDomain: AsmTransformDomain get() = TODO()
+    override val crossReferenceDomain: CrossReferenceDomain get() = TODO("builder for cross reference model")
+    override val styleDomain: AglStyleDomain get() = TODO("not implemented")
+    override val formatDomain: AglFormatDomain get() = TODO("not implemented")
     override val defaultTargetGrammar: Grammar
         get() = TODO("not implemented")
     override val defaultTargetGoalRule: String
@@ -100,10 +105,10 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
     override val syntaxAnalyser: SyntaxAnalyser<Asm> get() = TODO()
 
     // SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), asmTransformModel)
-    override val semanticAnalyser: SemanticAnalyser<Asm, ContextWithScope<Any, Any>> = SemanticAnalyserSimple(typesModel, crossReferenceModel)
+    override val semanticAnalyser: SemanticAnalyser<Asm, ContextWithScope<Any, Any>> = SemanticAnalyserSimple(typesDomain, crossReferenceDomain)
     override val completionProvider: CompletionProvider<Asm, ContextWithScope<Any, Any>>?
         get() = TODO("not implemented")
-    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatModel, typesModel, this.issues)
+    val formatter: Formatter<Asm> = FormatterOverAsmSimple(formatDomain, typesDomain, this.issues)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S
     )

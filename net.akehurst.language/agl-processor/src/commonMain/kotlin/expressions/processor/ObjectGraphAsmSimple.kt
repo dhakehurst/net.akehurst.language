@@ -23,8 +23,8 @@ import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 
 object StdLibPrimitiveExecutions {
     val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
@@ -126,7 +126,7 @@ class TypedObjectAsmValue(
 }
 
 open class ObjectGraphAsmSimple(
-    override var typeModel: TypeModel,
+    override var typesDomain: TypesDomain,
     val issues: IssueHolder
 ) : ObjectGraph<AsmValue> {
 
@@ -134,7 +134,7 @@ open class ObjectGraphAsmSimple(
 
     override fun typeFor(obj: AsmValue?): TypeInstance {
         return obj?.let {
-            typeModel.findByQualifiedNameOrNull(it.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+            typesDomain.findByQualifiedNameOrNull(it.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         } ?: StdLibDefault.NothingType
     }
 
@@ -163,7 +163,7 @@ open class ObjectGraphAsmSimple(
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<AsmValue>>): TypedObject<AsmValue> {
-        val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
+        val typeDecl = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Type not found ${possiblyQualifiedTypeName}")
         //val asmPath = AsmPathSimple("??") //TODO:
         val obj = AsmStructureSimple( typeDecl.qualifiedName)

@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.asm.api.AsmPath
-import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.types.api.TypeInstance
 
 data class NodeTypes(
     val forNode: TypeInstance,

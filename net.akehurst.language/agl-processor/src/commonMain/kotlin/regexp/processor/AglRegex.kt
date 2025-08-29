@@ -19,24 +19,27 @@ package net.akehurst.language.regexp.processor
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageObjectAbstract
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.regex.agl.RegexParser
 import net.akehurst.language.regex.api.Regex
-import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Regex"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
+
+    override val extends by lazy { emptyList<LanguageObject<Any, ContextWithScope<Any, Any>>>() }
 
     override val grammarString = """
         namespace ${AglGrammar.NAMESPACE_NAME}
@@ -136,22 +139,52 @@ object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
           }
         """.trimIndent()
 
-    override val grammarModel: GrammarModel
+    override val typesString: String = """
+        namespace ${NAMESPACE_NAME}.style.api
+          // TODO
+    """.trimIndent()
+
+    override val kompositeString: String = """
+        namespace ${NAMESPACE_NAME}.style.api
+          // TODO
+    """.trimIndent()
+
+    override val asmTransformString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val crossReferenceString = """
+        namespace ${NAMESPACE_NAME}
+            // TODO
+    """.trimIndent()
+
+    override val styleString = """
+        namespace ${NAMESPACE_NAME}
+            // TODO
+    """.trimIndent()
+
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain: GrammarDomain
         get() = TODO("not implemented")
 
-    override val typesModel: TypeModel
+    override val typesDomain: TypesDomain
         get() = TODO("not implemented")
 
-    override val asmTransformModel: AsmTransformDomain
+    override val asmTransformDomain: AsmTransformDomain
         get() = TODO("not implemented")
 
-    override val crossReferenceModel: CrossReferenceModel
+    override val crossReferenceDomain: CrossReferenceDomain
         get() = TODO("not implemented")
 
-    override val styleModel: AglStyleModel
+    override val styleDomain: AglStyleDomain
         get() = TODO("not implemented")
 
-    override val formatModel: AglFormatModel
+    override val formatDomain: AglFormatDomain
         get() = TODO("not implemented")
 
     override val defaultTargetGrammar: Grammar
@@ -164,5 +197,5 @@ object AglRegex : LanguageObjectAbstract<Regex, ContextWithScope<Any, Any>>() {
         get() = TODO("not implemented")
 
 
-    val parser by lazy {  RegexParser() }
+    val parser by lazy { RegexParser() }
 }

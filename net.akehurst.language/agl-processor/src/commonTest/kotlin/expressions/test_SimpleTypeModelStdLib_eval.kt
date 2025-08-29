@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
@@ -24,19 +25,19 @@ import net.akehurst.language.asm.simple.AsmNothingSimple
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_SimpleTypeModelStdLib_eval {
 
     companion object {
-        fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
-            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+        fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
+            val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
             assertEquals(expected, actual.self)
         }
@@ -44,7 +45,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_size__empty() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", "std.String", false, 0)
@@ -63,7 +64,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_size() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -81,7 +82,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_size__missing_prop_name() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -99,7 +100,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_first() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -117,7 +118,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_last() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -135,7 +136,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_back() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -153,7 +154,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_front() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)
@@ -171,7 +172,7 @@ class test_SimpleTypeModelStdLib_eval {
 
     @Test
     fun collection_List_join() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("list", StdLibDefault.String.qualifiedTypeName.value, false, 0)

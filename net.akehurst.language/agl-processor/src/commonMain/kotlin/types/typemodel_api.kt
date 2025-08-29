@@ -15,26 +15,26 @@
  *
  */
 
-package net.akehurst.language.typemodel.api
+package net.akehurst.language.types.api
 
 import net.akehurst.language.base.api.*
 import kotlin.jvm.JvmInline
 
-interface TypeModel : Model<TypeNamespace, TypeDefinition> {
+interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
     val AnyType: TypeDefinition
     val NothingType: TypeDefinition
 
     fun resolveImports()
 
-    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypeNamespace
+    fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): TypesNamespace
 
     fun findByQualifiedNameOrNull(qualifiedName: QualifiedName): TypeDefinition?
 
-    fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypeNamespace>)
+    fun addAllNamespaceAndResolveImports(namespaces: Iterable<TypesNamespace>)
 
     // --- DefinitionBlock ---
-    override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypeNamespace?
+    override fun findNamespaceOrNull(qualifiedName: QualifiedName): TypesNamespace?
 
 }
 
@@ -47,7 +47,7 @@ data class AssociationEnd(
     val navigable: Boolean,
 )
 
-interface TypeNamespace : Namespace<TypeDefinition> {
+interface TypesNamespace : Namespace<TypeDefinition> {
 
     /**
      * TypeDefinition.name --> TypeDefinition
@@ -69,8 +69,6 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     val interfaceType: Set<InterfaceType>
 
     val dataType: Set<DataType>
-
-    //fun resolveImports(model: TypeModel)
 
     fun isImported(qualifiedNamespaceName: QualifiedName): Boolean
 
@@ -127,7 +125,7 @@ interface TypeNamespace : Namespace<TypeDefinition> {
     /**
      * clone the namespace but not the content
      */
-    fun findInOrCloneTo(other: TypeModel): TypeNamespace
+    fun findInOrCloneTo(other: TypesDomain): TypesNamespace
 
 }
 
@@ -143,14 +141,14 @@ interface TypeParameter {
 interface TypeArgument {
     val type: TypeInstance
     fun conformsTo(other: TypeArgument): Boolean
-    fun signature(context: TypeNamespace?, currentDepth: Int): String
+    fun signature(context: TypesNamespace?, currentDepth: Int): String
     fun resolved(resolvingTypeArguments: Map<TypeParameter, TypeInstance>): TypeInstance
 
-    fun findInOrCloneTo(other: TypeModel): TypeArgument
+    fun findInOrCloneTo(other: TypesDomain): TypeArgument
 }
 
 interface TypeInstance {
-    val namespace: TypeNamespace
+    val namespace: TypesNamespace
 
     val typeArguments: List<TypeArgument>
 
@@ -185,7 +183,7 @@ interface TypeInstance {
     fun notNullable(): TypeInstance
     fun nullable(): TypeInstance
 
-    fun signature(context: TypeNamespace?, currentDepth: Int): String
+    fun signature(context: TypesNamespace?, currentDepth: Int): String
 
     /**
      * true if
@@ -197,15 +195,15 @@ interface TypeInstance {
     fun conformsTo(other: TypeInstance): Boolean
 
     fun commonSuperType(other: TypeInstance): TypeInstance
-    fun possiblyQualifiedNameInContext(context: TypeNamespace): Any
+    fun possiblyQualifiedNameInContext(context: TypesNamespace): Any
 
-    fun findInOrCloneTo(other: TypeModel): TypeInstance
+    fun findInOrCloneTo(other: TypesDomain): TypeInstance
 }
 
 interface TypeArgumentNamed : TypeArgument {
     val name: PropertyName
 
-    override fun findInOrCloneTo(other: TypeModel): TypeArgumentNamed
+    override fun findInOrCloneTo(other: TypesDomain): TypeArgumentNamed
 }
 
 interface TupleTypeInstance : TypeInstance {
@@ -213,7 +211,7 @@ interface TupleTypeInstance : TypeInstance {
 }
 
 interface TypeDefinition : Definition<TypeDefinition> {
-    override val namespace: TypeNamespace
+    override val namespace: TypesNamespace
 
     val supertypes: List<TypeInstance>
     val subtypes: List<TypeInstance>
@@ -243,7 +241,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
      */
     val metaInfo: Map<String, String>
 
-    fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
+    fun signature(context: TypesNamespace?, currentDepth: Int = 0): String
 
     fun type(typeArguments: List<TypeArgument> = emptyList(), isNullable: Boolean = false): TypeInstance
 
@@ -262,7 +260,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
     fun findOwnedMethodOrNull(name: MethodName): MethodDeclaration?
     fun findAllMethodOrNull(name: MethodName): MethodDeclaration?
 
-    fun asStringInContext(context: TypeNamespace): String
+    fun asStringInContext(context: TypesNamespace): String
 
     fun addTypeParameter(name: TypeParameter)
 
@@ -281,7 +279,7 @@ interface TypeDefinition : Definition<TypeDefinition> {
 
     fun appendMethodDerived(name: MethodName, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String): MethodDeclarationDerived
 
-    fun findInOrCloneTo(other: TypeModel): TypeDefinition
+    fun findInOrCloneTo(other: TypesDomain): TypeDefinition
 }
 
 interface SpecialType : TypeDefinition {}
@@ -305,7 +303,7 @@ interface StructuredType : TypeDefinition {
      */
     fun appendPropertyStored(name: PropertyName, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
 
-    override fun findInOrCloneTo(other: TypeModel): StructuredType
+    override fun findInOrCloneTo(other: TypesDomain): StructuredType
 }
 
 //interface TypeParameterVarArg : TypeParameter
@@ -362,7 +360,7 @@ interface UnionType : TypeDefinition {
 
     fun addAlternative(value: TypeInstance)
 
-    override fun findInOrCloneTo(other: TypeModel): UnionType
+    override fun findInOrCloneTo(other: TypesDomain): UnionType
 }
 
 interface CollectionType : StructuredType {
@@ -419,7 +417,7 @@ interface PropertyDeclaration {
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 
-    fun findInOrCloneTo(other: TypeModel): PropertyDeclaration
+    fun findInOrCloneTo(other: TypesDomain): PropertyDeclaration
 }
 
 interface PropertyDeclarationResolved : PropertyDeclaration {
@@ -501,7 +499,7 @@ interface MethodDeclaration {
     val description: String
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): MethodDeclarationResolved
-    fun findInOrCloneTo(other: TypeModel): MethodDeclaration
+    fun findInOrCloneTo(other: TypesDomain): MethodDeclaration
 }
 
 interface MethodDeclarationPrimitive : MethodDeclaration
@@ -514,7 +512,7 @@ interface ConstructorDeclaration {
     val owner: TypeDefinition
     val parameters: List<ParameterDeclaration>
 
-    fun findInOrCloneTo(other: TypeModel): ConstructorDeclaration
+    fun findInOrCloneTo(other: TypesDomain): ConstructorDeclaration
 }
 
 // ParameterName clashes with kotlin.ParameterName
@@ -526,5 +524,5 @@ interface ParameterDeclaration {
     val typeInstance: TypeInstance
     val defaultValue: String?
 
-    fun findInOrCloneTo(other: TypeModel): ParameterDeclaration
+    fun findInOrCloneTo(other: TypesDomain): ParameterDeclaration
 }

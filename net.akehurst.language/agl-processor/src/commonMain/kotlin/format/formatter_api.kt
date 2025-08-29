@@ -22,7 +22,7 @@ import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.expressions.api.WhenOption
 import net.akehurst.language.expressions.api.WhenOptionElse
 
-interface AglFormatModel : Model<FormatNamespace, FormatSet> {
+interface AglFormatDomain : Domain<FormatNamespace, FormatSet> {
 
     val defaultWhiteSpace: String
 

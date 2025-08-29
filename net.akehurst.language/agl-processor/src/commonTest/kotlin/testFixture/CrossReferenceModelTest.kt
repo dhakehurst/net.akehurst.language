@@ -17,11 +17,11 @@
 
 package net.akehurst.language.reference.test
 
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 
 object CrossReferenceModelTest {
 
-    fun assertEqual(expected: CrossReferenceModelDefault, actual: CrossReferenceModelDefault) {
+    fun assertEqual(expected: CrossReferenceDomainDefault, actual: CrossReferenceDomainDefault) {
 
     }
 

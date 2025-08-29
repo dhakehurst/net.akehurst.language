@@ -20,7 +20,7 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.scope.api.ItemInScope
 import net.akehurst.language.scope.api.Scope
 import net.akehurst.language.scope.asm.ScopeSimple
@@ -65,7 +65,7 @@ open class ContextWithScope<ItemType : Any, ItemInScopeType : Any>(
     }
 
     fun newScopeForSentence(sentenceIdentity: Any?): Scope<ItemInScopeType> {
-        val newScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+        val newScope = ScopeSimple<ItemInScopeType>(null, ScopeSimple.ROOT_ID, CrossReferenceDomainDefault.ROOT_SCOPE_TYPE_NAME)
         scopeForSentence[sentenceIdentity ?: NULL_SENTENCE_IDENTIFIER] = newScope
         return newScope
     }

@@ -22,35 +22,35 @@ import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.TypeNamespace
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeNamespaceAbstract
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.TypesNamespace
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypesNamespaceAbstract
 
-class GrammarTypeNamespaceSimple(
+class GrammarTypesNamespaceSimple(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import>
-) : GrammarTypeNamespaceAbstract(options, import) {
+) : GrammarTypesNamespaceAbstract(options, import) {
     companion object {
-        fun findOrCreateGrammarNamespace(typeModel: TypeModel, qualifiedName: QualifiedName) =
-            typeModel.findNamespaceOrNull(qualifiedName) as GrammarTypeNamespaceSimple?
+        fun findOrCreateGrammarNamespace(typesDomain: TypesDomain, qualifiedName: QualifiedName) =
+            typesDomain.findNamespaceOrNull(qualifiedName) as GrammarTypesNamespaceSimple?
                 ?: let {
                     val imports = listOf(Import(StdLibDefault.qualifiedName.value))
-                    val ns = GrammarTypeNamespaceSimple(
+                    val ns = GrammarTypesNamespaceSimple(
                         qualifiedName = qualifiedName,
                         import = imports
                     )
-                    typeModel.addNamespace(ns)
+                    typesDomain.addNamespace(ns)
                     ns
                 }
     }
 
-    override fun findInOrCloneTo(other: TypeModel): TypeNamespace =
+    override fun findInOrCloneTo(other: TypesDomain): TypesNamespace =
         other.findNamespaceOrNull(this.qualifiedName)
-            ?: GrammarTypeNamespaceSimple(
+            ?: GrammarTypesNamespaceSimple(
                 this.qualifiedName,
                 this.options,
                 this.import
@@ -61,10 +61,10 @@ class GrammarTypeNamespaceSimple(
 
 }
 
-abstract class GrammarTypeNamespaceAbstract(
+abstract class GrammarTypesNamespaceAbstract(
     options: OptionHolder,
     import: List<Import>
-) : TypeNamespaceAbstract(options, import), GrammarTypeNamespace {
+) : TypesNamespaceAbstract(options, import), GrammarTypesNamespace {
 
     override fun setTypeForGrammarRule(grammarRuleName: GrammarRuleName, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
@@ -82,7 +82,7 @@ abstract class GrammarTypeNamespaceAbstract(
                 when {
                     null==it -> null //FIXME: why is an importedNamespace maybe null !
                     excludingImports.contains(it.qualifiedName.asImport) -> null
-                    it is GrammarTypeNamespace -> it.findTypeForRule(ruleName, excludingImports+this.qualifiedName.asImport)
+                    it is GrammarTypesNamespace -> it.findTypeForRule(ruleName, excludingImports+this.qualifiedName.asImport)
                     else -> null
                 }
             }

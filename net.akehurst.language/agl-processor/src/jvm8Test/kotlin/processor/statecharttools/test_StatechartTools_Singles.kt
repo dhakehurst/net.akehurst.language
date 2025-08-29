@@ -18,8 +18,8 @@ package net.akehurst.language.agl.processor.statecharttools
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -30,9 +30,9 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.format.asm.AglFormatModelDefault
+import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.parser.leftcorner.ParseOptionsDefault
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -84,13 +84,13 @@ class test_StatechartTools_Singles {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
-                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
+                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), formatterStr) }
+                formatResolver { p -> AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), formatterStr) }
 //TODO                formatterResolver { p -> FormatterSimple(p.) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(

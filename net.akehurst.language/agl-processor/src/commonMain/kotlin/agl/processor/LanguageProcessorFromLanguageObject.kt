@@ -23,10 +23,10 @@ import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.format.processor.FormatterOverAsmSimple
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 
 internal class LanguageProcessorFromLanguageObject<AsmType : Any, ContextType : Any>(
     languageObject: LanguageObjectAbstract<AsmType, ContextType>,
@@ -37,11 +37,11 @@ internal class LanguageProcessorFromLanguageObject<AsmType : Any, ContextType : 
 
     override val ruleSets: Map<String, RuleSet> = languageObject.ruleSets
     override val targetRuleSet: RuleSet = languageObject.targetRuleSet
-    override val grammarModel: GrammarModel = languageObject.grammarModel
+    override val grammarDomain: GrammarDomain = languageObject.grammarDomain
     override val mapToGrammar: (Int, Int) -> RuleItem = languageObject.mapToGrammar
-    override val crossReferenceModel: CrossReferenceModel = languageObject.crossReferenceModel //?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
+    override val crossReferenceDomain: CrossReferenceDomain = languageObject.crossReferenceDomain //?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = languageObject.syntaxAnalyser
-    override val formatter: Formatter<AsmType> = FormatterOverAsmSimple(languageObject.formatModel, languageObject.typesModel, this.issues) as Formatter<AsmType>
+    override val formatter: Formatter<AsmType> = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.issues) as Formatter<AsmType>
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = languageObject.semanticAnalyser
 
     init {

@@ -19,11 +19,11 @@ package net.akehurst.language.m2mTransform.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 import kotlin.jvm.JvmInline
 
-interface M2mTransformDomain : Model<M2mTransformNamespace, M2mTransformRuleSet> {
+interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
     override val namespace: List<M2mTransformNamespace>
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace
@@ -62,6 +62,7 @@ interface M2mTransformRuleSet : Definition<M2mTransformRuleSet> {
 }
 
 interface M2mTransformRule {
+    val isAbstract: Boolean
     val isTop: Boolean
     val name: SimpleName
     val domainItem: Map<DomainReference, DomainItem>
@@ -76,7 +77,7 @@ interface VariableDefinition {
     val name: SimpleName
     val type: TypeInstance
 
-    fun resolveType(tm: TypeModel)
+    fun resolveType(tm: TypesDomain)
 }
 
 interface M2mRelation : M2mTransformRule {
@@ -91,7 +92,7 @@ interface M2mMapping : M2mTransformRule {
     /**
      * expression for constructing one domain from the other
      */
-    val expression: Map<DomainReference, Expression>
+    val expression: Map<DomainReference, Expression?>
 }
 
 interface ObjectPattern : PropertyPatternRhs {
@@ -100,7 +101,7 @@ interface ObjectPattern : PropertyPatternRhs {
     val propertyPattern: Map<SimpleName, PropertyPattern>
 
     fun setIdentifier(value: SimpleName)
-    fun resolveType(tm: TypeModel)
+    fun resolveType(tm: TypesDomain)
 }
 
 interface PropertyPattern {

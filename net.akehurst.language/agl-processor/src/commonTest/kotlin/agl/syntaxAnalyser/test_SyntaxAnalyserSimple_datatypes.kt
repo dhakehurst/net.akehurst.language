@@ -27,9 +27,9 @@ import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.*
 
 class test_SyntaxAnalyserSimple_datatypes {
@@ -61,15 +61,15 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.allIssues.none { it.kind == LanguageIssueKind.ERROR }, result.allIssues.toString())
-            val tr = AsmTransformDomainDefault.fromGrammarModel(result.asm!!)
+            val tr = AsmTransformDomainDefault.fromGrammarDomain(result.asm!!)
             assertNotNull(tr.asm)
             assertTrue(tr.allIssues.none { it.kind == LanguageIssueKind.ERROR }, result.allIssues.toString())
             tr.asm!!
         }
         val typeModel by lazy {
-            asmTransformModel.typeModel!!
+            asmTransformModel.typesDomain!!
         }
-        val scopeModel = CrossReferenceModelDefault(grammar.primary!!.name)
+        val scopeModel = CrossReferenceDomainDefault(grammar.primary!!.name)
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, asmTransformModel, grammar.primary!!.qualifiedName)
         val processor = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
             grammarStr,
@@ -84,8 +84,8 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Ignore
     @Test
     fun checkTypeModel() {
-        val actual = processor.typesModel
-        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val actual = processor.typesDomain
+        val expected = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 //unit = declaration* ;
                 dataFor("unit", "Unit") {
@@ -242,7 +242,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple(crossReferenceModel = scopeModel, context = contextAsmSimple()) {
+        val expected = asmSimple(crossReferenceDomain = scopeModel, context = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

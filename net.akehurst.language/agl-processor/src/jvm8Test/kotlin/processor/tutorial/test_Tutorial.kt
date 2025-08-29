@@ -21,7 +21,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.TransformString
+import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.api.processor.TypesString
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
@@ -83,7 +83,7 @@ class test_Tutorial {
         val proc = Agl.processorFromStringSimple(
             grammarDefinitionStr = GrammarString(grammarDefinitionStr),
             typeStr = TypesString(typeModelStr),
-            transformStr = TransformString(transformStr)
+            transformStr = AsmTransformString(transformStr)
         )
     }
 

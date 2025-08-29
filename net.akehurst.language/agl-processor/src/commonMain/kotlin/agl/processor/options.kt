@@ -38,7 +38,7 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val completionProvider: CompletionProviderOptions<ContextType> = CompletionProviderOptionsDefault(),
     override val format: FormatOptions<AsmType> = FormatOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType> {
-    override fun clone()= ProcessOptionsDefault<AsmType, ContextType>(
+    override fun clone() = ProcessOptionsDefault<AsmType, ContextType>(
         scan = scan.clone(),
         parse = parse.clone(),
         syntaxAnalysis = syntaxAnalysis.clone(),
@@ -50,7 +50,7 @@ class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var enabled: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType> {
-    override fun clone()= SyntaxAnalysisOptionsDefault<AsmType>(
+    override fun clone() = SyntaxAnalysisOptionsDefault<AsmType>(
         enabled = this.enabled
     )
 }
@@ -66,7 +66,7 @@ class SemanticAnalysisOptionsDefault<ContextType : Any>(
     override var resolveReferences: Boolean = true,
     override val other: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<ContextType> {
-    override fun clone()= SemanticAnalysisOptionsDefault<ContextType>(
+    override fun clone() = SemanticAnalysisOptionsDefault<ContextType>(
         enabled = this.enabled,
         locationMap = this.locationMap,
         context = this.context,
@@ -97,6 +97,10 @@ class CompletionProviderOptionsDefault<ContextType : Any>(
     )
 }
 
-class FormatOptionsDefault<AsmType : Any>() : FormatOptions<AsmType> {
-
+class FormatOptionsDefault<SelfType : Any>(
+    override val environment: Map<String, SelfType> = mutableMapOf(),
+) : FormatOptions<SelfType> {
+    override fun clone() = FormatOptionsDefault<SelfType>(
+        environment = environment.toMutableMap()
+    )
 }

@@ -17,26 +17,26 @@
 
 package net.akehurst.language.asmTransform.processor
 
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmStructure
+import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.typemodel.api.PropertyCharacteristic
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.PropertyCharacteristic
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 
 class AsmTransformInterpreter<AsmValueType:Any>(
-    val typeModel: TypeModel,
+    val typesDomain: TypesDomain,
     val objectGraph: ObjectGraph<AsmValueType>,
 ) {
 
@@ -51,7 +51,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
         val SLIST_OF_ANY = StdLibDefault.ListSeparated.type(listOf(StdLibDefault.AnyType.asTypeArgument))
         val CMP_STR_MEM = setOf(PropertyCharacteristic.COMPOSITE, PropertyCharacteristic.READ_WRITE, PropertyCharacteristic.STORED)
 
-        val parseNodeTypeModel = typeModel("ParseNodes", true) {
+        val parseNodeTypesDomain = typesDomain("ParseNodes", true) {
             namespace("parse") {
                 data("Node") {
                     subtypes("BranchSeparated","Branch", "Leaf")
@@ -81,7 +81,7 @@ class AsmTransformInterpreter<AsmValueType:Any>(
                 }
             }
         }
-        val parseNodeNamespace = parseNodeTypeModel.findNamespaceOrNull(QualifiedName("parse"))!!
+        val parseNodeNamespace = parseNodeTypesDomain.findNamespaceOrNull(QualifiedName("parse"))!!
 
         val PARSE_NODE_TYPE_LEAF = parseNodeNamespace.findOwnedTypeNamed(SimpleName("Leaf"))!!
 

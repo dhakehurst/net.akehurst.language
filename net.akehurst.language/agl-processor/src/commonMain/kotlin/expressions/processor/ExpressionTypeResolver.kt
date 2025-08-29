@@ -3,13 +3,13 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
 class ExpressionTypeResolver(
-    val typeModel: TypeModel,
-    val contextNamespace: TypeNamespace,
+    val typesDomain: TypesDomain,
+    val contextNamespace: TypesNamespace,
     val issues: IssueHolder
 ) {
 
@@ -41,7 +41,7 @@ class ExpressionTypeResolver(
     }
 
     fun LiteralExpression.typeOfLiteralExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findByQualifiedNameOrNull(this.qualifiedTypeName)?.type() ?: StdLibDefault.NothingType
+        typesDomain.findByQualifiedNameOrNull(this.qualifiedTypeName)?.type() ?: StdLibDefault.NothingType
 
     fun RootExpression.typeOfRootExpressionFor(self: TypeInstance): TypeInstance = when {
         this.isNothing -> StdLibDefault.NothingType
@@ -160,7 +160,7 @@ class ExpressionTypeResolver(
     }
 
     fun CreateObjectExpression.typeOfCreateObjectExpressionFor(self: TypeInstance): TypeInstance =
-        typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.possiblyQualifiedTypeName)?.type() ?: StdLibDefault.NothingType
+        typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.possiblyQualifiedTypeName)?.type() ?: StdLibDefault.NothingType
 
     fun CreateTupleExpression.typeOfCreateTupleExpressionFor(self: TypeInstance): TypeInstance {
         val args = this.propertyAssignments.map {

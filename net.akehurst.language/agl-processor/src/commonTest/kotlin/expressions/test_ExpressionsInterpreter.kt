@@ -17,6 +17,7 @@
 
 package net.akehurst.language.expressions.processor
 
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.asm.simple.AsmListSimple
@@ -26,27 +27,27 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_ExpressionsInterpreter {
 
     companion object {
-        fun test(typeModel: TypeModel, self: AsmValue, expression: String, expected: AsmValue) {
-            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+        fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
+            val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
             assertEquals(expected, actual.self)
         }
 
-        fun test_fail(typeModel: TypeModel, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
-            val st = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+        fun test_fail(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
+            val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel,issues),issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
             assertEquals(AsmNothingSimple, actual.self)
             assertEquals(expected, interpreter.issues.all.toList())
@@ -56,7 +57,7 @@ class test_ExpressionsInterpreter {
     @Test
     fun structure_nothing() {
         val expression = $$"$nothing"
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -76,7 +77,7 @@ class test_ExpressionsInterpreter {
     @Test
     fun structure_self() {
         val expression = $$"$self"
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -95,7 +96,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property__notfound() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -114,7 +115,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property__found() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -133,7 +134,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property_index__notIndexable() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -159,7 +160,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property_index__onlyOneIndexValue() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
@@ -185,7 +186,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property_index__mustBeInteger() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
@@ -211,7 +212,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_property_index__outOfRange() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
@@ -237,7 +238,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_propertyListOfString_index_0() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("prop1", "String", false, 0)
@@ -257,7 +258,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_propertyListOfA_get() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("aList", "A", false, 0)
@@ -267,7 +268,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple(typeModel = tm) {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfElement("aList") {
                     element("A") {
@@ -290,7 +291,7 @@ class test_ExpressionsInterpreter {
 
     @Test
     fun structure_propertyListOfA_map() {
-        val tm = typeModel("test", true) {
+        val tm = typesDomain("test", true) {
             namespace("ns") {
                 data("Test") {
                     propertyListTypeOf("aList", "A", false, 0)
@@ -300,7 +301,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple(typeModel = tm) {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfElement("aList") {
                     element("A") {

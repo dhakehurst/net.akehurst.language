@@ -22,11 +22,11 @@ import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.api.AsmTransformNamespace
 import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-object AsmTransformModelTest {
+object AsmTransformDomainTest {
 
     fun trAssertEquals(expected: AsmTransformDomain?, actual: AsmTransformDomain?) {
         assertEquals(expected?.asString(), actual?.asString())
@@ -73,7 +73,7 @@ object AsmTransformModelTest {
 
     private fun trAssertEquals(expected: AsmTransformationRule, actual: AsmTransformationRule, message: String) {
         assertEquals(expected.grammarRuleName, actual.grammarRuleName)
-        TypeModelTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
+        TypesDomainTest.tmAssertEquals(expected.resolvedType, actual.resolvedType, "TransformationRule")
         ExpressionsTest.exAssertEquals(expected.expression, actual.expression)
     }
 

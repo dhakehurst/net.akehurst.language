@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.typemodel.processor
+package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
@@ -27,10 +27,10 @@ import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
 
-internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWithScope<Any,Any>> {
+internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypesDomain, ContextWithScope<Any,Any>> {
 
     companion object {
         const val OPTION_INCLUDE_STD = "include-std"
@@ -47,7 +47,7 @@ internal class TypemodelSemanticAnalyser : SemanticAnalyser<TypeModel, ContextWi
         _resolvedReferences.clear()
     }
 
-    override fun analyse(sentenceIdentity:Any?,asm: TypeModel, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
+    override fun analyse(sentenceIdentity:Any?, asm: TypesDomain, locationMap: LocationMap?, options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>): SemanticAnalysisResult {
         if(asm.options.includeStd) {
             asm.addNamespace(StdLibDefault)
         }

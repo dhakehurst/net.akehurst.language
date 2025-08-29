@@ -23,8 +23,8 @@ import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CrossReferenceString
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -36,7 +36,7 @@ class test_CompletionProviderSimple {
         data class TestData(
             val grammarStr: String,
             val crossReferencesStr: String = "",
-            val additionalTypeModel: TypeModel? = null,
+            val additionalTypesDomain: TypesDomain? = null,
             val context: ContextWithScope<Any, Any>? = contextAsmSimple(),
             val sentence: String,
             val position: Int,
@@ -47,11 +47,11 @@ class test_CompletionProviderSimple {
             val res = Agl.processorFromStringSimple(grammarDefinitionStr = GrammarString(data.grammarStr), referenceStr = CrossReferenceString(data.crossReferencesStr))
             assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
             val proc = res.processor!!
-            data.additionalTypeModel?.let {
-                proc.typesModel.addAllNamespaceAndResolveImports(it.namespace)
+            data.additionalTypesDomain?.let {
+                proc.typesDomain.addAllNamespaceAndResolveImports(it.namespace)
             }
-            proc.typesModel
-            proc.crossReferenceModel
+            proc.typesDomain
+            proc.crossReferenceDomain
             assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
 
             val actual = proc.expectedItemsAt(data.sentence, data.position, Agl.options {
@@ -224,7 +224,7 @@ class test_CompletionProviderSimple {
 
 
         val sentence = "var x: "
-        val additionalTypeModel = typeModel("External", true) {
+        val additionalTypeModel = typesDomain("External", true) {
             namespace(externalNsName) {
                 data("TypeDef")
             }
@@ -244,7 +244,7 @@ class test_CompletionProviderSimple {
             TestData(
                 grammarStr = grammarStr,
                 crossReferencesStr = crossReferencesStr,
-                additionalTypeModel = additionalTypeModel,
+                additionalTypesDomain = additionalTypeModel,
                 context = context,
                 sentence = sentence,
                 position = sentence.length,

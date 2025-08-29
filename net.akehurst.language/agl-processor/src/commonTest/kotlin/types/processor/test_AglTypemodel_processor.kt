@@ -15,12 +15,12 @@
  *
  */
 
-package net.akehurst.language.typemodel.processor
+package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -28,12 +28,12 @@ class test_AglTypemodel_processor {
 
     private companion object {
 
-        fun testPass(typeModeStr: String, expected: TypeModel) {
+        fun testPass(typeModeStr: String, expected: TypesDomain) {
             val res = Agl.registry.agl.types.processor!!.process(typeModeStr)
             assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
             val actual = res.asm!!
 
-            TypeModelTest.tmAssertEquals(expected, actual)
+            TypesDomainTest.tmAssertEquals(expected, actual)
         }
     }
 
@@ -41,7 +41,7 @@ class test_AglTypemodel_processor {
     fun empty() {
         val typesStr = $$"""
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
 
         }
         testPass(typesStr, expected)
@@ -52,7 +52,7 @@ class test_AglTypemodel_processor {
         val typesStr = $$"""
             namespace test
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) { }
         }
         testPass(typesStr, expected)
@@ -64,7 +64,7 @@ class test_AglTypemodel_processor {
             namespace test
               singleton Singleton
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 singleton("Singleton")
             }
@@ -78,7 +78,7 @@ class test_AglTypemodel_processor {
             namespace test
               primitive Primitive
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 primitive("Primitive")
             }
@@ -92,7 +92,7 @@ class test_AglTypemodel_processor {
             namespace test
               enum Enum { A, B, C }
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 enum("Enum", listOf("A", "B", "C"))
             }
@@ -106,7 +106,7 @@ class test_AglTypemodel_processor {
             namespace test
               value Value(val value:String)
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 value("Value") {
                     constructor_ {
@@ -124,7 +124,7 @@ class test_AglTypemodel_processor {
             namespace test
               collection Collection<T,U,V>
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 collection("Collection", listOf("T", "U", "V"))
             }
@@ -140,7 +140,7 @@ class test_AglTypemodel_processor {
               primitive String
               union Union { Int | String }
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 primitive("Int")
                 primitive("String")
@@ -159,7 +159,7 @@ class test_AglTypemodel_processor {
             namespace test
               interface Interface
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 interface_("Interface") { }
             }
@@ -174,7 +174,7 @@ class test_AglTypemodel_processor {
               primitive Int
               interface Interface { val prop:Int }
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 primitive("Int")
                 interface_("Interface") {
@@ -195,7 +195,7 @@ class test_AglTypemodel_processor {
                val prop2:Int
               }
         """
-        val expected = typeModel("ParsedTypesUnit", true, namespaces = emptyList()) {
+        val expected = typesDomain("ParsedTypesUnit", true, namespaces = emptyList()) {
             namespace("test", imports = emptyList()) {
                 primitive("Int")
                 data("Data") {

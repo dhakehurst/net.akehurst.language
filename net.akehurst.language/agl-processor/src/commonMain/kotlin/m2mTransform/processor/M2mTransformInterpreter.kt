@@ -17,16 +17,16 @@
 
 package net.akehurst.language.m2mTransform.processor
 
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.RootExpression
-import net.akehurst.language.expressions.processor.EvaluationContext
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
 import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.types.api.PropertyName
 
 data class M2MTransformResult<OT : Any>(
     val issues: IssueHolder,
@@ -92,7 +92,10 @@ class M2mTransformInterpreter<OT : Any>(
     ): Map<DomainReference, TypedObject<OT>> {
         val result = mutableMapOf<DomainReference, TypedObject<OT>>()
 
-        val srcObjs = source.entries.associate { (k, v) -> Pair(k.value, v) }
+        val srcObjs = source.entries.associate { (k, v) ->
+            val di = rule.domainItem[k] ?: error("No domain item found for source domain ref '$k'")
+            Pair(di.variable.name.value, v)
+        }
 
         val expression = rule.expression[targetDomainRef]
         when (expression) {
@@ -242,7 +245,7 @@ class M2mTransformInterpreter<OT : Any>(
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)
             propValues[k.value] = value
         }
-        objectPattern.resolveType(tgtObjectGraph.typeModel)
+        objectPattern.resolveType(tgtObjectGraph.typesDomain)
         val obj = tgtObjectGraph.createStructureValue(objectPattern.type.qualifiedTypeName, propValues)
         propValues.forEach { (k, v) ->
             val pn = PropertyName(k)

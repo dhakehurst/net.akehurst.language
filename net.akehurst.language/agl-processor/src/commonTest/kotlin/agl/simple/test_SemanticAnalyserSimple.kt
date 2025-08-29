@@ -38,11 +38,11 @@ class test_SemanticAnalyserSimple {
                 grammarDefinitionStr = GrammarString(grammarStr),
                 referenceStr = CrossReferenceString(crossReferenceModelStr)
             ).let {
-                it.processor!!.crossReferenceModel
+                it.processor!!.crossReferenceDomain
                 check(it.issues.isEmpty()) { it.issues.toString() }
                 it.processor!!
             }
-            assertEquals(processor.targetGrammar!!.qualifiedName, processor.crossReferenceModel.declarationsForNamespace.keys.first())
+            assertEquals(processor.targetGrammar!!.qualifiedName, processor.crossReferenceDomain.declarationsForNamespace.keys.first())
             val result = processor.process(sentence, options)
             assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
             assertNotNull(result.asm)

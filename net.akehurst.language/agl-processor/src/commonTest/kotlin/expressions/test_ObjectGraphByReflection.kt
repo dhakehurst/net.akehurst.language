@@ -22,8 +22,8 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,7 +38,7 @@ class test_ObjectGraphByReflection {
             val prop3: TestClass?,
         )
 
-        val testTypeModel = typeModel("Test", true) {
+        val testTypeModel = typesDomain("Test", true) {
             namespace("net.akehurst.language.agl.expressions.processor") {
                 data("TestClass") {
                 }

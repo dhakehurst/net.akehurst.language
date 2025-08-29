@@ -21,8 +21,8 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.typemodel.api.PropertyName
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
 

@@ -1,4 +1,21 @@
-package net.akehurst.language.agl.typemodel.processor
+/*
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.types.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -11,8 +28,8 @@ import net.akehurst.language.base.processor.BaseSyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 
 internal data class TypeRefInfo(
     val name: PossiblyQualifiedName,
@@ -25,7 +42,7 @@ internal data class TypeRefInfo(
     }
 }
 
-internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypeModel>() {
+internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<TypesDomain>() {
 
     override val extendsSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<*>> = mapOf(
         QualifiedName("Base") to BaseSyntaxAnalyser()
@@ -60,14 +77,14 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     // --- Typemodel ---
 
     // override unit = option* namespace* ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeModel {
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesDomain {
         val options = children[0] as List<Pair<String, String>>
-        val namespaces = children[1] as List<TypeNamespace>
+        val namespaces = children[1] as List<TypesNamespace>
         val name = SimpleName("ParsedTypesUnit") //TODO: how to specify name, does it matter?
 
         val optHolder = OptionHolderDefault(null, options.associate { it })
         namespaces.forEach { (it.options as OptionHolderDefault).parent = optHolder }
-        return TypeModelSimple(
+        return TypesDomainSimple(
             name = name,
             optHolder
         ).also {
@@ -76,15 +93,15 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // namespace = 'namespace' possiblyQualifiedName option* import* definition* ;
-    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypeNamespace {
+    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): TypesNamespace {
         val pqn = children[1] as PossiblyQualifiedName
         val options = children[2] as List<Pair<String, String>>
         val imports = children[3] as List<Import>
-        val defs = children[4] as List<(namespace: TypeNamespace) -> TypeDefinition>
+        val defs = children[4] as List<(namespace: TypesNamespace) -> TypeDefinition>
         val optHolder = OptionHolderDefault(null, options.associate { it })
 
         val nsName = pqn.asQualifiedName(null)
-        val namespace = TypeNamespaceSimple(nsName, optHolder, imports)
+        val namespace = TypesNamespaceSimple(nsName, optHolder, imports)
         defs.forEach { def -> def.invoke(namespace) }
         return namespace
     }
@@ -99,30 +116,30 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
               | interfaceDefinition
               | unionDefinition
               ;*/
-    private fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> TypeDefinition =
-        children[0] as (namespace: TypeNamespace) -> TypeDefinition
+    private fun definition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> TypeDefinition =
+        children[0] as (namespace: TypesNamespace) -> TypeDefinition
 
     // singletonDefinition = 'singleton' IDENTIFIER ;
-    private fun singletonDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> SingletonType {
+    private fun singletonDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> SingletonType {
         val name = SimpleName(children[1] as String)
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             SingletonTypeSimple(namespace, name).also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 
     // primitiveDefinition = 'primitive' IDENTIFIER ;
-    private fun primitiveDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> PrimitiveType {
+    private fun primitiveDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> PrimitiveType {
         val name = SimpleName(children[1] as String)
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             PrimitiveTypeSimple(namespace, name).also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
 
     // enum = 'enum' NAME literals?;
-    private fun enumDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> EnumType {
+    private fun enumDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> EnumType {
         val name = SimpleName(children[1] as String)
         val literals = children[2] as List<String>? ?: emptyList()
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             EnumTypeSimple(namespace, name, literals).also { setLocationFor(it, nodeInfo, sentence) }
         }
     }
@@ -134,11 +151,11 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
-    private fun valueDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> ValueType {
+    private fun valueDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> ValueType {
         val name = SimpleName(children[1] as String)
         val supertypes = children[2] as List<TypeRefInfo>? ?: emptyList()
         val cParam = children[4] as (TypeDefinition) -> ParameterDeclaration
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             ValueTypeSimple(namespace, name).also { vt ->
                 setLocationFor(vt, nodeInfo, sentence)
                 supertypes.forEach { vt.addSupertype_dep(it.name) }
@@ -148,10 +165,10 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
-    private fun collectionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> CollectionType {
+    private fun collectionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> CollectionType {
         val name = SimpleName(children[1] as String)
         val tParams = (children[2] as List<String>).map { TypeParameterSimple(SimpleName((it))) }
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             CollectionTypeSimple(namespace, name).also { td ->
                 tParams.forEach { td.addTypeParameter(it) }
                 setLocationFor(td, nodeInfo, sentence)
@@ -160,10 +177,10 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
-    private fun unionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> UnionType {
+    private fun unionDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> UnionType {
         val name = SimpleName(children[1] as String)
         val alternatives = (children[3] as List<Any>).toSeparatedList<Any, TypeRefInfo, String>().items
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             UnionTypeSimple(namespace, name).also { ut ->
                 alternatives.forEach { tr ->
                     val ti = tr.toTypeInstance(ut)
@@ -174,12 +191,12 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
     }
 
     // interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
-    private fun interfaceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> InterfaceType {
+    private fun interfaceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> InterfaceType {
         val name = SimpleName(children[1] as String)
         val tParams = children[2] as List<String>? ?: emptyList()
         val supertypes = children[3] as List<TypeRefInfo>? ?: emptyList()
         val property = children[4] as List<((InterfaceType) -> PropertyDeclaration)>? ?: emptyList()
-        return { namespace: TypeNamespace ->
+        return { namespace: TypesNamespace ->
             InterfaceTypeSimple(namespace, name).also { ift ->
                 tParams.forEach { tp -> ift.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
                 supertypes.forEach { ift.addSupertype_dep(it.name) }
@@ -201,14 +218,14 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
           property*
        '}'
     ;*/
-    private fun dataDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypeNamespace) -> DataType {
+    private fun dataDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (namespace: TypesNamespace) -> DataType {
         val name = SimpleName(children[1] as String)
         val tParams = children[2] as List<String>? ?: emptyList()
         val supertypes = children[3] as List<TypeRefInfo>? ?: emptyList()
         val constructors = children[5] as List<List<(TypeDefinition) -> ParameterDeclaration>>
         val property = children[6] as List<((DataType) -> PropertyDeclaration)>
 
-        return { ns: TypeNamespace ->
+        return { ns: TypesNamespace ->
             val dt = DataTypeSimple(ns, name)
             tParams.forEach { tp -> dt.addTypeParameter(TypeParameterSimple(SimpleName((tp))) )}
             supertypes.forEach {
@@ -309,7 +326,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         return list
     }
 
-    private fun createTypeInstance(ns: TypeNamespace, contextType: TypeDefinition, tInfo:TypeRefInfo) : TypeInstance {
+    private fun createTypeInstance(ns: TypesNamespace, contextType: TypeDefinition, tInfo:TypeRefInfo) : TypeInstance {
         val targs = tInfo.args.map { createTypeInstance(ns,contextType, it).asTypeArgument }
         val ti = ns.createTypeInstance(contextType.qualifiedName, tInfo.name, targs, false)
         return ti

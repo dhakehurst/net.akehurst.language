@@ -23,13 +23,13 @@ import net.akehurst.language.base.api.OptionHolder
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimpleAbstract
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypesDomainSimpleAbstract
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.reflect.KClass
 
-class DatatypeRegistry : TypeModelSimpleAbstract() {
+class DatatypeRegistry : TypesDomainSimpleAbstract() {
 
     companion object {
         val KOTLIN_STD_STRING = """
@@ -53,7 +53,7 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
             }
         """.trimIndent()
 
-        val KOTLIN_STD_MODEL = typeModel("kotlin-std",false, emptyList()) {
+        val KOTLIN_STD_MODEL = typesDomain("kotlin-std",false, emptyList()) {
             namespace("kotlin", emptyList()) {
                 primitive("Boolean")
                 primitive("Byte")
@@ -172,9 +172,9 @@ class DatatypeRegistry : TypeModelSimpleAbstract() {
         }
     }
 
-    fun registerFromTypeModel(typeModel: TypeModel, primitiveMappers: Map<KClass<*>, PrimitiveMapper<*, *>>) {
+    fun registerFromTypeModel(typesDomain: TypesDomain, primitiveMappers: Map<KClass<*>, PrimitiveMapper<*, *>>) {
         this._primitiveMappers.putAll(primitiveMappers)
-        typeModel.namespace.forEach {
+        typesDomain.namespace.forEach {
                 this.addNamespace(it)
         }
     }

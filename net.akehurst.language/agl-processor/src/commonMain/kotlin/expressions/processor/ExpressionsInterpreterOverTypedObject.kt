@@ -19,45 +19,17 @@ package net.akehurst.language.expressions.processor
 
 //import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.agl.Agl
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeArgumentNamedSimple
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-data class EvaluationContext<SelfType:Any>(
-    val parent: EvaluationContext<SelfType>?,
-    val namedValues: Map<String, TypedObject<SelfType>>
-) {
-    companion object {
-        fun <SelfType:Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
-        fun <SelfType:Any> ofSelf(self: TypedObject<SelfType>) = of(mapOf(RootExpressionDefault.SELF.name to self))
-    }
 
-    val self = namedValues[RootExpressionDefault.SELF.name]
-
-    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
-
-    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        this.parent?.let {
-            sb.append(it.toString())
-            sb.append("----------\n")
-        }
-        this.namedValues.forEach {
-            sb.append(it.key)
-            sb.append(" := ")
-            sb.append(it.value.toString())
-            sb.append("\n")
-        }
-        return sb.toString()
-    }
-}
 
 interface TypedObject<out SelfType:Any> {
     val self: SelfType
@@ -66,7 +38,7 @@ interface TypedObject<out SelfType:Any> {
 }
 
 interface ObjectGraph<SelfType:Any> {
-    var typeModel: TypeModel
+    var typesDomain: TypesDomain
 
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj:SelfType?) : TypedObject<SelfType>
@@ -107,7 +79,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
     val objectGraph: ObjectGraph<SelfType>,
     val issues: IssueHolder
 ) {
-    val typeModel = objectGraph.typeModel
+    val typeModel = objectGraph.typesDomain
     //val typeResolver = ExpressionTypeResolver(typeModel, issues)
 
     /**

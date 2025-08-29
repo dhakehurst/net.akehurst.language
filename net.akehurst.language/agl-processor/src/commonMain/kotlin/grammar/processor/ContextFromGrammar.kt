@@ -19,24 +19,24 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 
-fun TypeModel.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
+fun TypesDomain.findTypeForRule(ruleName: GrammarRuleName): TypeInstance? {
     return this.namespace.firstNotNullOfOrNull { ns ->
         when (ns) {
-            is GrammarTypeNamespace -> ns.findTypeForRule(ruleName)
+            is GrammarTypesNamespace -> ns.findTypeForRule(ruleName)
             else -> null
         }
     }
 }
 
-fun contextFromGrammar(grammars: GrammarModel): ContextWithScope<Any, Any> {
+fun contextFromGrammar(grammars: GrammarDomain): ContextWithScope<Any, Any> {
     val proc = Agl.registry.agl.grammar.processor!!
-    val aglGrammarTypeModel = proc.typesModel
+    val aglGrammarTypeModel = proc.typesDomain
     val context = ContextWithScope<Any, Any>()
     grammars.allDefinitions.forEach { g ->
         val scope = context.newScopeForSentence(g.qualifiedName.toString())

@@ -17,16 +17,16 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    grammarModel: GrammarModel,
+    grammarDomain: GrammarDomain,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    grammarModel,
+    grammarDomain,
     buildForDefaultGoal
 ) {
     private val _configuration = initialConfiguration
@@ -36,19 +36,19 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
             error("Cannot set the configuration of a LanguageDefinitionFromAsm")
         }
 
-    override val grammarString: GrammarString? get() = this.grammarModel?.asString()?.let { GrammarString(it) }
+    override val grammarString: GrammarString? get() = this.grammarDomain?.asString()?.let { GrammarString(it) }
 
     override val isModifiable: Boolean = false
 
-    override val typesString: TypesString? get() = this.typesModel?.asString()?.let { TypesString(it) }
+    override val typesString: TypesString? get() = this.typesDomain?.asString()?.let { TypesString(it) }
 
-    override val transformString: TransformString? get() = this.transformModel?.asString()?.let { TransformString(it) }
+    override val asmTransformString: AsmTransformString? get() = this.transformDomain?.asString()?.let { AsmTransformString(it) }
 
-    override val crossReferenceString: CrossReferenceString? get() = this.crossReferenceModel?.asString()?.let { CrossReferenceString(it) }
+    override val crossReferenceString: CrossReferenceString? get() = this.crossReferenceDomain?.asString()?.let { CrossReferenceString(it) }
 
-    override val styleString: StyleString? get() = this.styleModel?.asString()?.let { StyleString(it) }
+    override val styleString: StyleString? get() = this.styleDomain?.asString()?.let { StyleString(it) }
 
-    override val formatString: FormatString? get() = FormatString(this.formatter?.formatModel?.asString() ?: "")
+    override val formatString: FormatString? get() = FormatString(this.formatter?.formatDomain?.asString() ?: "")
 
     init {
         this._issues.clear()
@@ -77,7 +77,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override fun update(
         grammarStr: GrammarString?,
         typeModelStr: TypesString?,
-        asmTransformStr: TransformString?,
+        asmTransformStr: AsmTransformString?,
         crossReferenceStr: CrossReferenceString?,
         styleStr: StyleString?,
         formatStr: FormatString?

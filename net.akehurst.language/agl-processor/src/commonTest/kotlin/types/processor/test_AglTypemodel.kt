@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.typemodel.processor
+package net.akehurst.language.types.processor
 
 import net.akehurst.language.base.api.SimpleName
 import kotlin.test.Test
@@ -26,7 +26,7 @@ class test_AglTypemodel {
 
     @Test
     fun grammarModel() {
-        val actual = AglTypes.grammarModel
+        val actual = AglTypes.grammarDomain
 
         assertNotNull(actual)
         assertEquals(AglTypes.grammarString, actual.asString())
@@ -34,7 +34,7 @@ class test_AglTypemodel {
 
     @Test
     fun typemodel() {
-        val actual = AglTypes.typesModel
+        val actual = AglTypes.typesDomain
 
         assertNotNull(actual)
     }
@@ -42,11 +42,11 @@ class test_AglTypemodel {
 
     @Test
     fun domainTypes() {
-        val td = AglTypes.typesModel.findFirstDefinitionByNameOrNull(SimpleName("TypeModel"))
+        val td = AglTypes.typesDomain.findFirstDefinitionByNameOrNull(SimpleName("TypesDomain"))
         assertNotNull(td)
-        assertEquals("TypeModel", td.name.value)
-        assertEquals("Model", td.supertypes[0].typeName.value)
-        assertEquals("TypeNamespace", td.supertypes[0].typeArguments[0].type.typeName.value)
+        assertEquals("TypesDomain", td.name.value)
+        assertEquals("Domain", td.supertypes[0].typeName.value)
+        assertEquals("TypesNamespace", td.supertypes[0].typeArguments[0].type.typeName.value)
         assertEquals("TypeDeclaration", td.supertypes[0].typeArguments[1].type.typeName.value)
     }
 }

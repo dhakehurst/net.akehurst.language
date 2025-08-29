@@ -17,7 +17,7 @@
 
 package net.akehurst.language.m2mTransform.processor
 
-import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
@@ -30,15 +30,15 @@ import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammarModel
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.builder.styleModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.builder.styleDomain
+import net.akehurst.language.types.builder.typesDomain
 
 object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
@@ -46,6 +46,8 @@ object M2mTransform : LanguageObjectAbstract<M2mTransformDomain, ContextWithScop
     const val goalRuleName = "unit"
 
     override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+
+    override val extends by lazy { listOf(AglBase) }
 
     override val grammarString: String = """
 namespace $NAMESPACE_NAME
@@ -61,12 +63,12 @@ grammar $NAME : Base {
     typeImport = 'import-types' possiblyQualifiedName ;
     
     transformRule = relation | mapping ;
-    relation = 'top'? 'relation' IDENTIFIER '{' pivot* relDomain{2+} when? where? '}' ;
-    mapping = 'mapping' IDENTIFIER '{' mapDomain{2+} when? where? '}' ;
+    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* relDomain{2+} when? where? '}' ;
+    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' mapDomain{2+} when? where? '}' ;
     
     pivot = 'pivot' variableDefinition ;
     relDomain = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    mapDomain = 'domain' IDENTIFIER variableDefinition ':=' expression
+    mapDomain = 'domain' IDENTIFIER variableDefinition (':=' expression)?
     variableDefinition = IDENTIFIER ':' typeName ;
     typeName = possiblyQualifiedName ;
     expression = Expressions::expression ;
@@ -81,6 +83,21 @@ grammar $NAME : Base {
 }
     """
 
+    override val typesString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
+    override val kompositeString: String = """
+        namespace net.akehurst.language.m2mTransform.api
+          // TODO
+    """.trimIndent()
+
+    override val asmTransformString: String = """
+        namespace $NAMESPACE_NAME
+          // TODO
+    """.trimIndent()
+
     override val crossReferenceString = """
         namespace $NAMESPACE_NAME
           // TODO
@@ -91,10 +108,15 @@ grammar $NAME : Base {
         styles $NAME {
             // TODO
         }
-    """
+    """.trimIndent()
 
-    override val grammarModel by lazy {
-        grammarModel(NAME) {
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain by lazy {
+        grammarDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 grammar(NAME) {
                     extendsGrammar(AglBase.defaultTargetGrammar.selfReference)
@@ -123,13 +145,13 @@ grammar $NAME : Base {
                         ref("mapping")
                     }
                     concatenation("relation") {
-                        opt { lit("top") }; lit("relation"); ref("IDENTIFIER"); lit("{")
-                        lst(0,-1) { ref("pivot") }
+                        opt { lit("abstract") }; opt { lit("top") }; lit("relation"); ref("IDENTIFIER"); lit("{")
+                        lst(0, -1) { ref("pivot") }
                         lst(2, -1) { ref("relDomain") }; opt { ref("when") }; opt { ref("where") }
                         lit("}")
                     }
                     concatenation("mapping") {
-                        opt { lit("top") }; lit("mapping"); ref("IDENTIFIER"); lit("{")
+                        opt { lit("abstract") }; opt { lit("top") }; lit("mapping"); ref("IDENTIFIER"); lit("{")
                         lst(2, -1) { ref("mapDomain") }; opt { ref("when") }; opt { ref("where") }
                         lit("}")
                     }
@@ -138,20 +160,20 @@ grammar $NAME : Base {
                         lit("domain"); ref("IDENTIFIER"); ref("IDENTIFIER"); lit(":"); ref("objectPattern")
                     }
                     concatenation("mapDomain") {
-                        lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); lit(":="); ref("expression")
+                        lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); opt { grp { lit(":="); ref("expression") } }
                     }
                     concatenation("variableDefinition") { ref("IDENTIFIER"); lit(":"); ref("typeName") }
                     concatenation("typeName") { ref("possiblyQualifiedName") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
                     concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }
                     concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
-                    concatenation("objectPattern") { ref("typeName"); lit("{"); lst(0,-1) { ref("propertyPattern")}; lit("}") }
-                    concatenation("propertyPattern") { ref("IDENTIFIER"); lit("=="); ref("propertyPatternRhs")}
+                    concatenation("objectPattern") { ref("typeName"); lit("{"); lst(0, -1) { ref("propertyPattern") }; lit("}") }
+                    concatenation("propertyPattern") { ref("IDENTIFIER"); lit("=="); ref("propertyPatternRhs") }
                     choice("propertyPatternRhs") {
                         ref("expression")
                         ref("namedObjectPattern")
                     }
-                    concatenation("namedObjectPattern") { opt { grp{ ref("IDENTIFIER"); lit(":") }}; ref("objectPattern") }
+                    concatenation("namedObjectPattern") { opt { grp { ref("IDENTIFIER"); lit(":") } }; ref("objectPattern") }
                 }
             }
         }
@@ -161,8 +183,8 @@ grammar $NAME : Base {
         // TODO
     """
 
-    override val typesModel by lazy {
-        typeModel(NAME, true, AglBase.typesModel.namespace) {
+    override val typesDomain by lazy {
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             namespace("net.akehurst.language.m2mTransform.api", listOf("std", "net.akehurst.language.base.api")) {
                 interface_("M2mTransformDomain") {}
             }
@@ -172,10 +194,10 @@ grammar $NAME : Base {
         }
     }
 
-    override val asmTransformModel: AsmTransformDomain by lazy {
+    override val asmTransformDomain: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
             namespace(qualifiedName = NAMESPACE_NAME) {
@@ -192,21 +214,21 @@ grammar $NAME : Base {
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
-        crossReferenceModel(NAME) {
+    override val crossReferenceDomain: CrossReferenceDomain by lazy {
+        crossReferenceDomain(NAME) {
             //TODO
 
         }
     }
 
-    override val formatModel: AglFormatModel by lazy {
-        formatModel(NAME) {
+    override val formatDomain: AglFormatDomain by lazy {
+        formatDomain(NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val styleModel: AglStyleModel by lazy {
-        styleModel(NAME) {
+    override val styleDomain: AglStyleDomain by lazy {
+        styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
                     // TODO
@@ -215,7 +237,7 @@ grammar $NAME : Base {
         }
     }
 
-    override val defaultTargetGrammar: Grammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGrammar: Grammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
     override val defaultTargetGoalRule: String = "unit"
 
     override val syntaxAnalyser: SyntaxAnalyser<M2mTransformDomain> by lazy { M2mTransformSyntaxAnalyser() }

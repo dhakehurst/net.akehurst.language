@@ -22,20 +22,20 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.automaton.api.Automaton
 import net.akehurst.language.automaton.api.ParseAction
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.Grammar
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.parser.api.RulePosition
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 interface LanguageObject<AsmType : Any, ContextType : Any> {
     val identity: LanguageIdentity
-
+    val extends: List<LanguageObject<Any, ContextType>>
     val grammarString: String
     val typesString: String
     val kompositeString: String
@@ -44,13 +44,13 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val styleString: String
     val formatString: String
 
-    val grammarModel: GrammarModel
-    val typesModel: TypeModel
-    val kompositeModel: TypeModel
-    val asmTransformModel: AsmTransformDomain
-    val crossReferenceModel: CrossReferenceModel
-    val styleModel: AglStyleModel
-    val formatModel: AglFormatModel
+    val grammarDomain: GrammarDomain
+    val typesDomain: TypesDomain
+    val kompositeDomain: TypesDomain
+    val asmTransformDomain: AsmTransformDomain
+    val crossReferenceDomain: CrossReferenceDomain
+    val styleDomain: AglStyleDomain
+    val formatDomain: AglFormatDomain
 
     val defaultTargetGrammar: Grammar
     val defaultTargetGoalRule: String
@@ -76,15 +76,15 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
         val GOAL = ParseAction.GOAL
     }
 
-    override val kompositeModel: TypeModel get() = typesModel
+    override val kompositeDomain: TypesDomain get() = typesDomain
 
-    override val grammarString: String by lazy { grammarModel.asString() }
-    override val typesString: String by lazy { typesModel.asString() }
-    override val kompositeString: String by lazy { kompositeModel.asString() }
-    override val asmTransformString: String by lazy { asmTransformModel.asString() }
-    override val crossReferenceString: String by lazy { crossReferenceModel.asString() }
-    override val styleString: String by lazy { styleModel.asString() }
-    override val formatString: String by lazy { formatModel.asString() }
+//    override val grammarString: String by lazy { grammarModel.asString() }
+//    override val typesString: String by lazy { typesModel.asString() }
+//    override val kompositeString: String by lazy { kompositeModel.asString() }
+//    override val asmTransformString: String by lazy { asmTransformModel.asString() }
+//    override val crossReferenceString: String by lazy { crossReferenceModel.asString() }
+//    override val styleString: String by lazy { styleModel.asString() }
+//    override val formatString: String by lazy { formatModel.asString() }
 
     open val ruleSets: Map<String, RuleSet> get() = TODO()
     open val targetRuleSet: RuleSet get() = TODO()

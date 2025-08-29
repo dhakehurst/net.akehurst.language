@@ -4,9 +4,8 @@ import net.akehurst.kotlinx.komposite.common.DatatypeRegistry
 import net.akehurst.kotlinx.komposite.processor.Komposite
 import net.akehurst.language.base.api.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.expressions.api.LambdaExpression
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -19,7 +18,7 @@ import kotlin.reflect.jvm.javaField
 
 class GenerateTypeModelViaReflection(
     val typeModelName: SimpleName,
-    val additionalNamespaces: List<TypeNamespace> = emptyList(),
+    val additionalNamespaces: List<TypesNamespace> = emptyList(),
     val substituteTypes: Map<String, String>,
     val kompositeStr: List<String>
 ) {
@@ -98,7 +97,7 @@ class GenerateTypeModelViaReflection(
                         }
                     }
 
-        fun KClass<*>.isKomposite(propertyName: String, komposite: TypeModel): Boolean =
+        fun KClass<*>.isKomposite(propertyName: String, komposite: TypesDomain): Boolean =
             komposite.findByQualifiedNameOrNull(this.qualifiedName!!.asQualifiedName)
                 ?.findAllPropertyOrNull(PropertyName(propertyName))
                 ?.isComposite
@@ -110,13 +109,13 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private val _typeModel = TypeModelSimple(typeModelName)
+    private val _typeModel = TypesDomainSimple(typeModelName)
     private val _komposite = kompositeStr.map {
         Komposite.process(it).let {
             assert(it.allIssues.errors.isEmpty()) { it.allIssues.errors.toString() }
             it.asm!!
         }
-    }.fold(TypeModelSimple(SimpleName("Komposite"))) { acc, km ->
+    }.fold(TypesDomainSimple(SimpleName("Komposite"))) { acc, km ->
         acc.addAllNamespaceAndResolveImports(km.namespace)
         acc
     }
@@ -134,7 +133,7 @@ class GenerateTypeModelViaReflection(
     }
 
     fun addPackage(packageName: String, initialImports: List<Import> = emptyList()) {
-        val ns = TypeNamespaceSimple(QualifiedName(packageName), import =  initialImports)
+        val ns = TypesNamespaceSimple(QualifiedName(packageName), import =  initialImports)
 
         val kclasses = findClasses(packageName)
 
@@ -145,7 +144,7 @@ class GenerateTypeModelViaReflection(
         _typeModel.addNamespace(ns)
     }
 
-    fun addKClass(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    fun addKClass(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         when {
             _exclude.contains(QualifiedName(kclass.qualifiedName!!)) -> Unit
             kclass.supertypes.any { it.classifier == Annotation::class } -> Unit // do not add annotations
@@ -168,9 +167,9 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    fun generate(): TypeModel {
+    fun generate(): TypesDomain {
         _include.forEach {
-            val ns = _typeModel.findOrCreateNamespace(it.front, emptyList()) as TypeNamespaceSimple
+            val ns = _typeModel.findOrCreateNamespace(it.front, emptyList()) as TypesNamespaceSimple
             val kclass = Class.forName(it.value).kotlin
             addKClass(ns, kclass)
         }
@@ -250,20 +249,20 @@ class GenerateTypeModelViaReflection(
         return ti
     }
 
-    private fun addPrimitiveType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addPrimitiveType(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         PrimitiveTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
     }
 
-    private fun <T : Enum<T>> addEnumType(ns: TypeNamespaceSimple, kclass: KClass<T>) {
+    private fun <T : Enum<T>> addEnumType(ns: TypesNamespaceSimple, kclass: KClass<T>) {
         val lits = kclass.enumValues.map { it.name }
         EnumTypeSimple(ns, SimpleName(kclass.simpleName!!), lits) //added to ns in constructor
     }
 
-    private fun addCollectionType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addCollectionType(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         CollectionTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
     }
 
-    private fun addSingleton(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addSingleton(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         SingletonTypeSimple(ns, SimpleName(kclass.simpleName!!)) //added to ns in constructor
         //       addTypeParameters(ns, type, kclass)
 //        addSuperTypes(type, kclass)
@@ -271,7 +270,7 @@ class GenerateTypeModelViaReflection(
 //        addPropertiesAndImports(ns, type, kclass)
     }
 
-    private fun addValueType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addValueType(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         val type = ns.findOwnedOrCreateValueTypeNamed( SimpleName(kclass.simpleName!!))
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
@@ -279,14 +278,14 @@ class GenerateTypeModelViaReflection(
         addPropertiesAndImports(ns, type, kclass)
     }
 
-    private fun addInterfaceType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addInterfaceType(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         val type = InterfaceTypeSimple(ns, SimpleName(kclass.simpleName!!))  //added to ns in constructor
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
         addPropertiesAndImports(ns, type, kclass)
     }
 
-    private fun addDataType(ns: TypeNamespaceSimple, kclass: KClass<*>) {
+    private fun addDataType(ns: TypesNamespaceSimple, kclass: KClass<*>) {
         val type = ns.findOwnedOrCreateDataTypeNamed( SimpleName(kclass.simpleName!!))
         addTypeParameters(ns, type, kclass)
         addSuperTypes(type, kclass)
@@ -294,7 +293,7 @@ class GenerateTypeModelViaReflection(
         addPropertiesAndImports(ns, type, kclass)
     }
 
-    private fun addTypeParameters(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
+    private fun addTypeParameters(ns: TypesNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         when {
             kclass.typeParameters.isEmpty() -> Unit
             else -> {
@@ -305,7 +304,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private fun addConstructors(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
+    private fun addConstructors(ns: TypesNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         // must be declared in correct order
         kclass.primaryConstructor?.let { c ->
             c.name
@@ -324,7 +323,7 @@ class GenerateTypeModelViaReflection(
         //TODO: other constructors
     }
 
-    private fun addPropertiesAndImports(ns: TypeNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
+    private fun addPropertiesAndImports(ns: TypesNamespaceSimple, type: TypeDefinition, kclass: KClass<*>) {
         //TODO: what about extension properties !
         val props = when {
             kclass.isInterface -> kclass.declaredMemberProperties
@@ -361,7 +360,7 @@ class GenerateTypeModelViaReflection(
         }
     }
 
-    private fun addStoredProperty(ns: TypeNamespaceSimple, type: TypeDefinition, mp: KProperty1<*, *>, comp_ref: PropertyCharacteristic) {
+    private fun addStoredProperty(ns: TypesNamespaceSimple, type: TypeDefinition, mp: KProperty1<*, *>, comp_ref: PropertyCharacteristic) {
         when (type) {
             is StructuredType -> {
                 val pn = PropertyName(mp.name)

@@ -14,7 +14,7 @@ class test_AglFormat_Singles {
         fun processor(targetGrammar: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
             Agl.registry.agl.expressions
             return Agl.processorFromGrammar(
-                AglFormat.grammarModel,
+                AglFormat.grammarDomain,
                 Agl.configuration(base = Agl.configurationSimple()) {
                     targetGrammarName(targetGrammar)
                 }

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.processor.vistraq
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.simple.*
 import net.akehurst.language.api.processor.CrossReferenceString
@@ -30,7 +30,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import kotlin.test.Test
@@ -55,12 +55,12 @@ class test_Vistraq_References {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 //typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
+                        SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain)) }
                 //styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 //formatterResolver { p -> AglFormatterModelFromAsm.fromString(ContextFromTypeModel(p.typeModel), FormatString("")) }
                 //completionProvider { p ->
@@ -102,17 +102,17 @@ class test_Vistraq_References {
 
     @Test
     fun typeModel() {
-        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarDomain(grammarList).asm?.typesDomain!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarList).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarDomain(grammarList).asm?.typesDomain!!
         val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr.value,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
+                semanticAnalysis { context(ContextFromTypesDomain(typeModel)) }
             }
         )
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())

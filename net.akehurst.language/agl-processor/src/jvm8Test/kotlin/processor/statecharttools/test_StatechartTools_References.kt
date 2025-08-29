@@ -18,9 +18,9 @@ package net.akehurst.language.agl.processor.statecharttools
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
-import net.akehurst.language.agl.semanticAnalyser.contextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SemanticAnalyserSimple
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
@@ -35,8 +35,8 @@ import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.format.asm.AglFormatModelDefault
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.format.asm.AglFormatDomainDefault
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -56,13 +56,13 @@ class test_StatechartTools_References {
                 targetGrammarName(grmName) //use default
                 defaultGoalRuleName(null) //use default
                 // typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                crossReferenceResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typesModel), scopeModelStr) }
+                crossReferenceResolver { p -> CrossReferenceDomainDefault.fromString(ContextFromTypesDomain(p.typesDomain), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
-                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesModel, p.transformModel, p.targetGrammar!!.qualifiedName))
+                    ProcessResultDefault(SyntaxAnalyserSimple(p.typesDomain, p.transformDomain, p.targetGrammar!!.qualifiedName))
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesModel, p.crossReferenceModel)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.typesDomain, p.crossReferenceDomain)) }
                 //  styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatResolver { p -> AglFormatModelDefault.fromString(contextFromTypeModel(p.typesModel), FormatString("")) }
+                formatResolver { p -> AglFormatDomainDefault.fromString(contextFromTypesDomain(p.typesDomain), FormatString("")) }
                 // completionProvider { p ->
                 //     ProcessResultDefault(
                 //         CompletionProviderDefault(p.grammar!!, TypeModelFromGrammar.defaultConfiguration, p.typeModel, p.crossReferenceModel),
@@ -92,13 +92,13 @@ class test_StatechartTools_References {
 
     @Test
     fun typeModel() {
-        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarDomain(grammarModel).asm?.typesDomain!!
         println(typeModel.asString())
     }
 
     @Test
     fun crossReferenceModel() {
-        val typeModel = AsmTransformDomainDefault.fromGrammarModel(grammarModel).asm?.typeModel!!
+        val typeModel = AsmTransformDomainDefault.fromGrammarDomain(grammarModel).asm?.typesDomain!!
         val extNs = typeModel.findOrCreateNamespace(QualifiedName("external"), listOf(Import("std")))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("AnnotationType"))
         extNs.findOwnedOrCreateDataTypeNamed(SimpleName("BuiltInType"))
@@ -110,7 +110,7 @@ class test_StatechartTools_References {
         val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr.value,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
+                semanticAnalysis { context(ContextFromTypesDomain(typeModel)) }
             }
         )
         assertTrue(result.allIssues.isEmpty(), result.allIssues.joinToString("\n") { it.toString() })
@@ -275,8 +275,8 @@ class test_StatechartTools_References {
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typesModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
+            typesDomain = processors[grammar]!!.typesDomain,
+            crossReferenceDomain = processors[grammar]!!.crossReferenceDomain as CrossReferenceDomainDefault,
             context = contextAsmSimple()
         ) {
             element("Statechart") {
@@ -457,8 +457,8 @@ StatechartSpecification {
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typesModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
+            typesDomain = processors[grammar]!!.typesDomain,
+            crossReferenceDomain = processors[grammar]!!.crossReferenceDomain as CrossReferenceDomainDefault,
             context = contextAsmSimple()
         ) {
             element("StatechartSpecification") {
@@ -519,7 +519,7 @@ StatechartSpecification {
         """.trimIndent()
 
         // add to type-model for things externally added to context
-        val ns = processors[grammar]!!.typesModel.findOrCreateNamespace(QualifiedName("external"), emptyList())
+        val ns = processors[grammar]!!.typesDomain.findOrCreateNamespace(QualifiedName("external"), emptyList())
         val bit = ns.findOwnedOrCreatePrimitiveTypeNamed(SimpleName("BuiltInType"))
 
         val expectedContext = contextAsmSimple {
@@ -529,8 +529,8 @@ StatechartSpecification {
         }
 
         val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typesModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
+            typesDomain = processors[grammar]!!.typesDomain,
+            crossReferenceDomain = processors[grammar]!!.crossReferenceDomain as CrossReferenceDomainDefault,
             context = expectedContext
         ) {
             element("StatechartSpecification") {

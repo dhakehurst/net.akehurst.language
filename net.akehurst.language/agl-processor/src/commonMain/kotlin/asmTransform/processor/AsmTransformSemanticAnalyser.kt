@@ -35,9 +35,9 @@ import net.akehurst.language.expressions.api.CreateTupleExpression
 import net.akehurst.language.expressions.api.RootExpression
 import net.akehurst.language.expressions.asm.CreateObjectExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionTypeResolver
-import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
+import net.akehurst.language.grammar.api.GrammarDomain
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
@@ -47,10 +47,10 @@ import net.akehurst.language.asmTransform.api.AsmTransformationRule
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
 import net.akehurst.language.asmTransform.asm.AsmTransformationRuleDefault
 import net.akehurst.language.asmTransform.asm.asmTransformationRule
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.ParameterDefinitionSimple
-import net.akehurst.language.typemodel.asm.PropertyDeclarationStored
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.ParameterDefinitionSimple
+import net.akehurst.language.types.asm.PropertyDeclarationStored
+import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.util.cached
 
 class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, ContextWithScope<Any, Any>> {
@@ -71,11 +71,11 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
     private var __asm: AsmTransformDomain? = null
     private val _asm: AsmTransformDomain get() = __asm!!
     //TODO: rework to allow use of proper items in context
-    private val _typeModel: TypeModel get() = _context!!.findItemsNamedConformingTo("typeModel") { _ -> true }.first().item as TypeModel
-    private val _grammarModel: GrammarModel get() = _context!!.findItemsNamedConformingTo("grammarModel") { _ -> true }.first().item as GrammarModel
+    private val _typesDomain: TypesDomain get() = _context!!.findItemsNamedConformingTo("types") { _ -> true }.first().item as TypesDomain
+    private val _grammarDomain: GrammarDomain get() = _context!!.findItemsNamedConformingTo("grammar") { _ -> true }.first().item as GrammarDomain
 
     private val transformFromGrammar = cached {
-        val res = AsmTransformDomainDefault.fromGrammarModel(_grammarModel)
+        val res = AsmTransformDomainDefault.fromGrammarDomain(_grammarDomain)
         _issues.addAllFrom(res.allIssues)
         res.asm!!
     }
@@ -99,14 +99,14 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
         if (null == _context) {
             _issues.warn(null, "No context, semantic analysis cannot be performed")
         } else {
-            (asm as AsmTransformDomainDefault).typeModel = _typeModel
+            (asm as AsmTransformDomainDefault).typesDomain = _typesDomain
             for (trns in asm.namespace) {
                 overrideDefaultNamespace(trns)
                 for (trs in trns.definition) {
                     createMissingTypeNamespaces(trs)
                 }
             }
-            _typeModel.resolveImports()
+            _typesDomain.resolveImports()
 
             for (trns in asm.namespace) {
                 for (trs in trns.definition) {
@@ -127,7 +127,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
                 }
             }
             // in case new namespaces/types were created TODO: maybe only if OPTION_CREATE_TYPES specified
-            _typeModel.resolveImports()
+            _typesDomain.resolveImports()
         }
         return SemanticAnalysisResultDefault(_resolvedReferences, _issues)
     }
@@ -142,7 +142,7 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
                 rulesToConvert.forEach { trr ->
                     val expr = trr.expression as RootExpression
                     val pqn = expr.name.asPossiblyQualifiedName
-                    val exprType = _typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
+                    val exprType = _typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(pqn)?.type() ?: StdLibDefault.NothingType
                     // expression is to simply redefine the type for the grammar rule
                     // actual trr expression should be same as default
                     val defRs = transformFromGrammar.value.findDefinitionByQualifiedNameOrNull(trs.qualifiedName) ?: error("Should exist!")
@@ -185,8 +185,8 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
         // to define the type for a grammar Rule
         // thus only certain expressions are valid.
         val expr = trr.expression
-        val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
-        val exprTypeResolver = ExpressionTypeResolver(_typeModel, gtns, _issues)
+        val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+        val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
         val exprType = when {
             trr.isResolved -> trr.resolvedType
             expr is CreateObjectExpression -> exprTypeResolver.typeFor(expr, StdLibDefault.AnyType)
@@ -203,10 +203,10 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
      * else create or find grammar-type-namespace and create new datatype for 'typePqn'
      */
     private fun findOrCloneFromDefaultTypeForTransformRule(typePqn: PossiblyQualifiedName, trs: AsmTransformRuleSet, trr: AsmTransformationRule): TypeDefinition {
-        val grmDecl = transformFromGrammar.value.typeModel?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
-        val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typeModel) ?: let {
+        val grmDecl = transformFromGrammar.value.typesDomain?.findFirstDefinitionByPossiblyQualifiedNameOrNull(typePqn)
+        val clonedTypeDeclOrCreated = grmDecl?.findInOrCloneTo(_typesDomain) ?: let {
             // need a grammarTypeNamespace
-            val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
+            val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
             val t = gtns.findOwnedOrCreateDataTypeNamed(typePqn.simpleName)
             // no need to setTypeForGrammarRule, it is done later
             // gtns.setTypeForGrammarRule(trr.grammarRuleName, t.type())
@@ -214,9 +214,9 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
         }
         // if type was cloned (in findInOrCloneTo), it will not have had the tyoe for grammar rule set
         when (clonedTypeDeclOrCreated.namespace) {
-            is GrammarTypeNamespace -> {
+            is GrammarTypesNamespace -> {
                 //TODO: should really use clone of type from original!
-                (clonedTypeDeclOrCreated.namespace as GrammarTypeNamespace).setTypeForGrammarRule(trr.grammarRuleName, clonedTypeDeclOrCreated.type())
+                (clonedTypeDeclOrCreated.namespace as GrammarTypesNamespace).setTypeForGrammarRule(trr.grammarRuleName, clonedTypeDeclOrCreated.type())
             }
         }
 
@@ -247,12 +247,12 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
     }
 
     private fun findOrCreateGrammarTypeNamespace(qn: QualifiedName) {
-        _typeModel.findNamespaceOrNull(qn) as GrammarTypeNamespace?
-            ?: GrammarTypeNamespaceSimple.findOrCreateGrammarNamespace(_typeModel, qn).also { tns ->
-                transformFromGrammar.value.typeModel?.findNamespaceOrNull(tns.qualifiedName)?.let { gtns ->
+        _typesDomain.findNamespaceOrNull(qn) as GrammarTypesNamespace?
+            ?: GrammarTypesNamespaceSimple.findOrCreateGrammarNamespace(_typesDomain, qn).also { tns ->
+                transformFromGrammar.value.typesDomain?.findNamespaceOrNull(tns.qualifiedName)?.let { gtns ->
                     gtns.import.forEach { tns.addImport(it) }
                 }
-                _typeModel.addNamespace(tns)
+                _typesDomain.addNamespace(tns)
             }
     }
 
@@ -292,8 +292,8 @@ class AsmTransformSemanticAnalyser() : SemanticAnalyser<AsmTransformDomain, Cont
                     val exprPqn = when {
                         trr.isResolved -> trr.resolvedType.qualifiedTypeName
                         expr is CreateObjectExpression -> {
-                            val gtns = _typeModel.findNamespaceOrNull(trs.qualifiedName) as GrammarTypeNamespace? ?: error("Should exist!")
-                            val exprTypeResolver = ExpressionTypeResolver(_typeModel, gtns, _issues)
+                            val gtns = _typesDomain.findNamespaceOrNull(trs.qualifiedName) as GrammarTypesNamespace? ?: error("Should exist!")
+                            val exprTypeResolver = ExpressionTypeResolver(_typesDomain, gtns, _issues)
                             val t = gtns.findOwnedOrCreateDataTypeNamed(expr.possiblyQualifiedTypeName.simpleName)
 
                             val params = expr.constructorArguments.map { ass ->

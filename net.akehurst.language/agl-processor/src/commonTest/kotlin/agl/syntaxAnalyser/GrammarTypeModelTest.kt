@@ -18,15 +18,15 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.TypeNamespace
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.api.TypesNamespace
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.fail
 
 object GrammarTypeModelTest {
 
-    fun tmAssertEquals(expected: TypeModel?, actual: TypeModel?) {
+    fun tmAssertEquals(expected: TypesDomain?, actual: TypesDomain?) {
         kotlin.test.assertEquals(expected?.asString(), actual?.asString())
         when {
             (expected == null && actual == null) -> Unit // pass
@@ -40,8 +40,8 @@ object GrammarTypeModelTest {
                     val expEl = expSorted[k]
                     val actEl = actSorted[k]
                     when {
-                        expEl is GrammarTypeNamespace && actEl is GrammarTypeNamespace -> GrammarTypeModelTest.tmAssertEquals(expEl, actEl, "GrammarTypeNamespace")
-                        else -> TypeModelTest.tmAssertEquals(expEl, actEl, "TypeNamespace")
+                        expEl is GrammarTypesNamespace && actEl is GrammarTypesNamespace -> GrammarTypeModelTest.tmAssertEquals(expEl, actEl, "GrammarTypeNamespace")
+                        else -> TypesDomainTest.tmAssertEquals(expEl, actEl, "TypeNamespace")
                     }
 
                 }
@@ -49,7 +49,7 @@ object GrammarTypeModelTest {
         }
     }
 
-    fun tmAssertEquals(expected: GrammarTypeNamespace?, actual: GrammarTypeNamespace?, source: String) {
+    fun tmAssertEquals(expected: GrammarTypesNamespace?, actual: GrammarTypesNamespace?, source: String) {
         kotlin.test.assertEquals(expected?.asString(), actual?.asString())
         when {
             (expected == null && actual == null) -> Unit // pass
@@ -60,9 +60,9 @@ object GrammarTypeModelTest {
                 for (k in expected.allRuleNameToType.keys) {
                     val expEl = expected.allRuleNameToType[k]
                     val actEl = actual.allRuleNameToType[k]
-                    TypeModelTest.tmAssertEquals(expEl, actEl, "TypeModel")
+                    TypesDomainTest.tmAssertEquals(expEl, actEl, "TypesDomain")
                 }
-                TypeModelTest.tmAssertEquals(expected as TypeNamespace?, actual as TypeNamespace?, "")
+                TypesDomainTest.tmAssertEquals(expected as TypesNamespace?, actual as TypesNamespace?, "")
             }
         }
     }

@@ -19,7 +19,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.test.TypesDomainTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -114,7 +114,7 @@ class test_ExpressionsLanguage {
     @Test
     fun check_typeModel() {
         val proc = Agl.registry.agl.expressions.processor!!
-        val actual = proc.typesModel
+        val actual = proc.typesDomain
         assertTrue(Agl.registry.agl.expressions.issues.errors.isEmpty(), Agl.registry.agl.expressions.issues.toString())
 
         val expected = grammarTypeModel("net.akehurst.language.agl.Expressions", "Expressions") {
@@ -131,7 +131,7 @@ class test_ExpressionsLanguage {
             dataFor("propertyReference", "")
             dataFor("qualifiedName", "")
         }
-        TypeModelTest.tmAssertEquals(expected, actual)
+        TypesDomainTest.tmAssertEquals(expected, actual)
     }
 
     @Test

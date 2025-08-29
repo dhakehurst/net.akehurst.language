@@ -15,10 +15,10 @@
  *
  */
 
-package net.akehurst.language.typemodel.api
+package net.akehurst.language.types.api
 
-import net.akehurst.language.typemodel.asm.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.test.TypeModelTest
+import net.akehurst.language.types.asm.SimpleTypeModelStdLib
+import net.akehurst.language.types.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

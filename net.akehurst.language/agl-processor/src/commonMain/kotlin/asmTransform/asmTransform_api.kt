@@ -20,14 +20,14 @@ package net.akehurst.language.asmTransform.api
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.GrammarRuleName
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
 
-interface AsmTransformDomain : Model<AsmTransformNamespace, AsmTransformRuleSet> {
+interface AsmTransformDomain : Domain<AsmTransformNamespace, AsmTransformRuleSet> {
     /**
      * Access to the TypeModel ensuring that the AsmTransform has first been evaluated
      */
-    val typeModel: TypeModel?
+    val typesDomain: TypesDomain?
 
     override val namespace: List<AsmTransformNamespace>
 

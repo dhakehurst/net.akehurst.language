@@ -27,8 +27,8 @@ import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 
 object StdLibPrimitiveExecutionsForReflection {
     val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((Any, PropertyDeclaration) -> Any)>>(
@@ -172,7 +172,7 @@ class TypedObjectAny<SelfType : Any>(
 }
 
 open class ObjectGraphByReflection<SelfType : Any>(
-    override var typeModel: TypeModel,
+    override var typesDomain: TypesDomain,
     val issues: IssueHolder
 ) : ObjectGraph<SelfType> {
 
@@ -221,7 +221,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
             }
 
             else -> {
-                val tp = typeModel.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
+                val tp = typesDomain.findFirstDefinitionByNameOrNull(SimpleName(obj::class.simpleName!!)) //TODO: use qualified name when kotlin-common supports it
                 when (tp) {
                     null -> {
                         issues.error(null, "ObjectGraphByReflection cannot get type for ${obj::class.simpleName}")
@@ -254,7 +254,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
     }
 
     override fun createStructureValue(possiblyQualifiedTypeName: PossiblyQualifiedName, constructorArgs: Map<String, TypedObject<SelfType>>): TypedObject<SelfType> {
-        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
+        val typeDef = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(possiblyQualifiedTypeName)
             ?: error("Cannot createStructureValue, no type found for '$possiblyQualifiedTypeName'")
         val obj = when (typeDef) {
             is SingletonType -> typeDef.objectInstance()

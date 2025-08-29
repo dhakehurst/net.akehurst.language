@@ -21,29 +21,29 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.Grammar2TransformRuleSet
-import net.akehurst.language.agl.simple.Grammar2TypeModelMapping
-import net.akehurst.language.agl.simple.GrammarModel2TransformModel
+import net.akehurst.language.agl.simple.Grammar2TypesDomainMapping
+import net.akehurst.language.agl.simple.GrammarDomain2TransformDomain
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.*
 import net.akehurst.language.base.asm.DefinitionAbstract
-import net.akehurst.language.base.asm.ModelAbstract
+import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.grammar.api.*
 import net.akehurst.language.asmTransform.api.*
-import net.akehurst.language.typemodel.api.TypeInstance
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.TypeModelSimple
+import net.akehurst.language.types.api.TypeInstance
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.TypesDomainSimple
 
 class AsmTransformDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespace: List<AsmTransformNamespace> = emptyList()
-) : AsmTransformDomain, ModelAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
+) : AsmTransformDomain, DomainAbstract<AsmTransformNamespace, AsmTransformRuleSet>(namespace,options) {
 
     companion object Companion {
-        fun fromString(context: ContextWithScope<Any, Any>, transformStr: TransformString): ProcessResult<AsmTransformDomain> {
+        fun fromString(context: ContextWithScope<Any, Any>, transformStr: AsmTransformString): ProcessResult<AsmTransformDomain> {
             val proc = Agl.registry.agl.asmTransform.processor ?: error("Asm-Transform language not found!")
             val res = proc.process(
                 sentence = transformStr.value,
@@ -57,19 +57,19 @@ class AsmTransformDomainDefault(
             }
         }
 
-        fun fromGrammarModel(
-            grammarModel: GrammarModel,
-            typeModel: TypeModel = TypeModelSimple(grammarModel.allDefinitions.last().name),
-            configuration: Grammar2TypeModelMapping? = Grammar2TransformRuleSet.defaultConfiguration
+        fun fromGrammarDomain(
+            grammarDomain: GrammarDomain,
+            typesDomain: TypesDomain = TypesDomainSimple(grammarDomain.allDefinitions.last().name),
+            configuration: Grammar2TypesDomainMapping? = Grammar2TransformRuleSet.defaultConfiguration
         ): ProcessResult<AsmTransformDomain> {
-            val atfg = GrammarModel2TransformModel(typeModel, grammarModel, configuration)
-            val trModel = atfg.build()
-            return ProcessResultDefault<AsmTransformDomain>(trModel, processIssues=atfg.issues)
+            val atfg = GrammarDomain2TransformDomain(typesDomain, grammarDomain, configuration)
+            val trDomain = atfg.build()
+            return ProcessResultDefault<AsmTransformDomain>(trDomain, processIssues=atfg.issues)
         }
 
     }
 
-    override var typeModel: TypeModel? = null
+    override var typesDomain: TypesDomain? = null
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): AsmTransformNamespace {
         val existing = findNamespaceOrNull(qualifiedName)
@@ -212,7 +212,7 @@ class AsmTransformRuleSetDefault(
                 " : ${refsStr.joinToString(separator = ", ") { it }}" //TODO import affect!
             }
         }
-        sb.append("transform $name$extStr{\n")
+        sb.append("asm-transform $name$extStr{\n")
         val newIndent = indent.inc
         if (importTypes.isNotEmpty()) {
             val importStr = importTypes
@@ -232,7 +232,7 @@ class AsmTransformRuleSetDefault(
         return sb.toString()
     }
 
-    override fun toString(): String  = "transform ${this.qualifiedName.value} {...}"
+    override fun toString(): String  = "asm-transform ${this.qualifiedName.value} {...}"
 }
 
 class AsmTransformationRuleDefault(

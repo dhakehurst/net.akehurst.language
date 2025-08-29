@@ -43,10 +43,10 @@ class OptionHolderDefault(
     }
 }
 
-abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
+abstract class DomainAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     namespace: List<NT>,
     override val options: OptionHolder
-) : Model<NT, DT> {
+) : Domain<NT, DT> {
 
     override val allDefinitions: List<DT> get() = namespace.flatMap { it.definition }
 
@@ -104,7 +104,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
             if (_namespace[value.qualifiedName] === value) {
                 //same object, no need to add it
             } else {
-                error("TypeModel '${this.name}' already contains a namespace '${value.qualifiedName}'")
+                error("TypesDomain '${this.name}' already contains a namespace '${value.qualifiedName}'")
             }
         } else {
             (_namespace as MutableMap)[value.qualifiedName] = value
@@ -123,7 +123,7 @@ abstract class ModelAbstract<NT : Namespace<DT>, DT : Definition<DT>>(
     // --- Any ---
     override fun hashCode(): Int = listOf(name, namespace.hashCode()).hashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is Model<*, *> -> false
+        other !is Domain<*, *> -> false
         this.name != other.name -> false
         this.namespace != other.namespace -> false
         else -> true
@@ -150,11 +150,11 @@ abstract class NamespaceAbstract<DT : Definition<DT>>(
         connectionDefinitionOptionHolderParentsToThis()
     }
 
-    override fun resolveImports(model: Model<Namespace<DT>, DT>) {
+    override fun resolveImports(domain: Domain<Namespace<DT>, DT>) {
         // check explicit imports
         this.import.forEach {
-            val ns = model.findNamespaceOrNull(it.asQualifiedName)
-                ?: error("import '$it' cannot be resolved in the TypeModel '${model.name}'")
+            val ns = domain.findNamespaceOrNull(it.asQualifiedName)
+                ?: error("import '$it' cannot be resolved in the namespace '${qualifiedName.value}' of TypesDomain '${domain.name.value}'")
             _importedNamespaces[it.asQualifiedName] = ns
         }
     }
@@ -228,11 +228,11 @@ abstract class DefinitionAbstract<DT : Definition<DT>> : Definition<DT> {
     }
 }
 
-class ModelDefault(
+class DomainDefault(
     override val name: SimpleName,
     options: OptionHolder,
     namespace: List<NamespaceDefault> = emptyList()
-) : ModelAbstract<NamespaceDefault, DefinitionDefault>(namespace, options) {
+) : DomainAbstract<NamespaceDefault, DefinitionDefault>(namespace, options) {
 
 }
 

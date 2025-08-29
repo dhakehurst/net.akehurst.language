@@ -25,15 +25,15 @@ import net.akehurst.language.style.asm.*
 @DslMarker
 annotation class StyleModelDslMarker
 
-fun styleModel(name: String, init: StyleModelBuilder.() -> Unit): AglStyleModel {
-    val b = StyleModelBuilder(SimpleName(name))
+fun styleDomain(name: String, init: StyleDomainBuilder.() -> Unit): AglStyleDomain {
+    val b = StyleDomainBuilder(SimpleName(name))
     b.init()
     return b.build()
 }
 
 
 @StyleModelDslMarker
-class StyleModelBuilder(
+class StyleDomainBuilder(
     private val _name: SimpleName
 ) {
 
@@ -45,7 +45,7 @@ class StyleModelBuilder(
         _namespaces.add( b.build() )
     }
 
-    fun build(): AglStyleModel = AglStyleModelDefault(_name).also { mdl ->
+    fun build(): AglStyleDomain = AglStyleDomainDefault(_name).also { mdl ->
         _namespaces.forEach { namespace -> mdl.addNamespace(namespace) }
     }
 }

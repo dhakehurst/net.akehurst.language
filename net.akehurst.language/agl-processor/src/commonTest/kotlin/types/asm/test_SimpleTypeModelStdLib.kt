@@ -15,9 +15,9 @@
  *
  */
 
-package net.akehurst.language.typemodel.asm
+package net.akehurst.language.types.asm
 
-import net.akehurst.language.typemodel.api.PropertyName
+import net.akehurst.language.types.api.PropertyName
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

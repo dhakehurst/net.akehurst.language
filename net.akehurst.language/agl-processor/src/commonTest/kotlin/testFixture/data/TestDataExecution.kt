@@ -40,7 +40,7 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val procRes = Agl.processorFromStringSimple(
         grammarDefinitionStr = GrammarString(testData.grammarStr),
         typeStr = testData.typeStr?.let { TypesString(it) },
-        transformStr = testData.transformStr?.let { TransformString(it) },
+        transformStr = testData.transformStr?.let { AsmTransformString(it) },
         referenceStr = testData.referenceStr?.let { CrossReferenceString(it) },
         grammarAglOptions = Agl.options {
             semanticAnalysis {
@@ -53,9 +53,9 @@ fun doTest(testData: TestDataProcessor, sentenceIndex: Int? = null) {
     val proc = procRes.processor!!
 
     println("--- TypeDomain ---")
-    println(proc.typesModel.asString())
+    println(proc.typesDomain.asString())
     println("--- Asm Transform ---")
-    println(proc.transformModel.asString())
+    println(proc.transformDomain.asString())
 
     println("****** ${testData.description} Sentences ******")
     if (null == sentenceIndex) {

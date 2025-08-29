@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.typemodel.test
+package net.akehurst.language.types.test
 
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-object TypeModelTest {
+object TypesDomainTest {
 
-    fun tmAssertEquals(expected: TypeModel?, actual: TypeModel?) {
+    fun tmAssertEquals(expected: TypesDomain?, actual: TypesDomain?) {
         assertEquals(expected?.asString(), actual?.asString())
         when {
             (expected == null && actual == null) -> Unit // pass
@@ -41,7 +41,7 @@ object TypeModelTest {
         }
     }
 
-    fun tmAssertEquals(expected: TypeNamespace?, actual: TypeNamespace?, source: String) {
+    fun tmAssertEquals(expected: TypesNamespace?, actual: TypesNamespace?, source: String) {
         assertEquals(expected?.asString(), actual?.asString())
         when {
             (expected == null && actual == null) -> Unit // pass
@@ -52,7 +52,7 @@ object TypeModelTest {
                 for (k in expected.ownedTypesByName.keys) {
                     val expEl = expected.ownedTypesByName[k]
                     val actEl = actual.ownedTypesByName[k]
-                    tmAssertEquals(expEl, actEl, "TypeModel")
+                    tmAssertEquals(expEl, actEl, "TypesDomain")
                 }
             }
         }

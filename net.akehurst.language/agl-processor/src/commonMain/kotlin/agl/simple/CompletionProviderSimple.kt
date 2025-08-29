@@ -23,12 +23,10 @@ import net.akehurst.language.api.processor.Spine
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.GrammarReferenceDefault
-import net.akehurst.language.grammar.asm.NonTerminalDefault
-import net.akehurst.language.grammarTypemodel.asm.GrammarTypeNamespaceSimple
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.grammarTypemodel.asm.GrammarTypesNamespaceSimple
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.StdLibDefault
 import kotlin.Any
 import kotlin.Throwable
 import kotlin.collections.List
@@ -39,7 +37,6 @@ import kotlin.collections.filter
 import kotlin.collections.first
 import kotlin.collections.firstOrNull
 import kotlin.collections.flatMap
-import kotlin.collections.flatten
 import kotlin.collections.getOrNull
 import kotlin.collections.isNotEmpty
 import kotlin.collections.map
@@ -56,12 +53,12 @@ import kotlin.ranges.until
 
 class CompletionProviderSimple(
     val targetGrammar: Grammar,
-    val grammar2TypeModel: Grammar2TypeModelMapping,
-    val typeModel: TypeModel,
-    val crossReferenceModel: CrossReferenceModel
+    val grammar2TypesDomain: Grammar2TypesDomainMapping,
+    val typesDomain: TypesDomain,
+    val crossReferenceDomain: CrossReferenceDomain
 ) : CompletionProviderAbstract<Asm, ContextWithScope<Any, Any>>() {
 
-    val targetNamespace = typeModel.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypeNamespaceSimple?
+    val targetNamespace = typesDomain.findNamespaceOrNull(targetGrammar.qualifiedName) as GrammarTypesNamespaceSimple?
         ?: error("Namespace not found for grammar '${targetGrammar.qualifiedName}'")
 
     override fun provide(nextExpected: Set<Spine>, options: CompletionProviderOptions<ContextWithScope<Any, Any>>): List<CompletionItem> {
@@ -152,11 +149,11 @@ class CompletionProviderSimple(
                                 }.toSet()
                     }
                     strProps.flatMap { prp ->
-                        val refTypeNames = crossReferenceModel.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
-                        val refTypes = refTypeNames.mapNotNull { typeModel.findByQualifiedNameOrNull(it) }
+                        val refTypeNames = crossReferenceDomain.referenceForProperty(prp.owner.qualifiedName, prp.name.value)
+                        val refTypes = refTypeNames.mapNotNull { typesDomain.findByQualifiedNameOrNull(it) }
                         val items = refTypes.flatMap { refType ->
                             context.findItemsConformingTo {
-                                val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                                val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                                 itemType.conformsTo(refType)
                             }
                         }

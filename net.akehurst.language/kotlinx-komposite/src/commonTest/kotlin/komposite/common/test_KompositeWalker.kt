@@ -17,8 +17,8 @@
 package net.akehurst.kotlinx.komposite.common
 
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 import kotlin.test.Test
@@ -283,7 +283,7 @@ class test_KompositeWalker {
     fun walk_Map_with_type() {
         var result = ""
         val reg = DatatypeRegistry()
-        val tm = typeModel("Test",true) {}
+        val tm = typesDomain("Test",true) {}
         reg.registerFromTypeModel(tm, emptyMap())
         val sut = kompositeWalker<String, String>(reg) {
             primitive { path, info, value, type, m ->
@@ -334,7 +334,7 @@ class test_KompositeWalker {
     @Test
     fun walk_object_primitive_property_no_type() {
         val reg = DatatypeRegistry()
-        val tm = typeModel("Test",true) {
+        val tm = typesDomain("Test",true) {
             namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
                 data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)
@@ -375,7 +375,7 @@ class test_KompositeWalker {
     @Test
     fun walk_object_primitive_property_with_type() {
         val reg = DatatypeRegistry()
-        val tm = typeModel("Test",true) {
+        val tm = typesDomain("Test",true) {
             namespace("net.akehurst.language.komposite.common", imports = listOf(StdLibDefault.qualifiedName.value)) {
                 data("A") {
                     propertyPrimitiveType("prop1", "String", false, 0)

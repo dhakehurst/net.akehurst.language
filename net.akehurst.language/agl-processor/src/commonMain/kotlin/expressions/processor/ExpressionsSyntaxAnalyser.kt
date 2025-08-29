@@ -26,7 +26,7 @@ import net.akehurst.language.expressions.api.*
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.asm.StdLibDefault
 
 class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Expression>() {
 

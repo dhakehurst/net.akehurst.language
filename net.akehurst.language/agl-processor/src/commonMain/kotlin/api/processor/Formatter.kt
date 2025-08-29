@@ -17,12 +17,47 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.base.api.PossiblyQualifiedName
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.expressions.asm.RootExpressionDefault
+import net.akehurst.language.expressions.processor.TypedObject
+import net.akehurst.language.formatter.api.AglFormatDomain
 
-interface Formatter<in AsmType> {
+data class EvaluationContext<SelfType:Any>(
+    val parent: EvaluationContext<SelfType>?,
+    val namedValues: Map<String, TypedObject<SelfType>>
+) {
+    companion object {
+        fun <SelfType:Any> of(namedValues: Map<String, TypedObject<SelfType>>, parent: EvaluationContext<SelfType>? = null) = EvaluationContext(parent, namedValues)
+        fun <SelfType:Any> ofSelf(self: TypedObject<SelfType>, namedValues: Map<String, TypedObject<SelfType>> = emptyMap()):EvaluationContext<SelfType> {
+            val env = namedValues.toMutableMap()
+            env[RootExpressionDefault.SELF.name] = self
+            return of(env)
+        }
+    }
 
-    val formatModel: AglFormatModel
+    val self = namedValues[RootExpressionDefault.SELF.name]
 
-    fun format(formatSetName: PossiblyQualifiedName, asm:AsmType): FormatResult
+    fun getOrInParent(name: String): TypedObject<SelfType>? = namedValues[name] ?: parent?.getOrInParent(name)
 
+    fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        this.parent?.let {
+            sb.append(it.toString())
+            sb.append("----------\n")
+        }
+        this.namedValues.forEach {
+            sb.append(it.key)
+            sb.append(" := ")
+            sb.append(it.value.toString())
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
+}
+
+interface Formatter<SelfType:Any> {
+    val formatDomain: AglFormatDomain
+    fun formatSelf(formatSetName: PossiblyQualifiedName, self:SelfType): FormatResult
+    fun format(formatSetName: PossiblyQualifiedName, evc: EvaluationContext<SelfType>): FormatResult
 }

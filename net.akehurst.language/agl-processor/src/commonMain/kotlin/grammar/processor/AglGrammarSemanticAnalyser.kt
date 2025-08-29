@@ -34,7 +34,7 @@ import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
 
-class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithScope<Any, Any>> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarDomain, ContextWithScope<Any, Any>> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
@@ -73,7 +73,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
 
     override fun analyse(
         sentenceIdentity: Any?,
-        asm: GrammarModel,
+        asm: GrammarDomain,
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
@@ -99,7 +99,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<GrammarModel, ContextWithS
         return SemanticAnalysisResultDefault(_resolvedReferences,_issues)
     }
 
-    private fun checkGrammar(context: ContextWithScope<Any, Any>?, grammarList: GrammarModel, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: ContextWithScope<Any, Any>?, grammarList: GrammarDomain, automatonKind: AutomatonKind) {
         grammarList.namespace.forEach { ns ->
             ns.definition.forEach { grammar ->
                 this.resolveGrammarRefs(context, grammar)

@@ -20,17 +20,17 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.grammar.api.GrammarModel
-import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.api.GrammarDomain
+import net.akehurst.language.grammar.asm.GrammarDomainDefault
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: LanguageIdentity,
-    private val aglOptions: ProcessOptions<GrammarModel, ContextWithScope<Any,Any>>?,
+    private val aglOptions: ProcessOptions<GrammarDomain, ContextWithScope<Any,Any>>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    GrammarModelDefault(SimpleName(identity.last)),
+    GrammarDomainDefault(SimpleName(identity.last)),
     buildForDefaultGoal
 ) {
 
@@ -49,7 +49,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     override var typesString: TypesString? = null; private set
 
-    override var transformString: TransformString? = null; private set
+    override var asmTransformString: AsmTransformString? = null; private set
 
     override var crossReferenceString: CrossReferenceString? = null; private set
 
@@ -61,10 +61,10 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         updateFromConfigurationWithoutNotification(initialConfiguration)
     }
 
-    override fun update(grammarString: GrammarString?, typesString: TypesString?,transformString: TransformString?, crossReferenceString: CrossReferenceString?, styleString: StyleString?, formatString: FormatString?) {
+    override fun update(grammarString: GrammarString?, typesString: TypesString?, asmTransformString: AsmTransformString?, crossReferenceString: CrossReferenceString?, styleString: StyleString?, formatString: FormatString?) {
         val oldGrammarStr = this.grammarString
-        val oldTypeModelStr = this.typesString
-        val oldTransformStr = this.transformString
+        val oldTypesStr = this.typesString
+        val oldTransformStr = this.asmTransformString
         val oldCrossReferenceStr = this.crossReferenceString
         val oldStyleStr = this.styleString
         val oldFormatStr = this.formatString
@@ -72,7 +72,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         val newConfig = Agl.configuration(base = this.configuration) {
             grammarString?.let { grammarString(it) }
             typesString?.let { typesString(it) }
-            transformString?.let { transformString(it) }
+            asmTransformString?.let { transformString(it) }
             crossReferenceString?.let { crossReferenceString(it) }
             styleString?.let { styleString(it) }
             formatString?.let { formatString(it) }
@@ -80,8 +80,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         updateFromConfigurationWithoutNotification(newConfig)
 
         notifyGrammarStringObservers(oldGrammarStr,this.grammarString)
-        notifyTypesStringObservers(oldTypeModelStr, this.typesString)
-        notifyTransformStringObservers(oldTransformStr, this.transformString)
+        notifyTypesStringObservers(oldTypesStr, this.typesString)
+        notifyTransformStringObservers(oldTransformStr, this.asmTransformString)
         notifyCrossReferenceStringObservers(oldCrossReferenceStr, this.crossReferenceString)
         notifyStyleStringObservers(oldStyleStr, this.styleString)
         notifyFormatStringObservers(oldFormatStr, this.formatString)
@@ -102,7 +102,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
         this.grammarString = configuration.grammarString
         this.typesString = configuration.typesString
-        this.transformString = configuration.transformString
+        this.asmTransformString = configuration.asmTransformString
         this.crossReferenceString = configuration.crossReferenceString
         this.styleString = configuration.styleString
         this.formatString = configuration.formatString
@@ -119,20 +119,20 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 //        this._completionProviderResolver = configuration.completionProviderResolver
         this._styleResolver = configuration.styleResolver
 
-        updateGrammarModel(oldGrammarStr, configuration.grammarString)
+        updateGrammar(oldGrammarStr, configuration.grammarString)
 
         this._doObservableUpdates = true
         super._processor_cache.reset()
         super._style_cache.reset()
     }
 
-    internal fun updateGrammarModel(oldValue: GrammarString?, newValue: GrammarString?) {
+    internal fun updateGrammar(oldValue: GrammarString?, newValue: GrammarString?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<GrammarModel, ContextWithScope<Any,Any>>(newValue?.value, aglOptions)
+            val res = Agl.grammarFromString<GrammarDomain, ContextWithScope<Any,Any>>(newValue?.value, aglOptions)
             this._issues.addAllFrom(res.allIssues)
-            this.grammarModel = when {
-                res.allIssues.errors.isNotEmpty() -> GrammarModelDefault(SimpleName("Error"))
-                else -> res.asm ?: GrammarModelDefault(SimpleName(identity.last))
+            this.grammarDomain = when {
+                res.allIssues.errors.isNotEmpty() -> GrammarDomainDefault(SimpleName("Error"))
+                else -> res.asm ?: GrammarDomainDefault(SimpleName(identity.last))
             }
         }
     }
@@ -145,11 +145,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     private fun notifyTypesStringObservers(oldValue: TypesString?, newValue: TypesString?) {
         if (oldValue != newValue) {
-            typeModelStrObservers.forEach { it.invoke(oldValue, newValue) }
+            typesStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
-    private fun notifyTransformStringObservers(oldValue: TransformString?, newValue: TransformString?) {
+    private fun notifyTransformStringObservers(oldValue: AsmTransformString?, newValue: AsmTransformString?) {
         if (oldValue != newValue) {
             asmTransformStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

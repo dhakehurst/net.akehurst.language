@@ -20,9 +20,9 @@ package net.akehurst.language.style.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
-import net.akehurst.language.grammar.api.GrammarModel
+import net.akehurst.language.grammar.api.GrammarDomain
 import net.akehurst.language.grammar.processor.contextFromGrammar
-import net.akehurst.language.style.asm.AglStyleModelDefault
+import net.akehurst.language.style.asm.AglStyleDomainDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -32,7 +32,7 @@ class test_CompletionProvider {
     private companion object {
         val aglProc = Agl.registry.agl.style.processor!!
 
-        fun grammarFor(grammarStr: String): GrammarModel {
+        fun grammarFor(grammarStr: String): GrammarDomain {
             return Agl.registry.agl.grammar.processor?.process(grammarStr)?.asm!!
         }
 
@@ -113,7 +113,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
             CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -232,7 +232,7 @@ class test_CompletionProvider {
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
             CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

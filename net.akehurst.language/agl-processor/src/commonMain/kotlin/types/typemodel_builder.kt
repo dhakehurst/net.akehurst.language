@@ -15,57 +15,57 @@
  *
  */
 
-package net.akehurst.language.typemodel.builder
+package net.akehurst.language.types.builder
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.asm.*
+import net.akehurst.language.types.api.*
+import net.akehurst.language.types.asm.*
 
 @DslMarker
 annotation class TypeModelDslMarker
 
-fun typeModel(
+fun typesDomain(
     name: String,
     resolveImports: Boolean,
-    namespaces: List<TypeNamespace> = listOf(StdLibDefault),
-    init: TypeModelBuilder.() -> Unit
-): TypeModel {
-    val b = TypeModelBuilder(SimpleName(name), resolveImports, namespaces)
+    namespaces: List<TypesNamespace> = listOf(StdLibDefault),
+    init: TypeDomainBuilder.() -> Unit
+): TypesDomain {
+    val b = TypeDomainBuilder(SimpleName(name), resolveImports, namespaces)
     b.init()
     val m = b.build()
     return m
 }
 
 @TypeModelDslMarker
-class TypeModelBuilder(
+class TypeDomainBuilder(
     val name: SimpleName,
     private val resolveImports: Boolean,
-    val namespaces: List<TypeNamespace>
+    val namespaces: List<TypesNamespace>
 ) {
-    val _model = TypeModelSimple(name).also { m ->
+    val _domain = TypesDomainSimple(name).also { m ->
         namespaces.forEach {
             m.addNamespace(it)
         }
     }
     private val _assocBuilders = mutableListOf<AssociationBuilder>()
 
-    fun namespace(qualifiedName: String, imports: List<String> = listOf(StdLibDefault.qualifiedName.value), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
+    fun namespace(qualifiedName: String, imports: List<String> = listOf(StdLibDefault.qualifiedName.value), init: TypeNamespaceBuilder.() -> Unit): TypesNamespace {
         val b = TypeNamespaceBuilder(QualifiedName(qualifiedName), imports.map { Import(it) })
         b.init()
         val (ns, assocBuilders) = b.build()
-        _model.addNamespace(ns)
+        _domain.addNamespace(ns)
         _assocBuilders.addAll(assocBuilders)
         return ns
     }
 
-    fun build(): TypeModel {
+    fun build(): TypesDomain {
         if (resolveImports) {
-            _model.resolveImports()
+            _domain.resolveImports()
         }
         _assocBuilders.forEach {
             it.build()
         }
-        return _model
+        return _domain
     }
 }
 
@@ -75,7 +75,7 @@ open class TypeNamespaceBuilder(
     imports: List<Import>
 ) {
 
-    protected open val _namespace: TypeNamespace = TypeNamespaceSimple(qualifiedName, import = imports)
+    protected open val _namespace: TypesNamespace = TypesNamespaceSimple(qualifiedName, import = imports)
     private val _typeReferences = mutableListOf<TypeInstanceArgBuilder>()
     private val _assocBuilders = mutableListOf<AssociationBuilder>()
 
@@ -153,14 +153,14 @@ open class TypeNamespaceBuilder(
         _assocBuilders.add(b)
     }
 
-    open fun build(): Pair<TypeNamespace,List<AssociationBuilder>> {
+    open fun build(): Pair<TypesNamespace,List<AssociationBuilder>> {
         return Pair(_namespace,_assocBuilders)
     }
 }
 
 @TypeModelDslMarker
 class AssociationBuilder(
-    protected val _namespace: TypeNamespace,
+    protected val _namespace: TypesNamespace,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
 
@@ -212,7 +212,7 @@ class AssociationBuilder(
 
 @TypeModelDslMarker
 abstract class StructuredTypeBuilder(
-    protected val _namespace: TypeNamespace,
+    protected val _namespace: TypesNamespace,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
     protected abstract val _structuredType: StructuredType
@@ -362,7 +362,7 @@ class TupleTypeBuilder(
 
 @TypeModelDslMarker
 class ValueTypeBuilder(
-    _namespace: TypeNamespace,
+    _namespace: TypesNamespace,
     _typeReferences: MutableList<TypeInstanceArgBuilder>,
     _name: SimpleName
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
@@ -402,7 +402,7 @@ class ValueTypeBuilder(
 
 @TypeModelDslMarker
 class InterfaceTypeBuilder(
-    _namespace: TypeNamespace,
+    _namespace: TypesNamespace,
     _typeReferences: MutableList<TypeInstanceArgBuilder>,
     _name: SimpleName
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
@@ -448,7 +448,7 @@ class InterfaceTypeBuilder(
 
 @TypeModelDslMarker
 class DataTypeBuilder(
-    _namespace: TypeNamespace,
+    _namespace: TypesNamespace,
     _typeReferences: MutableList<TypeInstanceArgBuilder>,
     _name: SimpleName
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
@@ -499,7 +499,7 @@ class DataTypeBuilder(
 
 @TypeModelDslMarker
 class ConstructorBuilder(
-    val _namespace: TypeNamespace,
+    val _namespace: TypesNamespace,
     private val _type: TypeDefinition,
     private val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
@@ -523,7 +523,7 @@ class ConstructorBuilder(
 @TypeModelDslMarker
 class TypeInstanceArgBuilder(
     val context: TypeDefinition?,
-    val _namespace: TypeNamespace,
+    val _namespace: TypesNamespace,
     val possiblyQualifiedName: PossiblyQualifiedName,
     val nullable: Boolean,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
@@ -569,7 +569,7 @@ class TypeInstanceArgBuilder(
 @TypeModelDslMarker
 class TypeInstanceArgNamedBuilder(
     val context: TypeDefinition?,
-    val _namespace: TypeNamespace,
+    val _namespace: TypesNamespace,
     val type: TypeDefinition,
     val instanceIsNullable: Boolean,
     protected val _typeReferences: MutableList<TypeInstanceArgBuilder>
@@ -610,7 +610,7 @@ class TypeInstanceArgNamedBuilder(
 @TypeModelDslMarker
 class TypeArgumentBuilder(
     private val _context: TypeDefinition?,
-    private val _namespace: TypeNamespace
+    private val _namespace: TypesNamespace
 ) {
     private val list = mutableListOf<TypeArgument>()
     fun typeArgument(possiblyQualifiedTypeDeclarationName: String, nullable: Boolean = false, typeArguments: TypeArgumentBuilder.() -> Unit = {}) {
@@ -640,7 +640,7 @@ class TypeArgumentBuilder(
 
 @TypeModelDslMarker
 class SubtypeListBuilder(
-    val _namespace: TypeNamespace,
+    val _namespace: TypesNamespace,
     private val _typeReferences: MutableList<TypeInstanceArgBuilder>
 ) {
 

@@ -20,8 +20,8 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,7 +32,7 @@ class test_ExpressionTypeResolver {
     @Test
     fun typeOfExpressionStr__list() {
 
-        val tm = typeModel("Test", true) {
+        val tm = typesDomain("Test", true) {
             namespace("test") {
                 data("Test") {
                     propertyListType("list", false, 0) {
@@ -54,7 +54,7 @@ class test_ExpressionTypeResolver {
     @Test
     fun typeOfExpressionStr__list_front() {
 
-        val tm = typeModel("Test", true) {
+        val tm = typesDomain("Test", true) {
             namespace("test") {
                 data("Test") {
                     propertyListType("list", false, 0) {
@@ -77,7 +77,7 @@ class test_ExpressionTypeResolver {
     @Test
     fun typeOfExpressionStr__list_front_join() {
 
-        val tm = typeModel("Test", true) {
+        val tm = typesDomain("Test", true) {
             namespace("test") {
                 data("Test") {
                     propertyListType("list", false, 0) {
@@ -100,7 +100,7 @@ class test_ExpressionTypeResolver {
     @Test
     fun typeOfExpressionStr__list_join_as_String() {
 
-        val tm = typeModel("Test", true) {
+        val tm = typesDomain("Test", true) {
             namespace("test") {
                 data("Test") {
                     propertyListType("list", false, 0) {
@@ -123,7 +123,7 @@ class test_ExpressionTypeResolver {
     @Test
     fun typeOfExpressionStr__list_list_string() {
 
-        val tm = typeModel("Test", true) {
+        val tm = typesDomain("Test", true) {
             namespace("test") {
                 data("Test") {
                     propertyOf(setOf(CMP, VAL), "listOfList", "List", false) {

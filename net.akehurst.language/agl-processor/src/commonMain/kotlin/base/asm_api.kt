@@ -130,7 +130,7 @@ interface OptionHolder {
  * A group of related namespaces in which the definitions may reference each other
  */
 //TODO: consider using alternative words for this interface - Domain, System, Unit, Module !
-interface Model<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
+interface Domain<NT : Namespace<DT>, DT : Definition<DT>> : Formatable {
     val name: SimpleName
 
     val options: OptionHolder
@@ -169,7 +169,7 @@ interface Namespace<DT : Definition<DT>> : Formatable {
 
     val definitionByName: Map<SimpleName, DT>
 
-    fun resolveImports(model: Model<Namespace<DT>, DT>)
+    fun resolveImports(domain: Domain<Namespace<DT>, DT>)
 
     /** find owned or imported definition **/
     fun findDefinitionOrNull(simpleName: SimpleName): DT?

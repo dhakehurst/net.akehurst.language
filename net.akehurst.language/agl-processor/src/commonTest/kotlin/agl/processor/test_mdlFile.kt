@@ -19,7 +19,7 @@ import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -76,8 +76,8 @@ grammar Mdl {
 
     @Test
     fun mdlTypeModel() {
-        val actual = processor.typesModel
-        val expected = typeModel("FromGrammarParsedGrammarUnit",true) {
+        val actual = processor.typesDomain
+        val expected = typesDomain("FromGrammarParsedGrammarUnit",true) {
             grammarTypeNamespace("test.Mdl") {
                 //file = section+ ;
                 dataFor("file", "File") {

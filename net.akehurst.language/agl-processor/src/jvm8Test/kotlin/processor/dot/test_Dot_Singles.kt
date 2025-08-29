@@ -279,7 +279,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converters = processor.grammarModel!!.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet().map { ConverterToRuntimeRules(it) }
+        val converters = processor.grammarDomain!!.allDefinitions.flatMap { it.allResolvedEmbeddedGrammars + it }.toSet().map { ConverterToRuntimeRules(it) }
         val grmToRrs = converters.associateBy({ it.grammar }, { it.runtimeRuleSet })
         converters.forEach { c -> c.resolveEmbedded(grmToRrs) }
 
@@ -1033,7 +1033,7 @@ NAME {
         val result = styleProc.process(
             sentence,
             Agl.options {
-                semanticAnalysis { context(contextFromGrammar(processor.grammarModel!!)) }
+                semanticAnalysis { context(contextFromGrammar(processor.grammarDomain!!)) }
             })
 
         assertNotNull(result.asm, result.allIssues.toString())

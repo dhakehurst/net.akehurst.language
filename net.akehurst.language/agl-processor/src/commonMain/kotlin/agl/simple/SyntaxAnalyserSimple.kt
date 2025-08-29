@@ -29,12 +29,12 @@ import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 class AsmFactorySimple(
-    typeModel: TypeModel,
+    typesDomain: TypesDomain,
     issues: IssueHolder
-) : ObjectGraphAsmSimple(typeModel, issues), AsmFactory<Asm, AsmValue> {
+) : ObjectGraphAsmSimple(typesDomain, issues), AsmFactory<Asm, AsmValue> {
 
     override fun constructAsm(): Asm = AsmSimple()
 
@@ -50,14 +50,14 @@ class AsmFactorySimple(
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    typeModel: TypeModel,
-    asmTransformModel: AsmTransformDomain,
+    typesDomain: TypesDomain,
+    asmTransformDomain: AsmTransformDomain,
     relevantTrRuleSet: QualifiedName
 ) : SyntaxAnalyserFromAsmTransformAbstract<Asm, AsmValue>(
-    typeModel,
-    asmTransformModel,
+    typesDomain,
+    asmTransformDomain,
     relevantTrRuleSet,
-    AsmFactorySimple(typeModel, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
+    AsmFactorySimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
 ) {
     //companion object {
     //    private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
@@ -66,7 +66,7 @@ class SyntaxAnalyserSimple(
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramQName ->
         val ruleSetQname = embGramQName
-        SyntaxAnalyserSimple(typeModel, asmTransformModel, ruleSetQname)//, this.scopeModel) //TODO: needs embedded asmTransform
+        SyntaxAnalyserSimple(typesDomain, asmTransformDomain, ruleSetQname)//, this.scopeModel) //TODO: needs embedded asmTransform
     }
 
 }

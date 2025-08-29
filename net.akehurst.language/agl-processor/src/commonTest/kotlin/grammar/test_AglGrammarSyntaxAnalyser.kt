@@ -19,7 +19,7 @@ package net.akehurst.language.grammar.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammar.api.*
-import net.akehurst.language.grammar.asm.GrammarModelDefault
+import net.akehurst.language.grammar.asm.GrammarDomainDefault
 import net.akehurst.language.grammar.builder.grammar
 import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
@@ -55,7 +55,7 @@ class test_AglGrammarSyntaxAnalyser {
             val sut = AglGrammarSyntaxAnalyser()
             val res = sut.transform(sppt)
             assertTrue(res.issues.isEmpty(), res.issues.toString())
-            val expectedMdl = GrammarModelDefault(SimpleName("Test"), namespace =  listOf(expected.namespace as GrammarNamespace))
+            val expectedMdl = GrammarDomainDefault(SimpleName("Test"), namespace =  listOf(expected.namespace as GrammarNamespace))
             assertEquals(expectedMdl.asString(), res.asm!!.asString())
         }
     }

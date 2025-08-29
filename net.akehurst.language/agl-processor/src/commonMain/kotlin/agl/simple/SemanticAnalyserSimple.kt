@@ -19,6 +19,7 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.LocationMapDefault
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
@@ -30,22 +31,22 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
 
 class SemanticAnalyserSimple(
-    val typeModel: TypeModel,
-    val crossReferenceModel: CrossReferenceModel
+    val typesDomain: TypesDomain,
+    val crossReferenceDomain: CrossReferenceDomain
 ) : SemanticAnalyser<Asm, ContextWithScope<Any, Any>> {
 
     companion object {
-        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceModel: CrossReferenceModel, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
+        fun identifyingValueInFor(interpreter: ExpressionsInterpreterOverTypedObject<AsmValue>, crossReferenceDomain: CrossReferenceDomain, inScopeForTypeName: SimpleName, self: AsmStructure): Any? {
             return when {
                 //crossReferenceModel.isScopeDefinedFor(self.qualifiedTypeName).not() -> null
                 else -> {
-                    val exp = crossReferenceModel.identifyingExpressionFor(inScopeForTypeName, self.qualifiedTypeName)
+                    val exp = crossReferenceDomain.identifyingExpressionFor(inScopeForTypeName, self.qualifiedTypeName)
                     when (exp) {
                         null -> null
                         else -> {
@@ -67,7 +68,7 @@ class SemanticAnalyserSimple(
     private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues), _issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, _issues), _issues)
 
     override fun clear() {
         _resolvedReferences.clear()
@@ -95,7 +96,7 @@ class SemanticAnalyserSimple(
     private fun checkAndResolveReferences(options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>, sentenceIdentity: Any?, asm: Asm, locationMap: LocationMap, context: ContextWithScope<Any, Any>) {
         when {
             options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
-            crossReferenceModel.isEmpty -> _issues.warn(null, "Empty CrossReferenceModel")
+            crossReferenceDomain.isEmpty -> _issues.warn(null, "Empty CrossReferenceDomain")
             else -> {
                 val resolve = if (options.resolveReferences) {
                     true
@@ -117,8 +118,8 @@ class SemanticAnalyserSimple(
         val sentenceScope = context.getScopeForSentenceOrNull(sentenceId)
         if(null!=sentenceScope) {
             val resolver = ReferenceResolverSimple(
-                typeModel,
-                crossReferenceModel,
+                typesDomain,
+                crossReferenceDomain,
                 context,
                 sentenceId,
                 this::identifyingValueInFor,
@@ -138,8 +139,8 @@ class SemanticAnalyserSimple(
             options.buildScope.not() -> _issues.info(null, "Semantic Analysis option 'buildScope' is off, scope is not built.")
             else -> {
                 val scopeCreator = ScopeCreator(
-                    typeModel,
-                    crossReferenceModel as CrossReferenceModelDefault,
+                    typesDomain,
+                    crossReferenceDomain as CrossReferenceDomainDefault,
                     context,
                     sentenceIdentity,
                     options.replaceIfItemAlreadyExistsInScope,
@@ -153,6 +154,6 @@ class SemanticAnalyserSimple(
     }
 
     private fun identifyingValueInFor(inScopeNamed: SimpleName, self: AsmStructure): Any? =
-        identifyingValueInFor(_interpreter, crossReferenceModel, inScopeNamed, self)
+        identifyingValueInFor(_interpreter, crossReferenceDomain, inScopeNamed, self)
 
 }

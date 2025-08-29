@@ -26,7 +26,7 @@ import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.expressions.api.Expression
-import net.akehurst.language.grammarTypemodel.api.GrammarTypeNamespace
+import net.akehurst.language.grammarTypemodel.api.GrammarTypesNamespace
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 
@@ -37,7 +37,7 @@ class ExpressionsSemanticAnalyser(
     private val _resolvedReferences = mutableListOf<ResolvedReference>()
     private var _locationMap: LocationMap = LocationMapDefault()
 
-    private var _grammarNamespace: GrammarTypeNamespace? = null
+    private var _grammarNamespace: GrammarTypesNamespace? = null
 
     override fun clear() {
         _grammarNamespace = null

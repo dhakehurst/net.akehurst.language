@@ -28,7 +28,7 @@ import kotlin.jvm.JvmInline
 //class GrammarRuleItemNotFoundException(message: String) : RuntimeException(message)
 
 
-interface GrammarModel : Model<GrammarNamespace, Grammar> {
+interface GrammarDomain : Domain<GrammarNamespace, Grammar> {
 
     val primary get() = this.namespace.lastOrNull()?.definition?.lastOrNull()
 }

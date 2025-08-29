@@ -1,8 +1,8 @@
 package net.akehurst.language.asm.simple
 
 import net.akehurst.language.base.processor.AglBase
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 object AglAsm {
 
@@ -25,8 +25,8 @@ interface AsmListSeparated {
 }
 """
 
-    val typeModel: TypeModel by lazy {
-        typeModel("Asm", true, AglBase.typesModel.namespace) {
+    val typesDomain: TypesDomain by lazy {
+        typesDomain("Asm", true, AglBase.typesDomain.namespace) {
             namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.collections")) {
                 value("PropertyValueName") {
                     supertype("PublicValueType")

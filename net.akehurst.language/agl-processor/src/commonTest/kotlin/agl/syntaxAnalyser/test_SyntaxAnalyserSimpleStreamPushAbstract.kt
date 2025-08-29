@@ -31,20 +31,20 @@ import net.akehurst.language.asm.api.AsmPath
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.typemodel.api.DataType
-import net.akehurst.language.typemodel.api.PrimitiveType
-import net.akehurst.language.typemodel.api.PropertyDeclaration
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.types.api.DataType
+import net.akehurst.language.types.api.PrimitiveType
+import net.akehurst.language.types.api.PropertyDeclaration
+import net.akehurst.language.types.api.TypesDomain
 import kotlin.test.*
 
 class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
     private companion object {
         class SyntaxAnalyserToString(
-            typeModel: TypeModel,
-            scopeModel: CrossReferenceModel
-        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(QualifiedName("ns"), typeModel, scopeModel) {
+            typesDomain: TypesDomain,
+            scopeModel: CrossReferenceDomain
+        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(QualifiedName("ns"), typesDomain, scopeModel) {
 
             private val sb = StringBuilder()
             private var indent = ""
@@ -148,7 +148,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 //typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesModel!!, p.crossReferenceModel!!)) }
+                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typesDomain!!, p.crossReferenceDomain!!)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString()) }
             }
         )

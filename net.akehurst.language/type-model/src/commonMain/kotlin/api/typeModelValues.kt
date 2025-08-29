@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.typemodel.api
+package net.akehurst.language.types.api
 
 abstract class AnyValue(
     open val type: TypeDeclaration

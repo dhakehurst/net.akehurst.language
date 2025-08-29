@@ -52,7 +52,7 @@ kotlinxReflect {
             "net.akehurst.language.base.**",
             "net.akehurst.language.grammar.**",
             "net.akehurst.language.style.**",
-            "net.akehurst.language.typemodel.**",
+            "net.akehurst.language.types.**",
             "net.akehurst.language.grammarTypemodel.**",
             "net.akehurst.language.asm.**",
             "net.akehurst.language.expressions.**",
@@ -85,7 +85,7 @@ exportPublic {
             "net.akehurst.language.style.api.**",
             "net.akehurst.language.style.asm.**",
 
-            "net.akehurst.language.typemodel.api.**",
+            "net.akehurst.language.types.api.**",
             "net.akehurst.language.agl.regex.**",
             "net.akehurst.language.agl.scanner.**",
             "net.akehurst.language.agl.processor.**",

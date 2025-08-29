@@ -21,44 +21,35 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageIdentity
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.base.api.asQualifiedName
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.types.api.TypesDomain
 
 // used by other languages that reference rules  in a grammar
-class ContextFromTypeModelReference(
+class ContextFromTypesDomainReference(
     val languageDefinitionId: LanguageIdentity
 ) : SentenceContext {
-    //val rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
-    /*
-        fun dereference(reg: LanguageRegistry): ContextFromTypeModel? {
-            val langDef = reg.findOrNull<Any, Any>(this.languageDefinitionId)
-            return langDef?.let {
-                val tm = GrammarNamespaceAndAsmTransformBuilderFromGrammar.createFromGrammarList(it.grammarList)
-                ContextFromTypeModel(tm)
-            }
-        }
 
-     */
 }
 
-class ContextFromTypeModel(
-    val typeModel: TypeModel
+@Deprecated("use contextFromTypesDomain")
+class ContextFromTypesDomain(
+    val typesDomain: TypesDomain
 ) : SentenceContext {
 
-    override fun hashCode(): Int = typeModel.hashCode()
+    override fun hashCode(): Int = typesDomain.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
-        other !is ContextFromTypeModel -> false
-        this.typeModel != other.typeModel -> false
+        other !is ContextFromTypesDomain -> false
+        this.typesDomain != other.typesDomain -> false
         else -> true
     }
 
-    override fun toString(): String = "ContextFromTypeModel($typeModel)"
+    override fun toString(): String = "ContextFromTypesDomain($typesDomain)"
 }
 
-fun contextFromTypeModel(typeModel: TypeModel) : ContextWithScope<Any, Any> {
+fun contextFromTypesDomain(typesDomain: TypesDomain) : ContextWithScope<Any, Any> {
     val context = ContextWithScope<Any, Any>()
-    val sentenceIdentity = typeModel.name.value
-    typeModel.allDefinitions.forEach { def ->
+    val sentenceIdentity = typesDomain.name.value
+    typesDomain.allDefinitions.forEach { def ->
         val qualifiedName = def.qualifiedName.parts.map { it.value }
         val itemTypeName = def::class.simpleName!!.asQualifiedName //TODO: use qualified names when supported by kotlin
         val location = null

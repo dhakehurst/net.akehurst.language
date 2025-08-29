@@ -33,7 +33,7 @@ import net.akehurst.language.sppt.api.SpptDataNodeInfo
 
 internal class AglGrammarSyntaxAnalyser(
     //val languageRegistry: LanguageRegistryDefault
-) : SyntaxAnalyserByMethodRegistrationAbstract<GrammarModel>() {
+) : SyntaxAnalyserByMethodRegistrationAbstract<GrammarDomain>() {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
@@ -43,7 +43,7 @@ internal class AglGrammarSyntaxAnalyser(
         QualifiedName("Base") to BaseSyntaxAnalyser()
     )
 
-    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarModel>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<GrammarDomain>> = emptyMap()
 
     override fun <T : Any> clear(done: Set<SyntaxAnalyser<T>>) {
         super.clear(done)
@@ -96,12 +96,12 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // Base.unit = option* namespace* ;
-    private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarModel {
+    private fun unit(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarDomain {
         val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<GrammarNamespace>
 
         val optHolder = OptionHolderDefault(null, options.associate { it })
-        val unit = GrammarModelDefault(name = SimpleName("ParsedGrammarUnit"), namespace = namespaces, options = optHolder)
+        val unit = GrammarDomainDefault(name = SimpleName("ParsedGrammarUnit"), namespace = namespaces, options = optHolder)
         return unit
     }
 

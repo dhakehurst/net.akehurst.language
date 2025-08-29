@@ -17,7 +17,7 @@
 package net.akehurst.language.format.processor
 
 import net.akehurst.language.agl.Agl
-import net.akehurst.language.agl.format.builder.formatModel
+import net.akehurst.language.agl.format.builder.formatDomain
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.LanguageIdentity
@@ -27,25 +27,27 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.processor.AglBase
 import net.akehurst.language.expressions.processor.AglExpressions
-import net.akehurst.language.formatter.api.AglFormatModel
+import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.grammar.api.OverrideKind
-import net.akehurst.language.grammar.builder.grammarModel
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.builder.crossReferenceModel
-import net.akehurst.language.style.builder.styleModel
+import net.akehurst.language.grammar.builder.grammarDomain
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
 
 
-object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, Any>>() {
+object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Format"
     const val goalRuleName = "unit"
 
     override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
+
+    override val extends by lazy { listOf(AglBase) } //TODO: should be AglExpressions
 
     override val grammarString = """
         namespace $NAMESPACE_NAME
@@ -85,8 +87,38 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
         }
     """
 
-    override val grammarModel by lazy {
-        grammarModel(name=NAME, grammarRegistry = Agl.registry) {
+    override val typesString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val kompositeString: String = """
+        namespace ${NAMESPACE_NAME}.format.api
+          // TODO
+    """.trimIndent()
+
+    override val asmTransformString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val crossReferenceString = """
+        namespace ${NAMESPACE_NAME}
+            // TODO
+    """.trimIndent()
+
+    override val styleString = """
+        namespace ${NAMESPACE_NAME}
+            // TODO
+    """.trimIndent()
+
+    override val formatString: String = """
+        namespace ${NAMESPACE_NAME}
+          // TODO
+    """.trimIndent()
+
+    override val grammarDomain by lazy {
+        grammarDomain(name = NAME, grammarRegistry = Agl.registry) {
             namespace(NAMESPACE_NAME) {
                 grammar("Template") {
                     concatenation("templateString") {
@@ -107,11 +139,15 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
                         lit("\$["); ebd("Expressions", "propertyName"); lit("/"); ebd("Expressions", "STRING"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
-                        lit("\${"); ebd("Format","formatExpression"); lit("}")
+                        lit("\${"); ebd("Format", "formatExpression"); lit("}")
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
-                    concatenation("RAW_TEXT", isLeaf = true) { pat("([^" +
-                            "$\"\\\\]|\\\\.)+") }
+                    concatenation("RAW_TEXT", isLeaf = true) {
+                        pat(
+                            "([^" +
+                                    "$\"\\\\]|\\\\.)+"
+                        )
+                    }
                 }
                 grammar(NAME) {
                     extendsGrammar(AglExpressions.defaultTargetGrammar.selfReference)
@@ -130,11 +166,11 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
                     choice("formatExpression") {
                         ref("expression")
                         ebd("Template", "templateString")
-              //          ref("whenExpression")
+                        //          ref("whenExpression")
                     }
-              //      concatenation("whenExpression") {
-              //          lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
-              //      }
+                    //      concatenation("whenExpression") {
+                    //          lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
+                    //      }
                     concatenation("whenOption", OverrideKind.REPLACE) {
                         ref("expression"); lit("->"); ref("formatExpression")
                     }
@@ -149,17 +185,17 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
     const val komposite = """
     """
 
-    override val typesModel: TypeModel by lazy {
-        typeModel(NAME, true, AglBase.typesModel.namespace) {  }
+    override val typesDomain: TypesDomain by lazy {
+        typesDomain(NAME, true, AglBase.typesDomain.namespace) { }
     }
 
-    override val asmTransformModel: AsmTransformDomain by lazy {
+    override val asmTransformDomain: AsmTransformDomain by lazy {
         asmTransform(
             name = NAME,
-            typeModel = typesModel,
+            typesDomain = typesDomain,
             createTypes = false
         ) {
-            namespace(NAMESPACE_NAME){
+            namespace(NAMESPACE_NAME) {
                 ruleSet(NAME) {
                     //TODO
                 }
@@ -167,14 +203,14 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
         }
     }
 
-    override val crossReferenceModel: CrossReferenceModel by lazy {
-        crossReferenceModel(AglStyle.NAME) {
+    override val crossReferenceDomain: CrossReferenceDomain by lazy {
+        crossReferenceDomain(AglStyle.NAME) {
             //TODO
         }
     }
 
-    override val styleModel by lazy {
-        styleModel(AglStyle.NAME) {
+    override val styleDomain by lazy {
+        styleDomain(AglStyle.NAME) {
             namespace(AglStyle.NAMESPACE_NAME) {
                 styles(AglStyle.NAME) {
                     metaRule("'[^']+'") {
@@ -186,17 +222,17 @@ object AglFormat : LanguageObjectAbstract<AglFormatModel, ContextWithScope<Any, 
         }
     }
 
-    override val formatModel by lazy {
-        formatModel(AglStyle.NAME) {
+    override val formatDomain by lazy {
+        formatDomain(AglStyle.NAME) {
 //            TODO("not implemented")
         }
     }
 
-    override val defaultTargetGrammar by lazy { grammarModel.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
+    override val defaultTargetGrammar by lazy { grammarDomain.findDefinitionByQualifiedNameOrNull(QualifiedName("${NAMESPACE_NAME}.${NAME}"))!! }
     override val defaultTargetGoalRule = "unit"
 
-    override val syntaxAnalyser: SyntaxAnalyser<AglFormatModel>? by lazy { AglFormatSyntaxAnalyser() }
-    override val semanticAnalyser: SemanticAnalyser<AglFormatModel, ContextWithScope<Any, Any>>? by lazy { AglFormatSemanticAnalyser() }
-    override val completionProvider: CompletionProvider<AglFormatModel, ContextWithScope<Any, Any>>? by lazy { AglFormatCompletionProvider() }
+    override val syntaxAnalyser: SyntaxAnalyser<AglFormatDomain>? by lazy { AglFormatSyntaxAnalyser() }
+    override val semanticAnalyser: SemanticAnalyser<AglFormatDomain, ContextWithScope<Any, Any>>? by lazy { AglFormatSemanticAnalyser() }
+    override val completionProvider: CompletionProvider<AglFormatDomain, ContextWithScope<Any, Any>>? by lazy { AglFormatCompletionProvider() }
 
 }

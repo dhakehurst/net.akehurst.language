@@ -19,13 +19,13 @@ package net.akehurst.language.typemodel
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.GrammarString
-import net.akehurst.language.api.processor.TransformString
+import net.akehurst.language.api.processor.AsmTransformString
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -33,14 +33,14 @@ import kotlin.test.assertTrue
 class test_typemodelFromTransform {
 
     companion object {
-        fun test(grammarStr: String, transformStr: String, expected: TypeModel) {
+        fun test(grammarStr: String, transformStr: String, expected: TypesDomain) {
             val res = Agl.processorFromStringSimple(
                 grammarDefinitionStr = GrammarString(grammarStr),
-                transformStr = TransformString(transformStr),
+                transformStr = AsmTransformString(transformStr),
                 referenceStr = null
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
-            val actualTm = res.processor!!.typesModel
+            val actualTm = res.processor!!.typesDomain
             assertTrue(res.processor!!.issues.isEmpty(), res.processor!!.issues.toString())
             assertEquals(expected.asString(), actualTm.asString())
         }
@@ -62,7 +62,7 @@ class test_typemodelFromTransform {
             }
         """.trimIndent()
 
-        val expected = typeModel("FromGrammarParsedGrammarUnit", true) {
+        val expected = typesDomain("FromGrammarParsedGrammarUnit", true) {
             grammarTypeNamespace("test.Test") {
                 dataFor("S", "S2") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -90,7 +90,7 @@ class test_typemodelFromTransform {
             }
         """.trimIndent()
 
-        val typesModel = typeModel("", true) {
+        val typesModel = typesDomain("", true) {
             namespace("types") {
                 data("S2") {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -130,7 +130,7 @@ class test_typemodelFromTransform {
             }
         """.trimIndent()
 
-        val typesModel = typeModel("", true) {
+        val typesModel = typesDomain("", true) {
             namespace("types") {
                 data("S2") {
                     propertyPrimitiveType("a", "String", false, 0)

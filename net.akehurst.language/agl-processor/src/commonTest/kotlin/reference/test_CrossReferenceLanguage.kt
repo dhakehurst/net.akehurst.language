@@ -18,22 +18,22 @@ package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
-import net.akehurst.language.reference.api.CrossReferenceModel
-import net.akehurst.language.reference.asm.CrossReferenceModelDefault
-import net.akehurst.language.reference.builder.crossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
+import net.akehurst.language.reference.asm.CrossReferenceDomainDefault
+import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
-import net.akehurst.language.typemodel.asm.TypeModelSimple
-import net.akehurst.language.typemodel.builder.typeModel
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
+import net.akehurst.language.types.asm.TypesDomainSimple
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,14 +43,14 @@ class test_CrossReferenceLanguage {
     private companion object {
         val aglProc = Agl.registry.agl.crossReference.processor!!
 
-        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
+        fun test(grammarStr: String, sentence: String, expected: CrossReferenceDomain, typemodel: TypesDomain? = null, expIssues: Set<LanguageIssue> = emptySet()) {
             val grammarMdl = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
-            val grmrTypeModel = TypeModelSimple(grammarMdl.name)
+            val grmrTypeModel = TypesDomainSimple(grammarMdl.name)
             grmrTypeModel.addNamespace(StdLibDefault)
-            AsmTransformDomainDefault.fromGrammarModel(grammarMdl, grmrTypeModel)
+            AsmTransformDomainDefault.fromGrammarDomain(grammarMdl, grmrTypeModel)
             val tm = grmrTypeModel
             typemodel?.let { tm.addAllNamespaceAndResolveImports(it.namespace) }
-            val ctx = ContextFromTypeModel(tm)
+            val ctx = ContextFromTypesDomain(tm)
             val result = aglProc.process(
                 sentence = sentence,
                 Agl.options {
@@ -75,7 +75,7 @@ class test_CrossReferenceLanguage {
 
     @Test
     fun check_typeModel() {
-        val actual = aglProc.typesModel
+        val actual = aglProc.typesDomain
         val expected = grammarTypeModel("net.akehurst.language.agl.language", "References") {
             // declarations = rootIdentifiables scopes references?
             dataFor("declarations", "Declarations") {
@@ -151,7 +151,7 @@ class test_CrossReferenceLanguage {
 
         val result = aglProc.process(sentence)
 
-        val expected = CrossReferenceModelDefault(SimpleName(""))
+        val expected = CrossReferenceDomainDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
@@ -169,7 +169,7 @@ class test_CrossReferenceLanguage {
 
         val result = aglProc.process(text)
 
-        val expected = CrossReferenceModelDefault(SimpleName(""))
+        val expected = CrossReferenceDomainDefault(SimpleName(""))
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
@@ -189,7 +189,7 @@ class test_CrossReferenceLanguage {
                 scope Rule1 { }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                 }
@@ -213,7 +213,7 @@ class test_CrossReferenceLanguage {
                 scope RuleX { }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 scope("RuleX") { }
             }
@@ -247,7 +247,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("Rule2", "rule3")
@@ -276,7 +276,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("RuleX", "rule3")
@@ -315,7 +315,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 scope("Rule1") {
                     identify("Rule2", "ruleX")
@@ -361,7 +361,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 reference("Rule2") {
                     property("rule3", listOf("Rule1"), null)
@@ -393,7 +393,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 reference("RuleX") {
                     property("ruleY", listOf("RuleZ", "RuleW"), null)
@@ -433,7 +433,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 reference("Rule1") {
                     property("rule2", listOf("Rule1", "Rule2", "Rule3"), null)
@@ -465,7 +465,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 reference("Rule2") {
                     property("rule3", listOf("AnExternalType1", "AnExternalType2"), null)
@@ -500,7 +500,7 @@ class test_CrossReferenceLanguage {
                 }
             """.trimIndent()
 
-        val additionalTypeModel = typeModel("externals", true) {
+        val additionalTypeModel = typesDomain("externals", true) {
             namespace("external") {
                 data("AnExternalType1")
                 data("AnExternalType2")
@@ -517,7 +517,7 @@ class test_CrossReferenceLanguage {
                 }
         """.trimIndent()
 
-        val expected = crossReferenceModel("Test") {
+        val expected = crossReferenceDomain("Test") {
             declarationsFor("test.Test") {
                 import("external")
                 reference("Rule2") {

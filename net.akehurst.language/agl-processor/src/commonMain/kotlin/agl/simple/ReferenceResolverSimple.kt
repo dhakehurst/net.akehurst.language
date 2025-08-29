@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.simple
 
 import net.akehurst.kotlinx.collections.mutableStackOf
+import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.processor.ResolvedReference
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.asm.api.*
@@ -31,14 +32,14 @@ import net.akehurst.language.expressions.asm.NavigationExpressionDefault
 import net.akehurst.language.expressions.asm.RootExpressionDefault
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.reference.api.CrossReferenceModel
+import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.api.ReferenceExpression
 import net.akehurst.language.reference.asm.ReferenceExpressionCollectionDefault
 import net.akehurst.language.reference.asm.ReferenceExpressionPropertyDefault
 import net.akehurst.language.scope.api.Scope
-import net.akehurst.language.typemodel.api.TypeDefinition
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.asm.StdLibDefault
+import net.akehurst.language.types.api.TypeDefinition
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.asm.StdLibDefault
 
 
 data class ReferenceExpressionContext<ItemInScopeType>(
@@ -51,8 +52,8 @@ data class ReferenceExpressionContext<ItemInScopeType>(
  * Properties in the asm that are references
  */
 class ReferenceResolverSimple<ItemInScopeType : Any>(
-    val typeModel: TypeModel,
-    val crossReferenceModel: CrossReferenceModel,
+    val typesDomain: TypesDomain,
+    val crossReferenceDomain: CrossReferenceDomain,
     val context: ContextWithScope<Any, ItemInScopeType>, //TODO: use interface or something more abstract
     val sentenceIdentity: Any?,
     val identifyingValueInFor: (inTypeName: SimpleName, item: AsmStructure) -> Any?,
@@ -63,7 +64,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
     private val scopeStack = mutableStackOf(context.getScopeForSentenceOrNull(sentenceIdentity) ?: context.newScopeForSentence(sentenceIdentity))
     private val scopeForElement = mutableMapOf<AsmStructure, Scope<ItemInScopeType>>()
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typeModel, _issues), _issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, _issues), _issues)
 
     val resolvedReferences = mutableListOf<ResolvedReference>()
 
@@ -119,7 +120,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
         scopeStack.push(elScope)
         scopeForElement[value] = elScope
 
-        val references = crossReferenceModel.referencesFor(value.typeName)
+        val references = crossReferenceDomain.referencesFor(value.typeName)
         for (refExpr in references) {
             handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value)
         }
@@ -154,7 +155,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
             null -> scopeStack.peek()
             else -> {
                 //scope for result of navigation
-                val elType = typeModel.findByQualifiedNameOrNull(exprContext.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+                val elType = typesDomain.findByQualifiedNameOrNull(exprContext.element.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
                 val fromEl = _interpreter.evaluateExpression(
                     EvaluationContext.ofSelf(TypedObjectAsmValue(elType, exprContext.element)), refExpr.fromNavigation
                 ).self
@@ -187,7 +188,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
             }
         }
         if(null!=scope) {
-            val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+            val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             var referringValue = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), refExpr.referringPropertyNavigation).self
             if (referringValue is AsmReference) {
                 referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
@@ -196,11 +197,11 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
                 referringValue is AsmPrimitive -> {
                     //TODO: extract to function to avoid repetition
                     val referringStr = referringValue.value as String
-                    val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
+                    val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
                     val targets = referredToTypes.flatMap { td ->
                         // Use context (not scope) because the reference could have been created from a different sentence
                         context.findItemsByQualifiedNameConformingTo(scope.scopePath + referringStr) {
-                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(td)
                         }
                     }
@@ -262,11 +263,11 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
                 referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                     val qname = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                    val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
+                    val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) }
                     val targets = referredToTypes.flatMap { td ->
                         // Use context (not scope) because the reference could have been created from a different sentence
                         context.findItemsByQualifiedNameConformingTo(qname) {
-                            val itemType = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
+                            val itemType = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(it) ?: StdLibDefault.NothingType.resolvedDeclaration
                             itemType.conformsTo(td)
                         }
                     }
@@ -334,7 +335,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
     }
 
     private fun handleCollectionReferenceExpression(refExpr: ReferenceExpressionCollectionDefault, context: ReferenceExpressionContext<ItemInScopeType>, self: AsmValue) {
-        val elType = typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
+        val elType = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
         val coll = _interpreter.evaluateExpression(EvaluationContext.ofSelf(TypedObjectAsmValue(elType, self)), refExpr.expression)
         for (re in refExpr.referenceExpressionList) {
             when (coll.self) {
@@ -370,14 +371,14 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
     }
 
     private fun AsmValue.conformsToType(typeName: PossiblyQualifiedName): Boolean {
-        val type = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
-        val selfType = typeModel.typeOf(this)
+        val type = typesDomain.findFirstDefinitionByPossiblyQualifiedNameOrNull(typeName) ?: StdLibDefault.NothingType.resolvedDeclaration
+        val selfType = typesDomain.typeOf(this)
         return selfType.conformsTo(type)
     }
 
-    private fun TypeModel.typeOf(self: AsmValue): TypeDefinition =
-        typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)
-            ?: error("Type '${self.qualifiedTypeName}' not found in type model '${this.name}'")
+    private fun TypesDomain.typeOf(self: AsmValue): TypeDefinition =
+        typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)
+            ?: error("Type '${self.qualifiedTypeName}' not found in types domain '${this.name}'")
 
     private fun NavigationExpression.propertyFor(root: AsmValue): AsmStructureProperty {
         return when {
@@ -400,7 +401,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
             else -> {
                 //val exprEval = ExpressionsInterpreterOverTypedObject(typeModel)
-                val selfType = typeModel.typeOf(root).type()
+                val selfType = typesDomain.typeOf(root).type()
                 val front = NavigationExpressionDefault(this.start, this.parts.dropLast(1))
                 val evc = EvaluationContext(null, mapOf(RootExpressionDefault.SELF.name to TypedObjectAsmValue(selfType, root)))
                 val v = _interpreter.evaluateExpression(evc, front).self

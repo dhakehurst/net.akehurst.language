@@ -29,11 +29,11 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.style.api.AglStyleMetaRule
-import net.akehurst.language.style.api.AglStyleModel
+import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.api.AglStyleSelectorKind
 import net.akehurst.language.style.api.AglStyleTagRule
 
-class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithScope<Any,Any>> {
+class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleDomain, ContextWithScope<Any,Any>> {
 
     companion object {
         // TODO: AglGrammar.typesModel.findTypeForRule(GrammarRuleName("grammarRule"))
@@ -50,7 +50,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextWithSc
 
     override fun analyse(
         sentenceIdentity:Any?,
-        asm: AglStyleModel,
+        asm: AglStyleDomain,
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any,Any>>
     ): SemanticAnalysisResult {

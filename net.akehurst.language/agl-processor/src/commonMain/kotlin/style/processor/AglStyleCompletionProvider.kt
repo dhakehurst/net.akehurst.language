@@ -26,11 +26,11 @@ import net.akehurst.language.grammar.api.GrammarRuleName
 import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.grammar.api.Terminal
 import net.akehurst.language.grammar.processor.AglGrammar
-import net.akehurst.language.style.api.AglStyleModel
-import net.akehurst.language.style.asm.AglStyleModelDefault
-import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.style.api.AglStyleDomain
+import net.akehurst.language.style.asm.AglStyleDomainDefault
+import net.akehurst.language.types.api.TypeInstance
 
-class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWithScope<Any,Any>> {
+class AglStyleCompletionProvider() : CompletionProvider<AglStyleDomain, ContextWithScope<Any,Any>> {
 
     companion object {
        // private val aglGrammarQualifiedName get() = Agl.registry.agl.grammar.processor!!.targetGrammar!!.qualifiedName
@@ -41,7 +41,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
         //private val aglStyleTypeModel get() = Agl.registry.agl.style.processor!!.typesModel
         //private val aglStyleNamespace: GrammarTypeNamespace get() = AglStyle.typesModel.findNamespaceOrNull(QualifiedName("net.akehurst.language.style.api")) as GrammarTypeNamespace? ?: error("Internal error: aglStyleNamespace not found")
 
-        private val styleTransformRuleSet = AglStyle.asmTransformModel.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName)?: error("Internal error: styleTransformRuleSet not found")
+        private val styleTransformRuleSet = AglStyle.asmTransformDomain.findDefinitionByQualifiedNameOrNull(AglStyle.defaultTargetGrammar.qualifiedName)?: error("Internal error: styleTransformRuleSet not found")
 
         //private val aglBaseQualifiedName get() = Agl.registry.agl.base.processor!!.targetGrammar!!.qualifiedName
         //private val aglBaseTypeModel = Agl.registry.agl.base.processor!!.typeModel
@@ -49,7 +49,7 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
 
         //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
         //private val grammarRule = aglGrammarNamespace.findTypeForRule(GrammarRuleName("grammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
-        private val grammarRuleTypeDefinition = AglGrammar.typesModel.findByQualifiedNameOrNull(QualifiedName("net.akehurst.language.grammar.api.GrammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
+        private val grammarRuleTypeDefinition = AglGrammar.typesDomain.findByQualifiedNameOrNull(QualifiedName("net.akehurst.language.grammar.api.GrammarRule")) ?: error("Internal error: type for 'grammarRule' not found")
 
 //        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
 //        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
@@ -116,8 +116,8 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, ContextWi
 
     private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: ContextWithScope<Any,Any>): List<CompletionItem> {
         return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.KEYWORD_STYLE_ID.value),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleModelDefault.NO_STYLE_ID.value)
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.KEYWORD_STYLE_ID.value),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", AglStyleDomainDefault.NO_STYLE_ID.value)
         )
     }
 
