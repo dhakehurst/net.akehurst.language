@@ -136,7 +136,7 @@ interface ReferenceExpressionCollection {
 }
 """
 
-    val typeModel by lazy {
+    val typesDomain by lazy {
         typesDomain(NAME, true, AglExpressions.typesDomain.namespace) {
             namespace("net.akehurst.language.reference.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.expressions.api")) {
                 interface_("ScopeDefinition") {
