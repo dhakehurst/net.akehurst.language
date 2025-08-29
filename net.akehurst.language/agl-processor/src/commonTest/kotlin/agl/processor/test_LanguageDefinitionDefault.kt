@@ -128,7 +128,6 @@ class test_LanguageDefinitionDefault {
         assertNull(def.transformDomain)
         assertNull(def.crossReferenceDomain)
         assertNull(def.styleDomain)
-        assertTrue(def.styleDomain!!.isEmpty)
         assertNull(def.formatter)
         assertTrue(sut.issues.isEmpty())
     }

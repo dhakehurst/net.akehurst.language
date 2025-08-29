@@ -183,8 +183,8 @@ interface ReferenceExpressionCollection {
                 interface_("CrossReferenceNamespace") {
                     supertype("Namespace"){ ref("DeclarationsForNamespace") }
                 }
-                interface_("CrossReferenceModel") {
-                    supertype("Model"){ ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
+                interface_("CrossReferenceDomain") {
+                    supertype("Domain"){ ref("CrossReferenceNamespace"); ref("DeclarationsForNamespace") }
                 }
             }
             namespace("net.akehurst.language.reference.asm", listOf("net.akehurst.language.reference.api", "std", "net.akehurst.language.base.api", "net.akehurst.language.expressions.api", "net.akehurst.language.base.asm")) {

@@ -36,6 +36,8 @@ import net.akehurst.language.types.builder.typesDomain
 object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any, Any>>() {
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
     const val NAME = "Expressions"
+    const val TYPES_API_NS_QN = "${NAMESPACE_NAME}.expressions.api"
+    const val TYPES_ASM_NS_QN = "${NAMESPACE_NAME}.expressions.asm"
 
     override val identity = LanguageIdentity("${NAMESPACE_NAME}.${NAME}")
 
@@ -125,10 +127,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           }
       """.trimIndent()
 
-    override val typesString: String = """
-        namespace ${NAMESPACE_NAME}.expressions.api
-          // TODO
-    """
+    override val typesString: String by lazy {
+        typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
+                "\n" +
+                typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()
+    }
 
     override val kompositeString = """
         namespace $NAMESPACE_NAME.expressions.api

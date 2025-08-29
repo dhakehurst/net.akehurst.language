@@ -17,19 +17,32 @@
 
 package net.akehurst.language.types.processor
 
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.processor.AglBase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
-class test_AglTypemodel {
+class test_AglTypes {
 
     @Test
-    fun grammarModel() {
-        val actual = AglTypes.grammarDomain
+    fun process_grammarString_EQ_grammarModel() {
+        val res = Agl.registry.agl.grammar.processor!!.process(
+            AglBase.grammarString + "\n" + AglTypes.grammarString,
+            Agl.options {
+                semanticAnalysis {
+                    context(contextFromGrammarRegistry(Agl.registry))
+                }
+            }
+        )
+        assertTrue(res.allIssues.errors.isEmpty(), res.allIssues.toString())
+        val actual = res.asm!!.asString()
+        val expected = AglTypes.grammarDomain.asString()
 
-        assertNotNull(actual)
-        assertEquals(AglTypes.grammarString, actual.asString())
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -47,6 +60,6 @@ class test_AglTypemodel {
         assertEquals("TypesDomain", td.name.value)
         assertEquals("Domain", td.supertypes[0].typeName.value)
         assertEquals("TypesNamespace", td.supertypes[0].typeArguments[0].type.typeName.value)
-        assertEquals("TypeDeclaration", td.supertypes[0].typeArguments[1].type.typeName.value)
+        assertEquals("TypeDefinition", td.supertypes[0].typeArguments[1].type.typeName.value)
     }
 }

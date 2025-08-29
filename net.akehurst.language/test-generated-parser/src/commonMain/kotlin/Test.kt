@@ -23,6 +23,7 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageIdentity
+import net.akehurst.language.api.processor.LanguageObject
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -51,8 +52,9 @@ object GeneratedGrammar_Simple : LanguageObjectAbstract<Asm, ContextWithScope<An
 
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    override val identity: LanguageIdentity
-        get() = TODO("not implemented")
+    override val identity = LanguageIdentity("Test")
+
+    override val extends: List<LanguageObject<Any, ContextWithScope<Any, Any>>> = emptyList()
 
     override val grammarString = """
         namespace test

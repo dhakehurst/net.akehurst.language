@@ -63,15 +63,15 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
             enumLiterals = '{' [IDENTIFIER / ',']+ '}' ;
             valueDefinition = 'value' IDENTIFIER supertypes? '(' constructorParameter ')' ;
             collectionDefinition = 'collection' IDENTIFIER typeParameterList ;
-            unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
-            interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
-            interfaceBody = '{' property* '}' ;
             dataDefinition =
               'data' IDENTIFIER typeParameterList? supertypes? '{'
                 constructor*
                 property*
               '}'
             ;
+            interfaceDefinition = 'interface' IDENTIFIER typeParameterList? supertypes? interfaceBody? ;
+            interfaceBody = '{' property* '}' ;
+            unionDefinition = 'union' IDENTIFIER '{' alternatives '}' ;
             alternatives = [typeReference / '|']+ ;
             typeParameterList = '<' [IDENTIFIER / ',']+ '>' ;
             supertypes = ':' [typeReference / ',']+ ;
@@ -123,7 +123,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
             }
 
         namespace net.akehurst.language.types.asm
-            class TypeNamespaceAbstract {
+            class TypesNamespaceAbstract {
                 cmp ownedUnnamedSupertypeType
                 cmp ownedTupleTypes
             }
@@ -136,7 +136,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
             }
         
         namespace net.akehurst.language.grammarTypemodel.api
-            interface GrammarTypeNamespace {
+            interface GrammarTypesNamespace {
                 cmp allRuleNameToType
             }
     """.trimIndent()
@@ -258,7 +258,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("Namespace") { ref("TypeDefinition") }
                 }
                 interface_("TypesDomain") {
-                    supertype("Model") { ref("TypeNamespace"); ref("TypeDefinition") }
+                    supertype("Domain") { ref("TypesNamespace"); ref("TypeDefinition") }
                 }
                 interface_("TypeInstance") {
 
@@ -351,27 +351,27 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("ValueType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("UnionTypeSimple") {
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("UnionType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAR, CMP, STR), "alternatives", "List", false) {
                         typeArgument("TypeInstance")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("TypeParameterSimple") {
                     supertype("TypeParameter")
@@ -406,7 +406,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
                 data("TypesNamespaceAbstract") {
-                    supertype("TypeNamespace")
+                    supertype("TypesNamespace")
                     supertype("NamespaceAbstract") { ref("net.akehurst.language.types.api.TypeDefinition") }
                     constructor_ {
                         parameter("options", "OptionHolder", false)
@@ -442,14 +442,14 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeInstanceAbstract")
                     constructor_ {
                         parameter("contextQualifiedTypeName", "QualifiedName", false)
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("qualifiedOrImportedTypeName", "PossiblyQualifiedName", false)
                         parameter("typeArguments", "List", false)
                         parameter("isNullable", "Boolean", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "contextQualifiedTypeName", "QualifiedName", false)
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedOrImportedTypeName", "PossiblyQualifiedName", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgument")
@@ -506,11 +506,11 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("TupleType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                     propertyOf(setOf(VAR, REF, STR), "typeParameters", "List", false) {
                         typeArgument("TypeParameterMultiple")
                     }
@@ -519,12 +519,12 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeInstanceAbstract")
                     supertype("TupleTypeInstance")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("typeArguments", "List", false)
                         parameter("isNullable", "Boolean", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "isNullable", "Boolean", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                     propertyOf(setOf(VAL, REF, STR), "resolvedDeclaration", "TypeDefinition", false)
                     propertyOf(setOf(VAR, CMP, STR), "typeArguments", "List", false) {
                         typeArgument("TypeArgumentNamed")
@@ -539,21 +539,21 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("SpecialType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("SingletonTypeSimple") {
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("SingletonType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("PropertyDeclarationStored") {
                     supertype("PropertyDeclarationAbstract")
@@ -637,11 +637,11 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("PrimitiveType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("ParameterDefinitionSimple") {
                     supertype("ParameterDeclaration")
@@ -702,11 +702,11 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("InterfaceType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                     propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
@@ -715,7 +715,7 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("TypeDefinitionSimpleAbstract")
                     supertype("EnumType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                         parameter("literals", "List", false)
                     }
@@ -723,20 +723,20 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                         typeArgument("String")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
                 data("DataTypeSimple") {
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("DataType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAR, CMP, STR), "constructors", "List", false) {
                         typeArgument("ConstructorDeclaration")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                     propertyOf(setOf(VAR, REF, STR), "subtypes", "List", false) {
                         typeArgument("TypeInstance")
                     }
@@ -756,16 +756,16 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     supertype("StructuredTypeSimpleAbstract")
                     supertype("CollectionType")
                     constructor_ {
-                        parameter("namespace", "TypeNamespace", false)
+                        parameter("namespace", "TypesNamespace", false)
                         parameter("name", "SimpleName", false)
                     }
                     propertyOf(setOf(VAL, CMP, STR), "name", "SimpleName", false)
-                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypeNamespace", false)
+                    propertyOf(setOf(VAL, REF, STR), "namespace", "TypesNamespace", false)
                 }
             }
             namespace("net.akehurst.language.grammarTypemodel.api", listOf("net.akehurst.language.types.api", "std", "net.akehurst.language.grammar.api")) {
-                interface_("GrammarTypeNamespace") {
-                    supertype("TypeNamespace")
+                interface_("GrammarTypesNamespace") {
+                    supertype("TypesNamespace")
                     propertyOf(setOf(VAR, CMP, STR), "allRuleNameToType", "Map", false) {
                         typeArgument("GrammarRuleName")
                         typeArgument("TypeInstance")
@@ -783,8 +783,8 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     "net.akehurst.language.types.api"
                 )
             ) {
-                data("GrammarTypeNamespaceSimple") {
-                    supertype("GrammarTypeNamespaceAbstract")
+                data("GrammarTypesNamespaceSimple") {
+                    supertype("GrammarTypesNamespaceAbstract")
                     constructor_ {
                         parameter("qualifiedName", "QualifiedName", false)
                         parameter("options", "OptionHolder", false)
@@ -792,9 +792,9 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
-                data("GrammarTypeNamespaceAbstract") {
-                    supertype("TypeNamespaceAbstract")
-                    supertype("GrammarTypeNamespace")
+                data("GrammarTypesNamespaceAbstract") {
+                    supertype("TypesNamespaceAbstract")
+                    supertype("GrammarTypesNamespace")
                     constructor_ {
                         parameter("options", "OptionHolder", false)
                         parameter("import", "List", false)

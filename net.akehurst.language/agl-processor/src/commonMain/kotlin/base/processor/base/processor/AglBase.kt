@@ -93,7 +93,9 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
 
     override val asmTransformString: String = """
         namespace ${NAMESPACE_NAME}
-          // TODO
+          asm-transform Base {
+        
+          }
     """.trimIndent()
 
     override val crossReferenceString = """

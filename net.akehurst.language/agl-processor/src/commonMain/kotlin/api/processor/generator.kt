@@ -58,6 +58,11 @@ interface LanguageObject<AsmType : Any, ContextType : Any> {
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     val completionProvider: CompletionProvider<AsmType, ContextType>?
+
+    // The values for this Language including any extended languages
+    val allGrammarString:String
+    val allTypesString:String
+
 }
 
 abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : LanguageObject<AsmType, ContextType> {
@@ -93,4 +98,12 @@ abstract class LanguageObjectAbstract<AsmType : Any, ContextType : Any> : Langua
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? get() = TODO()
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = TODO()
 
+    override val allGrammarString: String by lazy {
+        val extStr = extends.joinToString("\n") { it.allGrammarString }
+        if(extStr.isEmpty()) grammarString else extStr + "\n" + grammarString
+    }
+    override val allTypesString: String by lazy {
+        val extStr = extends.joinToString("\n") { it.allTypesString }
+        if(extStr.isEmpty()) typesString else extStr + "\n" + typesString
+    }
 }

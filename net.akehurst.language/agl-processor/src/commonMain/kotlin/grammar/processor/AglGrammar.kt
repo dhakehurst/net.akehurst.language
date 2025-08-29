@@ -45,9 +45,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
     const val OPTION_defaultGoalRule = "defaultGoalRule"
 
     const val NAMESPACE_NAME = AglBase.NAMESPACE_NAME
-    const val TYPES_API_NS_QN = "net.akehurst.language.grammar.api"
-    const val TYPES_ASM_NS_QN = "net.akehurst.language.grammar.asm"
     const val NAME = "Grammar"
+    const val TYPES_API_NS_QN = "$NAMESPACE_NAME.grammar.api"
+    const val TYPES_ASM_NS_QN = "$NAMESPACE_NAME.grammar.asm"
 
     override val identity: LanguageIdentity = LanguageIdentity("${NAMESPACE_NAME}.$NAME")
 
@@ -104,10 +104,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
         """.trimIndent()
 
     override val typesString: String by lazy {
-        """
-        ${typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString()}
-        ${typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()}
-        """.trimIndent()
+        typesDomain.findNamespaceOrNull(QualifiedName(TYPES_API_NS_QN))!!.asString() +
+                "\n" +
+                typesDomain.findNamespaceOrNull(QualifiedName(TYPES_ASM_NS_QN))!!.asString()
     }
 
     override val kompositeString = """
@@ -155,7 +154,11 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
 
     override val asmTransformString: String = """
         namespace $NAMESPACE_NAME
-          // TODO
+          asm-transform Grammar {
+            import-types net.akehurst.language.grammar.api
+            import-types net.akehurst.language.grammar.asm
+            unit: GrammarDomain() { }
+          }
     """
 
     override val crossReferenceString: String = """
@@ -416,8 +419,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
                 interface_("GrammarNamespace") {
                     supertype("Namespace") { ref("Grammar") }
                 }
-                interface_("GrammarModel") {
-                    supertype("Model") { ref("GrammarNamespace"); ref("Grammar") }
+                interface_("GrammarDomain") {
+                    supertype("Domain") { ref("GrammarNamespace"); ref("Grammar") }
                 }
                 interface_("GrammarItem") {
                     supertype("Formatable")
@@ -653,9 +656,9 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
                     }
                     propertyOf(setOf(VAL, CMP, STR), "qualifiedName", "QualifiedName", false)
                 }
-                data("GrammarModelDefault") {
-                    supertype("GrammarModel")
-                    supertype("ModelAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
+                data("GrammarDomainDefault") {
+                    supertype("GrammarDomain")
+                    supertype("DomainAbstract") { ref("net.akehurst.language.grammar.api.GrammarNamespace"); ref("net.akehurst.language.grammar.api.Grammar") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
                         parameter("options", "OptionHolder", false)
@@ -784,7 +787,7 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
                         "net.akehurst.language.grammar.api",
                         "net.akehurst.language.grammar.asm"
                     )
-                    createObject("unit", "GrammarModel") {
+                    createObject("unit", "GrammarDomain") {
 
                     }
                     //TODO: currently the types are not found in the typemodel

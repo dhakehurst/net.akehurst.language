@@ -264,8 +264,8 @@ typeModel("Grammar", true, listOf(SimpleTypeModelStdLib)) {
     interfaceType("GrammarNamespace") {
       supertype("Namespace"){ ref("Grammar") }
     }
-    interfaceType("GrammarModel") {
-      supertype("Model"){ ref("GrammarNamespace"); ref("Grammar") }
+    interfaceType("GrammarDomain") {
+      supertype("Domain"){ ref("GrammarNamespace"); ref("Grammar") }
     }
     interfaceType("GrammarItem") {
       supertype("Formatable")

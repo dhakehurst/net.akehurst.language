@@ -206,8 +206,8 @@ interface AglStyleRule {
         typesDomain(NAME, true, AglBase.typesDomain.namespace) {
             grammarTypeNamespace("net.akehurst.language.style.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("AglStyleSelectorKind", listOf("LITERAL", "PATTERN", "RULE_NAME", "META"))
-                interface_("AglStyleModel") {
-                    supertype("Model") { ref("StyleNamespace"); ref("StyleSet") }
+                interface_("AglStyleDomain") {
+                    supertype("Domain") { ref("StyleNamespace"); ref("StyleSet") }
                 }
                 interface_("StyleNamespace") {
                     supertype("Namespace") { ref("StyleSet") }
@@ -311,9 +311,9 @@ interface AglStyleRule {
                         typeArgument("AglStyleSelector")
                     }
                 }
-                data("AglStyleModelDefault") {
-                    supertype("AglStyleModel")
-                    supertype("ModelAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
+                data("AglStyleDomainDefault") {
+                    supertype("AglStyleDomain")
+                    supertype("DomainAbstract") { ref("net.akehurst.language.style.api.StyleNamespace"); ref("net.akehurst.language.style.api.StyleSet") }
                     constructor_ {
                         parameter("name", "SimpleName", false)
                         parameter("namespace", "List", false)
@@ -336,7 +336,7 @@ interface AglStyleRule {
             namespace(qualifiedName = NAMESPACE_NAME) {
                 ruleSet(NAME) {
                     importTypes("net.akehurst.language.style.api", "net.akehurst.language.base.api")
-                    createObject("unit", "AglStyleModel") { /* custom SyntaxAnalyser */ }
+                    createObject("unit", "AglStyleDomain") { /* custom SyntaxAnalyser */ }
                     createObject("namespace", "StyleNamespace") { /* custom SyntaxAnalyser */ }
                     createObject("styleSet", "StyleSet") { /* custom SyntaxAnalyser */ }
                     transToListOf("extends", "StyleSetReference", $$"/* custom SyntaxAnalyser */ $nothing")

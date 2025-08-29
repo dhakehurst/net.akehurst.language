@@ -54,11 +54,11 @@ class test_Agl_registry_agl {
             checkStringEqualsModel(Agl.registry.agl.grammar.processor!!, expected.grammarString, actual.grammarDomain!!,contextFromGrammarRegistry(Agl.registry))
             checkModelEqualsString(Agl.registry.agl.grammar.processor!!, expected.grammarDomain, actual.grammarString!!.value,contextFromGrammarRegistry(Agl.registry))
 
-            assertEquals((expected.typesString), actual.typesString?.value)
+            assertEquals(expected.allTypesString, actual.typesString?.value, "typesString doesn't match")
 
-            assertEquals((expected.asmTransformString), actual.asmTransformString?.value)
+            assertEquals(expected.asmTransformString, actual.asmTransformString?.value, "asmTransformString doesn't match")
 
-            assertEquals((expected.crossReferenceString), actual.crossReferenceString?.value)
+            assertEquals(expected.crossReferenceString, actual.crossReferenceString?.value, "crossReferenceString doesn't match")
 
             checkStringEqualsModel(Agl.registry.agl.style.processor!!, expected.styleString, actual.styleDomain!!, contextFromGrammar(expected.grammarDomain))
             checkModelEqualsString(Agl.registry.agl.style.processor!!, expected.styleDomain, actual.styleString!!.value, contextFromGrammar(actual.grammarDomain!!))
@@ -115,8 +115,13 @@ class test_Agl_registry_agl {
     }
 
     @Test
-    fun test_Agl_registry_agl_transform() {
+    fun test_Agl_registry_agl_asmTransform() {
         checkProcessor(Agl.registry.agl.asmTransform.processor)
+    }
+
+    @Test
+    fun test_Agl_registry_agl_m2mTransform() {
+        checkProcessor(Agl.registry.agl.m2mTransform.processor)
     }
 
     @Test
