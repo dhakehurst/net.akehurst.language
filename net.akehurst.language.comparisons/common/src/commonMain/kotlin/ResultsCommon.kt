@@ -15,11 +15,15 @@
  */
 package net.akehurst.language.comparisons.common
 
-import korlibs.io.file.std.StandardPaths
+import korlibs.io.file.getUnderlyingUnscapedFile
 import korlibs.io.file.std.localVfs
 import korlibs.io.file.std.resourcesVfs
-import korlibs.time.DateTime
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.char
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 object ResultsCommon {
 
@@ -60,7 +64,11 @@ object ResultsCommon {
         results[col] = res
     }
 
-    private fun dateTimeNow(): String = DateTime.now().format("yyyy-MM-dd_HH-mm")
+
+    fun Instant.format(fmt:String) = this.format(DateTimeComponents.Format {
+        year(); char('-'); monthNumber(); char('-'); day(); char('_'); hour(); char('-'); minute()
+    })
+    private fun dateTimeNow(): String = Clock.System.now().format("yyyy-MM-dd_HH-mm")
 
     suspend fun write(name: String) {
         try {

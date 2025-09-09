@@ -15,17 +15,17 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.processor.contextFromGrammarRegistry
+import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
 import net.akehurst.language.comparisons.common.Results
 import net.akehurst.language.comparisons.common.TimeLogger
+import net.akehurst.language.grammar.processor.AglGrammarSemanticAnalyser
+import net.akehurst.language.sppt.api.SharedPackedParseTree
 import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -48,21 +48,25 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm,ContextSimple> {
-            val bytes = Java8_compare_Test_aglOptm::class.java.getResourceAsStream(aglFile).readBytes()
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm,ContextWithScope<Any,Any>> {
+            val bytes = Resources::class.java.getResourceAsStream(aglFile)?.readBytes() ?: error("Cannot find resource: $aglFile")
             val javaGrammarStr = String(bytes)
-            val res = Agl.processorFromString<Asm, ContextSimple>(
+            val res = Agl.processorFromString<Asm, ContextWithScope<Any,Any>>(
                 grammarDefinitionStr = javaGrammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                        context(contextFromGrammarRegistry(Agl.registry))
                     }
                 }
             )
             // no need to build because, sentence is parsed twice in the test - pre-full-build maybe gives faster parse!
-            val proc = res.processor!!
-            return proc.buildFor(Agl.parseOptions { goalRuleName("CompilationUnit") })
+            val proc = res.let {
+                check(it.issues.errors.isEmpty()) {it.issues.toString()}
+                it.processor!!
+            }
+            return proc//.buildFor(Agl.parseOptions { goalRuleName("CompilationUnit") })
         }
 
         var input: String? = null
@@ -91,7 +95,7 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
                     timer.success()
                     res.sppt
                 }
-            } catch (e: ParseFailedException) {
+            } catch (e: Throwable) {
                 println("Error: ${e.message}")
                 Results.logError("${col}-fst", file)
                 assertTrue(file.isError)

@@ -100,7 +100,7 @@ object AglStyle : LanguageObjectAbstract<AglStyleDomain, ContextWithScope<Any, A
     override val styleString = """
         namespace net.akehurst.language
             styles $NAME {
-                $$ "$${CommonRegexPatterns.LITERAL.value}" {
+                $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
                   foreground: darkgreen;
                   font-weight: bold;
                 }

@@ -2,18 +2,30 @@ plugins {
     kotlin("multiplatform")
 }
 
-val version_agl:String by project
+val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 kotlin {
     jvm("jvm8") {
-        val main by compilations.getting {
-            kotlinOptions {
-                jvmTarget = JavaVersion.VERSION_1_8.toString()
+        compilations {
+            val main by getting {
+                compileTaskProvider.configure {
+                    compilerOptions {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
+                }
             }
-        }
-        val test by compilations.getting {
-            kotlinOptions {
-                jvmTarget = JavaVersion.VERSION_1_8.toString()
+            val test by getting {
+                compileTaskProvider.configure {
+                    compilerOptions {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
+                }
             }
         }
     }

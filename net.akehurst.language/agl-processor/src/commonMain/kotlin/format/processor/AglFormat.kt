@@ -36,6 +36,7 @@ import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.style.processor.AglStyle
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -107,10 +108,15 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
             // TODO
     """.trimIndent()
 
-    override val styleString = """
+    override val styleString: String = """
         namespace ${NAMESPACE_NAME}
-            // TODO
-    """.trimIndent()
+          styles ${NAME} {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
+              foreground: darkgreen;
+              font-weight: bold;
+            }
+          }
+      """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
@@ -210,10 +216,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
     }
 
     override val styleDomain by lazy {
-        styleDomain(AglStyle.NAME) {
-            namespace(AglStyle.NAMESPACE_NAME) {
-                styles(AglStyle.NAME) {
-                    metaRule("'[^']+'") {
+        styleDomain(NAME) {
+            namespace(NAMESPACE_NAME) {
+                styles(NAME) {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }

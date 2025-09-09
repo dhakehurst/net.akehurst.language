@@ -36,6 +36,7 @@ import net.akehurst.language.grammar.api.OverrideKind
 import net.akehurst.language.grammar.builder.grammarDomain
 import net.akehurst.language.reference.api.CrossReferenceDomain
 import net.akehurst.language.reference.builder.crossReferenceDomain
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.types.builder.typesDomain
@@ -103,12 +104,15 @@ grammar $NAME : Base {
           // TODO
     """.trimIndent()
 
-    override val styleString = """
-        namespace $NAMESPACE_NAME
-        styles $NAME {
-            // TODO
-        }
-    """.trimIndent()
+    override val styleString: String = """
+        namespace ${NAMESPACE_NAME}
+          styles ${NAME} {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
+              foreground: darkgreen;
+              font-weight: bold;
+            }
+          }
+      """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
@@ -227,11 +231,14 @@ grammar $NAME : Base {
         }
     }
 
-    override val styleDomain: AglStyleDomain by lazy {
+    override val styleDomain by lazy {
         styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    // TODO
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
+                        declaration("foreground", "darkgreen")
+                        declaration("font-weight", "bold")
+                    }
                 }
             }
         }

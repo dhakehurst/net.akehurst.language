@@ -9,7 +9,7 @@ exportPublic = "2.2.0"
 nak-kotlinx = "2.2.0-SNAPSHOT"
 jsIntegration = "2.2.0"
 
-korlibs = "6.0.1"
+korlibs = "6.0.2"
 kotest = "5.9.1"
 
 [libraries]

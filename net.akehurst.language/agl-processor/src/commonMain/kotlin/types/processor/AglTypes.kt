@@ -32,6 +32,8 @@ import net.akehurst.language.grammar.processor.AglGrammar
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.m2mTransform.processor.M2mTransform
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 
@@ -151,15 +153,15 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
             // TODO
     """.trimIndent()
 
-    override val styleString = """
+    override val styleString: String = """
         namespace ${NAMESPACE_NAME}
           styles ${NAME} {
-            $$ "'[^']+'" {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
               foreground: darkgreen;
               font-weight: bold;
             }
-          }        
-    """
+          }
+      """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}

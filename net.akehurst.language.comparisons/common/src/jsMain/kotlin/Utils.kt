@@ -10,8 +10,9 @@ actual val kotlinTarget:String = "JS"
 
 actual var myResourcesVfs: VfsFile = localVfs("${StandardPaths.cwd}/kotlin")
 
-actual fun runTest(block: suspend () -> Unit): dynamic = GlobalScope.promise { block() }
-
+//actual fun runTest(block: suspend () -> Unit) {
+//    GlobalScope.promise { block() }
+//}
 
 actual fun getPathsRecursive(dir: VfsFile, filter: (path: String) -> Boolean): List<VfsFile> {
     val files = mutableListOf<String>()

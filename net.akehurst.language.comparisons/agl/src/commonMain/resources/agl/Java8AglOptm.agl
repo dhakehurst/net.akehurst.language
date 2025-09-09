@@ -1,3 +1,19 @@
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * This may be more permissive than the other ambiguous grammar
  * derived from [https://docs.oracle.com/javase/specs/jls/se8/html/jls-19.html]
@@ -7,7 +23,7 @@ namespace net.akehurst.language.java8
 grammar Base {
     skip leaf WHITESPACE = "\s+" ;
     skip leaf COMMENT_SINGLE_LINE = "//[^\r\n]*" ;
-    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+    skip leaf COMMENT_MULTI_LINE = "/[*][^*]*[*]+([^*/][^*]*[*]+)*/" ;
 
     leaf IDENTIFIER = JAVA_LETTER JAVA_LETTER_OR_DIGIT* ;
     leaf JAVA_LETTER_OR_DIGIT = JAVA_LETTER | "[0-9]" ;
@@ -55,24 +71,22 @@ grammar Literals {
         | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
         | '\\' 'u'+ "[0-9a-fA-F]{4}"
         ;
-    leaf STRING_LITERAL    = "\"([^\"\\]|\\.)*\"" ;
+    leaf STRING_LITERAL    = "\"(\\.|[^\"\\])*\"" ;
     leaf NULL_LITERAL      = 'null' ;
 }
 
-grammar Annotations extends Base, Literals {
-    Annotation = NormalAnnotation | MarkerAnnotation | SingleElementAnnotation ;
-    NormalAnnotation = '@' QualifiedName '(' ElementValuePairList ')' ;
+grammar Annotations : Base, Literals {
+    Annotation = '@' QualifiedName AnnotationArgs? ;
+    AnnotationArgs = '(' (ElementValue | ElementValuePairList) ')' ;
     ElementValuePairList = [ ElementValuePair / ',' ]* ;
     ElementValuePair = IDENTIFIER '=' ElementValue ;
     // overridden in expressions
     ElementValue = Literal | ElementValueArrayInitializer | Annotation ;
     ElementValueArrayInitializer = '{' ElementValueList ','? '}' ;
     ElementValueList = [ ElementValue / ',' ]* ;
-    MarkerAnnotation = '@' QualifiedName ;
-    SingleElementAnnotation = '@' QualifiedName '(' ElementValue ')' ;
 }
 
-grammar Types extends Annotations {
+grammar Types : Annotations {
 
     TypeReference = TypeReferenceNonArray Dims? ;
     Dims = (Annotation* '[' ']')+ ;
@@ -95,7 +109,7 @@ grammar Types extends Annotations {
     leaf FloatingPointType = 'float' | 'double' ;
 }
 
-grammar Expressions extends Types {
+grammar Expressions : Types {
 
     // from Annotations
     override ElementValue = Expression | ElementValueArrayInitializer | Annotation ;
@@ -129,19 +143,19 @@ grammar Expressions extends Types {
     preference Expression {
       MethodReference on '::' left
 //      LambdaExpression
-      Assignment on ASSIGNMENT_OPERATOR left
+      Assignment ITEM on ASSIGNMENT_OPERATOR left
       TernaryIf on '?' right
-      InfixLogicalOr on '||' left
-      InfixLogicalAnd on '&&' left
-      InfixBitwiseOr on '|' left
-      InfixBitwiseXor on '^' left
-      InfixBitwiseAnd on '&' left
-      InfixEquality on INFIX_OPERATOR_EQUALITY left
+      InfixLogicalOr ITEM on '||' left
+      InfixLogicalAnd ITEM on '&&' left
+      InfixBitwiseOr ITEM on '|' left
+      InfixBitwiseXor ITEM on '^' left
+      InfixBitwiseAnd ITEM on '&' left
+      InfixEquality ITEM on INFIX_OPERATOR_EQUALITY left
       InstanceOf on 'instanceOf' left
-      InfixRelational on INFIX_OPERATOR_RELATIONAL left
-      InfixBitShift on INFIX_OPERATOR_BIT_SHIFT left
-      InfixAdditive on INFIX_OPERATOR_ADDITIVE left
-      InfixMultiplicative on INFIX_OPERATOR_MULTIPLICATIVE left
+      InfixRelational ITEM on INFIX_OPERATOR_RELATIONAL left
+      InfixBitShift ITEM on INFIX_OPERATOR_BIT_SHIFT left
+      InfixAdditive ITEM on INFIX_OPERATOR_ADDITIVE left
+      InfixMultiplicative ITEM on INFIX_OPERATOR_MULTIPLICATIVE left
 //      Prefix
       Postfix on POSTFIX_OPERATOR left
 //      CastExpression
@@ -274,7 +288,7 @@ grammar Expressions extends Types {
     ConstantExpression = Expression ;
 }
 
-grammar BlocksAndStatements extends Expressions {
+grammar BlocksAndStatements : Expressions {
 
     // from Expressions
     override LambdaBody = Expression | Block ;
@@ -370,7 +384,7 @@ grammar BlocksAndStatements extends Expressions {
     Resource = VariableModifier* TypeReference VariableDeclaratorId '=' Expression ;
 }
 
-grammar Classes extends BlocksAndStatements {
+grammar Classes : BlocksAndStatements {
 
     // from BlocksAndStatements
     override BlockStatement = LocalVariableDeclarationStatement | ClassDeclaration | Statement ;
@@ -446,7 +460,7 @@ grammar Classes extends BlocksAndStatements {
     EnumBodyDeclarations = ';' ClassBodyDeclaration* ;
 }
 
-grammar Interfaces extends Classes {
+grammar Interfaces : Classes {
     // from Classes
     override ClassMemberDeclaration
                 = FieldDeclaration
@@ -489,7 +503,7 @@ grammar Interfaces extends Classes {
     DefaultValue = 'default' ElementValue ;
 }
 
-grammar Packages extends Interfaces {
+grammar Packages : Interfaces {
     CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;
     PackageDeclaration = PackageModifier* 'package' [IDENTIFIER / '.']+ ';' ;
     PackageModifier = Annotation ;

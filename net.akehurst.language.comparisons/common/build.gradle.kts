@@ -3,54 +3,81 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 plugins {
     kotlin("multiplatform")
 }
-val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
-val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
+val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
-
 kotlin {
     jvm("jvm8") {
         compilations {
             val main by getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+                compileTaskProvider.configure {
+                    compilerOptions {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
             }
             val test by getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+                compileTaskProvider.configure {
+                    compilerOptions {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
             }
         }
     }
-    js("js", IR) {
-        tasks.withType<KotlinJsCompile>().configureEach {
-            kotlinOptions {
-                moduleKind = "es"
-                useEsClasses = true
-            }
+    js("js") {
+        compilerOptions {
+            target.set("es2015")
         }
         nodejs {
+            testTask {
+                useMocha {
+                    timeout = "5000"
+                }
+            }
         }
         browser {
+            // webpackTask {
+            //    outputFileName = "${project.group}-${project.name}.js"
+            // }
+            testTask {
+                useMocha {
+                    timeout = "5000"
+                }
+            }
+        }
+    }
+
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(libs.kotlinx.datetime)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.korlibs.korio)
+
+                implementation(kotlin("test"))
+                implementation(kotlin("test-annotations-common"))
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+            }
         }
     }
 }
 
-val version_klock:String by project
-val version_korge:String by project
-val version_coroutines:String by project
-dependencies {
-    //"commonMainImplementation"(kotlin("stdlib"))
-    "commonTestImplementation"(kotlin("test"))
-    "commonTestImplementation"(kotlin("test-annotations-common"))
-    commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_coroutines")
-    //commonMainImplementation("com.soywiz.korlibs.klock:klock:$version_klock")
-    commonMainApi("com.soywiz.korge:korge-core:$version_korge")
 
+dependencies {
     //"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
     "jvm8TestImplementation"(kotlin("test-junit"))
 

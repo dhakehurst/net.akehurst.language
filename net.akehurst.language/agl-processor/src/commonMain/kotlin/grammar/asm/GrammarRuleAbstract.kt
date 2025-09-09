@@ -56,7 +56,6 @@ abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
         }
 
         private fun toRegEx(value: String): String {
-
             return Regex.escape(value)
         }
 

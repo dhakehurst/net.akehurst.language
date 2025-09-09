@@ -31,6 +31,7 @@ import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.reference.builder.crossReferenceDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.regex.api.CommonRegexPatterns
 import net.akehurst.language.types.builder.typesDomain
 
 object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any, Any>>() {
@@ -183,15 +184,15 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
           // TODO
     """.trimIndent()
 
-    override val styleString = """
-        namespace $NAMESPACE_NAME
-          styles $NAME {
-            $$ "'[^']+'" {
+    override val styleString: String = """
+        namespace ${NAMESPACE_NAME}
+          styles ${NAME} {
+            $$ "${CommonRegexPatterns.LITERAL.escapedFoAgl.value}" {
               foreground: darkgreen;
               font-weight: bold;
             }
           }
-        """.trimIndent()
+      """
 
     override val formatString: String = """
         namespace ${NAMESPACE_NAME}
@@ -675,7 +676,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
-                    metaRule("'[^']+'") {
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }
