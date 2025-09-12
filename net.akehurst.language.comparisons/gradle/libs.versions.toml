@@ -12,6 +12,7 @@ kotest = "5.9.1"
 [libraries]
 nal-agl-processor = { module = "net.akehurst.language:agl-processor", version.ref = "nal-agl" }
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
+korlibs-io-nodejs = { module = "com.soywiz:korlibs-io-nodejs-js", version.ref = "korlibs" }
 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }

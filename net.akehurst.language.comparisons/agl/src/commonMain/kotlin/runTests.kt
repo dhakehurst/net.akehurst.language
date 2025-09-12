@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import korlibs.io.file.std.StandardPaths
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.ContextWithScope
@@ -55,8 +56,7 @@ suspend fun files(rootDirInfo: String, numFiles: Int, skipPatterns: Set<Regex>, 
 }
 
 suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm, ContextWithScope<Any, Any>> {
-    output(StandardPaths.cwd)
-    val javaGrammarStr = myResourcesVfs[aglFile].readString()
+    val javaGrammarStr = readResource(aglFile)
     val res = Agl.processorFromString<Asm, ContextWithScope<Any, Any>>(
         grammarDefinitionStr = javaGrammarStr,
         aglOptions = Agl.options {
@@ -108,7 +108,7 @@ suspend fun parseJavaFiles(parserCode: String, numFiles: Int, grammarFile: Strin
     val totalFiles = files.size
     for (file in files) {
         output("File: ${file.index} of $totalFiles ")
-        val input = file.path.readString()
+        val input = readResource(file.path.name)
         val md = parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
         if (md.inWholeSeconds >= maxParseTimeBeforeBreak) break
     }
@@ -129,7 +129,9 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
             val data = mutableListOf<Pair<FileDataCommon, String>>()
             var index = 0
             for (file in files) {
-                file.path.readLines().forEachIndexed { idx, line ->
+                val content = readResource(file.path.name)
+                val lines = content.lines()
+                lines.forEachIndexed { idx, line ->
                     when {
                         line.isBlank() -> Unit
                         line.startsWith('#') -> Unit
@@ -164,7 +166,7 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
         false -> {
             for (file in files) {
                 output("File: ${file.index} of $totalFiles ")
-                val input = file.path.readString()
+                val input = readResource(file.path.name)
                 val md = parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
                 if (md.inWholeSeconds >= maxParseTimeBeforeBreak) break
             }
@@ -174,6 +176,8 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
 }
 
 suspend fun runTests() {
+    output(SystemFileSystem.list(Path(".")).joinToString("\n"))
+
     parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt",false)
     parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot",false)
 

@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
@@ -61,6 +64,16 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(kotlin("test-annotations-common"))
+                implementation(libs.nal.agl.processor)
+                implementation(project(":common"))
+                api("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(libs.kotlinx.coroutines.test)
@@ -73,14 +86,3 @@ kotlin {
     }
 }
 
-
-dependencies {
-    commonMainImplementation(kotlin("test"))
-    commonMainImplementation(kotlin("test-annotations-common"))
-    commonMainImplementation(libs.nal.agl.processor)
-
-    commonMainImplementation(project(":common"))
-    //jvm8TestImplementation(project(":common"))
-    //"jvm8TestImplementation"("net.akehurst.language:agl-processor-jvm8:$version_agl")
-
-}

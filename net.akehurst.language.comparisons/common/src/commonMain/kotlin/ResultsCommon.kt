@@ -15,12 +15,14 @@
  */
 package net.akehurst.language.comparisons.common
 
-import korlibs.io.file.getUnderlyingUnscapedFile
-import korlibs.io.file.std.localVfs
-import korlibs.io.file.std.resourcesVfs
+
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.char
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.writeString
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
@@ -73,8 +75,8 @@ object ResultsCommon {
     suspend fun write(name: String) {
         try {
             // You must create this file and add the full path to the folder containing the javaTestFiles
-            val resultFolder = resourcesVfs["nogit/resultFolder.txt"].readString()
-            val rootFs = localVfs(resultFolder)
+            val resultFolder = readResource("nogit/resultFolder.txt")
+            val rootFs = Path(resultFolder)
             val sorted = this.resultsByIndex.entries.sortedBy { it.key }
             val lines = mutableListOf<String>()
             val header = this.resultsByIndex.values.first().values.joinToString { it.col }
@@ -87,10 +89,12 @@ object ResultsCommon {
                 val numCharsNoComments = fe.fileData.charsNoComments
                 lines.add("$index, $numChars, $numCharsNoComments, $durations")
             }
-            val resultsFileOut = rootFs["${name}_${dateTimeNow()}.csv"]
-            resultsFileOut.ensureParents()
-            resultsFileOut.writeLines(lines)
-            println("Written: ${resultsFileOut.getUnderlyingUnscapedFile().path}")
+            val resultsFileOut =Path("${rootFs.name}/${name}_${dateTimeNow()}.csv")
+            SystemFileSystem.createDirectories(resultsFileOut, true)
+            SystemFileSystem.sink(resultsFileOut).buffered().use {
+                it.writeString(lines.joinToString("\n"))
+            }
+            println("Written: ${resultsFileOut.name}")
         } catch (ex: Throwable) {
             throw RuntimeException("Error logging results", ex)
         }

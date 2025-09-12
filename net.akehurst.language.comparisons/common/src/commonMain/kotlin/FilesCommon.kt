@@ -15,14 +15,12 @@
  */
 package net.akehurst.language.comparisons.common
 
-import korlibs.io.file.VfsFile
-import korlibs.io.file.fullNameWithoutExtension
-import korlibs.io.file.std.localVfs
-import korlibs.io.file.std.resourcesVfs
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 data class FileDataCommon(
     val index: Int,
-    val path: VfsFile,
+    val path: Path,
     val lineNumber: Int,
     val chars: Int,
     val charsNoComments: Int,
@@ -31,44 +29,44 @@ data class FileDataCommon(
 
 object FilesCommon {
 
-    suspend fun filesRecursiveFromDir(rootInfoFile: String, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): List<FileDataCommon> {
-        val testFiles = resourcesVfs[rootInfoFile].readString()
-        val rootFs = localVfs(testFiles)
+    fun filesRecursiveFromDir(rootInfoFile: String, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): List<FileDataCommon> {
+        val testFiles = readResource(rootInfoFile)
+        val rootFs = Path(testFiles)
         val allFilteredFiles = getPathsRecursive(rootFs, filter)
-        val path_size = allFilteredFiles.map { Pair(rootFs[it.path], it.stat().size) }.associate { it }
-        val data = path_size.map { (path, size) ->
-            val chars = countChars(path.readString(), skipPatterns)
-            FileDataCommon(0, path, 0,chars.first, chars.second, false)
+        // val path_size = allFilteredFiles.map { Pair(rootFs[it.path], it.stat().size) }.associate { it }
+        val data = allFilteredFiles.map { path ->
+            val content = readResource(path.name)
+            val chars = countChars(content , skipPatterns)
+            FileDataCommon (0, path, 0, chars.first, chars.second, false)
         }
         val sorted = data.sortedBy { it.chars }
         var index = 0
         val files = sorted.map {
-            FileDataCommon(index++, it.path,0, it.chars, it.charsNoComments, it.isError)
+            FileDataCommon(index++, it.path, 0, it.chars, it.charsNoComments, it.isError)
         }
         return files
     }
 
     suspend fun javaFiles(rootInfoFile: String, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): List<FileDataCommon> {
         // You must create this file and add the full path to the folder containing the javaTestFiles
-        val javaTestFiles = resourcesVfs[rootInfoFile].readString()
-        val rootFs = localVfs(javaTestFiles)
-        //val javaFiles = rootFs.listRecursiveSimple().filter { it.path.endsWith(".java") }
-        val javaFiles = getPathsRecursive(rootFs, filter)
-        val path_size = javaFiles.map { Pair(rootFs[it.path], it.stat().size) }.associate { it }
-        val data = path_size.map { (path, size) ->
-            val chars = countChars(path.readString(), skipPatterns)
+        val testFiles = readResource(rootInfoFile)
+        val rootFs = Path(testFiles)
+        val allFilteredFiles = getPathsRecursive(rootFs, filter)
+        val data = allFilteredFiles.map { path ->
+            val content = readResource(path.name)
+            val chars = countChars(content, skipPatterns)
             val isError = containsError(path)
-            FileDataCommon(0, path, 0,chars.first, chars.second, isError)
+            FileDataCommon(0, path, 0, chars.first, chars.second, isError)
         }
         val sorted = data.sortedBy { it.chars }
         var index = 0
         val files = sorted.map {
-            FileDataCommon(index++, it.path, 0,it.chars, it.charsNoComments, it.isError)
+            FileDataCommon(index++, it.path, 0, it.chars, it.charsNoComments, it.isError)
         }
         return files
     }
 
-    fun countChars(sentence:String, skipPatterns: Set<Regex>): Pair<Int, Int> {
+    fun countChars(sentence: String, skipPatterns: Set<Regex>): Pair<Int, Int> {
         var text = sentence
         val rawLength = text.length
         for (pat in skipPatterns) {
@@ -80,14 +78,14 @@ object FilesCommon {
         return Pair(rawLength, text.length)
     }
 
-    private suspend fun containsError(path: VfsFile): Boolean {
-        val outFilePath = path.parent[path.pathInfo.fullNameWithoutExtension + ".out"]
-        return if (outFilePath.exists()) {
-            val txt = outFilePath.readString()
+    private suspend fun containsError(path: Path): Boolean {
+        val outFilePath = path.parent?.let { SystemFileSystem.list(it).firstOrNull { p -> p.name.endsWith(".out") } }
+        return if (null!=outFilePath ) {
+            val txt =readResource( outFilePath.name)
             //TODO: could make this test for errors better
             txt.contains(Regex("errors|error"))
         } else {
-            val txt = path.readString()
+            val txt = readResource( path.name)
             //TODO: could make this test for errors better
             txt.contains(Regex("errors|error"))
         }

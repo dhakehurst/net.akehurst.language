@@ -1,14 +1,19 @@
 package net.akehurst.language.comparisons.common
 
+actual val kotlinTarget:String = "JS"
+
+/*
 import korlibs.io.file.VfsFile
 import korlibs.io.file.std.StandardPaths
 import korlibs.io.file.std.localVfs
+import korlibs.io.file.std.resourcesVfs
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.promise
 
-actual val kotlinTarget:String = "JS"
 
-actual var myResourcesVfs: VfsFile = localVfs("${StandardPaths.cwd}/kotlin")
+
+//actual var myResourcesVfs: VfsFile = localVfs("${StandardPaths.cwd}/kotlin")
+actual var myResourcesVfs: VfsFile = resourcesVfs
 
 //actual fun runTest(block: suspend () -> Unit) {
 //    GlobalScope.promise { block() }
@@ -32,4 +37,4 @@ fun walk(dir: String, callback: (path: String, stat: dynamic) -> Unit) {
             walk(filePath, callback)
         }
     }
-}
+}*/

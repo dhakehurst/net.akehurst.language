@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 
 plugins {
@@ -61,10 +64,18 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.datetime)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.korlibs.korio)
+               // api(libs.korlibs.korio)
 
                 implementation(kotlin("test"))
                 implementation(kotlin("test-annotations-common"))
+
+                api("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
+            }
+        }
+
+        jsMain {
+            dependencies {
+              //  api(libs.korlibs.io.nodejs)
             }
         }
 

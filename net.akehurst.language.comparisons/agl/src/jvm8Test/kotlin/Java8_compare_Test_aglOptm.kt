@@ -48,7 +48,7 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<Asm,ContextWithScope<Any,Any>> {
+        fun createProcessor(aglFile: String): LanguageProcessor<Asm,ContextWithScope<Any,Any>> {
             val bytes = Resources::class.java.getResourceAsStream(aglFile)?.readBytes() ?: error("Cannot find resource: $aglFile")
             val javaGrammarStr = String(bytes)
             val res = Agl.processorFromString<Asm, ContextWithScope<Any,Any>>(
@@ -83,14 +83,28 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
             Results.write()
         }
 
-        val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
+
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
             return try {
-                TimeLogger("${col}-fst", file).use { timer ->
+//                var aglProcessor = createProcessor("/agl/Java8AglOptm.agl")
+//                //warm up JVM
+//                TimeLogger("${col}-1", file).use { timer ->
+//                    aglProcessor.parse(input!!, Agl.parseOptions { goalRuleName("CompilationUnit") })
+//                    timer.success()
+//                }
+//                TimeLogger("${col}-2", file).use { timer ->
+//                    val res = aglProcessor.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
+//                    timer.success()
+//                    res.sppt
+//                }
+
+                // do test
+                val aglProcessor = createProcessor("/agl/Java8AglOptm.agl")
+                TimeLogger("${col}-3", file).use { timer ->
                     aglProcessor.parse(input!!, Agl.parseOptions { goalRuleName("CompilationUnit") })
                     timer.success()
                 }
-                TimeLogger("${col}-snd", file).use { timer ->
+                TimeLogger("${col}-4", file).use { timer ->
                     val res = aglProcessor.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
                     timer.success()
                     res.sppt
