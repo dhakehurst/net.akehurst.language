@@ -130,6 +130,8 @@ open class ObjectGraphAsmSimple(
     val issues: IssueHolder
 ) : ObjectGraph<AsmValue> {
 
+    override val createdStructuresByType = mutableMapOf<TypeInstance, List<AsmValue>>()
+
     fun AsmValue.toTypedObject() = TypedObjectAsmValue(typeFor(this), this)
 
     override fun typeFor(obj: AsmValue?): TypeInstance {
@@ -168,7 +170,9 @@ open class ObjectGraphAsmSimple(
         //val asmPath = AsmPathSimple("??") //TODO:
         val obj = AsmStructureSimple( typeDecl.qualifiedName)
         constructorArgs.forEach { (k, v) -> obj.setProperty(PropertyValueName(k), v.self, obj.property.size) }
-        return TypedObjectAsmValue(typeDecl.type(), obj)
+        val type = typeDecl.type()
+        addCreatedStructure(type, obj)
+        return TypedObjectAsmValue(type, obj)
     }
 
     override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<AsmValue>>): TypedObject<AsmValue> {
@@ -295,6 +299,16 @@ open class ObjectGraphAsmSimple(
             }
 
             else -> tobj.self.toTypedObject()
+        }
+    }
+
+    private fun addCreatedStructure(type: TypeInstance, obj: AsmValue) {
+        var list = this.createdStructuresByType[type]
+        if(null==list) {
+            list = mutableListOf(obj)
+            this.createdStructuresByType[type] = list
+        } else {
+            (list as MutableList).add(obj)
         }
     }
 }

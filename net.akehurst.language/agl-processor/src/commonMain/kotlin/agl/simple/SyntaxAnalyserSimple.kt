@@ -19,29 +19,28 @@ package net.akehurst.language.agl.simple
 
 import net.akehurst.kotlinx.collections.lazyMap
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromAsmTransformAbstract
-import net.akehurst.language.api.syntaxAnalyser.AsmFactory
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmSimple
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
-import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.types.api.TypesDomain
 
-class AsmFactorySimple(
-    typesDomain: TypesDomain,
-    issues: IssueHolder
-) : ObjectGraphAsmSimple(typesDomain, issues), AsmFactory<Asm, AsmValue> {
-
-    override fun constructAsm(): Asm = AsmSimple()
-
-    override fun rootList(asm: Asm): List<AsmValue> = asm.root
-    override fun addRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
-    override fun removeRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
-}
+//class AsmFactorySimple(
+//    typesDomain: TypesDomain,
+//    issues: IssueHolder
+//) : ObjectGraphAsmSimple(typesDomain, issues), AsmFactory<Asm, AsmValue> {
+//
+//    override fun constructAsm(): Asm = AsmSimple()
+//
+//    override fun rootList(asm: Asm): List<AsmValue> = asm.root
+//    override fun addRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
+//    override fun removeRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
+//}
 
 /**
  * TypeName <=> RuleName
@@ -57,12 +56,13 @@ class SyntaxAnalyserSimple(
     typesDomain,
     asmTransformDomain,
     relevantTrRuleSet,
-    AsmFactorySimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
+    ObjectGraphAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
 ) {
-    //companion object {
-    //    private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
-   //     const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
-    //}
+
+    override fun constructAsm(): Asm = AsmSimple(objectGraph as ObjectGraphAsmSimple)
+    override fun rootList(asm: Asm): List<AsmValue> = asm.root
+    override fun addAsmRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
+    override fun removeAsmRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)
 
     override val embeddedSyntaxAnalyser: Map<QualifiedName, SyntaxAnalyser<Asm>> = lazyMap { embGramQName ->
         val ruleSetQname = embGramQName

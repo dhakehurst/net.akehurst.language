@@ -39,11 +39,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; nothing rewritten, use default") {
@@ -64,11 +64,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; rewrite root rule") {
@@ -91,11 +91,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; rewrite root only") {
@@ -122,23 +122,23 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "A") {
                                 propertyString("a", "a")
                                 propertyString("a2", "a")
                             }
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("S = a; leaf a = 'a'; override-default in unit, change only type of root rule") {
@@ -162,11 +162,11 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("a") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("a", "a")
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; override-default in transform, rewrite Root and one choice") {
@@ -194,20 +194,20 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("S = A | B; A = a a; B = 'b' b; override-default in unit, rewrite Root and one choice") {
@@ -235,20 +235,20 @@ class test_ProvidedTransform {
                 """.trimIndent()
                 )
                 sentencePass("aa") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyString("yyy", "a")
                         }
-                    })
+                    }
                 }
                 sentencePass("bb") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("XXX") {
                             propertyElementExplicitType("yyy", "B") {
                                 propertyString("b", "b")
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("Embedded grammars, override-default in unit, rewrite outer") {
@@ -281,32 +281,32 @@ class test_ProvidedTransform {
                 """
                 )
                 sentencePass("d") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         string("d")
-                    })
+                    }
                 }
                 sentencePass("babd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("cacd") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("baaaabd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyElementExplicitType("inner", "S1") {
@@ -322,7 +322,7 @@ class test_ProvidedTransform {
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
             }
             testData("Embedded grammars, override-default in unit, rewrite inner & outer") {
@@ -359,39 +359,39 @@ class test_ProvidedTransform {
                 """.replace("§", "$")
                 )
                 sentencePass("d") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         string("d")
-                    })
+                    }
                 }
                 sentencePass("babd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("cacd") {
-                    expectedAsm(asmSimple() {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "a")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
                 sentencePass("baaaabd") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S1") {
                             propertyElementExplicitType("b", "BI") {
                                 propertyString("inner", "aaaa")
                             }
                             propertyString("s", "d")
                         }
-                    })
+                    }
                 }
             }
         }

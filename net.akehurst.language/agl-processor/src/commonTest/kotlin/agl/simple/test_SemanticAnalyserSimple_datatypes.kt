@@ -110,7 +110,7 @@ class test_SemanticAnalyserSimple_datatypes {
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
         assertNotNull(result.asm)
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -139,7 +139,7 @@ class test_SemanticAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -175,7 +175,7 @@ class test_SemanticAnalyserSimple_datatypes {
         )
         assertNotNull(result.asm)
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {

@@ -25,6 +25,7 @@ import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.asm.OptionHolderDefault
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.formatter.api.AglFormatDomain
 import net.akehurst.language.formatter.api.FormatNamespace
@@ -46,25 +47,25 @@ class FormatModelBuilder(
     private val _namespaces = mutableListOf<FormatNamespace>()
     private val _options = mutableMapOf<String,String>()
     private val _domain = AglFormatDomainDefault(name, OptionHolderDefault(null, _options), _namespaces)
+//TODO:
+    //private val _asm = AsmSimple(ObjectGraphAsmSimple())
+    //private val _ruleList = mutableListOf<AsmStructure>()
+//    private val rules = _asm.createStructure("/", QualifiedName("Unit")).also {
+//        _asm.addRoot(it)
+//        it.setProperty(PropertyValueName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
+//    }
 
-    private val _asm = AsmSimple()
-    private val _ruleList = mutableListOf<AsmStructure>()
-    private val rules = _asm.createStructure("/", QualifiedName("Unit")).also {
-        _asm.addRoot(it)
-        it.setProperty(PropertyValueName("ruleList"), AsmListSimple(_ruleList), 0)//TODO childIndex
-    }
-
-    fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
-        val b = FormatExpressionBuilder(_asm)
-        b.init()
-        val expr = b.build()
-        val formatRuleElement = _asm.createStructure("/",QualifiedName("FormatRule"))
-        val typeReference = _asm.createStructure("/", QualifiedName("TypeReference"))
-        typeReference.setProperty(PropertyValueName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
-        formatRuleElement.setProperty(PropertyValueName("typeReference"), typeReference, 0)//TODO childIndex
-        formatRuleElement.setProperty(PropertyValueName("formatExpression"), expr, 0)//TODO childIndex
-        _ruleList.add(formatRuleElement)
-    }
+//    fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
+//        val b = FormatExpressionBuilder(_asm)
+//        b.init()
+//        val expr = b.build()
+//        val formatRuleElement = _asm.createStructure("/",QualifiedName("FormatRule"))
+//        val typeReference = _asm.createStructure("/", QualifiedName("TypeReference"))
+//        typeReference.setProperty(PropertyValueName("identifier"), AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
+//        formatRuleElement.setProperty(PropertyValueName("typeReference"), typeReference, 0)//TODO childIndex
+//        formatRuleElement.setProperty(PropertyValueName("formatExpression"), expr, 0)//TODO childIndex
+//        _ruleList.add(formatRuleElement)
+//    }
 
     fun build(): AglFormatDomain = _domain
 }

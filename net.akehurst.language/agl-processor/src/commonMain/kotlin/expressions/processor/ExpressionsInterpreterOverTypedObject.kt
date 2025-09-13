@@ -20,6 +20,7 @@ package net.akehurst.language.expressions.processor
 //import net.akehurst.language.asmTransform.processor.AsmTransformInterpreter
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.EvaluationContext
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
@@ -39,6 +40,8 @@ interface TypedObject<out SelfType:Any> {
 
 interface ObjectGraph<SelfType:Any> {
     var typesDomain: TypesDomain
+
+    val createdStructuresByType:Map<TypeInstance, List<SelfType>>
 
     fun typeFor(obj: SelfType?): TypeInstance
     fun toTypedObject(obj:SelfType?) : TypedObject<SelfType>
@@ -322,22 +325,21 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
     }
 
     private fun evaluateCreateObject(evc: EvaluationContext<SelfType>, expression: CreateObjectExpression): TypedObject<SelfType> {
-        val typeDecl = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
+        val typeDef = typeModel.findFirstDefinitionByPossiblyQualifiedNameOrNull(expression.possiblyQualifiedTypeName)
             ?: error("Type not found ${expression.possiblyQualifiedTypeName}")
-//        val asmPath = evaluateRootExpression(evc, RootExpressionSimple(AsmTransformInterpreter.PATH.value)) //FIXME: don't like this import on AsmTransformInterpreter
-        return when (typeDecl) {
+        return when (typeDef) {
             is DataType, is ValueType -> {
                 val args = expression.constructorArguments.map { evaluateExpression(evc, it.rhs) }
                 val constructorArgs = when {
                     args.isNotEmpty() -> {
-                        val constructors = when(typeDecl) {
-                            is DataType -> typeDecl.constructors
-                            is ValueType -> typeDecl.constructors
-                            else -> error("Type '${typeDecl.qualifiedName.value}' has no constructors")
+                        val constructors = when(typeDef) {
+                            is DataType -> typeDef.constructors
+                            is ValueType -> typeDef.constructors
+                            else -> error("Type '${typeDef.qualifiedName.value}' has no constructors")
                         }
                         val constructor = constructors.firstOrNull { cons ->
                             cons.parameters.size == args.size && cons.parameters.zip(args).all { (p, a) -> a.type.conformsTo(p.typeInstance) }
-                        } ?: error("Constructor not found for '${typeDecl.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
+                        } ?: error("Constructor not found for '${typeDef.qualifiedName.value}' with arguments ${args.joinToString { it.type.qualifiedTypeName.value }}")
 
                         // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
                         // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
@@ -354,10 +356,8 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
                 }
                 return obj
             }
-            else -> error("Cannot create an object of type '${typeDecl.qualifiedName.value}'")
+            else -> error("Cannot create an object of type '${typeDef.qualifiedName.value}'")
         }
-
-
     }
 
     private fun evaluateLambda(evc: EvaluationContext<SelfType>, expression: LambdaExpression): TypedObject<SelfType> {

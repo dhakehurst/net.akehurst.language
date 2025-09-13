@@ -1326,7 +1326,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bc", sppt = "S { BC { b:'b' c:'c' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm)  {
                     element("BC") {
                         propertyString("b", "b")
                         propertyString("c", "c")
@@ -1334,17 +1334,17 @@ class test_AllDefault {
                 }
             }
             define(sentence = "d", sppt = "S { §S§multi1 { d : 'd' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d")
                 }
             }
             define(sentence = "dd", sppt = "S { §S§multi1 { d:'d' d:'d' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d", "d")
                 }
             }
             define(sentence = "ddd", sppt = "S { §S§multi1 { d:'d' d:'d' d:'d' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString("d", "d", "d")
                 }
             }
@@ -1435,7 +1435,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "bc", sppt = "S { BC { b:'b' c:'c' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("BC") {
                         propertyString("b", "b")
                         propertyString("c", "c")
@@ -1443,12 +1443,12 @@ class test_AllDefault {
                 }
             }
             define(sentence = "", sppt = "S { §S§multi1 { <EMPTY_LIST> } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     listOfString()
                 }
             }
             define(sentence = "d", sppt = "S { §S§multi1 { D { d : 'd' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1457,7 +1457,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "dd", sppt = "S { §S§multi1 { D { d:'d' } D { d:'d' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1469,7 +1469,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ddd", sppt = "S { §S§multi1 { D { d:'d' } D { d:'d' } D { d:'d' } } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     list {
                         element("D") {
                             propertyString("d", "d")
@@ -1549,12 +1549,12 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "a", sppt = "S { a:'a' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     string("a")
                 }
             }
             define(sentence = "aa", sppt = "S { S1{ S { a:'a' } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyString("s", "a")
                         propertyString("a", "a")
@@ -1562,7 +1562,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaa", sppt = "S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyElementExplicitType("s", "S1") {
                             propertyString("s", "a")
@@ -1573,7 +1573,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "aaaa", sppt = "S { S1{ S { S1{ S { S1{ S { a:'a' } a:'a' } } a:'a' } } a:'a' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S1") {
                         propertyElementExplicitType("s", "S1") {
                             propertyElementExplicitType("s", "S1") {
@@ -5306,7 +5306,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "abce", sppt = "S { a:'a' §S§choice1 { BC { b:'b' c:'c' } } e:'e' }") {
-                asmSimple {
+                asmSimple (typesDomain = expectedTm){
                     element("S") {
                         propertyString("a", "a")
                         propertyElementExplicitType("\$choice", "BC") {
@@ -5318,7 +5318,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d"))
@@ -5327,7 +5327,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adde", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d"))
@@ -5336,7 +5336,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "addde", sppt = "S { a:'a' §S§choice1 { §S§multi1 { d:'d' d:'d' d:'d' } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d", "d"))
@@ -5436,7 +5436,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ae", sppt = "S { a:'a' §S§opt1 { <EMPTY> } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("\$choice")
@@ -5445,7 +5445,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abce", sppt = "S { a:'a' §S§opt1 { §S§choice1 { BC { b:'b' c:'c' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyElementExplicitType("\$choice", "BC") {
@@ -5457,7 +5457,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "ade", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d"))
@@ -5466,7 +5466,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "adde", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d"))
@@ -5475,7 +5475,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "addde", sppt = "S { a:'a' §S§opt1 { §S§choice1 { §S§multi1 { d:'d' d:'d' d:'d' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyListOfString("\$choice", listOf("d", "d", "d"))
@@ -5916,7 +5916,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "xaby", sppt = "S { x:'x' §S§choice1 { a:'a' b:'b' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("\$choice") {
@@ -5928,7 +5928,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "xcdey", sppt = "S { x:'x' §S§choice1 { c:'c' d:'d' e:'e' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("\$choice") {
@@ -6042,7 +6042,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ab", sppt = "S { CH { a:'a' b:'b' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyTuple("ch") {
                             propertyString("a", "a")
@@ -6052,7 +6052,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "cde", sppt = "S { CH { c:'c' d:'d' e:'e' } }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyTuple("ch") {
                             propertyString("c", "c")
@@ -6176,7 +6176,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "xaby", sppt = "S { x:'x' CH { a:'a' b:'b' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("ch") {
@@ -6188,7 +6188,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "xcdey", sppt = "S { x:'x' CH { c:'c' d:'d' e:'e' } y:'y' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("x", "x")
                         propertyTuple("ch") {
@@ -6355,7 +6355,7 @@ class test_AllDefault {
             expectedTr = expectedTr
         ) {
             define(sentence = "ae", sppt = "S { a:'a' §S§opt1 { <EMPTY> } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyNothing("x")
@@ -6364,7 +6364,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "abce", sppt = "S { a:'a' §S§opt1 { X { R { §R§group1 { b:'b' c:'c' } } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyTuple("x") {
@@ -6378,7 +6378,7 @@ class test_AllDefault {
                 }
             }
             define(sentence = "axe", sppt = "S { a:'a' §S§opt1 { X { D { 'x' } } } e:'e' }") {
-                asmSimple {
+                asmSimple(typesDomain = expectedTm) {
                     element("S") {
                         propertyString("a", "a")
                         propertyString("x", "x")

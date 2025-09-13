@@ -5,6 +5,8 @@ import net.akehurst.language.agl.processor.contextFromGrammarRegistry
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.builder.asmSimple
+import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -17,7 +19,8 @@ fun testSentence(proc: LanguageProcessor<Asm, ContextWithScope<Any, Any>>, sd: T
                 val asmRes = proc.process(sd.sentence, sd.options)
                 assertTrue(asmRes.allIssues.errors.isEmpty(), asmRes.allIssues.toString())
                 val actual = asmRes.asm!!
-                assertEquals(sd.expectedAsm.asString(), actual.asString(), "Different ASM")
+                val expectedAsm = asmSimple(typesDomain = proc.typesDomain,init = sd.expectedAsm)
+                assertEquals(expectedAsm.asString(), actual.asString(), "Different ASM")
             }
 
             null != sd.expectedCompletionItem -> {

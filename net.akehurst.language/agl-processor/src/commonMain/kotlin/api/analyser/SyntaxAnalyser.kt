@@ -24,27 +24,15 @@ import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SharedPackedParseTree
 
-/**
- * stateless set of functions that construct elements of an ASM
- */
-interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph<AsmValueType> {
-
-    fun constructAsm(): AsmType
-    fun rootList(asm: AsmType): List<AsmValueType>
-    fun addRoot(asm: AsmType, root: AsmValueType): Boolean
-    fun removeRoot(asm: AsmType, root: AsmValueType): Boolean
-
-    //fun toTypedObject(self: AsmValueType, selfType: TypeInstance): TypedObject<AsmValueType>
-    //fun nothingValue(): AsmValueType
-    //fun anyValue(value: Any): AsmValueType
-    //fun primitiveValue(qualifiedTypeName: QualifiedName, value: Any): AsmValueType
-    //fun listOfValues(elements: List<AsmValueType>): AsmValueType
-    // fun listOfSeparatedValues(elements: ListSeparated<AsmValueType, AsmValueType, AsmValueType>): AsmValueType
-
-    //fun constructStructure(qualifiedTypeName: QualifiedName, vararg args:Any): AsmStructureType
-    //fun setProperty(self: AsmStructureType, index: Int, propertyName: String, value: AsmValueType)
-
-}
+///**
+// * stateless set of functions that construct elements of an ASM
+// */
+//interface AsmFactory<AsmType : Any, AsmValueType : Any> : ObjectGraph<AsmValueType> {  //TODO: return ObjectGraph (should enable removal of this)
+//    fun constructAsm(): AsmType
+//    fun rootList(asm: AsmType): List<AsmValueType>
+//    fun addRoot(asm: AsmType, root: AsmValueType): Boolean
+//    fun removeRoot(asm: AsmType, root: AsmValueType): Boolean
+//}
 
 interface AsmWalker<AsmType : Any, AsmValueType : Any, AsmStructureType : AsmValueType, PropertyType, ListValueType> {
     fun beforeRoot(root: AsmValueType)
@@ -104,5 +92,5 @@ interface SyntaxAnalyser<AsmType : Any> { //TODO: make transform type argument h
      * map the tree into an instance of the targetType
      *
      */
-    fun transform(sppt: SharedPackedParseTree): SyntaxAnalysisResult<AsmType>
+    fun transform(sppt: SharedPackedParseTree): SyntaxAnalysisResult<AsmType>  //TODO: return ObjectGraph in result
 }

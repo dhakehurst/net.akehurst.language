@@ -54,7 +54,7 @@ class test_asmTransformInterpreter {
                     }
                 """)
                 sentencePass("block AA { a a a  }") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("name","AA")
                             propertyListOfElement("listOfA") {
@@ -63,7 +63,7 @@ class test_asmTransformInterpreter {
                                 element("A") {}
                             }
                         }
-                    })
+                    }
                 }
             }
             testData("Substitute default type of list rule") {
@@ -90,12 +90,12 @@ class test_asmTransformInterpreter {
                     }
                 """.replace("§","$"))
                 sentencePass("block AA { a a a  }") {
-                    expectedAsm(asmSimple {
+                    expectedAsm {
                         element("S") {
                             propertyString("name","AA")
                             propertyString("listOfA","a a a")
                         }
-                    })
+                    }
                 }
             }
         }

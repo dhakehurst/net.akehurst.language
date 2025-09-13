@@ -21,7 +21,10 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.expressions.processor.ObjectGraph
+import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
 import net.akehurst.language.types.api.PropertyName
+import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
@@ -59,26 +62,9 @@ class AsmPathSimple(
     override fun toString(): String = this.value
 }
 
-open class AsmSimple() : Asm {
-
-    /*    companion object {
-            internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
-                is String -> "'$this'"
-                is List<*> -> when (this.size) {
-                    0 -> "[]"
-                    1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
-                    else -> {
-                        val newIndent = currentIndent + indent
-                        this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
-                    }
-                }
-
-                is AsmElementSimple -> this.asString(currentIndent, indent)
-                else -> error("property value type not handled '${this::class.simpleName}'")
-            }
-        }*/
-
-    private var _nextElementId = 0
+open class AsmSimple(
+    val objectGraph: ObjectGraphAsmSimple,
+) : Asm {
 
     override val root: List<AsmValue> = mutableListOf()
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
@@ -87,7 +73,8 @@ open class AsmSimple() : Asm {
     fun removeRoot(root: Any)= (this.root as MutableList).remove(root)
 
     fun createStructure(parsePath: String, typeName: QualifiedName): AsmStructureSimple {
-        val el = AsmStructureSimple(typeName)
+        val obj = objectGraph.createStructureValue(typeName, emptyMap())
+        val el = obj.self as AsmStructureSimple
         el.parsePath = parsePath
         //this.elementIndex[asmPath] = el
         return el

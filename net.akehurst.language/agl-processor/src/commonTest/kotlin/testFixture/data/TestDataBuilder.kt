@@ -6,6 +6,7 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.ProcessOptions
 import net.akehurst.language.asm.api.Asm
+import net.akehurst.language.asm.builder.AsmSimpleBuilder
 import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.sentence.api.InputLocation
 
@@ -75,7 +76,7 @@ class TestDataProcessorSentencePass(
     override val sentence: String,
     val description:String?,
     override val options: ProcessOptions<Asm, ContextWithScope<Any, Any>>,
-    val expectedAsm: Asm?,
+    val expectedAsm: (AsmSimpleBuilder.() -> Unit)?,
     val expectedCompletionItem: List<CompletionItem>?
 ) : TestDataProcessorSentence {
     override fun toString(): String = "Pass: ${description ?:""} $sentence"
@@ -171,7 +172,7 @@ class TestDataSentenceBuilder(
 ) {
     private var _options: ProcessOptions<Asm, ContextWithScope<Any, Any>> = Agl.options(baseOptions){}
     private var _context: ContextWithScope<Any,Any>? = null
-    private var _expectedAsm: Asm? = null
+    private var _expectedAsm: (AsmSimpleBuilder.() -> Unit)? = null
     private var _expectedCompletionItems: List<CompletionItem>? = null
     private val _expectedIssues = mutableListOf<LanguageIssue>()
 
@@ -188,8 +189,8 @@ class TestDataSentenceBuilder(
         _expectedIssues.addAll(value)
     }
 
-    fun expectedAsm(value: Asm) {
-        _expectedAsm = value
+    fun expectedAsm(init: AsmSimpleBuilder.() -> Unit) {
+        _expectedAsm = init
     }
 
     fun expectedCompletionItems(value: List<CompletionItem>) {

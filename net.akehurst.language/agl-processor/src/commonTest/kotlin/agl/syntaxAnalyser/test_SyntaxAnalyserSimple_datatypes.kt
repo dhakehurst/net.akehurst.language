@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.agl.simple.SyntaxAnalyserSimple
 import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.agl.simple.test_SemanticAnalyserSimple_datatypes
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
@@ -136,7 +137,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty())
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = typeModel) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -161,7 +162,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty())
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = typeModel) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -198,7 +199,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty())
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = typeModel) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -242,7 +243,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
 
-        val expected = asmSimple(crossReferenceDomain = scopeModel, context = contextAsmSimple()) {
+        val expected = asmSimple(typesDomain = typeModel,crossReferenceDomain = scopeModel, context = contextAsmSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

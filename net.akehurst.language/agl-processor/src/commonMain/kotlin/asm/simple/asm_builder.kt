@@ -73,7 +73,7 @@ class AsmSimpleBuilder(
     private val _sentenceScope = _context?.getScopeForSentenceOrNull(null) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(_typesDomain, _issues),_issues)
-    private val _asm = AsmSimple()
+    private val _asm = AsmSimple(ObjectGraphAsmSimple(_typesDomain,_issues))
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<Any>>()
     private val _identifyingValueInFor = { inTypeName: SimpleName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)

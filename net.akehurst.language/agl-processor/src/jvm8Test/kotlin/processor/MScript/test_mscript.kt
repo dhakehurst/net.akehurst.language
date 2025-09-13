@@ -244,7 +244,7 @@ class test_mscript {
         val text = "x"
         val result = sut.process(text, Agl.options { parse{ goalRuleName("rootVariable") }})
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = sut.typesDomain) {
             element("RootVariable") {
                 propertyString("name", "x")
             }
@@ -755,7 +755,7 @@ class test_mscript {
         val text = "disp(get_param(gcbh,'xxx'))"
         val result = sut.process(text, Agl.options { parse { goalRuleName("script") } })
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = sut.typesDomain) {
             element("Script") {
                 propertyListOfElement("statementList") {
                     element("Line") {
@@ -799,7 +799,7 @@ class test_mscript {
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         val actual = result.asm!!
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = sut.typesDomain) {
             element("Assignment") {
                 propertyElementExplicitType("lhs", "RootVariable") {
                     propertyString("name", "x")
@@ -823,7 +823,7 @@ class test_mscript {
         val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         val actual = result.asm!!
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = sut.typesDomain)  {
             element("Assignment") {
                 propertyElementExplicitType("lhs", "Matrix") {
                     propertyListOfElement("row") {

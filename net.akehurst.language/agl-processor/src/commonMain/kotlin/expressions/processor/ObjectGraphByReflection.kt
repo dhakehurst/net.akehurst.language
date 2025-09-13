@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.reflect.reflect
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
@@ -176,7 +177,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
     val issues: IssueHolder
 ) : ObjectGraph<SelfType> {
 
-    //fun Any.toTypedObject(type: TypeInstance) = TypedObjectByReflection(type, this)
+    override val createdStructuresByType = mutableMapOf<TypeInstance, List<SelfType>>()
 
     fun untyped(typedObj: TypedObject<SelfType>): Any {
         val obj = typedObj.self
@@ -273,7 +274,9 @@ open class ObjectGraphByReflection<SelfType : Any>(
             is UnionType -> error("Should not create an instance of a UnionType")
             else -> error("Unsupported subtype of TypeDefinition: '${typeDef::class.simpleName}'")
         }
-        return TypedObjectAny(typeDef.type(), obj) as TypedObject<SelfType>
+        val type = typeDef.type()
+        addCreatedStructure(type, obj as SelfType)
+        return TypedObjectAny(type, obj) as TypedObject<SelfType>
     }
 
     override fun createCollection(qualifiedTypeName: QualifiedName, collection: Iterable<TypedObject<SelfType>>): TypedObject<SelfType> {
@@ -437,4 +440,13 @@ open class ObjectGraphByReflection<SelfType : Any>(
         return TypedObjectAny(newType, tobj.self)
     }
 
+    private fun addCreatedStructure(type: TypeInstance, obj: SelfType) {
+        var list = this.createdStructuresByType[type]
+        if(null==list) {
+            list = mutableListOf(obj)
+            this.createdStructuresByType[type] = list
+        } else {
+            (list as MutableList).add(obj)
+        }
+    }
 }

@@ -39,16 +39,16 @@ class test_ExpressionsInterpreter {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, issues), issues)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
             assertEquals(expected, actual.self)
         }
 
         fun test_fail(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
-            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, issues), issues)
+            val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
             assertEquals(AsmNothingSimple, actual.self)
             assertEquals(expected, interpreter.issues.all.toList())
         }
@@ -64,7 +64,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyString("prop1", "strValue")
             }
@@ -84,7 +84,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyString("prop1", "strValue")
             }
@@ -103,7 +103,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyString("prop1", "strValue")
             }
@@ -122,7 +122,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyString("prop1", "strValue")
             }
@@ -141,7 +141,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyString("prop1", "strValue")
             }
@@ -167,7 +167,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("prop1", listOf("strValue"))
             }
@@ -193,7 +193,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("prop1", listOf("strValue"))
             }
@@ -219,7 +219,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("prop1", listOf("strValue"))
             }
@@ -245,7 +245,7 @@ class test_ExpressionsInterpreter {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("prop1", listOf("strValue"))
             }
@@ -317,11 +317,13 @@ class test_ExpressionsInterpreter {
             }
         }
         val self = asm.root[0]
-        val expected = AsmListSimple(listOf(
-            AsmPrimitiveSimple.stdString("v1") ,
-            AsmPrimitiveSimple.stdString("v2") ,
-            AsmPrimitiveSimple.stdString("v3")
-        ))
+        val expected = AsmListSimple(
+            listOf(
+                AsmPrimitiveSimple.stdString("v1"),
+                AsmPrimitiveSimple.stdString("v2"),
+                AsmPrimitiveSimple.stdString("v3")
+            )
+        )
         test(tm, self, "aList.map() {it.prop1}", expected)
     }
 }

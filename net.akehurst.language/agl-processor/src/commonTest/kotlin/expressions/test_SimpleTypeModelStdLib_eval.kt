@@ -52,7 +52,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf())
             }
@@ -71,7 +71,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -89,7 +89,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -107,7 +107,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -125,7 +125,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -143,7 +143,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -161,7 +161,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
@@ -179,7 +179,7 @@ class test_SimpleTypeModelStdLib_eval {
                 }
             }
         }
-        val asm = asmSimple {
+        val asm = asmSimple(typesDomain = tm) {
             element("Test") {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }

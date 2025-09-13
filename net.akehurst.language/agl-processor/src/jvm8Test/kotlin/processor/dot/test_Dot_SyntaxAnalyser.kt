@@ -190,7 +190,7 @@ class test_Dot_SyntaxAnalyser {
         assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         assertNotNull(actual)
 
-        val expected = asmSimple {
+        val expected = asmSimple(typesDomain = processor.typesDomain) {
             element("Graph") {
                 propertyString("strict", null)
                 propertyString("type", "graph")
