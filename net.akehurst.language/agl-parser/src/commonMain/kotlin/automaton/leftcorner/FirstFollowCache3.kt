@@ -174,7 +174,6 @@ internal class FirstFollowCache3 {
             }
         }
         graph.resolveAllChildParentInfo()
-
         this.cacheStuff(graph)
 
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: ${graph.root}" }

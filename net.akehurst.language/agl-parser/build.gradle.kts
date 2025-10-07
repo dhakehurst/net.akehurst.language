@@ -51,6 +51,9 @@ kotlin {
         binaries.library()
         generateTypeScriptDefinitions()
     }
+    sourceSets {
+        val jvm8Main by getting
+    }
 }
 
 tasks.forEach {

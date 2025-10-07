@@ -44,9 +44,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
 
     override val extends by lazy { listOf(AglBase) }
 
-    override val grammarString = """
-        namespace $NAMESPACE_NAME
-          grammar $NAME : Base {
+    override val grammarString = $$"""
+        namespace $$NAMESPACE_NAME
+          grammar $$NAME : Base {
             expression
               = rootExpression
               | literalExpression
@@ -119,7 +119,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
             
             literal = BOOLEAN | INTEGER | REAL | STRING ;
         
-            leaf SPECIAL = '${"$"}' IDENTIFIER ;
+            leaf SPECIAL = '$' IDENTIFIER ;
             leaf BOOLEAN = "true|false" ;
             leaf INTEGER = "[0-9]+" ;
             leaf REAL = "[0-9]+[.][0-9]+" ;

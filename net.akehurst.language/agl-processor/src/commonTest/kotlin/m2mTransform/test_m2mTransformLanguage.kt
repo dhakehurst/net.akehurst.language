@@ -1,0 +1,360 @@
+/*
+ * Copyright (C) 2024 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.asmTransform.processor
+
+import net.akehurst.language.agl.Agl
+import net.akehurst.language.agl.semanticAnalyser.contextFromTypesDomain
+import net.akehurst.language.agl.simple.ContextWithScope
+import net.akehurst.language.agl.simple.contextAsmSimple
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.asmTransform.api.AsmTransformDomain
+import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.m2mTransform.api.DomainReference
+import net.akehurst.language.m2mTransform.api.M2mTransformDomain
+import net.akehurst.language.types.api.TypesDomain
+import net.akehurst.language.types.builder.typesDomain
+import net.akehurst.language.types.test.TypesDomainTest
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+class test_m2mTransformLanguage {
+
+    companion object Companion {
+        data class TestData(
+            val testName: String,
+            val sentence: String,
+            val expectedAsm: List<M2mTransformDomain> = emptyList()
+        ) {
+            val typeDomains = mutableMapOf<DomainReference,TypesDomain>()
+        }
+
+        val testData = listOf(
+            TestData(
+                testName = "empty",
+                sentence = """
+                    namespace test
+                """.trimIndent()
+            ),
+            TestData(
+                testName = "empty transform",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                    }
+                """.trimIndent(),
+            ),
+            TestData(
+                testName = "single line comment",
+                sentence = """
+                    // single line comment
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                testName = "multi line comment",
+                sentence = """
+                    /* multi
+                       line
+                       comment
+                    */
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                    }
+                """.trimIndent()
+            ),
+            TestData(
+                testName = "top relation",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "non top relation",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "multiple relations",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
+                      relation Rel2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
+                      relation Rel3 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "top mapping",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top mapping Map1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "non top mapping",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "multiple mapping",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top mapping Map1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := A() {}
+                      }
+                      mapping Map2 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := A() {}
+                      }
+                      mapping Map3 {
+                        domain d1 x:X {}
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+        )
+
+        private fun test_process(data: TestData) {
+            val context = ContextWithScope<Any, Any>()
+            data.typeDomains.forEach { (k,v) ->
+                context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
+            }
+            val result = Agl.registry.agl.m2mTransform.processor!!.process(
+                data.sentence,
+                options = Agl.options {
+                    semanticAnalysis {
+                        context(context)
+                    }
+                }
+            )
+            assertNotNull(result.asm, result.allIssues.toString())
+            assertTrue(result.allIssues.errors.isEmpty(), "'${data.sentence}'\n${result.allIssues}")
+            data.expectedAsm.forEachIndexed { idx, it ->
+
+            }
+        }
+
+    }
+
+    @Test
+    fun check_grammar() {
+        val proc = Agl.registry.agl.asmTransform.processor
+        assertTrue(Agl.registry.agl.asmTransform.issues.isEmpty(), Agl.registry.agl.asmTransform.issues.toString())
+        assertNotNull(proc)
+    }
+
+    @Ignore
+    @Test
+    fun check_typeModel() {
+        val actual = Agl.registry.agl.asmTransform.processor!!.typesDomain
+        val expected = grammarTypeModel("net.akehurst.language.agl", "AsmTransform") {
+            //unit = ruleList ;
+            //ruleList = [formatRule]* ;
+            //formatRule = typeReference '->' formatExpression ;
+            //formatExpression
+            // = stringExpression
+            // | whenExpression
+            // ;
+        }
+
+        TypesDomainTest.tmAssertEquals(expected, actual)
+    }
+
+    @Test
+    fun parse() {
+        val processor = Agl.registry.agl.m2mTransform.processor!!
+        for (td in testData) {
+            println()
+            println("--- ${td.testName} ---")
+            println("Parsing '${td.sentence}'")
+            val result = processor.parse(td.sentence)
+            assertTrue(result.issues.errors.isEmpty(), "'${td.sentence}'\n${result.issues}")
+        }
+    }
+
+    @Test
+    fun process() {
+        for (td in testData) {
+            println()
+            println("--- ${td.testName} ---")
+            println("Processing '${td.sentence}'")
+            test_process(td)
+        }
+    }
+
+}

@@ -26,11 +26,13 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.api.TypeReference
+import net.akehurst.language.expressions.asm.LiteralExpressionDefault
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
 import net.akehurst.language.format.asm.*
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import net.akehurst.language.types.asm.StdLibDefault
 
 internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<AglFormatDomain>() {
 
@@ -54,14 +56,16 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         super.register(this::whenExpression)
         super.register(this::whenOption)
         super.register(this::whenOptionElse)
+        super.register(this::separatedList)
+        super.register(this::separator)
     }
 
     // override unit from BaseSyntaxAnalyser
     // unit = option* namespace* ;
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatDomain {
-        val options = children[0] as List<Pair<String,String>>
+        val options = children[0] as List<Pair<String, String>>
         val namespace = children[1] as List<FormatNamespace>
-        val optHolder = OptionHolderDefault(null,options.associate{it})
+        val optHolder = OptionHolderDefault(null, options.associate { it })
         namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
         val result = AglFormatDomainDefault(SimpleName("Unit"), optHolder, namespace)
         return result
@@ -70,12 +74,12 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     // override namespace from BaseSyntaxAnalyser
     fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FormatNamespace {
         val pqn = children[1] as PossiblyQualifiedName
-        val options = children[2] as List<Pair<String,String>>
+        val options = children[2] as List<Pair<String, String>>
         val import = children[3] as List<Import>
         val definition = children[4] as List<(ns: FormatNamespace) -> FormatSet>
 
-        val optHolder = OptionHolderDefault(null,options.associate{it})
-        val ns = AglFormatNamespaceDefault(pqn.asQualifiedName(null),optHolder, import)
+        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val ns = AglFormatNamespaceDefault(pqn.asQualifiedName(null), optHolder, import)
         definition.forEach {
             val def = it.invoke(ns)
             ns.addDefinition(def)
@@ -145,5 +149,26 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         return FormatWhenOptionElseDefault(expression)
     }
 
+    // separatedList = rootExpression 'sep' separator ;
+    private fun separatedList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Expression,Expression> {
+        val propertyReference = children[0] as Expression
+        val separator = children[2] as Expression
+        return Pair(propertyReference,separator)
+    }
+
+    // separator = STRING | rootExpression ;
+    private fun separator(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression {
+        return when (nodeInfo.alt.option.value) {
+            0 -> {
+                val value = children[0] as String
+                val value2 = value
+                    .removeSurrounding("'")
+                    .replace("\\\\n", "\n")
+                LiteralExpressionDefault(StdLibDefault.String.qualifiedTypeName,value2)
+            }
+            1 -> children[0] as Expression
+            else -> error("Option not supported ${nodeInfo.alt.option.value}")
+        }
+    }
 
 }

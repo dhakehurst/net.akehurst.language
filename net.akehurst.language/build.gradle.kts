@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import com.github.gmazzo.buildconfig.BuildConfigExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -95,25 +96,11 @@ subprojects {
             }
         }
         js("js") {
+            binaries.library()
+            nodejs()
+            browser()
             compilerOptions {
                 target.set("es2015")
-            }
-            nodejs {
-                testTask {
-                    useMocha {
-                        timeout = "5000"
-                    }
-                }
-            }
-            browser {
-                // webpackTask {
-                //    outputFileName = "${project.group}-${project.name}.js"
-                // }
-                testTask {
-                    useMocha {
-                        timeout = "5000"
-                    }
-                }
             }
         }
 
@@ -121,8 +108,6 @@ subprojects {
 //            publishLibraryVariants("release", "debug")
 //        }
 
-
-        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
         wasmJs() {
             binaries.library()
             browser()

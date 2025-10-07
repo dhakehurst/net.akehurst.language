@@ -199,11 +199,16 @@ class TemplateElementExpressionPropertyDefault(
 }
 
 class TemplateElementExpressionListDefault(
-    override val listPropertyName: String,
-    override val separator: String
+    override val listExpression: Expression,
+    override val separator: Expression
 ) : TemplateElementExpressionList {
-    override fun toString(): String = "\$[$listPropertyName / '$separator']"
+    override fun toString(): String = "\$[${listExpression.asString(Indent())} sep '${separator.asString(Indent())}']"
 }
+
+data class TemplateElementExpressionListSeparatorDefault(
+    override val value:String,
+    override val isNamedOfValue:Boolean
+):TemplateElementExpressionListSeparator
 
 class TemplateElementExpressionEmbeddedDefault(
     override val expression: FormatExpression

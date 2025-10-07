@@ -29,6 +29,9 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
 
 class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, ContextWithScope<Any, Any>> {
+
+    private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+
     override fun clear() {
 
     }
@@ -39,18 +42,31 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
         locationMap: LocationMap?,
         options: SemanticAnalysisOptions<ContextWithScope<Any, Any>>
     ): SemanticAnalysisResult {
-        val context = options.context!!
-        asm.allDefinitions.forEach { def ->
-            val typeDomains = def.domainParameters
-            def.rule.forEach { (k,v) ->
-                v.domainItem.forEach { (dk,dv) ->
-                    val typesDomainName = typeDomains[dv.domainRef]!!
-                    val tm = (context.findItemsNamedConformingTo(typesDomainName.value,) {true}).first().item as TypesDomain//TODO check its a typemodel
-                    dv.variable.resolveType(tm)
+        val context = options.context
+        when {
+            null == context -> _issues.warn(null, "No context provided, either provide one or switch off Semantic Analysis.")
+            else -> {
+                asm.allDefinitions.forEach { def ->
+                    val typeDomains = def.domainParameters
+                    def.rule.forEach { (k, v) ->
+                        v.domainItem.forEach { (dk, dv) ->
+                            val typesDomainName = typeDomains[dv.domainRef]
+                            if (null == typesDomainName) {
+                                _issues.error(null, "TypeDomain '${dv.domainRef}' not found for rule '${k}'")
+                            } else {
+                                val tm = (context.findItemsNamedConformingTo(typesDomainName.value,) { true }).firstOrNull()?.item
+                                when(tm) {
+                                    null -> _issues.error(null, "TypeModel '${typesDomainName.value}' not found for rule '${k}'")
+                                    !is TypesDomain -> _issues.error(null, "TypeModel '${typesDomainName.value}' is not a TypesDomain for rule '${k}'")
+                                    else -> dv.variable.resolveType(tm)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        return SemanticAnalysisResultDefault(emptyList(), IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+        return SemanticAnalysisResultDefault(emptyList(), _issues)
     }
 }

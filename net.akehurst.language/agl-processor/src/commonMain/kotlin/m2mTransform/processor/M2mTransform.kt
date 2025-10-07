@@ -64,12 +64,12 @@ grammar $NAME : Base {
     typeImport = 'import-types' possiblyQualifiedName ;
     
     transformRule = relation | mapping ;
-    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* relDomain{2+} when? where? '}' ;
-    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' mapDomain{2+} when? where? '}' ;
+    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* domainObjectPattern{2+} when? where? '}' ;
+    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainObjectPattern+ domainAssignment when? where? '}' ;
     
     pivot = 'pivot' variableDefinition ;
-    relDomain = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    mapDomain = 'domain' IDENTIFIER variableDefinition (':=' expression)?
+    domainObjectPattern = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
+    domainAssignment = 'domain' IDENTIFIER variableDefinition (':=' expression)?
     variableDefinition = IDENTIFIER ':' typeName ;
     typeName = possiblyQualifiedName ;
     expression = Expressions::expression ;
@@ -151,19 +151,19 @@ grammar $NAME : Base {
                     concatenation("relation") {
                         opt { lit("abstract") }; opt { lit("top") }; lit("relation"); ref("IDENTIFIER"); lit("{")
                         lst(0, -1) { ref("pivot") }
-                        lst(2, -1) { ref("relDomain") }; opt { ref("when") }; opt { ref("where") }
+                        lst(2, -1) { ref("domainObjectPattern") }; opt { ref("when") }; opt { ref("where") }
                         lit("}")
                     }
                     concatenation("mapping") {
                         opt { lit("abstract") }; opt { lit("top") }; lit("mapping"); ref("IDENTIFIER"); lit("{")
-                        lst(2, -1) { ref("mapDomain") }; opt { ref("when") }; opt { ref("where") }
+                        lst(1, -1) { ref("domainObjectPattern") }; ref("domainAssignment"); opt { ref("when") }; opt { ref("where") }
                         lit("}")
                     }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
-                    concatenation("relDomain") {
+                    concatenation("domainObjectPattern") {
                         lit("domain"); ref("IDENTIFIER"); ref("IDENTIFIER"); lit(":"); ref("objectPattern")
                     }
-                    concatenation("mapDomain") {
+                    concatenation("domainAssignment") {
                         lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); opt { grp { lit(":="); ref("expression") } }
                     }
                     concatenation("variableDefinition") { ref("IDENTIFIER"); lit(":"); ref("typeName") }

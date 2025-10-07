@@ -93,9 +93,15 @@ interface TemplateElementExpressionProperty : TemplateElement {
 }
 
 interface TemplateElementExpressionList : TemplateElement {
-    val listPropertyName: String
-    val separator:String
+    val listExpression: Expression
+    val separator: Expression
 }
+
+interface TemplateElementExpressionListSeparator {
+    val value:String
+    val isNamedOfValue:Boolean
+}
+
 
 interface TemplateElementExpressionEmbedded : TemplateElement {
     val expression: FormatExpression

@@ -140,7 +140,21 @@ class test_AglFormat_Singles {
         val sentence = $$"""
             namespace test
             format F {
-                Type -> "he said $[greetings / ','] to me!" 
+                Type -> "he said $[greetings sep ','] to me!" 
+            }
+        """.trimIndent()
+        val asm = null
+        test_process(targetGrammar, goal, sentence, asm)
+    }
+
+    @Test
+    fun Format_unit_template_with_text_list_text_sep_is_namedValue() {
+        val targetGrammar = "Format"
+        val goal = "unit"
+        val sentence = $$"""
+            namespace test
+            format F {
+                Type -> "he said $[greetings sep $EOL] to me!" 
             }
         """.trimIndent()
         val asm = null

@@ -19,25 +19,16 @@ package net.akehurst.language.m2mTransform.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.asmTransform.api.AsmTransformNamespace
-import net.akehurst.language.asmTransform.api.AsmTransformRuleSet
-import net.akehurst.language.asmTransform.api.AsmTransformationRule
-import net.akehurst.language.asmTransform.asm.AsmTransformNamespaceDefault
-import net.akehurst.language.asmTransform.asm.AsmTransformRuleSetDefault
-import net.akehurst.language.asmTransform.asm.AsmTransformRuleSetReferenceDefault
 import net.akehurst.language.base.api.Import
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.base.processor.BaseSyntaxAnalyser
-import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.AglExpressions
 import net.akehurst.language.expressions.processor.ExpressionsSyntaxAnalyser
-import net.akehurst.language.grammar.api.SeparatedList
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.m2mTransform.asm.*
 import net.akehurst.language.parser.api.OptionNum
@@ -67,8 +58,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::relation)
         super.register(this::mapping)
         super.register(this::pivot)
-        super.register(this::relDomain)
-        super.register(this::mapDomain)
+        super.register(this::domainObjectPattern)
+        super.register(this::domainAssignment)
         super.register(this::variableDefinition)
         super.register(this::expression)
         super.registerFor("when",this::when_)
@@ -173,19 +164,22 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
-    // mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' mapDomain{2+} when? where? '}' ;
+    // mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainObjectPattern+ domainAssignment when? where? '}' ;
     private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mMapping {
         val isAbstract = children[0] == "abstract"
         val isTop = children[1] == "top"
         val name = SimpleName(children[3] as String)
-        val relDomains = children[5] as List<Pair<DomainItem, Expression?>>
+        val inputDomains = children[5] as List<Pair<DomainItem, Expression?>>
+        val outputDomain = children[6] as Pair<DomainItem, Expression?>
         val whenNode = children[6]
         val whereNode = children[7]
         return M2mMappingDefault(isAbstract, isTop, name).also {
-            relDomains.forEach { rd ->
+            inputDomains.forEach { rd ->
                 (it.domainItem as MutableMap)[rd.first.domainRef] = rd.first
                 (it.expression as MutableMap)[rd.first.domainRef] = rd.second
             }
+            (it.domainItem as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
+            (it.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
         }
     }
 
@@ -195,8 +189,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return vd
     }
 
-    // relDomain = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    private fun relDomain(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, ObjectPattern> {
+    // domainObjectPattern = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
+    private fun domainObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, ObjectPattern> {
         val dn = children[1] as String
         val id = children[2] as String
         val pat = children[4] as ObjectPattern
@@ -205,8 +199,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return Pair(di, pat)
     }
 
-    // mapDomain = 'domain' IDENTIFIER variableDefinition (':=' expression)?
-    private fun mapDomain(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, Expression?> {
+    // domainAssignment = 'domain' IDENTIFIER variableDefinition (':=' expression)?
+    private fun domainAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, Expression?> {
         val dn = children[1] as String
         val vd = children[2] as VariableDefinition
         val expr = (children[3] as? List<Any>)?.getOrNull(1) as? Expression

@@ -1,13 +1,13 @@
 [versions]
-project = "4.2.2.0-SNAPSHOT"
+project = "4.2.2.20-SNAPSHOT"
 
-kotlin = "2.2.0"
+kotlin = "2.2.20"
 dokka = "2.0.0"
-buildconfig = "5.5.1"
+buildconfig = "5.6.7"
 credentials = "3.0"
-exportPublic = "2.2.0"
-nak-kotlinx = "2.2.0-SNAPSHOT"
-jsIntegration = "2.2.0"
+exportPublic = "2.2.20-SNAPSHOT"
+nak-kotlinx = "2.2.20-SNAPSHOT"
+jsIntegration = "2.2.20-SNAPSHOT"
 
 korlibs = "6.0.2"
 kotest = "5.9.1"

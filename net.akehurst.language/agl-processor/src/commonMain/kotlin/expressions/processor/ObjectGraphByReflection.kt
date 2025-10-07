@@ -36,7 +36,7 @@ object StdLibPrimitiveExecutionsForReflection {
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdInteger(self.size.toLong())
+                self.size.toLong()
             },
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("first"))!! to { self, prop ->
                 check(self is List<*>) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -373,7 +373,8 @@ open class ObjectGraphByReflection<SelfType : Any>(
                                 ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                             val propExec = typeProps[propRes.original]
                                 ?: error("StdLibPrimitiveExecutionsForReflection not found for property '${propertyName}' of TypeDeclaration '${type.qualifiedName}'")
-                            toTypedObject(propExec.invoke(untyped(tobj), propRes) as SelfType?)
+                            val v = propExec.invoke(untyped(tobj),propRes)
+                            toTypedObject(v as SelfType?)
                         }
 
                         is PropertyDeclarationStored -> {

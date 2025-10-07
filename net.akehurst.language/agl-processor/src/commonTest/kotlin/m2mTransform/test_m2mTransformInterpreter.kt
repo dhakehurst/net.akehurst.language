@@ -34,8 +34,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_transformInterpreter {
-    private companion object {
+class test_m2mTransformInterpreter {
+    private companion object Companion {
         data class TestData(
             val description: String = "",
         ) {

@@ -60,8 +60,8 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
             text = RAW_TEXT ;
             templateExpression = templateExpressionProperty | templateExpressionList | templateExpressionEmbedded ;
             templateExpressionProperty = DOLLAR_IDENTIFIER ;
-            templateExpressionList = '$[' Expressions::propertyName '/' Expressions::STRING ']' ;
-            templateExpressionEmbedded = '$${'{'}' AglFormat::formatExpression '}'
+            templateExpressionList = '$[' $NAME::separatedList ']' ;
+            templateExpressionEmbedded = '$${'{'}' $NAME::formatExpression '}'
             
             leaf DOLLAR_IDENTIFIER = '$' IDENTIFIER ;
             leaf RAW_TEXT = "(\\\"|[^\"])+" ;
@@ -74,17 +74,15 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
             ruleList = formatRule* ;
             formatRule = typeReference '->' formatExpression ;
             
-            // TODO: override expression +=| formatExpression
-            
             formatExpression
               = expression
               | Template::templateString
-           //   | whenExpression
               ;
-           // whenExpression = 'when' '{' whenOptionList '}' ;
-           // whenOptionList = whenOption* ;
             override whenOption = expression '->' formatExpression ;
             override whenOptionElse = 'else' '->' formatExpression ;
+            
+            separatedList = expression 'sep' separator ;
+            separator = STRING | rootExpression ;
         }
     """
 
@@ -142,10 +140,10 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
                     }
                     concatenation("templateExpressionProperty") { ref("DOLLAR_IDENTIFIER") }
                     concatenation("templateExpressionList") {
-                        lit("\$["); ebd("Expressions", "propertyName"); lit("/"); ebd("Expressions", "STRING"); lit("]")
+                        lit("\$["); ebd(NAME, "separatedList"); lit("]")
                     }
                     concatenation("templateExpressionEmbedded") {
-                        lit("\${"); ebd("Format", "formatExpression"); lit("}")
+                        lit("\${"); ebd(NAME, "formatExpression"); lit("}")
                     }
                     concatenation("DOLLAR_IDENTIFIER", isLeaf = true) { pat("[$][a-zA-Z_][a-zA-Z_0-9-]*") }
                     concatenation("RAW_TEXT", isLeaf = true) {
@@ -172,16 +170,21 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
                     choice("formatExpression") {
                         ref("expression")
                         ebd("Template", "templateString")
-                        //          ref("whenExpression")
                     }
-                    //      concatenation("whenExpression") {
-                    //          lit("when"); lit("{"); lst(1, -1) { ref("whenOption") }; lit("}")
-                    //      }
                     concatenation("whenOption", OverrideKind.REPLACE) {
                         ref("expression"); lit("->"); ref("formatExpression")
                     }
                     concatenation("whenOptionElse", OverrideKind.REPLACE) {
                         lit("else"); lit("->"); ref("formatExpression")
+                    }
+
+                    // only referenced from Template::templateExpressionList
+                    concatenation("separatedList") {
+                        ref("expression"); lit("sep"); ref("separator")
+                    }
+                    choice("separator") {
+                        ref("STRING")
+                        ref("rootExpression") // includes '$id' with 'SPECIAL'
                     }
                 }
             }
@@ -210,7 +213,7 @@ object AglFormat : LanguageObjectAbstract<AglFormatDomain, ContextWithScope<Any,
     }
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
-        crossReferenceDomain(AglStyle.NAME) {
+        crossReferenceDomain(NAME) {
             //TODO
         }
     }

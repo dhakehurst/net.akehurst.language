@@ -266,7 +266,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
                 }
             }
 
-            else -> error("'$op' must have same type for lhs and rhs")
+            else -> objectGraph.createPrimitiveValue(StdLibDefault.Boolean.qualifiedTypeName, false)//error("'$op' must have same type for lhs and rhs")
         }
 
         "+" -> when {

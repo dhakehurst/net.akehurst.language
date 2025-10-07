@@ -40,6 +40,8 @@ data class EvaluationContext<SelfType:Any>(
 
     fun child(namedValues: Map<String, TypedObject<SelfType>>) = of(namedValues, this)
 
+    fun childSelf(self: TypedObject<SelfType>) = ofSelf(self, this.namedValues)
+
     override fun toString(): String {
         val sb = StringBuilder()
         this.parent?.let {

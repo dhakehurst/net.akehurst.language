@@ -1,0 +1,13 @@
+ClosureGraph :
+(parents)
+  root: {RP(0/<GOAL>,oN,SR)} RP(0/<GOAL>,oN,SR) [LHS(<RT>)]
+  {RP(0/<GOAL>,oN,SR)} RP(-1/<EMPTY>,oN,ER) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/S,0,SR) [LHS(<RT>)]]
+  {RP(0/<GOAL>,oN,SR)} RP(0/S,1,SR) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/<GOAL>,oN,SR) [LHS(<RT>)]]
+  {RP(0/<GOAL>,oN,SR)} RP(0/'a',oN,ER) [LHS('a', <RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/S,1,SR) [LHS(<RT>)]]
+  {RP(0/<GOAL>,oN,SR)} RP(0/S,0,SR) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/<GOAL>,oN,SR) [LHS(<RT>)]]
+(children)
+  {RP(0/<GOAL>,oN,SR)} RP(0/<GOAL>,oN,SR) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/S,0,SR) [LHS(<RT>)], {RP(0/<GOAL>,oN,SR)} RP(0/S,1,SR) [LHS(<RT>)]]
+  {RP(0/<GOAL>,oN,SR)} RP(-1/<EMPTY>,oN,ER) [LHS(<RT>)] -> []
+  {RP(0/<GOAL>,oN,SR)} RP(0/S,1,SR) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(0/'a',oN,ER) [LHS('a', <RT>)]]
+  {RP(0/<GOAL>,oN,SR)} RP(0/'a',oN,ER) [LHS('a', <RT>)] -> []
+  {RP(0/<GOAL>,oN,SR)} RP(0/S,0,SR) [LHS(<RT>)] -> [{RP(0/<GOAL>,oN,SR)} RP(-1/<EMPTY>,oN,ER) [LHS(<RT>)]]
