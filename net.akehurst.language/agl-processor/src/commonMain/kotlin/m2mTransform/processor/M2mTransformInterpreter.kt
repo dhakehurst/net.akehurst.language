@@ -46,7 +46,7 @@ class M2mTransformInterpreter<OT : Any>(
 ) {
 
     fun transform(targetDomainRef: DomainReference, root: Map<DomainReference, TypedObject<OT>>): M2MTransformResult<OT> {
-        val pair = m2m.allDefinitions.firstNotNullOfOrNull {
+        val pair = m2m.allTransformRuleSet.firstNotNullOfOrNull {
             val dp = it.domainParameters // domainRef -> Domain-Name
             val tr = it.topRule.firstOrNull { tr ->
                 val srcDomainRefs = tr.domainItem.filterKeys { k -> k != targetDomainRef }

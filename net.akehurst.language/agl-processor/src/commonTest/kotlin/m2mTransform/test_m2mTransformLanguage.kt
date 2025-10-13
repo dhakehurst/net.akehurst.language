@@ -44,6 +44,7 @@ class test_m2mTransformLanguage {
         data class TestData(
             val testName: String,
             val sentence: String,
+            val goalRuleName: String? = null,
             val expectedAsm: List<M2mTransformDomain> = emptyList()
         ) {
             val typeDomains = mutableMapOf<DomainReference,TypesDomain>()
@@ -287,7 +288,215 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            TestData(
+                testName = "where",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top relation Rel1 {
+                        domain d1 x:X {}
+                        domain d2 y:Y {}
+                        where {
+                          Rel2(x,y)
+                        }
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template literal string",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == 'abc'
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template free variable",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == v
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template unnamed object template",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == Property { name == 'n' }
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template named object template",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == p:Property { name == 'n' }
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+
+            TestData(
+                testName = "tests",
+                goalRuleName = "testUnit",
+                sentence = """
+                    namespace test
+                    transform-test Test(d1:D1, d2:D2) {
+                        domain d1 := X() {}
+                        domain d2 := Y() {}
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
         )
+
+        private fun test_parse(data: TestData) {
+            val proc = Agl.registry.agl.m2mTransform.processor!!
+            val result = proc.parse(
+                data.sentence,
+                options = Agl.parseOptions {
+                    data.goalRuleName?.let { goalRuleName(it) }
+                }
+            )
+            assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
+        }
 
         private fun test_process(data: TestData) {
             val context = ContextWithScope<Any, Any>()
@@ -297,6 +506,11 @@ class test_m2mTransformLanguage {
             val result = Agl.registry.agl.m2mTransform.processor!!.process(
                 data.sentence,
                 options = Agl.options {
+                    parse {
+                        data.goalRuleName?.let {
+                            goalRuleName(it)
+                        }
+                    }
                     semanticAnalysis {
                         context(context)
                     }
@@ -342,8 +556,7 @@ class test_m2mTransformLanguage {
             println()
             println("--- ${td.testName} ---")
             println("Parsing '${td.sentence}'")
-            val result = processor.parse(td.sentence)
-            assertTrue(result.issues.errors.isEmpty(), "'${td.sentence}'\n${result.issues}")
+           test_parse(td)
         }
     }
 

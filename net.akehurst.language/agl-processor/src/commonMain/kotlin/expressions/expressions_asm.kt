@@ -72,6 +72,24 @@ data class CreateObjectExpressionDefault(
     override fun toString(): String = "$possiblyQualifiedTypeName { ... }"
 }
 
+data class FunctionOrConstructorCallDefault(
+    override val possiblyQualifiedName: PossiblyQualifiedName,
+    override val arguments: List<Expression>
+) : ExpressionAbstract(), FunctionOrConstructorCall {
+    override fun asString(indent: Indent, imports: List<Import>): String {
+        val sb = StringBuilder()
+        val pqn = when {
+            imports.any { it.value == possiblyQualifiedName.asQualifiedName(null).front.value } -> possiblyQualifiedName.simpleName.value
+            else -> possiblyQualifiedName.value
+        }
+        val cArgs = arguments.joinToString(separator = ", ") { it.asString(Indent(), imports) }
+        sb.append("$pqn($cArgs)")
+        return sb.toString()
+    }
+
+    override fun toString(): String = "$possiblyQualifiedName(...)"
+}
+
 class WithExpressionDefault(
     override val withContext: Expression,
     override val expression: Expression

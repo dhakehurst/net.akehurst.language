@@ -47,33 +47,6 @@ class test_m2mTransformInterpreter {
         }
 
         val testSuit = listOf(
-//            TestData("just a namespace").also {
-//                val dr1 = DomainReference("d1")
-//                val dr2 = DomainReference("d2")
-//                val tm1 = typeModel("Domain1", true) {}
-//                val tm2 = typeModel("Domain2", true) {}
-//                it.typeDomains[dr1] = tm1
-//                it.typeDomains[dr2] = tm2
-//                it.transform = """
-//                    namespace test
-//                """
-//                it.target = dr2
-//            },
-//            TestData("just a transform, no rules").also {
-//                val dr1 = DomainReference("d1")
-//                val dr2 = DomainReference("d2")
-//                val tm1 = typeModel("Domain1", true) {}
-//                val tm2 = typeModel("Domain2", true) {}
-//                it.typeDomains[dr1] = tm1
-//                it.typeDomains[dr2] = tm2
-//                it.transform = """
-//                    namespace test
-//                    transform Test(d1:Domain1, d2:Domain2) {
-//
-//                    }
-//                """
-//                it.target = dr2
-//            },
             TestData("simple mapping").also {
                 val dr1 = DomainReference("d1")
                 val dr2 = DomainReference("d2")
@@ -97,8 +70,8 @@ class test_m2mTransformInterpreter {
                     namespace test
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A12A2 {
-                            domain d1 a1:A1 := A1() { prop1 := a2.prop2 }
-                            domain d2 a2:A2 := A2() { prop2 := a1.prop1 }
+                            domain d1 a1:A1 { prop1 == v }
+                            domain d2 a2:A2 := A2() { prop2 := v }
                         }
                     }
                 """

@@ -23,26 +23,30 @@ import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import kotlin.jvm.JvmInline
 
-interface M2mTransformDomain : Domain<M2mTransformNamespace, M2mTransformRuleSet> {
+interface M2mTransformDomain : Domain<M2mTransformNamespace, M2MTransformDefinition> {
     override val namespace: List<M2mTransformNamespace>
+    val allTransformRuleSet: List<M2mTransformRuleSet>
+    val allTransformTest: List<M2mTransformTest>
 
     fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace
 
 }
 
-interface M2mTransformNamespace : Namespace<M2mTransformRuleSet> {
-    fun createOwnedTransformRuleSet(name: SimpleName, extends: List<M2mTransformRuleSetReference>, options: OptionHolder): M2mTransformRuleSet
+interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
+    fun createOwnedTransformRuleSet(name: SimpleName, extends: List<M2MTransformDefinition>, options: OptionHolder): M2mTransformRuleSet
 }
 
-interface M2mTransformRuleSetReference : DefinitionReference<M2mTransformRuleSet> {
-    override fun resolveAs(resolved: M2mTransformRuleSet)
+interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinition> {
+    override fun resolveAs(resolved: M2MTransformDefinition)
     fun cloneTo(ns: M2mTransformNamespace): M2mTransformRuleSetReference
 }
 
 @JvmInline
 value class DomainReference(val value: String)
 
-interface M2mTransformRuleSet : Definition<M2mTransformRuleSet> {
+interface M2MTransformDefinition : Definition<M2MTransformDefinition>
+
+interface M2mTransformRuleSet : M2MTransformDefinition {
     override val namespace: M2mTransformNamespace
 
     val domainParameters: Map<DomainReference, SimpleName>
@@ -65,6 +69,7 @@ interface M2mTransformRule {
     val isAbstract: Boolean
     val isTop: Boolean
     val name: SimpleName
+    val primitiveDomains : List<VariableDefinition>
     val domainItem: Map<DomainReference, DomainItem>
 }
 
@@ -113,4 +118,9 @@ interface PropertyPatternRhs
 
 interface PropertyPatternExpression : PropertyPatternRhs {
     val expression: Expression
+}
+
+interface M2mTransformTest : M2MTransformDefinition {
+    val domainParameters: Map<DomainReference, SimpleName>
+    val domain: Map<DomainReference, Expression>
 }

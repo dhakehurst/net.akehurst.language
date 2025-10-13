@@ -331,6 +331,14 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
                     }
+                    tagRule("MULTI_LINE_COMMENT") {
+                        declaration("foreground", "gray")
+                        declaration("font-style", "italic")
+                    }
+                    tagRule("SINGLE_LINE_COMMENT") {
+                        declaration("foreground", "darkgray")
+                        declaration("font-style", "italic")
+                    }
                 }
             }
         }

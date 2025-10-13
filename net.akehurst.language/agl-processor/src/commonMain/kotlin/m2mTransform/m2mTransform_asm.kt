@@ -23,6 +23,7 @@ import net.akehurst.language.base.asm.DomainAbstract
 import net.akehurst.language.base.asm.NamespaceAbstract
 import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.m2mTransform.api.*
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
@@ -32,7 +33,10 @@ class M2mTransformDomainDefault(
     override val name: SimpleName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     namespace: List<M2mTransformNamespace> = emptyList()
-) : M2mTransformDomain, DomainAbstract<M2mTransformNamespace, M2mTransformRuleSet>(namespace, options) {
+) : M2mTransformDomain, DomainAbstract<M2mTransformNamespace, M2MTransformDefinition>(namespace, options) {
+
+    override val allTransformRuleSet: List<M2mTransformRuleSet> get() = allDefinitions.filterIsInstance<M2mTransformRuleSet>()
+    override val allTransformTest: List<M2mTransformTest> get() = allDefinitions.filterIsInstance<M2mTransformTest>()
 
     override fun findOrCreateNamespace(qualifiedName: QualifiedName, imports: List<Import>): M2mTransformNamespace {
         TODO("not implemented")
@@ -44,10 +48,10 @@ class M2mTransformNamespaceDefault(
     override val qualifiedName: QualifiedName,
     options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     import: List<Import> = mutableListOf()
-) : M2mTransformNamespace, NamespaceAbstract<M2mTransformRuleSet>(options, import) {
+) : M2mTransformNamespace, NamespaceAbstract<M2MTransformDefinition>(options, import) {
     override fun createOwnedTransformRuleSet(
         name: SimpleName,
-        extends: List<M2mTransformRuleSetReference>,
+        extends: List<M2MTransformDefinition>,
         options: OptionHolder
     ): M2mTransformRuleSet {
         TODO("not implemented")
@@ -59,9 +63,9 @@ data class M2mTransformRuleSetReferenceDefault(
     override val nameOrQName: PossiblyQualifiedName
 ) : M2mTransformRuleSetReference {
 
-    override var resolved: M2mTransformRuleSet? = null
+    override var resolved: M2MTransformDefinition? = null
 
-    override fun resolveAs(resolved: M2mTransformRuleSet) {
+    override fun resolveAs(resolved: M2MTransformDefinition) {
         this.resolved = resolved
     }
 
@@ -80,7 +84,7 @@ class M2mTransformRuleSetDefault(
     argExtends: List<M2mTransformRuleSetReference> = emptyList(),
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
     _rules: List<M2mTransformRule>
-) : M2mTransformRuleSet, DefinitionAbstract<M2mTransformRuleSet>() {
+) : M2mTransformRuleSet, DefinitionAbstract<M2MTransformDefinition>() {
 
     override val extends: List<M2mTransformRuleSetReference> = mutableListOf()
     override val importTypes: List<Import> = mutableListOf()
@@ -108,6 +112,7 @@ data class M2mRelationDefault(
     override val name: SimpleName
 ) : M2mRelation {
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
+    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainItem: Map<DomainReference, DomainItem> = mutableMapOf()
     override val objectPattern: Map<DomainReference, ObjectPattern> = mutableMapOf()
 }
@@ -117,6 +122,7 @@ data class M2mMappingDefault(
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2mMapping {
+    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainItem: Map<DomainReference, DomainItem> = mutableMapOf()
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
 }
@@ -130,20 +136,20 @@ data class DomainItemDefault(
 
 data class VariableDefinitionDefault(
     override val name: SimpleName,
-    val typeRef: PossiblyQualifiedName,
+    val typeRef: TypeReference,
 ) : VariableDefinition {
     private var _resolvedType: TypeInstance? = null
 
     override val type: TypeInstance get() = _resolvedType ?: error("Type not resolved for '$this'")
 
     override fun resolveType(tm: TypesDomain) {
-        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef)
+        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef.possiblyQualifiedName) //TODO typeargs
         _resolvedType = td?.type()
     }
 }
 
 data class ObjectPatternDefault(
-    val typeRef: PossiblyQualifiedName,
+    val typeRef: TypeReference,
     override val propertyPattern: Map<SimpleName, PropertyPattern>
 ) : ObjectPattern {
 
@@ -157,7 +163,7 @@ data class ObjectPatternDefault(
     }
 
     override fun resolveType(tm: TypesDomain) {
-        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef)
+        val td = tm.findFirstDefinitionByPossiblyQualifiedNameOrNull(this.typeRef.possiblyQualifiedName)
         _resolvedType = td?.type()
     }
 }
@@ -172,3 +178,14 @@ data class PropertyPatternDefault(
 class PropertyPatternExpressionDefault(
     override val expression: Expression
 ) : PropertyPatternExpression
+
+
+data class M2MTransformTestDefault(
+    override val namespace: M2mTransformNamespace,
+    override val name: SimpleName,
+    override val domainParameters: Map<DomainReference, SimpleName>,
+    override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
+) : M2mTransformTest, DefinitionAbstract<M2MTransformDefinition>() {
+
+    override val domain: Map<DomainReference, Expression> = mutableMapOf()
+}

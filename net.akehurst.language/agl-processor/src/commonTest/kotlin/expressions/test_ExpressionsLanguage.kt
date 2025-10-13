@@ -78,11 +78,14 @@ class test_ExpressionsLanguage {
             // object
             "A()",
             "A(v:=true) { a:= 1 }",
-            $$"A(s:='d' o:=x.y.z v:=$self) { a:= 1 b:=$self }",
-            $$"A(o:=a[1].f() v:=$self.f() b:=true) { a:= 1 b:=x.y.x c:= a[1].f().z }",
+            $$"A(s:='d', o:=x.y.z, v:=$self) { a:= 1 b:=$self }",
+            $$"A(o:=a[1].f(), v:=$self.f(), b:=true) { a:= 1 b:=x.y.x c:= a[1].f().z }",
+            // function call
+            "func()",
+            "func(a,b,c)",
             // with
             "with(1) true",
-            $$"with(a[1].f().z) A(s:='d' o:=x.y.z v:=$self) { a:= 1 b:=$self }",
+            $$"with(a[1].f().z) A(s:='d', o:=x.y.z, v:=$self) { a:= 1 b:=$self }",
             // when
             "when { true -> 1 else -> false }",
             "when{1+1->2 else->3}",

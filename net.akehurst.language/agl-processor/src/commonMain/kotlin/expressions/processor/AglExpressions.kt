@@ -54,6 +54,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
               | infixExpression
               | tuple
               | object
+              | functionOrConstructorCall
               | with
               | when
               | cast
@@ -82,15 +83,16 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
               | '/' | '*' | '%' | '+' | '-' // arithmetic
               ;
             
-            object = possiblyQualifiedName constructorArguments assignmentBlock? ;
-            constructorArguments = '(' assignmentList ')' ;
-        
+            functionOrConstructorCall = possiblyQualifiedName '(' argumentList ')' ;
             tuple = 'tuple' assignmentBlock ;
+            object = possiblyQualifiedName constructorArguments assignmentBlock? ;
+            constructorArguments = '(' [assignment / ',']* ')' ;
             assignmentBlock = '{' assignmentList  '}' ;
             assignmentList = assignment* ;
-            assignment = propertyName grammarRuleIndex? ':=' expression ;
+            assignment = propertyName grammarRuleIndex? ASSIGN_OP expression ;
             propertyName = SPECIAL | IDENTIFIER ;
             grammarRuleIndex = '$' POSITIVE_INTEGER ;
+            leaf ASSIGN_OP = ':=' | '+=' ;
                 
             with = 'with' '(' expression ')' expression ;
             
@@ -211,6 +213,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         ref("infixExpression")
                         ref("tuple")
                         ref("object")
+                        ref("functionOrConstructorCall")
                         ref("with")
                         ref("when")
                         ref("cast")
@@ -245,11 +248,14 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         // arithmetic
                         lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
+                    concatenation("functionOrConstructorCall") {
+                        ref("possiblyQualifiedName");  lit("("); ref("argumentList"); lit(")")
+                    }
                     concatenation("object") {
                         ref("possiblyQualifiedName"); ref("constructorArguments"); opt { ref("assignmentBlock") }
                     }
                     concatenation("constructorArguments") {
-                        lit("("); ref("assignmentList"); lit(")");
+                        lit("("); spLst(0,-1) { ref("assignment"); lit(",") }; lit(")");
                     }
                     concatenation("tuple") {
                         lit("tuple"); ref("assignmentBlock")
@@ -261,7 +267,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         ref("assignment")
                     }
                     concatenation("assignment") {
-                        ref("propertyName"); opt { ref("grammarRuleIndex") }; lit(":="); ref("expression")
+                        ref("propertyName"); opt { ref("grammarRuleIndex") }; ref("ASSIGN_OP"); ref("expression")
+                    }
+                    choice("ASSIGN_OP", isLeaf = true) {
+                        lit(":=")
+                        lit("+=")
                     }
                     choice("propertyName") {
                         ref("SPECIAL")
@@ -676,6 +686,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
         styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
                 styles(NAME) {
+                    extends(AglBase.NAME)
                     metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")

@@ -58,29 +58,41 @@ grammar $NAME : Base {
     transform = 'transform' IDENTIFIER '(' domainParams ')' extends? '{' option* typeImport* transformRule* '} ;
     domainParams = [parameterDefinition / ',']2+ ;
     parameterDefinition = IDENTIFIER ':' DOMAIN_NAME ;
-    leaf DOMAIN_NAME = IDENTIFIER ;
     extends = ':' [possiblyQualifiedName / ',']+ ;
     option = 'option' IDENTIFIER '=' expression ;
     typeImport = 'import-types' possiblyQualifiedName ;
     
     transformRule = relation | mapping ;
-    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* domainObjectPattern{2+} when? where? '}' ;
-    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainObjectPattern+ domainAssignment when? where? '}' ;
+    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* domainPrimitive* domainObjectPattern{2+} when? where? '}' ;
+    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
     
     pivot = 'pivot' variableDefinition ;
-    domainObjectPattern = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    domainAssignment = 'domain' IDENTIFIER variableDefinition (':=' expression)?
-    variableDefinition = IDENTIFIER ':' typeName ;
-    typeName = possiblyQualifiedName ;
+    domainPrimitive = 'primitive' 'domain' variableDefinition ;
+    domainObjectPattern = 'domain' domainReference variableName ':' objectPattern ;
+    domainAssignment = 'domain' domainReference variableDefinition ':=' expression ;
+    variableDefinition = IDENTIFIER ':' typeReference ;
+    typeReference = Expressions::typeReference ;
     expression = Expressions::expression ;
     
     when = 'when' '{' expression '}' ;
     where = 'where' '{' expression '}' ;
-    
-    objectPattern = typeName '{' propertyPattern*  '}';
-    propertyPattern = IDENTIFIER '==' propertyPatternRhs ;
+       
+    objectPattern = typeReference '{' propertyPattern*  '}';
+    propertyPattern = propertyReference '==' propertyPatternRhs ; //TODO: support navigations on lhs
     propertyPatternRhs = expression | namedObjectPattern ;
-    namedObjectPattern = (IDENTIFIER ':')? objectPattern ;
+    namedObjectPattern = (variableName ':')? objectPattern ;
+
+    leaf DOMAIN_NAME := IDENTIFIER ;
+    leaf domainReference := IDENTIFIER ;
+    leaf propertyReference := IDENTIFIER ;
+    leaf variableName := IDENTIFIER ;
+    
+    testUnit = option* import* testNamespace* ;
+    testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
+    transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
+       testDomain2+
+    '}' ;
+    testDomain = 'domain' IDENTIFIER ':=' expression ;
 }
     """
 
@@ -151,33 +163,63 @@ grammar $NAME : Base {
                     concatenation("relation") {
                         opt { lit("abstract") }; opt { lit("top") }; lit("relation"); ref("IDENTIFIER"); lit("{")
                         lst(0, -1) { ref("pivot") }
-                        lst(2, -1) { ref("domainObjectPattern") }; opt { ref("when") }; opt { ref("where") }
+                        lst(0, -1) { ref("domainPrimitive") }
+                        lst(2, -1) { ref("domainObjectPattern") }
+                        opt { ref("when") }
+                        opt { ref("where") }
                         lit("}")
                     }
                     concatenation("mapping") {
                         opt { lit("abstract") }; opt { lit("top") }; lit("mapping"); ref("IDENTIFIER"); lit("{")
-                        lst(1, -1) { ref("domainObjectPattern") }; ref("domainAssignment"); opt { ref("when") }; opt { ref("where") }
+                        lst(0, -1) { ref("domainPrimitive") }
+                        lst(1, -1) { ref("domainObjectPattern") }
+                        ref("domainAssignment")
+                        opt { ref("when") }
+                        opt { ref("where") }
                         lit("}")
                     }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
+                    concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition");}
                     concatenation("domainObjectPattern") {
-                        lit("domain"); ref("IDENTIFIER"); ref("IDENTIFIER"); lit(":"); ref("objectPattern")
+                        lit("domain"); ref("IDENTIFIER"); ref("variableName"); lit(":"); ref("objectPattern")
                     }
                     concatenation("domainAssignment") {
-                        lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); opt { grp { lit(":="); ref("expression") } }
+                        lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); lit(":="); ref("expression")
                     }
-                    concatenation("variableDefinition") { ref("IDENTIFIER"); lit(":"); ref("typeName") }
-                    concatenation("typeName") { ref("possiblyQualifiedName") }
+                    concatenation("variableDefinition") { ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("typeReference") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "typeReference") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
                     concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }
                     concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
-                    concatenation("objectPattern") { ref("typeName"); lit("{"); lst(0, -1) { ref("propertyPattern") }; lit("}") }
-                    concatenation("propertyPattern") { ref("IDENTIFIER"); lit("=="); ref("propertyPatternRhs") }
+                    concatenation("objectPattern") { ref("typeReference"); lit("{"); lst(0, -1) { ref("propertyPattern") }; lit("}") }
+                    concatenation("propertyPattern") { ref("propertyName"); lit("=="); ref("propertyPatternRhs") }
+                    concatenation("propertyName") {  ref("IDENTIFIER")}
                     choice("propertyPatternRhs") {
                         ref("expression")
                         ref("namedObjectPattern")
                     }
-                    concatenation("namedObjectPattern") { opt { grp { ref("IDENTIFIER"); lit(":") } }; ref("objectPattern") }
+                    concatenation("namedObjectPattern") { opt { grp { ref("variableName"); lit(":") } }; ref("objectPattern") }
+                    concatenation("variableName") { ref("IDENTIFIER") }
+
+                    concatenation("testUnit") {
+                        lst(0, -1) { ref("option") }
+                        lst(0, -1) { ref("import") }
+                        lst(0, -1) { ref("testNamespace") }
+                    }
+                    concatenation("testNamespace") {
+                        lit("namespace"); ref("possiblyQualifiedName")
+                        lst(0, -1) { ref("option") }
+                        lst(0, -1) { ref("import") }
+                        lst(0, -1) { ref("transformTest") }
+                    }
+                    concatenation("transformTest") {
+                        lit("transform-test"); ref("IDENTIFIER"); lit("("); ref("domainParams"); lit(")"); lit("{")
+                            lst(2, -1) { ref("testDomain") }
+                        lit("}")
+                    }
+                    concatenation("testDomain") {
+                        lit("domain"); ref("IDENTIFIER"); lit(":="); ref("expression")
+                    }
                 }
             }
         }
@@ -234,10 +276,23 @@ grammar $NAME : Base {
     override val styleDomain by lazy {
         styleDomain(NAME) {
             namespace(NAMESPACE_NAME) {
-                styles(NAME) {
+                styles(AglExpressions.NAME) { //TODO: include from AglExpression not repeat
                     metaRule(CommonRegexPatterns.LITERAL.value) {
                         declaration("foreground", "darkgreen")
                         declaration("font-weight", "bold")
+                    }
+                }
+                styles(NAME) {
+                    extends(AglBase.NAME)
+                    metaRule(CommonRegexPatterns.LITERAL.value) {
+                        declaration("foreground", "darkgreen")
+                        declaration("font-weight", "bold")
+                    }
+                    tagRule("typeReference") {
+                        declaration("foreground", "DarkBlue")
+                    }
+                    tagRule("propertyName") {
+                        declaration("foreground", "Blue")
                     }
                 }
             }

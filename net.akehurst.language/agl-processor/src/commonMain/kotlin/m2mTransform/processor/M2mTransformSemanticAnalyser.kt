@@ -46,7 +46,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
         when {
             null == context -> _issues.warn(null, "No context provided, either provide one or switch off Semantic Analysis.")
             else -> {
-                asm.allDefinitions.forEach { def ->
+                asm.allTransformRuleSet.forEach { def ->
                     val typeDomains = def.domainParameters
                     def.rule.forEach { (k, v) ->
                         v.domainItem.forEach { (dk, dv) ->

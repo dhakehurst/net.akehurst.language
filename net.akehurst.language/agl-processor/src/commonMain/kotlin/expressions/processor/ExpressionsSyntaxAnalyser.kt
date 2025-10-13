@@ -44,6 +44,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationPart)
         super.register(this::infixExpression)
         super.registerFor("object", this::object_)
+        super.register(this::functionOrConstructorCall)
         super.register(this::constructorArguments)
         super.register(this::tuple)
         super.register(this::assignmentBlock)
@@ -134,6 +135,13 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionDefault(expressions, operators)
     }
 
+    // functionOrConstructorCall = possiblyQualifiedName '(' argumentList ')' ;
+    private fun functionOrConstructorCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FunctionOrConstructorCall {
+        val pqn = children[0] as PossiblyQualifiedName
+        val args = children[2] as List<Expression>
+        return FunctionOrConstructorCallDefault(pqn, args)
+    }
+
     // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val pqn = children[0] as PossiblyQualifiedName
@@ -144,10 +152,9 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return exp
     }
 
-    // constructorArguments = '(' assignmentList ')' ;
+    // constructorArguments = '(' [ assignment / ',' ]* ')' ;
     private fun constructorArguments(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AssignmentStatement> =
-        children[1] as List<AssignmentStatement> //TODO: maybe should also be assignments ?
-
+        (children[1] as List<Any>).toSeparatedList<Any, AssignmentStatement, String>().items
 
     // tuple = 'tuple' assignmentBlock ;
     private fun tuple(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateTupleExpression {
@@ -166,7 +173,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
     // assignment = propertyName  grammarRuleIndex? ':=' expression ;
     private fun assignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AssignmentStatement {
         val lhsPropertyName = children[0] as String
-        val  lhsGrammarRuleIndex = children[1] as Int?
+        val lhsGrammarRuleIndex = children[1] as Int?
         val rhs = children[3] as Expression
         return AssignmentStatementDefault(lhsPropertyName, lhsGrammarRuleIndex, rhs)
     }

@@ -18,6 +18,7 @@ package net.akehurst.language.style.builder
 
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
+import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.regex.api.UnescapedPattern
 import net.akehurst.language.style.api.*
 import net.akehurst.language.style.asm.*
@@ -73,6 +74,10 @@ class StylesBuilder internal constructor(
 
     private val _extends = mutableListOf<StyleSetReference>()
     private val _rules = mutableListOf<AglStyleRule>()
+
+    fun extends(styleSetName: String) {
+        _extends.add(StyleSetReferenceDefault(_namespace, styleSetName.asPossiblyQualifiedName))
+    }
 
     fun metaRule(unescapedPattern: String, init: StyleMetaRuleBuilder.() -> Unit) {
         val b = StyleMetaRuleBuilder(UnescapedPattern(unescapedPattern))
