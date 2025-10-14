@@ -232,7 +232,9 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun domainObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, ObjectTemplate> {
         val ds = children[0] as DomainSignature
         val pt = children[1] as Map<SimpleName, PropertyTemplate>
-        val op = ObjectTemplateDefault(ds.variable.typeRef, pt)
+        val op = ObjectTemplateDefault(ds.variable.typeRef, pt).apply {
+            setIdentifier(ds.variable.name)
+        }
         return Pair(ds, op)
     }
 

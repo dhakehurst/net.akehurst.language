@@ -286,7 +286,6 @@ class test_m2mTransformInterpreter {
                 }
             },
 
-
             TestData("umlRdbms QVT example - PackageToSchema").also {
                 val dr1 = DomainReference("uml")
                 val dr2 = DomainReference("rdbms")
@@ -762,7 +761,9 @@ class test_m2mTransformInterpreter {
         )
 
         fun doTest(testData: TestData) {
+            println("****** ${testData.description} ******")
             testData.typeDomains.forEach { (k,v) ->
+                println("----- ${k.value} : ${v.name.value} -----")
                 println(v.asString())
             }
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
@@ -790,6 +791,8 @@ class test_m2mTransformInterpreter {
             val source = testData.input.entries.associate { (k,v) ->
                 //TODO: for all roots!
                 val obj = v.root.first()
+                println("----- Source ${k.value} -----")
+                println(obj.asString())
                 val srcTypeDomain = testData.typeDomains[k]!!
                 val tobj = ogs[srcTypeDomain.name]?.let {
                     val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
@@ -803,7 +806,8 @@ class test_m2mTransformInterpreter {
             for(dr in testData.expected.keys) {
                 val exp = testData.expected[dr]!!
                 val act = trRes.objects[dr]!!
-                println("Result domain ${dr.value} is ${act.asString()}")
+                println("--- Result domain ${dr.value} ----")
+                println(act.asString())
                 assertEquals(exp.asString(), act.asString())
             }
 
@@ -813,7 +817,6 @@ class test_m2mTransformInterpreter {
     @Test
     fun testAll() {
         testSuit.forEach {
-            println("****** ${it.description} ******")
             doTest(it)
         }
     }
