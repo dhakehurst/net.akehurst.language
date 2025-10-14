@@ -26,7 +26,10 @@ import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.m2mTransform.api.*
+import net.akehurst.language.types.api.CollectionType
 import net.akehurst.language.types.api.PropertyName
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 data class M2MTransformResult<OT : Any>(
     val issues: IssueHolder,
@@ -49,10 +52,10 @@ class M2mTransformInterpreter<OT : Any>(
         val pair = m2m.allTransformRuleSet.firstNotNullOfOrNull {
             val dp = it.domainParameters // domainRef -> Domain-Name
             val tr = it.topRule.firstOrNull { tr ->
-                val srcDomainRefs = tr.domainItem.filterKeys { k -> k != targetDomainRef }
+                val srcDomainRefs = tr.domainSignature.filterKeys { k -> k != targetDomainRef }
                 srcDomainRefs.keys == root.keys
                         && root.entries.all { (k, v) ->
-                    tr.domainItem[k]?.let { di ->
+                    tr.domainSignature[k]?.let { di ->
                         di.variable.type.let { dt ->
                             v.type.conformsTo(dt)
                         }
@@ -90,27 +93,31 @@ class M2mTransformInterpreter<OT : Any>(
         targetDomainRef: DomainReference,
         source: Map<DomainReference, TypedObject<OT>>
     ): Map<DomainReference, TypedObject<OT>> {
-        val result = mutableMapOf<DomainReference, TypedObject<OT>>()
+        val (isMatch, variables) = matchSourceVariables(domainParameters, rule, targetDomainRef, source)
+        return when {
+            isMatch -> {
+                val expression = rule.expression[targetDomainRef]
+                when (expression) {
+                    null -> {
+                        _issues.error(null, "No expression found for target domain ref '$targetDomainRef'")
+                        emptyMap()
+                    }
 
-        val srcObjs = source.entries.associate { (k, v) ->
-            val di = rule.domainItem[k] ?: error("No domain item found for source domain ref '$k'")
-            Pair(di.variable.name.value, v)
-        }
-
-        val expression = rule.expression[targetDomainRef]
-        when (expression) {
-            null -> _issues.error(null, "No expression found for target domain ref '$targetDomainRef'")
-            else -> {
-                val dtn = domainParameters[targetDomainRef] ?: error("DomainParameter not found for target domain ref '$targetDomainRef'")
-                val tgtOg = objectGraph[dtn] ?: error("ObjectGraph not found for domain '$dtn'")
-                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
-                val evc = EvaluationContext.of(srcObjs)
-                val target = exprInterp.evaluateExpression(evc, expression)
-                result[targetDomainRef] = target
+                    else -> {
+                        val dtn = domainParameters[targetDomainRef] ?: error("DomainParameter not found for target domain ref '$targetDomainRef'")
+                        val tgtOg = objectGraph[dtn] ?: error("ObjectGraph not found for domain '$dtn'")
+                        val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
+                        val evc = EvaluationContext.of(variables)
+                        val target = exprInterp.evaluateExpression(evc, expression)
+                        val result = mutableMapOf<DomainReference, TypedObject<OT>>()
+                        result[targetDomainRef] = target
+                        result
+                    }
+                }
             }
-        }
 
-        return result
+            else -> emptyMap()
+        }
     }
 
     private fun executeRelation(
@@ -120,28 +127,12 @@ class M2mTransformInterpreter<OT : Any>(
         source: Map<DomainReference, TypedObject<OT>>
     ): Map<DomainReference, TypedObject<OT>> {
         val result = mutableMapOf<DomainReference, TypedObject<OT>>()
-        val variables = mutableMapOf<String, TypedObject<OT>>()
-
-        val srcDomainRefs = rule.domainItem.filterKeys { k -> k != targetDomainRef }
-        val isMatch = srcDomainRefs.all { (srcDomainRef, srcDomainItem) ->
-            val srcDtn = domainParameters[srcDomainRef]
-            val srcOg = objectGraph[srcDtn] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
-            val srcObjPat = rule.objectPattern[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
-            // match variables from source domain
-            val src = source[srcDomainRef] ?: error("No source object found for domain '$srcDomainRef'")
-            val res = matchVariablesFromRhs(variables, srcObjPat, srcOg, src)
-            if (res.isMatch) {
-                variables[srcDomainItem.variable.name.value] = res.value
-                true
-            } else {
-                false
-            }
-        }
+        val (isMatch, variables) = matchSourceVariables(domainParameters, rule, targetDomainRef, source)
 
         if (isMatch) {
             val dtn = domainParameters[targetDomainRef] ?: error("DomainParameter not found for domain '$targetDomainRef'")
             val tgtOg = objectGraph[dtn] ?: error("ObjectGraph not found for domain '$dtn'")
-            val objPat = rule.objectPattern[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
+            val objPat = rule.objectTemplate[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
             val obj = createFromRhs(variables, objPat, tgtOg)
             result[targetDomainRef] = obj
 
@@ -151,41 +142,82 @@ class M2mTransformInterpreter<OT : Any>(
         return result
     }
 
-    fun matchVariablesFromRhs(variables: MutableMap<String, TypedObject<OT>>, rhs: PropertyPatternRhs, srcObjectGraph: ObjectGraph<OT>, src: TypedObject<OT>): PatternMatchResult<OT> =
+    private fun matchSourceVariables(
+        domainParameters: Map<DomainReference, SimpleName>,
+        rule: M2mTangibleRule,
+        targetDomainRef: DomainReference,
+        source: Map<DomainReference, TypedObject<OT>>
+    ): Pair<Boolean, Map<String, TypedObject<OT>>> {
+        val variables = mutableMapOf<String, TypedObject<OT>>()
+
+        val srcDomainRefs = rule.domainSignature.filterKeys { k -> k != targetDomainRef }
+        val isMatch = srcDomainRefs.all { (srcDomainRef, srcDomainItem) ->
+            val srcDtn = domainParameters[srcDomainRef]
+            val srcOg = objectGraph[srcDtn] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
+            val srcObjPat = rule.objectTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
+            // match variables from source domain
+            val src = source[srcDomainRef] ?: error("No source object found for domain '$srcDomainRef'")
+            val res = matchVariablesFromRhs(variables, srcOg, src, srcObjPat)
+            if (res.isMatch) {
+                variables[srcDomainItem.variable.name.value] = res.value
+                true
+            } else {
+                false
+            }
+        }
+        return Pair(isMatch, variables.takeIf { isMatch } ?: emptyMap())
+    }
+
+    fun matchVariablesFromRhs(variables: MutableMap<String, TypedObject<OT>>, srcObjectGraph: ObjectGraph<OT>, src: TypedObject<OT>, rhs: PropertyTemplateRhs): PatternMatchResult<OT> =
         when (rhs) {
-            is PropertyPatternExpression -> matchVariablesFromPropertyPatternExpression(variables, rhs, srcObjectGraph, src)
-            is ObjectPattern -> matchVariablesFromObjectPattern(variables, rhs, srcObjectGraph, src)
+            is PropertyTemplateExpression -> matchVariablesFromPropertyTemplateExpression(variables, srcObjectGraph, src, rhs)
+            is ObjectTemplate -> matchVariablesFromObjectTemplate(variables, rhs, srcObjectGraph, src)
+            is CollectionTemplate -> matchVariablesFromCollectionTemplate(variables, rhs, srcObjectGraph, src)
             else -> error("Unknown rhs type ${rhs::class}")
         }
 
     /**
      * always returns isMatch==true
      */
-    fun matchVariablesFromPropertyPatternExpression(
+    fun matchVariablesFromPropertyTemplateExpression(
         variables: MutableMap<String, TypedObject<OT>>,
-        ppe: PropertyPatternExpression,
         srcObjectGraph: ObjectGraph<OT>,
-        src: TypedObject<OT>
+        lhs: TypedObject<OT>,
+        rhs: PropertyTemplateExpression
     ): PatternMatchResult<OT> {
-        val expr = ppe.expression
-        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-        val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcObjectGraph, issues)
-        val evc = EvaluationContext.of(variables)
-        val value = exprInterp.evaluateExpression(evc, expr)
-        val isMatch = srcObjectGraph.isNothing(value).not()
-        return PatternMatchResult(isMatch, value, issues)
+        // either :
+        // 1) rhs is a free-variable with no value set, in which case set it to the lhs
+        // 2) rhs is an expression with a value that matches the lhs
+        val expr = rhs.expression
+        return when {
+            expr is RootExpression && variables.contains(expr.name).not() -> {
+                val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+                variables[expr.name] = lhs
+                PatternMatchResult(true, lhs, issues)
+            }
+
+            else -> {
+                val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+                val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcObjectGraph, issues)
+                val evc = EvaluationContext.of(variables)
+                val value = exprInterp.evaluateExpression(evc, expr)
+                val isMatch = srcObjectGraph.equalTo(lhs, value)
+                PatternMatchResult(isMatch, value, issues)
+            }
+        }
     }
 
-    fun matchVariablesFromObjectPattern(
+    fun matchVariablesFromObjectTemplate(
         variables: MutableMap<String, TypedObject<OT>>,
-        objectPattern: ObjectPattern,
+        objectTemplate: ObjectTemplate,
         srcObjectGraph: ObjectGraph<OT>,
         src: TypedObject<OT>
     ): PatternMatchResult<OT> {
         val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-        val isMatch = objectPattern.propertyPattern.all { (k, v) ->
+        val isMatch = objectTemplate.propertyTemplate.all { (k, v) ->
             val rhsPat = v.rhs
-            val res = matchVariablesFromRhs(variables, rhsPat, srcObjectGraph, src)
+            val lhs = srcObjectGraph.getProperty(src, k.value)
+            val res = matchVariablesFromRhs(variables, srcObjectGraph, lhs, rhsPat)
             when {
                 res.isMatch -> {
                     val sv = srcObjectGraph.getProperty(src, k.value)
@@ -195,7 +227,7 @@ class M2mTransformInterpreter<OT : Any>(
                 srcObjectGraph.isNothing(res.value) -> {
                     // rhs variable not set, so set it
                     val varName = when {
-                        rhsPat is PropertyPatternExpression -> when {
+                        rhsPat is PropertyTemplateExpression -> when {
                             rhsPat.expression is RootExpression -> {
                                 val n = (rhsPat.expression as RootExpression).name
                                 SimpleName(n)
@@ -218,20 +250,52 @@ class M2mTransformInterpreter<OT : Any>(
         }
 
         // if the pattern has a name, assign it
-        objectPattern.identifier?.let { variables[it.value] = src }
+        objectTemplate.identifier?.let { variables[it.value] = src }
         return PatternMatchResult(isMatch, src, issues)
     }
 
-    fun createFromRhs(variables: MutableMap<String, TypedObject<OT>>, rhs: PropertyPatternRhs, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> = when (rhs) {
-        is PropertyPatternExpression -> createFromPropertyPatternExpression(variables, rhs, tgtObjectGraph)
-        is ObjectPattern -> createFromObjectPattern(variables, rhs, tgtObjectGraph)
+    fun matchVariablesFromCollectionTemplate(
+        variables: MutableMap<String, TypedObject<OT>>,
+        collectionTemplate: CollectionTemplate,
+        srcObjectGraph: ObjectGraph<OT>,
+        src: TypedObject<OT>
+    ): PatternMatchResult<OT> {
+        val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
+        val result = when {
+            src.type.isCollection -> {
+                val list = mutableListOf<PatternMatchResult<OT>>()
+                srcObjectGraph.forEachIndexed(src) { idx, el ->
+                    collectionTemplate.elements.firstNotNullOfOrNull { elT ->
+                        val matchedVars = mutableMapOf<String, TypedObject<OT>>()
+                        val mr = matchVariablesFromRhs(matchedVars, srcObjectGraph, el, elT)
+                        issues.addAll(mr.issues)
+                        if (mr.isMatch) {
+                            variables.putAll(matchedVars)
+                            list.add(mr)
+                        }
+                    }?.let {
+
+                    }
+                }
+                list
+            }
+            else -> error("src is not a collection")
+        }
+        return when {
+            collectionTemplate.isSubset -> PatternMatchResult(isMatch, result, issues)
+        }
+    }
+
+    fun createFromRhs(variables: Map<String, TypedObject<OT>>, rhs: PropertyTemplateRhs, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> = when (rhs) {
+        is PropertyTemplateExpression -> createFromPropertyPatternExpression(variables, rhs, tgtObjectGraph)
+        is ObjectTemplate -> createFromObjectPattern(variables, rhs, tgtObjectGraph)
         else -> error("Unknown rhs type ${rhs::class}")
     }
 
     /**
      * returns value of expression evaluated in context of provided variables
      */
-    fun createFromPropertyPatternExpression(variables: MutableMap<String, TypedObject<OT>>, ppe: PropertyPatternExpression, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> {
+    fun createFromPropertyPatternExpression(variables: Map<String, TypedObject<OT>>, ppe: PropertyTemplateExpression, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> {
         val expr = ppe.expression
         val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtObjectGraph, _issues)
         val evc = EvaluationContext.of(variables)
@@ -239,17 +303,17 @@ class M2mTransformInterpreter<OT : Any>(
         return value
     }
 
-    fun createFromObjectPattern(variables: MutableMap<String, TypedObject<OT>>, objectPattern: ObjectPattern, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> {
+    fun createFromObjectPattern(variables: Map<String, TypedObject<OT>>, objectTemplate: ObjectTemplate, tgtObjectGraph: ObjectGraph<OT>): TypedObject<OT> {
         val propValues = mutableMapOf<String, TypedObject<OT>>()
-        objectPattern.propertyPattern.forEach { (k, v) ->
+        objectTemplate.propertyTemplate.forEach { (k, v) ->
             val value = createFromRhs(variables, v.rhs, tgtObjectGraph)
             propValues[k.value] = value
         }
-        objectPattern.resolveType(tgtObjectGraph.typesDomain)
-        val obj = tgtObjectGraph.createStructureValue(objectPattern.type.qualifiedTypeName, propValues)
+        objectTemplate.resolveType(tgtObjectGraph.typesDomain)
+        val obj = tgtObjectGraph.createStructureValue(objectTemplate.type.qualifiedTypeName, propValues)
         propValues.forEach { (k, v) ->
             val pn = PropertyName(k)
-            if (true == objectPattern.type.allResolvedProperty[pn]?.isReadWrite) {
+            if (true == objectTemplate.type.allResolvedProperty[pn]?.isReadWrite) {
                 tgtObjectGraph.setProperty(obj, k, v)
             }
         }

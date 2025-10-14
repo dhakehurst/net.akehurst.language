@@ -214,9 +214,22 @@ open class ObjectGraphAsmSimple(
                     }
                 }
 
-
             else -> {
                 issues.error(null, "getIndex not supported on type '${tobj.type.typeName}'")
+                nothing()
+            }
+        }
+    }
+
+    override fun forEachIndexed(tobj: TypedObject<AsmValue>, body: (index: Int, value: TypedObject<AsmValue>) -> Unit) {
+        val asmValue = tobj.self
+        when (asmValue) {
+            is AsmList ->  {
+                asmValue.elements.forEachIndexed { index, el -> body(index, toTypedObject(el)) }
+            }
+
+            else -> {
+                issues.error(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }

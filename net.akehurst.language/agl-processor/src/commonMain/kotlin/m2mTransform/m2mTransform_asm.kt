@@ -106,37 +106,47 @@ class M2mTransformRuleSetDefault(
     }
 }
 
+data class M2mAbstractRuleDefault(
+    override val isTop: Boolean,
+    override val name: SimpleName
+) : M2mAbstractRule {
+    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
+    override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
+}
+
 data class M2mRelationDefault(
-    override val isAbstract: Boolean,
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2mRelation {
-    override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
-    override val domainItem: Map<DomainReference, DomainItem> = mutableMapOf()
-    override val objectPattern: Map<DomainReference, ObjectPattern> = mutableMapOf()
+    override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
+
+    override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
+    override val objectTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
 }
 
 data class M2mMappingDefault(
-    override val isAbstract: Boolean,
     override val isTop: Boolean,
     override val name: SimpleName
 ) : M2mMapping {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
-    override val domainItem: Map<DomainReference, DomainItem> = mutableMapOf()
+    override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
+
+    override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
+    override val objectTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
 }
 
-data class DomainItemDefault(
+data class DomainSignatureDefault(
     override val domainRef: DomainReference,
     override val variable: VariableDefinition
-) : DomainItem {
+) : DomainSignature {
 
 }
 
 data class VariableDefinitionDefault(
     override val name: SimpleName,
-    val typeRef: TypeReference,
+    override val typeRef: TypeReference,
 ) : VariableDefinition {
     private var _resolvedType: TypeInstance? = null
 
@@ -148,10 +158,10 @@ data class VariableDefinitionDefault(
     }
 }
 
-data class ObjectPatternDefault(
+data class ObjectTemplateDefault(
     val typeRef: TypeReference,
-    override val propertyPattern: Map<SimpleName, PropertyPattern>
-) : ObjectPattern {
+    override val propertyTemplate: Map<SimpleName, PropertyTemplate>
+) : ObjectTemplate {
 
     override var identifier: SimpleName? = null
 
@@ -168,16 +178,23 @@ data class ObjectPatternDefault(
     }
 }
 
-data class PropertyPatternDefault(
-    override val propertyName: SimpleName,
-    override val rhs: PropertyPatternRhs
-) : PropertyPattern {
+data class CollectionTemplateDefault(
+    override val isSubset: Boolean,
+    override val elements: List<PropertyTemplateRhs>
+) : CollectionTemplate {
 
 }
 
-class PropertyPatternExpressionDefault(
+data class PropertyTemplateDefault(
+    override val propertyName: SimpleName,
+    override val rhs: PropertyTemplateRhs
+) : PropertyTemplate {
+
+}
+
+class PropertyTemplateExpressionDefault(
     override val expression: Expression
-) : PropertyPatternExpression
+) : PropertyTemplateExpression
 
 
 data class M2MTransformTestDefault(

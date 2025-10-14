@@ -454,7 +454,146 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
-
+            TestData(
+                testName = "Pattern Template collection template empty",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == []
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template collection template complete literals",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == ['a' 'b' 'c']
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template collection template complete objects",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == [
+                            Object { p==b }
+                            o2: Object { p==b }
+                            Object { p==b }
+                          ]
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template collection template subset objects",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      mapping Map1 {
+                        domain d1 x:X {
+                          prop == [
+                            ...
+                            o2: Object { p==b }
+                            Object { p==b }
+                          ]
+                        }
+                        domain d2 y:Y := A() {}
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
             TestData(
                 testName = "tests",
                 goalRuleName = "testUnit",

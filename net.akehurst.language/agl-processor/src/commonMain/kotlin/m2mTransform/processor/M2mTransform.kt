@@ -62,28 +62,32 @@ grammar $NAME : Base {
     option = 'option' IDENTIFIER '=' expression ;
     typeImport = 'import-types' possiblyQualifiedName ;
     
-    transformRule = relation | mapping ;
-    relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* domainPrimitive* domainObjectPattern{2+} when? where? '}' ;
-    mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
-    
+    transformRule = abstractRule | relation | mapping ;
+    abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
+    relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainObjectPattern{2+} when? where? '}' ;
+    mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
+   
     pivot = 'pivot' variableDefinition ;
     domainPrimitive = 'primitive' 'domain' variableDefinition ;
-    domainObjectPattern = 'domain' domainReference variableName ':' objectPattern ;
-    domainAssignment = 'domain' domainReference variableDefinition ':=' expression ;
-    variableDefinition = IDENTIFIER ':' typeReference ;
+    domainSignature = 'domain' domainReference variableDefinition ;
+    domainObjectPattern = domainSignature propertyTemplateBlock ;
+    domainAssignment = domainSignature ':=' expression ;
+    variableDefinition = variableName ':' typeReference ;
     typeReference = Expressions::typeReference ;
     expression = Expressions::expression ;
     
     when = 'when' '{' expression '}' ;
     where = 'where' '{' expression '}' ;
-       
-    objectPattern = typeReference '{' propertyPattern*  '}';
-    propertyPattern = propertyReference '==' propertyPatternRhs ; //TODO: support navigations on lhs
-    propertyPatternRhs = expression | namedObjectPattern ;
-    namedObjectPattern = (variableName ':')? objectPattern ;
+
+    propertyTemplateRhs = expression | objectTemplate | collectionTemplate ;
+    objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
+    propertyTemplateBlock = '{' propertyTemplate*  '}';
+    propertyTemplate = propertyReference '==' propertyTemplateRhs ; //TODO: support navigations on lhs
+    collectionTemplate = '[' ('...')? propertyTemplateRhs* ']' ;
 
     leaf DOMAIN_NAME := IDENTIFIER ;
     leaf domainReference := IDENTIFIER ;
+    leaf ruleName := IDENTIFIER ;
     leaf propertyReference := IDENTIFIER ;
     leaf variableName := IDENTIFIER ;
     
@@ -157,11 +161,18 @@ grammar $NAME : Base {
                     concatenation("extends") { lit(":"); spLst(1, -1) { ref("possiblyQualifiedName"); lit(",") } }
                     concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
                     choice("transformRule") {
-                        ref("relation");
+                        ref("abstractRule")
+                        ref("relation")
                         ref("mapping")
                     }
+                    concatenation("abstractRule") {
+                        lit("abstract"); opt { lit("top") };  lit("rule"); ref("ruleName"); opt { ref("extends") }; lit("{")
+                        lst(0, -1) { ref("domainPrimitive") }
+                        lst(0, -1) { ref("domainSignature") }
+                        lit("}")
+                    }
                     concatenation("relation") {
-                        opt { lit("abstract") }; opt { lit("top") }; lit("relation"); ref("IDENTIFIER"); lit("{")
+                        opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(0, -1) { ref("domainPrimitive") }
                         lst(2, -1) { ref("domainObjectPattern") }
@@ -170,7 +181,7 @@ grammar $NAME : Base {
                         lit("}")
                     }
                     concatenation("mapping") {
-                        opt { lit("abstract") }; opt { lit("top") }; lit("mapping"); ref("IDENTIFIER"); lit("{")
+                        opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainPrimitive") }
                         lst(1, -1) { ref("domainObjectPattern") }
                         ref("domainAssignment")
@@ -180,27 +191,37 @@ grammar $NAME : Base {
                     }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
                     concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition");}
+                    concatenation("domainSignature") {
+                        lit("domain"); ref("domainReference"); ref("variableDefinition")
+                    }
                     concatenation("domainObjectPattern") {
-                        lit("domain"); ref("IDENTIFIER"); ref("variableName"); lit(":"); ref("objectPattern")
+                        ref("domainSignature"); ref("propertyTemplateBlock")
                     }
                     concatenation("domainAssignment") {
-                        lit("domain"); ref("IDENTIFIER"); ref("variableDefinition"); lit(":="); ref("expression")
+                        ref("domainSignature"); lit(":="); ref("expression")
                     }
-                    concatenation("variableDefinition") { ref("IDENTIFIER"); lit(":"); ref("typeReference") }
+                    concatenation("variableDefinition") { ref("variableName"); lit(":"); ref("typeReference") }
                     concatenation("typeReference") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "typeReference") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
                     concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }
                     concatenation("where") { lit("where"); lit("{"); ref("expression"); lit("}") }
-                    concatenation("objectPattern") { ref("typeReference"); lit("{"); lst(0, -1) { ref("propertyPattern") }; lit("}") }
-                    concatenation("propertyPattern") { ref("propertyName"); lit("=="); ref("propertyPatternRhs") }
-                    concatenation("propertyName") {  ref("IDENTIFIER")}
-                    choice("propertyPatternRhs") {
-                        ref("expression")
-                        ref("namedObjectPattern")
-                    }
-                    concatenation("namedObjectPattern") { opt { grp { ref("variableName"); lit(":") } }; ref("objectPattern") }
-                    concatenation("variableName") { ref("IDENTIFIER") }
 
+                    choice("propertyTemplateRhs") {
+                        ref("expression")
+                        ref("objectTemplate")
+                        ref("collectionTemplate")
+                    }
+                    concatenation("objectTemplate") { opt { grp { ref("variableName"); lit(":") } }; ref("typeReference"); ref("propertyTemplateBlock") }
+                    concatenation("propertyTemplateBlock") { lit("{"); lst(0, -1) { ref("propertyTemplate") }; lit("}") }
+                    concatenation("propertyTemplate") { ref("propertyReference"); lit("=="); ref("propertyTemplateRhs") }
+                    concatenation("collectionTemplate") {
+                        lit("["); opt { lit("...") }; lst(0, -1) { ref("propertyTemplateRhs") }; lit("]")
+                    }
+
+                    concatenation("domainReference", isLeaf = true) { ref("IDENTIFIER") }
+                    concatenation("ruleName", isLeaf = true) { ref("IDENTIFIER") }
+                    concatenation("propertyReference", isLeaf = true) { ref("IDENTIFIER") }
+                    concatenation("variableName", isLeaf = true) { ref("IDENTIFIER") }
                     concatenation("testUnit") {
                         lst(0, -1) { ref("option") }
                         lst(0, -1) { ref("import") }

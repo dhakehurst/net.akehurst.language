@@ -49,7 +49,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
                 asm.allTransformRuleSet.forEach { def ->
                     val typeDomains = def.domainParameters
                     def.rule.forEach { (k, v) ->
-                        v.domainItem.forEach { (dk, dv) ->
+                        v.domainSignature.forEach { (dk, dv) ->
                             val typesDomainName = typeDomains[dv.domainRef]
                             if (null == typesDomainName) {
                                 _issues.error(null, "TypeDomain '${dv.domainRef}' not found for rule '${k}'")

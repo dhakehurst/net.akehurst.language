@@ -61,6 +61,7 @@ interface ObjectGraph<SelfType:Any> {
 
     // would like to use Long as index to be compatible with Integer implemented as Long - but index in underlying kotlin is always an Int
     fun getIndex(tobj: TypedObject<SelfType>, index: Int): TypedObject<SelfType>
+    fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit)
 
     /**
      * value of the given PropertyDeclaration or Nothing if no such property exists

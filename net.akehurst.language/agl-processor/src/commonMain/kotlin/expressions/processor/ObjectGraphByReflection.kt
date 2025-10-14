@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.reflect.reflect
+import net.akehurst.language.asm.api.AsmList
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
 import net.akehurst.language.base.api.PossiblyQualifiedName
@@ -337,6 +338,20 @@ open class ObjectGraphByReflection<SelfType : Any>(
 
             else -> {
                 issues.error(null, "getIndex not supported on type '${tobj.type.typeName}'")
+                nothing()
+            }
+        }
+    }
+
+    override fun forEachIndexed(tobj: TypedObject<SelfType>, body: (index: Int, value: TypedObject<SelfType>) -> Unit) {
+        val self = untyped(tobj)
+        when (self) {
+            is List<*> -> {
+                self.forEachIndexed { index, el -> body(index, toTypedObject(el as SelfType?)) }
+            }
+
+            else -> {
+                issues.error(null, "forEachIndexed not supported on type '${tobj.type.typeName}'")
                 nothing()
             }
         }

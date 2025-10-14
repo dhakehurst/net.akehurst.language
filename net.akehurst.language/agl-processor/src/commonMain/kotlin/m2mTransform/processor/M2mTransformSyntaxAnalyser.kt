@@ -56,24 +56,25 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         //super.register(this::import)
         super.register(this::typeImport)
         super.register(this::transformRule)
+        super.register(this::abstractRule)
         super.register(this::relation)
         super.register(this::mapping)
         super.register(this::pivot)
         super.register(this::domainPrimitive)
+        super.register(this::domainSignature)
         super.register(this::domainObjectPattern)
         super.register(this::domainAssignment)
         super.register(this::variableDefinition)
-        super.register(this::expression)
         super.register(this::typeReference)
+        super.register(this::expression)
         super.registerFor("when", this::when_)
         super.register(this::where)
 
-        super.register(this::objectPattern)
-        super.register(this::propertyPattern)
-        super.register(this::propertyName)
-        super.register(this::propertyPatternRhs)
-        super.register(this::namedObjectPattern)
-        super.register(this::variableName)
+        super.register(this::propertyTemplateRhs)
+        super.register(this::objectTemplate)
+        super.register(this::propertyTemplateBlock)
+        super.register(this::propertyTemplate)
+        super.register(this::collectionTemplate)
 
         super.register(this::testUnit)
         super.register(this::testNamespace)
@@ -149,47 +150,62 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun typeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
         Import((children[1] as PossiblyQualifiedName).value)
 
-    // transformRule = relation | mapping ;
+    // transformRule = abstractRule | relation | mapping ;
     private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformRule =
         children[0] as M2mTransformRule
 
-    // relation = 'abstract'? 'top'? 'relation' IDENTIFIER '{' pivot* domainPrimitive* relDomain{2+} when? where? '}' ;
-    private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mRelation {
-        val isAbstract = children[0] == "abstract"
+    // abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
+    private fun abstractRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mAbstractRule {
         val isTop = children[1] == "top"
         val name = SimpleName(children[3] as String)
-        val pivots = children[5] as List<VariableDefinition>
+        val extends = children[4] as List<PossiblyQualifiedName>? ?: emptyList()
         val primDomains = children[6] as List<VariableDefinition>
-        val relDomains = children[7] as List<Pair<DomainItem, ObjectPattern>>
-        val whenNode = children[8]
-        val whereNode = children[9]
-        return M2mRelationDefault(isAbstract, isTop, name).also { rel ->
-            pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
+        val sigDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
+        return M2mAbstractRuleDefault(isTop, name).also { rel ->
             (rel.primitiveDomains as MutableList).addAll(primDomains)
-            relDomains.forEach { rd ->
-                (rel.domainItem as MutableMap)[rd.first.domainRef] = rd.first
-                (rel.objectPattern as MutableMap)[rd.first.domainRef] = rd.second
+            sigDomains.forEach { rd ->
+                (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
             }
         }
     }
 
-    // mapping = 'abstract'? 'top'? 'mapping' IDENTIFIER '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
-    private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mMapping {
-        val isAbstract = children[0] == "abstract"
-        val isTop = children[1] == "top"
-        val name = SimpleName(children[3] as String)
-        val primDomains = children[5] as List<VariableDefinition>
-        val inputDomains = children[6] as List<Pair<DomainItem, Expression?>>
-        val outputDomain = children[7] as Pair<DomainItem, Expression?>
+    // relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* relDomain{2+} when? where? '}' ;
+    private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mRelation {
+        val isTop = children[0] == "top"
+        val name = SimpleName(children[2] as String)
+        val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
+        val pivots = children[5] as List<VariableDefinition>
+        val primDomains = children[6] as List<VariableDefinition>
+        val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenNode = children[8]
         val whereNode = children[9]
-        return M2mMappingDefault(isAbstract, isTop, name).also {
+        return M2mRelationDefault(isTop, name).also { rel ->
+            pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
+            (rel.primitiveDomains as MutableList).addAll(primDomains)
+            relDomains.forEach { rd ->
+                (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
+                (rel.objectTemplate as MutableMap)[rd.first.domainRef] = rd.second
+            }
+        }
+    }
+
+    // mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
+    private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mMapping {
+        val isTop = children[0] == "top"
+        val name = SimpleName(children[2] as String)
+        val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
+        val primDomains = children[5] as List<VariableDefinition>
+        val inputDomains = children[6] as List<Pair<DomainSignature, ObjectTemplate>>
+        val outputDomain = children[7] as Pair<DomainSignature, Expression?>
+        val whenNode = children[8]
+        val whereNode = children[9]
+        return M2mMappingDefault(isTop, name).also {
             (it.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
-                (it.domainItem as MutableMap)[rd.first.domainRef] = rd.first
-                (it.expression as MutableMap)[rd.first.domainRef] = rd.second
+                (it.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
+                (it.objectTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
-            (it.domainItem as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
+            (it.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
             (it.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
         }
     }
@@ -205,27 +221,29 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return children[2] as VariableDefinition
     }
 
-    // domainObjectPattern = 'domain' IDENTIFIER IDENTIFIER ':' objectPattern
-    private fun domainObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, ObjectPattern> {
-        val dn = children[1] as String
-        val id = children[2] as String
-        val pat = children[4] as ObjectPattern
-        val vd = VariableDefinitionDefault(SimpleName(id), (pat as ObjectPatternDefault).typeRef)
-        val di = DomainItemDefault(DomainReference(dn), vd)
-        return Pair(di, pat)
-    }
-
-    // domainAssignment = 'domain' domainReference variableDefinition ':=' expression ;
-    private fun domainAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainItem, Expression?> {
-        val dn = children[1] as String
+    // domainSignature = 'domain' domainReference variableDefinition ;
+    private fun domainSignature(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DomainSignature {
+        val dr = children[1] as String
         val vd = children[2] as VariableDefinition
-        val expr = children[4] as Expression
-
-        val di = DomainItemDefault(DomainReference(dn), vd)
-        return Pair(di, expr)
+        return DomainSignatureDefault(DomainReference(dr), vd)
     }
 
-    // variableDefinition = IDENTIFIER ':' typeReference ;
+    // domainObjectPattern = domainSignature propertyTemplateBlock ;
+    private fun domainObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, ObjectTemplate> {
+        val ds = children[0] as DomainSignature
+        val pt = children[1] as Map<SimpleName, PropertyTemplate>
+        val op = ObjectTemplateDefault(ds.variable.typeRef, pt)
+        return Pair(ds, op)
+    }
+
+    // domainAssignment = domainSignature ':=' expression ;
+    private fun domainAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, Expression?> {
+        val ds = children[0] as DomainSignature
+        val expr = children[2] as Expression
+        return Pair(ds, expr)
+    }
+
+    // variableDefinition = variableName ':' typeReference ;
     private fun variableDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {
         val name = children[0] as String
         val typeRef = children[2] as TypeReference
@@ -248,44 +266,43 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun where(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
         children[2] as Expression
 
-    // objectPattern = typeReference '{' propertyPattern*  '}';
-    private fun objectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectPattern {
-        val typeRef = children[0] as TypeReference
-        val propPats = children[2] as List<PropertyPattern>
-        return ObjectPatternDefault(typeRef, propPats.associateBy { it.propertyName })
-    }
-
-    // propertyPattern = propertyName '==' propertyPatternRhs ;
-    private fun propertyPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyPattern {
-        val id = children[0] as String
-        val rhs = children[2] as PropertyPatternRhs
-        return PropertyPatternDefault(SimpleName(id), rhs)
-    }
-
-    // propertyName = IDENTIFIER ;
-    private fun propertyName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
-        children[0] as String
-
-    // propertyPatternRhs = expression | namedObjectPattern ;
-    private fun propertyPatternRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyPatternRhs =
+    // propertyTemplateRhs = expression | objectTemplate | collectionTemplate ;
+    private fun propertyTemplateRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyTemplateRhs =
         when (nodeInfo.alt.option) {
-            OptionNum(0) -> PropertyPatternExpressionDefault(children[0] as Expression)
-            OptionNum(1) -> children[0] as ObjectPattern
+            OptionNum(0) -> PropertyTemplateExpressionDefault(children[0] as Expression)
+            OptionNum(1) -> children[0] as ObjectTemplate
+            OptionNum(2) -> children[0] as CollectionTemplate
             else -> error("Invalid state")
         }
 
-    // namedObjectPattern = (variableName ':')? objectPattern ;
-    private fun namedObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectPattern {
+    // objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
+    private fun objectTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectTemplate {
         val id = (children[0] as? List<Any> )?.getOrNull(0) as? String
-        val op = children[1] as ObjectPattern
-        return op.apply {
+        val tr = children[1] as TypeReference
+        val pt = children[2] as Map<SimpleName, PropertyTemplate>
+        return ObjectTemplateDefault(tr, pt).apply {
             id?.let { setIdentifier(SimpleName(id)) }
         }
     }
 
-    // variableName := IDENTIFIER ;
-    private fun variableName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return children[0] as String
+    // propertyTemplateBlock = '{' propertyPattern*  '}';
+    private fun propertyTemplateBlock(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Map<SimpleName, PropertyTemplate> {
+        val propPats = children[1] as List<PropertyTemplate>
+        return propPats.associateBy { it.propertyName }
+    }
+
+    // propertyTemplate = propertyName '==' propertyPatternRhs ;
+    private fun propertyTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyTemplate {
+        val id = children[0] as String
+        val rhs = children[2] as PropertyTemplateRhs
+        return PropertyTemplateDefault(SimpleName(id), rhs)
+    }
+
+    // collectionTemplate = '[' ('...')? propertyPatternRhs* ']' ;
+    private fun collectionTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionTemplate {
+        val isSubset = children[1] == null
+        val els = children[2] as List<PropertyTemplateRhs>
+        return CollectionTemplateDefault(isSubset, els)
     }
 
     // testUnit = option* import* testNamespace* ;

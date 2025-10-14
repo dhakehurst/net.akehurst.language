@@ -162,6 +162,8 @@ interface TypeInstance {
 
     val qualifiedTypeName: QualifiedName
 
+    val isCollection: Boolean
+
     /**
      * {derived} type is resolved via the namespace
      */

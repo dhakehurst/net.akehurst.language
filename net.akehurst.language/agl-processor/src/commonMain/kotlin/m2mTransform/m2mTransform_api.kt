@@ -19,6 +19,7 @@ package net.akehurst.language.m2mTransform.api
 
 import net.akehurst.language.base.api.*
 import net.akehurst.language.expressions.api.Expression
+import net.akehurst.language.expressions.api.TypeReference
 import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.api.TypesDomain
 import kotlin.jvm.JvmInline
@@ -66,57 +67,70 @@ interface M2mTransformRuleSet : M2MTransformDefinition {
 }
 
 interface M2mTransformRule {
-    val isAbstract: Boolean
     val isTop: Boolean
     val name: SimpleName
-    val primitiveDomains : List<VariableDefinition>
-    val domainItem: Map<DomainReference, DomainItem>
+    val primitiveDomains: List<VariableDefinition>
+    val domainSignature: Map<DomainReference, DomainSignature>
 }
 
-interface DomainItem {
+interface DomainSignature {
     val domainRef: DomainReference
     val variable: VariableDefinition
 }
 
 interface VariableDefinition {
     val name: SimpleName
+    val typeRef: TypeReference
     val type: TypeInstance
 
     fun resolveType(tm: TypesDomain)
 }
 
-interface M2mRelation : M2mTransformRule {
+interface M2mAbstractRule : M2mTransformRule {
+
+}
+
+interface M2mTangibleRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
-    val objectPattern: Map<DomainReference, ObjectPattern>
+    val objectTemplate: Map<DomainReference, ObjectTemplate>
+}
+
+interface M2mRelation : M2mTangibleRule {
+
 }
 
 /**
  * should only have two domains
  */
-interface M2mMapping : M2mTransformRule {
+interface M2mMapping : M2mTangibleRule {
     /**
      * expression for constructing one domain from the other
      */
     val expression: Map<DomainReference, Expression?>
 }
 
-interface ObjectPattern : PropertyPatternRhs {
+interface ObjectTemplate : PropertyTemplateRhs {
     val identifier: SimpleName?
     val type: TypeInstance
-    val propertyPattern: Map<SimpleName, PropertyPattern>
+    val propertyTemplate: Map<SimpleName, PropertyTemplate>
 
     fun setIdentifier(value: SimpleName)
     fun resolveType(tm: TypesDomain)
 }
 
-interface PropertyPattern {
-    val propertyName: SimpleName
-    val rhs: PropertyPatternRhs
+interface CollectionTemplate : PropertyTemplateRhs {
+    val isSubset: Boolean
+    val elements: List<PropertyTemplateRhs>
 }
 
-interface PropertyPatternRhs
+interface PropertyTemplate {
+    val propertyName: SimpleName
+    val rhs: PropertyTemplateRhs
+}
 
-interface PropertyPatternExpression : PropertyPatternRhs {
+interface PropertyTemplateRhs
+
+interface PropertyTemplateExpression : PropertyTemplateRhs {
     val expression: Expression
 }
 
