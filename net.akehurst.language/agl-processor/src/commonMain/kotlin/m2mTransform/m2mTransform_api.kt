@@ -37,6 +37,11 @@ interface M2mTransformNamespace : Namespace<M2MTransformDefinition> {
     fun createOwnedTransformRuleSet(name: SimpleName, extends: List<M2MTransformDefinition>, options: OptionHolder): M2mTransformRuleSet
 }
 
+/**
+ * entries in an M2mTransformNamespace, either a RuleSet or a Test
+ */
+interface M2MTransformDefinition : Definition<M2MTransformDefinition>
+
 interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinition> {
     override fun resolveAs(resolved: M2MTransformDefinition)
     fun cloneTo(ns: M2mTransformNamespace): M2mTransformRuleSetReference
@@ -44,8 +49,6 @@ interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinit
 
 @JvmInline
 value class DomainReference(val value: String)
-
-interface M2MTransformDefinition : Definition<M2MTransformDefinition>
 
 interface M2mTransformRuleSet : M2MTransformDefinition {
     override val namespace: M2mTransformNamespace
@@ -86,23 +89,23 @@ interface VariableDefinition {
     fun resolveType(tm: TypesDomain)
 }
 
-interface M2mAbstractRule : M2mTransformRule {
+interface M2mTransformAbstractRule : M2mTransformRule {
 
 }
 
-interface M2mTangibleRule : M2mTransformRule {
+interface M2mTransformTangibleRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
     val objectTemplate: Map<DomainReference, ObjectTemplate>
 }
 
-interface M2mRelation : M2mTangibleRule {
+interface M2MTransformRelation : M2mTransformTangibleRule {
 
 }
 
 /**
  * should only have two domains
  */
-interface M2mMapping : M2mTangibleRule {
+interface M2MTransformMapping : M2mTransformTangibleRule {
     /**
      * expression for constructing one domain from the other
      */

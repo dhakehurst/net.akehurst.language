@@ -271,6 +271,9 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
         }
 
         "+" -> when {
+            objectGraph.isNothing(lhs) && objectGraph.isNothing(rhs) -> objectGraph.nothing()
+            objectGraph.isNothing(lhs) -> rhs
+            objectGraph.isNothing(rhs) -> lhs
             lhs.type.conformsTo(StdLibDefault.String) && rhs.type.conformsTo(StdLibDefault.String) -> {
                 val lhsv = objectGraph.valueOf(lhs) as String
                 val rhsv = objectGraph.valueOf(rhs) as String

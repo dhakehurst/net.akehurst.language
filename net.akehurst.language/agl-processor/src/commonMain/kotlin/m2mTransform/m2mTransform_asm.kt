@@ -106,18 +106,18 @@ class M2mTransformRuleSetDefault(
     }
 }
 
-data class M2mAbstractRuleDefault(
+data class M2MTransformAbstractRuleDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2mAbstractRule {
+) : M2mTransformAbstractRule {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 }
 
-data class M2mRelationDefault(
+data class M2MTransformRelationDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2mRelation {
+) : M2MTransformRelation {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
@@ -125,10 +125,10 @@ data class M2mRelationDefault(
     override val objectTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
 }
 
-data class M2mMappingDefault(
+data class M2MTransformMappingDefault(
     override val isTop: Boolean,
     override val name: SimpleName
-) : M2mMapping {
+) : M2MTransformMapping {
     override val primitiveDomains: List<VariableDefinition> = mutableListOf()
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 

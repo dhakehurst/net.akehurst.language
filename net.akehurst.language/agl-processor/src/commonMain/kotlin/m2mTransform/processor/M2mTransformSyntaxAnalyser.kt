@@ -155,13 +155,13 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         children[0] as M2mTransformRule
 
     // abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
-    private fun abstractRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mAbstractRule {
+    private fun abstractRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformAbstractRule {
         val isTop = children[1] == "top"
         val name = SimpleName(children[3] as String)
         val extends = children[4] as List<PossiblyQualifiedName>? ?: emptyList()
         val primDomains = children[6] as List<VariableDefinition>
         val sigDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
-        return M2mAbstractRuleDefault(isTop, name).also { rel ->
+        return M2MTransformAbstractRuleDefault(isTop, name).also { rel ->
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
                 (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
@@ -170,7 +170,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     }
 
     // relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* relDomain{2+} when? where? '}' ;
-    private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mRelation {
+    private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformRelation {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
         val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
@@ -179,7 +179,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val relDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
         val whenNode = children[8]
         val whereNode = children[9]
-        return M2mRelationDefault(isTop, name).also { rel ->
+        return M2MTransformRelationDefault(isTop, name).also { rel ->
             pivots.forEach { (rel.pivot as MutableMap)[it.name] = it }
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             relDomains.forEach { rd ->
@@ -190,7 +190,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     }
 
     // mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
-    private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mMapping {
+    private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformMapping {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
         val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
@@ -199,7 +199,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val outputDomain = children[7] as Pair<DomainSignature, Expression?>
         val whenNode = children[8]
         val whereNode = children[9]
-        return M2mMappingDefault(isTop, name).also {
+        return M2MTransformMappingDefault(isTop, name).also {
             (it.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
                 (it.domainSignature as MutableMap)[rd.first.domainRef] = rd.first

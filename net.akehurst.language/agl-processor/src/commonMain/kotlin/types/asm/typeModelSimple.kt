@@ -283,6 +283,7 @@ class TypeParameterReference(
 
     override val typeArguments: List<TypeArgument> = mutableListOf() //mutableListOf for serialisation
 
+    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDeclaration == resolvedDeclaration
     override val isCollection: Boolean get() = resolvedDeclaration is CollectionType
 
     override val resolvedDeclarationOrNull: TypeDefinition? = null
@@ -386,6 +387,7 @@ class TypeInstanceSimple(
             }
             ?: error("Cannot construct a Qualified name for '$qualifiedOrImportedTypeName' in context of '$contextQualifiedTypeName'")
 
+    override val isNothing: Boolean get() = StdLibDefault.NothingType.resolvedDeclaration == resolvedDeclaration
     override val isCollection: Boolean get() = resolvedDeclaration is CollectionType
 
     override val resolvedDeclarationOrNull: TypeDefinition? get() = namespace.findTypeNamed(qualifiedOrImportedTypeName)
@@ -446,7 +448,8 @@ class TupleTypeInstanceSimple(
 
     override val typeName: SimpleName get() = resolvedDeclaration.name
     override val qualifiedTypeName: QualifiedName get() = resolvedDeclaration.qualifiedName
-    override val isCollection: Boolean = false
+    override val isNothing: Boolean get() = false
+    override val isCollection: Boolean get() = false
     override val resolvedDeclarationOrNull: TypeDefinition get() = resolvedDeclaration
     override val resolvedDeclaration: TypeDefinition = StdLibDefault.TupleType
 

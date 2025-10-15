@@ -39,15 +39,15 @@ class test_m2mTransformInterpreter {
         data class TestData(
             val description: String = "",
         ) {
-            val typeDomains = mutableMapOf<DomainReference,TypesDomain>()
+            val typeDomains = mutableMapOf<DomainReference, TypesDomain>()
             var transform: String = ""
             val input = mutableMapOf<DomainReference, Asm>()
             var target: DomainReference? = null
-            val expected = mutableMapOf<DomainReference, Asm>()
+            var expected: Asm? = null
         }
 
         val testSuit = listOf(
-            TestData("simple literal result").also {
+            TestData("1 matching top mapping to 1 String input 1 gives literal String result").also {
                 val dr1 = DomainReference("d1")
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("Domain1", true) {
@@ -73,8 +73,110 @@ class test_m2mTransformInterpreter {
                     string("Any")
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     string("Hello World!")
+                }
+            },
+            TestData("1 matching top mapping to 2 String input 2 gives 2 literal String result").also {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                val tm2 = typesDomain("Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A12A2 {
+                            domain d1 a1:String {}
+                            domain d2 a2:String := 'Hello World!'
+                        }
+                    }
+                """
+                it.input[dr1] = asmSimple(tm1) {
+                    string("Any1")
+                    string("Any1")
+                }
+                it.target = dr2
+                it.expected = asmSimple(tm2) {
+                    string("Hello World!")
+                    string("Hello World!")
+                }
+            },
+            TestData("2 matching top mapping to 2 String input 2 gives error").also {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                val tm2 = typesDomain("Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A {
+                            domain d1 a1:String {}
+                            domain d2 a2:String := 'Hello World A!'
+                        }
+                        top mapping B {
+                            domain d1 a1:String {}
+                            domain d2 a2:String := 'Hello World B!'
+                        }
+                    }
+                """
+                it.input[dr1] = asmSimple(tm1) {
+                    string("Any1")
+                    string("Any1")
+                }
+                it.target = dr2
+                it.expected = asmSimple(tm2) {
+                }
+            },
+            TestData("2 matching top mapping to one of each 2 String input 2 gives 2 literal String result").also {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("Domain1", true) {
+                    namespace("n1") {
+                    }
+                }
+                val tm2 = typesDomain("Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A {
+                            domain d1 a1:String == 'A'
+                            domain d2 a2:String := 'Hello World A!'
+                        }
+                        top mapping B {
+                            domain d1 a1:String == 'B'
+                            domain d2 a2:String := 'Hello World B!'
+                        }
+                    }
+                """
+                it.input[dr1] = asmSimple(tm1) {
+                    string("A")
+                    string("A")
+                }
+                it.target = dr2
+                it.expected = asmSimple(tm2) {
+                    string("Hello World A!")
+                    string("Hello World B!")
                 }
             },
             TestData("simple mapping").also {
@@ -111,7 +213,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     element("A2") {
                         propertyString("prop2", "value1")
                     }
@@ -151,7 +253,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     element("A2") {
                         propertyString("prop2", "value1")
                     }
@@ -207,7 +309,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     element("A2") {
                         propertyString("prop2", "value")
                     }
@@ -226,8 +328,8 @@ class test_m2mTransformInterpreter {
                             propertyOf(emptySet(), "name", "String")
                         }
                         association {
-                            end("Class",emptySet(), "class")
-                            end("Attribute",emptySet(), "attribtute")
+                            end("Class", emptySet(), "class")
+                            end("Attribute", emptySet(), "attribtute")
                         }
                     }
                 }
@@ -243,6 +345,7 @@ class test_m2mTransformInterpreter {
                         top mapping A12A2 {
                             domain d1 c1:Class {
                                name == X
+                               kind == 'P'
                                attribute == [
                                  ...
                                  a1:Attribute {
@@ -281,7 +384,81 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
+                    string("c1c1a1")
+                }
+            },
+            TestData("match exact Collection").also {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("Domain1", true) {
+                    namespace("n1") {
+                        data("Class") {
+                            propertyOf(emptySet(), "name", "String")
+                            propertyOf(emptySet(), "kind", "String")
+                        }
+                        data("Attribute") {
+                            propertyOf(emptySet(), "name", "String")
+                        }
+                        association {
+                            end("Class", emptySet(), "class")
+                            end("Attribute", emptySet(), "attribtute")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("Domain2", true) {
+                    namespace("n2") {
+                    }
+                }
+                it.typeDomains[dr1] = tm1
+                it.typeDomains[dr2] = tm2
+                it.transform = """
+                    namespace test
+                    transform Test(d1:Domain1, d2:Domain2) {
+                        top mapping A12A2 {
+                            domain d1 c1:Class {
+                               name == X
+                               attribute == [
+                                 a3:Attribute {
+                                   name == 'a3'
+                                 }
+                                 a4:Attribute {
+                                   name == 'a4'
+                                 }
+                               ]
+                            }
+                            domain d2 a2:String := a3.name + a4.name
+                        }
+                    }
+                """
+                it.input[dr1] = asmSimple(tm1) {
+                    element("Class") {
+                        propertyString("name", "c1")
+                        propertyString("kind", "P")
+                        propertyListOfElement("attribute") {
+                            element("Attribute") {
+                                propertyString("name", "c1a1")
+                            }
+                            element("Attribute") {
+                                propertyString("name", "a2")
+                            }
+                        }
+                    }
+                    element("Class") {
+                        propertyString("name", "c2")
+                        propertyString("kind", "T")
+                        propertyListOfElement("attribute") {
+                            element("Attribute") {
+                                propertyString("name", "a3")
+                            }
+                            element("Attribute") {
+                                propertyString("name", "a4")
+                            }
+                        }
+                    }
+                }
+                it.target = dr2
+                it.expected = asmSimple(tm2) {
                     string("c1c1a1")
                 }
             },
@@ -292,7 +469,7 @@ class test_m2mTransformInterpreter {
                 val tm1 = typesDomain("SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(CMP, VAR),"name","String")
+                            propertyOf(setOf(CMP, VAR), "name", "String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
@@ -308,7 +485,7 @@ class test_m2mTransformInterpreter {
                         }
                         data("Class") {
                             supertypes("Classifier")
-                            propertyOf(setOf(CMP, VAR),"kind","String")
+                            propertyOf(setOf(CMP, VAR), "kind", "String")
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
@@ -318,35 +495,35 @@ class test_m2mTransformInterpreter {
                             supertypes("PackageElement")
                         }
                         association {
-                            end("Package",setOf(REF,VAR),"namespace")
-                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                            end("Package", setOf(REF, VAR), "namespace")
+                            end("PackageElement", setOf(CMP, VAR), "elements", false, "Set")
                         }
                         association {
-                            end("Classifier",setOf(REF,VAR),"type")
-                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                            end("Classifier", setOf(REF, VAR), "type")
+                            end("Attribute", setOf(REF, VAR), "typeOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"owner")
-                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                            end("Class", setOf(REF, VAR), "owner")
+                            end("Attribute", setOf(CMP, VAR), "attribute", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"general", false,"Set")
-                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                            end("Class", setOf(REF, VAR), "general", false, "Set")
+                            end("Class", setOf(REF, VAR), "generalOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"source")
-                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                            end("Class", setOf(REF, VAR), "source")
+                            end("Association", setOf(REF, VAR), "reverse", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"destination")
-                            end("Association",setOf(REF,VAR),"forward", false,"Set")
+                            end("Class", setOf(REF, VAR), "destination")
+                            end("Association", setOf(REF, VAR), "forward", false, "Set")
                         }
                     }
                 }
                 val tm2 = typesDomain("SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
                         }
                         data("Schema") {
                             supertypes("RModelElement")
@@ -364,29 +541,29 @@ class test_m2mTransformInterpreter {
                             supertypes("RModelElement")
                         }
                         association {
-                            end("Schema",setOf(REF,VAR),"schema")
-                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                            end("Schema", setOf(REF, VAR), "schema")
+                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Column", setOf(CMP, VAR), "column", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Key", setOf(CMP, VAR), "key", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("ForeignKey", setOf(CMP, VAR), "foreignKey", false, "Set")
                         }
                         association {
-                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            end("Key", setOf(REF, VAR), "refersTo", false, "Set")
                             //TODO: refersToOpposite is not navigable!
-                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                            end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
                         }
                         association {
-                            end("Column",setOf(REF,VAR),"column", false,"Set")
-                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
+                            end("Column", setOf(REF, VAR), "column", false, "Set")
+                            end("ForeignKey", setOf(REF, VAR), "foreignKey", false, "Set")
                         }
                     }
                 }
@@ -409,7 +586,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     element("Schema") {
                         propertyString("name", "pkg1")
                     }
@@ -421,7 +598,7 @@ class test_m2mTransformInterpreter {
                 val tm1 = typesDomain("SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(CMP, VAR),"name","String")
+                            propertyOf(setOf(CMP, VAR), "name", "String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
@@ -437,7 +614,7 @@ class test_m2mTransformInterpreter {
                         }
                         data("Class") {
                             supertypes("Classifier")
-                            propertyOf(setOf(CMP, VAR),"kind","String")
+                            propertyOf(setOf(CMP, VAR), "kind", "String")
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
@@ -447,35 +624,35 @@ class test_m2mTransformInterpreter {
                             supertypes("PackageElement")
                         }
                         association {
-                            end("Package",setOf(REF,VAR),"namespace")
-                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                            end("Package", setOf(REF, VAR), "namespace")
+                            end("PackageElement", setOf(CMP, VAR), "elements", false, "Set")
                         }
                         association {
-                            end("Classifier",setOf(REF,VAR),"type")
-                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                            end("Classifier", setOf(REF, VAR), "type")
+                            end("Attribute", setOf(REF, VAR), "typeOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"owner")
-                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                            end("Class", setOf(REF, VAR), "owner")
+                            end("Attribute", setOf(CMP, VAR), "attribute", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"general", false,"Set")
-                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                            end("Class", setOf(REF, VAR), "general", false, "Set")
+                            end("Class", setOf(REF, VAR), "generalOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"source")
-                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                            end("Class", setOf(REF, VAR), "source")
+                            end("Association", setOf(REF, VAR), "reverse", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"destination")
-                            end("Association",setOf(REF,VAR),"forward", false,"Set")
+                            end("Class", setOf(REF, VAR), "destination")
+                            end("Association", setOf(REF, VAR), "forward", false, "Set")
                         }
                     }
                 }
                 val tm2 = typesDomain("SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
                         }
                         data("Schema") {
                             supertypes("RModelElement")
@@ -493,29 +670,29 @@ class test_m2mTransformInterpreter {
                             supertypes("RModelElement")
                         }
                         association {
-                            end("Schema",setOf(REF,VAR),"schema")
-                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                            end("Schema", setOf(REF, VAR), "schema")
+                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Column", setOf(CMP, VAR), "column", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Key", setOf(CMP, VAR), "key", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("ForeignKey", setOf(CMP, VAR), "foreignKey", false, "Set")
                         }
                         association {
-                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            end("Key", setOf(REF, VAR), "refersTo", false, "Set")
                             //TODO: refersToOpposite is not navigable!
-                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                            end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
                         }
                         association {
-                            end("Column",setOf(REF,VAR),"column", false,"Set")
-                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
+                            end("Column", setOf(REF, VAR), "column", false, "Set")
+                            end("ForeignKey", setOf(REF, VAR), "foreignKey", false, "Set")
                         }
                     }
                 }
@@ -548,7 +725,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     string("BOOLEAN")
                 }
             },
@@ -558,14 +735,14 @@ class test_m2mTransformInterpreter {
                 val tm1 = typesDomain("SimpleUML", true) {
                     namespace("uml") {
                         data("UmlModelElement") {
-                            propertyOf(setOf(CMP, VAR),"name","String")
+                            propertyOf(setOf(CMP, VAR), "name", "String")
                         }
                         data("Package") {
                             supertypes("UmlModelElement")
                         }
                         data("Attribute") {
                             supertypes("UmlModelElement")
-                       }
+                        }
                         data("PackageElement") {
                             supertypes("UmlModelElement")
                         }
@@ -574,7 +751,7 @@ class test_m2mTransformInterpreter {
                         }
                         data("Class") {
                             supertypes("Classifier")
-                            propertyOf(setOf(CMP, VAR),"kind","String")
+                            propertyOf(setOf(CMP, VAR), "kind", "String")
                         }
                         data("PrimitiveDataType") {
                             supertypes("Classifier")
@@ -584,35 +761,35 @@ class test_m2mTransformInterpreter {
                             supertypes("PackageElement")
                         }
                         association {
-                            end("Package",setOf(REF,VAR),"namespace")
-                            end("PackageElement",setOf(CMP, VAR),"elements", false, "Set")
+                            end("Package", setOf(REF, VAR), "namespace")
+                            end("PackageElement", setOf(CMP, VAR), "elements", false, "Set")
                         }
                         association {
-                            end("Classifier",setOf(REF,VAR),"type")
-                            end("Attribute",setOf(REF,VAR),"typeOpposite", false,"Set")
+                            end("Classifier", setOf(REF, VAR), "type")
+                            end("Attribute", setOf(REF, VAR), "typeOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"owner")
-                            end("Attribute",setOf(CMP,VAR),"attribute", false,"Set")
+                            end("Class", setOf(REF, VAR), "owner")
+                            end("Attribute", setOf(CMP, VAR), "attribute", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"general", false,"Set")
-                            end("Class",setOf(REF,VAR),"generalOpposite", false,"Set")
+                            end("Class", setOf(REF, VAR), "general", false, "Set")
+                            end("Class", setOf(REF, VAR), "generalOpposite", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"source")
-                            end("Association",setOf(REF,VAR),"reverse", false,"Set")
+                            end("Class", setOf(REF, VAR), "source")
+                            end("Association", setOf(REF, VAR), "reverse", false, "Set")
                         }
                         association {
-                            end("Class",setOf(REF,VAR),"destination")
-                            end("Association",setOf(REF,VAR),"forward", false,"Set")
+                            end("Class", setOf(REF, VAR), "destination")
+                            end("Association", setOf(REF, VAR), "forward", false, "Set")
                         }
                     }
                 }
                 val tm2 = typesDomain("SimpleRDBMS", true) {
                     namespace("rdbms") {
                         data("RModelElement") {
-                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE),"name","String")
+                            propertyOf(setOf(PropertyCharacteristic.READ_WRITE), "name", "String")
                         }
                         data("Schema") {
                             supertypes("RModelElement")
@@ -630,29 +807,29 @@ class test_m2mTransformInterpreter {
                             supertypes("RModelElement")
                         }
                         association {
-                            end("Schema",setOf(REF,VAR),"schema")
-                            end("Table",setOf(CMP,VAR),"tables", false,"Set")
+                            end("Schema", setOf(REF, VAR), "schema")
+                            end("Table", setOf(CMP, VAR), "tables", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Column",setOf(CMP,VAR),"column", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Column", setOf(CMP, VAR), "column", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("Key",setOf(CMP,VAR),"key", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("Key", setOf(CMP, VAR), "key", false, "Set")
                         }
                         association {
-                            end("Table",setOf(REF,VAR),"owner")
-                            end("ForeignKey",setOf(CMP,VAR),"foreignKey", false,"Set")
+                            end("Table", setOf(REF, VAR), "owner")
+                            end("ForeignKey", setOf(CMP, VAR), "foreignKey", false, "Set")
                         }
                         association {
-                            end("Key",setOf(REF,VAR),"refersTo", false,"Set")
+                            end("Key", setOf(REF, VAR), "refersTo", false, "Set")
                             //TODO: refersToOpposite is not navigable!
-                            end("ForeignKey",setOf(REF,VAR),"refersToOpposite", false,"Set")
+                            end("ForeignKey", setOf(REF, VAR), "refersToOpposite", false, "Set")
                         }
                         association {
-                            end("Column",setOf(REF,VAR),"column", false,"Set")
-                            end("ForeignKey",setOf(REF,VAR),"foreignKey", false,"Set")
+                            end("Column", setOf(REF, VAR), "column", false, "Set")
+                            end("ForeignKey", setOf(REF, VAR), "foreignKey", false, "Set")
                         }
                     }
                 }
@@ -752,7 +929,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
                 it.target = dr2
-                it.expected[dr2] = asmSimple(tm2) {
+                it.expected = asmSimple(tm2) {
                     element("Schema") {
                         propertyString("name", "pkg1")
                     }
@@ -762,13 +939,13 @@ class test_m2mTransformInterpreter {
 
         fun doTest(testData: TestData) {
             println("****** ${testData.description} ******")
-            testData.typeDomains.forEach { (k,v) ->
+            testData.typeDomains.forEach { (k, v) ->
                 println("----- ${k.value} : ${v.name.value} -----")
                 println(v.asString())
             }
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
             val context = ContextWithScope<Any, Any>()
-            testData.typeDomains.forEach { (k,v) ->
+            testData.typeDomains.forEach { (k, v) ->
                 context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
             }
             val res = Agl.registry.agl.m2mTransform.processor!!.process(
@@ -783,34 +960,36 @@ class test_m2mTransformInterpreter {
                 check(it.allIssues.errors.isEmpty()) { it.allIssues.toString() }
                 it.asm!!
             }
-            val ogs = testData.typeDomains.entries.associate { (k,v) ->
-                Pair(v.name , ObjectGraphAsmSimple(v, issues))
+            val ogs = testData.typeDomains.entries.associate { (k, v) ->
+                Pair(v.name, ObjectGraphAsmSimple(v, issues))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
-            val source = testData.input.entries.associate { (k,v) ->
-                //TODO: for all roots!
-                val obj = v.root.first()
+            val source = testData.input.entries.associate { (k, v) ->
                 println("----- Source ${k.value} -----")
-                println(obj.asString())
-                val srcTypeDomain = testData.typeDomains[k]!!
-                val tobj = ogs[srcTypeDomain.name]?.let {
-                    val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
-                    TypedObjectAsmValue(td.type(),obj)
-                }!!
-                Pair(k,tobj)
+                val sourceObjects = v.root.map { obj ->
+                    println(obj.asString())
+                    val srcTypeDomain = testData.typeDomains[k]!!
+                    ogs[srcTypeDomain.name]!!.let {
+                        val td = srcTypeDomain.findByQualifiedNameOrNull(obj.qualifiedTypeName) ?: error("Can't find type ${obj.qualifiedTypeName}")
+                        TypedObjectAsmValue(td.type(), obj)
+                    }
+                }
+                Pair(k, sourceObjects)
             }
-            val trRes = interpreter.transform(testData.target!!, source)
+            val tgtTransform = m2m.allTransformRuleSet.first()
+            val trRes = interpreter.transform(tgtTransform, testData.target!!, source)
             assertTrue(trRes.issues.isEmpty(), trRes.issues.toString())
-            assertEquals(testData.expected.size, trRes.objects.size, "number of outputs is different")
-            for(dr in testData.expected.keys) {
-                val exp = testData.expected[dr]!!
-                val act = trRes.objects[dr]!!
-                println("--- Result domain ${dr.value} ----")
-                println(act.asString())
-                assertEquals(exp.asString(), act.asString())
+            val expected = testData.expected
+            if (null!=expected) {
+                for (i in expected.root.indices) {
+                    val exp = expected.root[i]
+                    val act = trRes.objects[i]
+                    println("--- Result domain ${testData.target!!.value} ----")
+                    println(act.asString())
+                    assertEquals(exp.asString(), act.asString())
+                }
             }
-
         }
     }
 
