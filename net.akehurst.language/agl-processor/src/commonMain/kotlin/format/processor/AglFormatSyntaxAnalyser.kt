@@ -65,7 +65,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
     fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglFormatDomain {
         val options = children[0] as List<Pair<String, String>>
         val namespace = children[1] as List<FormatNamespace>
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         namespace.forEach { (it.options as OptionHolderDefault).parent = optHolder }
         val result = AglFormatDomainDefault(SimpleName("Unit"), optHolder, namespace)
         return result
@@ -78,7 +78,7 @@ internal class AglFormatSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbs
         val import = children[3] as List<Import>
         val definition = children[4] as List<(ns: FormatNamespace) -> FormatSet>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val ns = AglFormatNamespaceDefault(pqn.asQualifiedName(null), optHolder, import)
         definition.forEach {
             val def = it.invoke(ns)

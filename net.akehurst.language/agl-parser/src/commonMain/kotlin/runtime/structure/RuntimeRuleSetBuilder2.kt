@@ -58,7 +58,7 @@ internal class RuntimeRuleSetBuilder2(
             .plus(Pair("<EMPTY>", RuntimeRuleSet.EMPTY))
             .plus(Pair("<EMPTY_LIST>", RuntimeRuleSet.EMPTY_LIST))
             .plus(Pair("<EOT>", RuntimeRuleSet.END_OF_TEXT))
-            .associate { it }
+            .toMap()
         val rules = this._ruleBuilders.values.map { rb ->
             rb.buildRhs(ruleMap)
             rb.rule!!

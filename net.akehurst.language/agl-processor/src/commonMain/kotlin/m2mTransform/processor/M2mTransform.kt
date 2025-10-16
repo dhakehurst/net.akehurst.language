@@ -64,13 +64,16 @@ grammar $NAME : Base {
     
     transformRule = abstractRule | relation | mapping ;
     abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
-    relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainObjectPattern{2+} when? where? '}' ;
-    mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
+    relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
+    mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
    
     pivot = 'pivot' variableDefinition ;
     domainPrimitive = 'primitive' 'domain' variableDefinition ;
     domainSignature = 'domain' domainReference variableDefinition ;
-    domainObjectPattern = domainSignature propertyTemplateBlock ;
+    domainTemplate = domainSignature domainTemplateRhs ;
+    domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
+    domainPrimitiveRhs = '==' expression ;
+    domainObjectRhs = propertyTemplateBlock ;
     domainAssignment = domainSignature ':=' expression ;
     variableDefinition = variableName ':' typeReference ;
     typeReference = Expressions::typeReference ;
@@ -175,7 +178,7 @@ grammar $NAME : Base {
                         opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(0, -1) { ref("domainPrimitive") }
-                        lst(2, -1) { ref("domainObjectPattern") }
+                        lst(2, -1) { ref("domainTemplate") }
                         opt { ref("when") }
                         opt { ref("where") }
                         lit("}")
@@ -183,7 +186,7 @@ grammar $NAME : Base {
                     concatenation("mapping") {
                         opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainPrimitive") }
-                        lst(1, -1) { ref("domainObjectPattern") }
+                        lst(1, -1) { ref("domainTemplate") }
                         ref("domainAssignment")
                         opt { ref("when") }
                         opt { ref("where") }
@@ -194,9 +197,15 @@ grammar $NAME : Base {
                     concatenation("domainSignature") {
                         lit("domain"); ref("domainReference"); ref("variableDefinition")
                     }
-                    concatenation("domainObjectPattern") {
-                        ref("domainSignature"); ref("propertyTemplateBlock")
+                    concatenation("domainTemplate") {
+                        ref("domainSignature"); ref("domainTemplateRhs")
                     }
+                    choice("domainTemplateRhs") {
+                        ref("domainPrimitiveRhs")
+                        ref("domainObjectRhs")
+                    }
+                    concatenation("domainPrimitiveRhs") { lit("=="); ref("expression") }
+                    concatenation("domainObjectRhs") { ref("propertyTemplateBlock") }
                     concatenation("domainAssignment") {
                         ref("domainSignature"); lit(":="); ref("expression")
                     }

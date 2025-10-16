@@ -53,7 +53,6 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::domainParams)
         super.register(this::parameterDefinition)
         super.register(this::extends)
-        //super.register(this::import)
         super.register(this::typeImport)
         super.register(this::transformRule)
         super.register(this::abstractRule)
@@ -62,7 +61,10 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::pivot)
         super.register(this::domainPrimitive)
         super.register(this::domainSignature)
-        super.register(this::domainObjectPattern)
+        super.register(this::domainTemplate)
+        super.register(this::domainTemplateRhs)
+        super.register(this::domainPrimitiveRhs)
+        super.register(this::domainObjectRhs)
         super.register(this::domainAssignment)
         super.register(this::variableDefinition)
         super.register(this::typeReference)
@@ -87,7 +89,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<M2mTransformNamespace>
         val name = SimpleName("ParsedTransformUnit") //TODO: how to specify name, does it matter?
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         return M2mTransformDomainDefault(
             name = name,
             optHolder,
@@ -103,7 +105,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val imports = children[3] as List<Import>
         val transformBuilders = children[4] as List<(M2mTransformNamespaceDefault) -> M2mTransformRuleSet>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val namespace = M2mTransformNamespaceDefault(nsName, optHolder, imports)
         transformBuilders.map { it.invoke(namespace) }
         return namespace
@@ -118,7 +120,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val typeImports = children[8] as List<Import>
         val rules = children[9] as List<M2mTransformRule>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         return { namespace ->
             val extendRefs = extends.map { M2mTransformRuleSetReferenceDefault(namespace, it) }
             val asm = M2mTransformRuleSetDefault(namespace, name, domParams.associate { Pair(DomainReference(it.first), it.second) }, extendRefs, optHolder, rules)
@@ -160,16 +162,16 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val name = SimpleName(children[3] as String)
         val extends = children[4] as List<PossiblyQualifiedName>? ?: emptyList()
         val primDomains = children[6] as List<VariableDefinition>
-        val sigDomains = children[7] as List<Pair<DomainSignature, ObjectTemplate>>
+        val sigDomains = children[7] as List<DomainSignature>
         return M2MTransformAbstractRuleDefault(isTop, name).also { rel ->
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             sigDomains.forEach { rd ->
-                (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
+                (rel.domainSignature as MutableMap)[rd.domainRef] = rd
             }
         }
     }
 
-    // relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* relDomain{2+} when? where? '}' ;
+    // relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
     private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformRelation {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
@@ -184,12 +186,12 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             (rel.primitiveDomains as MutableList).addAll(primDomains)
             relDomains.forEach { rd ->
                 (rel.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
-                (rel.objectTemplate as MutableMap)[rd.first.domainRef] = rd.second
+                (rel.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
         }
     }
 
-    // mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainObjectPattern+ domainAssignment when? where? '}' ;
+    // mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
     private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformMapping {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
@@ -203,7 +205,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             (it.primitiveDomains as MutableList).addAll(primDomains)
             inputDomains.forEach { rd ->
                 (it.domainSignature as MutableMap)[rd.first.domainRef] = rd.first
-                (it.objectTemplate as MutableMap)[rd.first.domainRef] = rd.second
+                (it.domainTemplate as MutableMap)[rd.first.domainRef] = rd.second
             }
             (it.domainSignature as MutableMap)[outputDomain.first.domainRef] = outputDomain.first
             (it.expression as MutableMap)[outputDomain.first.domainRef] = outputDomain.second
@@ -228,15 +230,33 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return DomainSignatureDefault(DomainReference(dr), vd)
     }
 
-    // domainObjectPattern = domainSignature propertyTemplateBlock ;
-    private fun domainObjectPattern(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, ObjectTemplate> {
+    // domainTemplate = domainSignature domainTemplateRhs ;
+    private fun domainTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, PropertyTemplateRhs> {
         val ds = children[0] as DomainSignature
-        val pt = children[1] as Map<SimpleName, PropertyTemplate>
-        val op = ObjectTemplateDefault(ds.variable.typeRef, pt).apply {
+        val rhs = children[1]
+        val template = when (rhs) {
+            is PropertyTemplateExpression -> rhs
+            is Map<*,*> -> ObjectTemplateDefault(ds.variable.typeRef, rhs as Map<SimpleName, PropertyTemplate>)
+            else -> error("Invalid state")
+        }.apply {
             setIdentifier(ds.variable.name)
         }
-        return Pair(ds, op)
+
+
+        return Pair(ds, template)
     }
+
+    // domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
+    private fun domainTemplateRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Any =
+        children[0] as Any
+
+    // domainPrimitiveRhs = '==' expression ;
+    private fun domainPrimitiveRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyTemplateExpression =
+        PropertyTemplateExpressionDefault(children[1] as Expression)
+
+    // domainObjectRhs = propertyTemplateBlock ;
+    private fun domainObjectRhs(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Map<SimpleName, PropertyTemplate> =
+        children[0] as Map<SimpleName, PropertyTemplate>
 
     // domainAssignment = domainSignature ':=' expression ;
     private fun domainAssignment(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, Expression?> {
@@ -279,7 +299,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // objectTemplate = (variableName ':')? typeReference propertyTemplateBlock ;
     private fun objectTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectTemplate {
-        val id = (children[0] as? List<Any> )?.getOrNull(0) as? String
+        val id = (children[0] as? List<Any>)?.getOrNull(0) as? String
         val tr = children[1] as TypeReference
         val pt = children[2] as Map<SimpleName, PropertyTemplate>
         return ObjectTemplateDefault(tr, pt).apply {
@@ -302,7 +322,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // collectionTemplate = '[' ('...')? propertyPatternRhs* ']' ;
     private fun collectionTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionTemplate {
-        val isSubset = children[1] == null
+        val isSubset = children[1] != null
         val els = children[2] as List<PropertyTemplateRhs>
         return CollectionTemplateDefault(isSubset, els)
     }
@@ -312,7 +332,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<M2mTransformNamespace>
         val name = SimpleName("ParsedTransformTestUnit") //TODO: how to specify name, does it matter?
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         return M2mTransformDomainDefault(
             name = name,
             optHolder,
@@ -328,7 +348,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val imports = children[3] as List<Import>
         val transformBuilders = children[4] as List<(M2mTransformNamespaceDefault) -> M2mTransformTest>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val namespace = M2mTransformNamespaceDefault(nsName, optHolder, imports)
         transformBuilders.map { it.invoke(namespace) }
         return namespace

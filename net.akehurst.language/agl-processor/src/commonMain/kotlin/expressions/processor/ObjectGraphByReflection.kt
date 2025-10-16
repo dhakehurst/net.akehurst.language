@@ -21,6 +21,7 @@ import net.akehurst.kotlinx.reflect.reflect
 import net.akehurst.language.asm.api.AsmList
 import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmPrimitiveSimple
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
@@ -162,7 +163,7 @@ class TypedObjectAny<SelfType : Any>(
     override val self: SelfType
 ) : TypedObject<SelfType> {
 
-    override fun asString(): String = self.toString()
+    override fun asString(indent:Indent): String = "$indent$self"
 
     override fun hashCode(): Int = self.hashCode()
     override fun equals(other: Any?): Boolean = when {

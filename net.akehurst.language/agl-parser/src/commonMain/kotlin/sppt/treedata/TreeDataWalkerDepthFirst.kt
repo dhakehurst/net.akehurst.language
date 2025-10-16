@@ -128,7 +128,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     Pair(index, x.size)
                 }
             }
-        }.associate { it }
+        }.toMap()
 
     private fun numSkipChildren(skipData: TreeData?): Int {
         return if (null == skipData) {

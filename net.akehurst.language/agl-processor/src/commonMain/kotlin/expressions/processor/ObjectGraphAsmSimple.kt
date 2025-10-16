@@ -19,6 +19,7 @@ package net.akehurst.language.expressions.processor
 
 import net.akehurst.language.asm.api.*
 import net.akehurst.language.asm.simple.*
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.toSeparatedList
@@ -114,7 +115,7 @@ class TypedObjectAsmValue(
     override val self: AsmValue
 ) : TypedObject<AsmValue> {
 
-    override fun asString(): String = self.asString()
+    override fun asString(indent:Indent): String = self.asString(indent)
 
     override fun hashCode(): Int = self.hashCode()
     override fun equals(other: Any?): Boolean = when {

@@ -78,7 +78,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val options = children[0] as List<Pair<String, String>>
         val namespace = children[1] as List<CrossReferenceNamespace>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it.first to it.second })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val result = CrossReferenceDomainDefault(SimpleName("Unit"), optHolder, namespace)
         //namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result

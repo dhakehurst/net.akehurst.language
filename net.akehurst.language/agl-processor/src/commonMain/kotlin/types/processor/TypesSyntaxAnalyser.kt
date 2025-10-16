@@ -82,7 +82,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         val namespaces = children[1] as List<TypesNamespace>
         val name = SimpleName("ParsedTypesUnit") //TODO: how to specify name, does it matter?
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         namespaces.forEach { (it.options as OptionHolderDefault).parent = optHolder }
         return TypesDomainSimple(
             name = name,
@@ -98,7 +98,7 @@ internal class TypesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<
         val options = children[2] as List<Pair<String, String>>
         val imports = children[3] as List<Import>
         val defs = children[4] as List<(namespace: TypesNamespace) -> TypeDefinition>
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
 
         val nsName = pqn.asQualifiedName(null)
         val namespace = TypesNamespaceSimple(nsName, optHolder, imports)

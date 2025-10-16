@@ -26,7 +26,7 @@ class test_m2mTransformInterpreterHelperFunctions {
 
     @Test
     fun cartesianProduct_empty() {
-        val actual = emptyList<List<Any>>().cartesianProduct()
+        val actual = emptyList<List<Any>>().cartesianProduct().toSet()
         val expected = emptySet<Any>()
         assertEquals(expected, actual)
     }
@@ -35,7 +35,7 @@ class test_m2mTransformInterpreterHelperFunctions {
     fun cartesianProduct_one_empty_content() {
         val actual = listOf(
             emptyList<Any>()
-        ).cartesianProduct()
+        ).cartesianProduct().toSet()
         val expected = emptySet<Any>()
         assertEquals(expected, actual)
     }
@@ -44,7 +44,7 @@ class test_m2mTransformInterpreterHelperFunctions {
     fun cartesianProduct_one_content() {
         val actual = listOf(
             listOf("A")
-        ).cartesianProduct()
+        ).cartesianProduct().toSet()
         val expected = setOf(listOf("A"))
         assertEquals(expected, actual)
     }
@@ -54,7 +54,7 @@ class test_m2mTransformInterpreterHelperFunctions {
         val actual = listOf(
             listOf("A"),
             emptyList()
-        ).cartesianProduct()
+        ).cartesianProduct().toSet()
         val expected = emptySet<Any>()
         assertEquals(expected, actual)
     }
@@ -64,8 +64,8 @@ class test_m2mTransformInterpreterHelperFunctions {
         val actual = listOf(
             listOf("A"),
             listOf(1),
-        ).cartesianProduct()
-        val expected = setOf(listOf("A",1))
+        ).cartesianProduct().toSet()
+        val expected = setOf(listOf("A", 1))
         assertEquals(expected, actual)
     }
 
@@ -75,8 +75,8 @@ class test_m2mTransformInterpreterHelperFunctions {
             listOf("A"),
             listOf(1),
             listOf("x"),
-        ).cartesianProduct()
-        val expected = setOf(listOf("A",1, "x"))
+        ).cartesianProduct().toSet()
+        val expected = setOf(listOf("A", 1, "x"))
         assertEquals(expected, actual)
     }
 
@@ -84,18 +84,18 @@ class test_m2mTransformInterpreterHelperFunctions {
     fun cartesianProduct_3x2_content() {
         val actual = listOf(
             listOf("A", "B"),
-            listOf(1,2),
+            listOf(1, 2),
             listOf("x", "y"),
-        ).cartesianProduct()
+        ).cartesianProduct().toSet()
         val expected = setOf(
-            listOf("A",1, "x"),
-            listOf("B",1, "x"),
-            listOf("A",2, "x"),
-            listOf("B",2, "x"),
-            listOf("A",1, "y"),
-            listOf("A",2, "y"),
-            listOf("B",1, "y"),
-            listOf("B",2, "y"),
+            listOf("A", 1, "x"),
+            listOf("B", 1, "x"),
+            listOf("A", 2, "x"),
+            listOf("B", 2, "x"),
+            listOf("A", 1, "y"),
+            listOf("A", 2, "y"),
+            listOf("B", 1, "y"),
+            listOf("B", 2, "y"),
         )
         assertEquals(expected, actual)
     }
@@ -104,19 +104,59 @@ class test_m2mTransformInterpreterHelperFunctions {
     fun cartesianProduct_3x2x3x1_content() {
         val actual = listOf(
             listOf("A", "B"),
-            listOf(1,2,3),
+            listOf(1, 2, 3),
             listOf("x"),
-        ).cartesianProduct()
+        ).cartesianProduct().toSet()
         val expected = setOf(
-            listOf("A",1, "x"),
-            listOf("B",1, "x"),
-            listOf("A",2, "x"),
-            listOf("B",2, "x"),
-            listOf("A",3, "x"),
-            listOf("B",3, "x"),
-            listOf("A",3, "x"),
-            listOf("B",3, "x"),
+            listOf("A", 1, "x"),
+            listOf("B", 1, "x"),
+            listOf("A", 2, "x"),
+            listOf("B", 2, "x"),
+            listOf("A", 3, "x"),
+            listOf("B", 3, "x"),
+            listOf("A", 3, "x"),
+            listOf("B", 3, "x"),
         )
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun findCoveringSubsets_1() {
+        val map = mapOf(
+            1 to listOf("a", "b"),
+            2 to listOf("z"),
+            3 to listOf("c")
+        )
+        val cover = listOf(1, 3)
+        val subsets = listOf("a", "b", "c")
+
+        val actual = M2mTransformInterpreter.findCoveringSubsets2(cover, subsets) { a, b ->
+            Pair(map[a]!!.contains(b), "$a$b")
+        }
+        println(actual)
+        assertEquals(listOf(listOf("1a", "3c"), listOf("1b", "3c")), actual)
+    }
+
+    @Test
+    fun findCoveringSubsets_2() {
+        val map = mapOf(
+            1 to listOf("a", "b"),
+            2 to listOf("b", "a"),
+            3 to listOf("c")
+        )
+        val cover = listOf(1, 2, 3)
+        val subsets = listOf("a", "b", "c")
+
+        val actual = M2mTransformInterpreter.findCoveringSubsets2(cover, subsets) { a, b ->
+            Pair(map[a]!!.contains(b), "$a$b")
+        }
+        println(actual)
+        val expected = setOf(
+            listOf("1a", "2a", "3c"),
+            listOf("1a", "2b", "3c"),
+            listOf("1b", "2a", "3c"),
+            listOf("1b", "2b", "3c")
+        )
+        assertEquals(expected, actual.toSet())
     }
 }

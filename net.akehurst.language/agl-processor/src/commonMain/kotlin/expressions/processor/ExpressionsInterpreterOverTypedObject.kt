@@ -21,6 +21,7 @@ package net.akehurst.language.expressions.processor
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmValue
+import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.expressions.api.*
@@ -35,7 +36,7 @@ import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 interface TypedObject<out SelfType:Any> {
     val self: SelfType
     val type: TypeInstance
-    fun asString(): String
+    fun asString(indent:Indent = Indent()): String
 }
 
 interface ObjectGraph<SelfType:Any> {
@@ -348,7 +349,7 @@ open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
                         // val consProps = typeDecl.property.filter { it.characteristics.contains(PropertyCharacteristic.CONSTRUCTOR) }
                         // if (consProps.size != args.size) error("Wrong number of constructor arguments for ${typeDecl.qualifiedName}")
 
-                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.associate { it }
+                        constructor.parameters.mapIndexed { idx, pd -> Pair(pd.name.value, args[idx]) }.toMap()
                     }
                     else -> emptyMap()
                 }

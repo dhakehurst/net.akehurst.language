@@ -74,7 +74,7 @@ class test_Processor {
             // object = '{' property* '}' ;
             private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ObjectValue {
                 val props = children[1] as List<Pair<String, Value>>?
-                val properties = props?.associate { it } ?: emptyMap()
+                val properties = props?.toMap() ?: emptyMap()
                 return ObjectValue(properties)
             }
 

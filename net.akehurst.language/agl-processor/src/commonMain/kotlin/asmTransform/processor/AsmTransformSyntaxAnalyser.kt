@@ -79,7 +79,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val name = SimpleName("ParsedTransformUnit") //TODO: how to specify name, does it matter?
         //val typeModel = TypeModelSimple(name) //TODO: how to specify type model ?
         // typeModel.addNamespace(SimpleTypeModelStdLib)
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         return AsmTransformDomainDefault(
             name = name,
             optHolder,
@@ -95,7 +95,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val imports = children[3] as List<Import>
         val transformBuilders = children[4] as List<(AsmTransformNamespaceDefault) -> AsmTransformRuleSet>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val namespace = AsmTransformNamespaceDefault(nsName, optHolder, imports)
         transformBuilders.map { it.invoke(namespace) }
         return namespace
@@ -115,7 +115,7 @@ class AsmTransformSyntaxAnalyser() : SyntaxAnalyserByMethodRegistrationAbstract<
         val typeImports = children[5] as List<Import>
         val rules = children[6] as List<AsmTransformationRule>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         return { namespace ->
             val extendRefs = extends.map { AsmTransformRuleSetReferenceDefault(namespace, it) }
             val asm = AsmTransformRuleSetDefault(namespace, name, extendRefs, optHolder, rules)

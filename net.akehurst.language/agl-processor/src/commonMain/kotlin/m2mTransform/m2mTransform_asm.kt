@@ -122,7 +122,7 @@ data class M2MTransformRelationDefault(
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
-    override val objectTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
+    override val domainTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
 }
 
 data class M2MTransformMappingDefault(
@@ -133,7 +133,7 @@ data class M2MTransformMappingDefault(
     override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
 
     override val pivot: Map<SimpleName, VariableDefinition> = mutableMapOf()
-    override val objectTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
+    override val domainTemplate: Map<DomainReference, ObjectTemplate> = mutableMapOf()
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
 }
 
@@ -182,7 +182,10 @@ data class CollectionTemplateDefault(
     override val isSubset: Boolean,
     override val elements: List<PropertyTemplateRhs>
 ) : CollectionTemplate {
-
+    override var identifier: SimpleName? = null
+    override fun setIdentifier(value: SimpleName) {
+        this.identifier = value
+    }
 }
 
 data class PropertyTemplateDefault(
@@ -194,7 +197,12 @@ data class PropertyTemplateDefault(
 
 class PropertyTemplateExpressionDefault(
     override val expression: Expression
-) : PropertyTemplateExpression
+) : PropertyTemplateExpression {
+    override var identifier: SimpleName? = null
+    override fun setIdentifier(value: SimpleName) {
+        this.identifier = value
+    }
+}
 
 
 data class M2MTransformTestDefault(

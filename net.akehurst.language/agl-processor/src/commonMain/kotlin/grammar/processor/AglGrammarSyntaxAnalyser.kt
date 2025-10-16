@@ -100,7 +100,7 @@ internal class AglGrammarSyntaxAnalyser(
         val options = children[0] as List<Pair<String, String>>
         val namespaces = children[1] as List<GrammarNamespace>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val unit = GrammarDomainDefault(name = SimpleName("ParsedGrammarUnit"), namespace = namespaces, options = optHolder)
         return unit
     }
@@ -122,7 +122,7 @@ internal class AglGrammarSyntaxAnalyser(
         val imports = children[3] as List<Import>
         val grammarBuilders = children[4] as List<(GrammarNamespace) -> Grammar>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val namespace = GrammarNamespaceDefault(nsName, optHolder, imports)
         grammarBuilders.map { it.invoke(namespace) }
         return namespace
@@ -136,7 +136,7 @@ internal class AglGrammarSyntaxAnalyser(
         val options = (children[4] as List<Pair<String, String>>)
         val rules = children[5] as List<Pair<Boolean, (Grammar) -> GrammarItem>>
 
-        val optHolder = OptionHolderDefault(null, options.associate { it })
+        val optHolder = OptionHolderDefault(null, options.toMap())
         val grmRules = rules.filter { it.first }.map { it.second }
         val precRules = rules.filter { it.first.not() }.map { it.second }
 

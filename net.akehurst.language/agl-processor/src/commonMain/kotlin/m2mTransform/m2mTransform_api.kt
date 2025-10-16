@@ -95,7 +95,7 @@ interface M2mTransformAbstractRule : M2mTransformRule {
 
 interface M2mTransformTangibleRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
-    val objectTemplate: Map<DomainReference, ObjectTemplate>
+    val domainTemplate: Map<DomainReference, PropertyTemplateRhs>
 }
 
 interface M2MTransformRelation : M2mTransformTangibleRule {
@@ -112,12 +112,11 @@ interface M2MTransformMapping : M2mTransformTangibleRule {
     val expression: Map<DomainReference, Expression?>
 }
 
-interface ObjectTemplate : PropertyTemplateRhs {
-    val identifier: SimpleName?
+interface ObjectTemplate :  PropertyTemplateRhs {
+
     val type: TypeInstance
     val propertyTemplate: Map<SimpleName, PropertyTemplate>
 
-    fun setIdentifier(value: SimpleName)
     fun resolveType(tm: TypesDomain)
 }
 
@@ -131,9 +130,12 @@ interface PropertyTemplate {
     val rhs: PropertyTemplateRhs
 }
 
-interface PropertyTemplateRhs
+interface PropertyTemplateRhs {
+    val identifier: SimpleName?
+    fun setIdentifier(value: SimpleName)
+}
 
-interface PropertyTemplateExpression : PropertyTemplateRhs {
+interface PropertyTemplateExpression :  PropertyTemplateRhs {
     val expression: Expression
 }
 

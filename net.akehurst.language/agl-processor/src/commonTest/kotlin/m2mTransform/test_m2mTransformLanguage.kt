@@ -51,6 +51,7 @@ class test_m2mTransformLanguage {
         }
 
         val testData = listOf(
+            // namespace
             TestData(
                 testName = "empty",
                 sentence = """
@@ -86,6 +87,7 @@ class test_m2mTransformLanguage {
                     }
                 """.trimIndent()
             ),
+            // relations
             TestData(
                 testName = "top relation",
                 sentence = """
@@ -187,6 +189,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            // mapping
             TestData(
                 testName = "top mapping",
                 sentence = """
@@ -288,6 +291,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            // where
             TestData(
                 testName = "where",
                 sentence = """
@@ -322,8 +326,72 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            // Templates - primitive
             TestData(
-                testName = "Pattern Template literal string",
+                testName = "Pattern Template literal expression",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      relation Map1 {
+                        domain d1 x:String == 'abc'
+                        domain d2 y:Int == 3
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "Pattern Template complex expression",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      relation Map1 {
+                        domain d1 x:String == 'abc' + 'def' + 'ghi'
+                        domain d2 y:Int == x.y.z.size
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) {
+                    namespace("n1") {
+                        data("A1") {
+                            propertyOf(emptySet(), "prop1", "String")
+                        }
+                    }
+                }
+                val tm2 = typesDomain("D2", true) {
+                    namespace("n2") {
+                        data("A2") {
+                            propertyOf(emptySet(), "prop2", "String")
+                        }
+                    }
+                }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            // Templates - object
+            TestData(
+                testName = "Pattern Template property literal string ",
                 sentence = """
                     namespace test
                     transform Test(d1:D1, d2:D2) {
@@ -356,7 +424,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr2] = tm2
             },
             TestData(
-                testName = "Pattern Template free variable",
+                testName = "Pattern Template property free variable",
                 sentence = """
                     namespace test
                     transform Test(d1:D1, d2:D2) {
@@ -454,6 +522,7 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            // collection template
             TestData(
                 testName = "Pattern Template collection template empty",
                 sentence = """
@@ -594,6 +663,8 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+
+            // transform-test
             TestData(
                 testName = "tests",
                 goalRuleName = "testUnit",
