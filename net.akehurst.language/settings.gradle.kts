@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2025 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,16 +28,21 @@ pluginManagement {
         }
         gradlePluginPortal()
     }
+    includeBuild("./0_build-logic")
 }
 
 rootProject.name = file(".").name
 
 fileTree(".") {
+    exclude("build.gradle.kts")
+    exclude("_buildSrc")
+    exclude("0_build-logic")
     include("**/build.gradle.kts")
-    exclude("build.gradle.kts") // Exclude the root _build file.
 }.forEach {
-    val prj = it.parentFile.name
-    println("including $prj at " + relativePath(it.parent))
-    include(prj)
-    project(":$prj").projectDir = File(relativePath(it.parent))
+    val prjName = it.parentFile.name
+    val prjPath = relativePath(it.parent)
+    println("including $prjName at $prjPath")
+    include(prjName)
+    // project(":$prjName").name = prjName
+    project(":$prjName").projectDir = File(prjPath)
 }

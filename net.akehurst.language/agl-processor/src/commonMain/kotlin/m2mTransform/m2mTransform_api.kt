@@ -47,8 +47,9 @@ interface M2mTransformRuleSetReference : DefinitionReference<M2MTransformDefinit
     fun cloneTo(ns: M2mTransformNamespace): M2mTransformRuleSetReference
 }
 
-@JvmInline
-value class DomainReference(val value: String)
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class DomainReference(val value: String)
 
 interface M2mTransformRuleSet : M2MTransformDefinition {
     override val namespace: M2mTransformNamespace
@@ -93,23 +94,27 @@ interface M2mTransformAbstractRule : M2mTransformRule {
 
 }
 
-interface M2mTransformTangibleRule : M2mTransformRule {
+interface M2mTransformPatternRule : M2mTransformRule {
     val pivot: Map<SimpleName, VariableDefinition>
     val domainTemplate: Map<DomainReference, PropertyTemplateRhs>
 }
 
-interface M2MTransformRelation : M2mTransformTangibleRule {
+interface M2MTransformRelation : M2mTransformPatternRule {
 
 }
 
 /**
  * should only have two domains
  */
-interface M2MTransformMapping : M2mTransformTangibleRule {
+interface M2MTransformMapping : M2mTransformPatternRule {
     /**
      * expression for constructing one domain from the other
      */
     val expression: Map<DomainReference, Expression?>
+}
+
+interface M2MTransformTable : M2mTransformRule {
+    val values: List<Map<DomainReference, Expression>>
 }
 
 interface ObjectTemplate :  PropertyTemplateRhs {
@@ -132,7 +137,7 @@ interface PropertyTemplate {
 
 interface PropertyTemplateRhs {
     val identifier: SimpleName?
-    fun setIdentifier(value: SimpleName)
+    fun setIdentifierValue(value: SimpleName)
 }
 
 interface PropertyTemplateExpression :  PropertyTemplateRhs {

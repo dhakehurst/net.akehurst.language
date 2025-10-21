@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
+//@file:OptIn(ExperimentalWasmDsl::class)
 
-import com.github.gmazzo.buildconfig.BuildConfigExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+//import com.github.gmazzo.buildconfig.BuildConfigExtension
+//import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+//import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+//import kotlin.time.Duration
+//import kotlin.time.Duration.Companion.seconds
 
 plugins {
-    alias(libs.plugins.kotlin) apply false
-    alias(libs.plugins.dokka) apply false
-    alias(libs.plugins.buildconfig) apply false
-    alias(libs.plugins.credentials) apply true
-    alias(libs.plugins.exportPublic) apply false
+   alias(libs.plugins.kotlin) apply false
+   alias(libs.plugins.dokka) apply false
+   alias(libs.plugins.buildconfig) apply false
+   //alias(libs.plugins.credentials) apply true
+   alias(libs.plugins.exportPublic) apply false
 }
+project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
 
+
+/*
 allprojects {
     repositories {
         mavenLocal {
@@ -95,12 +102,25 @@ subprojects {
                 }
             }
         }
-        js("js") {
+        js {
             binaries.library()
-            nodejs()
-            browser()
+            nodejs {
+            }
+            browser {
+                testTask {
+                    useMocha {
+                        timeout = "5000"
+                    }
+//                    useKarma {
+//                        useChromeHeadless()
+//                        println("karma use config directory : ${rootDir.resolve("karma.config.d")}")
+//                        useConfigDirectory(rootDir.resolve("karma.config.d"))
+//                    }
+                }
+            }
             compilerOptions {
                 target.set("es2015")
+                freeCompilerArgs.add("-Xes-long-as-bigint")
             }
         }
 
@@ -110,7 +130,8 @@ subprojects {
 
         wasmJs() {
             binaries.library()
-            browser()
+            browser{
+            }
         }
 
        // macosArm64 {
@@ -140,8 +161,8 @@ subprojects {
 
     fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
-    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD")
+//    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
+    val sonatype_pwd = null/*creds.forKey("SONATYPE_PASSWORD")*/
         ?: getProjectProperty("SONATYPE_PASSWORD")
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
@@ -164,7 +185,7 @@ subprojects {
                 credentials {
                     username = getProjectProperty("PUB_USERNAME")
                         ?: error("Must set project property with Username (-P PUB_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
-                    password = getProjectProperty("PUB_PASSWORD") ?: creds.forKey(getProjectProperty("PUB_USERNAME"))
+                    password = getProjectProperty("PUB_PASSWORD") //?: creds.forKey(getProjectProperty("PUB_USERNAME"))
                 }
             }
         }
@@ -230,3 +251,4 @@ subprojects {
     }
 
 }
+ */

@@ -18,25 +18,33 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
 plugins {
-    // id("io.kotest.multiplatform") version ("5.7.2")
+    id("project-conventions")
 }
 
-// do not publish
-tasks.withType<AbstractPublishToMaven> { onlyIf { false } }
-
-
-dependencies {
-
-    commonTestImplementation(project(":agl-processor"))
-
-//    commonTestImplementation("com.soywiz.korlibs.korge:korio:$version_korio")
-    commonMainApi(libs.korlibs.korio)
-
-    commonTestImplementation(libs.kotest.assertions.core)
-    commonTestImplementation(libs.kotest.framework.engine)
-    commonTestImplementation(libs.kotest.framework.datatest)
-    jvm8TestImplementation(libs.kotest.runner.junit5)
-
+kotlin {
+    sourceSets {
+        commonMain.configure {
+            resources.srcDir(projectDir.resolve("languages"))
+        }
+        commonMain {
+            dependencies {
+                api(libs.korlibs.korio)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(project(":agl-processor"))
+                implementation(libs.kotest.assertions.core)
+                implementation(libs.kotest.framework.engine)
+                implementation(libs.kotest.framework.datatest)
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation(libs.kotest.runner.junit5)
+            }
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {
@@ -54,14 +62,7 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-kotlin {
-    sourceSets {
-        commonMain.configure {
-            resources.srcDir(projectDir.resolve("languages"))
-        }
-    }
-}
-
+// do not publish
 tasks.withType<AbstractPublishToMaven> {
     onlyIf { false }
 }

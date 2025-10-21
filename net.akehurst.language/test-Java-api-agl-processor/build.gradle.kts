@@ -1,11 +1,18 @@
 plugins {
-
+    id("project-conventions")
 }
 
-dependencies {
-    jvm8TestImplementation(project(":agl-processor"))
-    jvm8TestImplementation("junit:junit:4.13.2")
+kotlin {
+    sourceSets {
+        jvmMain {
+            dependencies {
+                implementation(project(":agl-processor"))
+                implementation("junit:junit:4.13.2")
+            }
+        }
+    }
 }
+
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(8))

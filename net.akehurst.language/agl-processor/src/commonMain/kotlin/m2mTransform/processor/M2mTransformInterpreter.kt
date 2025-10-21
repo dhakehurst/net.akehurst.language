@@ -34,15 +34,15 @@ import kotlin.collections.component2
 
 data class M2MTransformResult<OT : Any>(
     val issues: IssueHolder,
-    val record: Map<M2mTransformRule,MappingRecord<OT>>,
+    val record: Map<M2mTransformRule, MappingRecord<OT>>,
     val targetDomainRef: DomainReference
 ) {
     val targets: List<TypedObject<OT>> get() = record.values.flatMap { it.alternatives.map { it[targetDomainRef]!! } }
 
-    fun asString(indent: Indent = Indent()):String {
+    fun asString(indent: Indent = Indent()): String {
         val sb = StringBuilder()
         sb.appendLine("${indent}M2M Transform Result:")
-        for((k,v) in record) {
+        for ((k, v) in record) {
             val recIndent = indent.inc
             sb.appendLine("${recIndent}top rule ${k.name}:")
             sb.appendLine(v.asString(recIndent.inc))
@@ -97,7 +97,7 @@ data class MappingRecord<OT : Any>(
     val alternatives: List<Map<DomainReference, TypedObject<OT>>>
 ) {
 
-    fun asString(indent: Indent = Indent()):String {
+    fun asString(indent: Indent = Indent()): String {
         val sb = StringBuilder()
         sb.appendLine("${indent}MappingRecord:")
         for (i in alternatives.indices) {
@@ -137,10 +137,10 @@ class M2mTransformInterpreter<OT : Any>(
         ): List<List<R>> {
 
             // T_to_CoverMap: Map<t_element, Set<CoverOption>>
-            val tToCoverMap: Map<T, List< R>> = cover.associateWith { tElement ->
+            val tToCoverMap: Map<T, List<R>> = cover.associateWith { tElement ->
                 bySubsetsOf.mapNotNull { cElement ->
-                    val (isMatch, rValue) = matches( tElement, cElement,)
-                    if (isMatch)  rValue else null
+                    val (isMatch, rValue) = matches(tElement, cElement)
+                    if (isMatch) rValue else null
                 }
             }
 
@@ -168,7 +168,7 @@ class M2mTransformInterpreter<OT : Any>(
             // T_to_CoverMap: Map<t_element, Set<CoverOption>>
             val tToCoverMap: Map<T, Set<CoverOption<B, R>>> = cover.associateWith { tElement ->
                 bySubsetsOf.mapNotNull { cElement ->
-                    val (isMatch, rValue) = matches( tElement, cElement,)
+                    val (isMatch, rValue) = matches(tElement, cElement)
                     if (isMatch) CoverOption(cElement, rValue) else null
                 }.toSet()
             }
@@ -352,6 +352,8 @@ class M2mTransformInterpreter<OT : Any>(
         }
     }
 
+    val records = mutableMapOf<M2mTransformRule, MappingRecord<OT>>()
+
     /**
      * @param targetDomainRef reference to the domain that is the target of the transformation
      * @param domainGraphs the objects for each source domain, keyed by the domain reference
@@ -368,9 +370,9 @@ class M2mTransformInterpreter<OT : Any>(
             }
 
             else -> {
-                    targetTransform.topRule.map { topRule ->
-                        executeRule(topRule, targetDomainRef, domainGraphs, objectGraphHandler)
-                    }
+                targetTransform.topRule.map { topRule ->
+                    executeRule(topRule, targetDomainRef, domainGraphs, objectGraphHandler)
+                }
             }
         }
         val r = result.associateBy { it.rule }
@@ -382,19 +384,20 @@ class M2mTransformInterpreter<OT : Any>(
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
         sourceObjectGraph: Map<DomainReference, ObjectGraph<OT>>,
-    ) = when (rule) {
+    ): MappingRecord<OT>  = when (rule) {
         is M2mTransformAbstractRule -> executeAbstract(rule, targetDomainRef, source, sourceObjectGraph)
         is M2MTransformRelation -> executeRelation(rule, targetDomainRef, source, sourceObjectGraph)
         is M2MTransformMapping -> executeMapping(rule, targetDomainRef, source, sourceObjectGraph)
+        is M2MTransformTable -> executeTable(rule, targetDomainRef, source, sourceObjectGraph)
         else -> error("Unknown rule type ${rule::class}")
-    }
+    }.also { records[rule] = it }
 
     private fun executeAbstract(
         rule: M2mTransformAbstractRule,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
         objectGraph: Map<DomainReference, ObjectGraph<OT>>,
-    ):  MappingRecord<OT> {
+    ): MappingRecord<OT> {
         TODO()
     }
 
@@ -416,7 +419,7 @@ class M2mTransformInterpreter<OT : Any>(
 
             else -> {
                 val altSources = domToListOfAlts
-                    .map { (k,v) -> Pair(k,v.alternatives) }
+                    .map { (k, v) -> Pair(k, v.alternatives) }
                     .toMap()
                     .cartesianProduct()
                 when {
@@ -435,20 +438,20 @@ class M2mTransformInterpreter<OT : Any>(
                                 val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtOg, _issues)
                                 val evc = EvaluationContext.of(allVars.matchedVariables)
                                 val r = exprInterp.evaluateExpression(evc, expression)
-                                val srcs = alt.entries.associate { (srcDomainRef,mr) ->
+                                val srcs = alt.entries.associate { (srcDomainRef, mr) ->
                                     val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
                                     val srcId = srcObjPat.identifier?.value ?: error("No identifier found for matched object in domain '$srcDomainRef'")
                                     val src = mr.getValueNamed(srcId) ?: error("No matched object found for identifier '$srcId'")
-                                    Pair(srcDomainRef,src)
+                                    Pair(srcDomainRef, src)
                                 }
-                                srcs+ Pair(targetDomainRef,r)
+                                srcs + Pair(targetDomainRef, r)
                             }
                         }
                     }
                 }
             }
         }
-        return MappingRecord(rule,res)
+        return MappingRecord(rule, res)
     }
 
     private fun executeRelation(
@@ -456,7 +459,7 @@ class M2mTransformInterpreter<OT : Any>(
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
         objectGraph: Map<DomainReference, ObjectGraph<OT>>,
-    ):  MappingRecord<OT> {
+    ): MappingRecord<OT> {
         val tgtOg = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
         val domToListOfAlts = matchSourceVariables(rule, targetDomainRef, source, objectGraph)
         val res = when {
@@ -467,7 +470,7 @@ class M2mTransformInterpreter<OT : Any>(
 
             else -> {
                 val altSources = domToListOfAlts
-                    .map { (k,v) -> Pair(k,v.alternatives) }
+                    .map { (k, v) -> Pair(k, v.alternatives) }
                     .toMap()
                     .cartesianProduct()
                 when {
@@ -476,22 +479,59 @@ class M2mTransformInterpreter<OT : Any>(
                         val allVars = alt.values.merge()
                         val objPat = rule.domainTemplate[targetDomainRef] ?: error("No object pattern found for domain '$targetDomainRef'")
                         val r = createFromRhs(allVars.matchedVariables, objPat, tgtOg)
-                        val srcs = alt.entries.associate { (srcDomainRef,v) ->
+                        val srcs = alt.entries.associate { (srcDomainRef, v) ->
                             val srcObjPat = rule.domainTemplate[srcDomainRef] ?: error("No object pattern found for domain '$srcDomainRef'")
                             val srcId = srcObjPat.identifier?.value ?: error("No identifier found for matched object in domain '$srcDomainRef'")
                             val src = v.getValueNamed(srcId) ?: error("No matched object found for identifier '$srcId'")
-                            Pair(srcDomainRef,src)
+                            Pair(srcDomainRef, src)
                         }
-                        srcs+ Pair(targetDomainRef,r)
+                        srcs + Pair(targetDomainRef, r)
                     }
                 }
             }
         }
-        return MappingRecord(rule,res)
+        return MappingRecord(rule, res)
+    }
+
+    private fun executeTable(
+        rule: M2MTransformTable,
+        targetDomainRef: DomainReference,
+        source: Map<DomainReference, List<TypedObject<OT>>>,
+        objectGraph: Map<DomainReference, ObjectGraph<OT>>,
+    ): MappingRecord<OT> {
+        val matchingValues = source.cartesianProduct().mapNotNull { srcAlt ->
+            rule.values.firstNotNullOfOrNull { vs ->
+                val srcValues = srcAlt.mapNotNull { (srcDomainRef, v) ->
+                    val srcObjectGraph = objectGraph[srcDomainRef] ?: error("ObjectGraph not found for domain '$srcDomainRef'")
+                    val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(srcObjectGraph, _issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val drExp = vs[srcDomainRef] ?: error("")
+                    val value = exprInterp.evaluateExpression(evc, drExp)
+                    val match = srcObjectGraph.equalTo(v, value)
+                    if (match) {
+                        Pair(srcDomainRef, value)
+                    } else {
+                        null
+                    }
+                }
+                // if found a match, add the target value
+                if (srcValues.isEmpty()) {
+                    null
+                } else {
+                    val tgtObjectGraph = objectGraph[targetDomainRef] ?: error("ObjectGraph not found for domain '$targetDomainRef'")
+                    val exprInterp = ExpressionsInterpreterOverTypedObject<OT>(tgtObjectGraph, _issues)
+                    val evc = EvaluationContext.of(emptyMap<String, TypedObject<OT>>()) //TODO: are there any variables !
+                    val drExp = vs[targetDomainRef] ?: error("")
+                    val value = exprInterp.evaluateExpression(evc, drExp)
+                    srcValues + Pair(targetDomainRef, value)
+                }
+            }?.toMap()
+        }
+        return MappingRecord(rule, matchingValues)
     }
 
     private fun matchSourceVariables(
-        rule: M2mTransformTangibleRule,
+        rule: M2mTransformPatternRule,
         targetDomainRef: DomainReference,
         source: Map<DomainReference, List<TypedObject<OT>>>,
         objectGraph: Map<DomainReference, ObjectGraph<OT>>,
@@ -580,7 +620,7 @@ class M2mTransformInterpreter<OT : Any>(
                 TemplateMatchAlternatives(alts)
             }
         }
-     }
+    }
 
     fun matchVariablesFromCollectionTemplate(
         variables: Map<String, TypedObject<OT>>,
@@ -603,7 +643,7 @@ class M2mTransformInterpreter<OT : Any>(
                     cover = collectionTemplate.elements,
                     bySubsetsOf = elements
                 ) { tp, el ->
-                    val mr = matchVariablesFromRhs(variables, srcObjectGraph,  el, tp)
+                    val mr = matchVariablesFromRhs(variables, srcObjectGraph, el, tp)
                     Pair(mr.alternatives.isNotEmpty(), mr)
                 }
                 options.map { opt ->

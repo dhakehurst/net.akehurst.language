@@ -198,7 +198,7 @@ class test_SemanticAnalyserSimple {
                 LanguageIssueKind.WARNING,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 null,
-                "Empty CrossReferenceModel"
+                "Empty CrossReferenceDomain"
             )
         )
         test_issues(grammarStr, referenceModelStr, sentence, options, expected)

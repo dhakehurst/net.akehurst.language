@@ -326,7 +326,7 @@ class AsmStructureSimple(
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmStructure -> false
         this.qualifiedTypeName != other.qualifiedTypeName -> false
-        this.parsePath != other.parsePath -> false
+        //this.parsePath != other.parsePath -> false
         this.property.size != other.property.size -> false
         else -> {
             this.property.all { (k, v) ->
@@ -398,11 +398,7 @@ class AsmStructurePropertySimple(
                         error("Cannot compare property values: ${t} and ${o}")
                     }
                 } else {
-                    if (t is AsmStructureSimple && o is AsmStructureSimple) {
                         t.equalTo(o)
-                    } else {
-                        t == o
-                    }
                 }
             }
         }

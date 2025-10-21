@@ -69,25 +69,29 @@ interface UnescapedValue {
     val escapedForRegex: String
 }
 
-@JvmInline
-value class EscapedPattern(override val value: String) : EscapedValue {
-    override val unescapedFromAgl: UnescapedPattern get() = CommonRegexPatterns.unescape_PATTERN(value)
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class EscapedPattern(override val value: String) : EscapedValue {
+    override val unescapedFromAgl: UnescapedValue get() = CommonRegexPatterns.unescape_PATTERN(value)
 }
 
-@JvmInline
-value class UnescapedPattern(override val value: String) : UnescapedValue {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class UnescapedPattern(override val value: String) : UnescapedValue {
     override val escapedFoAgl: EscapedPattern get() = CommonRegexPatterns.escape_PATTERN(value)
     override val escapedForRegex: String get() = value
     fun toRegex() = escapedForRegex.toRegex()
 }
 
-@JvmInline
-value class EscapedLiteral(override val value: String) : EscapedValue {
-    override val unescapedFromAgl: UnescapedLiteral get() = CommonRegexPatterns.unescape_LITERAL(value)
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class EscapedLiteral(override val value: String) : EscapedValue {
+    override val unescapedFromAgl: UnescapedValue get() = CommonRegexPatterns.unescape_LITERAL(value)
 }
 
-@JvmInline
-value class UnescapedLiteral(override val value: String) : UnescapedValue {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class UnescapedLiteral(override val value: String) : UnescapedValue {
     override val escapedFoAgl: EscapedLiteral get() = CommonRegexPatterns.escape_LITERAL(value)
     override val escapedForRegex: String
         get() =

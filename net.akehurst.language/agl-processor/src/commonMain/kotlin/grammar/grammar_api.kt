@@ -154,8 +154,9 @@ interface Grammar : Definition<Grammar> {
 
 }
 
-@JvmInline
-value class GrammarRuleName(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class GrammarRuleName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 

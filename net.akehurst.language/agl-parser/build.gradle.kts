@@ -1,14 +1,21 @@
 plugins {
+    id("project-conventions")
     alias(libs.plugins.exportPublic)
     alias(libs.plugins.reflex)
 }
 
-dependencies {
-    commonMainImplementation(project(":agl-regex"))
-    commonMainImplementation(project(":collections"))
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(project(":agl-regex"))
+                implementation(project(":collections"))
 
-    commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
-    commonMainApi(libs.nak.kotlinx.collections) // for MutableStack
+                api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
+                api(libs.nak.kotlinx.collections) // for MutableStack
+            }
+        }
+    }
 }
 
 //  since change in Kotlin compiler, can't see transitive deps in module (without additional work yet done
@@ -46,15 +53,6 @@ exportPublic {
 }
 */
 
-kotlin {
-    js("js") {
-        binaries.library()
-        generateTypeScriptDefinitions()
-    }
-    sourceSets {
-        val jvm8Main by getting
-    }
-}
 
 tasks.forEach {
     if (it.name.startsWith("publish")) {

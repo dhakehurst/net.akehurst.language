@@ -2,8 +2,8 @@
 project = "4.2.2.20-SNAPSHOT"
 
 kotlin = "2.2.20"
-dokka = "2.0.0"
-buildconfig = "5.6.7"
+dokka = "2.1.0"
+buildconfig = "5.7.0"
 credentials = "3.0"
 exportPublic = "2.2.20-SNAPSHOT"
 nak-kotlinx = "2.2.20-SNAPSHOT"
@@ -11,16 +11,21 @@ jsIntegration = "2.2.20-SNAPSHOT"
 
 korlibs = "6.0.2"
 kotest = "5.9.1"
+kotlinx-coroutines = "1.10.2"
 
 [libraries]
 korlibs-korio = { module = "com.soywiz:korlibs-io", version.ref = "korlibs" }
 nak-kotlinx-reflect = { module = "net.akehurst.kotlinx:kotlinx-reflect", version.ref = "nak-kotlinx" }
 nak-kotlinx-collections = { module = "net.akehurst.kotlinx:kotlinx-collections", version.ref = "nak-kotlinx" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

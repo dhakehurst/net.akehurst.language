@@ -1,3 +1,7 @@
+plugins {
+    id("project-conventions")
+}
+
 kotlin {
     sourceSets {
         commonMain {

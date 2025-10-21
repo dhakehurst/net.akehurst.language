@@ -61,7 +61,7 @@ class test_DataTypes {
             Data("class A ",8, listOf("{")),
             Data("class A {",9, listOf("{")),
             Data("class A { ",10, listOf("<ID>","}")),
-            Data("class A { p",11, listOf(":")),
+            Data("class A { p",11, listOf("<ID>")),
             Data("class A { p ",12, listOf(":")),
             Data("class A { p: ",13, listOf("<ID>")),
             Data("class A { p: X",14, listOf("<", "<ID>", "}")),

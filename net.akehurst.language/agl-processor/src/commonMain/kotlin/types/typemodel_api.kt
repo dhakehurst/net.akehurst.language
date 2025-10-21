@@ -372,8 +372,9 @@ interface CollectionType : StructuredType {
     val isStdMap: Boolean
 }
 
-@JvmInline
-value class PropertyName(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class PropertyName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
@@ -490,8 +491,9 @@ enum class PropertyCharacteristic {
     }
 }
 
-@JvmInline
-value class MethodName(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class MethodName(override val value: String) : PublicValueType
 
 interface MethodDeclaration {
     val owner: TypeDefinition
@@ -519,8 +521,9 @@ interface ConstructorDeclaration {
 }
 
 // ParameterName clashes with kotlin.ParameterName
-@JvmInline
-value class TmParameterName(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class TmParameterName(override val value: String) : PublicValueType
 
 interface ParameterDeclaration {
     val name: TmParameterName

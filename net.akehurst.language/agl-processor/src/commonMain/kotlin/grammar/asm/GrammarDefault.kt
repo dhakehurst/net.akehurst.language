@@ -40,10 +40,10 @@ class GrammarDomainDefault(
         else -> true
     }
 
-    override fun toString(): String = "GrammarModel '$name'"
+    override fun toString(): String = "GrammarDomain '$name'"
 }
 
-@Deprecated("Just use a GrammarModel", ReplaceWith("Just use a GrammarModel"))
+@Deprecated("Just use a GrammarDomain", ReplaceWith("Just use a GrammarDomain"))
 fun Grammar.asGrammarDomain(): GrammarDomain = GrammarDomainDefault(this.name, OptionHolderDefault(null, emptyMap()), listOf(this.namespace as GrammarNamespace))
 
 class GrammarNamespaceDefault(

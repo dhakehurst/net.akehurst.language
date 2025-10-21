@@ -137,6 +137,15 @@ data class M2MTransformMappingDefault(
     override val expression: Map<DomainReference, Expression?> = mutableMapOf()
 }
 
+data class M2MTransformTableDefault(
+    override val isTop: Boolean,
+    override val name: SimpleName
+) : M2MTransformTable {
+    override val primitiveDomains: List<VariableDefinition> = mutableListOf()
+    override val domainSignature: Map<DomainReference, DomainSignature> = mutableMapOf()
+    override val values: List<Map<DomainReference, Expression>> = mutableListOf()
+}
+
 data class DomainSignatureDefault(
     override val domainRef: DomainReference,
     override val variable: VariableDefinition
@@ -168,7 +177,7 @@ data class ObjectTemplateDefault(
     private var _resolvedType: TypeInstance? = null
     override val type: TypeInstance get() = _resolvedType ?: error("Type not resolved for '$this'")
 
-    override fun setIdentifier(value: SimpleName) {
+    override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
     }
 
@@ -183,7 +192,7 @@ data class CollectionTemplateDefault(
     override val elements: List<PropertyTemplateRhs>
 ) : CollectionTemplate {
     override var identifier: SimpleName? = null
-    override fun setIdentifier(value: SimpleName) {
+    override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
     }
 }
@@ -199,7 +208,7 @@ class PropertyTemplateExpressionDefault(
     override val expression: Expression
 ) : PropertyTemplateExpression {
     override var identifier: SimpleName? = null
-    override fun setIdentifier(value: SimpleName) {
+    override fun setIdentifierValue(value: SimpleName) {
         this.identifier = value
     }
 }

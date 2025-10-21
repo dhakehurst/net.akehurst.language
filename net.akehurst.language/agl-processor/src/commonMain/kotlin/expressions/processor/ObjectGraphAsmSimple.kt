@@ -145,8 +145,7 @@ open class ObjectGraphAsmSimple(
 
     override fun isNothing(obj: TypedObject<AsmValue>): Boolean = obj.self == AsmNothingSimple
     override fun equalTo(lhs: TypedObject<AsmValue>, rhs: TypedObject<AsmValue>): Boolean =
-        lhs.self == rhs.self //TODO: should compare types here also, maybe?
-
+        lhs.self.equalTo(rhs.self)
 
     override fun nothing() = AsmNothingSimple.toTypedObject()
     override fun any(value: Any) = AsmAnySimple(value).toTypedObject()

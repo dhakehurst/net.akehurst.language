@@ -291,6 +291,70 @@ class test_m2mTransformLanguage {
                 typeDomains[dr1] = tm1
                 typeDomains[dr2] = tm2
             },
+            // table
+            TestData(
+                testName = "top table 2x1",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top table Rel1 {
+                        domain d1 :Int    domain d2 :Int
+                        values  1    to   2
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) { namespace("n1") {} }
+                val tm2 = typesDomain("D2", true) { namespace("n2") {} }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "top table 2x2",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2) {
+                      top table Rel1 {
+                        domain d1 :Int    domain d2 :String
+                        values  1    to   'a'
+                        values  2    to   'b'
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val tm1 = typesDomain("D1", true) { namespace("n1") {} }
+                val tm2 = typesDomain("D2", true) { namespace("n2") {} }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+            },
+            TestData(
+                testName = "top table 3x3",
+                sentence = """
+                    namespace test
+                    transform Test(d1:D1, d2:D2, d3:D3) {
+                      top table Rel1 {
+                        domain d1 :Int    domain d2 :String  domain d3 :Boolean
+                        values  1    to   'a'    to           true
+                        values  2    to   'b'    to           false
+                        values  3    to   'c'    to           true
+                      }
+                    }
+                """.trimIndent()
+            ).apply {
+                val dr1 = DomainReference("d1")
+                val dr2 = DomainReference("d2")
+                val dr3 = DomainReference("d3")
+                val tm1 = typesDomain("D1", true) { namespace("n1") {} }
+                val tm2 = typesDomain("D2", true) { namespace("n2") {} }
+                val tm3 = typesDomain("D3", true) { namespace("n3") {} }
+                typeDomains[dr1] = tm1
+                typeDomains[dr2] = tm2
+                typeDomains[dr3] = tm3
+            },
             // where
             TestData(
                 testName = "where",
@@ -708,7 +772,11 @@ class test_m2mTransformLanguage {
             assertTrue(result.issues.errors.isEmpty(), "'${data.sentence}'\n${result.issues}")
         }
 
-        private fun test_process(data: TestData) {
+        private fun test_process(i:Int) {
+            val data = testData[i]
+            println()
+            println("--- ${data.testName} ---")
+            println("Processing '${data.sentence}'")
             val context = ContextWithScope<Any, Any>()
             data.typeDomains.forEach { (k,v) ->
                 context.addToScope(null, listOf(v.name.value), QualifiedName("TypesDomain"), null, v)
@@ -772,11 +840,8 @@ class test_m2mTransformLanguage {
 
     @Test
     fun process() {
-        for (td in testData) {
-            println()
-            println("--- ${td.testName} ---")
-            println("Processing '${td.sentence}'")
-            test_process(td)
+        for (i in testData.indices) {
+            test_process(i)
         }
     }
 

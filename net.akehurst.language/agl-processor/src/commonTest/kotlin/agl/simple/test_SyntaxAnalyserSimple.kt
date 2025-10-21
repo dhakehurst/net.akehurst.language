@@ -29,8 +29,6 @@ import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.builder.typesDomain
 import kotlin.test.Test
@@ -38,7 +36,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_SyntaxAnalyserSimple {
 
     private companion object {

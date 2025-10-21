@@ -150,9 +150,10 @@ grammar Dot  {
 }
         """
         val grammars = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(contextFromGrammarRegistry(Agl.registry)) } }).asm!!
-        val rrs = grammars.allDefinitions.map {
-            ConverterToRuntimeRules(it).runtimeRuleSet
-        }
+        val converters = grammars.allDefinitions.map { ConverterToRuntimeRules(it) }
+        val grmToRrs = converters.associateBy({ it.grammar}, { it.runtimeRuleSet })
+        converters.forEach {c -> c.resolveEmbedded(grmToRrs) }
+        val rrs = converters.last().runtimeRuleSet!!
         val sentences = listOf(
             "graph {  }",
             """
@@ -199,7 +200,7 @@ digraph g {
         )
         test(
             "graph",
-            rrs.last(),
+            rrs,
             sentences
         )
     }

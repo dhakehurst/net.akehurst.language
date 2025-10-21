@@ -62,20 +62,24 @@ grammar $NAME : Base {
     option = 'option' IDENTIFIER '=' expression ;
     typeImport = 'import-types' possiblyQualifiedName ;
     
-    transformRule = abstractRule | relation | mapping ;
+    transformRule = abstractRule | relationRule | mappingRule | tableRule ;
     abstractRule = 'abstract' 'top'? 'rule' ruleName extends? '{' domainPrimitive* domainSignature* '}' ;
-    relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
-    mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
-   
+    relationRule = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
+    mappingRule = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
+    tableRule = 'top'? 'table' ruleName extends? '{' domainPrimitive* unnamedDomainSignature{2+} values+ when? where? '}' ;
+    
     pivot = 'pivot' variableDefinition ;
     domainPrimitive = 'primitive' 'domain' variableDefinition ;
     domainSignature = 'domain' domainReference variableDefinition ;
+    unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
     domainTemplate = domainSignature domainTemplateRhs ;
     domainTemplateRhs = domainPrimitiveRhs | domainObjectRhs ;
     domainPrimitiveRhs = '==' expression ;
     domainObjectRhs = propertyTemplateBlock ;
     domainAssignment = domainSignature ':=' expression ;
     variableDefinition = variableName ':' typeReference ;
+    values = 'values' [expression / 'to']2+ ;
+
     typeReference = Expressions::typeReference ;
     expression = Expressions::expression ;
     
@@ -165,8 +169,9 @@ grammar $NAME : Base {
                     concatenation("typeImport") { lit("import-types"); ref("possiblyQualifiedName") }
                     choice("transformRule") {
                         ref("abstractRule")
-                        ref("relation")
-                        ref("mapping")
+                        ref("relationRule")
+                        ref("mappingRule")
+                        ref("tableRule")
                     }
                     concatenation("abstractRule") {
                         lit("abstract"); opt { lit("top") };  lit("rule"); ref("ruleName"); opt { ref("extends") }; lit("{")
@@ -174,7 +179,7 @@ grammar $NAME : Base {
                         lst(0, -1) { ref("domainSignature") }
                         lit("}")
                     }
-                    concatenation("relation") {
+                    concatenation("relationRule") {
                         opt { lit("top") }; lit("relation"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("pivot") }
                         lst(0, -1) { ref("domainPrimitive") }
@@ -183,7 +188,7 @@ grammar $NAME : Base {
                         opt { ref("where") }
                         lit("}")
                     }
-                    concatenation("mapping") {
+                    concatenation("mappingRule") {
                         opt { lit("top") }; lit("mapping"); ref("ruleName"); opt { ref("extends") }; lit("{")
                         lst(0, -1) { ref("domainPrimitive") }
                         lst(1, -1) { ref("domainTemplate") }
@@ -192,10 +197,22 @@ grammar $NAME : Base {
                         opt { ref("where") }
                         lit("}")
                     }
+                    concatenation("tableRule") {
+                        opt { lit("top") }; lit("table"); ref("ruleName"); opt { ref("extends") }; lit("{")
+                        lst(0, -1) { ref("domainPrimitive") }
+                        lst(2, -1) { ref("unnamedDomainSignature") }
+                        lst(1, -1) { ref("values") }
+                        opt { ref("when") }
+                        opt { ref("where") }
+                        lit("}")
+                    }
                     concatenation("pivot") { lit("pivot"); ref("variableDefinition") }
                     concatenation("domainPrimitive") { lit("primitive"); lit("domain"); ref("variableDefinition");}
                     concatenation("domainSignature") {
                         lit("domain"); ref("domainReference"); ref("variableDefinition")
+                    }
+                    concatenation("unnamedDomainSignature") {
+                        lit("domain"); ref("domainReference"); lit(":"); ref("typeReference")
                     }
                     concatenation("domainTemplate") {
                         ref("domainSignature"); ref("domainTemplateRhs")
@@ -210,6 +227,7 @@ grammar $NAME : Base {
                         ref("domainSignature"); lit(":="); ref("expression")
                     }
                     concatenation("variableDefinition") { ref("variableName"); lit(":"); ref("typeReference") }
+                    concatenation("values") { lit("values"); spLst(2, -1) { ref("expression"); lit("to") } }
                     concatenation("typeReference") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "typeReference") }
                     concatenation("expression") { ebd(AglExpressions.defaultTargetGrammar.selfReference, "expression") }
                     concatenation("when") { lit("when"); lit("{"); ref("expression"); lit("}") }

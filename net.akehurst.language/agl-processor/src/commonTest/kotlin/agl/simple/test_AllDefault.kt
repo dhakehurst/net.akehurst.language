@@ -28,15 +28,13 @@ import net.akehurst.language.api.processor.GrammarString
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
-import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.parser.api.RuleSet
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.AsmTransformRuleSetBuilder
 import net.akehurst.language.asmTransform.builder.asmTransform
 import net.akehurst.language.asmTransform.test.AsmTransformDomainTest
+import net.akehurst.language.base.api.QualifiedName
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
+import net.akehurst.language.parser.api.RuleSet
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -44,7 +42,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_AllDefault {
 
     private companion object {

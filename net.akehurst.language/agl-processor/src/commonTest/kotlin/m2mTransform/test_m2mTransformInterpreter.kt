@@ -109,7 +109,7 @@ class test_m2mTransformInterpreter {
                     string("Hello World! Any2")
                 }
             },
-            TestData("2 matching top mapping to 2 String input 2 gives error").also {
+            TestData("2 matching top mapping to 2 String input 2 give 4 results").also {
                 val dr1 = DomainReference("d1")
                 val dr2 = DomainReference("d2")
                 val tm1 = typesDomain("Domain1", true) {
@@ -127,11 +127,11 @@ class test_m2mTransformInterpreter {
                     transform Test(d1:Domain1, d2:Domain2) {
                         top mapping A {
                             domain d1 a1:String {}
-                            domain d2 a2:String := 'Hello World A!'
+                            domain d2 a2:String := 'Hello World! from A '+a1
                         }
                         top mapping B {
                             domain d1 a1:String {}
-                            domain d2 a2:String := 'Hello World B!'
+                            domain d2 a2:String := 'Hello World! from B '+a1
                         }
                     }
                 """
@@ -141,7 +141,10 @@ class test_m2mTransformInterpreter {
                 }
                 it.target = dr2
                 it.expected = asmSimple(tm2) {
-                    string("should not happen, error should occur")
+                    string("Hello World! from A Any1")
+                    string("Hello World! from A Any2")
+                    string("Hello World! from B Any1")
+                    string("Hello World! from B Any2")
                 }
             },
             TestData("2 matching top mapping to one of each 2 String input 2 gives 2 literal String result").also {
@@ -538,7 +541,7 @@ class test_m2mTransformInterpreter {
                     string("c2a3a4")
                 }
             },
-
+            // qvt example
             TestData("umlRdbms QVT example - PackageToSchema").also {
                 val dr1 = DomainReference("uml")
                 val dr2 = DomainReference("rdbms")
@@ -668,7 +671,7 @@ class test_m2mTransformInterpreter {
                     }
                 }
             },
-            TestData("umlRdbms QVT example - top table").also {
+            TestData("umlRdbms QVT example - top table PrimitiveUmlTypeToSqlType").also {
                 val dr1 = DomainReference("uml")
                 val dr2 = DomainReference("rdbms")
                 val tm1 = typesDomain("SimpleUML", true) {
@@ -778,10 +781,11 @@ class test_m2mTransformInterpreter {
                     namespace test
                     transform umlRdbms(uml : SimpleUML, rdbms : SimpleRDBMS) {
                         top table PrimitiveUmlTypeToSqlType {
-                            domains uml :PrimitiveDataType                | rdbms :String
-                            map     PrimitiveDataType{ name := 'Int'}     | 'NUMBER'
-                            map     PrimitiveDataType{ name := 'Boolean'} | 'BOOLEAN'
-                            map     PrimitiveDataType{ name := 'String'}  | 'VARCHAR'
+                            domain  uml :PrimitiveDataType                /**/ domain rdbms :String
+                            /*===================================================================*/ 
+                            values PrimitiveDataType(){ name := 'Int'}     to  'NUMBER'
+                            values PrimitiveDataType(){ name := 'Boolean'} to  'BOOLEAN'
+                            values PrimitiveDataType(){ name := 'String'}  to  'VARCHAR'
                         }
                     }
                 """.trimIndent()
@@ -795,7 +799,7 @@ class test_m2mTransformInterpreter {
                     string("BOOLEAN")
                 }
             },
-            TestData("umlRdbms QVT example - PrimitiveUmlTypeToSqlType").also {
+            TestData("umlRdbms QVT example - abstract PrimitiveUmlTypeToSqlType").also {
                 val dr1 = DomainReference("uml")
                 val dr2 = DomainReference("rdbms")
                 val tm1 = typesDomain("SimpleUML", true) {

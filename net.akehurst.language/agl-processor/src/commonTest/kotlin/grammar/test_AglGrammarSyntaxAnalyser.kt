@@ -25,13 +25,10 @@ import net.akehurst.language.parser.leftcorner.LeftCornerParser
 import net.akehurst.language.regex.agl.RegexEnginePlatform
 import net.akehurst.language.scanner.common.ScannerOnDemand
 import net.akehurst.language.sppt.api.SharedPackedParseTree
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.JVM)
 class test_AglGrammarSyntaxAnalyser {
 
     private companion object {

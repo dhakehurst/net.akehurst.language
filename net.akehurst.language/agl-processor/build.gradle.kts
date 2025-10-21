@@ -1,24 +1,20 @@
 plugins {
+    id("project-conventions")
     alias(libs.plugins.reflex)
 }
 
 dependencies {
-    commonMainApi(project(":agl-parser"))
-    commonMainApi(project(":agl-regex"))
-    commonMainApi(project(":collections")) //TODO merge with kotlinx collections
 
-    commonMainApi(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
-    commonMainApi(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+        freeCompilerArgs.add("-Xes-long-as-bigint")
     }
 
     js("js") {
         binaries.library()
-        generateTypeScriptDefinitions()
         compilations["main"].packageJson {
             customField(
                 "author", mapOf(
@@ -37,6 +33,18 @@ kotlin {
    // macosArm64()
 
     sourceSets {
+        commonMain {
+            dependencies {
+                api(project(":agl-parser"))
+                api(project(":agl-regex"))
+                api(project(":collections")) //TODO merge with kotlinx collections
+
+                api(libs.nak.kotlinx.collections) // needed for topologicalSort, OrderedSet
+                api(libs.nak.kotlinx.reflect) // needed for KotlinxReflect generated code
+            }
+        }
+
+
         commonTest.configure {
             // add language repository so we can test the grammars with specific sentences here
             resources.srcDir(projectDir.resolve("../language-repository/languages"))

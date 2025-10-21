@@ -19,11 +19,13 @@ package net.akehurst.kotlinx.komposite.common
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
+import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 import kotlin.jvm.JvmInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalJsExport::class)
 @JsExport
 data class A(
     val prop1: String = "hello"
@@ -58,9 +60,9 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
+            
         """, emptyMap()
         )
         var result = ""
@@ -85,9 +87,9 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
+            
         """, emptyMap()
         )
         var result = ""
@@ -112,9 +114,9 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
+            
         """, emptyMap()
         )
 
@@ -137,9 +139,9 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
+            
         """, emptyMap()
         )
 
@@ -163,12 +165,12 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
-            namespace net.akehurst.language.komposite.common {
+            
+            namespace net.akehurst.language.komposite.common
                 primitive AValueClass
-            }
+            
         """, emptyMap()
         )
 
@@ -191,12 +193,12 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin
                 primitive String
-            }
-            namespace net.akehurst.language.komposite.common {
+            
+            namespace net.akehurst.language.komposite.common
                 primitive AValueClass
-            }
+            
         """, emptyMap()
         )
 
@@ -225,13 +227,13 @@ class test_KompositeWalker {
         val reg = DatatypeRegistry()
         reg.registerFromAglTypesString(
             """
-            namespace kotlin {
+            namespace kotlin 
                 primitive Int
                 primitive String
-            }
-            namespace kotlin.collections {
+            
+            namespace kotlin.collections 
                collection Map<K,V>
-            }
+            
         """, emptyMap()
         )
         val sut = kompositeWalker<String, String>(reg) {

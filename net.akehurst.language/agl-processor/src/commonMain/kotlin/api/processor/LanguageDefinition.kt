@@ -42,28 +42,35 @@ interface GrammarRegistry {
     fun findGrammarOrNull(localNamespace: Namespace<Grammar>, nameOrQName: PossiblyQualifiedName): Grammar?
 }
 
-@JvmInline
-value class LanguageIdentity(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class LanguageIdentity(override val value: String) : PublicValueType {
     val last: String get() = value.split(".").last()
 }
 
-@JvmInline
-value class GrammarString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class GrammarString(override val value: String) : PublicValueType
 
-@JvmInline
-value class TypesString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class TypesString(override val value: String) : PublicValueType
 
-@JvmInline
-value class AsmTransformString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class AsmTransformString(override val value: String) : PublicValueType
 
-@JvmInline
-value class CrossReferenceString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class CrossReferenceString(override val value: String) : PublicValueType
 
-@JvmInline
-value class StyleString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class StyleString(override val value: String) : PublicValueType
 
-@JvmInline
-value class FormatString(override val value: String) : PublicValueType
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class FormatString(override val value: String) : PublicValueType
 
 interface LanguageRegistry : GrammarRegistry {
 

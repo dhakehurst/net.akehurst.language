@@ -21,12 +21,10 @@ package net.akehurst.language.agl.simple
 import net.akehurst.language.agl.Agl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.processor.contextFromGrammarRegistry
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
-import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
-import net.akehurst.language.test.FixMethodOrder
-import net.akehurst.language.test.MethodSorters
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeModel
+import net.akehurst.language.grammarTypemodel.builder.grammarTypeNamespace
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypesDomainSimple
@@ -36,7 +34,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_deriveGrammarTypeNamespaceFromGrammar {
 
     private companion object {

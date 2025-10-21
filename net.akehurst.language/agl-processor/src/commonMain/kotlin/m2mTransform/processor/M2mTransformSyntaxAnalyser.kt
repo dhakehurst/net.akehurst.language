@@ -35,6 +35,7 @@ import net.akehurst.language.m2mTransform.asm.*
 import net.akehurst.language.parser.api.OptionNum
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.SpptDataNodeInfo
+import kotlin.collections.set
 
 class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2mTransformDomain>() {
 
@@ -56,17 +57,20 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::typeImport)
         super.register(this::transformRule)
         super.register(this::abstractRule)
-        super.register(this::relation)
-        super.register(this::mapping)
+        super.register(this::relationRule)
+        super.register(this::mappingRule)
+        super.register(this::tableRule)
         super.register(this::pivot)
         super.register(this::domainPrimitive)
         super.register(this::domainSignature)
+        super.register(this::unnamedDomainSignature)
         super.register(this::domainTemplate)
         super.register(this::domainTemplateRhs)
         super.register(this::domainPrimitiveRhs)
         super.register(this::domainObjectRhs)
         super.register(this::domainAssignment)
         super.register(this::variableDefinition)
+        super.register(this::values)
         super.register(this::typeReference)
         super.register(this::expression)
         super.registerFor("when", this::when_)
@@ -152,7 +156,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun typeImport(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Import =
         Import((children[1] as PossiblyQualifiedName).value)
 
-    // transformRule = abstractRule | relation | mapping ;
+    // transformRule = abstractRule | relationRule | mappingRule | tableRule ;
     private fun transformRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformRule =
         children[0] as M2mTransformRule
 
@@ -171,8 +175,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
-    // relation = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
-    private fun relation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformRelation {
+    // relationRule = 'top'? 'relation' ruleName extends? '{' pivot* domainPrimitive* domainTemplate{2+} when? where? '}' ;
+    private fun relationRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformRelation {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
         val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
@@ -191,8 +195,8 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
-    // mapping = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
-    private fun mapping(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformMapping {
+    // mappingRule = 'top'? 'mapping' ruleName extends? '{' domainPrimitive* domainTemplate+ domainAssignment when? where? '}' ;
+    private fun mappingRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformMapping {
         val isTop = children[0] == "top"
         val name = SimpleName(children[2] as String)
         val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
@@ -212,6 +216,29 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         }
     }
 
+    // tableRule = 'top'? 'table' ruleName extends? '{' domainPrimitive* unnamedDomainSignature{2+} values+ when? where? '}' ;
+    private fun tableRule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2MTransformTable {
+        val isTop = children[0] == "top"
+        val name = SimpleName(children[2] as String)
+        val extends = children[3] as List<PossiblyQualifiedName>? ?: emptyList()
+        val primDomains = children[5] as List<VariableDefinition>
+        val sigDomains = children[6] as List<DomainSignature>
+        val values = children[7] as List<List<Expression>>
+        val whenNode = children[8]
+        val whereNode = children[9]
+        return M2MTransformTableDefault(isTop, name).also { rel ->
+            (rel.primitiveDomains as MutableList).addAll(primDomains)
+            sigDomains.forEach { rd ->
+                (rel.domainSignature as MutableMap)[rd.domainRef] = rd
+            }
+            val valsMap = values.map { vs ->
+                vs.mapIndexed { i, v -> Pair(sigDomains[i].domainRef, v) }.toMap()
+            }
+            (rel.values as MutableList).addAll(valsMap)
+        }
+    }
+
+
     // pivot = 'pivot' variableDefinition ;
     private fun pivot(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): VariableDefinition {
         val vd = children[1] as VariableDefinition
@@ -230,6 +257,14 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return DomainSignatureDefault(DomainReference(dr), vd)
     }
 
+    // unnamedDomainSignature = 'domain' domainReference ':' typeReference ;
+    private fun unnamedDomainSignature(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DomainSignature {
+        val dr = children[1] as String
+        val tr = children[3] as TypeReference
+        val vd = VariableDefinitionDefault(SimpleName("<unnamed>"),tr)
+        return DomainSignatureDefault(DomainReference(dr), vd)
+    }
+
     // domainTemplate = domainSignature domainTemplateRhs ;
     private fun domainTemplate(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<DomainSignature, PropertyTemplateRhs> {
         val ds = children[0] as DomainSignature
@@ -239,7 +274,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
             is Map<*,*> -> ObjectTemplateDefault(ds.variable.typeRef, rhs as Map<SimpleName, PropertyTemplate>)
             else -> error("Invalid state")
         }.apply {
-            setIdentifier(ds.variable.name)
+            setIdentifierValue(ds.variable.name)
         }
 
 
@@ -270,6 +305,12 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val name = children[0] as String
         val typeRef = children[2] as TypeReference
         return VariableDefinitionDefault(SimpleName(name), typeRef)
+    }
+
+    // values = 'values' [expression / '<->']2+ ;
+    private fun values(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> {
+        val exprSepList = (children[1] as List<Any>).toSeparatedList<Any,Expression,String>()
+        return exprSepList.items
     }
 
     // expression = Expressions::expression ;
@@ -303,7 +344,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val tr = children[1] as TypeReference
         val pt = children[2] as Map<SimpleName, PropertyTemplate>
         return ObjectTemplateDefault(tr, pt).apply {
-            id?.let { setIdentifier(SimpleName(id)) }
+            id?.let { setIdentifierValue(SimpleName(id)) }
         }
     }
 

@@ -92,8 +92,9 @@ interface PrefOption {
     val associativity: Assoc
 }
 
-@JvmInline
-value class OptionNum(val value:Int) :Comparable<OptionNum> {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class OptionNum(val value:Int) :Comparable<OptionNum> {
     val asIndex:Int get() {
         if(value < 0) error("Should not happen")
         return value

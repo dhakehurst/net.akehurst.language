@@ -48,8 +48,9 @@ sealed interface PossiblyQualifiedName {
 /**
  * A qualified name, separator assumed to be '.'
  */
-@JvmInline
-value class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class QualifiedName(override val value: String) : PossiblyQualifiedName, PublicValueType {
 
     constructor(namespace: QualifiedName, name: SimpleName) : this("${namespace.value}.${name.value}")
 
@@ -75,8 +76,9 @@ value class QualifiedName(override val value: String) : PossiblyQualifiedName, P
 val String.isSimpleName: Boolean get() = this.contains(".").not()
 val String.asSimpleName: SimpleName get() = SimpleName(this)
 
-@JvmInline
-value class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class SimpleName(override val value: String) : PossiblyQualifiedName, PublicValueType {
     companion object {
         //FIXME: from here - see above
     }
@@ -104,8 +106,9 @@ interface PublicValueType {
  *
  * Separator assumed to be '.'
  */
-@JvmInline
-value class Import(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class Import(override val value: String) : PublicValueType {
     val asQualifiedName: QualifiedName get() = QualifiedName(value)
     override fun toString() = value
 }

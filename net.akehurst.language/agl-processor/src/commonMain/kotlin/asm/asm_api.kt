@@ -72,8 +72,9 @@ interface AsmReference {
     fun resolveAs(value: AsmStructure?)
 }
 
-@JvmInline
-value class PropertyValueName(override val value: String) : PublicValueType {
+// @JvmInline
+// TODO: value classes don't work (fully) in js and wasm
+data class PropertyValueName(override val value: String) : PublicValueType {
     override fun toString(): String = value
 }
 
