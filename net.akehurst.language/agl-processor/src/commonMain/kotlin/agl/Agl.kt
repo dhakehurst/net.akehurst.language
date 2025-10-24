@@ -347,12 +347,16 @@ object Agl {
         return result
     }
 
-    fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
-        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
+    fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraph<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
         val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
-        val objectGraph = ObjectGraphByReflection<SelfType>(typesDomain, issueHolder)
         val result = format(formatDomain, objectGraph, self, options)
         return result
+    }
+
+    fun <SelfType : Any> formatByReflection(template: FormatString, typesDomain: TypesDomain, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+        val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
+        val objectGraph = ObjectGraphByReflection<SelfType>(typesDomain, issueHolder)
+        return formatWithTemplate(template, typesDomain, objectGraph, self, options)
     }
 }

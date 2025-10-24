@@ -19,6 +19,8 @@ package net.akehurst.language.types.api
 
 import net.akehurst.language.base.api.*
 import kotlin.jvm.JvmInline
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 interface TypesDomain : Domain<TypesNamespace, TypeDefinition> {
 
@@ -396,7 +398,6 @@ interface PropertyDeclaration {
      */
     val metaInfo: Map<String, String>
 
-
     val isReference: Boolean
     val isComposite: Boolean
 
@@ -418,6 +419,9 @@ interface PropertyDeclaration {
     val isStored: Boolean
     val isDerived: Boolean
     val isPrimitive: Boolean
+
+    // to assist execution by reflection without having MPP reflection support
+    val execution: ((self:Any) -> Any?)?
 
     fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved
 

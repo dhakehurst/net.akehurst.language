@@ -31,8 +31,6 @@ import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.asm.TypeArgumentNamedSimple
 
-
-
 interface TypedObject<out SelfType:Any> {
     val self: SelfType
     val type: TypeInstance
@@ -41,6 +39,7 @@ interface TypedObject<out SelfType:Any> {
 
 interface ObjectGraph<SelfType:Any> {
     var typesDomain: TypesDomain
+    val primitiveExecutor:PrimitiveExecutor<SelfType>
 
     val createdStructuresByType:Map<TypeInstance, List<SelfType>>
 
@@ -74,11 +73,13 @@ interface ObjectGraph<SelfType:Any> {
     fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType>
 }
 
-////val TypedObject<SelfType>.asmValue
-//    get() = when (this) {
-//        is TypedObjectAsmValue -> this.self
-//        else -> error("Not possible to convert ${this::class.simpleName} to AsmValue")
-//    }
+data class ExecutionResult(val value: Any?)
+
+interface PrimitiveExecutor<T : Any> {
+    fun propertyValue(obj:T, typeDef: TypeDefinition, property:PropertyDeclaration):ExecutionResult?
+    fun methodCall(obj:T, typeDef: TypeDefinition, method: MethodDeclaration, args: List<TypedObject<T>>):ExecutionResult?
+}
+
 
 open class ExpressionsInterpreterOverTypedObject<SelfType:Any>(
     val objectGraph: ObjectGraph<SelfType>,

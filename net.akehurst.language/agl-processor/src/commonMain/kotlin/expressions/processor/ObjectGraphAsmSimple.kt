@@ -27,7 +27,7 @@ import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 
-object StdLibPrimitiveExecutions {
+object StdLibPrimitiveExecutionsForAsmSimple: PrimitiveExecutor<AsmValue> {
     val property = mapOf<TypeDefinition, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
         StdLibDefault.List to mapOf(
             StdLibDefault.List.findAllPropertyOrNull(PropertyName("size"))!! to { self, prop ->
@@ -108,6 +108,18 @@ object StdLibPrimitiveExecutions {
             }
         ),
     )
+
+    override fun propertyValue(obj:AsmValue, typeDef: TypeDefinition, property:PropertyDeclaration): ExecutionResult? {
+        val typeProps = this.property[typeDef] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for TypeDeclaration '${typeDef.qualifiedName.value}'")
+        val propExec = typeProps[property] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for property '${property.name.value}' of TypeDeclaration '${typeDef.qualifiedName.value}'")
+        return ExecutionResult(propExec.invoke(obj,property))
+    }
+
+    override fun methodCall(obj:AsmValue, typeDef: TypeDefinition, method: MethodDeclaration,args: List<TypedObject<AsmValue>>):ExecutionResult? {
+        val methProps = this.method[typeDef] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for TypeDeclaration '${typeDef.qualifiedName.value}'")
+        val methExec = methProps[method] ?: error("StdLibPrimitiveExecutionsForAsmSimple not found for method '${method.name.value}' of TypeDeclaration '${typeDef.qualifiedName.value}'")
+        return ExecutionResult( methExec.invoke(obj, method, args) as AsmValue)
+    }
 }
 
 class TypedObjectAsmValue(
@@ -128,7 +140,8 @@ class TypedObjectAsmValue(
 
 open class ObjectGraphAsmSimple(
     override var typesDomain: TypesDomain,
-    val issues: IssueHolder
+    val issues: IssueHolder,
+    override val primitiveExecutor: PrimitiveExecutor<AsmValue> = StdLibPrimitiveExecutionsForAsmSimple
 ) : ObjectGraph<AsmValue> {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<AsmValue>>()
@@ -236,6 +249,7 @@ open class ObjectGraphAsmSimple(
     }
 
     override fun getProperty(tobj: TypedObject<AsmValue>, propertyName: String): TypedObject<AsmValue> {
+        //TODO: use executor
         val asmValue = tobj.self
         val propRes = tobj.type.allResolvedProperty[PropertyName(propertyName)]
         return when (propRes) {
@@ -255,7 +269,7 @@ open class ObjectGraphAsmSimple(
                 is PropertyDeclarationDerived -> TODO()
                 is PropertyDeclarationPrimitive -> {
                     val type = tobj.type.resolvedDeclaration
-                    val typeProps = StdLibPrimitiveExecutions.property[type]
+                    val typeProps = StdLibPrimitiveExecutionsForAsmSimple.property[type]
                         ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
                     val propExec = typeProps[propRes.original]
                         ?: error("StdLibPrimitiveExecutions not found for property '${propertyName}' of TypeDeclaration '${type.qualifiedName}'")
@@ -277,14 +291,16 @@ open class ObjectGraphAsmSimple(
     }
 
     override fun setProperty(tobj: TypedObject<AsmValue>, propertyName: String, value: TypedObject<AsmValue>) {
+        //TODO: use executor
         val obj = tobj.self as AsmStructure
         obj.setProperty(PropertyValueName(propertyName), value.self, obj.property.size)
     }
 
     override fun executeMethod(tobj: TypedObject<AsmValue>, methodName: String, args: List<TypedObject<AsmValue>>): TypedObject<AsmValue> {
+        //TODO: use executor
         val methRes = tobj.type.allResolvedMethod[MethodName(methodName)]!!
         val type = tobj.type.resolvedDeclaration
-        val stdMeths = StdLibPrimitiveExecutions.method[type]
+        val stdMeths = StdLibPrimitiveExecutionsForAsmSimple.method[type]
         val ao = when (stdMeths) {
             null -> TODO()
             else -> {

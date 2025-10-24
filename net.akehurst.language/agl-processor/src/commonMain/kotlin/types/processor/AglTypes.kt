@@ -223,21 +223,24 @@ object AglTypes : LanguageObjectAbstract<TypesDomain, ContextWithScope<Any, Any>
         typesDomain(NAME, true, AglGrammar.typesDomain.namespace) {
             namespace("net.akehurst.language.types.api", listOf("std", "net.akehurst.language.base.api")) {
                 enum("PropertyCharacteristic", listOf("REFERENCE", "COMPOSITE", "READ_ONLY", "READ_WRITE", "STORED", "DERIVED", "PRIMITIVE", "CONSTRUCTOR", "IDENTITY"))
-                value("PropertyName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("PropertyName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
-                value("TmParameterName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("TmParameterName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
                 }
-                value("MethodName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("MethodName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)

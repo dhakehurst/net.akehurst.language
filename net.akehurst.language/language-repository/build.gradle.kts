@@ -36,7 +36,6 @@ kotlin {
                 implementation(project(":agl-processor"))
                 implementation(libs.kotest.assertions.core)
                 implementation(libs.kotest.framework.engine)
-                implementation(libs.kotest.framework.datatest)
             }
         }
         jvmTest {

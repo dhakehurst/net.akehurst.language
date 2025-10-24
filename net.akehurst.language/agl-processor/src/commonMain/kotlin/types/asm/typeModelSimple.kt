@@ -27,6 +27,7 @@ import net.akehurst.language.base.asm.OptionHolderDefault
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.builder.typesDomain
 import net.akehurst.language.util.cached
+import kotlin.reflect.KProperty1
 
 class TypesDomainSimple(
     override val name: SimpleName,
@@ -1610,6 +1611,8 @@ abstract class PropertyDeclarationAbstract() : PropertyDeclaration {
     override val isDerived: Boolean get() = characteristics.contains(PropertyCharacteristic.DERIVED)
     override val isStored: Boolean get() = characteristics.contains(PropertyCharacteristic.STORED)
     override val isPrimitive: Boolean get() = characteristics.contains(PropertyCharacteristic.PRIMITIVE)
+
+    override var execution: ((self:Any) -> Any?)? = null
 
     override fun resolved(typeArguments: Map<TypeParameter, TypeInstance>): PropertyDeclarationResolved = PropertyDeclarationResolvedSimple(
         this,

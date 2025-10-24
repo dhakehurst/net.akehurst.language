@@ -349,7 +349,8 @@ object AglGrammar : LanguageObjectAbstract<GrammarDomain, ContextWithScope<Any, 
                 enum("OverrideKind", listOf("REPLACE", "APPEND_ALTERNATIVE", "SUBSTITUTION"))
                 enum("Associativity", listOf("LEFT", "RIGHT"))
                 enum("ChoiceIndicator", listOf("NONE", "EMPTY", "ITEM", "NUMBER"))
-                value("GrammarRuleName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("GrammarRuleName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)

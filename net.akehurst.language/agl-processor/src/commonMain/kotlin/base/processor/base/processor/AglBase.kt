@@ -38,6 +38,10 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.builder.styleDomain
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.builder.asmTransform
+import net.akehurst.language.base.api.Domain
+import net.akehurst.language.base.api.Import
+import net.akehurst.language.base.api.Namespace
+import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.StdLibDefault
 import net.akehurst.language.types.builder.typesDomain
@@ -150,53 +154,52 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
         //TODO: NamespaceAbstract._definition wrongly generated with net.akehurst.language.base.asm.NamespaceAbstract.DT
         typesDomain(NAME, true, listOf(StdLibDefault)) {
             grammarTypeNamespace("net.akehurst.language.base.api", listOf("std")) {
-                value("SimpleName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("SimpleName") {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, SimpleName::value)
                 }
-                value("QualifiedName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("QualifiedName") {
                     supertype("PossiblyQualifiedName")
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, QualifiedName::value)
                 }
-                value("Import") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("Import") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
                     }
-                    propertyOf(setOf(VAL, REF, STR), "value", "String", false)
+                    propertyOf(setOf(VAL, REF, STR), "value", "String", false, Import::value)
                 }
                 interface_("PublicValueType") {
-
                 }
                 interface_("PossiblyQualifiedName") {
-
                 }
                 interface_("OptionHolder") {
-
                 }
                 interface_("Namespace") {
                     typeParameters("DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
+                    propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false, Namespace<*>::options)
                 }
                 interface_("Domain") {
                     typeParameters("NT", "DT")
                     supertype("Formatable")
-                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false) {
+                    propertyOf(setOf(VAR, CMP, STR), "namespace", "List", false, Domain<*,*>::namespace) {
                         typeArgument("NT")
                     }
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 interface_("Formatable") {
-
                 }
                 interface_("DefinitionReference") {
                     typeParameters("DT")
@@ -208,16 +211,12 @@ object AglBase : LanguageObjectAbstract<Any, ContextWithScope<Any, Any>>() {
                     propertyOf(setOf(VAL, CMP, STR), "options", "OptionHolder", false)
                 }
                 data("Indent") {
-
                     constructor_ {
                         parameter("value", "String", false)
                         parameter("increment", "String", false)
                     }
                     propertyOf(setOf(VAL, REF, STR), "increment", "String", false)
                     propertyOf(setOf(VAL, REF, STR), "value", "String", false)
-                }
-                data("Asm_apiKt") {
-
                 }
             }
             namespace("net.akehurst.language.base.asm", listOf("net.akehurst.language.base.api", "std")) {

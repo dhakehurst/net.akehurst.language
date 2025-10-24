@@ -18,8 +18,11 @@
 package net.akehurst.language.types.builder
 
 import net.akehurst.language.base.api.*
+import net.akehurst.language.expressions.processor.PrimitiveExecutor
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 @DslMarker
 annotation class TypeModelDslMarker
@@ -153,8 +156,8 @@ open class TypeNamespaceBuilder(
         _assocBuilders.add(b)
     }
 
-    open fun build(): Pair<TypesNamespace,List<AssociationBuilder>> {
-        return Pair(_namespace,_assocBuilders)
+    open fun build(): Pair<TypesNamespace, List<AssociationBuilder>> {
+        return Pair(_namespace, _assocBuilders)
     }
 }
 
@@ -202,7 +205,7 @@ class AssociationBuilder(
             val collectionTypeName = thisEnd.collectionTypeName?.asPossiblyQualifiedName
             val characteristics = thisEnd.characteristics
             val navigable = true //TODO
-            val ae = AssociationEnd(endName,endType, isNullable,collectionTypeName,characteristics, navigable)
+            val ae = AssociationEnd(endName, endType, isNullable, collectionTypeName, characteristics, navigable)
             assocEnds.add(ae)
         }
         val props = _namespace.findOrCreateAssociation(assocEnds)
@@ -233,17 +236,17 @@ abstract class StructuredTypeBuilder(
         characteristics: Set<PropertyCharacteristic>,
         propertyName: String,
         typeName: String,
-        //typeArgs: List<String> = emptyList(),
         isNullable: Boolean = false,
+        execution: KProperty<Any>? = null,
         init: TypeArgumentBuilder.() -> Unit = {}
     ): PropertyDeclaration {
         val tab = TypeArgumentBuilder(_structuredType, _namespace)
         tab.init()
-        val btargs = tab.build()
-        //val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it.asPossiblyQualifiedName, emptyList(), false) }
-        val targs = btargs //if (btargs.isEmpty()) atargs else btargs
+        val targs = tab.build()
         val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
-        return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics)
+        return _structuredType.appendPropertyStored(PropertyName(propertyName), ti, characteristics).also {
+            (it as PropertyDeclarationStored).execution = execution as KProperty1<Any, Any?>?
+        }
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
@@ -271,11 +274,6 @@ abstract class StructuredTypeBuilder(
         val propType = collType.type(listOf(itemType.type().asTypeArgument, separatorType.type().asTypeArgument), isNullable)
         return property(propertyName, propType, childIndex)
     }
-
-    // fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-    //     val itemType = _namespace.findOwnedOrCreateDataTypeNamed(SimpleName(itemTypeName))
-    //     return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
-    // }
 
     fun propertyListSeparatedType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TypeInstanceArgBuilder.() -> Unit): PropertyDeclaration {
         val collType = StdLibDefault.ListSeparated.qualifiedName
@@ -334,6 +332,21 @@ abstract class StructuredTypeBuilder(
             }
         val ti = t.type(isNullable = isNullable)  //_namespace.createTypeInstance(null, elementTypeName.asPossiblyQualifiedName, emptyList(), isNullable)
         return property(propertyName, ti, childIndex)
+    }
+
+    fun propertyByEvaluation(
+        propertyName: String,
+        typeName: String,
+        isNullable: Boolean = false,
+        description:String = "",
+        typeArguments: TypeArgumentBuilder.() -> Unit = {}
+    ): PropertyDeclaration {
+        val tab = TypeArgumentBuilder(_structuredType, _namespace)
+        tab.typeArguments()
+        val btargs = tab.build()
+        val targs = btargs
+        val ti = _namespace.createTypeInstance(_structuredType.qualifiedName, typeName.asPossiblyQualifiedName, targs, isNullable)
+        return _structuredType.appendPropertyPrimitive(PropertyName(propertyName), ti, description)
     }
 
     fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {

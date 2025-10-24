@@ -28,7 +28,8 @@ interface AsmListSeparated {
     val typesDomain: TypesDomain by lazy {
         typesDomain("Asm", true, AglBase.typesDomain.namespace) {
             namespace("net.akehurst.language.asm.api", listOf("net.akehurst.language.base.api", "std", "net.akehurst.language.collections")) {
-                value("PropertyValueName") {
+                // TODO: value classes don't work (fully) in js and wasm
+                data("PropertyValueName") {
                     supertype("PublicValueType")
                     constructor_ {
                         parameter("value", "String", false)
