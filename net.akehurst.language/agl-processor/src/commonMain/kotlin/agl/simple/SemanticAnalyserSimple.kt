@@ -68,7 +68,7 @@ class SemanticAnalyserSimple(
     private var _resolvedReferences = mutableListOf<ResolvedReference>()
     private lateinit var _locationMap: LocationMap
 
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, _issues), _issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, _issues), _issues)
 
     override fun clear() {
         _resolvedReferences.clear()

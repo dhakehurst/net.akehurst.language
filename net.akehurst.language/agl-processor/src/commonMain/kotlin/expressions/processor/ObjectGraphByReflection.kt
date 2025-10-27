@@ -18,22 +18,18 @@
 package net.akehurst.language.agl.expressions.processor
 
 import net.akehurst.kotlinx.reflect.reflect
+import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.collections.ListSeparated
 import net.akehurst.language.collections.toSeparatedList
-import net.akehurst.language.expressions.processor.ExecutionResult
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.PrimitiveExecutor
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
+import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
-import kotlin.collections.get
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 class StdLibPrimitiveExecutionsForReflection<T : Any>(
@@ -172,6 +168,10 @@ class StdLibPrimitiveExecutionsForReflection<T : Any>(
         return ExecutionResult(res)
     }
 
+    override fun functionCall(functionName: String, args: List<TypedObject<T>>): ExecutionResult? {
+        TODO("not implemented")
+    }
+
     fun <S> addPropertyExecution1(property: PropertyDeclaration, exec: KProperty1<S, Any?>) {
         addPropertyExecution2(property) { obj, pd -> exec.get(obj as S) }
     }
@@ -199,7 +199,7 @@ class StdLibPrimitiveExecutionsForReflection<T : Any>(
     /** returns null if execution is not found for the given property on the typeDef */
     private fun propertyValueDirect(obj: T, typeDef: TypeDefinition, property: PropertyDeclaration): ExecutionResult? {
         val propExec = property.execution
-        return  when {
+        return when {
             null == propExec -> {
                 val typeProps = this._property[typeDef]
                 typeProps?.let {
@@ -210,13 +210,15 @@ class StdLibPrimitiveExecutionsForReflection<T : Any>(
                     }
                 }
             }
-            propExec !is KProperty1<*,*> -> {
+
+            propExec !is KProperty1<*, *> -> {
                 issues.error(null, "'$property' is not a KProperty1<*,*>, cannot get it")
                 null
             }
+
             else -> try {
-                ExecutionResult( (propExec as KProperty1<Any,Any?>).get(obj) )
-            } catch(t: Throwable) {
+                ExecutionResult((propExec as KProperty1<Any, Any?>).get(obj))
+            } catch (t: Throwable) {
                 issues.error(null, t.message ?: "Error while invoking property execution", t)
                 null
             }
@@ -244,7 +246,7 @@ open class ObjectGraphByReflection<SelfType : Any>(
     override var typesDomain: TypesDomain,
     val issues: IssueHolder,
     override val primitiveExecutor: PrimitiveExecutor<SelfType> = StdLibPrimitiveExecutionsForReflection<SelfType>()
-) : ObjectGraph<SelfType> {
+) : ObjectGraphAccessorMutator<SelfType> {
 
     override val createdStructuresByType = mutableMapOf<TypeInstance, List<SelfType>>()
 
@@ -530,10 +532,17 @@ open class ObjectGraphByReflection<SelfType : Any>(
 
                         else -> error("Subtype of MethodDeclaration not handled: '${this::class.simpleName}'")
                     }
+
                     else -> toTypedObject(execResult.value as SelfType?)
                 }
             }
         }
+    }
+
+    override fun callFunction(functionName: String, args: List<TypedObject<SelfType>>): TypedObject<SelfType> {
+        return primitiveExecutor.functionCall(functionName, args)?.let {
+            toTypedObject(it.value as? SelfType)
+        } ?: nothing()
     }
 
     override fun cast(tobj: TypedObject<SelfType>, newType: TypeInstance): TypedObject<SelfType> {
@@ -549,4 +558,25 @@ open class ObjectGraphByReflection<SelfType : Any>(
             (list as MutableList).add(obj)
         }
     }
+
+    override fun getCompositeGraphFrom(resultGraphIdentity: String, roots: List<TypedObject<SelfType>>): ObjectGraph<SelfType> {
+        val nodes = mutableSetOf<TypedObject<SelfType>>()
+        val edges = mutableSetOf<ObjectGraphEdge<SelfType>>()
+
+        TODO("Needs a Komposite walker!")
+        return ObjectGraphAny(nodes, edges)
+    }
 }
+
+class ObjectGraphAny<SelfType : Any>(
+    override val nodes: Set<TypedObject<SelfType>>,
+    override val edges: Set<ObjectGraphEdge<SelfType>>
+) : ObjectGraph<SelfType> {
+
+}
+
+data class ObjectGraphEdgeAny<SelfType : Any>(
+    override val source: TypedObject<SelfType>,
+    override val target: TypedObject<SelfType>,
+    override val property: PropertyDeclaration
+) : ObjectGraphEdge<SelfType>

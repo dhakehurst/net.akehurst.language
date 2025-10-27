@@ -85,6 +85,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         super.register(this::testUnit)
         super.register(this::testNamespace)
         super.register(this::transformTest)
+        super.register(this::testCase)
         super.register(this::testDomain)
     }
 
@@ -261,7 +262,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     private fun unnamedDomainSignature(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DomainSignature {
         val dr = children[1] as String
         val tr = children[3] as TypeReference
-        val vd = VariableDefinitionDefault(SimpleName("<unnamed>"),tr)
+        val vd = VariableDefinitionDefault(SimpleName("<unnamed>"), tr)
         return DomainSignatureDefault(DomainReference(dr), vd)
     }
 
@@ -271,7 +272,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         val rhs = children[1]
         val template = when (rhs) {
             is PropertyTemplateExpression -> rhs
-            is Map<*,*> -> ObjectTemplateDefault(ds.variable.typeRef, rhs as Map<SimpleName, PropertyTemplate>)
+            is Map<*, *> -> ObjectTemplateDefault(ds.variable.typeRef, rhs as Map<SimpleName, PropertyTemplate>)
             else -> error("Invalid state")
         }.apply {
             setIdentifierValue(ds.variable.name)
@@ -309,7 +310,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
 
     // values = 'values' [expression / '<->']2+ ;
     private fun values(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Expression> {
-        val exprSepList = (children[1] as List<Any>).toSeparatedList<Any,Expression,String>()
+        val exprSepList = (children[1] as List<Any>).toSeparatedList<Any, Expression, String>()
         return exprSepList.items
     }
 
@@ -371,7 +372,7 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
     // testUnit = option* import* testNamespace* ;
     private fun testUnit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformDomain {
         val options = children[0] as List<Pair<String, String>>
-        val namespaces = children[1] as List<M2mTransformNamespace>
+        val namespaces = children[2] as List<M2mTransformNamespace>
         val name = SimpleName("ParsedTransformTestUnit") //TODO: how to specify name, does it matter?
         val optHolder = OptionHolderDefault(null, options.toMap())
         return M2mTransformDomainDefault(
@@ -395,22 +396,35 @@ class M2mTransformSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<M2
         return namespace
     }
 
-    //     transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
-    //       testDomain2+
-    //    '}' ;
+    // transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
+    //    testCase*
+    // '}' ;
     private fun transformTest(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (M2mTransformNamespaceDefault) -> M2mTransformTest {
         val id = children[1] as String
         val domParams = children[3] as List<Pair<String, SimpleName>>
-        val testDomains = children[6] as List<Pair<String, Expression>>
+        val testCases = children[6] as List<M2mTransformTestCase>
         return { namespace ->
             M2MTransformTestDefault(
                 namespace = namespace,
                 name = SimpleName(id),
                 domainParameters = domParams.associate { Pair(DomainReference(it.first), it.second) }
             ).apply {
-                testDomains.forEach { (dr, exp) ->
-                    (domain as MutableMap)[DomainReference(dr)] = exp
+                testCases.forEach { tc ->
+                    this.testCase[tc.name] = tc
                 }
+            }
+        }
+    }
+
+    // testCase = 'test-case' IDENTIFIER '{'
+    //  testDomain*
+    // '}' ;
+    private fun testCase(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): M2mTransformTestCase {
+        val id = children[1] as String
+        val testDomains = children[3] as List<Pair<String, Expression>>
+        return M2mTransformTestCaseDefault(SimpleName(id)).apply {
+            testDomains.forEach { (dr, exp) ->
+                domain[DomainReference(dr)] = exp
             }
         }
     }

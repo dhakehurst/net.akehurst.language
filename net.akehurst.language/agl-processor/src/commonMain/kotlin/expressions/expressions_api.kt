@@ -43,7 +43,7 @@ interface CreateObjectExpression : Expression {
     val propertyAssignments: List<AssignmentStatement>
 }
 
-interface FunctionOrConstructorCall {
+interface FunctionCall: Expression {
     val possiblyQualifiedName: PossiblyQualifiedName
     val arguments: List<Expression>
 }

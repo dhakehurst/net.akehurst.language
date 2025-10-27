@@ -18,8 +18,6 @@ package net.akehurst.language.api.syntaxAnalyser
 
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.sppt.api.ParsePath
 import net.akehurst.language.sppt.api.SharedPackedParseTree

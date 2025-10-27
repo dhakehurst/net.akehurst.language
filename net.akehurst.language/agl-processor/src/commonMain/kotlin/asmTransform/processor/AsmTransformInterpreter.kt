@@ -17,6 +17,7 @@
 
 package net.akehurst.language.asmTransform.processor
 
+import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.asm.api.AsmStructure
 import net.akehurst.language.asmTransform.api.AsmTransformationRule
@@ -25,8 +26,6 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.api.AssignmentStatement
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.PropertyCharacteristic
@@ -37,7 +36,7 @@ import net.akehurst.language.types.builder.typesDomain
 
 class AsmTransformInterpreter<AsmValueType:Any>(
     val typesDomain: TypesDomain,
-    val objectGraph: ObjectGraph<AsmValueType>,
+    val objectGraph: ObjectGraphAccessorMutator<AsmValueType>,
 ) {
 
     companion object {

@@ -22,8 +22,6 @@ import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.syntaxAnalyser.LocationMap
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.grammar.api.RuleItem
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.sentence.api.InputLocation

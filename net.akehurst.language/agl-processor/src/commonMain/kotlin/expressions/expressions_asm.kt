@@ -72,10 +72,10 @@ data class CreateObjectExpressionDefault(
     override fun toString(): String = "$possiblyQualifiedTypeName { ... }"
 }
 
-data class FunctionOrConstructorCallDefault(
+data class FunctionCallDefault(
     override val possiblyQualifiedName: PossiblyQualifiedName,
     override val arguments: List<Expression>
-) : ExpressionAbstract(), FunctionOrConstructorCall {
+) : ExpressionAbstract(), FunctionCall {
     override fun asString(indent: Indent, imports: List<Import>): String {
         val sb = StringBuilder()
         val pqn = when {

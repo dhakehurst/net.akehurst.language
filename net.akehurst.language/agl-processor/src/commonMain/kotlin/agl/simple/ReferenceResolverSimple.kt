@@ -64,7 +64,7 @@ class ReferenceResolverSimple<ItemInScopeType : Any>(
 
     private val scopeStack = mutableStackOf(context.getScopeForSentenceOrNull(sentenceIdentity) ?: context.newScopeForSentence(sentenceIdentity))
     private val scopeForElement = mutableMapOf<AsmStructure, Scope<ItemInScopeType>>()
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, _issues), _issues)
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, _issues), _issues)
 
     val resolvedReferences = mutableListOf<ResolvedReference>()
 

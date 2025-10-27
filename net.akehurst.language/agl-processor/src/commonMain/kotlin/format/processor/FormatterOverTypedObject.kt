@@ -16,6 +16,7 @@
 
 package net.akehurst.language.format.processor
 
+import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.api.processor.EvaluationContext
 import net.akehurst.language.api.processor.FormatResult
@@ -24,8 +25,6 @@ import net.akehurst.language.base.api.Formatable
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.api.Expression
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.formatter.api.*
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.*
@@ -33,7 +32,7 @@ import net.akehurst.language.types.asm.StdLibDefault
 
 class FormatterOverTypedObject<SelfType : Any>(
     override val formatDomain: AglFormatDomain,
-    objectGraph: ObjectGraph<SelfType>,
+    objectGraph: ObjectGraphAccessorMutator<SelfType>,
     issues: IssueHolder
 ) : ExpressionsInterpreterOverTypedObject<SelfType>(objectGraph, issues), Formatter<SelfType> {
 

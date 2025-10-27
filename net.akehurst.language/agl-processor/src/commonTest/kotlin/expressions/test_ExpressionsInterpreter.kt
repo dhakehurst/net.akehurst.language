@@ -39,7 +39,7 @@ class test_ExpressionsInterpreter {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, issues), issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
             assertEquals(expected, actual.self)
         }
@@ -47,7 +47,7 @@ class test_ExpressionsInterpreter {
         fun test_fail(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: List<LanguageIssue>) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain, issues), issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain, issues), issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st, self)), expression)
             assertEquals(AsmNothingSimple, actual.self)
             assertEquals(expected, interpreter.issues.all.toList())
@@ -55,7 +55,7 @@ class test_ExpressionsInterpreter {
     }
 
     @Test
-    fun structure_nothing() {
+    fun nothing() {
         val expression = $$"$nothing"
         val tm = typesDomain("test", true) {
             namespace("ns") {
@@ -72,6 +72,40 @@ class test_ExpressionsInterpreter {
         val self = asm.root[0]
 
         test(tm, self, expression, AsmNothingSimple)
+    }
+
+    @Test
+    fun primitive_string() {
+        val expression = $$"'Hello World!'"
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val self = AsmNothingSimple
+
+        test(tm, self, expression, AsmPrimitiveSimple.stdString("Hello World!"))
+    }
+
+    @Test
+    fun Set_of_string() {
+        val expression = $$"Set('Hello', 'World', '!')"
+        val tm = typesDomain("test", true) {
+            namespace("ns") {
+                data("Test") {
+                    propertyPrimitiveType("prop1", "String", false, 0)
+                }
+            }
+        }
+        val self = AsmNothingSimple
+
+        test(tm, self, expression, AsmListSimple(listOf(
+            AsmPrimitiveSimple.stdString("Hello"),
+            AsmPrimitiveSimple.stdString("World"),
+            AsmPrimitiveSimple.stdString("!")
+        )))
     }
 
     @Test

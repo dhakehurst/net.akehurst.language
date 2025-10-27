@@ -44,7 +44,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         super.register(this::navigationPart)
         super.register(this::infixExpression)
         super.registerFor("object", this::object_)
-        super.register(this::functionOrConstructorCall)
+        super.register(this::functionCall)
         super.register(this::constructorArguments)
         super.register(this::tuple)
         super.register(this::assignmentBlock)
@@ -135,20 +135,20 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
         return InfixExpressionDefault(expressions, operators)
     }
 
-    // functionOrConstructorCall = possiblyQualifiedName '(' argumentList ')' ;
-    private fun functionOrConstructorCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FunctionOrConstructorCall {
+    // functionCall = possiblyQualifiedName '(' argumentList ')' ;
+    private fun functionCall(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): FunctionCall {
         val pqn = children[0] as PossiblyQualifiedName
         val args = children[2] as List<Expression>
-        return FunctionOrConstructorCallDefault(pqn, args)
+        return FunctionCallDefault(pqn, args)
     }
 
-    // object = possiblyQualifiedName constructorArguments assignmentBlock? ;
+    // object = possiblyQualifiedName constructorArguments assignmentBlock ;
     private fun object_(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CreateObjectExpression {
         val pqn = children[0] as PossiblyQualifiedName
         val args = children[1] as List<AssignmentStatement>
-        val propertyAssignments = children[2] as List<AssignmentStatement>?
+        val propertyAssignments = children[2] as List<AssignmentStatement>
         val exp = CreateObjectExpressionDefault(pqn, args)
-        exp.propertyAssignments = propertyAssignments ?: emptyList()
+        exp.propertyAssignments = propertyAssignments
         return exp
     }
 

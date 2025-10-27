@@ -18,8 +18,8 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.base.api.PossiblyQualifiedName
 import net.akehurst.language.expressions.asm.RootExpressionDefault
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
+import net.akehurst.language.objectgraph.api.TypedObject
 
 data class EvaluationContext<SelfType:Any>(
     val parent: EvaluationContext<SelfType>?,

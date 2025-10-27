@@ -221,5 +221,16 @@ data class M2MTransformTestDefault(
     override val options: OptionHolder = OptionHolderDefault(null, emptyMap()),
 ) : M2mTransformTest, DefinitionAbstract<M2MTransformDefinition>() {
 
-    override val domain: Map<DomainReference, Expression> = mutableMapOf()
+    init {
+        namespace.addDefinition(this)
+    }
+
+    override val testCase = mutableMapOf<SimpleName, M2mTransformTestCase>()
+
+}
+
+data class M2mTransformTestCaseDefault(
+    override val name: SimpleName
+) : M2mTransformTestCase {
+    override val domain = mutableMapOf<DomainReference, Expression>()
 }

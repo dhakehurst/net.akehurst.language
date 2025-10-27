@@ -37,6 +37,7 @@ import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.expressions.asm.*
 import net.akehurst.language.expressions.processor.*
 import net.akehurst.language.grammar.api.GrammarRuleName
+import net.akehurst.language.objectgraph.api.*
 import net.akehurst.language.parser.api.Rule
 import net.akehurst.language.sentence.api.Sentence
 import net.akehurst.language.sppt.api.*
@@ -73,7 +74,7 @@ abstract class SyntaxAnalyserFromAsmTransformAbstract<AsmType : Any, AsmValueTyp
     _typesDomain: TypesDomain,
     val asmTransform: AsmTransformDomain,
     val relevantTrRuleSet: QualifiedName,
-    val objectGraph: ObjectGraph<AsmValueType>
+    val objectGraph: ObjectGraphAccessorMutator<AsmValueType>
 ) : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
     companion object {

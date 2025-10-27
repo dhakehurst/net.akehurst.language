@@ -37,7 +37,7 @@ class test_SimpleTypeModelStdLib_eval {
         fun test(typesDomain: TypesDomain, self: AsmValue, expression: String, expected: AsmValue) {
             val st = typesDomain.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type() ?: StdLibDefault.AnyType
             val issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
-            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(typesDomain,issues),issues)
+            val interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(typesDomain,issues),issues)
             val actual = interpreter.evaluateStr(EvaluationContext.ofSelf(TypedObjectAsmValue(st,self)), expression)
             assertEquals(expected, actual.self)
         }

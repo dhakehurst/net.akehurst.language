@@ -21,10 +21,8 @@ import net.akehurst.language.asm.api.*
 import net.akehurst.language.base.api.Indent
 import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.collections.ListSeparated
-import net.akehurst.language.expressions.processor.ObjectGraph
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.types.api.PropertyName
-import net.akehurst.language.types.api.TypeInstance
 import net.akehurst.language.types.asm.StdLibDefault
 
 val PropertyName.asValueName get() = PropertyValueName(this.value)
@@ -63,8 +61,47 @@ class AsmPathSimple(
 }
 
 open class AsmSimple(
-    val objectGraph: ObjectGraphAsmSimple,
+    val objectGraph: ObjectGraphAccessorMutatorAsmSimple,
 ) : Asm {
+
+    companion object {
+        fun traverseDepthFirst(roots: List<AsmValue>, walker: AsmTreeWalker) {
+            fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+                when (value) {
+                    is AsmNothing -> walker.onNothing(owningProperty, value)
+                    is AsmPrimitive -> walker.onPrimitive(owningProperty, value)
+                    is AsmStructure -> {
+                        walker.beforeStructure(owningProperty, value)
+                        for (prop in value.propertyOrdered) {
+                            walker.onProperty(value, prop)
+                            val pv = prop.value
+                            traverse(prop, pv)
+                        }
+                        walker.afterStructure(owningProperty, value)
+                    }
+
+                    is AsmList -> {
+                        walker.beforeList(owningProperty, value)
+                        value.elements.forEach { el -> traverse(owningProperty, el) }
+                        walker.afterList(owningProperty, value)
+                    }
+
+                    is AsmListSeparated -> {
+                        walker.beforeList(owningProperty, value)
+                        value.elements.forEach { el -> traverse(owningProperty, el) }
+                        walker.afterList(owningProperty, value)
+                    }
+
+                    else -> Unit
+                }
+            }
+            roots.forEach {
+                walker.beforeRoot(it)
+                traverse(null, it)
+                walker.afterRoot(it)
+            }
+        }
+    }
 
     override val root: List<AsmValue> = mutableListOf()
     override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
@@ -84,42 +121,7 @@ open class AsmSimple(
         this.elementIndex[AsmPathSimple(value.parsePath.toString())] = value //FIXME: should use asmPath !
     }
 
-    override fun traverseDepthFirst(callback: AsmTreeWalker) {
-        fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
-            when (value) {
-                is AsmNothing -> callback.onNothing(owningProperty, value)
-                is AsmPrimitive -> callback.onPrimitive(owningProperty, value)
-                is AsmStructure -> {
-                    callback.beforeStructure(owningProperty, value)
-                    for (prop in value.propertyOrdered) {
-                        callback.onProperty(value, prop)
-                        val pv = prop.value
-                        traverse(prop, pv)
-                    }
-                    callback.afterStructure(owningProperty, value)
-                }
-
-                is AsmList -> {
-                    callback.beforeList(owningProperty, value)
-                    value.elements.forEach { el -> traverse(owningProperty, el) }
-                    callback.afterList(owningProperty, value)
-                }
-
-                is AsmListSeparated -> {
-                    callback.beforeList(owningProperty, value)
-                    value.elements.forEach { el -> traverse(owningProperty, el) }
-                    callback.afterList(owningProperty, value)
-                }
-
-                else -> Unit
-            }
-        }
-        this.root.forEach {
-            callback.beforeRoot(it)
-            traverse(null, it)
-            callback.afterRoot(it)
-        }
-    }
+    override fun traverseDepthFirst(walker: AsmTreeWalker) = traverseDepthFirst(this.root, walker)
 
     override fun asString(indent: Indent): String = this.root.joinToString(separator = "\n") {
         it.asString(indent)

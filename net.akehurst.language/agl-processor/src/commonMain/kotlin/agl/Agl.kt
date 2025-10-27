@@ -17,6 +17,8 @@
 
 package net.akehurst.language.agl
 
+import net.akehurst.language.objectgraph.api.ObjectGraphAccessorMutator
+import net.akehurst.language.objectgraph.api.TypedObject
 import net.akehurst.language.agl.expressions.processor.ObjectGraphByReflection
 import net.akehurst.language.agl.processor.*
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypesDomain
@@ -29,7 +31,6 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.base.api.SimpleName
-import net.akehurst.language.expressions.processor.ObjectGraph
 import net.akehurst.language.format.asm.AglFormatDomainDefault
 import net.akehurst.language.format.processor.FormatterOverTypedObject
 import net.akehurst.language.formatter.api.AglFormatDomain
@@ -47,7 +48,6 @@ import net.akehurst.language.style.api.AglStyleDomain
 import net.akehurst.language.style.asm.AglStyleDomainDefault
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.asmTransform.asm.AsmTransformDomainDefault
-import net.akehurst.language.expressions.processor.TypedObject
 import net.akehurst.language.types.api.TypesDomain
 import net.akehurst.language.types.asm.TypesDomainSimple
 
@@ -334,7 +334,7 @@ object Agl {
         return AglFormatDomainDefault.fromString(contextFromTypesDomain(typesDomain), template)
     }
 
-    fun <SelfType : Any> format(formatDomain: AglFormatDomain, objectGraph: ObjectGraph<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+    fun <SelfType : Any> format(formatDomain: AglFormatDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val issueHolder = IssueHolder(defaultPhase = LanguageProcessorPhase.FORMAT)
         val formatter = FormatterOverTypedObject(formatDomain, objectGraph, issueHolder)
         val formatSetName = formatDomain.allDefinitions.lastOrNull()?.qualifiedName ?: error("No FormatSet found.")
@@ -347,7 +347,7 @@ object Agl {
         return result
     }
 
-    fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraph<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
+    fun <SelfType : Any> formatWithTemplate(template: FormatString, typesDomain: TypesDomain, objectGraph: ObjectGraphAccessorMutator<SelfType>, self: SelfType, options: FormatOptions<SelfType> = FormatOptionsDefault()): FormatResult {
         val formatResult = formatDomain(template, typesDomain)
         val formatDomain = formatResult.asm ?: error("AglFormatDomain not created from template.")
         val result = format(formatDomain, objectGraph, self, options)

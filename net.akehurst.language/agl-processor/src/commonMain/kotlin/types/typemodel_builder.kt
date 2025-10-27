@@ -18,7 +18,6 @@
 package net.akehurst.language.types.builder
 
 import net.akehurst.language.base.api.*
-import net.akehurst.language.expressions.processor.PrimitiveExecutor
 import net.akehurst.language.types.api.*
 import net.akehurst.language.types.asm.*
 import kotlin.reflect.KProperty

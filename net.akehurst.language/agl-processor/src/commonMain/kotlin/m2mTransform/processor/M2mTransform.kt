@@ -101,7 +101,10 @@ grammar $NAME : Base {
     testUnit = option* import* testNamespace* ;
     testNamespace = 'namespace' possiblyQualifiedName option* import* transformTest* ;
     transformTest = 'transform-test' IDENTIFIER '(' domainParams ')' '{'
-       testDomain2+
+       testCase*
+    '}' ;
+    testCase = 'test-case' IDENTIFIER '{'
+      testDomain*
     '}' ;
     testDomain = 'domain' IDENTIFIER ':=' expression ;
 }
@@ -262,7 +265,12 @@ grammar $NAME : Base {
                     }
                     concatenation("transformTest") {
                         lit("transform-test"); ref("IDENTIFIER"); lit("("); ref("domainParams"); lit(")"); lit("{")
-                            lst(2, -1) { ref("testDomain") }
+                        lst(0, -1) { ref("testCase") }
+                        lit("}")
+                    }
+                    concatenation("testCase") {
+                        lit("test-case"); ref("IDENTIFIER"); lit("{")
+                        lst(2, -1) { ref("testDomain") }
                         lit("}")
                     }
                     concatenation("testDomain") {

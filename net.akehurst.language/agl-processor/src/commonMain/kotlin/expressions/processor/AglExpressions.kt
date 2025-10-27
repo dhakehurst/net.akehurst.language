@@ -54,7 +54,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
               | infixExpression
               | tuple
               | object
-              | functionOrConstructorCall
+              | functionCall
               | with
               | when
               | cast
@@ -83,9 +83,9 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
               | '/' | '*' | '%' | '+' | '-' // arithmetic
               ;
             
-            functionOrConstructorCall = possiblyQualifiedName '(' argumentList ')' ;
+            functionCall = possiblyQualifiedName '(' argumentList ')' ;
             tuple = 'tuple' assignmentBlock ;
-            object = possiblyQualifiedName constructorArguments assignmentBlock? ;
+            object = possiblyQualifiedName constructorArguments assignmentBlock ;
             constructorArguments = '(' [assignment / ',']* ')' ;
             assignmentBlock = '{' assignmentList  '}' ;
             assignmentList = assignment* ;
@@ -213,7 +213,7 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         ref("infixExpression")
                         ref("tuple")
                         ref("object")
-                        ref("functionOrConstructorCall")
+                        ref("functionCall")
                         ref("with")
                         ref("when")
                         ref("cast")
@@ -248,11 +248,11 @@ object AglExpressions : LanguageObjectAbstract<Expression, ContextWithScope<Any,
                         // arithmetic
                         lit("/"); lit("*"); lit("%"); lit("+"); lit("-");
                     }
-                    concatenation("functionOrConstructorCall") {
+                    concatenation("functionCall") {
                         ref("possiblyQualifiedName");  lit("("); ref("argumentList"); lit(")")
                     }
                     concatenation("object") {
-                        ref("possiblyQualifiedName"); ref("constructorArguments"); opt { ref("assignmentBlock") }
+                        ref("possiblyQualifiedName"); ref("constructorArguments"); ref("assignmentBlock")
                     }
                     concatenation("constructorArguments") {
                         lit("("); spLst(0,-1) { ref("assignment"); lit(",") }; lit(")");

@@ -25,7 +25,7 @@ import net.akehurst.language.asm.api.AsmValue
 import net.akehurst.language.asm.simple.AsmSimple
 import net.akehurst.language.asmTransform.api.AsmTransformDomain
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.types.api.TypesDomain
@@ -56,10 +56,10 @@ class SyntaxAnalyserSimple(
     typesDomain,
     asmTransformDomain,
     relevantTrRuleSet,
-    ObjectGraphAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
+    ObjectGraphAccessorMutatorAsmSimple(typesDomain, IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS))
 ) {
 
-    override fun constructAsm(): Asm = AsmSimple(objectGraph as ObjectGraphAsmSimple)
+    override fun constructAsm(): Asm = AsmSimple(objectGraph as ObjectGraphAccessorMutatorAsmSimple)
     override fun rootList(asm: Asm): List<AsmValue> = asm.root
     override fun addAsmRoot(asm: Asm, root: AsmValue) =(asm as AsmSimple).addRoot(root)
     override fun removeAsmRoot(asm: Asm, root: AsmValue) = (asm as AsmSimple).removeRoot(root)

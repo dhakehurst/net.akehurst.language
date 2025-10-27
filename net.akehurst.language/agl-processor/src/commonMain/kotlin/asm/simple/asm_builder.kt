@@ -26,7 +26,7 @@ import net.akehurst.language.base.api.QualifiedName
 import net.akehurst.language.base.api.SimpleName
 import net.akehurst.language.base.api.asPossiblyQualifiedName
 import net.akehurst.language.expressions.processor.ExpressionsInterpreterOverTypedObject
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.issues.api.LanguageIssueKind
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -72,8 +72,8 @@ class AsmSimpleBuilder(
 ) {
     private val _sentenceScope = _context?.getScopeForSentenceOrNull(null) as ScopeSimple? //TODO
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAsmSimple(_typesDomain, _issues),_issues)
-    private val _asm = AsmSimple(ObjectGraphAsmSimple(_typesDomain,_issues))
+    private val _interpreter = ExpressionsInterpreterOverTypedObject(ObjectGraphAccessorMutatorAsmSimple(_typesDomain, _issues),_issues)
+    private val _asm = AsmSimple(ObjectGraphAccessorMutatorAsmSimple(_typesDomain,_issues))
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<Any>>()
     private val _identifyingValueInFor = { inTypeName: SimpleName, item: AsmStructure ->
         SemanticAnalyserSimple.identifyingValueInFor(_interpreter, _crossReferenceDomain, inTypeName, item)

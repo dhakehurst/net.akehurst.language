@@ -146,5 +146,10 @@ interface PropertyTemplateExpression :  PropertyTemplateRhs {
 
 interface M2mTransformTest : M2MTransformDefinition {
     val domainParameters: Map<DomainReference, SimpleName>
+    val testCase : Map<SimpleName, M2mTransformTestCase>
+}
+
+interface M2mTransformTestCase {
+    val name: SimpleName
     val domain: Map<DomainReference, Expression>
 }

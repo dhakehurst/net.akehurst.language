@@ -22,7 +22,7 @@ import net.akehurst.language.agl.simple.ContextWithScope
 import net.akehurst.language.asm.api.Asm
 import net.akehurst.language.asm.builder.asmSimple
 import net.akehurst.language.base.api.QualifiedName
-import net.akehurst.language.expressions.processor.ObjectGraphAsmSimple
+import net.akehurst.language.expressions.processor.ObjectGraphAccessorMutatorAsmSimple
 import net.akehurst.language.expressions.processor.TypedObjectAsmValue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
@@ -1159,7 +1159,7 @@ class test_m2mTransformInterpreter {
                 it.asm!!
             }
             val ogs = testData.typeDomains.entries.associate { (k, v) ->
-                Pair(v.name, ObjectGraphAsmSimple(v, issues))
+                Pair(v.name, ObjectGraphAccessorMutatorAsmSimple(v, issues))
             }
             val interpreter = M2mTransformInterpreter(m2m, ogs, issues)
 
