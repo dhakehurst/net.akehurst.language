@@ -33,7 +33,7 @@ class M2mTransformSemanticAnalyser : SemanticAnalyser<M2mTransformDomain, Contex
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
 
     override fun clear() {
-
+        _issues.clear()
     }
 
     override fun analyse(

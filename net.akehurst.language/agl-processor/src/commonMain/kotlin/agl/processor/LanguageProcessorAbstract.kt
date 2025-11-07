@@ -56,7 +56,7 @@ import net.akehurst.language.types.builder.typesDomain
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
 
-    override val issues = IssueHolder(LanguageProcessorPhase.ALL)
+    override val allIssues = IssueHolder(LanguageProcessorPhase.ALL)
 
     abstract override val targetRuleSet: RuleSet?
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
@@ -65,14 +65,14 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val scanner: Scanner? by lazy {
         val res = configuration.scannerResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val parser: Parser? by lazy {
         //ScanOnDemandParser(this.runtimeRuleSet)
         val res = configuration.parserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
@@ -92,7 +92,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val baseTypesDomain: TypesDomain by lazy {
         val res = configuration.typesResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
             ?: typesDomain("FromGrammar" + this.grammarDomain.name.value, true) {}
     }
@@ -101,7 +101,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val transformDomain: AsmTransformDomain by lazy {
         val res = configuration.transformResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
             ?: AsmTransformDomainDefault.fromGrammarDomain(this.grammarDomain, this.baseTypesDomain).asm
             ?: error("should not happen")
@@ -114,42 +114,42 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val crossReferenceDomain: CrossReferenceDomain by lazy {
         val res = configuration.crossReferenceResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm ?: CrossReferenceDomainDefault(SimpleName("FromGrammar" + grammarDomain.name.value))
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by lazy {
         val res = configuration.semanticAnalyserResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val formatDomain: AglFormatDomain? by lazy {
         val res = configuration.formatResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
     override val formatter: Formatter<AsmType>? by lazy {
         val res = configuration.formatResolver?.invoke(this)
         res?.let {
-            this.issues.addAllFrom(res.allIssues)
+            this.allIssues.addAllFrom(res.allIssues)
             res.asm?.let {
                 //TODO: make a formatter Resolver !
-                FormatterOverAsmSimple(it, typesDomain, this.issues) as Formatter<AsmType>
+                FormatterOverAsmSimple(it, typesDomain, this.allIssues) as Formatter<AsmType>
             }
         }
     }
 
     override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
         val res = configuration.completionProviderResolver?.invoke(this)
-        res?.let { this.issues.addAllFrom(res.allIssues) }
+        res?.let { this.allIssues.addAllFrom(res.allIssues) }
         res?.asm
     }
 
@@ -168,6 +168,15 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         ProcessOptionsDefault<AsmType, ContextType>().also {
             it.parse.goalRuleName = this.defaultGoalRuleName?.value
         }
+
+    override fun clear() {
+        this.scanner?.reset()
+        this.parser?.reset()
+        this.syntaxAnalyser?.clear<AsmType>()
+        this.semanticAnalyser?.clear()
+        //this.formatter.clear()
+        this.allIssues.clear()
+    }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
         val opts = options ?: parseOptionsDefault()
@@ -204,7 +213,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val semAnalyser = this.semanticAnalyser
             ?: error("the processor for grammar '${this.targetGrammar?.qualifiedName}' was not configured with a SemanticAnalyser")
         semAnalyser.clear()
-        val sentenceId = opts.parse.sentenceIdentity?.invoke()
+        val sentenceId = opts.parse.sentenceIdentity.invoke()
         val lm = opts.semanticAnalysis.locationMap
         return semAnalyser.analyse(sentenceId, asm, lm, opts.semanticAnalysis)
     }
@@ -294,7 +303,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 } else {
                     val prefix = sentence.substring(parserExpected.usedPosition, position)
                     val filtered = items.filter {
-                        it.text.startsWith(prefix)
+                        if(it.kind== CompletionItemKind.LITERAL) it.text.startsWith(prefix) else true //TODO: try a match for patterns
                     }
                     ExpectedAtResultDefault(position - parserExpected.usedPosition, filtered, IssueHolder(LanguageProcessorPhase.ALL))
                 }

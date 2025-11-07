@@ -70,7 +70,7 @@ class test_Agl_registry_agl {
         fun checkProcessor(processor: LanguageProcessor<*, *>?) {
             assertNotNull(processor)
             assertNotNull(processor.configuration)
-            assertTrue(processor.issues.isEmpty())
+            assertTrue(processor.allIssues.isEmpty())
             assertNotNull(processor.grammarDomain)
             assertNotNull(processor.targetGrammar)
             assertNotNull(processor.targetRuleSet)

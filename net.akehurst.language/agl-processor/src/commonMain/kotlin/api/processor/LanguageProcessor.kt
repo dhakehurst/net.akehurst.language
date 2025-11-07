@@ -50,7 +50,10 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
 
     val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
-    val issues: IssueCollection<LanguageIssue>
+    /**
+     * the collected issues from all parts pf the processor (scanner, parser, syntaxAnalyser, semanticAnalyser, etc)
+     */
+    val allIssues: IssueCollection<LanguageIssue>
 
     val grammarDomain: GrammarDomain?
 
@@ -120,6 +123,11 @@ interface LanguageProcessor<AsmType:Any, ContextType : Any> {
      * get the default options for this language processor
      */
     fun optionsDefault(): ProcessOptions<AsmType,ContextType>
+
+    /**
+     * clear the issues in the scanner, parser, syntaxAnalyser, semanticAnalyser, etc
+     */
+    fun clear()
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.

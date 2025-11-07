@@ -86,7 +86,7 @@ class test_CompletionProviderDefault_datatypes {
             }
             proc.typesDomain
             proc.crossReferenceDomain
-            assertTrue(proc.issues.errors.isEmpty(), proc.issues.toString())
+            assertTrue(proc.allIssues.errors.isEmpty(), proc.allIssues.toString())
 
             val actual = proc.expectedItemsAt(data.sentence, data.sentence.length, Agl.options {
                 completionProvider {

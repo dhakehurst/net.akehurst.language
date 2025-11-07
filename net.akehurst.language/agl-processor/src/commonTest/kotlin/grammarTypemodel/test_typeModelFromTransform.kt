@@ -41,7 +41,7 @@ class test_typemodelFromTransform {
             )
             assertTrue(res.issues.isEmpty(), res.issues.toString())
             val actualTm = res.processor!!.typesDomain
-            assertTrue(res.processor!!.issues.isEmpty(), res.processor!!.issues.toString())
+            assertTrue(res.processor!!.allIssues.isEmpty(), res.processor!!.allIssues.toString())
             assertEquals(expected.asString(), actualTm.asString())
         }
     }

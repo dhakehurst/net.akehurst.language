@@ -41,7 +41,7 @@ internal class LanguageProcessorFromLanguageObject<AsmType : Any, ContextType : 
     override val mapToGrammar: (Int, Int) -> RuleItem = languageObject.mapToGrammar
     override val crossReferenceDomain: CrossReferenceDomain = languageObject.crossReferenceDomain //?: CrossReferenceModelDefault(SimpleName("FromGrammar"+ grammarModel.name.value))
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = languageObject.syntaxAnalyser
-    override val formatter: Formatter<AsmType> = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.issues) as Formatter<AsmType>
+    override val formatter: Formatter<AsmType> = FormatterOverAsmSimple(languageObject.formatDomain, languageObject.typesDomain, this.allIssues) as Formatter<AsmType>
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = languageObject.semanticAnalyser
 
     init {

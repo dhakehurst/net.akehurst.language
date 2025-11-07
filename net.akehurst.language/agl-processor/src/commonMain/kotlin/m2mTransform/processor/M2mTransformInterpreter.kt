@@ -420,7 +420,10 @@ class M2mTransformInterpreter<OT : Any>(
                     .toMap()
                     .cartesianProduct()
                 when {
-                    altSources.isEmpty() -> error("Should not happen as this is indicate no match")
+                    altSources.isEmpty() -> {
+                        _issues.warn(null, "Match not found for all source domains.")
+                        emptyList()
+                    }
 //                    1 < altSources.size -> error("Cannot execute mapping if multiple alternative top mapping matches for a single root object")
                     else -> altSources.map { alt ->
                         val expression = rule.expression[targetDomainRef]

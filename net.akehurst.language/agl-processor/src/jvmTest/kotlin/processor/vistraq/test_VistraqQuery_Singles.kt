@@ -61,7 +61,7 @@ class test_VistraqQuery_Singles {
                 }
             }
             val result = proc.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-            assertTrue(processor.issues.errors.isEmpty(), processor.issues.toString())
+            assertTrue(processor.allIssues.errors.isEmpty(), processor.allIssues.toString())
             assertTrue(result.allIssues.errors.isEmpty(), result.allIssues.toString())
         }
 
