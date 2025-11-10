@@ -35,6 +35,7 @@ data class CompletionItem(
 ) {
     var id: Int? = 0
     var description: String = ""
+    var detail: RuleItem? = null
 }
 
 interface SpineNode {

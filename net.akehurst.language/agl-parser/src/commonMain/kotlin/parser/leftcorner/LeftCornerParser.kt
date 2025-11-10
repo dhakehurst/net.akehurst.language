@@ -27,6 +27,7 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.api.LanguageProcessorPhase
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.*
+import net.akehurst.language.scanner.api.Matchable
 import net.akehurst.language.scanner.api.MatchableKind
 import net.akehurst.language.sentence.api.InputLocation
 import net.akehurst.language.scanner.api.Scanner
@@ -305,41 +306,7 @@ class LeftCornerParser(
     override fun expectedAt(sentenceText: String, position: Int, options: ParseOptions): ExpectedAtResult {
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val cacheSkip = options.cacheSkip
-
-        val previousText = sentenceText.substring(0, position)
-        val revWordStartPosition = when {
-            options.reverseFindWordStartBySkipRules -> {
-                //TODO: actually parse rather than simply OR the regexes
-                val matchables = this.runtimeRuleSet.skipParserStateSet?.let {
-                    it.usedTerminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
-                }
-                when(matchables) {
-                    null -> 0
-                    else -> {
-                        val str = matchables.joinToString(separator = "|") {
-                            when(it.kind) {
-                                MatchableKind.EOT -> ""
-                                else -> it.expression.escapedForRegex
-                            }
-                        }
-                        val regex = str.toRegex()
-                        previousText.reversed().let {
-                            regex.find(it)?.range?.start
-                        } ?: position
-                    }
-                }
-            }
-
-            null != options.reverseFindWordStartRegex -> {
-                val regex = options.reverseFindWordStartRegex!!.toRegex()
-                previousText.reversed().let {
-                    regex.find(it)?.range?.start
-                } ?: 0//position
-            }
-
-            else -> 0
-        }
-
+        val revWordStartPosition = findReverseStartPosition(sentenceText, position, options)
         val wordStartPosition = position - revWordStartPosition
         val usedText = sentenceText.substring(0, wordStartPosition) // parse from start (0) to position - ignore rest of text
         scanner.reset()
@@ -403,5 +370,75 @@ class LeftCornerParser(
                 else -> emptyList() // TODO()
             }
         }.toSet()
+    }
+
+    private fun findReverseStartPosition(sentenceText: String, position: Int, options: ParseOptions): Int {
+        val previousText = sentenceText.substring(0, position)
+        return when {
+            options.reverseFindWordStartBySkipRules -> {
+                //TODO: actually parse rather than simply OR the regexes
+                val matchables = this.runtimeRuleSet.skipParserStateSet?.let {
+                    it.usedTerminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
+                }
+                when (matchables) {
+                    null -> 0
+                    else -> {
+                        val revPos = findLastMatchOf2(previousText, matchables) ?: position
+                        revPos
+                    }
+                }
+            }
+
+            null != options.reverseFindWordStartRegex -> {
+                val regex = options.reverseFindWordStartRegex!!.toRegex()
+                previousText.reversed().let {
+                    regex.find(it)?.range?.start
+                } ?: 0//position
+            }
+
+            else -> 0
+        }
+    }
+
+    private fun findLastMatchOf(text:String, matchables: List<Matchable>):Int ?{
+        //Does not really work, as regExs are not reversed
+        val str = matchables.joinToString(separator = "|") {
+            when (it.kind) {
+                MatchableKind.EOT -> ""
+                else -> it.expression.escapedForRegex
+            }
+        }
+        val regex = str.toRegex()
+        return text.reversed().let {
+            regex.find(it)?.range?.start
+        }
+    }
+
+    private fun findLastMatchOf2(text:String, matchables: List<Matchable>):Int ? {
+        val str = matchables.joinToString(separator = "|") {
+            when (it.kind) {
+                MatchableKind.EOT -> ""
+                else -> "(${it.expression.escapedForRegex})"
+            }
+        }
+        val regex = str.toRegex()
+        var pos = text.length - 1
+        var lastMatchLen:Int? = null
+        while(null==lastMatchLen && pos >=0 ){
+            val match = regex.matchAt(text, pos)
+            if(null==match) {
+                //try one character more
+            } else {
+                if( text.length-1 == match.range.last) {
+                    lastMatchLen = pos+match.value.length
+                } else {
+                    // matched something that finished in wrong place, thus nothing found
+                    lastMatchLen = null
+                    break
+                }
+            }
+            pos-=1
+        }
+        return lastMatchLen?.let { text.length - it }
     }
 }

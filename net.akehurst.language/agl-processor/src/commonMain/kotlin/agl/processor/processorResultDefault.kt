@@ -23,12 +23,12 @@ import net.akehurst.language.issues.api.LanguageIssue
 import net.akehurst.language.issues.ram.IssueHolder
 import net.akehurst.language.parser.api.ParseResult
 
-class LanguageProcessorResult<AsmType:Any, ContextType : Any>(
+class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,
     val issues: IssueCollection<LanguageIssue>
 )
 
-data class SyntaxAnalysisResultDefault<AsmType:Any>(
+data class SyntaxAnalysisResultDefault<AsmType : Any>(
     override val asm: AsmType?,
     override val issues: IssueCollection<LanguageIssue>,
     override val locationMap: LocationMap
@@ -39,7 +39,7 @@ data class SemanticAnalysisResultDefault(
     override val issues: IssueCollection<LanguageIssue>
 ) : SemanticAnalysisResult
 
-data class ProcessResultDefault<AsmType:Any>(
+data class ProcessResultDefault<AsmType : Any>(
     override val asm: AsmType?,
     override val parse: ParseResult? = null,
     override val syntaxAnalysis: SyntaxAnalysisResult<AsmType>? = null,
@@ -61,7 +61,11 @@ data class FormatResultDefault(
 ) : FormatResult
 
 data class ExpectedAtResultDefault(
-    override val offset: Int,
+    override val requestedPosition: Int,
+    override val offeredPosition: Int,
     override val items: List<CompletionItem>,
     override val issues: IssueCollection<LanguageIssue>
-) : ExpectedAtResult
+) : ExpectedAtResult {
+    override val isTerminalCompletion: Boolean get() = requestedPosition != offeredPosition
+    override val offset: Int get() = requestedPosition - offeredPosition
+}

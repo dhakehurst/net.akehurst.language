@@ -232,7 +232,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 if (null == this.semanticAnalyser) issues.info(null, "There is no SemanticAnalyser configured")
                 if (null == synxResult.asm) issues.info(null, "There was no ASM returned by the SyntaxAnalyser")
                 if (opts.semanticAnalysis.enabled.not()) issues.info(null, "Semantic Analysis is inactive (switched off) in the options")
-                ProcessResultDefault(synxResult.asm,parseResult,synxResult, processIssues = issues)
+                ProcessResultDefault(synxResult.asm, parseResult, synxResult, processIssues = issues)
             } else {
                 opts.semanticAnalysis.locationMap = synxResult.locationMap
                 val result = this.semanticAnalysis(asm, opts)
@@ -287,7 +287,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }.flatten()
-        return ExpectedAtResultDefault(0, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(position, position, terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
@@ -299,13 +299,20 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 val spines = parserExpected.spines.map { rtSpine -> SpineDefault(rtSpine, mapToGrammar) }.toSet()
                 val items = completionProvider!!.provide(spines, opts.completionProvider)
                 if (parserExpected.usedPosition == position) {
-                    ExpectedAtResultDefault(0, items, IssueHolder(LanguageProcessorPhase.ALL))
+                    ExpectedAtResultDefault(position, parserExpected.usedPosition, items, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
                     val prefix = sentence.substring(parserExpected.usedPosition, position)
-                    val filtered = items.filter {
-                        if(it.kind== CompletionItemKind.LITERAL) it.text.startsWith(prefix) else true //TODO: try a match for patterns
-                    }
-                    ExpectedAtResultDefault(position - parserExpected.usedPosition, filtered, IssueHolder(LanguageProcessorPhase.ALL))
+                    val filtered = items
+                        .filter {
+                            when (it.kind) {
+                                CompletionItemKind.LITERAL -> prefix!=it.text && it.text.startsWith(prefix) //do not include if terminal already complete
+                                CompletionItemKind.PATTERN -> false //TODO: try a match for patterns
+                                CompletionItemKind.SEGMENT -> false
+                                CompletionItemKind.REFERRED -> false //TODO: should be able to complete these!
+                            }
+                        }
+                    val used = if(filtered.isEmpty()) position else parserExpected.usedPosition
+                    ExpectedAtResultDefault(position, used, filtered, IssueHolder(LanguageProcessorPhase.ALL))
                 }
             }
 

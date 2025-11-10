@@ -263,19 +263,19 @@ class test_CompletionProviderSimple {
             }
         """
         val sentence = "This is a sentence ."
-//        test(
-//            TestData(
-//                grammarStr = grammarStr,
-//                sentence = sentence,
-//                position = 0,
-//                expected = listOf(
-//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
-//                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
-//                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
-//                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
-//                )
-//            )
-//        )
+        test(
+            TestData(
+                grammarStr = grammarStr,
+                sentence = sentence,
+                position = 0,
+                expected = listOf(
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "That is a sentence ."),
+                    CompletionItem(CompletionItemKind.SEGMENT, "S", "This is a sentence ."),
+                    CompletionItem(CompletionItemKind.LITERAL, "'That'", "That"),
+                    CompletionItem(CompletionItemKind.LITERAL, "'This'", "This"),
+                )
+            )
+        )
 //        test(
 //            TestData(
 //                grammarStr = grammarStr,

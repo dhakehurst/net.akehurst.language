@@ -62,13 +62,13 @@ class test_Issue57 {
         )
 
         val testData = listOf(
-            TestData("", 0, setOf("[ x ]", "[")),
-            TestData("[", 0, setOf("[ x ]", "[")),
-            TestData("[", 1, setOf("[ x ]", "[")),
+//            TestData("", 0, setOf("[ x ]", "[")),
+//            TestData("[", 0, setOf("[ x ]", "[")),
+            TestData("[", 1, setOf("x")),
             TestData("[ ", 2, setOf("x")),
-            TestData("[ x", 3, setOf("x")),
+            TestData("[ x", 3, setOf("]")),
             TestData("[ x ", 4, setOf("]")),
-            TestData("[ x ]", 5, setOf("]")),
+            TestData("[ x ]", 5, setOf()),
             TestData("[ x ] ", 6, setOf()),
         )
     }
