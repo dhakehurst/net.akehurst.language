@@ -4,7 +4,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg?gav=true)](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor)
 ![npm](https://img.shields.io/npm/v/net.akehurst.language-agl-processor)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Generic badge](https://img.shields.io/badge/Kotlin-2.1.21-green)](https://kotlinlang.org/)
+[![Generic badge](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdhakehurst%2Fnet.akehurst.language%2Frefs%2Fheads%2Fmaster%2Fnet.akehurst.language%2Fgradle%2Flibs.versions.toml&search=kotlin%20%3D%20%22(%5B%5E%22%5D%2B)%22&replace=%241&label=Kotlin&color=green&link=https%3A%2F%2Fkotlinlang.org%2F
+)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
 
